@@ -36,18 +36,20 @@
  * @date 17th March 2010
  */
 
+/**
+ * Default controller that gets called.
+ */
 class IndexController extends Zend_Controller_Action
 {
-
+	/**
+	 * The default action that gets called.
+	 */
     public function indexAction()
     {
-        $client = new SoapClient("http://localhost:8080/SchedulingServer-Permissions/services/Permissions?wsdl",
-            array('cache_wsdl' => WSDL_CACHE_NONE));
-
-        $resp = $client->getUser(array("userQName" => "UTS:mdiponio"));
-
-        var_dump($resp);
-
+		$client = new Zend_Soap_Client("http://localhost:8080/SchedulingServer-Permissions/services/Permissions?wsdl");
+		
+		$resp = $client->getUser(array("userQName" => "UTS:mdiponio"));
+		var_dump($resp);
     }
 }
 

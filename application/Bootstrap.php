@@ -37,7 +37,7 @@
  */
 
 /**
- * Boots the web application.
+ * Boot straps the web application.
  */
 class Bootstrap extends Zend_Application_Bootstrap_Bootstrap
 {

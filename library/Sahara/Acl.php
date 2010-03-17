@@ -38,18 +38,127 @@
 
 class Sahara_Acl extends Zend_Acl
 {
-    /* Administrator user. */
-    const ADMIN = 'ADMIN';
+    /** Unauthorised user. */
+    const UNAUTH = 'UNAUTH';
 
-    /* Academic users. */
-    const ACADEMIC = 'ACADEMIC';
-
-    /* Normal users. */
-    const USER = 'USER';
-
-    /* Demonstration user. */
+    /** Demonstration user. */
     const DEMO = 'DEMO';
 
-    /* Unauthorised user. */
-    const UNAUTH = 'UNAUTH';
+    /** Normal users. */
+    const USER = 'USER';
+
+    /** Academic users. */
+    const ACADEMIC = 'ACADEMIC';
+
+    /** Administrator user. */
+    const ADMIN = 'ADMIN';
+
+    /** Pages an unauthenticated user may access. */
+    protected $_unAuthPages = array('index' => array('index'));
+
+    /** Pages a demonstration user may access. */
+    protected $_demoPages = array();
+
+    /** Pages a user may access. */
+    protected $_userPages = array();
+
+    /** Pages an academic user may access. */
+    protected $_academicPages = array();
+
+    /** Pages an administrator user may access. */
+    protected $_adminPages = array();
+
+    /** The users qualified name. */
+    protected $_userQName;
+
+    /** The users role. */
+    protected $_userRole;
+
+    public function __construct($user)
+    {
+        $this->_userQName = $user;
+    }
+
+    public function loadPermissions()
+    {
+        $this->_userRole = self::UNAUTH;
+
+
+    }
+
+
+    /**
+     * Loads the Acl list for unauthenticated users.
+     */
+    protected function _loadUnAuthAcls()
+    {
+        $this->addRole(new Zend_Acl_Role(self::UNAUTH));
+        $this->_loadAclAssoc(self::UNAUTH, $this->_unAuthPages);
+    }
+
+    /**
+     * Loads the Acl list for demonstration users.
+     */
+    protected function _loadDemoAcls()
+    {
+        $this->_loadUnAuthAcls();
+        $this->addRole(new Zend_Acl_Role(self::DEMO));
+        $this->_loadAclAssoc(self::DEMO, $this->_demoPages);
+    }
+
+    /**
+     * Loads the Acl list for users.
+     */
+    protected function _loadUserAcls()
+    {
+        $this->_loadDemoAcls();
+        $this->addRole(new Zend_Acl_Role(self::USER));
+        $this->_loadAclAssoc(self::USER, $this->_userPages);
+    }
+
+    /**
+     * Loads the Acl list for academic users.
+     */
+    protected function _loadAcademicAcls()
+    {
+        $this->_loadUserAcls();
+        $this->addRole(new Zend_Acl_Role(self::ACADEMIC));
+        $this->_loadAclAssoc(self::ACADEMIC, $this->_academicPages);
+    }
+
+    /*
+     * Loads the Acl list for admin users.
+     */
+    protected function _loadAdminAcls()
+    {
+        $this->_loadAcademicAcls();
+        $this->addRole(new Zend_Acl_Role(self::ADMIN));
+        $this->_loadAclAssoc(self::UNAUTH, $this->_adminPages);
+    }
+
+    /**
+     * Loads the specified ACL array for the specified role.
+     *
+     * @param String $role name of role
+     * @param assoc array $assoc acl list
+     */
+    protected function loadAclAssoc($role, $assoc)
+    {
+        foreach ($assoc as $controller => $actionList)
+        {
+            foreach ($actionList as $action)
+            {
+                $this->allow($role, null, $controlle . '-' .$action);
+            }
+        }
+    }
+
+    /**
+     * Gets the users role.
+     * @return String users role
+     */
+    protected function getuserRole()
+    {
+        return $this->_userRole;
+    }
 }
