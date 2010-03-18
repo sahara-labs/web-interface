@@ -39,7 +39,7 @@
 class Sahara_Acl extends Zend_Acl
 {
     /** Unauthorised user. */
-    const UNAUTH = 'UNAUTH';
+    const UNAUTH = 'NOTFOUND';
 
     /** Demonstration user. */
     const DEMO = 'DEMO';
@@ -53,87 +53,95 @@ class Sahara_Acl extends Zend_Acl
     /** Administrator user. */
     const ADMIN = 'ADMIN';
 
-    /** Pages an unauthenticated user may access. */
-    protected $_unAuthPages = array('index' => array('index'));
+    /** @var assoc array Pages an unauthenticated user may access. */
+    protected $_unAuthPages = array('index' => array('index'),
+                                    'error' => array('error'));
 
-    /** Pages a demonstration user may access. */
+    /** @var assoc array Pages a demonstration user may access. */
     protected $_demoPages = array();
 
-    /** Pages a user may access. */
+    /** @var assoc array Pages a user may access. */
     protected $_userPages = array();
 
-    /** Pages an academic user may access. */
+    /** @var assoc array Pages an academic user may access. */
     protected $_academicPages = array();
 
-    /** Pages an administrator user may access. */
+    /** @var assoc array Pages an administrator user may access. */
     protected $_adminPages = array();
 
-    /** The users qualified name. */
-    protected $_userQName;
+    /** @var String The users qualified name. */
+    protected $_user;
 
-    /** The users role. */
+    /** @var String The users role. */
     protected $_userRole;
+
+    /** @var Sahara_Logger Logger. */
+    protected $_logger;
 
     public function __construct($user)
     {
-        $this->_userQName = $user;
+        $this->_user = $user;
+        $this->_logger = Sahara_Logger::getInstance();
     }
 
+    /**
+     * Loads the users role and the appropriate permissions for that role.
+     */
     public function loadPermissions()
     {
         $this->_userRole = self::UNAUTH;
 
+        if ($this->_user != null)
+        {
+        	/* Attempt to find the user's 'persona' which defines their role. */
+            $user = Sahara_Soap::getSchedServerPermissionsClient()->getUser(array('userQName' => $this->_user));
+            $this->_userRole = $user->persona;
+            $this->_logger->debug("Loaded role of $this->_user as $this->_userRole->persona.");
 
+            // TODO Attempt to set up authorization
+        }
+        else
+        {
+            $this->_userRole = self::UNAUTH;
+        }
+
+        /* Loads the permissions in a stack with each higher privilege role
+         * inheriting the preceding roles privileges. */
+        switch ($this->_userRole)
+        {
+            case self::ADMIN:
+                $this->addRole(new Zend_Acl_Role(self::ADMIN));
+                $this->_loadAclAssoc(self::ADMIN, $this->_adminPages);
+                /* Falls through. */
+            case self::ACADEMIC:
+                $this->addRole(new Zend_Acl_Role(self::ACADEMIC));
+                $this->_loadAclAssoc(self::ACADEMIC, $this->_academicPages);
+                /* Falls through. */
+            case self::USER:
+                $this->addRole(new Zend_Acl_Role(self::USER));
+                $this->_loadAclAssoc(self::USER, $this->_userPages);
+                /* Falls through. */
+            case self::DEMO:
+                $this->addRole(new Zend_Acl_Role(self::DEMO));
+                $this->_loadAclAssoc(self::DEMO, $this->_demoPages);
+                /* Falls through. */
+            case self::UNAUTH:
+                $this->addRole(new Zend_Acl_Role(self::UNAUTH));
+                $this->_loadAclAssoc(self::UNAUTH, $this->_unAuthPages);
+        }
     }
-
 
     /**
-     * Loads the Acl list for unauthenticated users.
+     * Returns true if the user has permission to use the specified controller
+     * and action.
+     *
+     * @param String $controller controller name
+     * @param String $action controller action
+     * @return boolean true if the user has permission
      */
-    protected function _loadUnAuthAcls()
+    public function hasPermission($controller, $action)
     {
-        $this->addRole(new Zend_Acl_Role(self::UNAUTH));
-        $this->_loadAclAssoc(self::UNAUTH, $this->_unAuthPages);
-    }
-
-    /**
-     * Loads the Acl list for demonstration users.
-     */
-    protected function _loadDemoAcls()
-    {
-        $this->_loadUnAuthAcls();
-        $this->addRole(new Zend_Acl_Role(self::DEMO));
-        $this->_loadAclAssoc(self::DEMO, $this->_demoPages);
-    }
-
-    /**
-     * Loads the Acl list for users.
-     */
-    protected function _loadUserAcls()
-    {
-        $this->_loadDemoAcls();
-        $this->addRole(new Zend_Acl_Role(self::USER));
-        $this->_loadAclAssoc(self::USER, $this->_userPages);
-    }
-
-    /**
-     * Loads the Acl list for academic users.
-     */
-    protected function _loadAcademicAcls()
-    {
-        $this->_loadUserAcls();
-        $this->addRole(new Zend_Acl_Role(self::ACADEMIC));
-        $this->_loadAclAssoc(self::ACADEMIC, $this->_academicPages);
-    }
-
-    /*
-     * Loads the Acl list for admin users.
-     */
-    protected function _loadAdminAcls()
-    {
-        $this->_loadAcademicAcls();
-        $this->addRole(new Zend_Acl_Role(self::ADMIN));
-        $this->_loadAclAssoc(self::UNAUTH, $this->_adminPages);
+        return $this->isAllowed($this->_userRole, null, strtolower("$controller-$action"));
     }
 
     /**
@@ -142,19 +150,20 @@ class Sahara_Acl extends Zend_Acl
      * @param String $role name of role
      * @param assoc array $assoc acl list
      */
-    protected function loadAclAssoc($role, $assoc)
+    protected function _loadAclAssoc($role, $assoc)
     {
         foreach ($assoc as $controller => $actionList)
         {
             foreach ($actionList as $action)
             {
-                $this->allow($role, null, $controlle . '-' .$action);
+                $this->allow($role, null, "$controller-$action");
             }
         }
     }
 
     /**
      * Gets the users role.
+     *
      * @return String users role
      */
     protected function getuserRole()

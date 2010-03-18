@@ -39,15 +39,16 @@
 /**
  * Default controller that gets called.
  */
-class IndexController extends Zend_Controller_Action
+class IndexController extends Sahara_Controller_Action_Acl
 {
 	/**
 	 * The default action that gets called.
 	 */
     public function indexAction()
     {
-		$client = new Zend_Soap_Client("http://localhost:8080/SchedulingServer-Permissions/services/Permissions?wsdl");
-		
+        var_dump($this->_flashMessenger->getMessages());
+	    $client = Sahara_Soap::getSchedServerPermissionsClient();
+
 		$resp = $client->getUser(array("userQName" => "UTS:mdiponio"));
 		var_dump($resp);
     }

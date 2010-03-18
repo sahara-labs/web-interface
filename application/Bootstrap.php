@@ -41,30 +41,71 @@
  */
 class Bootstrap extends Zend_Application_Bootstrap_Bootstrap
 {
-    /** Application path. */
+    /** @var String Application path. */
     protected $_rootDir = APPLICATION_PATH;
 
-	/**
-	 * Initialises the view renderer.
-	 *
-	 * @return Zend_View view renderer
-	 */
-	protected function _initView()
-	{
-		/* Create the view. */
-		$view = new Zend_View();
-		$view->doctype('XHTML1_STRICT');
+    /**
+     * Initalises configuration by adding a Zend_Config instance to the registry.
+     *
+     * @return Zend_Config config instance
+     */
+    protected function _initConfiguration()
+    {
+        $config = new Zend_Config_Ini($this->_rootDir . '/configs/config.ini', APPLICATION_ENV);
 
-		/* Add it to the view renderer. */
-		$viewRenderer = Zend_Controller_Action_HelperBroker::getStaticHelper('ViewRenderer');
-		$viewRenderer->setView($view);
+        /* Add config to the registry. */
+        Zend_Registry::set('config', $config);
 
-		Zend_Layout::startMvc(array(
+        return $config;
+    }
+
+    /**
+     * Initialises the logger.
+     *
+     * @return unknown_type
+     */
+    protected function _initLogger()
+    {
+        require_once 'Sahara/Logger.php'; // The autoloader isn't set up at this point
+        Zend_Registry::set('logger', Sahara_Logger::getInstance());
+    }
+
+    /**
+     * Initialise the Zend autoloader.
+     */
+    protected function _initAutoLoader()
+    {
+        $autoloader = Zend_Loader_Autoloader::getInstance();
+        $autoloader->registerNamespace('Sahara_');
+
+        $inst = Zend_Registry::get('config')->institution;
+        if (is_dir($this->_rootDir . '/../library/' . $inst))
+        {
+            Zend_Registry::get('logger')->debug("Registering institution namespace '" . $inst . "_'.");
+            $autoloader->registerNamespace($inst . '_');
+        }
+    }
+
+    /**
+     * Initialises the view renderer.
+     *
+     * @return Zend_View view renderer
+     */
+    protected function _initView()
+    {
+        /* Create the view. */
+        $view = new Zend_View();
+        $view->doctype('XHTML1_STRICT');
+
+        /* Add it to the view renderer. */
+        $viewRenderer = Zend_Controller_Action_HelperBroker::getStaticHelper('ViewRenderer');
+        $viewRenderer->setView($view);
+
+        Zend_Layout::startMvc(array(
 			'layoutPath' => $this->_rootDir . '/views/layouts'
-		));
+        ));
 
-		return $view;
-	}
-
+        return $view;
+    }
 }
 
