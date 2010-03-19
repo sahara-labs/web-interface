@@ -46,11 +46,7 @@ class IndexController extends Sahara_Controller_Action_Acl
 	 */
     public function indexAction()
     {
-        var_dump($this->_flashMessenger->getMessages());
-	    $client = Sahara_Soap::getSchedServerPermissionsClient();
-
-		$resp = $client->getUser(array("userQName" => "UTS:mdiponio"));
-		var_dump($resp);
+        $this->view->todo = "TODO login page.";
     }
 }
 

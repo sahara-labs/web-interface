@@ -35,6 +35,8 @@
  * @author Michael Diponio (mdiponio)
  * @date 17th March 2010
  */
+
+$this->headLink()->appendStylesheet($this->baseUrl() . 'css/layout.css');
 ?>
 
 <?php echo $this->doctype(); ?>
@@ -47,8 +49,24 @@
 	<?php echo $this->headMeta(); ?>
 </head>
 <body>
-	<?php echo $this->render('_header.phtml'); ?>
-	<?php echo $this->layout()->content; ?>
-	<?php echo $this->render('_footer.phtml'); ?>
+	<div id="wrapper">
+		<div id="header">
+			<?php echo $this->render('_header.phtml'); ?>
+		</div>
+		<div id="navigation">
+			TODO Nav bar
+		</div>
+		<div id="faux">
+			<div id="leftColumn">
+			    TODO column info
+			</div>
+			<div id="rightcolumn">
+				<?php echo $this->layout()->content; ?>
+			</div>
+		</div>
+		<div id="footer">
+			<?php echo $this->render('_footer.phtml'); ?>
+		</div>
+	</div>
 </body>
 </html>
