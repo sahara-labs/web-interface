@@ -1,0 +1,20 @@
+@CHARSET "UTF-8";
+
+td {
+	padding:5px;
+}
+
+fieldset {
+	border-width: 20px 1px 2px;
+	border-color: #525252 #878787 #525252;
+	border-style: solid dashed;
+	background-color: #D4D9DE;
+	margin-bottom: 5px;
+}
+
+legend {
+	width: 100%;
+	color: #E1E1E1;
+	background-color: #525252;
+	font-weight: bold;
+}

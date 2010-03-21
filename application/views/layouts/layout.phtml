@@ -36,7 +36,8 @@
  * @date 17th March 2010
  */
 
-$this->headLink()->appendStylesheet($this->baseUrl() . 'css/layout.css');
+$this->headLink()->appendStylesheet($this->baseUrl('css/layout.css'));
+//$this->headScript()->appendFile($this->baseUrl('js/jquery.js'));
 ?>
 
 <?php echo $this->doctype(); ?>
@@ -44,6 +45,7 @@ $this->headLink()->appendStylesheet($this->baseUrl() . 'css/layout.css');
 <head>
 	<?php echo $this->headTitle(); ?>
 	<?php echo $this->headLink(); ?>
+	<script type="text/javascript" src="js/jquery.js"></script>
 	<?php echo $this->headStyle(); ?>
 	<?php echo $this->headScript(); ?>
 	<?php echo $this->headMeta(); ?>
@@ -54,18 +56,18 @@ $this->headLink()->appendStylesheet($this->baseUrl() . 'css/layout.css');
 			<?php echo $this->render('_header.phtml'); ?>
 		</div>
 		<div id="navigation">
-			TODO Nav bar
+			TODO top nav bar
 		</div>
 		<div id="faux">
-			<div id="leftColumn">
-			    TODO column info
+			<div id="leftcolumn">
+			    TODO left nav col
 			</div>
 			<div id="rightcolumn">
 				<?php echo $this->layout()->content; ?>
 			</div>
 		</div>
 		<div id="footer">
-			<?php echo $this->render('_footer.phtml'); ?>
+		    <?php echo $this->render('_footer.phtml'); ?>
 		</div>
 	</div>
 </body>

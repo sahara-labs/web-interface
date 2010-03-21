@@ -89,12 +89,25 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
         if (!$this->_acl->hasPermission($controller, $action))
         {
             $this->_logger->warn('User ' . $this->_auth->getIdentity() . " tried to access a resource they do not " .
-                    "have access to (controller=$controller - action=$action).");
+                    "have access to (controller=$controller, action=$action).");
             $this->_flashMessenger->addMessage("Permission denied accessing $action on $controller.");
-            $this->_redirector->goto('index', 'index');
+            $this->_redirectTo('index', 'index');
         }
 
         /* Check if the user has a pending request and should be in the queue or on a experiment page. */
         // TODO redirect to experiment or queue page
+    }
+
+    /**
+     * Redirects to the specified controller action. Request parameters
+     * can optionally be supplied.
+     *
+     * @param String $action action to redirect to
+     * @param String $controller controller containing the action
+     * @param array $params request parameters (optional)
+     */
+    protected function _redirectTo($action, $controller, $params = array())
+    {
+        $this->_redirector->goto($action, $controller, null, $params);
     }
 }

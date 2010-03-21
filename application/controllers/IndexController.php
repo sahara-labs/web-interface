@@ -46,7 +46,58 @@ class IndexController extends Sahara_Controller_Action_Acl
 	 */
     public function indexAction()
     {
-        $this->view->todo = "TODO login page.";
+        $this->view->headTitle('Remote Laboratory Login');
+        $this->view->messages = $this->_flashMessenger->getMessages();
+
+        $form = new Sahara_Auth_Form();
+        $this->view->form = $form;
+
+        if ($this->_request->isPost() && $form->isValid($this->_request->getParams()))
+        {
+            Zend_Session::regenerateId();
+
+            $username = $form->getValue('username');
+            $password = $form->getValue('password');
+
+            // TODO authentication
+
+            /* Store the authentication information. */
+            $qName = Zend_Registry::get('config')->institution . ':' . $username;
+            $storage = $this->_auth->getStorage();
+            $storage->clear();
+            $storage->write($qName);
+
+
+            $user = Sahara_Soap::getSchedServerPermissionsClient()->getUser(array('userQName' => $qName));
+            if ($user->persona == 'NOTFOUND')
+            {
+                // TODO try to find about the user and add permissions.
+            }
+
+            /* Redirect to an appropriate page. */
+            switch ($user->persona)
+            {
+                case Sahara_Acl::USER:
+                    $this->_redirectTo('index', 'queue');
+                    break;
+                case Sahara_Acl::ACADEMIC:
+                    $this->_redirectTo('index', 'academic');
+                    break;
+                case Sahara_Acl::ADMIN:
+                    $this->_redirectTo('index', 'admin');
+                    break;
+            }
+        }
+    }
+
+    /**
+     * Logs out and ends a session.
+     */
+    public function logoutAction()
+    {
+        $this->_auth->clearIdentity();
+        $this->_flashMessenger->addMessage('Logged out!');
+        $this->_redirectTo('index', 'index');
     }
 }
 
