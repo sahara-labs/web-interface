@@ -1,9 +1,5 @@
 @CHARSET "UTF-8";
 
-/*
- * Layout based on faux css column layout from http://www.code-sucks.com.
- */
-
 * {
 padding: 0;
 margin: 0;
@@ -18,6 +14,9 @@ body {
  width: 958px;
  min-width: 922px;
  margin: 0 auto -20px;
+}
+
+#content {
 }
 
 #header {
