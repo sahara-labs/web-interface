@@ -49,6 +49,9 @@ class IndexController extends Sahara_Controller_Action_Acl
         $this->view->headTitle('Remote Labs: Login');
         $this->view->messages = $this->_flashMessenger->getMessages();
 
+        $inst = Zend_Registry::get('config')->institution;
+        $this->view->inst = $inst;
+
         $form = new Sahara_Auth_Form();
         $this->view->form = $form;
 
@@ -62,7 +65,7 @@ class IndexController extends Sahara_Controller_Action_Acl
             // TODO authentication
 
             /* Store the authentication information. */
-            $qName = Zend_Registry::get('config')->institution . ':' . $username;
+            $qName =  $inst . ':' . $username;
             $storage = $this->_auth->getStorage();
             $storage->clear();
             $storage->write($qName);
@@ -99,7 +102,7 @@ class IndexController extends Sahara_Controller_Action_Acl
     public function logoutAction()
     {
         $this->_auth->clearIdentity();
-        $this->_flashMessenger->addMessage('Successfully logged out.');
+        $this->_flashMessenger->addMessage('You have logged out.');
         $this->_redirectTo('index', 'index');
     }
 }

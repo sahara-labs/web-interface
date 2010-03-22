@@ -65,7 +65,7 @@ button.jqTransformButton_click span { background-position: right -66px ; }
  * ------------- */
 .jqTransformInputWrapper {
 	background: transparent url(/img/input/input_text_left.gif) no-repeat left top;
-	height: 31px;
+/*	height: 31px; */
 	padding: 0px;
 	float:left;
 }
@@ -86,7 +86,7 @@ button.jqTransformButton_click span { background-position: right -66px ; }
 	font-size:12px;
 	line-height: 18px;
 	vertical-align: middle;
-	height: 31px;
+	/* height: 31px; */
 	color:#404040;	
 	border: none;
 	padding: 8px 0px 0px 0px;

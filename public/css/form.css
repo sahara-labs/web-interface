@@ -5,23 +5,33 @@ td {
 }
 
 fieldset {
-	border-width: 20px 1px 2px;
-	border-color: #525252 #878787 #525252;
-	border-style: solid dashed;
+	border: 0px;
+}
+
+#fieldssetdiv {
+	border: 0px;
 	background-color: #EFEFEF;
 	margin-bottom: 5px;
+	position: relative;
+	display: block;
+	overflow: hidden;
+	border: 1px solid #525252;
 }
 
 legend {
-	padding-left:7px;
-	width: 100%;
-	color: #E2EDF4;
-	background-color: #525252;
-	font-weight: bold;
+	display: none;
+}
+
+#formdiv {
+	width: 310px;
 }
 
 #formid {
 	margin-top: 10px;
+}
+
+.alertdiv {
+	width: 310px;
 }
 
 .alertspan {
@@ -31,4 +41,10 @@ legend {
 
 .alertp {
 	padding: 6px 0 6px;
+}
+
+.alertlist {
+	margin-left: 35px;
+	list-style: square;
+	padding-bottom: 10px;
 }

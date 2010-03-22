@@ -38,8 +38,16 @@
 
 $this->headLink()->appendStylesheet($this->baseUrl('css/layout.css'));
 $this->headLink()->appendStylesheet($this->baseUrl('css/smoothness/jquery-ui.custom.css'));
+$this->headLink()->appendStylesheet($this->baseUrl('css/menueffect.css'));
 $this->headScript()->prependFile($this->baseUrl('js/jquery.js'));
 $this->headScript()->appendFile($this->baseUrl('js/jquery-ui.js'));
+$this->headScript()->appendFile($this->baseUrl('js/menueffect.js'));
+
+$this->headScript()->appendScript('
+	$(document).ready( function() {
+		menuSlider.init("menu","slide");
+	});
+')
 ?>
 
 <?php echo $this->doctype(); ?>
@@ -56,20 +64,11 @@ $this->headScript()->appendFile($this->baseUrl('js/jquery-ui.js'));
 		<div id="header">
 			<?php echo $this->render('_header.phtml'); ?>
 		</div>
-		<div id="navigation">
-			TODO top nav bar
+		<?php echo $this->render('_navbar.phtml')?>
+		<div id="content">
+			<?php echo $this->layout()->content; ?>
 		</div>
-		<div id="faux">
-			<div id="leftcolumn">
-			    TODO left nav col
-			</div>
-			<div id="rightcolumn">
-				<?php echo $this->layout()->content; ?>
-			</div>
-		</div>
-		<div id="footer">
-		    <?php echo $this->render('_footer.phtml'); ?>
-		</div>
+	    <?php echo $this->render('_footer.phtml'); ?>
 	</div>
 </body>
 </html>

@@ -94,6 +94,11 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
             $this->_redirectTo('index', 'index');
         }
 
+        /* Set up some information for the navigation menu. */
+        $this->view->userRole = $this->_acl->getUserRole();
+        $this->view->controller = $controller;
+        $this->view->action = $action;
+
         /* Check if the user has a pending request and should be in the queue or on a experiment page. */
         // TODO redirect to experiment or queue page
     }

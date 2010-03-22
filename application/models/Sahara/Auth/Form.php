@@ -71,8 +71,7 @@ class Sahara_Auth_Form extends Zend_Form
         $this->addDisplayGroup(array('username', 'password'), 'auth_form');
         $dg = $this->getDisplayGroup('auth_form');
         $dg->setLegend('Login:')
-           ->setDecorators(Sahara_Decorator_Table::$DISPLAYGROUP)
-           ->setAttrib('class', 'ui-corner-all');
+           ->setDecorators(Sahara_Decorator_Table::$DISPLAYGROUP);
 
         /* Submit button. */
         $submit = new Zend_Form_Element_Submit('login');
