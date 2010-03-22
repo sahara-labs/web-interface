@@ -53,7 +53,8 @@ class Sahara_Auth_Form extends Zend_Form
                  ->setRequired(true)
                  ->addValidator('NotEmpty')
                  ->setErrorMessages(array('You must enter a username.'))
-                 ->setDecorators(Sahara_Decorator_Table::$ELEMENT);
+                 ->setDecorators(Sahara_Decorator_Table::$ELEMENT)
+                 ->setAttrib('class', 'validate[required]');
         $this->addElement($username);
 
         /* Password field. */
@@ -62,14 +63,16 @@ class Sahara_Auth_Form extends Zend_Form
                  ->setRequired(true)
                  ->addValidator('NotEmpty')
                  ->setErrorMessages(array('You must enter a password.'))
-                 ->setDecorators(Sahara_Decorator_Table::$ELEMENT);
+                 ->setDecorators(Sahara_Decorator_Table::$ELEMENT)
+                 ->setAttrib('class', 'validate[required]');
        $this->addElement($password);
 
         /* From display group container. */
         $this->addDisplayGroup(array('username', 'password'), 'auth_form');
         $dg = $this->getDisplayGroup('auth_form');
         $dg->setLegend('Login:')
-           ->setDecorators(Sahara_Decorator_Table::$DISPLAYGROUP);
+           ->setDecorators(Sahara_Decorator_Table::$DISPLAYGROUP)
+           ->setAttrib('class', 'ui-corner-all');
 
         /* Submit button. */
         $submit = new Zend_Form_Element_Submit('login');

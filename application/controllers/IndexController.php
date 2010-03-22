@@ -46,7 +46,7 @@ class IndexController extends Sahara_Controller_Action_Acl
 	 */
     public function indexAction()
     {
-        $this->view->headTitle('Remote Laboratory Login');
+        $this->view->headTitle('Remote Labs: Login');
         $this->view->messages = $this->_flashMessenger->getMessages();
 
         $form = new Sahara_Auth_Form();
@@ -86,6 +86,9 @@ class IndexController extends Sahara_Controller_Action_Acl
                 case Sahara_Acl::ADMIN:
                     $this->_redirectTo('index', 'admin');
                     break;
+                default:
+                    $this->view->messages = array("Unknown user \"$qName\".");
+                    break;
             }
         }
     }
@@ -96,7 +99,7 @@ class IndexController extends Sahara_Controller_Action_Acl
     public function logoutAction()
     {
         $this->_auth->clearIdentity();
-        $this->_flashMessenger->addMessage('Logged out!');
+        $this->_flashMessenger->addMessage('Successfully logged out.');
         $this->_redirectTo('index', 'index');
     }
 }

@@ -8,13 +8,27 @@ fieldset {
 	border-width: 20px 1px 2px;
 	border-color: #525252 #878787 #525252;
 	border-style: solid dashed;
-	background-color: #D4D9DE;
+	background-color: #EFEFEF;
 	margin-bottom: 5px;
 }
 
 legend {
+	padding-left:7px;
 	width: 100%;
-	color: #E1E1E1;
+	color: #E2EDF4;
 	background-color: #525252;
 	font-weight: bold;
+}
+
+#formid {
+	margin-top: 10px;
+}
+
+.alertspan {
+	float: left;
+	margin: 2px 4px 0px;
+}
+
+.alertp {
+	padding: 6px 0 6px;
 }

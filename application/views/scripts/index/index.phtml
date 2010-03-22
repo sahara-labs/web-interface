@@ -37,33 +37,43 @@
  */
 $this->headLink()->appendStylesheet($this->baseUrl('css/form.css'));
 $this->headLink()->appendStylesheet($this->baseUrl('css/jqtransform.css'));
+$this->headLink()->appendStylesheet($this->baseUrl('css/validationEngine.jquery.css'));
 $this->headScript()->appendFile($this->baseUrl('js/jquery.jqtransform.js'));
+$this->headScript()->appendFile($this->baseUrl('js/jquery.validationEngine-en.js'));
+$this->headScript()->appendFile($this->baseUrl('js/jquery.validationEngine.js'));
+$this->headScript()->appendScript('
+
+');
 ?>
 
 <?php if (count($this->messages)):?>
-	<div id="mesgdialog">
-	<?php if (count($this->messages) > 1):?>
-		<ul>
-		<?php foreach ($this->messages as $m): ?>
-			<li><?=$m?></li>
-		<?php endforeach; ?>
-		</ul>
-	<?php else: ?>
-		<?=$this->messages[0]?>
-	<?php endif; ?>
+	<div class="ui-state-error ui-corner-all">
+		<p class="alertp">
+    		<span class="ui-icon ui-icon-alert alertspan"></span>
+    	<?php if (count($this->messages) > 1):?>
+    		<ul>
+    		<?php foreach ($this->messages as $m): ?>
+    			<li><?=$m?></li>
+    		<?php endforeach; ?>
+    		</ul>
+    	<?php else: ?>
+    		<?=$this->messages[0]?>
+    	<?php endif; ?>
+		</p>
 	</div>
 <?php endif; ?>
 
-<form class="jqTransform" method="POST">
+<form id="formid" method="POST">
 	<?=$this->form->getDisplayGroup('auth_form')->render()?>
-	<div align="right">
+	<div align="right" class="ui-corner-all">
 		<?=$this->form->getElement('login')->render()?>
 	</div>
 </form>
 
 <script type="text/javascript">
 $(function() {
-    $("form").jqTransform();
+    $("#formid").jqTransform();
+    $("#formid").validationEngine();
 });
 </script>
 

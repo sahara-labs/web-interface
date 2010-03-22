@@ -37,7 +37,9 @@
  */
 
 $this->headLink()->appendStylesheet($this->baseUrl('css/layout.css'));
-//$this->headScript()->appendFile($this->baseUrl('js/jquery.js'));
+$this->headLink()->appendStylesheet($this->baseUrl('css/smoothness/jquery-ui.custom.css'));
+$this->headScript()->prependFile($this->baseUrl('js/jquery.js'));
+$this->headScript()->appendFile($this->baseUrl('js/jquery-ui.js'));
 ?>
 
 <?php echo $this->doctype(); ?>
@@ -45,7 +47,6 @@ $this->headLink()->appendStylesheet($this->baseUrl('css/layout.css'));
 <head>
 	<?php echo $this->headTitle(); ?>
 	<?php echo $this->headLink(); ?>
-	<script type="text/javascript" src="js/jquery.js"></script>
 	<?php echo $this->headStyle(); ?>
 	<?php echo $this->headScript(); ?>
 	<?php echo $this->headMeta(); ?>

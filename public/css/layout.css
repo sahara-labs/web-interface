@@ -34,7 +34,7 @@ body {
  height: 60px;
  background: #FFFFFF;
  position: relative;
- border-bottom: 3px groove #000000;
+ border-bottom: 1px solid #000000;
 }
 
 #headerimg {
@@ -61,11 +61,11 @@ body {
 }
 
 #navigation {
- color: #333;
  padding: 5px;
- height: 20px;
- background: #ABBEBE;
+ height: 15px;
+ background: #EFEFEF;
  clear: both;
+ margin-bottom: 10px;
 }
 
 #leftcolumn { 
@@ -84,13 +84,6 @@ body {
  float:left;
 }
 
-#footer { 
- border-top: 1px solid #000000;
- color: #333;
- background: #FFFFFF;
- padding-top: 5px;
- font-size: 0.8em;
- bottom: 2px;
- width: 80%;
- min-width: 922px;
+#footer {
+	font-size: 0.8em;
 }
