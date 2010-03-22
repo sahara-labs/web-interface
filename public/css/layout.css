@@ -72,11 +72,11 @@ body {
 
 a.plaina, a.plaina:active, a.plaina:visited {
 	text-decoration:none; 
-	color:#000000; 
+	color: #606060; 
 }
 
 a.plaina:hover {
-	font-weight: bold;
+	color: #010101;
 }
 
 .apad {
@@ -105,4 +105,23 @@ a.plaina:hover {
 	border-style: solid;
 	border-color: #B5B5B5;
 	border-width: 1px 1px 0px;
+}
+
+.alertdiv {
+	width: 310px;
+}
+
+.alertspan {
+	float: left;
+	margin: 2px 4px 0px;
+}
+
+.alertp {
+	padding: 6px 0 6px;
+}
+
+.alertlist {
+	margin-left: 35px;
+	list-style: square;
+	padding-bottom: 10px;
 }

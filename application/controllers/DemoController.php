@@ -33,24 +33,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 17th March 2010
+ * @date 21st March 2010
  */
-$config = Zend_Registry::get('config');
-($headerName = $config->header->name) != null || $headerName = 'Sahara: Remote Laboratory';
 
-($headerImg = $config->header->logoGraphic) != null || $headerImg = 'images/sahara.png';
-$headerImg = $this->baseUrl($headerImg);
-
-?>
-
-<div id="headerimg">
-	<img src="<?=$headerImg?>" alt="Institution Logo" />
-</div>
-
-<div id="headername">
-	<h1><?=$headerName?></h1>
-</div>
-
-<div id="labshareimg">
-	<img src="<?=$this->baseUrl('images/labshare.png')?>" alt="LabShare" />
-</div>
+/**
+ * Controller to get demonstration use of a rig.
+ */
+class DemoController extends Sahara_Controller_Action_Acl
+{
+    public function indexAction()
+    {
+        $this->view->headTitle('Remote Labs - Demonstrations');
+    }
+}

@@ -55,6 +55,9 @@ class Sahara_Acl extends Zend_Acl
 
     /** @var assoc array Pages an unauthenticated user may access. */
     protected $_unAuthPages = array('index' => array('index', 'logout'),
+                                    'labinfo' => array('index'),
+                                    'info' => array('index', 'faq', 'contact'),
+                                    'demo' => array('index'),
                                     'error' => array('error'));
 
     /** @var assoc array Pages a demonstration user may access. */

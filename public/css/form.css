@@ -29,22 +29,3 @@ legend {
 #formid {
 	margin-top: 10px;
 }
-
-.alertdiv {
-	width: 310px;
-}
-
-.alertspan {
-	float: left;
-	margin: 2px 4px 0px;
-}
-
-.alertp {
-	padding: 6px 0 6px;
-}
-
-.alertlist {
-	margin-left: 35px;
-	list-style: square;
-	padding-bottom: 10px;
-}

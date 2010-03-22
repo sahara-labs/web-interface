@@ -33,24 +33,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 17th March 2010
+ * @date 21st March 2010
  */
-$config = Zend_Registry::get('config');
-($headerName = $config->header->name) != null || $headerName = 'Sahara: Remote Laboratory';
-
-($headerImg = $config->header->logoGraphic) != null || $headerImg = 'images/sahara.png';
-$headerImg = $this->baseUrl($headerImg);
-
 ?>
-
-<div id="headerimg">
-	<img src="<?=$headerImg?>" alt="Institution Logo" />
+<div align="center" style="width:100%">
+<img style="padding:20px;" src="<?=$this->baseUrl('images/alert.png')?>" alt="Alert"></img>
+<div class="ui-state-error ui-corner-all alertdiv"
+							style="width:450px;">
+	<p>
+		<span class="ui-icon ui-icon-alert alertspan"></span>
+		About information in development!
+	</p>
 </div>
-
-<div id="headername">
-	<h1><?=$headerName?></h1>
-</div>
-
-<div id="labshareimg">
-	<img src="<?=$this->baseUrl('images/labshare.png')?>" alt="LabShare" />
 </div>

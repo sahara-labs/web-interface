@@ -46,7 +46,7 @@ class IndexController extends Sahara_Controller_Action_Acl
 	 */
     public function indexAction()
     {
-        $this->view->headTitle('Remote Labs: Login');
+        $this->view->headTitle('Remote Labs - Login');
         $this->view->messages = $this->_flashMessenger->getMessages();
 
         $inst = Zend_Registry::get('config')->institution;
