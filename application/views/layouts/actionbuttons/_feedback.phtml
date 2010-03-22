@@ -33,45 +33,5 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 17th March 2010
+ * @date 20th March 2010
  */
-
-$this->headLink()->appendStylesheet($this->baseUrl('css/layout.css'));
-$this->headLink()->appendStylesheet($this->baseUrl('css/smoothness/jquery-ui.custom.css'));
-$this->headLink()->appendStylesheet($this->baseUrl('css/menueffect.css'));
-$this->headScript()->prependFile($this->baseUrl('js/jquery.js'));
-$this->headScript()->appendFile($this->baseUrl('js/jquery-ui.js'));
-$this->headScript()->appendFile($this->baseUrl('js/menueffect.js'));
-
-$this->headScript()->appendScript('
-	$(document).ready( function() {
-		menuSlider.init("menu","slide");
-	});
-')
-?>
-
-<?php echo $this->doctype(); ?>
-<html>
-<head>
-	<?php echo $this->headTitle(); ?>
-	<?php echo $this->headLink(); ?>
-	<?php echo $this->headStyle(); ?>
-	<?php echo $this->headScript(); ?>
-	<?php echo $this->headMeta(); ?>
-</head>
-<body>
-	<div id="wrapper">
-		<div id="innerwrapper">
-    		<div id="header">
-    			<?php echo $this->render('_header.phtml'); ?>
-    		</div>
-    		<?php echo $this->render('_navbar.phtml')?>
-    		<?php echo $this->render('_actionbar.phtml')?>
-    		<div id="content">
-    			<?php echo $this->layout()->content; ?>
-    		</div>
-    	</div>
-		<?php echo $this->render('_footer.phtml'); ?>
-	</div>
-</body>
-</html>

@@ -33,7 +33,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 17th March 2010
+ * @date 20th March 2010
  */
 switch ($this->_userRole)
 {
@@ -41,7 +41,21 @@ switch ($this->_userRole)
         $actionMenu = array();
         break;
     default:
-        $actionMenu = array();
+        $actionMenu = array('feedback' => array('title' => 'Send Feedback', 'script' => '_feedback.phtml', 'icon' => $this->baseUrl('images/feedback.png')));
         break;
 }
 ?>
+
+<?php if (count($actionMenu)):?>
+<div id="actionbar">
+	<ul id="actionbarlist">
+	<?php foreach ($actionMenu as $id => $action): ?>
+		<li>
+			<a id="<?=$id?>" class="actiondialogbutton plaina ui-corner-all" href="#">
+					<img src="<?=$action['icon']?>" alt="Feedback" />
+			        <?=$action['title']?></a>
+		</li>
+	<?php endforeach; ?>
+	</ul>
+</div>
+<?php endif?>
