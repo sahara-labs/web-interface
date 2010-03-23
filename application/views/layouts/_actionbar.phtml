@@ -35,13 +35,34 @@
  * @author Michael Diponio (mdiponio)
  * @date 20th March 2010
  */
-switch ($this->_userRole)
+
+switch ($this->userRole)
 {
     case Sahara_Acl::USER:
-        $actionMenu = array();
+        $actionMenu = array(
+            'logout' => array('title' => 'Logout', 'script' => '_logout.phtml',
+                    'icon' => $this->baseUrl('images/logout.png'), 'alt' => 'logout',
+                    'buttons' => array(
+                    	'Yes' => 'location.href="' . $this->url(array('controller' => 'index', 'action' => 'logout')) . '";',
+                        'No'  => '$(this).dialog("close");'
+                    )),
+        	'feedback' => array('title' => 'Send Feedback', 'script' => '_feedback.phtml',
+                    'icon' => $this->baseUrl('images/feedback.png'), 'alt' => 'feedback',
+                    'buttons' => array(
+                        'Send' => '$("#feedback_form").submit();',
+                        'Cancel' => '$(this).dialog("close");'
+                    ))
+        );
         break;
     default:
-        $actionMenu = array('feedback' => array('title' => 'Send Feedback', 'script' => '_feedback.phtml', 'icon' => $this->baseUrl('images/feedback.png')));
+        $actionMenu = array(
+        	'feedback' => array('title' => 'Send Feedback', 'script' => '_feedback.phtml',
+                    'icon' => $this->baseUrl('images/feedback.png'), 'alt' => 'feedback',
+                    'buttons' => array(
+                        'Send' => '$("#feedback_form").submit();',
+                        'Cancel' => '$(this).dialog("close");'
+                    ))
+        );
         break;
 }
 ?>
@@ -52,10 +73,34 @@ switch ($this->_userRole)
 	<?php foreach ($actionMenu as $id => $action): ?>
 		<li>
 			<a id="<?=$id?>" class="actiondialogbutton plaina ui-corner-all" href="#">
-					<img src="<?=$action['icon']?>" alt="Feedback" />
+					<img src="<?=$action['icon']?>" alt="<?=$action['alt']?>" /><br />
 			        <?=$action['title']?></a>
+			<? echo $this->render('actionbuttons/' . $action['script']); ?>
 		</li>
 	<?php endforeach; ?>
 	</ul>
 </div>
+
+<script type="text/javascript">
+$(document).ready(function() {
+<?php foreach ($actionMenu as $id => $action): ?>
+	$('#<?=$id?>dialog').dialog ({
+		autoOpen: false,
+		width:600,
+		buttons: {
+		<?php foreach ($action['buttons'] as $name => $funcScript): ?>
+			"<?=$name?>": function() { <?=$funcScript?> },
+		<?php endforeach; ?>
+		}
+	});
+
+	$('#<?=$id?>').click(function(){
+		$('#<?=$id?>dialog').dialog('open');
+		return false;
+	});
+<?php endforeach; ?>
+});
+</script>
 <?php endif?>
+
+

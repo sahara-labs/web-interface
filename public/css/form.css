@@ -1,13 +1,5 @@
 @CHARSET "UTF-8";
 
-td {
-	padding:5px;
-}
-
-fieldset {
-	border: 0px;
-}
-
 #fieldssetdiv {
 	border: 0px;
 	background-color: #EFEFEF;
@@ -18,9 +10,7 @@ fieldset {
 	border: 1px solid #525252;
 }
 
-legend {
-	display: none;
-}
+
 
 #formdiv {
 	width: 310px;

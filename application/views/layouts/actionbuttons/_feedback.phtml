@@ -35,3 +35,33 @@
  * @author Michael Diponio (mdiponio)
  * @date 20th March 2010
  */
+$form = new Sahara_Feedback_Form();
+?>
+
+<div id="feedbackdialog" title="Send Feedback:">
+	Feedback will be sent to the website maintainers:
+	<form id="feedback_form">
+	    <?=$form->getDisplayGroup('feedback_form')->render()?>
+	</form>
+</div>
+
+<script type="text/javascript">
+function feedbackSuccess()
+{
+	$("div[aria-labelledby=ui-dialog-title-feedbackdialog] .ui-dialog-buttonpane").css("display", "none");
+}
+
+$(document).ready(function () {
+	 $("#feedback_form").jqTransform();
+	 $("#feedback_form").validationEngine({
+    	 ajaxSubmit: true,
+    	 ajaxSubmitFile: "<?= $this->url(array('controller' => 'index', 'action' => 'feedback'))?>",
+    	 ajaxSubmitMessage: "Thank you for your feedback.",
+       	 success: function() { feedbackSuccess(); },
+       	 failure: function() { }
+	 });
+
+	 $("#feedback_form div.jqTransformInputWrapper").css("width", "100%");
+	 $("#feedback_form input.jqTransformInput").css("width", "100%");
+});
+</script>

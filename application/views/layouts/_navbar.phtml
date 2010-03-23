@@ -39,7 +39,9 @@
 switch ($this->userRole)
 {
     case Sahara_Acl::USER:
-        $menu = array();
+        $menu = array(
+            'Queuable Resources' => array('controller' => 'queue', 'action' => 'index')
+        );
         break;
     case Sahara_Acl::ACADEMIC:
         $menu = array();

@@ -10,6 +10,19 @@ body {
 	min-height: 550px;
 }
 
+td {
+	padding: 5px;
+	vertical-align: top;
+}
+
+fieldset {
+	border: 0px;
+}
+
+legend {
+	display: none;
+}
+
 #wrapper { 
 	width: 958px;
 	min-width: 922px;
@@ -158,3 +171,5 @@ a.plaina:hover {
 	list-style: square;
 	padding-bottom: 10px;
 }
+
+

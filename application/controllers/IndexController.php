@@ -105,5 +105,25 @@ class IndexController extends Sahara_Controller_Action_Acl
         $this->_flashMessenger->addMessage('You have logged out.');
         $this->_redirectTo('index', 'index');
     }
+
+    /**
+     * Receives a feedback request.
+     */
+    public function feedbackAction()
+    {
+        /* Disable view renderer and layout. */
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();
+
+        $params = $this->_request->getParams();
+        $this->_logger->info('Received feedback email from ' . $params['name'] . ' (' . $params['email'] . '). ' .
+                'Feedback type: ' . $params['type'] . '. Purpose of user: ' . $params['purpose'] . '. Feedback: ' .
+                $params['feedback'] . '.');
+
+        // TODO email feedback report
+
+        /* Tells validation engine that submission succeeded. */
+        echo 'true';
+    }
 }
 
