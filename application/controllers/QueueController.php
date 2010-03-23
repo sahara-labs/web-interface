@@ -51,5 +51,9 @@ class QueueController extends Sahara_Controller_Action_Acl
     public function indexAction()
     {
         $this->view->headTitle('Remote Labs: Select a resource');
+
+        $permissions = Sahara_Soap::getSchedServerPermissionsClient();
+        $resp = $permissions->getPermissionsForUser(array('userID' => '98'));
+        var_dump($resp);
     }
 }
