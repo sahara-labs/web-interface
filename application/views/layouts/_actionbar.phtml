@@ -88,8 +88,9 @@ $(document).ready(function() {
 		autoOpen: false,
 		width:600,
 		buttons: {
-		<?php foreach ($action['buttons'] as $name => $funcScript): ?>
-			"<?=$name?>": function() { <?=$funcScript?> },
+		<?php $lastScript = end($action['buttons']);
+		    foreach ($action['buttons'] as $name => $funcScript): ?>
+			"<?=$name?>": function() { <?=$funcScript?> }<?php if ($lastScript != $funcScript) echo ','?>
 		<?php endforeach; ?>
 		}
 	});
