@@ -45,6 +45,13 @@ $(document).ready(function() {
 
 $keys = array_keys($this->userPermissions);
 sort($keys, SORT_STRING);
+
+$tabHref = array();
+$i = 1;
+foreach ($keys as $key)
+{
+    $tabHref[$key] = '#userClass' . $i++;
+}
 ?>
 
 <div class="contentheader">
@@ -56,10 +63,27 @@ sort($keys, SORT_STRING);
 		<ul>
 	    <?php foreach ($keys as $class): ?>
 			<li>
-				<a href="#<?=$this->stringTransform($class, ' ', '')?>"><?=$class?></a>
+				<a href="<?=$tabHref[$class]?>"><?=$this->stringTransform($class, '_', ' ')?></a>
 			</li>
 	    <?php endforeach; ?>
 	    </ul>
+	<?php foreach ($this->userPermissions as $class => $perms):?>
+		<div id="<?=$tabHref[$class]?>">
+		<?php for ($i = 0; $i < count($perms); $i++):
+		          $perm = $perms[$i]; ?>
+			<?php if ($i % 4 == 0): ?>
+				<ul class="permbuttonrow">
+			<?php endif; ?>
+					<li>
+						<a class="permbutton"><?=$this->stringTransform($class, '_', ' ')?></a>
+					</li>
+			<?php if ($i % 4 == 0): ?>
+				</ul>
+			<?php endif; ?>
+			<?php var_dump($perm)?>
+		<?php endfor; ?>
+		</div>
+	<?php endforeach; ?>
 	</div>
 <?php else: ?>
 	<div class="ui-state-error ui-corner-all alertdiv centercontent" style="width:350px">

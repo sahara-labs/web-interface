@@ -87,6 +87,8 @@ $(document).ready(function() {
 	$('#<?=$id?>dialog').dialog ({
 		autoOpen: false,
 		width:600,
+		modal: true,
+		resizable: false,
 		buttons: {
 		<?php $lastScript = end($action['buttons']);
 		    foreach ($action['buttons'] as $name => $funcScript): ?>

@@ -66,7 +66,19 @@ class QueueController extends Sahara_Controller_Action_Acl
         $userClasses = array();
         foreach ($perms->permission as $perm)
         {
-            $p = $perm->permission;
+            /* This is a hack because PHPSoap / Zend SOAP seems to some quirks
+             * parsing WSDLs. It generates a different object structure
+             * depending if there is one permission, or multiple permissions. */
+            if ($perm->permission == null)
+            {
+                $p = $perm;
+                $perm = $perms;
+                if (!$p) continue;
+            }
+            else
+            {
+                $p = $perm->permission;
+            }
 
             /* Add the user class if it hasn't already been loaded. */
             if (!array_key_exists($p->userClass->userClassName, $userClasses))
