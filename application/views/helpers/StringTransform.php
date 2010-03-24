@@ -33,53 +33,26 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 20th March 2010
+ * @date 24th March 2010
  */
-$this->headLink()->appendStylesheet($this->baseUrl('css/form.css'));
-$this->headScript()->appendScript('
-	$(document).ready(function() {
-		 $("#formid").jqTransform();
-    	 $("#formid").validationEngine();
-	});
-');
-?>
 
-<div class="contentheader">
-	<h2>Welcome to Remote Labs</h2>
-</div>
-
-<div style="width:310px; margin: 0 auto">
-
-<?php if (count($this->messages)):?>
-	<div class="ui-state-error ui-corner-all alertdiv">
-	<?php if (count($this->messages) == 1):?>
-		<p class="alertp">
-    		<span class="ui-icon ui-icon-alert alertspan"></span>
-    		<?=$this->messages[0]?>
-    	</p>
-	<?php else: ?>
-		<p class="alertp">
-			<span class="ui-icon ui-icon-alert alertspan"></span>
-			<strong>Alert:</strong>
-		</p>
-		<ul class="alertlist" >
-    	<?php foreach ($this->messages as $m): ?>
-    		<li><?=$m?></li>
-    	<?php endforeach; ?>
-    	</ul>
-   	<?php endif; ?>
-	</div>
-<?php endif; ?>
-
-<div id="formdiv">
-	<form id="formid" method="POST">
-		<div id="fieldssetdiv" class="ui-corner-all">
-	        <?=$this->form->getDisplayGroup('auth_form')->render()?>
-	    </div>
-		<div align="right" class="ui-corner-all">
-			<?=$this->form->getElement('login')->render()?>
-		</div>
-	</form>
-</div>
-
-</div>
+/**
+ * Transforms a string by replacing a string sequence with a different string
+ * sequence.
+ */
+class Zend_View_Helper_StringTransform
+{
+    /**
+     * Transforms a string by replacing a specific sequence with a different
+     * sequence.
+     *
+     * @param String $str string to transform
+     * @param String $find sequence to find
+     * @param String $replace sequence to replace
+     * @return String transform string
+     */
+    public function stringTransform($str, $find, $replace)
+    {
+        return implode($replace, explode($find, $str));
+    }
+}

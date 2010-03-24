@@ -96,6 +96,7 @@ class Bootstrap extends Zend_Application_Bootstrap_Bootstrap
         /* Create the view. */
         $view = new Zend_View();
         $view->doctype('XHTML1_STRICT');
+        $view->setHelperPath($this->_rootDir . '/views/helpers');
 
         /* Add it to the view renderer. */
         $viewRenderer = Zend_Controller_Action_HelperBroker::getStaticHelper('ViewRenderer');

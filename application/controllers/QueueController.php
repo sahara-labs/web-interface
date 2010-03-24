@@ -52,8 +52,40 @@ class QueueController extends Sahara_Controller_Action_Acl
     {
         $this->view->headTitle('Remote Labs: Select a resource');
 
-        $permissions = Sahara_Soap::getSchedServerPermissionsClient();
-        $resp = $permissions->getPermissionsForUser(array('userID' => '98'));
-        var_dump($resp);
+        /* Load the permissions of the user. */
+        $client = Sahara_Soap::getSchedServerPermissionsClient();
+        $perms = $client->getPermissionsForUser(array('userQName' => $this->_auth->getIdentity()));
+
+        if (!isset($perms->permission))
+        {
+            $this->view->noPermissions = true;
+            return;
+        }
+
+        /* Translate the permissions into a form to display based on user class. */
+        $userClasses = array();
+        foreach ($perms->permission as $perm)
+        {
+            $p = $perm->permission;
+
+            /* Add the user class if it hasn't already been loaded. */
+            if (!array_key_exists($p->userClass->userClassName, $userClasses))
+            {
+                $userClasses[$p->userClass->userClassName] = array();
+            }
+
+            /* Load up resource information. */
+            $resource = array(
+                'resouceClass' => $p->resourceClass,      // The resource class so either 'RIG', 'TYPE' or 'CAPS'
+                'resource' => $p->resource->resourceName, // The resource name
+                'locked' => $perm->isLocked,              // Whether the permission is locked
+                'active' => Sahara_DateTimeUtil::isBeforeNow($p->start) && // Whether the permission is active
+                            Sahara_DateTimeUtil::isAfterNow($p->expiry)
+            );
+
+            array_push($userClasses[$p->userClass->userClassName], $resource);
+        }
+
+        $this->view->userPermissions = $userClasses;
     }
 }

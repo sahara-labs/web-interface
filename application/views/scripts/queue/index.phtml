@@ -35,6 +35,37 @@
  * @author Michael Diponio (mdiponio)
  * @date 21st February 2010
  */
+
+$this->headLink()->appendStylesheet($this->baseUrl('css/queue.css'));
+$this->headScript()->appendScript('
+$(document).ready(function() {
+	$("#userclasstabs").tabs();
+});
+');
+
+$keys = array_keys($this->userPermissions);
+sort($keys, SORT_STRING);
 ?>
 
-TODO queue page
+<div class="contentheader">
+	<h2>Permission List</h2>
+</div>
+
+<?php if (!$this->noPermissions): ?>
+	<div id="userclasstabs">
+		<ul>
+	    <?php foreach ($keys as $class): ?>
+			<li>
+				<a href="#<?=$this->stringTransform($class, ' ', '')?>"><?=$class?></a>
+			</li>
+	    <?php endforeach; ?>
+	    </ul>
+	</div>
+<?php else: ?>
+	<div class="ui-state-error ui-corner-all alertdiv centercontent" style="width:350px">
+		<p class="alertp">
+    		<span class="ui-icon ui-icon-alert alertspan"></span>
+    		Sorry, you do not have permission to use any rigs.
+    	</p>
+    </div>
+<?php endif; ?>
