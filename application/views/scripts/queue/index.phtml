@@ -80,54 +80,110 @@ foreach ($this->userPermissions as $permissions)
 </div>
 
 <?php if (!$this->noPermissions): ?>
-	<div id="userclasstabs">
-		<ul>
-	    <?php foreach ($keys as $class): ?>
-			<li>
-				<a href="#<?=$tabHref[$class]?>"><?=$this->stringTransform($class, '_', ' ')?></a>
-			</li>
-	    <?php endforeach; ?>
-	    </ul>
-	<?php foreach ($tabHref as $class => $id):?>
-		<div id="<?=$id?>" style="height:<?=$tabHeight?>px">
-		<!-- Permission list for class <?=$class?> -->
-		<?php foreach ($this->userPermissions[$class] as $type => $typePerm):
-		          if (count($typePerm)): ?>
-			<div class="permissionbar">
-				<h3><?=$type?></h3>
-				<ul class="permissionlistbar">
-					<?php foreach ($typePerm as $perm): ?>
-					<li>
-						<a id="<?=$perm['id']?>" class="permissionbutton plaina ui-corner-all" href="#">
-						<?php if (!$perm['active']): ?>
-							<img class="permissionicon" src="<?=$this->baseUrl('images/permission_expired.png')?>" alt="Expired" />
-						<?php elseif ($perm['locked']):?>
-							<img class="permissionicon" src="<?=$this->baseUrl('images/permission_locked.png')?>" alt="Locked" />
-						<?php else: ?>
-							<img class="permissionicon" src="<?=$this->baseUrl('images/permission_launch.png')?>" alt="Allowed" />
-						<?php endif;?>
-						    <?=$this->stringTransform($perm['resource'], '_', ' ')?>
-						</a>
-					</li>
-					<?php endforeach;?>
-				</ul>
-			</div>
-		<?php    endif;
-		     endforeach; ?>
-		</div>
-	<?php endforeach; ?>
-	</div>
 
-	<!-- Legend for icon meaning. -->
-	<div id="iconlegend">
-		<h3>Legend:</h3>
-		<p><img src="<?=$this->baseUrl('images/permission_launch.png')?>" alt="Allowed" />
-		Active: You may queue for the resource.</p>
-		<p><img src="<?=$this->baseUrl('images/permission_expired.png')?>" alt="Allowed" />
-		Not active: The permission is not active at the current time.</p>
-		<p><img src="<?=$this->baseUrl('images/permission_locked.png')?>" alt="Allowed" />
-		Locked: The resource is active but locked. You must supply a pass key before you can queue.</p>
+<!-- Tab bar. -->
+<div id="userclasstabs">
+	<ul>
+    <?php foreach ($keys as $class): ?>
+		<li>
+			<a href="#<?=$tabHref[$class]?>"><?=$this->stringTransform($class, '_', ' ')?></a>
+		</li>
+    <?php endforeach; ?>
+    </ul>
+
+<!-- Tab content. -->
+<?php foreach ($tabHref as $class => $id):?>
+<div id="<?=$id?>" style="height:<?=$tabHeight?>px">
+
+<!-- Permission list for class <?=$class?> -->
+<?php foreach ($this->userPermissions[$class] as $type => $typePerm):
+      if (count($typePerm)): ?>
+	<div class="permissionbar">
+		<h3><?=$type?></h3>
+		<ul class="permissionlistbar">
+			<?php foreach ($typePerm as $perm): ?>
+			<li>
+				<a id="<?=$perm['id']?>_link" class="permissionbutton plaina ui-corner-all" href="#">
+				<?php if (!$perm['active']): ?>
+					<img class="permissionicon" src="<?=$this->baseUrl('images/permission_expired.png')?>" alt="Expired" />
+				<?php elseif ($perm['locked']):?>
+					<img class="permissionicon" src="<?=$this->baseUrl('images/permission_locked.png')?>" alt="Locked" />
+				<?php else: ?>
+					<img class="permissionicon" src="<?=$this->baseUrl('images/permission_launch.png')?>" alt="Allowed" />
+				<?php endif;?>
+				    <?=$this->stringTransform($perm['resource'], '_', ' ')?>
+				</a>
+			</li>
+			<?php endforeach;?>
+		</ul>
 	</div>
+<?php endif;
+      endforeach; ?>
+
+<!-- End tab content. -->
+</div>
+<?php endforeach; ?>
+
+<!-- End tab bar. -->
+</div>
+
+<!-- Dialog content for the permission dialogs. -->
+<?php foreach ($this->userPermissions as $class => $classPerms): ?>
+	<?php foreach ($classPerms as $type => $typePerms): ?>
+		<?php foreach ($typePerms as $perm):?>
+<div id="<?=$perm['id']?>" class="permissiondialog" title="<?=$perm['resource']?>">
+<?php if (!$perm['active']): ?>
+	<p>Uh, oh! The permission is not valid.</p>
+<?php elseif ($perm['locked']):?>
+<?php else: ?>
+	<div class="permissiondialogloading">
+    	<img src="<?=$this->baseUrl('images/ajax-loading.gif')?>" alt="Loading" /><br />
+    	<p>Loading...</p>
+    </div>
+<?php endif; ?>
+</div>
+		<?php endforeach; ?>
+	<?php endforeach; ?>
+<?php endforeach; ?>
+
+<!-- Script for the permission dialogs. -->
+<script type="text/javascript">
+$(document).ready(function() {
+<?php foreach ($this->userPermissions as $class => $classPerms): ?>
+	<?php foreach ($classPerms as $type => $typePerms): ?>
+		<?php foreach ($typePerms as $perm):?>
+	/* Dialogises dialog for id <?=$perm['id']?>. */
+	$("#<?=$perm['id']?>").dialog({
+		autoOpen: false,
+		modal: true,
+		resizable: false,
+		width: 600,
+		open: function (event, ui) {
+
+		}
+	});
+
+	$('#<?=$perm['id']?>_link').click(function(){
+		$('#<?=$perm['id']?>').dialog('open');
+		return false;
+	});
+		<?php endforeach; ?>
+	<?php endforeach; ?>
+<?php endforeach; ?>
+});
+</script>
+
+<!-- Legend for icon information. -->
+<div id="iconlegend">
+	<h3>Legend:</h3>
+	<p><img src="<?=$this->baseUrl('images/permission_launch.png')?>" alt="Allowed" />
+	Active: You may queue for the resource.</p>
+	<p><img src="<?=$this->baseUrl('images/permission_expired.png')?>" alt="Expired" />
+	Not active: The permission is not active at the current time.</p>
+	<p><img src="<?=$this->baseUrl('images/permission_locked.png')?>" alt="Locked" />
+	Locked: The resource is active but locked. You must supply a pass key before you can queue.</p>
+</div>
+
 <?php else: ?>
 	<div class="ui-state-error ui-corner-all alertdiv centercontent" style="width:350px">
 		<p class="alertp">

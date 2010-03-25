@@ -84,6 +84,18 @@
 	width: 40px;
 }
 
+.permissiondialog {
+}
+
+.permissiondialogloading {
+	text-align: center;
+	font-size: 1.4em;
+}
+
+.permissiondialogloading img {
+	padding: 15px;
+}
+
 #iconlegend {
 	font-size: 0.75em;
 	padding: 0px;
