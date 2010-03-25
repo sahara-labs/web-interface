@@ -64,6 +64,7 @@ class QueueController extends Sahara_Controller_Action_Acl
 
         /* Translate the permissions into a form to display based on user class. */
         $userClasses = array();
+        $i = 1;
         foreach ($perms->permission as $perm)
         {
             /* This is a hack because PHPSoap / Zend SOAP seems to some quirks
@@ -88,16 +89,43 @@ class QueueController extends Sahara_Controller_Action_Acl
 
             /* Load up resource information. */
             $resource = array(
-                'resouceClass' => $p->resourceClass,      // The resource class so either 'RIG', 'TYPE' or 'CAPS'
+                'resourceClass' => $p->resourceClass,     // The resource class so either 'RIG', 'TYPE' or 'CAPS'
                 'resource' => $p->resource->resourceName, // The resource name
                 'locked' => $perm->isLocked,              // Whether the permission is locked
                 'active' => Sahara_DateTimeUtil::isBeforeNow($p->start) && // Whether the permission is active
-                            Sahara_DateTimeUtil::isAfterNow($p->expiry)
+                            Sahara_DateTimeUtil::isAfterNow($p->expiry),
+                'id' => 'permission' . $i++               // An ID to hook to a dialog
             );
 
             array_push($userClasses[$p->userClass->userClassName], $resource);
         }
 
+        /* Sort each of the user class permissions by resource name. */
+        foreach ($userClasses as $class => $permList)
+        {
+            $typePerms = array();
+            $rigPerms = array();
+            $capsPerms = array();
+            foreach ($permList as $perm)
+            {
+                if      ($perm['resourceClass'] == 'TYPE') $typePerms[$perm['resource']] = $perm;
+                else if ($perm['resourceClass'] == 'RIG') $rigPerms[$perm['resource']] = $perm;
+                else if ($perm['resourceClass'] == 'CAPABILITY') $capsPerms[$perm['resource']] = $perm;
+            }
+
+            ksort($typePerms);
+            ksort($rigPerms);
+            ksort($capsPerms);
+            $userClasses[$class] = array(
+                'Rig Types:' => array_values($typePerms),
+                'Specific Rigs:'  => array_values($rigPerms),
+                'Other:' => array_values($capsPerms)
+            );
+        }
+
         $this->view->userPermissions = $userClasses;
     }
 }
+
+
+

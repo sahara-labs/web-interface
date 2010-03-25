@@ -46,7 +46,7 @@
 
 body {
 	height: 100%;
-	min-height: 550px;
+	min-height: 100;
 }
 
 td {
@@ -68,10 +68,9 @@ legend {
 #wrapper { 
 	width: 958px;
 	min-width: 922px;
-	margin: 0 auto -20px;
-}
-
-#innerwrapper {
+	margin: 0 auto;
+	height: 100%;
+ 	min-height: 100%;
  	position: relative;
 }
 
@@ -191,6 +190,7 @@ a.plaina:hover {
  ** Page Content                                                             **
  *****************************************************************************/
 #content {
+	padding-bottom: 40px;
 }
 
 .contentheader {

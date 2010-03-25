@@ -49,9 +49,38 @@ $this->headScript()->appendFile($this->baseUrl('js/jquery-ui.js'));
 $this->headScript()->appendFile($this->baseUrl('js/menueffect.js'));
 
 $this->headScript()->appendScript('
-	$(document).ready( function() {
-		menuSlider.init("menu","slide");
+$(document).ready( function() {
+
+	/* Hack to keep the damn footer down the bottom. */
+	var resizeTimer = null;
+	$(window).bind("resize", function() {
+		if (resizeTimer) clearTimeout(resizeTimer);
+		resizeTimer = setTimeout(resizeFooter, 50);
 	});
+	resizeFooter();
+
+	/* Initialise slide. */
+	if (!/msie|MSIE 6/.test(navigator.userAgent))
+	{
+		menuSlider.init("menu","slide");
+	}
+});
+
+function resizeFooter()
+{
+	$("#wrapper").css("min-height", "0");
+
+	if (/msie|MSIE 8/.test(navigator.userAgent))
+	{
+		/* For some reason IE 8 in "standards mode" finds an extra four pixels
+		 * height that no other browser has. */
+		$("#wrapper").css("min-height", $(document).height() - 4);
+	}
+	else
+	{
+		$("#wrapper").css("min-height", $(document).height());
+	}
+}
 ')
 ?>
 
@@ -66,15 +95,13 @@ $this->headScript()->appendScript('
 </head>
 <body>
 	<div id="wrapper">
-		<div id="innerwrapper">
-    		<div id="header">
-    			<?php echo $this->render('_header.phtml'); ?>
-    		</div>
-    		<?php echo $this->render('_navbar.phtml')?>
-    		<?php echo $this->render('_actionbar.phtml')?>
-    		<div id="content">
-    			<?php echo $this->layout()->content; ?>
-    		</div>
+    	<div id="header">
+    		<?php echo $this->render('_header.phtml'); ?>
+    	</div>
+    	<?php echo $this->render('_navbar.phtml')?>
+    	<?php echo $this->render('_actionbar.phtml')?>
+    	<div id="content">
+    		<?php echo $this->layout()->content; ?>
     	</div>
 		<?php echo $this->render('_footer.phtml'); ?>
 	</div>

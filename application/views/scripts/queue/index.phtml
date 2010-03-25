@@ -40,17 +40,38 @@ $this->headLink()->appendStylesheet($this->baseUrl('css/queue.css'));
 $this->headScript()->appendScript('
 $(document).ready(function() {
 	$("#userclasstabs").tabs();
+
+	if (/msie|MSIE 6/.test(navigator.userAgent) || /msie|MSIE 7/.test(navigator.userAgent))
+	{
+		$(".permissionbar h3").css("margin", "5");
+		$(".permissionbutton").css("margin-top", "0");
+		$(".permissionbutton").css("margin-bottom", "0");
+	}
 });
 ');
 
+/* Sort the user classes by name. */
 $keys = array_keys($this->userPermissions);
 sort($keys, SORT_STRING);
 
+/* Generate the tab div ids. */
 $tabHref = array();
 $i = 1;
 foreach ($keys as $key)
 {
-    $tabHref[$key] = '#userClass' . $i++;
+    $tabHref[$key] = 'userClass' . $i++;
+}
+
+/* Work out the height of the tab div. */
+$tabHeight = 0;
+foreach ($this->userPermissions as $permissions)
+{
+    $height = 0;
+    foreach ($permissions as $type => $perms)
+    {
+        $height += ceil(count($perms) / 4) * 100 + ceil((count($perms) / 4)) * 50;
+    }
+    if ($height > $tabHeight) $tabHeight = $height;
 }
 ?>
 
@@ -63,27 +84,49 @@ foreach ($keys as $key)
 		<ul>
 	    <?php foreach ($keys as $class): ?>
 			<li>
-				<a href="<?=$tabHref[$class]?>"><?=$this->stringTransform($class, '_', ' ')?></a>
+				<a href="#<?=$tabHref[$class]?>"><?=$this->stringTransform($class, '_', ' ')?></a>
 			</li>
 	    <?php endforeach; ?>
 	    </ul>
-	<?php foreach ($this->userPermissions as $class => $perms):?>
-		<div id="<?=$tabHref[$class]?>">
-		<?php for ($i = 0; $i < count($perms); $i++):
-		          $perm = $perms[$i]; ?>
-			<?php if ($i % 4 == 0): ?>
-				<ul class="permbuttonrow">
-			<?php endif; ?>
+	<?php foreach ($tabHref as $class => $id):?>
+		<div id="<?=$id?>" style="height:<?=$tabHeight?>px">
+		<!-- Permission list for class <?=$class?> -->
+		<?php foreach ($this->userPermissions[$class] as $type => $typePerm):
+		          if (count($typePerm)): ?>
+			<div class="permissionbar">
+				<h3><?=$type?></h3>
+				<ul class="permissionlistbar">
+					<?php foreach ($typePerm as $perm): ?>
 					<li>
-						<a class="permbutton"><?=$this->stringTransform($class, '_', ' ')?></a>
+						<a id="<?=$perm['id']?>" class="permissionbutton plaina ui-corner-all" href="#">
+						<?php if (!$perm['active']): ?>
+							<img class="permissionicon" src="<?=$this->baseUrl('images/permission_expired.png')?>" alt="Expired" />
+						<?php elseif ($perm['locked']):?>
+							<img class="permissionicon" src="<?=$this->baseUrl('images/permission_locked.png')?>" alt="Locked" />
+						<?php else: ?>
+							<img class="permissionicon" src="<?=$this->baseUrl('images/permission_launch.png')?>" alt="Allowed" />
+						<?php endif;?>
+						    <?=$this->stringTransform($perm['resource'], '_', ' ')?>
+						</a>
 					</li>
-			<?php if ($i % 4 == 0): ?>
+					<?php endforeach;?>
 				</ul>
-			<?php endif; ?>
-			<?php var_dump($perm)?>
-		<?php endfor; ?>
+			</div>
+		<?php    endif;
+		     endforeach; ?>
 		</div>
 	<?php endforeach; ?>
+	</div>
+
+	<!-- Legend for icon meaning. -->
+	<div id="iconlegend">
+		<h3>Legend:</h3>
+		<p><img src="<?=$this->baseUrl('images/permission_launch.png')?>" alt="Allowed" />
+		Active: You may queue for the resource.</p>
+		<p><img src="<?=$this->baseUrl('images/permission_expired.png')?>" alt="Allowed" />
+		Not active: The permission is not active at the current time.</p>
+		<p><img src="<?=$this->baseUrl('images/permission_locked.png')?>" alt="Allowed" />
+		Locked: The resource is active but locked. You must supply a pass key before you can queue.</p>
 	</div>
 <?php else: ?>
 	<div class="ui-state-error ui-corner-all alertdiv centercontent" style="width:350px">
