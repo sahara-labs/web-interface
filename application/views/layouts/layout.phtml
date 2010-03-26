@@ -38,7 +38,6 @@
 
 $this->headLink()->appendStylesheet($this->baseUrl('css/layout.css'));
 $this->headLink()->appendStylesheet($this->baseUrl('css/smoothness/jquery-ui.custom.css'));
-$this->headLink()->appendStylesheet($this->baseUrl('css/menueffect.css'));
 $this->headLink()->appendStylesheet($this->baseUrl('css/jqtransform.css'));
 $this->headLink()->appendStylesheet($this->baseUrl('css/validationEngine.jquery.css'));
 $this->headScript()->prependFile($this->baseUrl('js/jquery.jqtransform.js'));
@@ -93,7 +92,7 @@ function resizeFooter()
 	<?php echo $this->headScript(); ?>
 	<?php echo $this->headMeta(); ?>
 </head>
-<body>
+<body onload="resizeFooter()">
 	<div id="wrapper">
     	<div id="header">
     		<?php echo $this->render('_header.phtml'); ?>

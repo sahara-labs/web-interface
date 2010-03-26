@@ -94,7 +94,10 @@ class QueueController extends Sahara_Controller_Action_Acl
                 'locked' => $perm->isLocked,              // Whether the permission is locked
                 'active' => Sahara_DateTimeUtil::isBeforeNow($p->start) && // Whether the permission is active
                             Sahara_DateTimeUtil::isAfterNow($p->expiry),
-                'id' => 'permission' . $i++               // An ID to hook to a dialog
+                'id' => 'permission' . $i++,              // An ID to hook to a dialog
+                'start' => $p->start,                     // Start time of the resource
+                'expiry' => $p->expiry,                   // Expiry time of the resource
+                'permissionId' => $p->permissionID        // Permission ID
             );
 
             array_push($userClasses[$p->userClass->userClassName], $resource);
@@ -124,6 +127,18 @@ class QueueController extends Sahara_Controller_Action_Acl
         }
 
         $this->view->userPermissions = $userClasses;
+    }
+
+    /**
+     * Action that unlocks a permission.
+     */
+    public function unlockAction()
+    {
+        /* Disable view renderer and layout. */
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();
+
+        echo 'true';
     }
 }
 

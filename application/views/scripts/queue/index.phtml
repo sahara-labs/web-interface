@@ -48,6 +48,29 @@ $(document).ready(function() {
 		$(".permissionbutton").css("margin-bottom", "0");
 	}
 });
+
+function unlockPermission(id)
+{
+	var formId = "#perm_lock_form_" + id;
+	if (!$(formId).validationEngine({returnIsValid:true}))
+	{
+		return false;
+	}
+
+	$.get("' . $this->url(array('controller' => 'queue', 'action' => 'unlock')) . '", {
+		permission: id,
+		passkey: $("input[name=passkey_" + id + "]").val()
+		},
+		function(data) {
+			if (data == "true")
+			{
+			}
+			else
+			{
+
+			}
+		});
+}
 ');
 
 /* Sort the user classes by name. */
@@ -131,11 +154,56 @@ foreach ($this->userPermissions as $permissions)
 <?php foreach ($this->userPermissions as $class => $classPerms): ?>
 	<?php foreach ($classPerms as $type => $typePerms): ?>
 		<?php foreach ($typePerms as $perm):?>
-<div id="<?=$perm['id']?>" class="permissiondialog" title="<?=$perm['resource']?>">
+<div id="<?=$perm['id']?>" class="permissiondialog" title="<?=$this->stringTransform($perm['resource'], '_', ' ')?>">
 <?php if (!$perm['active']): ?>
-	<p>Uh, oh! The permission is not valid.</p>
-<?php elseif ($perm['locked']):?>
+
+<!-- Inactive permission dialog -->
+<div class="ui-state-error ui-corner-all alertdiv centercontent" style="width:400px">
+	<p class="alertp">
+   		<span class="ui-icon ui-icon-alert alertspan"></span>
+   		Sorry, the permission for <?=$this->stringTransform($perm['resource'], '_', ' ')?> is not valid.
+   	</p>
+</div>
+<div class="ui-priority-secondary ui-corner-all" style="width:400px;margin-top:10px">
+  	<span class="ui-icon ui-icon-info alertspan"></span>
+   <?php if (Sahara_DateTimeUtil::isBeforeNow($perm['expiry'])):?>
+    	This permission expired on <?=date('l, \t\h\e jS \o\f F o \a\t H:i', Sahara_DateTimeUtil::getTsFromISO8601($perm['expiry']))?>.
+    <?php else: ?>
+    	This permission will be active from <?=date('l, \t\h\e jS \o\f F o \a\t H:i', Sahara_DateTimeUtil::getTsFromISO8601($perm['start']))?>.
+    <?php endif; ?>
+</div>
+
+    <?php elseif ($perm['locked']):?>
+
+<!-- Locked permission dialog -->
+Unlock permission <?=$this->stringTransform($perm['resource'], '_', ' ')?>:
+<form id="perm_lock_form_<?=$perm['permissionId']?>" method="POST">
+<?php $form = new Sahara_PermissionLock_Form($perm['permissionId']);
+      echo $form->getDisplayGroup('perm_lock_form')->render(); ?>
+</form>
+<div id="perm_lock_result_<?=$perm['permissionId']?>"></div>
+
+<script type="text/javascript">
+$(document).ready( function () {
+	$("#perm_lock_form_<?=$perm['permissionId']?>").jqTransform();
+
+	/* Styling fixes. */
+	$("#fieldset-perm_lock_form table.formdisplaygroup").css("width", "100%");
+	$("#fieldset-perm_lock_form td").css("width", "20px");
+	$("#fieldset-perm_lock_form td.rowField").css("width", "100%");
+	$("#perm_lock_form div.jqTransformInputWrapper").css("width", "100%");
+	$("#perm_lock_form input.jqTransformInput").css("width", "100%");
+
+	$("#perm_lock_form_<?=$perm['permissionId']?>").validationEngine({
+		success: false,
+		failure: false
+	});
+});
+</script>
+
 <?php else: ?>
+
+	<!-- Active permission dialog -->
 	<div class="permissiondialogloading">
     	<img src="<?=$this->baseUrl('images/ajax-loading.gif')?>" alt="Loading" /><br />
     	<p>Loading...</p>
@@ -152,15 +220,34 @@ $(document).ready(function() {
 <?php foreach ($this->userPermissions as $class => $classPerms): ?>
 	<?php foreach ($classPerms as $type => $typePerms): ?>
 		<?php foreach ($typePerms as $perm):?>
+
 	/* Dialogises dialog for id <?=$perm['id']?>. */
 	$("#<?=$perm['id']?>").dialog({
 		autoOpen: false,
 		modal: true,
 		resizable: false,
-		width: 600,
-		open: function (event, ui) {
+<?php if (!$perm['active']): ?>
 
+		/* Inactive permission script. */
+		width: 420,
+		height: 180,
+		buttons: {
+			'Close': function() { $(this).dialog('close'); }
 		}
+<?php elseif ($perm['locked']):?>
+
+		/* Locked permission script. */
+		height: 200,
+		buttons: {
+			'Unlock': function() {
+				unlockPermission("<?=$perm['permissionId']?>");
+			},
+			'Cancel': function() { $(this).dialog("close"); }
+		}
+<?php else: ?>
+
+		/* Action permission script. */
+<?php endif; ?>
 	});
 
 	$('#<?=$perm['id']?>_link').click(function(){
