@@ -33,7 +33,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 21st February 2010
+ * @date 24th March 2010
  */
 
 $this->headLink()->appendStylesheet($this->baseUrl('css/queue.css'));
@@ -48,30 +48,8 @@ $(document).ready(function() {
 		$(".permissionbutton").css("margin-bottom", "0");
 	}
 });
-
-function unlockPermission(id)
-{
-	var formId = "#perm_lock_form_" + id;
-	if (!$(formId).validationEngine({returnIsValid:true}))
-	{
-		return false;
-	}
-
-	$.get("' . $this->url(array('controller' => 'queue', 'action' => 'unlock')) . '", {
-		permission: id,
-		passkey: $("input[name=passkey_" + id + "]").val()
-		},
-		function(data) {
-			if (data == "true")
-			{
-			}
-			else
-			{
-
-			}
-		});
-}
 ');
+$this->headScript()->appendFile($this->baseUrl('js/queue.js'));
 
 /* Sort the user classes by name. */
 $keys = array_keys($this->userPermissions);
@@ -176,16 +154,25 @@ foreach ($this->userPermissions as $permissions)
     <?php elseif ($perm['locked']):?>
 
 <!-- Locked permission dialog -->
-Unlock permission <?=$this->stringTransform($perm['resource'], '_', ' ')?>:
-<form id="perm_lock_form_<?=$perm['permissionId']?>" method="POST">
-<?php $form = new Sahara_PermissionLock_Form($perm['permissionId']);
-      echo $form->getDisplayGroup('perm_lock_form')->render(); ?>
-</form>
-<div id="perm_lock_result_<?=$perm['permissionId']?>"></div>
+<div id="perm_lock_div_<?=$perm['permissionId']?>">
+	Unlock permission <?=$this->stringTransform($perm['resource'], '_', ' ')?>:
+	<form id="perm_lock_form_<?=$perm['permissionId']?>" method="POST" action="">
+    <?php $form = new Sahara_PermissionLock_Form($perm['permissionId']);
+          echo $form->getDisplayGroup('perm_lock_form')->render(); ?>
+	</form>
+</div>
+<div id="perm_lock_result_<?=$perm['permissionId']?>" class="permlockres">Successfully unlocked permission.</div>
+<div id="perm_lock_result_fail_<?=$perm['permissionId']?>" class="permlockresfail">Supplied key is incorrect.</div>
 
 <script type="text/javascript">
 $(document).ready( function () {
+	$("#perm_lock_form_<?=$perm['permissionId']?>").unbind();
+	$("#perm_lock_form_<?=$perm['permissionId']?>").submit(function() {
+		unlockPermission(<?=$perm['permissionId']?>);
+		return false;
+	});
 	$("#perm_lock_form_<?=$perm['permissionId']?>").jqTransform();
+	$("#perm_lock_form_<?=$perm['permissionId']?>").validationEngine();
 
 	/* Styling fixes. */
 	$("#fieldset-perm_lock_form table.formdisplaygroup").css("width", "100%");
@@ -193,11 +180,6 @@ $(document).ready( function () {
 	$("#fieldset-perm_lock_form td.rowField").css("width", "100%");
 	$("#perm_lock_form div.jqTransformInputWrapper").css("width", "100%");
 	$("#perm_lock_form input.jqTransformInput").css("width", "100%");
-
-	$("#perm_lock_form_<?=$perm['permissionId']?>").validationEngine({
-		success: false,
-		failure: false
-	});
 });
 </script>
 
@@ -234,26 +216,40 @@ $(document).ready(function() {
 		buttons: {
 			'Close': function() { $(this).dialog('close'); }
 		}
-<?php elseif ($perm['locked']):?>
-
-		/* Locked permission script. */
-		height: 200,
-		buttons: {
-			'Unlock': function() {
-				unlockPermission("<?=$perm['permissionId']?>");
-			},
-			'Cancel': function() { $(this).dialog("close"); }
-		}
-<?php else: ?>
-
-		/* Action permission script. */
-<?php endif; ?>
 	});
 
 	$('#<?=$perm['id']?>_link').click(function(){
 		$('#<?=$perm['id']?>').dialog('open');
 		return false;
 	});
+<?php elseif ($perm['locked']):?>
+
+		/* Locked permission script. */
+		height: 180,
+		buttons: {
+			'Unlock': function() {
+				unlockPermission("<?=$perm['permissionId']?>");
+			},
+			'Cancel': function() { $(this).dialog("close"); }
+		}
+	});
+
+	$('#<?=$perm['id']?>_link').click(function(){
+		$("#perm_lock_result_fail_<?=$perm['permissionId']?>").hide();
+		$("#<?=$perm['id']?>").dialog("open");
+		return false;
+	});
+<?php else: ?>
+
+		/* Action permission script. */
+		});
+
+	$('#<?=$perm['id']?>_link').click(function(){
+		$('#<?=$perm['id']?>').dialog('open');
+		return false;
+	});
+<?php endif; ?>
+
 		<?php endforeach; ?>
 	<?php endforeach; ?>
 <?php endforeach; ?>

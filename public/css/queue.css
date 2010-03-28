@@ -96,6 +96,30 @@
 	padding: 15px;
 }
 
+.permlockres {
+	display: none;
+	background-color: #55EA55;
+	border: 1px solid #999999;
+	padding: 20px;
+	margin-top: 10px;
+}
+
+.permlockresfail {
+	display: none;
+	border: 1px solid #999999;
+	background-color: #FF8C8C;
+	padding: 10px;
+}
+
+.dialogwaiting {
+	text-align: center;
+	padding: 25px;
+}
+
+.dialogwaiting img {
+	margin: 0 0 10px;
+}
+
 #iconlegend {
 	font-size: 0.75em;
 	padding: 0px;

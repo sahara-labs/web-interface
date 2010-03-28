@@ -186,6 +186,15 @@ a.plaina:hover {
 	padding: 0px 10px 0px;
 }
 
+.logoutsecondary {
+	margin-top: 10px;
+}
+
+.logoutsecondary span {
+	float: left;
+	margin-right: 10px;
+}
+
 /******************************************************************************
  ** Page Content                                                             **
  *****************************************************************************/

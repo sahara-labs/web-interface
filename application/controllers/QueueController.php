@@ -65,6 +65,7 @@ class QueueController extends Sahara_Controller_Action_Acl
         /* Translate the permissions into a form to display based on user class. */
         $userClasses = array();
         $i = 1;
+
         foreach ($perms->permission as $perm)
         {
             /* This is a hack because PHPSoap / Zend SOAP seems to some quirks
@@ -72,9 +73,10 @@ class QueueController extends Sahara_Controller_Action_Acl
              * depending if there is one permission, or multiple permissions. */
             if ($perm->permission == null)
             {
+                if (is_bool($perm)) continue;
                 $p = $perm;
                 $perm = $perms;
-                if (!$p) continue;
+                $perm->isLocked = $perm->permission->isLocked;
             }
             else
             {
@@ -94,7 +96,7 @@ class QueueController extends Sahara_Controller_Action_Acl
                 'locked' => $perm->isLocked,              // Whether the permission is locked
                 'active' => Sahara_DateTimeUtil::isBeforeNow($p->start) && // Whether the permission is active
                             Sahara_DateTimeUtil::isAfterNow($p->expiry),
-                'id' => 'permission' . $i++,              // An ID to hook to a dialog
+                'id' => 'permission' . $p->permissionID,  // An ID to hook to a dialog
                 'start' => $p->start,                     // Start time of the resource
                 'expiry' => $p->expiry,                   // Expiry time of the resource
                 'permissionId' => $p->permissionID        // Permission ID
@@ -138,7 +140,16 @@ class QueueController extends Sahara_Controller_Action_Acl
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout()->disableLayout();
 
-        echo 'true';
+        $params = $this->_request->getParams();
+
+        $client = Sahara_Soap::getSchedServerPermissionsClient();
+        $response = $client->unlockUserLock( array(
+            'userID'       => array('userQName' => $this->_auth->getIdentity()),
+            'permissionID' => array('permissionID' => $params['permission']),
+            'lockKey'      => $params['passkey']
+        ));
+
+        echo $response->successful ? 'true' : 'false';
     }
 }
 
