@@ -99,7 +99,8 @@ class QueueController extends Sahara_Controller_Action_Acl
                 'id' => 'permission' . $p->permissionID,  // An ID to hook to a dialog
                 'start' => $p->start,                     // Start time of the resource
                 'expiry' => $p->expiry,                   // Expiry time of the resource
-                'permissionId' => $p->permissionID        // Permission ID
+                'permissionId' => $p->permissionID,       // Permission ID
+                'display' => isset($p->displayName) ? $p->displayName : $p->resource->resourceName // Display name
             );
 
             array_push($userClasses[$p->userClass->userClassName], $resource);
@@ -136,6 +137,7 @@ class QueueController extends Sahara_Controller_Action_Acl
      */
     public function queuingAction()
     {
+        $this->view->headTitle('Remote Lab: Queue');
         echo 'Queueing';
     }
 
@@ -161,11 +163,11 @@ class QueueController extends Sahara_Controller_Action_Acl
     }
 
     /**
-     * Action that provide information about a permission.
+     * Action that provides information about a permission.
      */
     public function infoAction()
     {
-        /* Disable the view renderer and layouyt. */
+        /* Disable the view renderer and layout. */
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout()->disableLayout();
 
@@ -175,6 +177,3 @@ class QueueController extends Sahara_Controller_Action_Acl
         var_dump($resp);
     }
 }
-
-
-

@@ -108,7 +108,7 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
                     array('userQName' => $this->_auth->getIdentity()));
             if ($session->inQueue && $action != 'queuing')
             {
-                //$this->_redirectTo('queuing', 'queue');
+                $this->_redirectTo('queuing', 'queue');
             }
             else if ($session->inSession)
             {

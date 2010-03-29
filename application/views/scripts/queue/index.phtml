@@ -112,7 +112,7 @@ foreach ($this->userPermissions as $permissions)
 				<?php else: ?>
 					<img class="permissionicon" src="<?=$this->baseUrl('images/permission_launch.png')?>" alt="Allowed" />
 				<?php endif;?>
-				    <?=$this->stringTransform($perm['resource'], '_', ' ')?>
+				    <?=$this->stringTransform($perm['display'], '_', ' ')?>
 				</a>
 			</li>
 			<?php endforeach;?>
@@ -132,7 +132,7 @@ foreach ($this->userPermissions as $permissions)
 <?php foreach ($this->userPermissions as $class => $classPerms): ?>
 	<?php foreach ($classPerms as $type => $typePerms): ?>
 		<?php foreach ($typePerms as $perm):?>
-<div id="<?=$perm['id']?>" class="permissiondialog" title="<?=$this->stringTransform($perm['resource'], '_', ' ')?>">
+<div id="<?=$perm['id']?>" class="permissiondialog" title="<?=$this->stringTransform($perm['display'], '_', ' ')?>">
 <?php if (!$perm['active']): ?>
 
 <!-- Inactive permission dialog -->
