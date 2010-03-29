@@ -209,8 +209,9 @@ a.plaina:hover {
 
 .contentheader h2 {
 	padding: 10px;
-	font-size: 1.4em;
+	font-size: 1.7em;
 	font-weight: bold;
+	text-shadow: 3px 3px 3px #C0C0C0;
 }
 
 .centercontent {

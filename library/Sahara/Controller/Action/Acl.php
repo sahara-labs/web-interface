@@ -99,8 +99,22 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
         $this->view->controller = $controller;
         $this->view->action = $action;
 
-        /* Check if the user has a pending request and should be in the queue or on a experiment page. */
-        // TODO redirect to experiment or queue page
+
+        /* Check if the user has a pending request and should be in the queue
+         * or on a experiment page. */
+        if ($this->_acl->getUserRole() != Sahara_Acl::UNAUTH)
+        {
+            $session = Sahara_Soap::getSchedServerQueuerClient()->isUserInQueue(
+                    array('userQName' => $this->_auth->getIdentity()));
+            if ($session->inQueue && $action != 'queuing')
+            {
+                //$this->_redirectTo('queuing', 'queue');
+            }
+            else if ($session->inSession)
+            {
+                // TODO redirect to session page
+            }
+        }
     }
 
     /**

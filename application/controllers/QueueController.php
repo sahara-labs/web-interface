@@ -132,6 +132,14 @@ class QueueController extends Sahara_Controller_Action_Acl
     }
 
     /**
+     * Action to show the queuing page.
+     */
+    public function queuingAction()
+    {
+        echo 'Queueing';
+    }
+
+    /**
      * Action that unlocks a permission.
      */
     public function unlockAction()
@@ -150,6 +158,21 @@ class QueueController extends Sahara_Controller_Action_Acl
         ));
 
         echo $response->successful ? 'true' : 'false';
+    }
+
+    /**
+     * Action that provide information about a permission.
+     */
+    public function infoAction()
+    {
+        /* Disable the view renderer and layouyt. */
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();
+
+        $client = Sahara_Soap::getSchedServerQueuerClient();
+        $resp = $client->isUserInQueue(array('userQName' => $this->_auth->getIdentity()));
+
+        var_dump($resp);
     }
 }
 

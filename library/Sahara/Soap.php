@@ -41,7 +41,11 @@
  */
 class Sahara_Soap
 {
+    /** The bundle containing the Permissions SOAP interface in the Scheduling Server. */
     const PERMISSIONS_SERVICE_BUNDLE = 'SchedulingServer-Permissions';
+
+    /** The bundle containing the Queuer SOAP interface in the Scheduling Server. */
+    const QUEUER_SERVICE_BUNDLE = 'SchedulingServer-Queuer';
 
     /** The SOAP client which points to the SOAP service. */
     protected $_client;
@@ -121,6 +125,23 @@ class Sahara_Soap
                     self::createSchedServerClient('Permissions', self::PERMISSIONS_SERVICE_BUNDLE));
         }
         return Zend_Registry::get(self::PERMISSIONS_SERVICE_BUNDLE);
+    }
+
+    /**
+     * Gets a Sahara_SOAP instance which points to the Queuer interface of
+     * the Scheduling Server.
+     *
+     * @return Sahara_SOAP instance
+     * @throws Exception if failed contacting Scheduling Server
+     */
+    public static function getSchedServerQueuerClient()
+    {
+        if (!Zend_Registry::isRegistered(self::QUEUER_SERVICE_BUNDLE))
+        {
+            Zend_Registry::set(self::QUEUER_SERVICE_BUNDLE,
+                    self::createSchedServerClient('Queuer', self::QUEUER_SERVICE_BUNDLE));
+        }
+        return Zend_Registry::get(self::QUEUER_SERVICE_BUNDLE);
     }
 
 
