@@ -35,6 +35,9 @@
  * @date 26th March 2010
  */
 
+/**
+ * Unlocks the resource permission specified by the id.
+ */
 function unlockPermission(id)
 {
 	var formId = "#perm_lock_form_" + id;
@@ -122,5 +125,11 @@ function unlockPermission(id)
 				$(dialogDiv + " div.ui-dialog-content").css("height", "100px");
 				$("#perm_lock_result_fail_" + id).slideDown("slow");
 			}
-		});
+		}
+	);
+}
+
+function cancelResourceRequest()
+{
+	alert("Cancelling queue request.");
 }

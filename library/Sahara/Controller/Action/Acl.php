@@ -43,6 +43,12 @@
  */
 class Sahara_Controller_Action_Acl extends Zend_Controller_Action
 {
+    /** Pseudo role for in queue users. */
+    const PSEUDO_ROLE_QUEUE = "INQUEUE";
+
+    /** Pseudo role for in session users. */
+    const PSEUDO_ROLE_SESSION = "INSESSION";
+
     /** @var Sahara_Acl Authorisation. */
     protected $_acl;
 
@@ -59,6 +65,9 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
 
     /** @var Sahara_Logger Logger. */
     protected $_logger;
+
+    /** @var array Controlled pages which will not redirect. */
+    private $_noRedirectPages = array("indexlogout", "indexfeedback");
 
     /**
      * Initalisation.
@@ -104,15 +113,55 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
          * or on a experiment page. */
         if ($this->_acl->getUserRole() != Sahara_Acl::UNAUTH)
         {
-            $session = Sahara_Soap::getSchedServerQueuerClient()->isUserInQueue(
-                    array('userQName' => $this->_auth->getIdentity()));
-            if ($session->inQueue && $action != 'queuing')
+            $session = Sahara_Soap::getSchedServerQueuerClient()->isUserInQueue(array('userQName' => $this->_auth->getIdentity()));
+            $this->_logger->debug('User ' . $this->_auth->getIdentity() . ' with role ' . $this->_acl->getUserRole() .
+                    ' is ' . ($session->inQueue ? 'in queue' : 'not in queue') . ' and ' .
+                    ($session->inSession ? 'in session.' : 'not in session') . '.');
+
+            /* Force a user to be specific places depending on where they are in session. */
+            if ($session->inQueue && "$controller$action" != 'queuequeuing' && !in_array("$controller$action", $this->_noRedirectPages))
             {
+                /* User in queue but not on queueing page. */
+                $this->_logger->debug('Redirecting user ' . $this->_auth->getIdentity() . ' to queueing page (queuing ' .
+                        "action on queue) from $action on $controller.");
                 $this->_redirectTo('queuing', 'queue');
+            }
+            else if ($session->inQueue)
+            {
+                $this->view->userRole = self::PSEUDO_ROLE_QUEUE;
+            }
+            else if ($session->inSession && !in_array("$controller$action", $this->_noRedirectPages))
+            {
+                /* User in session but not on experiment page. */
+                // TODO redirect to session page
             }
             else if ($session->inSession)
             {
-                // TODO redirect to session page
+                $this->view->userRole = self::PSEUDO_ROLE_SESSION;
+            }
+            else if ("$controller$action" == 'queuequeuing')
+            {
+                /* User in queue or experiment page, but not in either. */
+                $this->_logger->debug('Redirecting user ' . $this->_auth->getIdentity() . ' to role home from ' .
+                    "$action on $controller.");
+
+                /* Was in queue or in session, but thatis finished so redirect
+                 * them back home. */
+                switch ($user->persona)
+                {
+                    case Sahara_Acl::USER:
+                        $this->_redirectTo('index', 'queue');
+                        break;
+                    case Sahara_Acl::ACADEMIC:
+                        $this->_redirectTo('index', 'academic');
+                        break;
+                    case Sahara_Acl::ADMIN:
+                        $this->_redirectTo('index', 'admin');
+                        break;
+                    default:
+                        $this->view->messages = array("Unknown user \"$qName\".");
+                        break;
+                }
             }
         }
     }
