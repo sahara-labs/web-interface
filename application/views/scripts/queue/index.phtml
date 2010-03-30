@@ -241,7 +241,8 @@ $(document).ready(function() {
 	});
 <?php else: ?>
 
-		/* Action permission script. */
+		/* Valid permission script. */
+			open: function(event, ui) { loadPermissionInfo("<?=$perm['permissionId']?>"); }
 		});
 
 	$('#<?=$perm['id']?>_link').click(function(){

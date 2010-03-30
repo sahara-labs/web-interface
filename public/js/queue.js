@@ -35,9 +35,11 @@
  * @date 26th March 2010
  */
 
-/**
- * Unlocks the resource permission specified by the id.
- */
+function loadPermissionInfo(id)
+{
+	alert("Permission " + id);
+}
+
 function unlockPermission(id)
 {
 	var formId = "#perm_lock_form_" + id;
@@ -101,7 +103,7 @@ function unlockPermission(id)
 				$("#permission" + id + "_link").unbind();
 				
 				var diagId = "permission" + id;
-				var diagTitle = $("#ui-dialog-title-permission1").text();
+				var diagTitle = $("#ui-dialog-title-permission" + id).text();
 				$("body").append("" +
 						"<div id='" + diagId + "' class='permissiondialogloading'>" +
 						"	<img src='/images/ajax-loading.gif' alt='Loading' />" +
@@ -112,7 +114,8 @@ function unlockPermission(id)
 					autoOpen: false,
 					modal: true,
 					resizable: false,
-					title: diagTitle
+					title: diagTitle,
+					open: function (event, ui) { loadPermissionInfo(id); }
 				});
 				
 				$("#permission" + id + "_link").click(function() {
