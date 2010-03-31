@@ -35,9 +35,97 @@
  * @date 26th March 2010
  */
 
-function loadPermissionInfo(id)
+function loadPermissionInfo(pid)
 {
-	alert("Permission " + id);
+	$.get(
+		"/queue/info",   // URL to obtain information about the permission
+		{id: pid},       // GET parameter the permission ID
+		function(p) { // Callback to handle permission information
+			var diagDiv = "div[aria-labelledby=ui-dialog-title-permission" + pid + "]";
+			var conDiv = "#permission" + pid;
+			
+			/* The permission is not viable, so put up an error */
+			if (!p.viable)
+			{
+				$(conDiv).html(
+					"<div class='dialogcentercontent'>" +
+					"	<div class='dialogheader'>" +
+					"		<img src='/images/balls/red.gif' alt='Not viable' />" +
+					"		<h3>" + (p.queuedResource.type == "RIG" ? "Offline" : "All Offline") + "</h3>" +
+					"   </div>" +
+					"	<div class='ui-state-error ui-corner-all'>" +
+					"   <span class='ui-icon ui-icon-alert alertspan'></span>" +
+					"   	This permission is not queueable because all of its resources are offline." +
+					"   </div>" +
+					"</div>"
+				);
+				return;
+			}
+			
+			var html = "<div class='dialogcentercontent'>" +
+					   "	<div class='dialogheader'>";
+			if (p.hasFree)
+			{
+				/* The permission resource(s) is free, so put up the number free. */
+				html += "<img src='/images/balls/green.gif' alt='Free' />" +
+						"<h3>" + (p.queuedResource.type == "RIG" ? "Free" : p.numberFree + " Free") + "</h3>";
+			}
+			else
+			{
+				/* The permission resource(s) are in use. */
+				html += "<img src='/images/balls/yellow.gif' alt='In Use' />" +
+						"<h3>" + (p.queuedResource.type == "RIG" ? "In Use" : "All In Use") + "</h3>";
+			}
+			html += "</div>";
+			
+			/* List out all the target resources. */
+			if (p.queuedResource.type == 'TYPE' || p.queuedResource.type == 'CAPABILITY')
+			{
+				html += "<div class='dialogreslist'><ul>";
+				for (key in p.queueTarget)
+				{
+					if (key == "resource") t = p.queueTarget;
+					else if (!isNaN(key))  t = p.queueTarget[key];
+					else continue;
+					
+					html += "<li>";
+					if (!t.viable) html += "<img src='/images/balls/red_small.gif' alt='Not viable' class='dialogreslisticon' />";
+					else if (!t.isFree) html += "<img src='/images/balls/yellow_small.gif' alt='In Use' class='dialogreslisticon' />";
+					else html += "<img src='/images/balls/green_small.gif' alt='Free' class='dialogreslisticon' />";
+					html += t.resource.resourceName.split('_').join(' ') + "</li>";
+				}
+				html += "</ul></div>";
+			}
+			
+			/* Add queue button. */
+			html += "<div id='queuebuttonpane" + pid + "' class='ui-dialog-buttonpane ui-widget-content'>" +
+			        "	<button class='queuebutton ui-button ui-button-text-icon ui-widget ui-state-default ui-corner-all ui-priority-primary'" +
+			        "		id='queuebutton" + pid +"' type='button'>Queue</button>" +
+			        "   <button class='queuebutton ui-button ui-button-text-icon ui-widget ui-state-default ui-corner-all'" +
+			        "		id='queuecancelbutton" + pid +"' type='button'>Cancel</button>" +
+			        "</div>";
+			
+			$(conDiv).html(html);
+			
+			/* Queue button. */
+			$("#queuebutton" + pid).hover(
+					function() { $(this).addClass("ui-state-hover"); },
+					function() { $(this).removeClass("ui-state-hover"); }
+			);
+			$("#queuebutton" + pid).click(function() {
+				queueResourceRequest(pid);
+			});
+			
+			/* Cancel button. */
+			$("#queuecancelbutton" + pid).hover(
+					function() { $(this).addClass("ui-state-hover"); },
+					function() { $(this).removeClass("ui-state-hover"); }
+			);
+			$("#queuecancelbutton" + pid).click(function() {
+				$("#permission" + pid).dialog('close');
+			});
+		}
+	);
 }
 
 function unlockPermission(id)
@@ -73,7 +161,7 @@ function unlockPermission(id)
 			$(dialogDiv + " div.ui-dialog-buttonpane").show();
 			$(dialogDiv + " div.dialogwaiting").remove();
 			
-			if (data == "true")
+			if (data.successful)
 			{
 				/* Put a success message. */
 				$(dialogDiv).css("height", "auto");
@@ -127,6 +215,57 @@ function unlockPermission(id)
 				$(dialogDiv).css("height", "210px");
 				$(dialogDiv + " div.ui-dialog-content").css("height", "100px");
 				$("#perm_lock_result_fail_" + id).slideDown("slow");
+			}
+		}
+	);
+}
+
+function queueResourceRequest(pid)
+{
+	var diagDiv = "div[aria-labelledby=ui-dialog-title-permission" + pid + "]";
+	var conDiv = "#permission" + pid;
+	
+	/* Cancel all buttons. */
+	$("#queuebutton" + pid).unbind();
+	$("#queuecancelbutton" + pid).unbind();
+	$("#queuebuttonpane" + pid).css("display", "none");
+	$(diagDiv + " div.ui-dialog-titlebar").css("display", "none");
+	$(conDiv).dialog({'closeOnEscape': false});
+	
+	html = "<div class='permissiondialogloading'>" +
+		   "	<img src='/images/ajax-loading.gif' alt='Loading' /><br />" +
+		   "	<p>Requesting...</p>" +
+		   "</div>";
+	
+	$(conDiv).html(html);
+	
+	$.get(
+		"/queue/queue",   // URL to queue a sc
+		{id: pid},        // GET parameter the permission ID
+		function (r) {
+			if (r.successful)
+			{
+				/* Succeeding requesting resource. */
+				$(conDiv).html("Success, redirecting...");
+				window.location.replace("/queue/queuing");
+			}
+			else
+			{
+				/* Failed requesting resource. */
+				$(conDiv).html(
+						"<div class='dialogcentercontent'>" +
+						"	<div class='dialogheader'>" +
+						"		<img src='/images/alert.png' alt='Failed' style='width:60px;height:60px;'/><br />" +
+						"		<h3 style='display:block;margin-top:20px'>Requesting resource has failed.</h3>" +
+						"   </div>" +
+						"	<div class='ui-state-error ui-corner-all' style='margin-top:-25px'>" +
+						"   	<span class='ui-icon ui-icon-alert alertspan'></span>" +
+						"   	Please use the 'Send Feedback' button to provide information about this failure." +
+						"   </div>" +
+						"</div>"
+				);
+				$(conDiv).dialog({'closeOnEscape': true});
+				$(diagDiv + " div.ui-dialog-titlebar").css("display", "block");
 			}
 		}
 	);

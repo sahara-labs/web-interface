@@ -51,28 +51,31 @@ $(document).ready(function() {
 ');
 $this->headScript()->appendFile($this->baseUrl('js/queue.js'));
 
-/* Sort the user classes by name. */
-$keys = array_keys($this->userPermissions);
-sort($keys, SORT_STRING);
-
-/* Generate the tab div ids. */
-$tabHref = array();
-$i = 1;
-foreach ($keys as $key)
+if (!$this->noPermissions)
 {
-    $tabHref[$key] = 'userClass' . $i++;
-}
+    /* Sort the user classes by name. */
+    $keys = array_keys($this->userPermissions);
+    sort($keys, SORT_STRING);
 
-/* Work out the height of the tab div. */
-$tabHeight = 0;
-foreach ($this->userPermissions as $permissions)
-{
-    $height = 0;
-    foreach ($permissions as $type => $perms)
+    /* Generate the tab div ids. */
+    $tabHref = array();
+    $i = 1;
+    foreach ($keys as $key)
     {
-        $height += ceil(count($perms) / 4) * 100 + ceil((count($perms) / 4)) * 50;
+        $tabHref[$key] = 'userClass' . $i++;
     }
-    if ($height > $tabHeight) $tabHeight = $height;
+
+    /* Work out the height of the tab div. */
+    $tabHeight = 0;
+    foreach ($this->userPermissions as $permissions)
+    {
+        $height = 0;
+        foreach ($permissions as $type => $perms)
+        {
+            $height += ceil(count($perms) / 4) * 100 + ceil((count($perms) / 4)) * 50;
+        }
+        if ($height > $tabHeight) $tabHeight = $height;
+    }
 }
 ?>
 
@@ -258,14 +261,25 @@ $(document).ready(function() {
 </script>
 
 <!-- Legend for icon information. -->
-<div id="iconlegend">
+<div id="iconlegends">
 	<h3>Legend:</h3>
-	<p><img src="<?=$this->baseUrl('images/permission_launch.png')?>" alt="Allowed" />
-	Active: You may queue for the resource.</p>
-	<p><img src="<?=$this->baseUrl('images/permission_expired.png')?>" alt="Expired" />
-	Not active: The permission is not active at the current time.</p>
-	<p><img src="<?=$this->baseUrl('images/permission_locked.png')?>" alt="Locked" />
-	Locked: The resource is active but locked. You must supply a pass key before you can queue.</p>
+    <div id="iconlegend">
+    	<p><img src="<?=$this->baseUrl('images/permission_launch.png')?>" alt="Allowed" />
+    	Active: You may queue for the resource.</p>
+    	<p><img src="<?=$this->baseUrl('images/permission_expired.png')?>" alt="Expired" />
+    	Not active: The permission is not active at the current time.</p>
+    	<p><img src="<?=$this->baseUrl('images/permission_locked.png')?>" alt="Locked" />
+    	Locked: The resource is active but locked. You must supply a pass key before you can queue.</p>
+    </div>
+    <div id="balliconlegend">
+		<p><img src="<?=$this->baseUrl('images/balls/green_small.gif')?>" alt="Free" />
+    	Free: The resource is free to use.</p>
+    	<p><img src="<?=$this->baseUrl('images/balls/yellow_small.gif')?>" alt="In Use" />
+    	In Use: The resource is online and in use. The resource may be queued for use after the current user and
+    	any preceding queuers.</p>
+    	<p><img src="<?=$this->baseUrl('images/balls/red_small.gif')?>" alt="Offline" />
+    	Offline: The resource is offline and can not be used.</p>
+    </div>
 </div>
 
 <?php else: ?>

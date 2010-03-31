@@ -142,7 +142,8 @@ class QueueController extends Sahara_Controller_Action_Acl
     }
 
     /**
-     * Action that provides information about a permission.
+     * Action that provides information about a permission. The response is
+     * returned as a JSON query.
      */
     public function infoAction()
     {
@@ -150,10 +151,47 @@ class QueueController extends Sahara_Controller_Action_Acl
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout()->disableLayout();
 
-        $client = Sahara_Soap::getSchedServerQueuerClient();
-        $resp = $client->checkPermissionAvailability(array('permissionID' => $this->_request->getParam('id', '0')));
+        $id = $this->_request->getParam('id', '0');
 
-        var_dump($resp);
+        $client = Sahara_Soap::getSchedServerQueuerClient();
+        $resp = $client->checkPermissionAvailability(array('permissionID' => $id));
+
+        if ($resp->queuedResource->type == 'NOTFOUND')
+        {
+            $this->_logger->info("Permission with ID $id not found on Scheduling Server.");
+        }
+
+        /* Add a count of number of free resources. */
+        $resp->numberFree = 0;
+        if (count($resp->queueTarget) > 1 && $resp->queueTarget[1] instanceof stdClass)
+        {
+            /* Multiple queue targets. */
+            foreach ($resp->queueTarget as $t)
+            {
+                if ($t->isFree) $resp->numberFree++;
+            }
+        }
+        else if (count($resp->queueTarget))
+        {
+            /* One queue target (quirk in PHPSoap). */
+            if ($resp->queueTarget->isFree) $resp->numberFree = 1;
+        }
+
+        echo $this->view->json($resp);
+    }
+
+    /**
+     * Action that queues an experiment.
+     */
+    public function queueAction()
+    {
+        /* Disable view render and layout. */
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();
+
+        $result = array('successful' => true);
+
+        echo $this->view->json($result);
     }
 
     /**
@@ -174,6 +212,6 @@ class QueueController extends Sahara_Controller_Action_Acl
             'lockKey'      => $params['passkey']
         ));
 
-        echo $response->successful ? 'true' : 'false';
+        echo $this->view->json(array('successful' => $response->successful));
     }
 }

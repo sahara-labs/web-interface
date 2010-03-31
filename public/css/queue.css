@@ -120,14 +120,68 @@
 	margin: 0 0 10px;
 }
 
-#iconlegend {
+.dialogcentercontent {
+	text-align: center;
+}
+
+.dialogheader {
+	margin-bottom: 30px;
+}
+
+.dialogheader h3 {
+	display: inline;
+	font-size: 15px;
+}
+
+.dialogheader img {
+	margin: 0px 5px -15px;
+}
+
+.dialogreslist {
+	text-align: left;
+	margin: -15px 0 15px;
+}
+.dialogreslist ul {
+	list-style: none;
+}
+
+.dialogreslist ul li {
+	display: inline;
+}
+
+.dialogreslisticon {
+	width: 22px;
+	height: 22px;
+	margin: 0 8px -3px;
+}
+
+.queuebutton {
+	width: 100px;
+	height: 35px;
+	margin-bottom: 15px;
+}
+
+.queuerequestloading {
+	
+}
+
+#iconlegends {
 	font-size: 0.75em;
 	padding: 0px;
 	margin: 0px;
 }
 
-#iconlegend img {
+#iconlegends div img {
 	height: 25px;
 	width: 25px;
 	padding-right: 10px;
 }
+#iconlegend {
+	float:left;
+	width:50%;
+}
+
+#balliconlegend {
+}
+
+
