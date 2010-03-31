@@ -147,7 +147,7 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
 
                 /* Was in queue or in session, but thatis finished so redirect
                  * them back home. */
-                switch ($user->persona)
+                switch ($this->_acl->getUserRole())
                 {
                     case Sahara_Acl::USER:
                         $this->_redirectTo('index', 'queue');
