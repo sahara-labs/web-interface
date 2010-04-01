@@ -35,14 +35,42 @@
  * @author Michael Diponio (mdiponio)
  * @date 21st March 2010
  */
+$config = Zend_Registry::get('config');
+($contactName = $config->contact->name) != null || $contactName= 'Labshare Contact - Labshare Guru';
+($contactPhone = $config->contact->phone) != null || $contactPhone= 'Labshare Contact - (02) 9415 2975';
+($contactEmail = $config->contact->email) != null || $contactEmail= 'Labshare Contact - labshare@uts.edu.au';
+($contactAddress1 = $config->contact->address1) != null || $contactAddress1= 'Not Available';
+($contactAddress2 = $config->contact->address2) != null || $contactAddress2= '';
 ?>
+
+<?php if (count($this->messages)):?>
+	<div class="ui-state-error ui-corner-all alertdiv">
+	<?php if (count($this->messages) == 1):?>
+		<p class="alertp">
+    		<span class="ui-icon ui-icon-alert alertspan"></span>
+    		<?=$this->messages[0]?>
+    	</p>
+	<?php else: ?>
+		<p class="alertp">
+			<span class="ui-icon ui-icon-alert alertspan"></span>
+			<strong>Alert:</strong>
+		</p>
+		<ul class="alertlist" >
+    	<?php foreach ($this->messages as $m): ?>
+    		<li><?=$m?></li>
+    	<?php endforeach; ?>
+    	</ul>
+   	<?php endif; ?>
+	</div>
+<?php endif; ?>
+
 <div align="center" style="width:100%">
-<img style="padding:20px;" src="<?=$this->baseUrl('images/alert.png')?>" alt="Alert"></img>
-<div class="ui-state-error ui-corner-all alertdiv"
-							style="width:450px;">
-	<p>
-		<span class="ui-icon ui-icon-alert alertspan"></span>
-		Contact information in development!
-	</p>
+     <?php echo $this->inst?>
 </div>
+<div id="contact name" align="center" style="width:100%" >
+     <?php echo "Contact Name: ".$contactName?><br>
+     <?php echo "Contact Phone: ".$contactPhone?><br>
+     <?php echo "Contact Email: ".$contactEmail?><br>
+     <?php echo "Contact Address: ".$contactAddress1?>
 </div>
+

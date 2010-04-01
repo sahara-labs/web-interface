@@ -68,7 +68,7 @@ class QueueController extends Sahara_Controller_Action_Acl
 
         foreach ($perms->permission as $perm)
         {
-            /* This is a hack because PHPSoap / Zend SOAP seems to some quirks
+            /* This is a hack because PHPSoap / Zend SOAP seems to have some quirks
              * parsing WSDLs. It generates a different object structure
              * depending if there is one permission, or multiple permissions. */
             if ($perm->permission == null)

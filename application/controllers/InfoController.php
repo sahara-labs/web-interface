@@ -63,5 +63,9 @@ class InfoController extends Sahara_Controller_Action_Acl
     public function contactAction()
     {
         $this->view->headTitle('Remote Labs - Contact Us');
+        $this->view->messages = $this->_flashMessenger->getMessages();
+        
+        $inst = Zend_Registry::get('config')->institution;
+        $this->view->inst = $inst;
     }
 }
