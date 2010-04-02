@@ -96,6 +96,11 @@
 	padding: 15px;
 }
 
+.cancelloadingdialog {
+	text-align: center;
+	font-size: 1.4em;
+}
+
 .permlockres {
 	display: none;
 	background-color: #55EA55;

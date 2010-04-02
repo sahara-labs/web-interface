@@ -286,5 +286,53 @@ function queueResourceRequest(pid)
 
 function cancelResourceRequest()
 {
-	alert("Cancelling queue request.");
+	var diagDiv = "div[aria-labelledby=ui-dialog-title-cancelrequestdialog]";
+	var conDiv = "#cancelrequestdialog";
+	
+	/* Cancel all buttons. */
+	$(diagDiv + " div.ui-dialog-buttonpane").css("display", "none");
+	$(diagDiv + " div.ui-dialog-titlebar").css("display", "none");
+	$(conDiv).dialog({'closeOnEscape': false});
+	
+	html = "<div style='text-align:center;font-size:1.3em;'>" +
+		   "	<img src='/images/ajax-loading.gif' alt='Loading' /><br />" +
+		   "	<p>Cancelling...</p>" +
+		   "</div>";
+	
+	$(conDiv).html(html);
+	
+	$.get(
+		"/queue/cancel",
+		{},
+		function (r) {
+			if (r.queueSuccessful)
+			{
+				$(conDiv).html(
+						"<div class='dialogcentercontent'>" +
+						"	<div class='dialogheader'>" +
+						"		<h3 style='display:block;margin-top:20px'>Success, redirecting...</h3>" +
+						"   </div>" +
+						"<div>"
+				);
+				window.location.replace("/queue/index");
+			}
+			else
+			{
+				$(conDiv).html(
+						"<div class='dialogcentercontent'>" +
+						"	<div class='dialogheader'>" +
+						"		<img src='/images/alert.png' alt='Failed' style='width:60px;height:60px;'/><br />" +
+						"		<h3 style='display:block;margin-top:20px'>Requesting resource has failed.</h3>" +
+						"   </div>" +
+						"	<div class='ui-state-error ui-corner-all' style='margin-top:-25px'>" +
+						"   	<span class='ui-icon ui-icon-alert alertspan'></span>" +
+						"   	Please use the 'Send Feedback' button to provide information about this failure." +
+						"   </div>" +
+						"</div>"
+				);
+				$(conDiv).dialog({'closeOnEscape': true});
+				$(diagDiv + " div.ui-dialog-titlebar").css("display", "block");
+			}
+		}
+	);
 }

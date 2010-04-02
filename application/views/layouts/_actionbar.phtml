@@ -42,12 +42,14 @@ switch ($this->userRole)
         $actionMenu = array(
             'logout' => array('title' => 'Logout', 'script' => '_logout.phtml',
                     'icon' => $this->baseUrl('images/logout.png'), 'alt' => 'logout',
+                    'width' => 400,
                     'buttons' => array(
                     	'Yes' => 'location.href="' . $this->url(array('controller' => 'index', 'action' => 'logout')) . '";',
                         'No'  => '$(this).dialog("close");'
                     )),
         	'feedback' => array('title' => 'Send Feedback', 'script' => '_feedback.phtml',
                     'icon' => $this->baseUrl('images/feedback.png'), 'alt' => 'feedback',
+                    'width' => 600,
                     'buttons' => array(
                         'Send' => '$("#feedback_form").submit();',
                         'Cancel' => '$(this).dialog("close");'
@@ -58,18 +60,21 @@ switch ($this->userRole)
         $actionMenu = array(
             'cancelrequest' => array('title' => 'Cancel Request', 'script' => '_cancelQueue.phtml',
             		'icon' => $this->baseUrl('images/cancel.png'), 'alt' => 'Cancel',
+                    'width' => 400,
                     'buttons' => array(
                         'Yes' => 'cancelResourceRequest()',
                         'No' => '$(this).dialog("close")'
                     )),
             'logout' => array('title' => 'Logout', 'script' => '_logout.phtml',
                     'icon' => $this->baseUrl('images/logout.png'), 'alt' => 'logout',
+                    'width' => 400,
                     'buttons' => array(
                     	'Yes' => 'location.href="' . $this->url(array('controller' => 'index', 'action' => 'logout')) . '";',
                         'No'  => '$(this).dialog("close");'
                     )),
         	'feedback' => array('title' => 'Send Feedback', 'script' => '_feedback.phtml',
                     'icon' => $this->baseUrl('images/feedback.png'), 'alt' => 'feedback',
+                    'width' => 600,
                     'buttons' => array(
                         'Send' => '$("#feedback_form").submit();',
                         'Cancel' => '$(this).dialog("close");'
@@ -80,6 +85,7 @@ switch ($this->userRole)
         $actionMenu = array(
         	'feedback' => array('title' => 'Send Feedback', 'script' => '_feedback.phtml',
                     'icon' => $this->baseUrl('images/feedback.png'), 'alt' => 'feedback',
+                    'width' => 600,
                     'buttons' => array(
                         'Send' => '$("#feedback_form").submit();',
                         'Cancel' => '$(this).dialog("close");'
@@ -108,7 +114,7 @@ $(document).ready(function() {
 <?php foreach ($actionMenu as $id => $action): ?>
 	$('#<?=$id?>dialog').dialog ({
 		autoOpen: false,
-		width:600,
+		width:<?=$action['width']?>,
 		modal: true,
 		resizable: false,
 		buttons: {

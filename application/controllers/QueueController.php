@@ -201,6 +201,21 @@ class QueueController extends Sahara_Controller_Action_Acl
     }
 
     /**
+     * Action that removes a user from the queue.
+     */
+    public function cancelAction()
+    {
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();
+
+        $response = Sahara_Soap::getSchedServerQueuerClient()->removeUserFromQueue(array(
+        	'userQName' => $this->_auth->getIdentity()
+        ));
+
+        echo $this->view->json($response);
+    }
+
+    /**
      * Action that unlocks a permission.
      */
     public function unlockAction()

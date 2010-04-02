@@ -64,7 +64,7 @@ class Sahara_Acl extends Zend_Acl
     protected $_demoPages = array();
 
     /** @var assoc array Pages a user may access. */
-    protected $_userPages = array('queue' => array('index', 'unlock', 'info', 'queue', 'queuing'));
+    protected $_userPages = array('queue' => array('index', 'unlock', 'info', 'queue', 'queuing', 'cancel'));
 
     /** @var assoc array Pages an academic user may access. */
     protected $_academicPages = array('academic' => array('index'));
