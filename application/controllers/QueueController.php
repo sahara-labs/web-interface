@@ -189,9 +189,15 @@ class QueueController extends Sahara_Controller_Action_Acl
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout()->disableLayout();
 
-        $result = array('successful' => true);
+        $params = $this->_request->getParams();
 
-        echo $this->view->json($result);
+        $client = Sahara_Soap::getSchedServerQueuerClient();
+        $response = $client->addUserToQueue(array(
+            'userID'       => array('userQName' => $this->_auth->getIdentity()),
+            'permissionID' => array('permissionID' => $params['id'])
+        ));
+
+        echo $this->view->json($response);
     }
 
     /**

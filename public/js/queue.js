@@ -243,11 +243,24 @@ function queueResourceRequest(pid)
 		"/queue/queue",   // URL to queue a sc
 		{id: pid},        // GET parameter the permission ID
 		function (r) {
-			if (r.successful)
+			if (r.queueSuccessful)
 			{
 				/* Succeeding requesting resource. */
-				$(conDiv).html("Success, redirecting...");
-				window.location.replace("/queue/queuing");
+				$(conDiv).html(
+						"<div class='dialogcentercontent'>" +
+						"	<div class='dialogheader'>" +
+						"		<h3 style='display:block;margin-top:20px'>Success, redirecting...</h3>" +
+						"   </div>" +
+						"<div>"
+				);
+				if (r.inQueue)
+				{
+					window.location.replace("/queue/queuing");
+				}
+				else
+				{
+					window.location.replace("/session/index");
+				}
 			}
 			else
 			{
