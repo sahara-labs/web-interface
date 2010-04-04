@@ -138,7 +138,14 @@ class QueueController extends Sahara_Controller_Action_Acl
     public function queuingAction()
     {
         $this->view->headTitle('Remote Lab: Queue');
-        echo 'Queueing';
+
+        $queueInfo = Sahara_Soap::getSchedServerQueuerClient()->getUserQueuePosition(array(
+        		'userQName' => $this->_auth->getIdentity()
+        ));
+
+        $this->view->pos = $queueInfo->position;
+        $this->view->time = $queueInfo->time;
+
     }
 
     /**
@@ -195,6 +202,21 @@ class QueueController extends Sahara_Controller_Action_Acl
         $response = $client->addUserToQueue(array(
             'userID'       => array('userQName' => $this->_auth->getIdentity()),
             'permissionID' => array('permissionID' => $params['id'])
+        ));
+
+        echo $this->view->json($response);
+    }
+
+    /**
+     * Action that provides information about being in the queue.
+     */
+    public function updateAction()
+    {
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();
+
+        $response = Sahara_Soap::getSchedServerQueuerClient()->getUserQueuePosition(array(
+        		'userQName' => $this->_auth->getIdentity()
         ));
 
         echo $this->view->json($response);

@@ -39,7 +39,7 @@
 
 /******************************************************************************
  ** Permissions page.                                                        **
- *****************************************************************************/
+ ******************************************************************************/
  
 #userclasstabs {
  	margin: 0 auto;
@@ -182,11 +182,50 @@
 	padding-right: 10px;
 }
 #iconlegend {
-	float:left;
-	width:50%;
+	float: left;
+	width: 50%;
 }
 
 #balliconlegend {
 }
 
+/******************************************************************************
+ ** Queuing page.                                                            **
+ ******************************************************************************/
+#queueinfo {
+	margin: 25px auto 25px;
+	width: 260px;
+	font-weight: lighter;
+	text-align: center;
+	color: #BCBCBC;
+}
 
+#queuepos {
+	
+	font-size:1.15em;
+}
+
+#queueposnum {
+	font-size: 3.5em;
+	color: red;
+	font-weight: bolder;
+}
+
+#queuetime span{
+	color: #000000;
+}
+
+#queueredirectinfo {
+	width: 300px;
+	padding: 10px;
+	margin-top: 50px;
+	margin-left: -20px;
+	padding: 10px;
+	text-align: left;
+}
+
+#queueredirectinfo span {
+	float: left;
+	margin-right: 5px;
+}
+ 

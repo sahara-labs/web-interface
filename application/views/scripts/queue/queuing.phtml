@@ -38,7 +38,40 @@
 
 $this->headLink()->appendStylesheet($this->baseUrl('css/queue.css'));
 $this->headScript()->appendFile($this->baseUrl('js/queue.js'));
+
+$c = Zend_Registry::get('config')->queue->interval;
+$this->headScript()->appendScript('
+
+$(document).ready(function() {
+	tInterval = setInterval("updateQueueInfo()", '. ($c ? $c * 1000 : 60000) .');
+});
+
+');
+
+$lastDig = $this->pos % 10;
+if ($lastDig == 1)      $suf = 'st';
+else if ($lastDig == 2) $suf = 'nd';
+else if ($lastDig == 3) $suf = 'rd';
+else                    $suf = 'th';
+
+$mins = floor($this->time / 60);
+$secs = $this->time % 60;
 ?>
 <div class="contentheader">
 	<h2>Queue</h2>
+</div>
+
+<div id="queueinfo">
+    <div id="queuepos">
+    	Your position is: <span id="queueposnum"><?="$this->pos$suf"?></span><br />
+    	<img src="<?=$this->baseUrl('images/queuing.gif')?>" alt="Queuing" />
+    </div>
+    <div id="queuetime">
+    	In queue <span><?=$mins?></span> <?=$mins > 1 ? 'minutes' : 'minute'?>, <span><?=$secs?></span> <?=$secs > 1 ? 'seconds' : 'second'?>.
+    </div>
+    <div id="queueredirectinfo" class="ui-state-highlight ui-corner-all">
+    	<span class="ui-icon ui-icon-info"></span>
+    	You will be automatically redirected to the rig when you are assigned to one.
+    </div>
+
 </div>

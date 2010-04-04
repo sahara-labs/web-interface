@@ -336,3 +336,41 @@ function cancelResourceRequest()
 		}
 	);
 }
+
+function updateQueueInfo()
+{
+	$.get(
+		"/queue/update",
+		{ },
+		function (info) {
+			if (info.inQueue)
+			{
+				/* Update queue information. */
+				var ld = info.position % 10;
+				var pos = info.position;
+				if (ld == 1) pos += "st";
+				else if (ld == 2) pos += "nd";
+				else if (ld == 3) pos += "rd";
+				$("#queueposnum").html(pos);
+				
+				var min = Math.floor(info.time / 60);
+				var secs = info.time % 60;
+				$("#queuetime").html("In queue " +
+						 "<span>" + min + "</span> " + (min == 1 ? "minute" : "minutes") + 
+						 " <span>" + secs + "</span> " + (secs == 1 ? "second" : "seconds") + 
+						 "."
+				);
+			}
+			else if (info.inSession)
+			{
+				/* Redirect to rig page. */
+				window.location.replace("/session/index");
+			}
+			else
+			{
+				/* Redirect back to permissions page. */
+				window.location.replace("/queue/index");
+			}
+		}
+	);
+}
