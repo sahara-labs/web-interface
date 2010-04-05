@@ -58,14 +58,17 @@ class Sahara_Acl extends Zend_Acl
                                     'labinfo' => array('index'),
                                     'info' => array('index', 'faq', 'contact'),
                                     'demo' => array('index'),
-                                    'error' => array('error'));
+                                    'error' => array('error')
+                            );
 
     /** @var assoc array Pages a demonstration user may access. */
     protected $_demoPages = array();
 
     /** @var assoc array Pages a user may access. */
     protected $_userPages = array('queue' => array('index', 'unlock', 'info', 'queue', 'queuing', 'cancel',
-                                                   'update'));
+                                                   'update'),
+                                  'session' => array('index')
+                            );
 
     /** @var assoc array Pages an academic user may access. */
     protected $_academicPages = array('academic' => array('index'));

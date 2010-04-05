@@ -215,10 +215,24 @@
 	color: #000000;
 }
 
+#queuestalewarning {
+	width: 300px;
+	padding: 10px;
+	margin-top: 40px;
+	margin-left: -20px;
+	padding: 10px;
+	text-align: left;
+}
+
+#queuestalewarning span {
+	float: left;
+	margin-right: 5px;
+}
+
 #queueredirectinfo {
 	width: 300px;
 	padding: 10px;
-	margin-top: 50px;
+	margin-top: 20px;
 	margin-left: -20px;
 	padding: 10px;
 	text-align: left;

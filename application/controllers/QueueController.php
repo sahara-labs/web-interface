@@ -38,10 +38,6 @@
 
 /**
  * Controller for the queue.
- *
- * <ul>
- * 	<li>index - Display a list of resource a user can queue for.</li>
- * </ul>
  */
 class QueueController extends Sahara_Controller_Action_Acl
 {

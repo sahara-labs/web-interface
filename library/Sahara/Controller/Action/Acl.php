@@ -130,16 +130,18 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
             {
                 $this->view->userRole = self::PSEUDO_ROLE_QUEUE;
             }
-            else if ($session->inSession && !in_array("$controller$action", $this->_noRedirectPages))
+            else if ($session->inSession && "$controller$action" != 'sessionindex' && !in_array("$controller$action", $this->_noRedirectPages))
             {
-                /* User in session but not on experiment page. */
-                // TODO redirect to session page
+                /* User in session but not on session page. */
+                $this->_logger->debug('Redirecting user ' . $this->_auth->getIdentity() . ' to session page (index ' .
+                        "action on session) from $action on $controller.");
+                $this->_redirectTo('index', 'session');
             }
             else if ($session->inSession)
             {
                 $this->view->userRole = self::PSEUDO_ROLE_SESSION;
             }
-            else if ("$controller$action" == 'queuequeuing')
+            else if ("$controller$action" == 'queuequeuing' || "$controller$action" == 'sessionindex')
             {
                 /* User in queue or experiment page, but not in either. */
                 $this->_logger->debug('Redirecting user ' . $this->_auth->getIdentity() . ' to role home from ' .

@@ -357,7 +357,7 @@ function updateQueueInfo()
 				var secs = info.time % 60;
 				$("#queuetime").html("In queue " +
 						 "<span>" + min + "</span> " + (min == 1 ? "minute" : "minutes") + 
-						 " <span>" + secs + "</span> " + (secs == 1 ? "second" : "seconds") + 
+						 ", <span>" + secs + "</span> " + (secs == 1 ? "second" : "seconds") + 
 						 "."
 				);
 			}
