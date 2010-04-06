@@ -1,3 +1,5 @@
+@CHARSET "UTF-8";
+
 /**
  * SAHARA Web Interface
  *
@@ -32,39 +34,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 6th April 2010
+ * @date 21st February 2010
  */
-
-
-function finishSession()
-{
-	var diagDiv = "div[aria-labelledby=ui-dialog-title-finishsessiondialog]";
-	var conDiv = "#finishsessiondialog";
-	
-	/* Cancel all buttons. */
-	$(diagDiv + " div.ui-dialog-buttonpane").css("display", "none");
-	$(diagDiv + " div.ui-dialog-titlebar").css("display", "none");
-	$(conDiv).dialog({'closeOnEscape': false});
-	
-	html = "<div style='text-align:center;font-size:1.3em;'>" +
-		   "	<img src='/images/ajax-loading.gif' alt='Loading' /><br />" +
-		   "	<p>Finishing session...</p>" +
-		   "</div>";
-	
-	$(conDiv).html(html);
-	
-	$.get(
-		"/session/finish",
-		{},
-		function (r) {
-			$(conDiv).html(
-					"<div class='dialogcentercontent'>" +
-					"	<div class='dialogheader'>" +
-					"		<h3 style='display:block;margin-top:20px'>Success, redirecting...</h3>" +
-					"   </div>" +
-					"<div>"
-			);
-			window.location.replace("/queue/index");
-		}
-	);
+ 
+ 
+ .dialogcentercontent {
+	text-align: center;
 }
+
+ .dialogheader {
+	margin-bottom: 30px;
+}
+
+.dialogheader h3 {
+	display: inline;
+	font-size: 15px;
+}
+
+.dialogheader img {
+	margin: 0px 5px -15px;
+}
+
