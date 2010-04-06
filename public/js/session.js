@@ -1,4 +1,3 @@
-<?php
 /**
  * SAHARA Web Interface
  *
@@ -33,8 +32,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 5th April 2010
+ * @date 6th April 2010
  */
 
-$this->headScript()->appendFile($this->baseUrl('js/session.js'));
-?>
+
+function finishSession()
+{
+	alert("Requested finish session.");
+}
