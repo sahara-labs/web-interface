@@ -45,4 +45,19 @@ class SessionController extends Sahara_Controller_Action_Acl
     {
         echo "In session";
     }
+
+    /**
+     * Action to finish a rig session.
+     */
+    public function finishAction()
+    {
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();
+
+        $response = Sahara_Soap::getSchedServerSessionClient()->finishSession(array(
+        		'userQName' => $this->_auth->getIdentity()
+        ));
+
+        echo $this->view->json($response);
+    }
 }

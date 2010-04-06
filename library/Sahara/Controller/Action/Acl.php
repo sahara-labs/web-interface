@@ -67,7 +67,8 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
     protected $_logger;
 
     /** @var array Controlled pages which will not redirect. */
-    private $_noRedirectPages = array('indexlogout', 'indexfeedback', 'queuecancel', 'queueupdate');
+    private $_noRedirectPages = array('indexlogout', 'indexfeedback', 'queuecancel', 'queueupdate',
+                                      'sessionfinish');
 
     /**
      * Initalisation.
@@ -119,7 +120,8 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
                     ($session->inSession ? 'in session.' : 'not in session') . '.');
 
             /* Force a user to be specific places depending on where they are in session. */
-            if ($session->inQueue && "$controller$action" != 'queuequeuing' && !in_array("$controller$action", $this->_noRedirectPages))
+            if ($session->inQueue && "$controller$action" != 'queuequeuing' &&
+                    !in_array("$controller$action", $this->_noRedirectPages))
             {
                 /* User in queue but not on queueing page. */
                 $this->_logger->debug('Redirecting user ' . $this->_auth->getIdentity() . ' to queueing page (queuing ' .
@@ -130,7 +132,8 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
             {
                 $this->view->userRole = self::PSEUDO_ROLE_QUEUE;
             }
-            else if ($session->inSession && "$controller$action" != 'sessionindex' && !in_array("$controller$action", $this->_noRedirectPages))
+            else if ($session->inSession && "$controller$action" != 'sessionindex' &&
+                    !in_array("$controller$action", $this->_noRedirectPages))
             {
                 /* User in session but not on session page. */
                 $this->_logger->debug('Redirecting user ' . $this->_auth->getIdentity() . ' to session page (index ' .

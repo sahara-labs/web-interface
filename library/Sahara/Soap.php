@@ -47,6 +47,9 @@ class Sahara_Soap
     /** The bundle containing the Queuer SOAP interface in the Scheduling Server. */
     const QUEUER_SERVICE_BUNDLE = 'SchedulingServer-Queuer';
 
+    /** The bundle containing the Session SOAP interface in the Scheduling Server. */
+    const SESSION_SERVICE_BUNDLE = 'SchedulingServer-Session';
+
     /** The SOAP client which points to the SOAP service. */
     protected $_client;
 
@@ -88,7 +91,7 @@ class Sahara_Soap
      * @param string $endPoint service endpoint
      * @param string $prefix (optional) prefix to generate the URL (between the end of
      *        		the hostname:port and the Axis2 'services/endpoint' URL portion
-     * @return Sahara_SOAP instance
+     * @return Sahara_Soap instance
      * @throws Exception if failed contacting Scheduling Server
      */
     public static function createSchedServerClient($endPoint, $prefix = null)
@@ -111,10 +114,10 @@ class Sahara_Soap
     }
 
     /**
-     * Gets a Sahara_SOAP instance which points to the Permissions interface
+     * Gets a Sahara_Soap instance which points to the Permissions interface
      * of the Scheduling Server.
      *
-     * @return Sahara_SOAP instance
+     * @return Sahara_Soap instance
      * @throws Exception if failed contacting Scheduling Server
      */
     public static function getSchedServerPermissionsClient()
@@ -128,10 +131,10 @@ class Sahara_Soap
     }
 
     /**
-     * Gets a Sahara_SOAP instance which points to the Queuer interface of
+     * Gets a Sahara_Soap instance which points to the Queuer interface of
      * the Scheduling Server.
      *
-     * @return Sahara_SOAP instance
+     * @return Sahara_Soap instance
      * @throws Exception if failed contacting Scheduling Server
      */
     public static function getSchedServerQueuerClient()
@@ -144,6 +147,22 @@ class Sahara_Soap
         return Zend_Registry::get(self::QUEUER_SERVICE_BUNDLE);
     }
 
+    /**
+     * Gets a Sahara_Soap instance which points to the Session interface
+     * of the Scheduling Server.
+     *
+     * @return Sahara_Soap instance
+     * @throws Exception if failed contacting Scheduling Server
+     */
+    public static function getSchedServerSessionClient()
+    {
+        if (!Zend_Registry::isRegistered(self::SESSION_SERVICE_BUNDLE))
+        {
+            Zend_Registry::set(self::SESSION_SERVICE_BUNDLE,
+                    self::createSchedServerClient('Session', self::SESSION_SERVICE_BUNDLE));
+        }
+        return Zend_Registry::get(self::SESSION_SERVICE_BUNDLE);
+    }
 
     /**
      * Calls a SOAP operation on the SOAP client.
