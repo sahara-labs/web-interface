@@ -36,16 +36,37 @@
  * @date 8th April 2010
  */
 
-class Sahara_DefaultContacts
+class Sahara_DefaultInfo
 {
 	public function getContacts()
 	{
-		$allContacts = array("Sahara Technical Contact" => array("Contact Name" => "Tania Machet",
-										  "Contact Phone" => "(02) 9514 2975",
-										  "Contact Address" => "UTS Building 1",
+		$allContacts = array("Sahara Technical Contact" => array("Contact Name:" => "Tania Machet",
+										  "Contact Phone:" => "(02) 9514 2975",
+										  "Contact Address:" => "UTS Building 1",
 										  "" => "CB01.23.16",
-										  "Contact Email" => "<a href=\"mailto:tania.machet@eng.uts.edu.au\">Tania Machet</a>"));
+										  "Contact Email:" => "<a href=\"mailto:tania.machet@eng.uts.edu.au\">Tania Machet</a>"));
 										  
 		return $allContacts;	
+	}
+
+	public function getAbout()
+	{
+		$aboutHeader = "Sahara Software";
+		
+		$paragraph1 = "Sahara is the software used to access remote laboratories anywhere, any time.  Sahara is a suite of software 
+		 components that has been developed at UTS under the LabShare program.";
+		$paragraph2 = "For more information or any questions regarding Sahara,
+		 please use the \"Send Feedback\" tab or the contact details provided.";
+
+		$about = array("header" => $aboutHeader, "1" => $paragraph1, "2" => $paragraph2);
+		
+		return $about;	
+	}
+	
+	public function getFAQ()
+	{
+		$FAQ = "In development";
+		
+		return $FAQ;	
 	}
 }
