@@ -35,14 +35,38 @@
  * @author Michael Diponio (mdiponio)
  * @date 21st March 2010
  */
+$this->headLink()->appendStylesheet($this->baseUrl('css/info.css'));
 ?>
-<div align="center" style="width:100%">
-<img style="padding:20px;" src="<?=$this->baseUrl('images/alert.png')?>" alt="Alert"></img>
-<div class="ui-state-error ui-corner-all alertdiv"
-							style="width:450px;">
-	<p>
-		<span class="ui-icon ui-icon-alert alertspan"></span>
-		About information in development!
-	</p>
+<?php if (count($this->messages)):?>
+	<div class="ui-state-error ui-corner-all alertdiv">
+	<?php if (count($this->messages) == 1):?>
+		<p class="alertp">
+    		<span class="ui-icon ui-icon-alert alertspan"></span>
+    		<?=$this->messages[0]?>
+    	</p>
+	<?php else: ?>
+		<p class="alertp">
+			<span class="ui-icon ui-icon-alert alertspan"></span>
+			<strong>Alert:</strong>
+		</p>
+		<ul class="alertlist" >
+    	<?php foreach ($this->messages as $m): ?>
+    		<li><?=$m?></li>
+    	<?php endforeach; ?>
+    	</ul>
+   	<?php endif; ?>
+	</div>
+<?php endif; ?>
+
+<div class="contentheader">
+	<h2>About</h2>
+	<h3><?php echo $this->about["header"]?></h3>
 </div>
+<div class="bordered ui-corner-all"> 
+<?php foreach ($this->about as $i => $paragraph): 
+	if($i != "header"): ?>
+	<p class="about">
+	  	<?php echo $paragraph;?> 
+	<?php endif;?>
+<?php endforeach;?>
 </div>

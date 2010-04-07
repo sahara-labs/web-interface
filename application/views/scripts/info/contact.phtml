@@ -35,7 +35,7 @@
  * @author Michael Diponio (mdiponio)
  * @date 21st March 2010
  */
-$this->headLink()->appendStylesheet($this->baseUrl('css/contact.css'));
+$this->headLink()->appendStylesheet($this->baseUrl('css/info.css'));
 ?>
 <?php if (count($this->messages)):?>
 	<div class="ui-state-error ui-corner-all alertdiv">
@@ -60,23 +60,25 @@ $this->headLink()->appendStylesheet($this->baseUrl('css/contact.css'));
 
 <div class="contentheader">
 	<h2>Contact Information </h2>
-	<h3><b><?php echo $this->inst?></h3>
+	<h3><?php echo $this->inst?></h3>
 </div>
-<div class="bordered"> 
+<div class="bordered ui-corner-all"> 
+<?php foreach ($this->contacts as $i => $contacts): ?>
 <table class="contacttable">
- <?php foreach ($this->contacts as $i => $contacts): ?>
-	<th class="contacthead" colspan ="2">
-		<font color="#FFFFFF"><b>
+   <tr>
+	<th class="contacthead" colspan ="2" >
 		 <?php echo $i ?> 
-		 </font></b>
 	</th>
-	 <?php foreach ($contacts as $name => $value): ?>
-	<tr> 
-	 <td width = 30%><?php echo $name ?></td>
-	 <td width = 70%><?php echo $value?></td>
-	</tr>
+   </tr>
+ 	 <?php $j=0;
+ 	 foreach ($contacts as $name => $value): 
+ 	 	$j++;?>
+		<tr class="<?php  if($j&1) {echo "grey";} else {echo "white";}?>"> 
+	 	<td class="contactLabel"><?php echo $name ?></td>
+	 	<td class="contactValue"><?php echo $value?></td>
+		</tr>
 	<?php endforeach;?>
- <?php endforeach;?>
 </table> 
+<?php endforeach;?>
 </div>
 
