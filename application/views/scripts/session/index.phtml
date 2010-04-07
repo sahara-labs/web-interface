@@ -38,5 +38,19 @@
 
 $this->headScript()->appendFile($this->baseUrl('js/session.js'));
 $this->headLink()->appendStylesheet($this->baseUrl('css/session.css'));
-
 ?>
+
+<div class="contentheader">
+	<h2><?=$this->rig?> Rig</h2>
+</div>
+
+<div id="sessioninfo" class="ui-corner-all">
+	<div id="sessioninfoheader">
+		<p><span class="ui-icon ui-icon-info"></span>
+		Session information</p>
+	</div>
+	<div id="sessioninfocontent">
+		<div>Using: <span>15:50</span></div>
+		<div>Remaining:<span>10:30</span></div>
+	</div>
+</div>

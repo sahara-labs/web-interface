@@ -43,7 +43,13 @@ class SessionController extends Sahara_Controller_Action_Acl
 {
     public function indexAction()
     {
-        echo "In session";
+        $response = Sahara_Soap::getSchedServerSessionClient()->getSessionInformation(array(
+            'userQName' => $this->_auth->getIdentity()
+        ));
+
+        $this->view->rig = $this->view->stringTransform($response->resource->resourceName, '_', ' ');
+        $this->view->headTitle("Remote Labs: " . $this->view->rig);
+
     }
 
     /**
