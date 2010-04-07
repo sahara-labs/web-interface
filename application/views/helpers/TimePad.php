@@ -33,53 +33,27 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 5th April 2010
+ * @date 7th April 2010
  */
 
 /**
- * Controller for being in session.
+ * Pads time fields into two digits.
  */
-class SessionController extends Sahara_Controller_Action_Acl
+class Zend_View_Helper_TimePad
 {
     /**
-     * Action which displays the session page.
+     * If a time field is one digit, it is padded into two digits with a
+     * leading '0'.
+     *
+     * @param time field $tm
+     * @return padding time field
      */
-    public function indexAction()
+    public function timePad($tm)
     {
-        $response = Sahara_Soap::getSchedServerSessionClient()->getSessionInformation(array(
-            'userQName' => $this->_auth->getIdentity()
-        ));
-
-        $this->view->rig = $this->view->stringTransform($response->resource->resourceName, '_', ' ');
-        $this->view->headTitle("Remote Labs - " . $this->view->rig);
-
-        $this->view->time = array(
-            'hours' => floor($response->time / 3600),
-            'mins'  => floor(($response->time % 3600) / 60),
-            'secs'  => floor(($response->time % 3600) % 60)
-        );
-
-        $this->view->remaining = array(
-            'hours' => floor($response->timeLeft / 3600),
-            'mins' => floor(($response->timeLeft % 3600) / 60),
-            'secs'  => floor(($response->timeLeft % 3600) % 60)
-        );
-
-        $this->view->info = $response;
-    }
-
-    /**
-     * Action to finish a rig session.
-     */
-    public function finishAction()
-    {
-        $this->_helper->viewRenderer->setNoRender();
-        $this->_helper->layout()->disableLayout();
-
-        $response = Sahara_Soap::getSchedServerSessionClient()->finishSession(array(
-        		'userQName' => $this->_auth->getIdentity()
-        ));
-
-        echo $this->view->json($response);
+        if ($tm < 10)
+        {
+            return "0$tm";
+        }
+        return $tm;
     }
 }

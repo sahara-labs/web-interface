@@ -46,7 +46,7 @@ class QueueController extends Sahara_Controller_Action_Acl
      */
     public function indexAction()
     {
-        $this->view->headTitle('Remote Labs: Select a resource');
+        $this->view->headTitle('Remote Labs - Select a resource');
 
         /* Load the permissions of the user. */
         $client = Sahara_Soap::getSchedServerPermissionsClient();

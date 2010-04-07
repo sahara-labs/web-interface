@@ -44,13 +44,32 @@ $this->headLink()->appendStylesheet($this->baseUrl('css/session.css'));
 	<h2><?=$this->rig?> Rig</h2>
 </div>
 
+<div id="warningmessage">
+<?php if (isset($this->info->warningMessage)):?>
+	<div class="ui-corner-all ui-state-error">
+		<?=$this->info->warningMessage?>
+	</div>
+<?php endif; ?>
+</div>
+
 <div id="sessioninfo" class="ui-corner-all">
 	<div id="sessioninfoheader">
-		<p><span class="ui-icon ui-icon-info"></span>
-		Session information</p>
+		<p><span class="ui-icon ui-icon-info"></span>Session Time</p>
 	</div>
 	<div id="sessioninfocontent">
-		<div>Using: <span>15:50</span></div>
-		<div>Remaining:<span>10:30</span></div>
+		<div id="sessiontime">
+			In Session:
+			<span class="hour"><?=$this->timePad($this->time['hours'])?></span> :
+			<span class="min"><?=$this->timePad($this->time['mins'])?></span> :
+			<span class="sec"><?=$this->timePad($this->time['secs'])?></span>
+		</div>
+		<div id="sessionremainingtime">
+			<div class="timeheader">Remaining:</div>
+			<div class="timefields <?=$this->remaining['hours'] == 0 && $this->remaining['mins'] < 10 ? 'timered' : 'timenormal'?>">
+				<span class="hour"><?=$this->timePad($this->remaining['hours'])?></span> :
+				<span class="min"><?=$this->timePad($this->remaining['mins'])?></span> :
+				<span class="sec"><?=$this->timePad($this->remaining['secs'])?></span>
+			</div>
+		</div>
 	</div>
 </div>
