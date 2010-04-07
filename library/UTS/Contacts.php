@@ -41,16 +41,16 @@ class UTS_Contacts
 	public function getContacts()
 	{
 		
-		$allContacts = array("Business" => array("Contact Name" => "Michel de la Villefromoy",
-										  "Contact Phone" => "(02)9514 2406",
-										  "Contact Address" => "UTS Building 1",
+		$allContacts = array("Business" => array("Contact Name:" => "Michel de la Villefromoy",
+										  "Contact Phone:" => "(02) 9514 2406",
+										  "Contact Address:" => "UTS Building 1",
 										  "" => "CB01.23.16",
-										  "Contact Email" => "<a href=\"mailto:mville@eng.uts.edu.au\">Michel de la Villefromoy</a>"),
-							 "Technical" => array("Contact Name" => "Tania Machet",
-										  "Contact Phone" => "(02) 9514 2975",
-										  "Contact Address" => "UTS Building 1",
+										  "Contact Email:" => "<a href=\"mailto:mville@eng.uts.edu.au\">Michel de la Villefromoy</a>"),
+							 "Technical" => array("Contact Name:" => "Tania Machet",
+										  "Contact Phone:" => "(02) 9514 2975",
+										  "Contact Address:" => "UTS Building 1",
 										  "" => "CB01.23.16",
-										  "Contact Email" => "<a href=\"mailto:tania.machet@eng.uts.edu.au\">Tania Machet</a>"));
+										  "Contact Email:" => "<a href=\"mailto:tania.machet@eng.uts.edu.au\">Tania Machet</a>"));
 										  
 		return $allContacts;	
 	}
