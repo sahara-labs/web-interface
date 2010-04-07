@@ -35,14 +35,8 @@
  * @author Michael Diponio (mdiponio)
  * @date 21st March 2010
  */
-$config = Zend_Registry::get('config');
-($contactName = $config->contact->name) != null || $contactName= 'Labshare Contact - Labshare Guru';
-($contactPhone = $config->contact->phone) != null || $contactPhone= 'Labshare Contact - (02) 9415 2975';
-($contactEmail = $config->contact->email) != null || $contactEmail= 'Labshare Contact - labshare@uts.edu.au';
-($contactAddress1 = $config->contact->address1) != null || $contactAddress1= 'Not Available';
-($contactAddress2 = $config->contact->address2) != null || $contactAddress2= '';
+$this->headLink()->appendStylesheet($this->baseUrl('css/contact.css'));
 ?>
-
 <?php if (count($this->messages)):?>
 	<div class="ui-state-error ui-corner-all alertdiv">
 	<?php if (count($this->messages) == 1):?>
@@ -64,13 +58,25 @@ $config = Zend_Registry::get('config');
 	</div>
 <?php endif; ?>
 
-<div align="center" style="width:100%">
-     <?php echo $this->inst?>
+<div class="contentheader">
+	<h2>Contact Information </h2>
+	<h3><b><?php echo $this->inst?></h3>
 </div>
-<div id="contact name" align="center" style="width:100%" >
-     <?php echo "Contact Name: ".$contactName?><br>
-     <?php echo "Contact Phone: ".$contactPhone?><br>
-     <?php echo "Contact Email: ".$contactEmail?><br>
-     <?php echo "Contact Address: ".$contactAddress1?>
+<div class="bordered"> 
+<table class="contacttable">
+ <?php foreach ($this->contacts as $i => $contacts): ?>
+	<th class="contacthead" colspan ="2">
+		<font color="#FFFFFF"><b>
+		 <?php echo $i ?> 
+		 </font></b>
+	</th>
+	 <?php foreach ($contacts as $name => $value): ?>
+	<tr> 
+	 <td width = 30%><?php echo $name ?></td>
+	 <td width = 70%><?php echo $value?></td>
+	</tr>
+	<?php endforeach;?>
+ <?php endforeach;?>
+</table> 
 </div>
 

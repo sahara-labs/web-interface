@@ -41,7 +41,10 @@
  */
 class InfoController extends Sahara_Controller_Action_Acl
 {
-    /**
+    /** @var String Application path. */
+    protected $_rootDir = APPLICATION_PATH;
+	
+	/**
      * Action to provide information about the lab.
      */
     public function indexAction()
@@ -67,5 +70,16 @@ class InfoController extends Sahara_Controller_Action_Acl
         
         $inst = Zend_Registry::get('config')->institution;
         $this->view->inst = $inst;
+        if (is_file($this->_rootDir . '/../library/' . $inst . '/Contacts.php'))
+        {
+        	$contactClass = $inst . '_Contacts';
+        	$contacts = new $contactClass;
+        }
+        else
+        {
+        	$contacts = new Sahara_DefaultContacts;
+        }
+
+        $this->view->contacts = $contacts->getContacts();
     }
 }

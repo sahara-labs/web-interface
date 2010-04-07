@@ -214,6 +214,11 @@ a.plaina:hover {
 	text-shadow: 3px 3px 3px #C0C0C0;
 }
 
+.contentheader h3 {
+	padding: 10px;
+	font-size: 1.5em;
+	font-weight: bold;
+}
 .centercontent {
 	margin: 0 auto;
 }
