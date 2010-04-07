@@ -1,0 +1,50 @@
+@CHARSET "UTF-8";
+
+.bordered {
+	border:2px solid #606060;
+	margin:auto;
+	width:600px;
+}
+
+.contacttable {
+	border:0px;
+	width:100%;
+	align:center;
+	height:100;
+	border-collapse: collapse;
+	
+}
+
+.contacthead {
+	text-align:left;
+	padding-left:15px;
+	background-color:#606060;
+	width:370px;
+	height:40px;
+	color:#FFFFFF;
+}
+
+.grey {
+	background-color:#EFEFEF;
+}
+
+.white {
+	background-color:white;
+}
+
+.contactLabel {
+	width:30%;
+	font-weight:bold;
+}
+	
+.contactValue {
+	width:70%
+	
+}
+		
+
+.about {
+	padding:15px;
+	font-size:12pt;
+	line-height:20px;
+}
