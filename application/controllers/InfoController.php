@@ -50,6 +50,22 @@ class InfoController extends Sahara_Controller_Action_Acl
     public function indexAction()
     {
         $this->view->headTitle('Remote Labs - About');
+        $this->view->messages = $this->_flashMessenger->getMessages();
+        
+        $inst = Zend_Registry::get('config')->institution;
+        $this->view->inst = $inst;
+        if (is_file($this->_rootDir . '/../library/' . $inst . '/About.php'))
+        {
+        	$aboutClass = $inst . '_FAQ';
+        	$about = new $aboutClass;
+        }
+        else
+        {
+        	$about = new Sahara_DefaultInfo;
+        }
+
+        $this->view->about = $about->getAbout();
+        
     }
 
     /**
@@ -58,7 +74,22 @@ class InfoController extends Sahara_Controller_Action_Acl
     public function faqAction()
     {
         $this->view->headTitle('Remote Labs - Frequently Asked Questions');
-    }
+        $this->view->messages = $this->_flashMessenger->getMessages();
+        
+        $inst = Zend_Registry::get('config')->institution;
+        $this->view->inst = $inst;
+        if (is_file($this->_rootDir . '/../library/' . $inst . '/FAQ.php'))
+        {
+        	$faqClass = $inst . '_FAQ';
+        	$faq = new $faqClass;
+        }
+        else
+        {
+        	$faq = new Sahara_DefaultInfo;
+        }
+
+        $this->view->faq = $faq->getFAQ();
+    }    
 
     /**
      * Action to provide contact informaion.
@@ -77,7 +108,7 @@ class InfoController extends Sahara_Controller_Action_Acl
         }
         else
         {
-        	$contacts = new Sahara_DefaultContacts;
+        	$contacts = new Sahara_DefaultInfo;
         }
 
         $this->view->contacts = $contacts->getContacts();
