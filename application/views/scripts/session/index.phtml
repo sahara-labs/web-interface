@@ -45,6 +45,7 @@ $this->headScript()->appendScript('
 /* Extensions number. */
 extensions = ' . $this->info->extensions . ';
 callBackInterval = ' . ($c ? $c * 1000 : 60000) .';
+notReady = '. ($this->info->isReady ? 'false' : 'true') . ';
 
 $(document).ready(function() {
 	tInterval = setInterval("updateSession()", ' . ($this->info->isReady ? ($c ? $c * 1000 : 60000) : 10000) . ');
@@ -55,8 +56,6 @@ if (!$this->info->isReady)
 {
     $this->headScript()->appendScript(
 '
-notReady = true;
-
 $(document).ready(function() {
 	$("#readyoverlay").dialog({
 		autoOpen: true,
