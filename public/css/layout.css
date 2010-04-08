@@ -92,19 +92,29 @@ legend {
 }
 
 #headername {
-
 }
 
 #headername h1 {
-	margin-top: 1px;
-	margin-left: 175px;
-	font-weight: normal;
+	position: absolute;
+	margin-top: 10px;
+	margin-left: 220px;
+	font-weight: bold;
 	font-size: 35px;
+	 z-index: 1;
+}
+#headername h1shadow {
+	position: absolute;
+	color:#EEEEEE;
+	margin-top: 12px;
+	margin-left: 68px;
+	font-weight: bold;
+	font-size: 35px;
+	z-index: 0;
 }
 
 #labshareimg {
 	float: right;
-	margin-top: -52px;
+	margin-top: -10px;
 	margin-right:10px;
 }
 
