@@ -49,22 +49,22 @@ class InfoController extends Sahara_Controller_Action_Acl
      */
     public function indexAction()
     {
-        $this->view->headTitle('Remote Labs - About');
+        $this->view->headTitle('Remote Labs - News');
         $this->view->messages = $this->_flashMessenger->getMessages();
         
         $inst = Zend_Registry::get('config')->institution;
         $this->view->inst = $inst;
-        if (is_file($this->_rootDir . '/../library/' . $inst . '/About.php'))
+        if (is_file($this->_rootDir . '/../library/' . $inst . '/News.php'))
         {
-        	$aboutClass = $inst . '_FAQ';
-        	$about = new $aboutClass;
+        	$newsClass = $inst . '_FAQ';
+        	$news = new $newsClass;
         }
         else
         {
-        	$about = new Sahara_DefaultInfo;
+        	$news = new Sahara_DefaultInfo;
         }
 
-        $this->view->about = $about->getAbout();
+        $this->view->news = $news->getNews();
         
     }
 

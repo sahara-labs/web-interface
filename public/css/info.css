@@ -1,18 +1,16 @@
 @CHARSET "UTF-8";
 
 .bordered {
-	border:2px solid #606060;
 	margin:auto;
 	width:600px;
 }
 
 .contacttable {
-	border:0px;
-	width:100%;
-	align:center;
-	height:100;
-	border-collapse: collapse;
-	
+	border-collapse:collapse;
+	border-color:#EFEFEF;
+	border-style:solid;
+	border-width:0 2px;
+	width:100%;	
 }
 
 .contacthead {
@@ -43,8 +41,14 @@
 }
 		
 
-.about {
+.news {
 	padding:15px;
 	font-size:12pt;
 	line-height:20px;
 }
+
+.bordered .h3 {
+	font-size:12pt;
+	font-weight:bold;
+}
+

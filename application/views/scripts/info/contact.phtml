@@ -37,6 +37,12 @@
  */
 $this->headLink()->appendStylesheet($this->baseUrl('css/info.css'));
 ?>
+<script>
+  $(document).ready(function() {
+    $("#accordion").accordion({ autoHeight: false });
+  });
+ </script>
+ 
 <?php if (count($this->messages)):?>
 	<div class="ui-state-error ui-corner-all alertdiv">
 	<?php if (count($this->messages) == 1):?>
@@ -62,23 +68,23 @@ $this->headLink()->appendStylesheet($this->baseUrl('css/info.css'));
 	<h2>Contact Information </h2>
 	<h3><?php echo $this->inst?></h3>
 </div>
-<div class="bordered ui-corner-all"> 
-<?php foreach ($this->contacts as $i => $contacts): ?>
-<table class="contacttable">
-   <tr>
-	<th class="contacthead" colspan ="2" >
-		 <?php echo $i ?> 
-	</th>
-   </tr>
- 	 <?php $j=0;
- 	 foreach ($contacts as $name => $value): 
- 	 	$j++;?>
-		<tr class="<?php  if($j&1) {echo "grey";} else {echo "white";}?>"> 
-	 	<td class="contactLabel"><?php echo $name ?></td>
-	 	<td class="contactValue"><?php echo $value?></td>
-		</tr>
-	<?php endforeach;?>
-</table> 
-<?php endforeach;?>
-</div>
 
+<div class="bordered ui-corner-all" >
+	<div id="accordion" >
+			<?php foreach ($this->contacts as $i => $contacts):?>
+    		<h3><b><a href="#"><?php echo $i; ?></a></b></h3>
+    		<div>
+    		<table class="contacttable">
+ 	 			<?php $j=0;
+ 	 			foreach ($contacts as $name => $value): 
+ 	 				$j++;?>
+					<tr class="<?php  if($j&1) {echo "grey";} else {echo "white";}?>"> 
+	 				<td class="contactLabel"><?php echo $name ?></td>
+	 				<td class="contactValue"><?php echo $value?></td>
+					</tr>
+				<?php endforeach;?>
+			</table>
+    	</div>
+    	<?php endforeach;?>
+	</div>
+</div>
