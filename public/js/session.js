@@ -41,6 +41,20 @@ function updateSession()
 		"/session/info",
 		{},
 		function (info) {
+			/* Ready overlay. */
+			if (notReady)
+			{
+				if (info.isReady)
+				{
+					notReady = false;
+					$("#readyoverlay").dialog("close");
+					
+					/* Restore the normal interval. */
+					clearTimeout(tInterval);
+					tInterval = setInterval("updateSession()", callBackInterval);
+				}
+			}
+			
 			/* Update the in session and remaining fields. */
 			$("#sessiontime .hour").html(timePad(Math.floor(info.time / 3600)));
 			$("#sessiontime .min").html(timePad(Math.floor((info.time % 3600) / 60)));

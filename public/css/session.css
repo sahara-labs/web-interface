@@ -101,6 +101,10 @@
 	text-align: center;
 }
 
+#readyoverlay {
+	text-align: center;
+}
+
 .timered {
 	color: red;
 	font-weight: bold;	

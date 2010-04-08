@@ -44,11 +44,34 @@ $this->headScript()->appendScript('
 
 /* Extensions number. */
 extensions = ' . $this->info->extensions . ';
+callBackInterval = ' . ($c ? $c * 1000 : 60000) .';
 
 $(document).ready(function() {
-	tInterval = setInterval("updateSession()", ' . ($c ? $c * 1000 : 60000) . ');
+	tInterval = setInterval("updateSession()", ' . ($this->info->isReady ? ($c ? $c * 1000 : 60000) : 10000) . ');
 });
 ');
+
+if (!$this->info->isReady)
+{
+    $this->headScript()->appendScript(
+'
+notReady = true;
+
+$(document).ready(function() {
+	$("#readyoverlay").dialog({
+		autoOpen: true,
+		closeOnEscape: false,
+		draggable: false,
+		modal: true,
+		width: 240,
+		height: 100,
+		resizable: false
+	});
+
+	$("div[aria-labelledby=ui-dialog-title-readyoverlay] .ui-dialog-titlebar").css("display", "none");
+});'
+    );
+}
 ?>
 
 <div class="contentheader">
@@ -81,6 +104,13 @@ $(document).ready(function() {
 	</div>
 </div>
 
+<?php if (!$this->info->isReady):?>
+<div id="readyoverlay">
+	<img src="<?=$this->baseUrl('images/ajax-loading.gif')?>" alt="Loading" />
+	<h3>Please wait...</h3>
+	<p>The rig is not yet ready for use.</p>
+</div>
+<?php endif; ?>
 
 <div id="warningmessage" style="display:<?=isset($this->info->warningMessage) ? 'block' : 'none'?>">
 	<div class="ui-corner-all ui-state-error">
