@@ -50,6 +50,8 @@ class Zend_View_Helper_TimePad
      */
     public function timePad($tm)
     {
+        if ($tm < 0) return "00";
+
         if ($tm < 10)
         {
             return "0$tm";

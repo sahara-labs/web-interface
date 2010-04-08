@@ -69,6 +69,21 @@ class SessionController extends Sahara_Controller_Action_Acl
     }
 
     /**
+     * Action to provide info about a session.
+     */
+    public function infoAction()
+    {
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();
+
+        $response = Sahara_Soap::getSchedServerSessionClient()->getSessionInformation(array(
+            'userQName' => $this->_auth->getIdentity()
+        ));
+
+        echo $this->view->json($response);
+    }
+
+    /**
      * Action to finish a rig session.
      */
     public function finishAction()

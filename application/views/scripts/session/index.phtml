@@ -38,18 +38,21 @@
 
 $this->headScript()->appendFile($this->baseUrl('js/session.js'));
 $this->headLink()->appendStylesheet($this->baseUrl('css/session.css'));
+
+$c = Zend_Registry::get('config')->session->interval;
+$this->headScript()->appendScript('
+
+/* Extensions number. */
+extensions = ' . $this->info->extensions . ';
+
+$(document).ready(function() {
+	tInterval = setInterval("updateSession()", ' . ($c ? $c * 1000 : 60000) . ');
+});
+');
 ?>
 
 <div class="contentheader">
 	<h2><?=$this->rig?> Rig</h2>
-</div>
-
-<div id="warningmessage">
-<?php if (isset($this->info->warningMessage)):?>
-	<div class="ui-corner-all ui-state-error">
-		<?=$this->info->warningMessage?>
-	</div>
-<?php endif; ?>
 </div>
 
 <div id="sessioninfo" class="ui-corner-all">
@@ -65,11 +68,23 @@ $this->headLink()->appendStylesheet($this->baseUrl('css/session.css'));
 		</div>
 		<div id="sessionremainingtime">
 			<div class="timeheader">Remaining:</div>
-			<div class="timefields <?=$this->remaining['hours'] == 0 && $this->remaining['mins'] < 10 ? 'timered' : 'timenormal'?>">
+			<div class="timefields <?=$this->remaining['hours'] < 1 && $this->remaining['mins'] < 10 ? 'timered' : 'timenormal'?>">
 				<span class="hour"><?=$this->timePad($this->remaining['hours'])?></span> :
 				<span class="min"><?=$this->timePad($this->remaining['mins'])?></span> :
 				<span class="sec"><?=$this->timePad($this->remaining['secs'])?></span>
 			</div>
 		</div>
+	</div>
+	<div id="sessiontimeextension" style="display:none">
+		<span class="ui-icon ui-icon-clock" style="float:left"></span>
+		You session time has been extended.
+	</div>
+</div>
+
+
+<div id="warningmessage" style="display:<?=isset($this->info->warningMessage) ? 'block' : 'none'?>">
+	<div class="ui-corner-all ui-state-error">
+		<span class="ui-icon ui-icon-alert"></span>
+		<p id="warnmessagetext"><? if (isset($this->info->warningMessage)) echo $this->info->warningMessage?></p>
 	</div>
 </div>

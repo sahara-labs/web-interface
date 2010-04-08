@@ -35,6 +35,62 @@
  * @date 6th April 2010
  */
 
+function updateSession()
+{
+	$.get(
+		"/session/info",
+		{},
+		function (info) {
+			/* Update the in session and remaining fields. */
+			$("#sessiontime .hour").html(timePad(Math.floor(info.time / 3600)));
+			$("#sessiontime .min").html(timePad(Math.floor((info.time % 3600) / 60)));
+			$("#sessiontime .sec").html(timePad((info.time % 3600) % 60));
+			
+			var rHour = Math.floor(info.timeLeft / 3600);
+			var rMin = Math.floor((info.timeLeft % 3600) / 60);
+			$("#sessionremainingtime .hour").html(timePad(rHour));
+			$("#sessionremainingtime .min").html(timePad(rMin));
+			$("#sessionremainingtime .sec").html(timePad((info.timeLeft % 3600) % 60));
+			
+			if (rHour < 1 && rMin < 10)
+			{
+				$("#sessionremainingtime .timefields").addClass("timered");
+				$("#sessionremainingtime .timefields").removeClass("timenormal");
+			}
+
+			/* Warning message. */
+			if (info.warningMessage !== undefined)
+			{
+				$("#warnmessagetext").html(info.warningMessage);
+				if ($("#warningmessage").css('display') == 'none')
+				{
+					$("#warningmessage").fadeIn("slow");
+				}
+			}
+			else
+			{
+				if ($("#warningmessage").css('display') == 'block')
+				{
+					$("#warningmessage").fadeOut("slow");
+				}
+			}
+			
+			/* Time extensions. */
+			if (info.extensions < extensions)
+			{
+				extensions = info.extensions;
+				$("#sessiontimeextension").slideDown(1250);
+			}
+			else
+			{
+				if ($("#sessiontimeextension").css("display") == "block")
+				{
+					$("#sessiontimeextension").slideUp(1250);
+				}
+			}
+		}
+	);
+}
 
 function finishSession()
 {
@@ -67,4 +123,15 @@ function finishSession()
 			window.location.replace("/queue/index");
 		}
 	);
+}
+
+function timePad(tm)
+{
+	if (tm < 0) return "00";
+
+	if (tm < 10)
+	{
+		return "0" + tm;
+	}
+	return tm;
 }
