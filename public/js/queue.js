@@ -55,7 +55,7 @@ function loadPermissionInfo(pid)
 					"   </div>" +
 					"	<div class='ui-state-error ui-corner-all'>" +
 					"   <span class='ui-icon ui-icon-alert alertspan'></span>" +
-					"   	This permission is not queueable because all of its resources are offline." +
+					"   	You cannot queue for this rig because all of its resources are offline." +
 					"   </div>" +
 					"</div>"
 				);
