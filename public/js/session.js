@@ -41,6 +41,11 @@ function updateSession()
 		"/session/info",
 		{},
 		function (info) {
+			if (!info.isInSession)
+			{
+				window.location.replace("/queue/index");
+			}
+			
 			/* Ready overlay. */
 			if (notReady)
 			{
