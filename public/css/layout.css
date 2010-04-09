@@ -89,32 +89,23 @@ legend {
 	float: left;
 	padding-right: 10px;
 	height: 100%;
+	margin-top: 15px;
 }
 
 #headername {
 }
 
 #headername h1 {
-	position: absolute;
+	float: left;
 	margin-top: 10px;
-	margin-left: 220px;
+	margin-left: 60px;
 	font-weight: bold;
 	font-size: 35px;
-	 z-index: 1;
-}
-#headername h1shadow {
-	position: absolute;
-	color:#EEEEEE;
-	margin-top: 12px;
-	margin-left: 68px;
-	font-weight: bold;
-	font-size: 35px;
-	z-index: 0;
 }
 
 #labshareimg {
 	float: right;
-	margin-top: -10px;
+	margin-top: -7px;
 	margin-right:10px;
 }
 
