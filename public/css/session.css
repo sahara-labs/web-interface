@@ -123,6 +123,11 @@
 	float: left;
 	margin-right: 10px;
 }
+
+#rigscriptcontainer {
+	margin: 0 auto;
+	width: 575px;
+}
  
  /******************************************************************************
  ** Finish dialog                                                             **

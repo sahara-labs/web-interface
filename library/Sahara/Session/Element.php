@@ -33,30 +33,57 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 17th March 2010
+ * @date 5th April 2010
  */
 
-/* Define path to application directory */
-defined('APPLICATION_PATH')
-    || define('APPLICATION_PATH', realpath(dirname(__FILE__) . '/../application'));
+abstract class Sahara_Session_Element
+{
+    /** @var Sahara_Soap Soap instance to rig client. */
+    protected $_rigClient;
 
-/* Define application environment */
-defined('APPLICATION_ENV')
-    || define('APPLICATION_ENV', (getenv('APPLICATION_ENV') ? getenv('APPLICATION_ENV') : 'production'));
+    /** @var Zend_View View renderer. */
+    protected $_view;
 
-/* Ensure library/ is on include_path. */
-set_include_path(implode(PATH_SEPARATOR, array(
-    realpath(APPLICATION_PATH . '/../library'),
-    realpath(APPLICATION_PATH . '/models'),
-    realpath(APPLICATION_PATH . '/../institution'),
-    get_include_path()
-)));
+    /** @var Zend_Config Configuration. */
+    protected $_config;
 
-/* Zend_Application */
-require_once 'Zend/Application.php';
+    /** @var Sahara_Logger Logger. */
+    protected $_logger;
 
-/* Create application, bootstrap, and run. */
-$application = new Zend_Application(APPLICATION_ENV, APPLICATION_PATH . '/configs/application.ini');
+    public function __construct($rig)
+    {
+        $this->_rigClient = $rig;
 
-$application->bootstrap()
-            ->run();
+        $this->_config = Zend_Registry::get('config');
+        $this->_logger = Sahara_Logger::getInstance();
+
+        $this->_view = new Zend_View();
+        $this->_view->setScriptPath(realpath(dirname(__FILE__) .'/Element/'));
+    }
+
+    /**
+     * Renders the session element content to HTML.
+     *
+     * @return String HTML to display
+     */
+    public abstract function render();
+
+    /**
+     * Returns the value of the specified rig attribute.
+     *
+     * @param String $attr rig attribute to obtain value of
+     * @return mixed attribute value or false if not found
+     */
+    protected function _getRigAttribute($attr)
+    {
+        list($ns, $name) = explode(':', Zend_Auth::getInstance()->getIdentity(), 2);
+
+        $response = $this->_rigClient->getAttribute(array(
+                'requestor' => $name,
+                'attribute' => $attr
+        ));
+
+        if (!isset($response->value)) return false;
+        return $response->value;
+    }
+}

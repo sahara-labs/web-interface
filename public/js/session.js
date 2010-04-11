@@ -44,6 +44,7 @@ function updateSession()
 			if (!info.isInSession)
 			{
 				window.location.replace("/queue/index");
+				return;
 			}
 			
 			/* Ready overlay. */

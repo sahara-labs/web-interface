@@ -41,9 +41,6 @@
  */
 class InfoController extends Sahara_Controller_Action_Acl
 {
-    /** @var String Application path. */
-    protected $_rootDir = APPLICATION_PATH;
-	
 	/**
      * Action to provide information about the lab.
      */
@@ -51,10 +48,10 @@ class InfoController extends Sahara_Controller_Action_Acl
     {
         $this->view->headTitle('Remote Labs - News');
         $this->view->messages = $this->_flashMessenger->getMessages();
-        
+
         $inst = Zend_Registry::get('config')->institution;
         $this->view->inst = $inst;
-        if (is_file($this->_rootDir . '/../library/' . $inst . '/News.php'))
+        if (is_file(Bootstrap::$rootDirectory . '/../institution/' . $inst . '/News.php'))
         {
         	$newsClass = $inst . '_FAQ';
         	$news = new $newsClass;
@@ -65,7 +62,7 @@ class InfoController extends Sahara_Controller_Action_Acl
         }
 
         $this->view->news = $news->getNews();
-        
+
     }
 
     /**
@@ -75,10 +72,10 @@ class InfoController extends Sahara_Controller_Action_Acl
     {
         $this->view->headTitle('Remote Labs - Frequently Asked Questions');
         $this->view->messages = $this->_flashMessenger->getMessages();
-        
+
         $inst = Zend_Registry::get('config')->institution;
         $this->view->inst = $inst;
-        if (is_file($this->_rootDir . '/../library/' . $inst . '/FAQ.php'))
+        if (is_file(Bootstrap::$rootDirectory . '/../institution/' . $inst . '/FAQ.php'))
         {
         	$faqClass = $inst . '_FAQ';
         	$faq = new $faqClass;
@@ -89,7 +86,7 @@ class InfoController extends Sahara_Controller_Action_Acl
         }
 
         $this->view->faq = $faq->getFAQ();
-    }    
+    }
 
     /**
      * Action to provide contact informaion.
@@ -98,10 +95,10 @@ class InfoController extends Sahara_Controller_Action_Acl
     {
         $this->view->headTitle('Remote Labs - Contact Us');
         $this->view->messages = $this->_flashMessenger->getMessages();
-        
+
         $inst = Zend_Registry::get('config')->institution;
         $this->view->inst = $inst;
-        if (is_file($this->_rootDir . '/../library/' . $inst . '/Contacts.php'))
+        if (is_file(Bootstrap::$rootDirectory . '/../institution/' . $inst . '/Contacts.php'))
         {
         	$contactClass = $inst . '_Contacts';
         	$contacts = new $contactClass;

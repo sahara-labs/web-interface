@@ -65,7 +65,22 @@ class SessionController extends Sahara_Controller_Action_Acl
             'secs'  => floor(($response->timeLeft % 3600) % 60)
         );
 
+        $this->view->rigClient = new Sahara_Soap($response->contactURL . '?wsdl');
         $this->view->info = $response;
+
+        /* Type specific page rendering. */
+        if (($instDir = realpath(Bootstrap::$rootDirectory .'/../institution/' .
+                Zend_Registry::get('config')->institution . '/scripts/')))
+        {
+            $scriptPaths = $this->view->getScriptPaths();
+            array_push($scriptPaths, $instDir);
+            $this->view->setScriptPath($scriptPaths);
+        }
+        else
+        {
+            $this->_logger->info("Institution rig script directory does not exist so overridden rig scripts " .
+            	"will not be renderable.");
+        }
     }
 
     /**

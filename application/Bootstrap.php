@@ -42,7 +42,7 @@
 class Bootstrap extends Zend_Application_Bootstrap_Bootstrap
 {
     /** @var String Application path. */
-    protected $_rootDir = APPLICATION_PATH;
+    public static $rootDirectory = APPLICATION_PATH;
 
     /**
      * Initalises configuration by adding a Zend_Config instance to the registry.
@@ -51,7 +51,7 @@ class Bootstrap extends Zend_Application_Bootstrap_Bootstrap
      */
     protected function _initConfiguration()
     {
-        $config = new Zend_Config_Ini($this->_rootDir . '/configs/config.ini', APPLICATION_ENV);
+        $config = new Zend_Config_Ini(self::$rootDirectory . '/configs/config.ini', APPLICATION_ENV);
 
         /* Add config to the registry. */
         Zend_Registry::set('config', $config);
@@ -79,9 +79,8 @@ class Bootstrap extends Zend_Application_Bootstrap_Bootstrap
         $autoloader->registerNamespace('Sahara_');
 
         $inst = Zend_Registry::get('config')->institution;
-        if (is_dir($this->_rootDir . '/../library/' . $inst))
+        if (is_dir(self::$rootDirectory . '/../institution/' . $inst))
         {
-            Zend_Registry::get('logger')->debug("Registering institution namespace '" . $inst . "_'.");
             $autoloader->registerNamespace($inst . '_');
         }
     }
@@ -96,14 +95,14 @@ class Bootstrap extends Zend_Application_Bootstrap_Bootstrap
         /* Create the view. */
         $view = new Zend_View();
         $view->doctype('XHTML1_STRICT');
-        $view->setHelperPath($this->_rootDir . '/views/helpers');
+        $view->setHelperPath(self::$rootDirectory . '/views/helpers');
 
         /* Add it to the view renderer. */
         $viewRenderer = Zend_Controller_Action_HelperBroker::getStaticHelper('ViewRenderer');
         $viewRenderer->setView($view);
 
         Zend_Layout::startMvc(array(
-			'layoutPath' => $this->_rootDir . '/views/layouts'
+			'layoutPath' => self::$rootDirectory . '/views/layouts'
         ));
 
         return $view;

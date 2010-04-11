@@ -117,3 +117,18 @@ $(document).ready(function() {
 		<p id="warnmessagetext"><? if (isset($this->info->warningMessage)) echo $this->info->warningMessage?></p>
 	</div>
 </div>
+
+<div id="rigscriptcontainer">
+<?php
+    try
+    {
+        echo $this->render($this->info->rigType . '.phtml');
+    }
+    catch (Zend_Exception $ex)
+    {
+        /* The view script doesn't exist, so fall back to a default
+         * (remote desktop rig). */
+        echo $this->render('_defaultRig.phtml');
+    }
+?>
+</div>
