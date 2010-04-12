@@ -39,9 +39,17 @@
  
 #camerapanel {
 	left: -185px;
-	top: 135px;
+	top: 100px;
 }
 
 #camerapanelcontent {
 	height: 100px
+}
+
+.cameraformat {
+	margin: 5px 7px 5px;
+}
+
+.camformatlabel {
+	color: #606060;
 }

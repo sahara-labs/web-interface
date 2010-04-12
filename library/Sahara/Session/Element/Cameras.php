@@ -44,6 +44,14 @@ class Sahara_Session_Element_Cameras extends Sahara_Session_Element
     /** @var array Camera configuration. */
     private $_cameraConfig;
 
+    /** @var array Name of Format types. */
+    private $_formats = array(
+        'off'  => 'Camera Off',
+        'jpeg' => 'JPEG Images',
+        'mms'  => 'Windows Media Player',
+        'mmsh' => 'VLC Media Player'
+    );
+
     /**
      * Loads the details of the rig's cameras.
      */
@@ -80,8 +88,8 @@ class Sahara_Session_Element_Cameras extends Sahara_Session_Element
                         $camera['height'] = $height;
                         break;
                     case 'FORMAT':
-                        $camera['URL'] = array();
-                        foreach (explode(';', $val) as $f) $camera['URL'][$f] = '';
+                        $camera['url'] = array();
+                        foreach (explode(';', $val) as $f) $camera['url'][$f] = '';
                         break;
                     default:
                         $camera[$key] = $val;
@@ -90,7 +98,7 @@ class Sahara_Session_Element_Cameras extends Sahara_Session_Element
 
             /* Generate the camera URL based on the configured format. */
             $formats = $this->_config->camera->toArray();
-            foreach ($camera['URL'] as $f => $u)
+            foreach ($camera['url'] as $f => $u)
             {
                 if (!array_key_exists($f, $formats))
                 {
@@ -113,7 +121,19 @@ class Sahara_Session_Element_Cameras extends Sahara_Session_Element
                     }
                     $url .= $p;
                 }
-                $camera['URL'][$f] = $url;
+                $camera['url'][$f] = $url;
+
+                /* Order the camera formats with 'off' first, then 'jpeg', then
+                 * rest of the formats in their natural order. */
+                $formats = array('off' => $this->_formats['off']);
+
+                $formKeys = array_keys($camera['url']);
+                if (array_search('jpeg', $formKeys)) $formats['jpeg'] = $this->_formats['jpeg'];
+                foreach ($formKeys as $k)
+                {
+                    $formats[$k] = $this->_formats[$k];
+                }
+                $camera['formats'] = $formats;
             }
 
             array_push($this->_cameraConfig, $camera);
@@ -126,8 +146,9 @@ class Sahara_Session_Element_Cameras extends Sahara_Session_Element
         $this->_view->cameras = $this->_cameraConfig;
 
         $this->_view->headLink()->appendStylesheet($this->_view->baseUrl('css/elements/cameras.css'));
+
         $html = $this->_view->render('Cameras/_cameraPanel.phtml');
-        $html .= $this->_view->render('Cameras/_cameras.phtml');
+//        $html .= $this->_view->render('Cameras/_cameras.phtml');
         return $html;
     }
 }

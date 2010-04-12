@@ -37,12 +37,37 @@
  */
 ?>
 
-<div id="camerapanel" class="sessionpanel ui-corner-all">
+<div id="camerapanel" class="sessionpanel ui-corner-all leftpush">
 	<div class="sessionpanelheader">
 		<p><span class="ui-icon ui-icon-image sessionpanelheadericon"></span>Video Formats</p>
 	</div>
 	<div id="camerapanelcontent">
-
+    <?php for ($i = 0, $k = 1; $i < count($this->cameras); $i++, $k++): ?>
+    	<div id="camformat<?=$k?>" class="cameraformat">
+            <span class="camformatlabel">Camera <?=$k?>:</span>
+    		<form id="camform<?=$k?>">
+            	<select id="camselect<?=$k?>">
+        		<?php foreach ($this->cameras[$i]['formats'] as $form => $desc): ?>
+        			<option value="<?=$form?>"><?=$desc?></option>
+        		<?php endforeach; ?>
+        		</select>
+    		</form>
+		</div>
+	<?php endfor; ?>
 	</div>
 </div>
 
+<script>
+$(document).ready( function() {
+<?php for ($i = 0, $k = 1; $i < count($this->cameras); $i++, $k++): ?>
+	$("#camform<?=$k?>").jqTransform();
+
+	$("#camformat<?=$k?> .jqTransformSelectWrapper").css("z-index", "<?=count($this->cameras) - $i?>");
+<?php endfor; ?>
+
+	/* Styling fix for overflowing selects. */
+	$(".cameraformat .jqTransformSelectWrapper").css("width", "160px");
+	$(".cameraformat .jqTransformSelectWrapper").css("margin-bottom", "10px");
+	$(".cameraformat ul").css("width", "158px");
+});
+</script>

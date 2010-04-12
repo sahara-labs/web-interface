@@ -74,7 +74,7 @@ $(document).ready(function() {
 ?>
 
 <div class="contentheader">
-	<h2><?=$this->rig?> Rig</h2>
+	<h2 style="margin-left:50px"><?=$this->rig?> Rig</h2>
 </div>
 
 <div id="sessioninfo" class="sessionpanel ui-corner-all">
@@ -111,6 +111,8 @@ $(document).ready(function() {
 </div>
 <?php endif; ?>
 
+<div id="rigscriptcontainer">
+
 <div id="warningmessage" style="display:<?=isset($this->info->warningMessage) ? 'block' : 'none'?>">
 	<div class="ui-corner-all ui-state-error">
 		<span class="ui-icon ui-icon-alert"></span>
@@ -118,7 +120,6 @@ $(document).ready(function() {
 	</div>
 </div>
 
-<div id="rigscriptcontainer">
 <?php
     try
     {

@@ -100,12 +100,14 @@ function updateSession()
 			{
 				extensions = info.extensions;
 				$("#sessiontimeextension").slideDown(1250);
+				$(".leftpush").animate({"top": "+=35"}, 1250);
 			}
 			else
 			{
 				if ($("#sessiontimeextension").css("display") == "block")
 				{
 					$("#sessiontimeextension").slideUp(1250);
+					$(".leftpush").animate({"top": "-=35"}, 1250);
 				}
 			}
 		}
