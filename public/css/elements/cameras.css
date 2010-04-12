@@ -1,4 +1,5 @@
-<?php
+@CHARSET "UTF-8";
+
 /**
  * SAHARA Web Interface
  *
@@ -33,14 +34,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 5th April 2010
+ * @date 12th April 2010
  */
+ 
+#camerapanel {
+	left: -185px;
+	top: 135px;
+}
 
-$rdp = new Sahara_Session_Element_RemoteDesktop($this->rigClient);
-$camera = new Sahara_Session_Element_Cameras($this->rigClient);
-?>
-
-<?php
-echo $rdp->render();
-echo $camera->render();
-?>
+#camerapanelcontent {
+	height: 100px
+}
