@@ -78,8 +78,8 @@ $(document).ready(function() {
 </div>
 
 <div id="sessioninfo" class="ui-corner-all">
-	<div id="sessioninfoheader">
-		<p><span class="ui-icon ui-icon-info"></span>Session Time</p>
+	<div class="sessionpanelheader">
+		<p><span class="ui-icon ui-icon-info sessionpanelheadericon"></span>Session Time</p>
 	</div>
 	<div id="sessioninfocontent">
 		<div id="sessiontime">
@@ -128,7 +128,7 @@ $(document).ready(function() {
     {
         /* The view script doesn't exist, so fall back to a default
          * (remote desktop rig). */
-        echo $this->render('_defaultRig.phtml');
+        echo $this->render('session/_rig.phtml');
     }
 ?>
 </div>

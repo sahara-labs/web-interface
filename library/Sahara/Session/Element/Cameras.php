@@ -49,7 +49,7 @@ class Sahara_Session_Element_Cameras extends Sahara_Session_Element
      */
     public function init()
     {
-        if (!($num = $this->_getRigAttribute('WI_Camera_Number')))
+        if (!($num = $this->_getRigAttribute('Number_of_Cameras')))
         {
             $this->_logger->warn("Unable to determine number of cameras ('WI_Camera_Number' property). Ensure this " .
                     'property exists and contains the correct number of cameras.');
@@ -59,7 +59,7 @@ class Sahara_Session_Element_Cameras extends Sahara_Session_Element
         $this->_cameraConfig = array();
         for ($i = 1; $i <= $num; $i++)
         {
-            $camConf = $this->_getRigAttribute("WI_Camera_$i");
+            $camConf = $this->_getRigAttribute("Camera_$i");
             if (!$camConf)
             {
                 $this->_logger->warn("Unable to load camera configuration for camera number $i, it will not be renderd.");

@@ -33,35 +33,39 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 20th March 2010
+ * @date 12th April 2010
  */
-$form = new Sahara_Feedback_Form();
-?>
 
-<div id="feedbackdialog" title="Send Feedback">
-	Feedback will be sent to the Remote Labs team:
-	<form id="feedback_form">
-	    <?=$form->getDisplayGroup('feedback_form')->render()?>
-	</form>
-</div>
-
-<script type="text/javascript">
-function feedbackSuccess()
+/**
+ * Renders remote desktop information. THe rig cleint needs the property:
+ * <ul>
+ * 	<li><tt>Remote_Desktop_IP</tt> - IP address for the remote desktop.
+ * </ul>
+ */
+class Sahara_Session_Element_RemoteDesktop extends Sahara_Session_Element
 {
-	$("div[aria-labelledby=ui-dialog-title-feedbackdialog] .ui-dialog-buttonpane").css("display", "none");
+    /** @var String IP address to the remote desktop. */
+    protected $_ip;
+
+    /**
+     * Sets up the information for rendering.
+     */
+    protected function init()
+    {
+        $this->_ip = $this->_getRigAttribute('Remote_Desktop_Host');
+        if (!$this->_ip)
+        {
+            $this->_logger->warn('Unable to render Remote Desktop information because the remote desktop IP' .
+                    ' was not found (Remote_Desktop_Host rig client property).');
+        }
+    }
+
+    public function render()
+    {
+        $this->init();
+
+        $this->_view->domain = $this->_config->remotedesktop->domain;
+        $this->_view->ip = $this->_ip;
+        return $this->_view->render('RemoteDesktop/_remoteDesktop.phtml');
+    }
 }
-
-$(document).ready(function () {
-	 $("#feedback_form").jqTransform();
-	 $("#feedback_form").validationEngine({
-    	 ajaxSubmit: true,
-    	 ajaxSubmitFile: "<?= $this->url(array('controller' => 'index', 'action' => 'feedback'))?>",
-    	 ajaxSubmitMessage: "Thank you for your feedback.",
-       	 success: function() { feedbackSuccess(); },
-       	 failure: function() { }
-	 });
-
-	 $("#feedback_form div.jqTransformInputWrapper").css("width", "100%");
-	 $("#feedback_form input.jqTransformInput").css("width", "100%");
-});
-</script>
