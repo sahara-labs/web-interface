@@ -41,7 +41,7 @@ class UTS_Contacts
 	public function getContacts()
 	{
 		
-		$allContacts = array("Business" => array("Contact Name:" => "Michel de la Villefromoy",
+		$allContacts = array("Operational" => array("Contact Name:" => "Michel de la Villefromoy",
 										  "Contact Phone:" => "(02) 9514 2406",
 										  "Contact Address:" => "UTS Building 1",
 										  "" => "CB01.23.16",
