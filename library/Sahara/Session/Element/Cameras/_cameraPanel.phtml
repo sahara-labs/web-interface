@@ -33,15 +33,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 11th April 2010
+ * @date 12th February 2010
  */
 ?>
-<div id="cameras">
-<?php foreach ($this->cameras as $cam): ?>
-	<div class="cameraframe">
-		<div class="camera" style="float:left;background-color:#EFEFEF;width:<?=$cam['width']?>px;height:<?=$cam['height']?>px;">
-			<?php var_dump($cam['URL']); ?>
-		</div>
+
+<div id="camerapanel" class="sessionpanel ui-corner-all">
+	<div class="sessionpanelheader">
+		<p><span class="ui-icon ui-icon-image sessionpanelheadericon"></span>Video Formats</p>
 	</div>
-<?php endforeach; ?>
+	<div id="camerapanelcontent">
+
+	</div>
 </div>
+

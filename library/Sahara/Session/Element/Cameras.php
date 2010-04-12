@@ -124,7 +124,10 @@ class Sahara_Session_Element_Cameras extends Sahara_Session_Element
     {
         $this->init();
         $this->_view->cameras = $this->_cameraConfig;
-        $html = $this->_view->render('Cameras/_cameras.phtml');
+
+        $this->_view->headLink()->appendStylesheet($this->_view->baseUrl('css/elements/cameras.css'));
+        $html = $this->_view->render('Cameras/_cameraPanel.phtml');
+        $html .= $this->_view->render('Cameras/_cameras.phtml');
         return $html;
     }
 }
