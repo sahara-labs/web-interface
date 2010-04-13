@@ -1,4 +1,3 @@
-<?php
 /**
  * SAHARA Web Interface
  *
@@ -33,54 +32,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 12th February 2010
+ * @date 13th March 2010
  */
-?>
 
-<div id="camerapanel" class="sessionpanel ui-corner-all leftpush">
-	<div class="sessionpanelheader">
-		<p><span class="ui-icon ui-icon-image sessionpanelheadericon"></span>Video Formats</p>
-	</div>
-	<div id="camerapanelcontent">
-    <?php for ($i = 0, $k = 1; $i < count($this->cameras); $i++, $k++): ?>
-    	<div id="camformat<?=$k?>" class="cameraformat">
-            <span class="camformatlabel">Camera <?=$k?>:</span>
-    		<form id="camform<?=$k?>">
-            	<select id="camselect<?=$k?>">
-        		<?php foreach ($this->cameras[$i]['formats'] as $form => $desc): ?>
-        			<option value="<?=$form?>" <?php if ($form == 'jpeg') echo 'selected="yes"'?>><?=$desc?></option>
-        		<?php endforeach; ?>
-        		</select>
-    		</form>
-		</div>
-	<?php endfor; ?>
-	</div>
-</div>
-
-<script type="text/javascript">
-//<![CDATA[
-
-/* Look up table of format options to stream names. */
-formatTable = new Array();
-<?php foreach ($this->formats as $f => $opt):?>
-	formatTable["<?=$opt?>"] = "<?=$f?>";
-<?php endforeach; ?>
-
-$(document).ready( function() {
-<?php for ($i = 0, $k = 1; $i < count($this->cameras); $i++, $k++): ?>
-	$("#camform<?=$k?>").jqTransform();
-	$("#camformat<?=$k?> .jqTransformSelectWrapper").css("z-index", "<?=count($this->cameras) - $i?>");
-
-	$("#camform<?=$k?> .jqTransformSelectWrapper ul li a").click( function() {
-		changeCameraOption("#camera<?=$k?>", formatTable[$("#camform<?=$k?> .jqTransformSelectWrapper span").text()]);
-	});
-<?php endfor; ?>
-
-	/* Styling fix for overflowing selects. */
-	$(".cameraformat .jqTransformSelectWrapper").css("width", "160px");
-	$(".cameraformat .jqTransformSelectWrapper").css("margin-bottom", "10px");
-	$(".cameraformat ul").css("width", "158px");
-});
-
-//]]>
-</script>
+function changeCameraOption(div, vid)
+{
+	alert("Changing " + div + " to " + vid);
+}
