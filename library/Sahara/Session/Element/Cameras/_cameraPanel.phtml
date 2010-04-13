@@ -61,18 +61,29 @@
 //<![CDATA[
 
 /* Look up table of format options to stream names. */
-formatTable = new Array();
+cameraFormatTable = new Array();
 <?php foreach ($this->formats as $f => $opt):?>
-	formatTable["<?=$opt?>"] = "<?=$f?>";
+	cameraFormatTable["<?=$opt?>"] = "<?=$f?>";
 <?php endforeach; ?>
 
+cameraUrlTable = new Array();
 $(document).ready( function() {
 <?php for ($i = 0, $k = 1; $i < count($this->cameras); $i++, $k++): ?>
+
+	/* Camera URL lookup table. */
+	cameraUrlTable["#camera<?=$k?>"] = new Array();
+	<?php foreach ($this->cameras[$i]['url'] as $f => $url):?>
+		cameraUrlTable["#camera<?=$k?>"]["<?=$f?>"] = "<?=$url?>";
+	<?php endforeach;?>
+
+	/* Camera form styling. */
 	$("#camform<?=$k?>").jqTransform();
 	$("#camformat<?=$k?> .jqTransformSelectWrapper").css("z-index", "<?=count($this->cameras) - $i?>");
 
+	/* Camera form click event. */
 	$("#camform<?=$k?> .jqTransformSelectWrapper ul li a").click( function() {
-		changeCameraOption("#camera<?=$k?>", formatTable[$("#camform<?=$k?> .jqTransformSelectWrapper span").text()]);
+		var formatOption = cameraFormatTable[$("#camform<?=$k?> .jqTransformSelectWrapper span").text()];
+		changeCameraOption(<?=$k?>, formatOption, cameraUrlTable["#camera<?=$k?>"][formatOption]);
 	});
 <?php endfor; ?>
 

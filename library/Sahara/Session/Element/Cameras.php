@@ -97,17 +97,17 @@ class Sahara_Session_Element_Cameras extends Sahara_Session_Element
             }
 
             /* Generate the camera URL based on the configured format. */
-            $formats = $this->_config->camera->toArray();
+            $vidFormats = $this->_config->camera->toArray();
             foreach ($camera['url'] as $f => $u)
             {
-                if (!array_key_exists($f, $formats))
+                if (!array_key_exists($f, $vidFormats))
                 {
                     $this->_logger->warn("URL format string for format $f not found, this format will not be used.");
                     continue;
                 }
 
                 $url = '';
-                foreach (explode('<', $formats[$f]) as $p)
+                foreach (explode('<', $vidFormats[$f]) as $p)
                 {
                     list($tok, $p) = explode('>', $p, 2);
 
@@ -151,7 +151,7 @@ class Sahara_Session_Element_Cameras extends Sahara_Session_Element
         $this->_view->headScript()->appendFile($this->_view->baseUrl('js/elements/cameras.js'));
 
         $html = $this->_view->render('Cameras/_cameraPanel.phtml');
-//        $html .= $this->_view->render('Cameras/_cameras.phtml');
+        $html .= $this->_view->render('Cameras/_cameras.phtml');
         return $html;
     }
 }

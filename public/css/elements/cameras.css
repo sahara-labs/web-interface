@@ -53,3 +53,23 @@
 .camformatlabel {
 	color: #606060;
 }
+
+.camerapanel {
+}
+
+.jpegsliderholder {
+	color: #606060;
+}
+
+.jpegslider {
+	margin-left: 10px;
+	
+}
+
+.jpegtick {
+	margin-left: -5px;
+}
+
+.jpegtickarrow {
+	margin: 0 auto;
+}
