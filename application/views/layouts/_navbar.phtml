@@ -71,7 +71,7 @@ switch ($this->userRole)
 }
 ?>
 
-<div class="menu ui-corner-all">
+<div class="menu ui-corner-bottom">
 	<ul id="menu">
 	<?php foreach ($menu as $title => $url): ?>
 		<li <?php if ($this->controller == $url['controller'] && $this->action == $url['action']) echo 'value="1"'; ?>>

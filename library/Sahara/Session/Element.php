@@ -78,12 +78,19 @@ abstract class Sahara_Session_Element
     {
         list($ns, $name) = explode(':', Zend_Auth::getInstance()->getIdentity(), 2);
 
-        $response = $this->_rigClient->getAttribute(array(
+        try
+        {
+            $response = $this->_rigClient->getAttribute(array(
                 'requestor' => $name,
                 'attribute' => $attr
-        ));
+            ));
 
-        if (!isset($response->value)) return false;
-        return $response->value;
+            if (!isset($response->value)) return false;
+            return $response->value;
+        }
+        catch (Exception $ex)
+        {
+            return false;
+        }
     }
 }

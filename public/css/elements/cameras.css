@@ -37,12 +37,12 @@
  * @date 12th April 2010
  */
  
-#camerapanel {
+#cameracontrolpanel {
 	left: -185px;
 	top: 100px;
 }
 
-#camerapanelcontent {
+.camerapanelcontent {
 	
 }
 
