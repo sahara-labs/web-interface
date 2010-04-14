@@ -41,9 +41,8 @@ $config = Zend_Registry::get('config');
 ($headerImg = $config->header->logoGraphic) != null || $headerImg = 'images/sahara.png';
 $headerImg = $this->baseUrl($headerImg);
 
-($headerBack = $config->header->headerBackground) != null || $headerBack = 'images/saharaBack.png';
-$headerBack = $this->baseUrl($headerBack);
 ?>
+
 
 <div id="headerimg" >
 	<img src="<?=$headerImg?>" alt="Institution Logo" />
