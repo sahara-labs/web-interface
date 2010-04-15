@@ -50,6 +50,7 @@ $this->headScript()->appendFile($this->baseUrl('js/menueffect.js'));
 $config = Zend_Registry::get('config');
 $headerBack = $config->header->background;
 
+
 $this->headScript()->appendScript('
 $(document).ready( function() {
 
@@ -85,6 +86,7 @@ function resizeFooter()
 }
 ')
 ?>
+
 
 <?php echo $this->doctype(); ?>
 <html>
