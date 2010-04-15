@@ -36,8 +36,6 @@
  * @date 17th March 2010
  */
 
-$this->headScript()->appendFile($this->baseUrl('js/DD_belatedPNG_0.0.8a.js'));
-
 $config = Zend_Registry::get('config');
 
 ($headerImg = $config->header->logoGraphic) != null || $headerImg = 'images/uts.png';
@@ -50,7 +48,7 @@ $headerName = $this->baseUrl($headerName);
 ?>
 
 <!--[if IE 6]>
-<script src="DD_belatedPNG.js"></script>
+<script src="<?=$this->baseUrl("js/DD_belatedPNG.js")?>"></script>
 <script>
   DD_belatedPNG.fix('img');
 </script>
