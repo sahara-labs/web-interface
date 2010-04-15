@@ -48,8 +48,7 @@ $this->headScript()->appendFile($this->baseUrl('js/jquery-ui.js'));
 $this->headScript()->appendFile($this->baseUrl('js/menueffect.js'));
 
 $config = Zend_Registry::get('config');
-($headerBack = $config->header->background) != null || $headerBack = 'images/saharaBack.png';
-$headerBack = $this->baseUrl($headerBack);
+$headerBack = $config->header->background;
 
 $this->headScript()->appendScript('
 $(document).ready( function() {
@@ -98,7 +97,9 @@ function resizeFooter()
 </head>
 <body onload="resizeFooter()">
 	<div id="wrapper">
-    	<div id="header"  style="background-image:url(<?=$headerBack?>); background-repeat: no-repeat;" >
+    	<div id="header"  style="<?php if ($headerBack != null): 
+    			echo "background-image:url(".$this->baseUrl($headerBack)."); background-repeat: no-repeat;";
+    			endif; ?>" >
     		<?php echo $this->render('_header.phtml'); ?>
     	</div>
     	<?php echo $this->render('_navbar.phtml')?>

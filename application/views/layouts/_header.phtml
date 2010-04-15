@@ -36,18 +36,30 @@
  * @date 17th March 2010
  */
 $config = Zend_Registry::get('config');
-($headerName = $config->header->name) != null || $headerName = 'Sahara: Remote Laboratory';
 
-($headerImg = $config->header->logoGraphic) != null || $headerImg = 'images/sahara.png';
+($headerImg = $config->header->logoGraphic) != null || $headerImg = 'images/uts.png';
 $headerImg = $this->baseUrl($headerImg);
+$headerImgLink = $config->header->logoLink;
+
+($headerName = $config->header->nameImage) != null || $headerName = 'images/Sahara.png';
+$headerName = $this->baseUrl($headerName);
 
 ?>
 
+<div id="headerimg" >
+	<?php if ($headerImgLink != null): 
+    			echo "<a href=\"".$headerImgLink."\">";
+    			endif; ?>
+	<img src="<?=$headerImg?>" border="0" alt="Institution Logo" />
+	<?php if ($headerImgLink != null): 
+    			echo "</a>"; endif; ?>
+</div>
 
 <div id="headerimg" >
-	<img src="<?=$headerImg?>" alt="Institution Logo" />
+	<img src="<?=$headerName?>" alt="Lab Name" />
 </div>
 
 <div id="labshareimg">
-	<img src="<?=$this->baseUrl('images/labshare.png')?>" alt="LabShare" />
+	<a href="http://www.labshare.edu.au/">
+		<img src="<?=$this->baseUrl('images/labshare.png')?>" border="0" alt="LabShare" /></a>
 </div>
