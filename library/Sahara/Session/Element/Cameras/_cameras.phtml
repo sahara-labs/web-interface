@@ -55,12 +55,20 @@
 
 <script type="text/javascript">
 //<![CDATA[
+/* Cameras is an array of cameera objects. */
+vcameras = new Object();
 
 $(document).ready( function () {
-	/* For cameras that support video, start them streaming. */
+
 <?php for ($i = 0, $k = 1; $i < count($this->cameras); $i++, $k++): $cam = $this->cameras[$i]?>
+	/* Camera <?=$k?> */
+	cam = new Object();
+	cam.height = <?=$cam['height'] ? $cam['height'] : 320 ?>;
+	cam.width = <?=$cam['width'] ? $cam['width'] : 240 ?>;
+	vcameras[<?=$k?>] = cam;
+
     <?php if (array_key_exists('jpeg', $cam['url'])): ?>
-		changeCameraOption(<?=$k?>, "jpeg", "<?=$cam['url']['jpeg']?>");
+	changeCameraOption(<?=$k?>, "jpeg", "<?=$cam['url']['jpeg']?>");
     <?php endif; ?>
 
     /* Close click event. */

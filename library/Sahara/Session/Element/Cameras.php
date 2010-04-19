@@ -148,7 +148,8 @@ class Sahara_Session_Element_Cameras extends Sahara_Session_Element
         $this->_view->formats = $this->_formats;
 
         $this->_view->headLink()->appendStylesheet($this->_view->baseUrl('css/elements/cameras.css'));
-        $this->_view->headScript()->appendFile($this->_view->baseUrl('js/elements/cameras.js'));
+        $this->_view->headScript()->appendFile($this->_view->baseUrl('js/elements/cameras/jquery.media.js'));
+        $this->_view->headScript()->appendFile($this->_view->baseUrl('js/elements/cameras/cameras.js'));
 
         $html = $this->_view->render('Cameras/_cameraPanel.phtml');
         $html .= $this->_view->render('Cameras/_cameras.phtml');

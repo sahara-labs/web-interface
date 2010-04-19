@@ -40,5 +40,5 @@ $rdp = new Sahara_Session_Element_RemoteDesktop($this->rigClient);
 $camera = new Sahara_Session_Element_Cameras($this->rigClient);
 ?>
 
-<?=$rdp->render();?>
-<?=$camera->render();?>
+<?php echo $rdp->render();?>
+<?php echo $camera->render();?>

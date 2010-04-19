@@ -57,9 +57,26 @@ function changeCameraOption(id, vid, url)
 		deployJpeg(id, url, 0);
 		break;
 	case 'mms':
-		deployWMP(id, url);
+		deployWinMedia(id, url);
+		break;
+	case 'mmsh':
+		deployVLC(id, url);
+		break;
 	default:
-		//alert("Changing " + id + " to " + vid + " url " + url);
+		/* Fall back to the jQuery media plugin which may be able to detect
+		 * the media type and the correct plugin. */
+		var cameraDiv = "#camera" + id;
+		var html = "<a class='media' href='" + url + "' />";
+		$(cameraDiv).html(html);
+		$(cameraDiv + " .media").media({
+			width: vcameras[id].width,
+			height: vcameras[id].height,
+			src: url,
+			autoplay: true,
+			caption: false,
+			params: { uiMode: 'none' },
+			bgColor: '#606060'
+		});
 		break;
 	}
 }
@@ -68,16 +85,15 @@ function deployJpeg(id, url, tm)
 {
 	var cameraDiv = "#camera" + id;
 	
-	var html = "<div id='jpegframe" + id + "' style='height:" + (parseInt($(cameraDiv).css('height')) + 10) + "px'>" +
+	var html = "<div id='jpegframe" + id + "' style='height:" + (vcameras[id].height + 10) + "px'>" +
 				"	<img src='" + url + "?" + new Date().getTime() + "'/>" +
 				"</div>" +
 				"<div class='jpegsliderholder'>" +
 				"	<div id='jpegslider" + id + "' class='jpegslider'></div>";
 	
-	var indWidth = Math.floor(parseInt($(cameraDiv).css('width')) / 5);
 	for (i = 0; i < 5; i++)
 	{
-		html += "<div style='width:" + indWidth + "px;float:left;text-align:center'>" +
+		html += "<div style='width:" + Math.floor(vcameras[id].width / 5) + "px;float:left;text-align:center'>" +
 				"	<span class='ui-icon ui-icon-arrowthick-1-n jpegtickarrow'></span>" +
 				"   <span class='jpegtick'>" + (i == 0 ? "Off" : (0.25 * Math.pow(2, i - 1)) + "s") + "</span>" +
 				"</div>";
@@ -128,20 +144,72 @@ function updateJpeg(id, url, tm)
 	}
 }
 
-function deployWMP(id, url)
+function deployWinMedia(id, url)
 {
 	var cameraDiv = "#camera" + id;
-	$(cameraDiv).css("background-image", "");
-	var html = "<object width='320' height='240' " + 
-					" classid='CLSID:6BF52A52-394A-11d3-B153-00C04F79FAA6' " +
-					" type='application/x-oleobject'>" +
-					"<param NAME='URL' VALUE='" + url + "'>" +
-					"<param NAME='SendPlayStateChangeEvents VALUE='true'>" +
-					"<param NAME='AutoStart' VALUE='true'>" +
-					"<param name='uiMode' value='none'>" +
-					"<param name='PlayCount' value='9999'>" +
-				"</object>";
+	$(cameraDiv).css('background-color', '#606060');
+	
+	var html = "<object " +
+		"	classid='CLSID:22d6f312-b0f6-11d0-94ab-0080c74c7e95' " +
+		"	codebase='http://activex.microsoft.com/activex/controls/ mplayer/en/nsmp2inf.cab' " +
+		"	standby='Loading Microsoft Windows Media Player...' " +
+		"	type='application/x-oleobject' " +
+		"	width='" + vcameras[id].width + "' " +
+		"	height='" + vcameras[id].height + "' >" +
+		"		<param name='fileName' value='" + url + "'>" +
+		"		<param name='animationatStart' value='1'>" +
+		"		<param name='transparentatStart' value='1'>" +
+		"		<param name='autoStart' value='1'>" +
+		"		<param name='ShowControls' value='0'>" +
+		"		<param name='ShowDisplay' value='0'>" +
+		"		<param name='ShowStatusBar' value='0'>" +
+		"		<param name='loop' value='0'>" +
+		"		<embed type='video/x-ms-asf-plugin' " +
+		"			pluginspage='http://microsoft.com/windows/mediaplayer/ en/download/' " +
+		"			showcontrols='0' " +
+		"			showtracker='1' " +
+		"			showdisplay='0' " +
+		"			showstatusbar='0' " +
+		"			videoborder3d='0' " +
+		"			width='" + vcameras[id].width + "' " +
+		"			height='" + vcameras[id].height + "' " +
+		"			src='" + url + "' " +
+		"			autostart='1' " +
+		"			loop='0' /> " +
+		"</object>";
+	
 	$(cameraDiv).html(html);
+}
+
+function deployVLC(id, url)
+{
+	var cameraDiv = "#camera" + id;
+	$(cameraDiv).css('background-color', '#606060');
+	
+	var html = "<object " +
+		"classid='clsid:9BE31822-FDAD-461B-AD51-BE1D1C159921' " +
+		"codebase='http://downloads.videolan.org/pub/videolan/vlc/latest/win32/axvlc.cab'" +
+		"width='" + vcameras[id].width + "' " +
+		"height='" + vcameras[id].height + "' " +
+		"id='vlc" + id + "' events='True'>" +
+        "	<param name='Src' value='" + url + "' />" +
+        "	<param name='ShowDisplay' value='True' />" +
+        "	<param name='AutoLoop' value='no' />" +
+        "	<param name='AutoPlay' value='yes' />" +
+        "	<embed type='application/x-google-vlc-plugin' " +
+        "          name='vlcfirefox' " +
+        "          autoplay='yes' " +
+        "          loop='no' " +
+        "          width='" + vcameras[id].width + "' " +
+        "          height='" + vcameras[id].height + "' " +
+        "          target='"  + url + "' /> " +
+    "</object>";
+
+	$(cameraDiv).html(html);
+	
+	/* Start VLC playing. */
+	var vlc = document.getElementById('vlc' + id);
+	vlc.playlist.playItem(vlc.playlist.add(url));
 }
 
 function undeploy(id)
@@ -152,8 +220,9 @@ function undeploy(id)
 		clearInterval(jpegIntervals[id]);
 		jpegIntervals[id] = undefined;
 	}
-	
+
+	var cameraDiv = "#camera" + id;
+	$(cameraDiv).css("background-image", "");
+	$(cameraDiv).html("<p>Camera off.</p>");
 }
-
-
 
