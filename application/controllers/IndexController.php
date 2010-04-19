@@ -62,7 +62,9 @@ class IndexController extends Sahara_Controller_Action_Acl
             $username = $form->getValue('username');
             $password = $form->getValue('password');
 
-            // TODO authentication
+            /******************************************************************
+             ** TODO Add your authentication.                                **
+             ******************************************************************/
 
             /* Store the authentication information. */
             $qName =  $inst . ':' . $username;
@@ -74,7 +76,9 @@ class IndexController extends Sahara_Controller_Action_Acl
             $user = Sahara_Soap::getSchedServerPermissionsClient()->getUser(array('userQName' => $qName));
             if ($user->persona == 'NOTFOUND')
             {
-                // TODO try to find about the user and add permissions.
+                /**************************************************************
+                 ** TODO Try to find about the user and add permissions.     **
+                 **************************************************************/
             }
 
             /* Redirect to an appropriate page. */
