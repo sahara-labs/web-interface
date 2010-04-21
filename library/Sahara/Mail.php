@@ -47,6 +47,9 @@ class Sahara_Mail
     /** @var String From header in email. */
     private $_from;
 
+    /** @var String From name in email. */
+    private $_fromName = null;
+
     /** @var String Message subject. */
     private $_subject;
 
@@ -67,11 +70,19 @@ class Sahara_Mail
      * Adds an address to send the email to.
      *
      * @param String $address
+     * @param String $name name of reciept (optional)
      * @return Sahara_Mail this object to chain methods
      */
-    public function addTo($address)
+    public function addTo($address, $name = null)
     {
-        array_push($this->_to, $address);
+        if ($name != null)
+        {
+            array_push($this->_to, array('name' => $name, 'email' => $address));
+        }
+        else
+        {
+            array_push($this->_to, $address);
+        }
         return $this;
     }
 
@@ -91,11 +102,14 @@ class Sahara_Mail
      * Sets the from address of the email.
      *
      * @param String $address email from address
+     * @param String $name email from name (optional)
      * @return Sahara_Mail this object to chain methods
      */
-    public function setFrom($address)
+    public function setFrom($address, $name = null)
     {
+        $this->_fromName = $name;
         $this->_from = $address;
+        return $this;
     }
 
     /**
@@ -108,5 +122,42 @@ class Sahara_Mail
     {
         $this->_subject = $subject;
         return $this;
+    }
+
+    /**
+     * Sets the body of the email.
+     *
+     * @param String $body email body
+     * @return Sahara_Mail this object to chain methods
+     */
+    public function setBody($body)
+    {
+        $this->_body = $body;
+        return $this;
+    }
+
+    /**
+     * Sends this email.
+     */
+    public function send()
+    {
+        $mail = new Zend_Mail();
+        $mail->setFrom($this->_from, $this->_fromName);
+        $mail->setSubject($this->_subject);
+        $mail->setBodyText($this->_body);
+
+        foreach ($this->_to as $to)
+        {
+            if (is_array($to))
+            {
+                $mail->addTo($to['email'], $to['name']);
+            }
+            else
+            {
+                $mail->addTo($to);
+            }
+        }
+
+        $mail->send();
     }
 }

@@ -66,6 +66,9 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
     /** @var Sahara_Logger Logger. */
     protected $_logger;
 
+    /** @var Zend_Config Configuration from 'application/configs/config.ini'. */
+    protected $_config;
+
     /** @var array Controlled pages which will not redirect. */
     private $_noRedirectPages = array('indexlogout', 'indexfeedback', 'queuecancel', 'queueupdate',
                                       'sessionfinish', 'sessioninfo');
@@ -79,6 +82,7 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
         $this->_acl = new Sahara_Acl($this->_auth->getIdentity());
 
         $this->_logger = Sahara_Logger::getInstance();
+        $this->_config = Zend_Registry::get('config');
 
         $this->_flashMessenger = $this->getHelper('FlashMessenger');
         $this->_redirector = $this->getHelper('Redirector');

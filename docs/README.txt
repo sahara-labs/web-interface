@@ -11,7 +11,6 @@ implemented, feel free to email:
 
 TODO
 =====
- * Implement sending feedback. ('feedbackAction' in 'application/controllers/IndexController.php').
  * Implement authentication. ('indexAction' in 'application/controllers/IndexController.php').
  * Cameras, the position is a little off and deploying streaming options is a little flaky across
    different browsers in different operating systems. ('library/Sahara/Session/Elements/Cameras.php').

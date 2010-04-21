@@ -119,12 +119,43 @@ class IndexController extends Sahara_Controller_Action_Acl
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout()->disableLayout();
 
-        $params = $this->_request->getParams();
+        $params = $this->_request->getPost();
         $this->_logger->info('Received feedback email from ' . $params['name'] . ' (' . $params['email'] . '). ' .
                 'Feedback type: ' . $params['type'] . '. Purpose of user: ' . $params['purpose'] . '. Feedback: ' .
                 $params['feedback'] . '.');
 
-        // TODO email feedback report
+        $mail = new Sahara_Mail();
+        $mail->setFrom($this->_config->email->from->address, $this->_config->email->from->name);
+        $mail->setSubject('Sahara feedback from ' . $params['name'] . ' <' . $params['email'] . '>');
+
+        /* Feedback email body. */
+        $body  = "#################################################################\n";
+        $body .= "## Sahara Feedback Received\n";
+        $body .= "#################################################################\n\n";
+        $body .= "From: " . $params['name'] . " <" . $params['email'] . ">\n";
+        $body .= "Time: " . date('r') . "\n\n";
+        $body .= "Type: " . $params['type'] . "\n";
+        $body .= "Purpose: " . $params['purpose'] . "\n\n";
+        $body .= "Feedback:\n ";
+        $body .= $params['feedback'] . "\n\n";
+        $body .= "#################################################################\n";
+
+        $mail->setBody($body);
+
+        $addresses = $this->_config->feedback->address;
+        if ($addresses instanceof Zend_Config)
+        {
+            foreach ($addresses as $addr)
+            {
+            	$mail->addTo($addr);
+            }
+        }
+        else
+        {
+            $mail->addTo($addresses);
+        }
+
+        $mail->send();
 
         /* Tells validation engine that submission succeeded. */
         echo 'true';
