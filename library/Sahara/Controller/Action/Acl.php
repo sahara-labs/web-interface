@@ -98,9 +98,7 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
         /* Check if the user has permission for the requested resource. */
         if (!$this->_acl->hasPermission($controller, $action))
         {
-            $this->_logger->warn('User ' . $this->_auth->getIdentity() . " tried to access a resource they do not " .
-                    "have access to (controller=$controller, action=$action).");
-            $this->_flashMessenger->addMessage("Permission denied accessing $action on $controller.");
+            $this->_flashMessenger->addMessage("You session has timed out.");
             $this->_redirectTo('index', 'index');
         }
 
@@ -115,17 +113,12 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
         if ($this->_acl->getUserRole() != Sahara_Acl::UNAUTH)
         {
             $session = Sahara_Soap::getSchedServerQueuerClient()->isUserInQueue(array('userQName' => $this->_auth->getIdentity()));
-            $this->_logger->debug('User ' . $this->_auth->getIdentity() . ' with role ' . $this->_acl->getUserRole() .
-                    ' is ' . ($session->inQueue ? 'in queue' : 'not in queue') . ' and ' .
-                    ($session->inSession ? 'in session.' : 'not in session') . '.');
 
             /* Force a user to be specific places depending on where they are in session. */
             if ($session->inQueue && "$controller$action" != 'queuequeuing' &&
                     !in_array("$controller$action", $this->_noRedirectPages))
             {
                 /* User in queue but not on queueing page. */
-                $this->_logger->debug('Redirecting user ' . $this->_auth->getIdentity() . ' to queueing page (queuing ' .
-                        "action on queue) from $action on $controller.");
                 $this->_redirectTo('queuing', 'queue');
             }
             else if ($session->inQueue)
@@ -136,8 +129,6 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
                     !in_array("$controller$action", $this->_noRedirectPages))
             {
                 /* User in session but not on session page. */
-                $this->_logger->debug('Redirecting user ' . $this->_auth->getIdentity() . ' to session page (index ' .
-                        "action on session) from $action on $controller.");
                 $this->_redirectTo('index', 'session');
             }
             else if ($session->inSession)
@@ -146,10 +137,6 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
             }
             else if ("$controller$action" == 'queuequeuing' || "$controller$action" == 'sessionindex')
             {
-                /* User in queue or experiment page, but not in either. */
-                $this->_logger->debug('Redirecting user ' . $this->_auth->getIdentity() . ' to role home from ' .
-                    "$action on $controller.");
-
                 /* Was in queue or in session, but thatis finished so redirect
                  * them back home. */
                 switch ($this->_acl->getUserRole())
