@@ -132,7 +132,13 @@ class IndexController extends Sahara_Controller_Action_Acl
         $body  = "#################################################################\n";
         $body .= "## Sahara Feedback Received\n";
         $body .= "#################################################################\n\n";
+
+        if ($cred = $this->_auth->getIdentity())
+        {
+            $body .= "Credential: $cred\n";
+        }
         $body .= "From: " . $params['name'] . " <" . $params['email'] . ">\n";
+
         $body .= "Time: " . date('r') . "\n\n";
         $body .= "Type: " . $params['type'] . "\n";
         $body .= "Purpose: " . $params['purpose'] . "\n\n";
