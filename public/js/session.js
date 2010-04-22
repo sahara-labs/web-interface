@@ -147,6 +147,56 @@ function finishSession()
 	);
 }
 
+function remainingCountDown()
+{
+	var sec = $("#sessionremainingtime .sec").html();
+	var min = $("#sessionremainingtime .min").html();
+	var hour = $("#sessionremainingtime .hour").html();
+	
+	if (sec != 0)
+	{
+		 $("#sessionremainingtime .sec").html(timePad(sec - 1));
+		 return;
+	}
+	
+	/* Time has ended. */
+	if (hour == 0 && min == 0) return;
+	
+	$("#sessionremainingtime .sec").html(timePad(59));
+	if (min != 0)
+	{
+		$("#sessionremainingtime .min").html(timePad(min - 1));
+		return;
+	}
+	
+	$("#sessionremainingtime .min").html(timePad(59));
+	
+	$("#sessionremainingtime .hour").html(timePad(hour - 1));
+}
+
+function inSessionCountUp()
+{
+	var sec = $("#sessiontime .sec").html();
+	var min = $("#sessiontime .min").html();
+	var hour = $("#sessiontime .hour").html();
+	
+	if (sec != 59)
+	{
+		 $("#sessiontime .sec").html(timePad(parseInt(sec) + 1));
+		 return;
+	}
+	
+	$("#sessiontime .sec").html(timePad(0));
+	if (min != 59)
+	{
+		$("#sessiontime .min").html(timePad(parseInt(min) + 1));
+		return;
+	}
+	
+	$("#sessiontime .min").html(timePad(0));
+	$("#sessiontime .hour").html(timePad(parseInt(hour) + 1));
+}
+
 function timePad(tm)
 {
 	if (tm < 0) return "00";
