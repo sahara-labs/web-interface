@@ -69,11 +69,9 @@ $this->headLink()->appendStylesheet($this->baseUrl('css/info.css'));
 </div>
 
 <div class="bordered ui-corner-all" >
-	<div id="accordion" >
-			<?php foreach ($this->contacts as $i => $contacts):?>
-    		<h3><b><a href="#"><?php echo $i; ?></a></b></h3>
-    		<div>
-    		<table class="contacttable">
+	<?php foreach ($this->contacts as $i => $contacts):?>
+ 		<table class="contacttable">
+    		<th class = "contacthead" colspan="2"><b><?php echo $i; ?></b></th>
  	 			<?php $j=0;
  	 			foreach ($contacts as $name => $value): 
  	 				$j++;?>
@@ -82,8 +80,7 @@ $this->headLink()->appendStylesheet($this->baseUrl('css/info.css'));
 	 				<td class="contactValue"><?php echo $value?></td>
 					</tr>
 				<?php endforeach;?>
-			</table>
-    	</div>
-    	<?php endforeach;?>
-	</div>
+		</table>
+	<?php endforeach;?>
 </div>
+
