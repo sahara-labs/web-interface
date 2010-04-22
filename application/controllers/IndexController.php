@@ -133,13 +133,44 @@ class IndexController extends Sahara_Controller_Action_Acl
         $body .= "## Sahara Feedback Received\n";
         $body .= "#################################################################\n\n";
 
+        $body .= "Time: " . date('r') . "\n\n";
+
         if ($cred = $this->_auth->getIdentity())
         {
+            $body .= "## Session Details\n";
             $body .= "Credential: $cred\n";
-        }
-        $body .= "From: " . $params['name'] . " <" . $params['email'] . ">\n";
 
-        $body .= "Time: " . date('r') . "\n\n";
+            try
+            {
+                $session = Sahara_Soap::getSchedServerQueuerClient()
+                        ->isUserInQueue(array('userQName' => $this->_auth->getIdentity()));
+                $body .= "In Queue: " . ($session->inQueue ? 'true' : 'false') . "\n";
+                $body .= "In Session: " . ($session->inSession ? 'true' : 'false') . "\n";
+
+                if ($session->inQueue)
+                {
+                     $body .= "Queued resource ID: " . $session->queuedResouce->resourceID . "\n";
+                     $body .= "Queued resource name: " . $session->queuedResouce->resourceName . "\n";
+                     $body .= "Queued resource type: " . $session->queuedResouce->type . "\n";
+                }
+
+                if ($session->inSession)
+                {
+                     $body .= "Session resource ID: " . $session->assignedResource->resourceID . "\n";
+                     $body .= "Session resource name: " . $session->assignedResource->resourceName . "\n";
+                     $body .= "Session resource type: " . $session->assignedResource->type . "\n";
+                }
+            }
+            catch (Exception $ex)
+            {
+                $body .= "Exception when attempting to determine session status with message '" . $ex->getMessage()
+                        . "'.\n";
+            }
+            $body .= "\n";
+        }
+
+        $body .= "## Feedback Details\n";
+        $body .= "From: " . $params['name'] . " <" . $params['email'] . ">\n";
         $body .= "Type: " . $params['type'] . "\n";
         $body .= "Purpose: " . $params['purpose'] . "\n\n";
         $body .= "Feedback:\n ";
