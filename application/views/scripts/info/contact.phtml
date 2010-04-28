@@ -71,13 +71,12 @@ $this->headLink()->appendStylesheet($this->baseUrl('css/info.css'));
 <div class="bordered ui-corner-all" >
 	<?php foreach ($this->contacts as $i => $contacts):?>
  		<table class="contacttable">
-    		<th class = "contacthead" colspan="2"><b><?php echo $i; ?></b></th>
+    		<tr><th class = "contacthead" colspan="2"><b><?php echo $i; ?></b></th></tr>
  	 			<?php $j=0;
- 	 			foreach ($contacts as $name => $value): 
- 	 				$j++;?>
-					<tr class="<?php  if($j&1) {echo "grey";} else {echo "white";}?>"> 
-	 				<td class="contactLabel"><?php echo $name ?></td>
-	 				<td class="contactValue"><?php echo $value?></td>
+ 	 			foreach ($contacts as $name => $value):?>
+					<tr class="<?php  echo ++$j&1 ? "grey" : "white"; ?>"> 
+	 				<td class="contactLabel"><?=$name ?></td>
+	 				<td class="contactValue"><?=$value?></td>
 					</tr>
 				<?php endforeach;?>
 		</table>
