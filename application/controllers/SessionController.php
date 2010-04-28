@@ -115,15 +115,55 @@ class SessionController extends Sahara_Controller_Action_Acl
 
     /**
      * Action to bridge a primitive call to the in session rigclient. The
-     * response is returned as a JSON string.
+     * response is returned as a JSON string (either the response object or
+     * a Zend fault).
+     * <br />
+     * The mandatory parameters are:
+     * <ul>
+     * 	<li>Controller => The name of the primitive controller.</li>
+     *  <lI>Action => The name of the action to run on the specified controller.</li>
+     * </ul>
+     * Any other provided parameters are used as primitive request parameters.
      */
     public function primitiveBridgeAction()
     {
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout()->disableLayout();
 
+        $response = Sahara_Soap::getSchedServerSessionClient()->getSessionInformation(array(
+            'userQName' => $this->_auth->getIdentity()
+        ));
 
+        /* Set up the correct object model. */
+        $request = array('param' => array());
+        foreach ($this->_request->getParams() as $key => $val)
+        {
+            switch ($key)
+            {
+               case 'controller':
+                   $request['controller'] = $val;
+                   break;
+               case 'action':
+                   $request['action'] = $val;
+                   break;
+               default:
+                  $param = array(
+                      'name' => $key,
+                      'val' => $val
+                  );
+                  array_push($request['param'], $param);
+                  break;
+            }
+        }
 
-        echo $this->view->json($response);
+        try
+        {
+            $rigClient = new Sahara_Soap($response->contactURL . '?wsdl');
+            echo $this->view->json($rigClient->performPrimitiveControl($request));
+        }
+        catch (Exception $ex)
+        {
+            echo $this->view->json($ex);
+        }
     }
 }
