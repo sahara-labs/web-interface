@@ -112,4 +112,18 @@ class SessionController extends Sahara_Controller_Action_Acl
 
         echo $this->view->json($response);
     }
+
+    /**
+     * Action to bridge a primitive call to the in session rigclient. The
+     * response is returned as a JSON string.
+     */
+    public function primitiveBridgeAction()
+    {
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();
+
+
+
+        echo $this->view->json($response);
+    }
 }
