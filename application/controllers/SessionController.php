@@ -187,7 +187,6 @@ class SessionController extends Sahara_Controller_Action_Acl
         }
         catch (Exception $ex)
         {
-            var_dump($ex);
             echo $this->view->json($ex);
         }
     }
