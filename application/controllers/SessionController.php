@@ -125,7 +125,7 @@ class SessionController extends Sahara_Controller_Action_Acl
      * </ul>
      * Any other provided parameters are used as primitive request parameters.
      */
-    public function primitiveBridgeAction()
+    public function primitivebridgeAction()
     {
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout()->disableLayout();
@@ -134,22 +134,46 @@ class SessionController extends Sahara_Controller_Action_Acl
             'userQName' => $this->_auth->getIdentity()
         ));
 
+        if (!$response->isInSession)
+        {
+            /* Not in session, so unable to determine the rig clients address. */
+            $error = array(
+                'success' => 'false',
+                'error' => array(
+                    'code' => -1,
+                    'operation' => 'Primitive bridge request',
+                    'reason' => 'not in session'
+                )
+            );
+            echo $this->view->json($error);
+            return;
+        }
+
         /* Set up the correct object model. */
-        $request = array('param' => array());
+        list($junk, $allocUser) = explode(':', $this->_auth->getIdentity(), 2);
+        $request = array(
+            'requestor' => $allocUser,
+        	'param' => array());
         foreach ($this->_request->getParams() as $key => $val)
         {
             switch ($key)
             {
-               case 'controller':
+               case 'primitiveController':
                    $request['controller'] = $val;
                    break;
-               case 'action':
+               case 'primitiveAction':
                    $request['action'] = $val;
+                   break;
+               case 'controller':
+               case 'action':
+               case 'module':
+                   /* These are Zend request parameters and irrelevant to the
+                    * primitive call. */
                    break;
                default:
                   $param = array(
                       'name' => $key,
-                      'val' => $val
+                      'value' => $val
                   );
                   array_push($request['param'], $param);
                   break;
@@ -163,6 +187,7 @@ class SessionController extends Sahara_Controller_Action_Acl
         }
         catch (Exception $ex)
         {
+            var_dump($ex);
             echo $this->view->json($ex);
         }
     }
