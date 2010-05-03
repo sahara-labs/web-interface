@@ -114,6 +114,56 @@ class SessionController extends Sahara_Controller_Action_Acl
     }
 
     /**
+     * Action to bridge an attribute call to the in session rig client. The
+     * response is returned as a JSON string (either response object or
+     * Zend_Exception).
+     * <br />
+     * The mandatory parameters are:
+     * <ul>
+     * 	<li>attribute - The name of the attribute find the value of.
+     * </ul>
+     */
+    public function attributebridgeAction()
+    {
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();
+
+        $response = Sahara_Soap::getSchedServerSessionClient()->getSessionInformation(array(
+            'userQName' => $this->_auth->getIdentity()
+        ));
+
+        if (!$response->isInSession)
+        {
+            /* Not in session, so unable to determine the rig clients address. */
+            $error = array(
+                'success' => 'false',
+                'error' => array(
+                    'code' => -1,
+                    'operation' => 'Primitive bridge request',
+                    'reason' => 'not in session'
+                )
+            );
+            echo $this->view->json($error);
+            return;
+        }
+
+        list($junk, $user) = explode(':', $this->_auth->getIdentity(), 2);
+
+        try
+        {
+            $rigClient = new Sahara_Soap($response->contactURL . '?wsdl');
+            echo $this->view->json($rigClient->getAttribute(array(
+                'requestor' => $user,
+                'attribute' => $this->_request->getParam('attribute', '')
+            )));
+        }
+        catch (Exception $ex)
+        {
+            echo $this->view->json($ex);
+        }
+    }
+
+    /**
      * Action to bridge a primitive call to the in session rigclient. The
      * response is returned as a JSON string (either the response object or
      * a Zend fault).

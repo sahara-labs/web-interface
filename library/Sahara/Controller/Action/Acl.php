@@ -71,7 +71,8 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
 
     /** @var array Controlled pages which will not redirect. */
     private $_noRedirectPages = array('indexlogout', 'indexfeedback', 'queuecancel', 'queueupdate',
-                                      'sessionfinish', 'sessioninfo', 'sessionprimitivebridge');
+                                      'sessionfinish', 'sessioninfo', 'sessionprimitivebridge',
+                                      'sessionattributebridge');
 
     /**
      * Initalisation.
