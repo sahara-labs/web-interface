@@ -48,7 +48,7 @@
     		<form id="camform<?=$k?>">
             	<select id="camselect<?=$k?>">
         		<?php foreach ($this->cameras[$i]['formats'] as $form => $desc): ?>
-        			<option value="<?=$form?>" <?php if ($form == 'jpeg') echo 'selected="yes"'?>><?=$desc?></option>
+        			<option value="<?=$form?>" <?php if ($form == $this->cameras[$i]['default']) echo 'selected="yes"'?>><?=$desc?></option>
         		<?php endforeach; ?>
         		</select>
     		</form>

@@ -55,21 +55,22 @@
 
 <script type="text/javascript">
 //<![CDATA[
-/* Cameras is an array of cameera objects. */
+/* Cameras is an array of camera objects. */
 vcameras = new Object();
 
 $(document).ready( function () {
 
-<?php for ($i = 0, $k = 1; $i < count($this->cameras); $i++, $k++): $cam = $this->cameras[$i]?>
+<?php for ($i = 0, $k = 1; $i < count($this->cameras); $i++, $k++):
+    $cam = $this->cameras[$i];
+    $def = $cam['default']?>
 	/* Camera <?=$k?> */
 	cam = new Object();
 	cam.height = <?=$cam['height'] ? $cam['height'] : 320 ?>;
 	cam.width = <?=$cam['width'] ? $cam['width'] : 240 ?>;
 	vcameras[<?=$k?>] = cam;
 
-    <?php if (array_key_exists('jpeg', $cam['url'])): ?>
-	changeCameraOption(<?=$k?>, "jpeg", "<?=$cam['url']['jpeg']?>");
-    <?php endif; ?>
+
+	changeCameraOption(<?=$k?>, "<?=$def?>", "<?=$cam['url'][$def]?>");
 
     /* Close click event. */
 	$("#cameraclose<?=$k?>").click( function () {

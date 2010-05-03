@@ -148,6 +148,13 @@ class Sahara_Session_Element_Cameras extends Sahara_Session_Element
                     $formats[$k] = $this->_formats[$k];
                 }
                 $camera['formats'] = $formats;
+
+
+                /* Determine the default streaming option. This is:
+                 *   1) JPEG stream exists -> JPEG
+                 *   2) No JPEG -> first option that isn't off. */
+                $options = array_keys($formats);
+                $camera['default'] = $options[1]; // First non-off option
             }
 
             array_push($this->_cameraConfig, $camera);
