@@ -52,6 +52,18 @@ class Sahara_Session_Element_Cameras extends Sahara_Session_Element
         'mmsh' => 'VLC Media Player'
     );
 
+    public function __construct($rig)
+    {
+        parent::__construct($rig);
+
+        /* Load in any other format descriptions. */
+        $descs =  $this->_config->cameradesc;
+        if (!is_null($descs))
+        {
+            $this->_formats = array_merge($this->_formats, $descs->toArray());
+        }
+    }
+
     /**
      * Loads the details of the rig's cameras.
      */
@@ -127,8 +139,9 @@ class Sahara_Session_Element_Cameras extends Sahara_Session_Element
                  * rest of the formats in their natural order. */
                 $formats = array('off' => $this->_formats['off']);
                 $formKeys = array_keys($camera['url']);
+
                 sort($formKeys);
-                if (array_search('jpeg', $formKeys) >= 0) $formats['jpeg'] = $this->_formats['jpeg'];
+                if (array_search('jpeg', $formKeys) !== false) $formats['jpeg'] = $this->_formats['jpeg'];
 
                 foreach ($formKeys as $k)
                 {
