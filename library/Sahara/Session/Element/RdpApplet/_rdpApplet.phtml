@@ -33,16 +33,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 2nd May 2010
+ * @date 3rd May 2010
  */
+?>
 
-/**
- * Renders code to deploy the Sahara RDP applet.
- */
-class Sahara_Session_Element_RdpApplet extends Sahara_Session_Element
-{
-    public function render()
-    {
-        echo $this->_view->render('RdpApplet/_rdpApplet.phtml');
-    }
-}
+<div id="rdpcontrolpanel" class="sessionpanel ui-corner-all leftpush overlayelementhide" style="left:-185px;top:208px">
+	<div class="sessionpanelheader">
+		<p><span class="ui-icon ui-icon-image sessionpanelheadericon"></span>Rig Control</p>
+	</div>
+	<div id="rdppanelcontent">
+		<applet style="margin-left:5px" code="au.edu.uts.eng.remotelabs.rdp.SaharaRdpApplet.class" archive="<?=$this->baseUrl('/applets/ssaharardpapplet.jar')?>" .
+				width="170" height="100">
+		You need Java 1.6 installed.
+		</applet>
+	</div>
+</div>

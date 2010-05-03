@@ -33,16 +33,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 2nd May 2010
+ * @date 21st February 2010
  */
 
-/**
- * Renders code to deploy the Sahara RDP applet.
- */
-class Sahara_Session_Element_RdpApplet extends Sahara_Session_Element
-{
-    public function render()
-    {
-        echo $this->_view->render('RdpApplet/_rdpApplet.phtml');
-    }
-}
+$rdp = new Sahara_Session_Element_RdpApplet($this->rigClient);
+$camera = new Sahara_Session_Element_Cameras($this->rigClient);
+?>
+
+<?php
+    echo $camera->render();
+    echo $rdp->render();
+?>
