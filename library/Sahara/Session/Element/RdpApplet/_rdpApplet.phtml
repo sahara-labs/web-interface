@@ -39,12 +39,13 @@
 
 <div id="rdpcontrolpanel" class="sessionpanel ui-corner-all leftpush overlayelementhide" style="left:-185px;top:208px">
 	<div class="sessionpanelheader">
-		<p><span class="ui-icon ui-icon-image sessionpanelheadericon"></span>Rig Control</p>
+		<p><span class="ui-icon ui-icon-wrench sessionpanelheadericon"></span>Rig Control</p>
 	</div>
 	<div id="rdppanelcontent">
-		<applet id="rdpapplet" style="margin-left:5px;margin-top:5px" code="au.edu.uts.eng.remotelabs.rdp.SaharaRdpApplet.class" archive="<?=$this->baseUrl('/applets/ssaharardpapplet.jar')?>" .
+		<applet id="rdpapplet" name="Control Applet" style="margin-left:5px;margin-top:5px" 
+				code="au.edu.uts.eng.remotelabs.rdp.SaharaRdpApplet.class" archive="<?=$this->baseUrl('/applets/ssaharardpapplet.jar')?>"
 				width="165" height="95">
-		You need Java 1.6 installed.
+		<a href="http://java.com/en/download/">Install Java 6.</a>
 		</applet>
 	</div>
 </div>
