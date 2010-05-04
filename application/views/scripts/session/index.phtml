@@ -48,7 +48,7 @@ callBackInterval = ' . ($c ? $c * 1000 : 60000) .';
 notReady = '. ($this->info->isReady ? 'false' : 'true') . ';
 
 $(document).ready(function() {
-	tInterval = setInterval("updateSession()", ' . ($this->info->isReady ? ($c ? $c * 1000 : 60000) : 10000) . ');
+	tInterval = setInterval("updateSession()", ' . ($this->info->isReady ? ($c ? $c * 1000 : 60000) : 5000) . ');
 	cInterval = setInterval("remainingCountDown()", 1000);
 	uInterval = setInterval("inSessionCountUp()", 1000);
 });
@@ -68,6 +68,9 @@ $(document).ready(function() {
 		height: 100,
 		resizable: false
 	});
+
+	/* Hide hideable elements when the rig is getting ready. */
+	$(".overlayelementhide").css("display", "none");
 
 	$("div[aria-labelledby=ui-dialog-title-readyoverlay] .ui-dialog-titlebar").css("display", "none");
 });'
