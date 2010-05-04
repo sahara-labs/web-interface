@@ -42,9 +42,29 @@
 		<p><span class="ui-icon ui-icon-image sessionpanelheadericon"></span>Rig Control</p>
 	</div>
 	<div id="rdppanelcontent">
-		<applet style="margin-left:5px;margin-top:5px" code="au.edu.uts.eng.remotelabs.rdp.SaharaRdpApplet.class" archive="<?=$this->baseUrl('/applets/ssaharardpapplet.jar')?>" .
+		<applet id="rdpapplet" style="margin-left:5px;margin-top:5px" code="au.edu.uts.eng.remotelabs.rdp.SaharaRdpApplet.class" archive="<?=$this->baseUrl('/applets/ssaharardpapplet.jar')?>" .
 				width="165" height="95">
 		You need Java 1.6 installed.
 		</applet>
 	</div>
 </div>
+
+<script type="text/javascript">
+$(document).ready(function(){
+	provideSessionInfoApplet();
+});
+
+function provideSessionInfoApplet()
+{
+	var applet = document.getElementById("rdpapplet");
+	var host = document.location.host;
+	if (typeof applet.setSessionInfo !== 'undefined')
+	{
+		applet.setSessionInfo("http://" + host, document.cookie);
+	}
+	else
+	{
+		setTimeout("provideSessionInfoApplet()", 2000);
+	}
+}
+</script>
