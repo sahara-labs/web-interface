@@ -53,7 +53,7 @@ class InfoController extends Sahara_Controller_Action_Acl
         $this->view->inst = $inst;
         if (is_file(Bootstrap::$rootDirectory . '/../institution/' . $inst . '/News.php'))
         {
-        	$newsClass = $inst . '_FAQ';
+        	$newsClass = $inst . '_News';
         	$news = new $newsClass;
         }
         else
