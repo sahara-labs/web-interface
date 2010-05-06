@@ -170,8 +170,8 @@ class SessionController extends Sahara_Controller_Action_Acl
      * <br />
      * The mandatory parameters are:
      * <ul>
-     * 	<li>Controller => The name of the primitive controller.</li>
-     *  <lI>Action => The name of the action to run on the specified controller.</li>
+     * 	<li>primitiveController => The name of the primitive controller.</li>
+     *  <lI>primitiveAction => The name of the action to run on the specified controller.</li>
      * </ul>
      * Any other provided parameters are used as primitive request parameters.
      */
