@@ -191,7 +191,7 @@ $(document).ready(function() {
 					objects[i].style.marginLeft = objectMargins[i];
 				}
 
-				embedMargins = new Array();
+				var embeds = $("embed").toArray();
 				for (var i in embeds)
 				{
 					embeds[i].style.marginLeft = embedMargins[i];
