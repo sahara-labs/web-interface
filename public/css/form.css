@@ -8,6 +8,9 @@
 	display: block;
 	overflow: hidden;
 	border: 1px solid #525252;
+	-moz-box-shadow: 0 0 5px #525252;
+	-webkit-box-shadow: 0 0 5px #525252;
+	box-shadow: 0 0 5px #525252;
 }
 
 

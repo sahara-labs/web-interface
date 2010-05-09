@@ -81,7 +81,7 @@ function resizeFooter()
 	}
 	else
 	{
-		$("#wrapper").css("min-height", $(document).height());
+		$("#wrapper").css("min-height", $(document).height() );
 	}
 }
 ')
@@ -99,7 +99,7 @@ function resizeFooter()
 </head>
 <body onload="resizeFooter()">
 	<div id="wrapper">
-    	<div id="header"  style="<?php if ($headerBack != null): 
+    	<div id="header"  style="<?php if ($headerBack != null):
     			echo "background-image:url(".$this->baseUrl($headerBack)."); background-repeat: no-repeat;";
     			endif; ?>" >
     		<?php echo $this->render('_header.phtml'); ?>
