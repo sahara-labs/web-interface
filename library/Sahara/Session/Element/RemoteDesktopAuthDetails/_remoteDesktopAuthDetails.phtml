@@ -1,0 +1,80 @@
+<?php
+/**
+ * SAHARA Web Interface
+ *
+ * User interface to Sahara Remote Laboratory system.
+ *
+ * @license See LICENSE in the top level directory for complete license terms.
+ *
+ * Copyright (c) 2010, University of Technology, Sydney
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of the University of Technology, Sydney nor the names
+ *    of its contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * @author Michael Diponio (mdiponio)
+ * @date 12th March 2010
+ */
+$this->headLink()->appendStylesheet($this->baseUrl('css/elements/remotedesktop.css'));
+?>
+
+<div id="remotedesktopcontainer" class="ui-corner-all">
+	<div class="sessionpanelheader">
+		<p><span class="ui-icon ui-icon-lightbulb sessionpanelheadericon"></span>
+		Remote Desktop Address: <span class="remotedesktopaddress"><?=$this->ip?></span></p>
+		<a href="#" id="remotedesktophide" class="sessionpanelhide plaina">
+			<span class="ui-icon ui-icon-arrowthickstop-1-s"></span>Show Help
+		</a>
+	</div>
+	<div id="remotedesktopcontent" style="display:none">
+		You have been granted to a rig which uses Remote Desktop to control the rig. In order to use this:
+		<ol>
+			<li>Launch <em>Remote Desktop Connection</em> (Start &gt; Programs &gt; Accessories &gt; Remote Desktop
+			Connection).</li>
+			<li>Connect to the IP address '<span class="remotedesktopaddress"><?=$this->ip?></span>'.</li>
+			<li>Login using the same user name '<span class="remotedesktopaddress"><?=$this->username?></span>'
+			and password '<span class="remotedesktopaddress"><?=$this->password ?></span>'.</li>
+		</ol>
+	</div>
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+
+$(document).ready( function() {
+	$("#remotedesktophide").click(function() {
+		if ($("#remotedesktopcontent").css('display') == 'block')
+		{
+			$("#remotedesktopcontent").slideUp('slow');
+			$("#remotedesktophide").html('<span class="ui-icon ui-icon-arrowthickstop-1-s"></span>Show Help');
+		}
+		else
+		{
+			$("#remotedesktopcontent").slideDown('slow');
+			$("#remotedesktophide").html('<span class="ui-icon ui-icon-arrowthickstop-1-n"></span>Hide Help');
+		}
+	});
+});
+
+//]]>
+</script>

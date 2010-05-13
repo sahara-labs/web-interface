@@ -76,12 +76,10 @@ abstract class Sahara_Session_Element
      */
     protected function _getRigAttribute($attr)
     {
-        list($ns, $name) = explode(':', Zend_Auth::getInstance()->getIdentity(), 2);
-
         try
         {
             $response = $this->_rigClient->getAttribute(array(
-                'requestor' => $name,
+                'requestor' => $this->_getAssignedName(),
                 'attribute' => $attr
             ));
 
@@ -90,7 +88,74 @@ abstract class Sahara_Session_Element
         }
         catch (Exception $ex)
         {
+            $this->_logger->warn("Failed making rig attribute request for '$attr' with error '"  .
+                    $ex->getMessage() . "'.");
             return false;
         }
+    }
+
+    /**
+     * Performs a primitive request and returns the response parameters.
+     *
+     * @param String $controller the controller to user
+     * @param String $action the action to invoke
+     * @param assoc array $params request parameters in key => value (optional)
+     * @return mixed assoc array | false response parameters
+     */
+    protected function _performPrimitive($controller, $action, $params = array())
+    {
+        try
+        {
+            /* Generate the correct object format. */
+            $request = array(
+                'requestor' => $this->_getAssignedName(),
+                'controller' => $controller,
+                'action' => $action,
+            );
+
+            if (count($params))
+            {
+                $request['param'] = array();
+                foreach ($params as $name => $val)
+                {
+                    $param = array(
+                        'name' => $name,
+                        'value' => $val
+                    );
+                    array_push($request['param'], $param);
+                }
+            }
+
+            $response = $this->_rigClient->performPrimitiveControl($request);
+            if (!$response->success) return false;
+
+            $results = array();
+            foreach ($response->result as $r)
+            {
+                $results[$r->name] = $r->value;
+            }
+            return $results;
+        }
+        catch (Exception $ex)
+        {
+            $this->_logger->warn("Failed perform primitive control to controller '$controller', action '$action' with" .
+                    " error '" . $ex->getMessage() . "'.");
+            return false;
+        }
+    }
+
+    /**
+     * Gets the name of the user that is assigned to the rig. This name is
+     * logged in name excluding the namespace.
+     * <br />
+     * This method assumes the user is actually assigned to a rig and does not
+     * do any actual verfication of this.
+     *
+     * @return the name of the user assigned to the rig
+     */
+    protected function _getAssignedName()
+    {
+        list($ns, $name) = explode(':', Zend_Auth::getInstance()->getIdentity(), 2);
+        return $name;
     }
 }
