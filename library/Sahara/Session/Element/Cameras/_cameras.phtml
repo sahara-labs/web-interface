@@ -74,7 +74,9 @@ $(document).ready( function () {
 
     /* Close click event. */
 	$("#cameraclose<?=$k?>").click( function () {
-		$("#camerapanel<?=$k?>").slideUp("slow");
+		$("#camerapanel<?=$k?>").slideUp("slow", function() {
+			setTimeout("resizeFooter()", 100); // Small timing hack to give the camera option time to undeploy
+		});
 		$("#camform<?=$k?> .jqTransformSelectWrapper span").html("<?=$this->formats['off']?>");
 		$("#camform<?=$k?> .jqTransformSelectWrapper a").removeClass("selected");
 		$("#camform<?=$k?> .jqTransformSelectWrapper ul li a[index=0]").addClass("selected");

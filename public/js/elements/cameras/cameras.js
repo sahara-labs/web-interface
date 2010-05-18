@@ -45,7 +45,9 @@ function changeCameraOption(id, vid, url)
 	/* First make panel visible. */
 	if ($("#camerapanel" + id).css("display") == "none" && vid != 'off')
 	{
-		$("#camerapanel" + id).slideDown("slow");
+		$("#camerapanel" + id).slideDown("slow", function() {
+			setTimeout("resizeFooter()", 100);
+		});
 	}
 	
 	switch (vid)
@@ -120,13 +122,17 @@ function deployJpeg(id, url, tm)
 			}
 		}
 	});
-	$("#jpegslider" + id).css('width', '300px');
+	
+	$("#jpegslider" + id).css('width', vcameras[id].width - 20);
+	
+	$(cameraDiv).css("height", vcameras[id].height + 60);
+	
+	/* Hack so the footer doesn't overlay the camera panel while the background
+	 * image is downloading. */
+	resizeFooter();
 	
 	$(cameraDiv).css("background-image", "url(" + url + ")");
 	$(cameraDiv).css("background-repeat", "no-repeat");
-	
-	
-	$(cameraDiv).css("height", vcameras[id].height + 60);
 	
 	if (tm > 0)
 	{
@@ -229,5 +235,7 @@ function undeploy(id)
 	$(cameraDiv).css("background-color", "#FFFFFF");
 	$(cameraDiv).html("<p>Camera off.</p>");
 	$(cameraDiv).css("height", vcameras[id].height);
+	
+	resizeFooter();
 }
 
