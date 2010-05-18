@@ -108,6 +108,8 @@ class Sahara_Session_Element_Cameras extends Sahara_Session_Element
                 }
             }
 
+            if (!array_key_exists('TITLE', $camera)) $camera['TITLE'] = "Camera $i";
+
             /* Generate the camera URL based on the configured format. */
             $vidFormats = $this->_config->camera->toArray();
             foreach ($camera['url'] as $f => $u)

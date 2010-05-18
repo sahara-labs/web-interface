@@ -44,7 +44,7 @@
 	<div id="camerapanelcontent">
     <?php for ($i = 0, $k = 1; $i < count($this->cameras); $i++, $k++): ?>
     	<div id="camformat<?=$k?>" class="cameraformat">
-            <span class="camformatlabel">Camera <?=$k?>:</span>
+            <span class="camformatlabel"><?=$this->cameras[$i]['TITLE']?></span>
     		<form id="camform<?=$k?>">
             	<select id="camselect<?=$k?>">
         		<?php foreach ($this->cameras[$i]['formats'] as $form => $desc): ?>
