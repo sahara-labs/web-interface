@@ -54,7 +54,9 @@ function updateSession()
 				{
 					notReady = false;
 					$("#readyoverlay").dialog("close");
-					$(".overlayelementhide").fadeIn();
+					$(".overlayelementhide").fadeIn("def", function() {
+						setTimeout("resizeFooter()", 500);
+					});
 					
 					/* Restore the normal interval. */
 					clearTimeout(tInterval);
