@@ -98,7 +98,7 @@ function deployJpeg(id, url, tm)
 				"   <span class='jpegtick'>" + (i == 0 ? "Off" : (0.25 * Math.pow(2, i - 1)) + "s") + "</span>" +
 				"</div>";
 	}	
-	html += "</div>";
+	html += "</div>"; // jpegsliderholder
 
 	$(cameraDiv).html(html);
 
@@ -124,6 +124,9 @@ function deployJpeg(id, url, tm)
 	
 	$(cameraDiv).css("background-image", "url(" + url + ")");
 	$(cameraDiv).css("background-repeat", "no-repeat");
+	
+	
+	$(cameraDiv).css("height", vcameras[id].height + 60);
 	
 	if (tm > 0)
 	{
@@ -223,6 +226,8 @@ function undeploy(id)
 
 	var cameraDiv = "#camera" + id;
 	$(cameraDiv).css("background-image", "");
+	$(cameraDiv).css("background-color", "#FFFFFF");
 	$(cameraDiv).html("<p>Camera off.</p>");
+	$(cameraDiv).css("height", vcameras[id].height);
 }
 
