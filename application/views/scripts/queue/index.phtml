@@ -158,7 +158,7 @@ if (!$this->noPermissions)
 
 <!-- Locked permission dialog -->
 <div id="perm_lock_div_<?=$perm['permissionId']?>">
-	Unlock permission <?=$this->stringTransform($perm['resource'], '_', ' ')?>:
+	Unlock '<?=$this->stringTransform($perm['resource'], '_', ' ')?>' rigs:
 	<form id="perm_lock_form_<?=$perm['permissionId']?>" method="POST" action="">
     <?php $form = new Sahara_PermissionLock_Form($perm['permissionId']);
           echo $form->getDisplayGroup('perm_lock_form')->render(); ?>
