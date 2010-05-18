@@ -65,12 +65,16 @@ $(document).ready( function() {
 	$("#remotedesktophide").click(function() {
 		if ($("#remotedesktopcontent").css('display') == 'block')
 		{
-			$("#remotedesktopcontent").slideUp('slow');
+			$("#remotedesktopcontent").slideUp('slow', function() {
+				setTimeout("resizeFooter()", 100);
+			});
 			$("#remotedesktophide").html('<span class="ui-icon ui-icon-arrowthickstop-1-s"></span>Show Help');
 		}
 		else
 		{
-			$("#remotedesktopcontent").slideDown('slow');
+			$("#remotedesktopcontent").slideDown('slow', function() {
+				setTimeout("resizeFooter()", 100);
+			}););
 			$("#remotedesktophide").html('<span class="ui-icon ui-icon-arrowthickstop-1-n"></span>Hide Help');
 		}
 	});
