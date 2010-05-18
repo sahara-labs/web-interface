@@ -52,6 +52,19 @@
 
 <script type="text/javascript">
 $(document).ready(function(){
+
+	/* Correctly vertical align the applet panel. To do this, the height of the
+	 * camera control panel needs to be taken into account. */
+	var top = 100; // Position of then panel directly below the time panel
+
+	var camHeight = parseInt($("#cameracontrolpanel").height());
+	if (typeof camHeight == "number" && camHeight > 0)
+	{
+		top += camHeight + 14; // Padding between panels
+	}
+
+	$("#rdpcontrolpanel").css("top", top);
+
 	provideSessionInfoApplet();
 });
 
