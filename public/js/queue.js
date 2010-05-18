@@ -193,7 +193,7 @@ function unlockPermission(id)
 				var diagId = "permission" + id;
 				var diagTitle = $("#ui-dialog-title-permission" + id).text();
 				$("body").append("" +
-						"<div id='" + diagId + "' class='permissiondialogloading'>" +
+						"<div id='" + diagId + "'>" +
 						"	<img src='/images/ajax-loading.gif' alt='Loading' />" +
 						"	<p>Loading...</p>" +
 						"</div>");
