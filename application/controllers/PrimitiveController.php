@@ -329,7 +329,7 @@ class PrimitiveController extends Sahara_Controller_Action_Acl
 
                /* MIME type of file. */
                case 'mime': // Mime type
-                   $mime = implode('/', explode('-', $val));
+                   $mime = implode('/', explode('-', $val, 2));
                    break;
 
                /* Filename of file (forces download). */
