@@ -121,4 +121,17 @@ class Sahara_DefaultInfo
 		
 		return $FAQ;	
 	}
+	
+	public function getLabinfo()
+	{
+		$Images["1"] = array( "filename" => "uts/images/IPR.jpg",
+				"alt" => "UTS",
+				"title" => "UTS Inclined Plane Rig");
+		
+		$Images["2"] = array( "filename" => "uts/images/IPR_close.jpg",
+				"alt" => "UTS",
+				"title" => "Inclined Plane Blocks");
+
+		return $Images;	
+	}
 }

@@ -51,11 +51,21 @@
 	font-weight:bold;
 }
 
-.gallery{position:relative;margin-top:0.5em;background:white;width:80%;align:center}
-.gallery_list{width:602px;margin:0 auto;}
-.gallery_list li{width:100px;height:75px;border:3px double #ccc;margin: 0 2px;background:#000;}
+.gallery{
+	position:relative;
+	margin-top:20px;
+	background:white;
+	width:80%;
+	margin-left:20px;
+}
+
+.gallery_list{width:700px}
+.gallery_list li{width:100px;height:70px;border:3px solid #eee;margin: 0 14px 14px 0;overflow:hidden;background:#000;}
 .gallery_list li div{left:240px}
+.gallery_list li img.thumb{opacity:.5}
+.gallery_list li.active img.thumb,.gallery_demo li:hover img.thumb{opacity:.99} /* safari bug */
 .gallery_list li div .caption{font:italic 0.7em/1.4 georgia,serif;}
 #main_image{margin:0 auto 33px auto;height:450px;width:600px;background:white;padding:1px;border:3px double #777;}
 #main_image img{margin-bottom:10px;}
 .nav{padding-top:15px;clear:both;font:90% 'helvetica neue',sans-serif;letter-spacing:2px;text-align:center;font:80%/140% georgia,serif;}
+.caption{font-size: 0.85em;color:#000;}

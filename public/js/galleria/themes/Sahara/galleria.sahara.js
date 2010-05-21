@@ -29,7 +29,7 @@ Galleria.themes.create({
             this.$('image-nav-left,image-nav-right,counter').fadeOut(500);
         }));
         
-        this.$('image-nav-left,image-nav-right,counter').hide();
+        //this.$('image-nav-left,image-nav-right,counter').hide();
         
         var elms = this.$('info-link,info-close,info-text').click(function() {
             elms.toggle();

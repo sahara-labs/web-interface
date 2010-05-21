@@ -44,5 +44,20 @@ class LabinfoController extends Sahara_Controller_Action_Acl
     public function indexAction()
     {
         $this->view->headTitle('Remote Labs - Laboratory Rigs');
+        
+        $inst = Zend_Registry::get('config')->institution;
+        $this->view->inst = $inst;
+        if (is_file(Bootstrap::$rootDirectory . '/../institution/' . $inst . '/Labinfo.php'))
+        {
+        	$labinfoClass = $inst . '_Labinfo';
+        	$labinfo = new $labinfoClass;
+        }
+        else
+        {
+        	$labinfo = new Sahara_DefaultInfo;
+        }
+
+        $this->view->labinfo = $labinfo->getLabinfo();
+        
     }
 }
