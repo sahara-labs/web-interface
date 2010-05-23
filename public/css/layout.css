@@ -173,6 +173,12 @@ legend {
 	box-shadow: 0 0 4px #B5B5B5;
 }
 
+.actiondialogbutton:hover {
+	-moz-box-shadow: 0 0 4px #606060;
+	-webkit-box-shadow: 0 0 4px #606060;
+	box-shadow: 0 0 4px #606060;
+}
+
 a.actiondialogbutton img {
 	width: 40px;
 	height: 40px;
