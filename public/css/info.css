@@ -56,10 +56,10 @@
 	margin-top:20px;
 	background:white;
 	width:80%;
-	margin-left:20px;
+	margin-left:30px;
 }
 
-.gallery_list{width:700px}
+.gallery_list{width:800px}
 .gallery_list li{width:100px;height:70px;border:3px solid #eee;margin: 0 14px 14px 0;overflow:hidden;background:#000;}
 .gallery_list li div{left:240px}
 .gallery_list li img.thumb{opacity:.5}
