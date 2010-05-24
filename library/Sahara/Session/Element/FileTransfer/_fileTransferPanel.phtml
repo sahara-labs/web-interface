@@ -44,14 +44,15 @@
 		Session files:</p>
 	</div>
 	<div id="filetransfercontents">
-		The following are a list of files that are generated during session and you
-		may download. This list is periodically updated.
 		<?php if (count($this->files)): ?>
+		<ul id="filetransferlist">
 		    <?php foreach($this->files as $name => $url): ?>
-			<ul>
-				<li><a href="<?=$url?>"><?=$name?></a></li>
-			</ul>
+			<li>
+				<a class="plaina downloadlink" href="<?=$url?>"><?=$name?><span class="ui-icon ui-icon-disk"></span></a>
+				|<a class="plaina delfilelink" href=""><span class="ui-icon ui-icon-trash"></span>Delete</a>
+			</li>
 			<?php endforeach; ?>
+		</ul>
 		<?php else: ?>
 			No files.
 		<?php endif; ?>
