@@ -1,4 +1,3 @@
-<?php
 /**
  * SAHARA Web Interface
  *
@@ -33,33 +32,65 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 21st May 2010
+ * @date 25th May 2010
  */
-$this->headScript()->appendFile($this->baseUrl('/js/elements/filetransfer.js'));
-$this->headScript()->appendScript('
-$("document").ready(function (){
-	setInterval("regenerateFileList()", 20000);
-});
-');
-?>
 
-<div id="filetransfercontainer" class="ui-corner-all overlayelementhide">
-	<div class="sessionpanelheader">
-		<p><span class="ui-icon ui-icon-folder-open sessionpanelheadericon"></span>
-		Session files:</p>
-	</div>
-	<div id="filetransfercontents">
-		<?php if (count($this->files)): ?>
-		<ul id="filetransferlist">
-		    <?php foreach($this->files as $name => $url): ?>
-			<li>
-				<a class="plaina downloadlink" href="<?=$url['download']?>"><?=$name?><span class="ui-icon ui-icon-disk"></span></a>
-				<a class="plaina delfilelink" onclick="deleteFile('<?=$name?>')" href="#"><span class="ui-icon ui-icon-trash"></span>Delete</a>
-			</li>
-			<?php endforeach; ?>
-		</ul>
-		<?php else: ?>
-			No files.
-		<?php endif; ?>
-	</div>
-</div>
+function deleteFile(file)
+{
+	$.get(
+		'/primitive/echo/pc/au.edu.labshare.primitive.FileTransferController/pa/deleteFile/filename/' + file,
+		null,
+		function (data) {
+			if (data == 'SUCCESS')
+			{
+				regenerateFileList();
+			}
+	});
+}
+		
+function regenerateFileList()
+{
+	$.get(
+		'/primitive/json/pc/au.edu.labshare.primitive.FileTransferController/pa/listFiles',
+		null,
+		function (data) {
+			var html = "";
+			for (i in data)
+			{
+				var name = "";
+				var meta = "";
+				
+				/* Hack for weird PHP WS parsing. */
+				if (i == 'name')
+				{
+					name = data.name;
+					meta = data.value;
+				}
+				else if (i == 'value')
+				{
+					continue;
+				{
+					name = data[i].name;
+					meta = data[i].value;
+				}
+				
+				html += "<li>";
+				
+				/* Download link. */
+				var url = '#';
+				
+				html += "<a class='plaina downloadlink' href='" + url + "'>";				
+				html += name; // Name to display.
+				html += "<span class='ui-icon ui-icon-disk'></span>"; // Icon
+				html += "</a>";
+				
+				/* Delete link. */
+				html += "<a class='plaina delfilelink' onclick='deleteFile(\"" + name + "\")' href='#'>";
+				html += "<span class='ui-icon ui-icon-trash'></span>Delete</a>";
+
+				html += "</li>";
+			}
+			
+			$("#filetransferlist").html(html);
+	});
+}

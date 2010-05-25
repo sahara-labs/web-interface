@@ -45,6 +45,7 @@
 
 #filetransfercontents {
 	overflow-y: scroll;
+	overflow-x: hidden;
 	padding: 10px;
 	height: 125px;
 }
@@ -56,34 +57,61 @@
 }
 
 #filetransferlist li {
-	margin-bottom: 1px solid #B5B5B5;
-	border-top: 1px solid #B5B5B5;
+	height: 24px;
 	border-bottom: 1px solid #B5B5B5;
-	margin-top: -1px;
 	margin-left: -10px;
 }
 
 .downloadlink {
 	display: block;
 	float: left;
-	width: 450px;
-	height: 28px;
-	margin-top: -5px;
-	background-color: green;
-	background-opacity: 60%;
-	margin-left:-10px;
-	padding-top: 5px;
+	width: 449px;
+	border-right: 4px solid #B5B5B5;
+	padding: 3px;
+	height: 18px;
+}
+
+.downloadlink:hover {
+	background: -moz-linear-gradient(left, #FFFFFF, #D1FFD0, #FFFFFF);
+	background: -webkit-gradient(linear, 0 0, 100% 100%, from(#FFFFFF), color-stop(0.5, #D1FFD0), to(#FFFFFF));
+	-moz-box-shadow: 0 0 15px #B5B5B5;
+	-webkit-box-shadow: 0 0 15px #B5B5B5;
 }
 
 .downloadlink span {
 	float: left;
 	padding-right: 3px;
+	opacity: 0.5;
+	filter:alpha(opacity=50);
 }
 
+.downloadlink:hover span {
+	opacity: 1;
+	filter:alpha(opacity=100);
+}
+
+
 .delfilelink {
+	display: block;
 	float: right;
+	padding: 3px 9px 3px;
+	height: 18px;
+}
+
+.delfilelink:hover {
+	background: -moz-linear-gradient(left, #FFFFFF, #FBA898, #FFFFFF);
+	background: -webkit-gradient(linear, 0 0, 100% 100%, from(#FFFFFF), color-stop(0.5, #FBA898), to(#FFFFFF));
+	-moz-box-shadow: 0 0 15px #B5B5B5;
+	-webkit-box-shadow: 0 0 15px #B5B5B5;
 }
 
 .delfilelink span {
 	float: left;
+	opacity: 0.5;
+	filter:alpha(opacity=50);
+}
+
+.delfilelink:hover span {
+	opacity: 1;	
+	filter:alpha(opacity=100);
 }
