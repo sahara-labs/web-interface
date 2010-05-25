@@ -143,7 +143,8 @@ class PrimitiveController extends Sahara_Controller_Action_Acl
      * </ul>
      * Any other provided parameters are used as primitive request parameters.
      * <br />
-     * If the called failed 'FAILED' is returned.
+     * If the primitive call failed 'FAILED' is returned. If the primitive call succeeded
+     * but no response parameters was provided, 'SUCCESS' is returned.
      */
     public function echoAction()
     {
@@ -206,6 +207,7 @@ class PrimitiveController extends Sahara_Controller_Action_Acl
         {
             $rigClient = new Sahara_Soap($response->contactURL . '?wsdl');
             $response = $rigClient->performPrimitiveControl($request);
+
             if (!$response->success)
             {
                 echo "FAILED " . $response->error->reason;
@@ -238,6 +240,12 @@ class PrimitiveController extends Sahara_Controller_Action_Acl
             }
 
             /** Return all the response parameters. */
+            if (is_null($response))
+            {
+                echo 'SUCCESS';
+                return;
+            }
+
             if (isset($response->name))
             {
                 echo $response->value;
