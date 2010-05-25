@@ -59,10 +59,11 @@ class Sahara_Soap
     /**
      * Creates a SOAP client and gets the WSDL from the specified URI.
      *
-     * @param string $uri URI to the WSDL file
+     * @param String $uri URI to the WSDL file
+     * @param String $location URI to server to use instead of WSDL SOAP address (optional)
      * @throws @throws Exception if failed contacting Scheduling Server
      */
-    public function __construct($uri)
+    public function __construct($uri, $location = null)
     {
         $this->_wsdl = $uri;
 
@@ -76,6 +77,10 @@ class Sahara_Soap
         }
 
         $this->_client = new Zend_Soap_Client($this->_wsdl, $opts);
+        if (!is_null($location))
+        {
+            $this->_client->setLocation($location);
+        }
     }
 
     /**
@@ -107,10 +112,8 @@ class Sahara_Soap
         $uri .= 'services/';
         /* Append end point (e.g. 'Permissions'). */
         $uri .= $endPoint;
-        /* Append a request for a WSDL file. */
-        $uri .= '?wsdl';
 
-        return new Sahara_Soap($uri);
+        return new Sahara_Soap($uri . '?wsdl', $uri);
     }
 
     /**
