@@ -66,9 +66,8 @@ function regenerateFileList()
 					name = data.name;
 					meta = data.value;
 				}
-				else if (i == 'value')
-				{
-					continue;
+				else if (i == 'value') continue;
+				else
 				{
 					name = data[i].name;
 					meta = data[i].value;
@@ -77,7 +76,20 @@ function regenerateFileList()
 				html += "<li>";
 				
 				/* Download link. */
-				var url = '#';
+				var metaParts = meta.split(';', 3);
+				var url = '/primitive/file/pc/au.edu.labshare.primitive.FileTransferController/pa/';
+				if (metaParts[i] == 'text')
+				{
+					url += 'textFile';
+				}
+				else
+				{
+					url += 'binaryFile/tf/base64'; 
+				}
+				url += '/fn/' + name + '/filename/' + name;
+				
+				mimeParts = metaParts[0].split('/', 2);
+				url += '/mime/' + mimeParts[0] + '-' + mimeParts[1];
 				
 				html += "<a class='plaina downloadlink' href='" + url + "'>";				
 				html += name; // Name to display.
