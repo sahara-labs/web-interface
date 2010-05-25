@@ -1,0 +1,78 @@
+--- ../../../trunk/library/Sahara/Soap.php	2010-05-25 17:14:45.506851846 +1000
++++ Soap_modified.php	2010-05-25 16:37:14.558851506 +1000
+@@ -29,32 +29,39 @@
+  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  *
+  * @author Michael Diponio (mdiponio)
+  * @date  18th March 2010
++ * 
++ * @author Herbert Yeung
++ * @date  25th May 2010
++ * Modification: Added SOAP interface to access SchedServer-LabConnector bundle
+  */
+ 
+ /**
+  * Class to call SOAP methods for SAHARA services.
+  */
+ class Sahara_Soap
+ {
+     /** The bundle containing the Permissions SOAP interface in the Scheduling Server. */
+     const PERMISSIONS_SERVICE_BUNDLE = 'SchedulingServer-Permissions';
+ 
+     /** The bundle containing the Queuer SOAP interface in the Scheduling Server. */
+     const QUEUER_SERVICE_BUNDLE = 'SchedulingServer-Queuer';
+ 
+     /** The bundle containing the Session SOAP interface in the Scheduling Server. */
+     const SESSION_SERVICE_BUNDLE = 'SchedulingServer-Session';
+-
++    
++    /** The bundle containing the LabConnector SOAP interface in the Scheduling Server. */
++    const LABCONNECTOR_SERVICE_BUNDLE = 'SchedulingServer-LabConnector';
++    
+     /** The SOAP client which points to the SOAP service. */
+     protected $_client;
+ 
+     /** The location to the WSDL. */
+     protected $_wsdl;
+ 
+     /**
+      * Creates a SOAP client and gets the WSDL from the specified URI.
+@@ -160,16 +167,34 @@
+         {
+             Zend_Registry::set(self::SESSION_SERVICE_BUNDLE,
+                     self::createSchedServerClient('Session', self::SESSION_SERVICE_BUNDLE));
+         }
+         return Zend_Registry::get(self::SESSION_SERVICE_BUNDLE);
+     }
+ 
+     /**
++     * Gets a Sahara_Soap instance which points to the LabConnector interface
++     * of the Scheduling Server.
++     *
++     * @return Sahara_Soap instance
++     * @throws Exception if failed contacting Scheduling Server
++     */
++    public static function getSchedServerLabConnectorClient()
++    {
++        if (!Zend_Registry::isRegistered(self::LABCONNECTOR_SERVICE_BUNDLE))
++        {
++            Zend_Registry::set(self::LABCONNECTOR_SERVICE_BUNDLE,
++                    self::createSchedServerClient('LabConnector', self::LABCONNECTOR_SERVICE_BUNDLE));
++        }
++        return Zend_Registry::get(self::LABCONNECTOR_SERVICE_BUNDLE);
++    }
++
++
++    /**
+      * Calls a SOAP operation on the SOAP client.
+      *
+      * @param String $name name of the operation
+      * @param array $params operation parameters
+      * @return mixed
+      */
+     public function __call($name, $params)
+     {
