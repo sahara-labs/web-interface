@@ -53,8 +53,7 @@ class Sahara_Session_Element_FileTransfer extends Sahara_Session_Element
             {
                 list($mime, $type, $jk) = explode(';', $params);
 
-                $url = "http://138.25.47.151";
-                $url .= $this->_view->baseUrl() . '/primitive/file/pc/' . self::FILE_TRANSFER_CONTROLLER;
+                $url = $this->_view->baseUrl() . '/primitive/file/pc/' . self::FILE_TRANSFER_CONTROLLER;
                 if ($type == 'binary')
                 {
                     /* Binary file, so must use the binary file action and decode as base64. */
