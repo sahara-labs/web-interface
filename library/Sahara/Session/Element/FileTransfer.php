@@ -47,7 +47,7 @@ class Sahara_Session_Element_FileTransfer extends Sahara_Session_Element
 
         $list = $this->_performPrimitive(self::FILE_TRANSFER_CONTROLLER, 'listFiles');
 
-        if (count($list))
+        if ($list)
         {
             foreach ($list as $name => $params)
             {

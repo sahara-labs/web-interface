@@ -130,7 +130,11 @@ abstract class Sahara_Session_Element
             if (!$response->success) return false;
 
             $results = array();
-            if (count($response->result))
+            if (isset($response->result->name))
+            {
+                $results[$response->result->name] = $response->result->value;
+            }
+            else if (count($response->result))
             {
                 foreach ($response->result as $r)
                 {

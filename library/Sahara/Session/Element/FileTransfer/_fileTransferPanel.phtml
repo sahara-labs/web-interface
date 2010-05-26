@@ -38,7 +38,7 @@
 $this->headScript()->appendFile($this->baseUrl('/js/elements/filetransfer.js'));
 $this->headScript()->appendScript('
 $(document).ready(function (){
-	setInterval("regenerateFileList()", 20000);
+	setInterval("regenerateFileList()", 15000);
 });
 ');
 ?>
@@ -53,7 +53,7 @@ $(document).ready(function (){
 		<ul id="filetransferlist">
 		    <?php foreach($this->files as $name => $url): ?>
 			<li>
-				<a class="plaina downloadlink" href="<?=$url?>"><?=$name?><span class="ui-icon ui-icon-disk"></span></a>
+				<a class="plaina downloadlink" href="<?=$url?>"><span class="ui-icon ui-icon-circle-arrow-s" style="width:15px"></span><?=$name?></a>
 				<a class="plaina delfilelink" onclick="deleteFile('<?=$name?>')" href="#"><span class="ui-icon ui-icon-trash"></span>Delete</a>
 			</li>
 			<?php endforeach; ?>
@@ -63,3 +63,12 @@ $(document).ready(function (){
 		<?php endif; ?>
 	</div>
 </div>
+
+<!-- IE6 Fixes -->
+<!--[if lte IE 6]>
+<script type="text/javascript">
+$(document).ready(function() {
+	$(".downloadlink").css("width", "446px");
+});
+</script>
+<![endif]-->
