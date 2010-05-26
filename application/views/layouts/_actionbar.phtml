@@ -126,7 +126,8 @@ switch ($this->userRole)
 	<?php foreach ($actionMenu as $id => $action): ?>
 		<li>
 			<a id="<?=$id?>" class="actiondialogbutton plaina ui-corner-all" href="#">
-					<img src="<?=$action['icon']?>" alt="<?=$action['alt']?>" /><br />
+					<img src="<?=$action['icon']?>" alt="<?=$action['alt']?>"
+					style="margin-bottom:<?=strlen($action['title']) < 10 ? '10' : '0'?>px" /><br />
 			        <?=$action['title']?></a>
 			<? echo $this->render('actionbuttons/' . $action['script']); ?>
 		</li>
