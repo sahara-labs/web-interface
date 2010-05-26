@@ -55,6 +55,8 @@ function regenerateFileList()
 		null,
 		function (data) {
 			var html = "";
+			var number = data.length;
+			
 			for (i in data)
 			{
 				var name = "";
@@ -65,6 +67,7 @@ function regenerateFileList()
 				{
 					name = data.name;
 					meta = data.value;
+					number = 1;
 				}
 				else if (i == 'value') continue;
 				else
@@ -91,9 +94,15 @@ function regenerateFileList()
 				mimeParts = metaParts[0].split('/', 2);
 				url += '/mime/' + mimeParts[0] + '-' + mimeParts[1];
 				
-				html += "<a class='plaina downloadlink' href='" + url + "'>";				
+				html += "<a class='plaina downloadlink";
+				if (metaParts.length == 3 && metaParts[2] == 'new')
+				{
+					html += " newdownloadlink";
+				}
+				html += "' href='" + url + "'>";
+				
+				html += "<span class='ui-icon ui-icon-circle-arrow-s' style='width:15px'></span>"; // Icon
 				html += name; // Name to display.
-				html += "<span class='ui-icon ui-icon-disk'></span>"; // Icon
 				html += "</a>";
 				
 				/* Delete link. */
@@ -104,5 +113,14 @@ function regenerateFileList()
 			}
 			
 			$("#filetransferlist").html(html);
+			
+			
+			/* IE6 Hacks. */
+			if (/msie|MSIE 6/.test(navigator.userAgent))
+			{
+				$(".downloadlink").css("width", "446px");
+			}
+			
+			
 	});
 }

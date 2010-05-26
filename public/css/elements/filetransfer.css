@@ -46,20 +46,16 @@
 #filetransfercontents {
 	overflow-y: scroll;
 	overflow-x: hidden;
-	padding: 10px;
-	height: 125px;
 }
 
 #filetransferlist {
 	list-style: none;
-	margin: -11px 0 -11px;
-	width: 525px; 
+	width: 535px; 
 }
 
 #filetransferlist li {
 	height: 24px;
 	border-bottom: 1px solid #B5B5B5;
-	margin-left: -10px;
 }
 
 .downloadlink {
@@ -72,10 +68,13 @@
 }
 
 .downloadlink:hover {
-	background: -moz-linear-gradient(left, #FFFFFF, #D1FFD0, #FFFFFF);
-	background: -webkit-gradient(linear, 0 0, 100% 100%, from(#FFFFFF), color-stop(0.5, #D1FFD0), to(#FFFFFF));
 	-moz-box-shadow: 0 0 15px #B5B5B5;
 	-webkit-box-shadow: 0 0 15px #B5B5B5;
+}
+
+.newdownloadlink {
+	background: -moz-linear-gradient(left, #D1FFD0, #FFFFFF);
+	background: -webkit-gradient(linear, 0 0, 100% 100%, from(#FFFFFF), color-stop(0.5, #D1FFD0), to(#FFFFFF));
 }
 
 .downloadlink span {
@@ -99,8 +98,7 @@
 }
 
 .delfilelink:hover {
-	background: -moz-linear-gradient(left, #FFFFFF, #FBA898, #FFFFFF);
-	background: -webkit-gradient(linear, 0 0, 100% 100%, from(#FFFFFF), color-stop(0.5, #FBA898), to(#FFFFFF));
+	background-color: #ED1818;
 	-moz-box-shadow: 0 0 15px #B5B5B5;
 	-webkit-box-shadow: 0 0 15px #B5B5B5;
 }
