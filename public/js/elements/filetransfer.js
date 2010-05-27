@@ -55,7 +55,9 @@ function regenerateFileList()
 		null,
 		function (data) {
 			var html = "";
-			var number = data.length;
+			var number = 0;
+			
+			if (data != null) number = data.length;
 			
 			for (i in data)
 			{
@@ -91,8 +93,9 @@ function regenerateFileList()
 				}
 				url += '/fn/' + name + '/filename/' + name;
 				
-				mimeParts = metaParts[0].split('/', 2);
-				url += '/mime/' + mimeParts[0] + '-' + mimeParts[1];
+				/* MIME type for files. */
+//				mimeParts = metaParts[0].split('/', 2);
+//				url += '/mime/' + mimeParts[0] + '-' + mimeParts[1];
 				
 				html += "<a class='plaina downloadlink";
 				if (metaParts.length == 3 && metaParts[2] == 'new')
@@ -114,13 +117,44 @@ function regenerateFileList()
 			
 			$("#filetransferlist").html(html);
 			
-			
-			/* IE6 Hacks. */
-			if (/msie|MSIE 6/.test(navigator.userAgent))
+			/* Styling fixes to account for the scrolling. */
+			if (number > 10)
 			{
-				$(".downloadlink").css("width", "446px");
+				$("#filetransfercontents").css("height", "240px");	
+				$("#filetransfercontents").css("overflow-y", "scroll");
+				$("#filetransferlist").css("width", "535px");
+				
+				if (/msie|MSIE 6/.test(navigator.userAgent))
+				{
+					$(".downloadlink").css("width", "446px");
+				}
+				else if (/msie|MSIE/.test(navigator.userAgent))
+				{
+					$(".downloadlink").css("width", "449px");
+				}
+				else
+				{
+					$(".downloadlink").css("width", "450px");
+				}
 			}
-			
-			
+			else
+			{
+				$("#filetransfercontents").css("height", "auto");
+				$("#filetransfercontents").css("overflow-y", "hidden");
+				$("#filetransferlist").css("width", "555px");
+				
+				if (/msie|MSIE 6/.test(navigator.userAgent))
+				{
+					$(".downloadlink").css("width", "466px");
+				}
+				else if (/msie|MSIE/.test(navigator.userAgent))
+				{
+					$(".downloadlink").css("width", "469px");
+				}
+				else
+				{
+					$(".downloadlink").css("width", "470px");
+				}
+			}
 	});
 }

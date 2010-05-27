@@ -44,13 +44,11 @@
 }
 
 #filetransfercontents {
-	overflow-y: scroll;
 	overflow-x: hidden;
 }
 
 #filetransferlist {
 	list-style: none;
-	width: 535px; 
 }
 
 #filetransferlist li {
@@ -61,20 +59,23 @@
 .downloadlink {
 	display: block;
 	float: left;
-	width: 449px;
 	border-right: 4px solid #B5B5B5;
 	padding: 3px;
 	height: 18px;
 }
 
 .downloadlink:hover {
+	background-color: #F3F3F3;
 	-moz-box-shadow: 0 0 15px #B5B5B5;
 	-webkit-box-shadow: 0 0 15px #B5B5B5;
+	background: -moz-linear-gradient(top, #FFFFFF, #F2F2F2);
+	background: -webkit-gradient(linear, left top, left bottom, from(#FFFFFF), to(#F2F2F2))
 }
 
 .newdownloadlink {
-	background: -moz-linear-gradient(left, #D1FFD0, #FFFFFF);
-	background: -webkit-gradient(linear, 0 0, 100% 100%, from(#FFFFFF), color-stop(0.5, #D1FFD0), to(#FFFFFF));
+	background-color: #D1FFD0;
+	background: -moz-linear-gradient(bottom, #D1FFD0, #FFFFFF);
+	background: -webkit-gradient(linear, left bottom, left top, from(#D1FFD0), to(#FFFFFF));
 }
 
 .downloadlink span {
@@ -99,8 +100,10 @@
 
 .delfilelink:hover {
 	background-color: #ED1818;
-	-moz-box-shadow: 0 0 15px #B5B5B5;
-	-webkit-box-shadow: 0 0 15px #B5B5B5;
+	-moz-box-shadow: 0px 0 10px #F75555;
+	-webkit-box-shadow: 0 0 15px #F75555;
+	background: -moz-linear-gradient(top, #FFFFFF, #F75555);
+	background: -webkit-gradient(linear, left top, left bottom, from(#FFFFFF), to(#F75555))
 }
 
 .delfilelink span {

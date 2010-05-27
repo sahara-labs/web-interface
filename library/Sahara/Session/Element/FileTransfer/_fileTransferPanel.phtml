@@ -48,19 +48,20 @@ $(document).ready(function (){
 		<p><span class="ui-icon ui-icon-folder-open sessionpanelheadericon"></span>
 		Session files:</p>
 	</div>
-	<div id="filetransfercontents">
-		<?php if (count($this->files)): ?>
-		<ul id="filetransferlist">
+	<div id="filetransfercontents" style="overflow-y:<?= count($this->files) > 10 ? "scroll;height:240px" : "hidden"?>">
+
+		<ul id="filetransferlist" style="width:<?= count($this->files) > 10 ? "535px" : "555px"?>">
+		    <?php if (count($this->files)): ?>
 		    <?php foreach($this->files as $name => $url): ?>
-			<li>
-				<a class="plaina downloadlink" href="<?=$url?>"><span class="ui-icon ui-icon-circle-arrow-s" style="width:15px"></span><?=$name?></a>
+			<li >
+				<a class="plaina downloadlink" href="<?=$url?>" style="width:<?= count($this->files) > 10 ? "450px" : "470px"?>">
+					<span class="ui-icon ui-icon-circle-arrow-s" style="width:15px"></span><?=$name?>
+				</a>
 				<a class="plaina delfilelink" onclick="deleteFile('<?=$name?>')" href="#"><span class="ui-icon ui-icon-trash"></span>Delete</a>
 			</li>
 			<?php endforeach; ?>
+			<?php endif; ?>
 		</ul>
-		<?php else: ?>
-			No files.
-		<?php endif; ?>
 	</div>
 </div>
 
@@ -68,7 +69,14 @@ $(document).ready(function (){
 <!--[if lte IE 6]>
 <script type="text/javascript">
 $(document).ready(function() {
-	$(".downloadlink").css("width", "446px");
+	$(".downloadlink").css("width", "466px");
+});
+</script>
+<![endif]-->
+<!--[if gt IE 6]>
+<script type="text/javascript">
+$(document).ready(function() {
+	$(".downloadlink").css("width", "469px");
 });
 </script>
 <![endif]-->
