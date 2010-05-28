@@ -39,7 +39,7 @@
 class Sahara_Session_Element_FileTransfer extends Sahara_Session_Element
 {
     /** @var String Rig Client file transfer controller. */
-    const FILE_TRANSFER_CONTROLLER = 'au.edu.labshare.primitive.FileTransferController';
+    const FILE_TRANSFER_CONTROLLER = 'au.edu.labshare.rigclient.primitive.FileTransferController';
 
     public function init()
     {

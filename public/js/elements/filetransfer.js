@@ -38,7 +38,7 @@
 function deleteFile(file)
 {
 	$.get(
-		'/primitive/echo/pc/au.edu.labshare.primitive.FileTransferController/pa/deleteFile/filename/' + file,
+		'/primitive/echo/pc/au.edu.labshare.rigclient.primitive.FileTransferController/pa/deleteFile/filename/' + file,
 		null,
 		function (data) {
 			if (data == 'SUCCESS')
@@ -51,7 +51,7 @@ function deleteFile(file)
 function regenerateFileList()
 {
 	$.get(
-		'/primitive/json/pc/au.edu.labshare.primitive.FileTransferController/pa/listFiles',
+		'/primitive/json/pc/au.edu.labshare.rigclient.primitive.FileTransferController/pa/listFiles',
 		null,
 		function (data) {
 			var html = "";
@@ -82,7 +82,7 @@ function regenerateFileList()
 				
 				/* Download link. */
 				var metaParts = meta.split(';', 3);
-				var url = '/primitive/file/pc/au.edu.labshare.primitive.FileTransferController/pa/';
+				var url = '/primitive/file/pc/au.edu.labshare.rigclient.primitive.FileTransferController/pa/';
 				if (metaParts[i] == 'text')
 				{
 					url += 'textFile';
