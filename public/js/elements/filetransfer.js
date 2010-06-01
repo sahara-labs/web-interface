@@ -54,6 +54,11 @@ function regenerateFileList()
 		'/primitive/json/pc/au.edu.labshare.rigclient.primitive.FileTransferController/pa/listFiles',
 		null,
 		function (data) {
+			
+			/* If the call was successful the response is auto-serialised to a 
+			 * JSON object. */
+			if (typeof data == "string") return;
+			
 			var html = "";
 			var number = 0;
 			
