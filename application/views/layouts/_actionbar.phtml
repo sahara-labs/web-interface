@@ -106,6 +106,24 @@ switch ($this->userRole)
                     ))
         );
         break;
+    case Sahara_Acl::ADMIN:
+        $actionMenu = array(
+            'logout' => array('title' => 'Logout', 'script' => '_logout.phtml',
+                    'icon' => $this->baseUrl('images/logout.png'), 'alt' => 'logout',
+                    'width' => 400,
+                    'buttons' => array(
+                    	'Yes' => 'location.href="' . $this->url(array('controller' => 'index', 'action' => 'logout')) . '";',
+                        'No'  => '$(this).dialog("close");'
+                    )),
+        	'feedback' => array('title' => 'Send Feedback', 'script' => '_feedback.phtml',
+                    'icon' => $this->baseUrl('images/feedback.png'), 'alt' => 'feedback',
+                    'width' => 600,
+                    'buttons' => array(
+                        'Send' => '$("#feedback_form").submit();',
+                        'Cancel' => '$(this).dialog("close");'
+                    ))
+        );
+        break;
     default:
         $actionMenu = array(
         	'feedback' => array('title' => 'Send Feedback', 'script' => '_feedback.phtml',
