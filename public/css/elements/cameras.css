@@ -60,6 +60,7 @@
 	margin: 15px auto;
 	border: 1px solid #B5B5B5;
 	overflow: hidden;
+	z-index: 1000;
 }
 
 .camera {

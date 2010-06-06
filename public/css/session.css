@@ -66,6 +66,10 @@
 	padding-top: 6px;
 }
 
+.sessionpaneldraggable {
+	cursor: move;
+}
+
 .sessionpanelheadericon {
 	float: left;
 	margin: 0 5px 0;
