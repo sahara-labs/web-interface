@@ -84,7 +84,15 @@ $(document).ready( function () {
 		{
 			if (cameraFormatTable[name] == pOpt)
 			{
-			 	changeCameraOption(<?=$k?>, pOpt, cameraUrlTable["#camera<?=$k?>"][pOpt]);
+			 	if (pOpt == 'off')
+			 	{
+				 	$("#camerapanel<?=$k?>").css("display", "none");
+			 	}
+			 	else
+			 	{
+				 	changeCameraOption(<?=$k?>, pOpt, cameraUrlTable["#camera<?=$k?>"][pOpt]);
+			 	}
+
 				$("#camform<?=$k?> div div span").text(name);
 
 				$("#camform<?=$k?> li").each( function(index) {
