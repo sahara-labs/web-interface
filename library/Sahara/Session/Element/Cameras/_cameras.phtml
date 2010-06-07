@@ -69,8 +69,34 @@ $(document).ready( function () {
 	cam.width = <?=$cam['width'] ? $cam['width'] : 240 ?>;
 	vcameras[<?=$k?>] = cam;
 
+	/* Set the camera option. First try to use any persisted settings,
+	 * otherwise fallback to the default. */
+	var pOpt = getCameraCookie("CamOption-<?=$k?>");
+	if (pOpt == "")
+	{
+		changeCameraOption(<?=$k?>, "<?=$def?>", "<?=$cam['url'][$def]?>");
+	}
+	else
+	{
+		/* Also update the video formats panel. */
+		var optKnown = false;
+		for (name in cameraFormatTable)
+		{
+			if (cameraFormatTable[name] == pOpt)
+			{
+			 	changeCameraOption(<?=$k?>, pOpt, cameraUrlTable["#camera<?=$k?>"][pOpt]);
+				$("#camform<?=$k?> div div span").html(name);
+				optKnown = true;
+				break;
+			}
+		}
 
-	changeCameraOption(<?=$k?>, "<?=$def?>", "<?=$cam['url'][$def]?>");
+		if (!optKnown)
+		{
+			/* The cookie stored value is stale, so fall back to the default. */
+			changeCameraOption(<?=$k?>, "<?=$def?>", "<?=$cam['url'][$def]?>");
+		}
+	}
 
     /* Close click event. */
 	$("#cameraclose<?=$k?>").click( function () {
@@ -86,7 +112,8 @@ $(document).ready( function () {
 	/* Make the camera panel draggable. */
 	$("#camerapanel<?=$k?>").draggable({
 		handle: 'p',
-		opacity: 0.6
+		opacity: 0.6,
+		stack: ".camerapanel"
 	});
 <?php endfor; ?>
 

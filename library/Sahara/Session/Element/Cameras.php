@@ -69,6 +69,8 @@ class Sahara_Session_Element_Cameras extends Sahara_Session_Element
      */
     public function init()
     {
+        $this->_view->rigType = $this->_getRigAttribute('Rig_Type');
+
         if (!($num = $this->_getRigAttribute('Number_of_Cameras')))
         {
             $this->_logger->warn("Unable to determine number of cameras ('WI_Camera_Number' property). Ensure this " .

@@ -42,6 +42,8 @@ function changeCameraOption(id, vid, url)
 {
 	undeploy(id);
 	
+	setCameraCookie("CamOption-" + id, vid);
+	
 	/* First make panel visible. */
 	if ($("#camerapanel" + id).css("display") == "none" && vid != 'off')
 	{
@@ -218,7 +220,10 @@ function deployVLC(id, url)
 	
 	/* Start VLC playing. */
 	var vlc = document.getElementById('vlc' + id);
-	vlc.playlist.playItem(vlc.playlist.add(url));
+	if (typeof vlc.playlist != "undefined")
+	{
+		vlc.playlist.playItem(vlc.playlist.add(url));
+	}
 }
 
 function undeploy(id)
@@ -237,5 +242,29 @@ function undeploy(id)
 	$(cameraDiv).css("height", vcameras[id].height);
 	
 	resizeFooter();
+}
+
+function setCameraCookie(key, value)
+{
+	var expiry = new Date();
+	expiry.setDate(expiry.getDate() + 365);
+	var cookie = 'Camera_' + cameraRigType + '-' + key + '=' + value + ';expires=' + expiry.toUTCString();
+
+	document.cookie = cookie;
+}
+
+function getCameraCookie(key)
+{
+	var cookies = document.cookie.split('; ');
+	var fqKey = 'Camera_' + cameraRigType + '-' + key;
+	for (i in cookies)
+	{
+		var c = cookies[i].split('=', 2);
+		if (c[0] == fqKey)
+		{
+			return c[1];
+		}
+	}
+	return "";
 }
 
