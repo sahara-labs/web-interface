@@ -83,7 +83,11 @@ $(document).ready( function () {
 		undeploy(<?=$k?>);
 	})
 
-	$("#camerapanel<?=$k?>").draggable();
+	/* Make the camera panel draggable. */
+	$("#camerapanel<?=$k?>").draggable({
+		handle: 'p',
+		opacity: 0.6
+	});
 <?php endfor; ?>
 
 });
