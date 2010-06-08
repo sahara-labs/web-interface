@@ -38,6 +38,7 @@
 ?>
 <div id="cameras" class="overlayelementhide">
 <?php for ($i = 0, $k = 1; $i < count($this->cameras); $i++, $k++): $cam = $this->cameras[$i]?>
+	<div class="outcamerapanel" style="height:<?=$cam['height'] + 30?>px;overflow:visible">
 	<div id="camerapanel<?=$k?>" class="ui-corner-all camerapanel" style="width:<?=$cam['width']?>px;">
 		<div class="sessionpanelheader sessionpaneldraggable">
 			<p>
@@ -49,6 +50,7 @@
 		</div>
 		<div id="camera<?=$k?>" class="camera" style="width:<?=$cam['width']?>px;height:<?=$cam['height']?>px;">
 		</div>
+	</div>
 	</div>
 <?php endfor; ?>
 </div>

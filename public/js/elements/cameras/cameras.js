@@ -127,6 +127,7 @@ function deployJpeg(id, url, tm)
 	
 	$("#jpegslider" + id).css('width', vcameras[id].width - 20);
 	
+	$(cameraDiv).parent().parent().css("height", vcameras[id].height + 90); // Outer camera div
 	$(cameraDiv).css("height", vcameras[id].height + 60);
 	
 	/* Hack so the footer doesn't overlay the camera panel while the background
@@ -240,6 +241,9 @@ function undeploy(id)
 	$(cameraDiv).css("background-color", "#FFFFFF");
 	$(cameraDiv).html("<p>Camera off.</p>");
 	$(cameraDiv).css("height", vcameras[id].height);
+	$(cameraDiv).parent().parent().css("height", vcameras[id].height + 30); // Outer camera div
+	
+	
 	
 	resizeFooter();
 }
