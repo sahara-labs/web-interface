@@ -54,6 +54,7 @@
     		</form>
 		</div>
 	<?php endfor; ?>
+	<button id="camreset">Reset Positions</button>
 	</div>
 </div>
 
@@ -94,6 +95,16 @@ $(document).ready( function() {
 	$(".cameraformat .jqTransformSelectWrapper span").css("width", "160px");
 	$(".cameraformat .jqTransformSelectWrapper").css("margin-bottom", "10px");
 	$(".cameraformat ul").css("width", "158px");
+
+	/* Reset position button. */
+	$("#camreset").button();
+	$("#camreset").click( function(){
+		for (id in cameraUrlTable)
+		{
+			$(id).parent().css("top", 0);
+			$(id).parent().css("left", 0);
+		}
+	});
 });
 
 //]]>
