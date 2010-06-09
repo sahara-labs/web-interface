@@ -134,8 +134,21 @@ $(document).ready( function () {
 	$("#camerapanel<?=$k?>").draggable({
 		handle: 'p',
 		opacity: 0.6,
-		stack: ".camerapanel"
+		stack: ".camerapanel",
+		stop: function(event, ui) {
+			setCameraCookie(event.target.id, ui.position.left + "x" + ui.position.top);
+		}
 	});
+
+	/* Restore the any stored position. */
+	if ((pOpt = getCameraCookie("camerapanel<?=$k?>")) != "")
+	{
+		var pos = pOpt.split("x", 2);
+		$("#camerapanel<?=$k?>").css("left", pos[0] + "px");
+		$("#camerapanel<?=$k?>").css("top", pos[1] + "px");
+	}
+
+
 <?php endfor; ?>
 
 });
