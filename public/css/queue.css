@@ -176,7 +176,6 @@
 }
 
 .queuerequestloading {
-	
 }
 
 #iconlegends {
@@ -185,17 +184,51 @@
 	margin: 0px;
 }
 
+
 #iconlegends div img {
 	height: 25px;
 	width: 25px;
 	padding-right: 10px;
 }
+
 #iconlegend {
 	float: left;
-	width: 50%;
+	width: 30%;
+	padding-top: 15px;
+	padding-left: 150px;
+	padding-right: 50px;
 }
 
+#iconlegends li {
+	list-style: none;
+}
+
+.legendtext {
+	display:none; 
+	padding-left: 4px;
+	font-weight:normal;
+	font-size: 140%;
+	height: 40px;
+}
+
+.legendhover {
+	display:none;
+	border: 1px solid #999999;
+	-moz-box-shadow: 5px 5px 4px #B5B5B5;
+	margin-top: -35px;
+	margin-left: -35px;
+	backgrond-color:white;
+}
+
+.hoverimg{
+	/*float: left;
+	background-color: #B5B5B5;*/	
+}
+	
+
 #balliconlegend {
+	padding-top: 15px;
+	
 }
 
 /******************************************************************************

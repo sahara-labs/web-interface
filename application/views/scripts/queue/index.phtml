@@ -48,7 +48,8 @@ $(document).ready(function() {
 		$(".permissionbutton").css("margin-bottom", "0");
 	}
 });
-');
+')
+;
 $this->headScript()->appendFile($this->baseUrl('js/queue.js'));
 
 if (!$this->noPermissions)
@@ -260,27 +261,48 @@ $(document).ready(function() {
 });
 </script>
 
+
 <!-- Legend for icon information. -->
+
 <div id="iconlegends" class="legend">
-	<h3>Legend:</h3>
     <div id="iconlegend">
-    	<p><img src="<?=$this->baseUrl('images/permission_launch.png')?>" alt="Allowed" />
-    	Active: You may queue for the resource.</p>
-    	<p><img src="<?=$this->baseUrl('images/permission_expired.png')?>" alt="Expired" />
-    	Not active: You do not have permission to queue at the current time.</p>
-    	<p><img src="<?=$this->baseUrl('images/permission_locked.png')?>" alt="Locked" />
-    	Locked: The resource is active but locked. You must supply a pass key before you can queue.</p>
+		<h3>Permision Descriptions:</h3>
+		<ul>
+    		<li><img src="<?=$this->baseUrl('images/permission_launch.png')?>" alt="Allowed" /> Active 
+    			<div class="legendhover"> <img class="hoverimg" src="<?=$this->baseUrl('images/permission_launch.png')?>" alt="Allowed" />
+    			<span class="legendtext"> You may queue for this resource.  </span></div></li>
+    		<li><img src="<?=$this->baseUrl('images/permission_expired.png')?>" alt="Expired" />
+    		Not Active <span class="legendtext"> You do not currently have permission to queue.</span></li>
+    		<li><img src="<?=$this->baseUrl('images/permission_locked.png')?>" alt="Locked" />
+    		Locked <span class="legendtext"> The resource is active but locked. You must supply a pass key before you can queue.</span></li>
+   	 	</ul>
     </div>
     <div id="balliconlegend">
-		<p><img src="<?=$this->baseUrl('images/balls/green_small.gif')?>" alt="Free" />
-    	Free: The resource is free to use.</p>
-    	<p><img src="<?=$this->baseUrl('images/balls/yellow_small.gif')?>" alt="In Use" />
-    	In Use: The resource is online and in use. You will be queued to use the resource after the current user and
-    	any preceding queued users.</p>
-    	<p><img src="<?=$this->baseUrl('images/balls/red_small.gif')?>" alt="Offline" />
-    	Offline: The resource is offline and can not be used.</p>
+		<h3>Resource Status Descriptions:</h3>
+		<ul>
+			<li><img src="<?=$this->baseUrl('images/balls/green_small.gif')?>" alt="Free" />
+    		Free <span class="legendtext"> The resource is free to use.</span></li>
+    		<li><img src="<?=$this->baseUrl('images/balls/yellow_small.gif')?>" alt="In Use" />
+    		In Use <span class="legendtext"> The resource is online and in use. You will be queued to use the resource after the current user and
+    		any preceding queued users.</span></li>
+    		<li><img src="<?=$this->baseUrl('images/balls/red_small.gif')?>" alt="Offline" />
+    		Offline <span class="legendtext"> The resource is offline and can not be used.</span></li>
+    	</ul>
     </div>
 </div>
+
+<script>
+$("#iconlegends li").hover(
+  function () {
+    $(this).children("div").css("display","inline");
+    $(this).children("span").css("display","inline");
+  }, 
+  function () {
+    $(this).children("div").css("display","block");
+	$(this).children("span").css("display","none");
+  }
+);
+</script>
 
 <?php else: ?>
 	<div class="ui-state-error ui-corner-all alertdiv centercontent" style="width:350px">
