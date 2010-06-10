@@ -103,6 +103,9 @@ $(document).ready( function() {
 		{
 			$(id).parent().css("top", 0);
 			$(id).parent().css("left", 0);
+
+			/* Clear any stored position. */
+			setCameraCookie($(id).parent().attr('id'), "0x0");
 		}
 	});
 });
