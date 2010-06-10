@@ -36,7 +36,6 @@
  */
 
 jpegIntervals = new Array();
-count = new Array();
 
 function changeCameraOption(id, vid, url)
 {
@@ -141,19 +140,14 @@ function deployJpeg(id, url, tm)
 	{
 		jpegIntervals[id] = setInterval("updateJpeg(" + id + ", '" + url + "')", tm);
 	}
-	
-	count[id] = 0;
 }
 
 function updateJpeg(id, url, tm)
 {
-	$("#jpegframe" + id).html("<img src='" + url + "?" + new Date().getTime() + "'/>");
-	count[id]++;
-	if (count[id] == 50)
-	{
-		$("#camera" + id).css("background-image", "url(" + url + "?" + new Date().getTime() + ")");
-		count[id] = 0;
-	}
+	var tUrl = url + "?" + new Date().getTime();
+	$("#jpegframe" + id + " img").attr("src", url + "?" + new Date().getTime()).load(function() {
+		$("#camera" + id).css("background-image", "url(" + tUrl + ")");
+	});
 }
 
 function deployWinMedia(id, url)
