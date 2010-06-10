@@ -268,9 +268,8 @@ $(document).ready(function() {
     <div id="iconlegend">
 		<h3>Permision Descriptions:</h3>
 		<ul>
-    		<li><img src="<?=$this->baseUrl('images/permission_launch.png')?>" alt="Allowed" /> Active 
-    			<div class="legendhover"> <img class="hoverimg" src="<?=$this->baseUrl('images/permission_launch.png')?>" alt="Allowed" />
-    			<span class="legendtext"> You may queue for this resource.  </span></div></li>
+    		<li><img src="<?=$this->baseUrl('images/permission_launch.png')?>" alt="Allowed" />  
+    		 Active <span class="legendtext"> You may queue for this resource.  </span></li>
     		<li><img src="<?=$this->baseUrl('images/permission_expired.png')?>" alt="Expired" />
     		Not Active <span class="legendtext"> You do not currently have permission to queue.</span></li>
     		<li><img src="<?=$this->baseUrl('images/permission_locked.png')?>" alt="Locked" />
@@ -294,11 +293,11 @@ $(document).ready(function() {
 <script>
 $("#iconlegends li").hover(
   function () {
-    $(this).children("div").css("display","inline");
+    $(this).css("font-weight","bold");
     $(this).children("span").css("display","inline");
   }, 
   function () {
-    $(this).children("div").css("display","block");
+	    $(this).css("font-weight","normal");
 	$(this).children("span").css("display","none");
   }
 );
