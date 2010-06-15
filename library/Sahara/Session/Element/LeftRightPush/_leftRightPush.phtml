@@ -52,12 +52,9 @@ $(document).ready(function() {
 	for (var i in leftPushElements)
 	{
 		var e = leftPushElements[i];
-
 		var oldLeft = parseInt(e.style.left);
 		e.style.left = (isNaN(oldLeft) ? -leftPush : oldLeft - leftPush) + "px";
 	}
-
-
 
 	/* Action bar is to be pushed to the right and up or down. */
 	var ab = $("#actionbar");
@@ -71,6 +68,7 @@ $(document).ready(function() {
 	for (var i in rightPushElements)
 	{
 		var e = rightPushElements[i];
+
 		var oldRight = parseInt(e.style.right);
 		e.style.right = (isNaN(oldRight) ? -rightPush : oldRight - rightPush) + "px";
 
