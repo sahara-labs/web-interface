@@ -60,18 +60,23 @@ class Sahara_Session_Element_LeftRightPush extends Sahara_Session_Element
     /** @var int The amount to push the rig contents in pixels. */
     private $_rightPush;
 
+    /** @var int The top offset of right. */
+    private $_rightTop;
+
     /**
      * Constructor.
-     * @param String $rigClient Rig client URL.
-     * @param int $left The amount to push left (optional)
-     * @param int $right The amount to push right (optional)
+     * @param String $rigClient rig client URL
+     * @param int $left the amount to push left (optional)
+     * @param int $right the amount to push right (optional)
+     * @param int $rightTop the vertical offset of right (optional)
      */
-    public function __construct($rigClient, $left = 0, $right = 0)
+    public function __construct($rigClient, $left = 0, $right = 0, $rightTop = 0)
     {
         parent::__construct($rigClient);
 
         $this->_leftPush = $left;
         $this->_rightPush = $right;
+        $this->_rightTop = $rightTop;
     }
 
     /**
@@ -94,10 +99,21 @@ class Sahara_Session_Element_LeftRightPush extends Sahara_Session_Element
         $this->_rightPush = $pixels;
     }
 
+    /**
+     * Sets the right top offset from its normal height.
+     *
+     * @param int $pixels right top offset
+     */
+    public function setRightTop($pixels)
+    {
+        $this->_rightTop = $pixels;
+    }
+
     public function render()
     {
         $this->_view->leftPush = $this->_leftPush;
         $this->_view->rightPush = $this->_rightPush;
+        $this->_view->rightTop = $this->_rightTop;
 
         return $this->_view->render('LeftRightPush/_leftRightPush.phtml');
     }

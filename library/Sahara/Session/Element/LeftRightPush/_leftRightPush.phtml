@@ -41,6 +41,7 @@
 $(document).ready(function() {
 	var leftPush = <?=$this->leftPush?>;
 	var rightPush = <?=$this->rightPush?>;
+	var rightTop = <?=$this->rightTop?>;
 
 	/* Session panel is to be pushed left. */
 	var left = parseInt($("#sessioninfo").css("left")) - leftPush;
@@ -51,40 +52,30 @@ $(document).ready(function() {
 	for (var i in leftPushElements)
 	{
 		var e = leftPushElements[i];
-		var oldLeft = parseInt(e.style.left);
 
-		if (isNaN(oldLeft))
-		{
-			left = -leftPush;
-		}
-		else
-		{
-			left = oldLeft - leftPush;
-		}
-		e.style.left = left + "px";
+		var oldLeft = parseInt(e.style.left);
+		e.style.left = (isNaN(oldLeft) ? -leftPush : oldLeft - leftPush) + "px";
 	}
 
 
-	/* Action bar is to be pushed to the right. */
-	var right = parseInt($("#actionbar").css("right")) - rightPush;
-	$("#actionbar").css("right", right);
 
-	/* Right push contents is to be pushed to the right. */
+	/* Action bar is to be pushed to the right and up or down. */
+	var ab = $("#actionbar");
+	var right = parseInt(ab.css("right")) - rightPush;
+	ab.css("right", right);
+	if (rightTop != 0) ab.css("top", rightTop);
+
+
+	/* Right push contents is to be pushed to the right and up or down. */
 	var rightPushElements = $(".rightpush").toArray();
 	for (var i in rightPushElements)
 	{
 		var e = rightPushElements[i];
 		var oldRight = parseInt(e.style.right);
+		e.style.right = (isNaN(oldRight) ? -rightPush : oldRight - rightPush) + "px";
 
-		if (isNan(oldRight))
-		{
-			right = -rightPush;
-		}
-		else
-		{
-			right = oldRight - rightPush;
-		}
-		e.style.right = right + "px";
+		var oldTop = parseInt(e.style.top);
+		e.style.top = (isNan(oldTop) ? rightTop : oldTop + rightTop) + "px";
 	}
 });
 </script>
