@@ -31,9 +31,9 @@ Galleria.themes.create({
         
         //this.$('image-nav-left,image-nav-right,counter').hide();
         
-        var elms = this.$('info-link,info-close,info-text').click(function() {
-            elms.toggle();
-        });
+        //var elms = this.$('info-link,info-close,info-text').click(function() {
+        //    elms.toggle();
+        //});
         
         this.bind(Galleria.LOADSTART, function(e) {
             if (!e.cached) {

@@ -46,7 +46,8 @@ $this->headScript()->appendFile($this->baseUrl('js/galleria/themes/Sahara/galler
 
 <div class="gallery" >
 <ul class="gallery_list">
-	<?php foreach ($this->labinfo as $i => $labinfo):?>
+<?=$this->labinfo["1"]["filename"];?>
+	<?php foreach ($this->labinfo as $labinfo):?>
 	  <li><img src="<?=$this->baseUrl($labinfo["filename"])?>" alt="<?=$labinfo["alt"]?>" title="<?=$labinfo["title"]?>"></li>
 	<?php endforeach;?>
 </ul>

@@ -38,68 +38,65 @@
 
 class UTS_Labinfo
 {
+	/** 
+	 * The images for the Laboratory Information gallery page.
+	 * A list of arrays containing the image information. The image information
+	 * is stored as an associative array containing:
+	 *   - filename => image filename (from baseUrl)
+	 *   - alt => subtitle for image
+	 *   - title => title for image    
+	 */
+
+		
+		private $Images = array (
+			array( "filename" => "uts/images/IPR.jpg",
+				"alt" => "Tests coefficients of friction, gravity, static and kinetic friction ..",
+				"title" => "Inclined Plane Rig"),
+		    array( "filename" => "uts/images/IPR_close.jpg",
+				"alt" => "Blocks of different materials used for the Inclined Plane",
+				"title" => "Inclined Plane Blocks"),
+			array( "filename" => "uts/images/ShakeTable_1.jpg",
+				"alt" => "Two Degree-of-Freedom shaker table",
+				"title" => "Shaker Table"),
+			array( "filename" => "uts/images/ShakeTable_3.jpg",
+				"alt" => "Collection of four shaker table rigs",
+				"title" => "Shaker Table Rigs"),
+			array( "filename" => "uts/images/ShakeTable_close.jpg",
+				"alt" => "Three Degree-of-Freedom shaker table",
+				"title" => "Shaker Table"),
+			array( "filename" => "uts/images/Coldfire.jpg",
+				"alt" => "UTS",
+				"title" => "Coldfire Rig"),
+			array( "filename" => "uts/images/CoupledTank.jpg",
+				"alt" => "UTS",
+				"title" => "Coupled Tank Rig"),
+			 array( "filename" => "uts/images/FPGA_1.jpg",
+				"alt" => "UTS",
+				"title" => "Single FPGA Rig"),
+ 			array( "filename" => "uts/images/LoadedBeam_1.jpg",
+				"alt" => "UTS",
+				"title" => "Single Loaded Beam Rig"),
+			 array( "filename" => "uts/images/LoadedBeam_2.jpg",
+				"alt" => "UTS",
+				"title" => "Loaded Beam Rigs"),
+			 array( "filename" => "uts/images/PLC_1.jpg",
+				"alt" => "UTS",
+				"title" => "Single PLC Rig"),
+			array( "filename" => "uts/images/PLC_2.jpg",
+				"alt" => "UTS",
+				"title" => "PLC Rigs"),
+			array( "filename" => "uts/images/RL_outside.jpg",
+				"alt" => "UTS",
+				"title" => "Remote Laboratory"),
+			array( "filename" => "uts/images/RL_inside.jpg",
+				"alt" => "UTS",
+				"title" => "Remote Laboratory"),
+			 array( "filename" => "uts/images/RL_tanks.jpg",
+				"alt" => "UTS",
+				"title" => "Remote Laboratory"));
+
 	public function getLabinfo()
 	{
-		$Images["1"] = array( "filename" => "uts/images/IPR.jpg",
-				"alt" => "UTS",
-				"title" => "UTS Inclined Plane Rig");
-		
-		$Images["2"] = array( "filename" => "uts/images/IPR_close.jpg",
-				"alt" => "UTS",
-				"title" => "Inclined Plane Blocks");
-
-		$Images["3"] = array( "filename" => "uts/images/ShakeTable_1.jpg",
-				"alt" => "UTS",
-				"title" => "2 Degree-of-Freedom Shaker Table");
-
-		$Images["4"] = array( "filename" => "uts/images/ShakeTable_3.jpg",
-				"alt" => "UTS",
-				"title" => "Shaker Table Rigs");
-		
-		$Images["5"] = array( "filename" => "uts/images/ShakeTable_close.jpg",
-				"alt" => "UTS",
-				"title" => "3 Degree-of-Freedom Shaker Table");
-		
-		$Images["6"] = array( "filename" => "uts/images/Coldfire.jpg",
-				"alt" => "UTS",
-				"title" => "Coldfire Rig");
-
-		$Images["7"] = array( "filename" => "uts/images/CoupledTank.jpg",
-				"alt" => "UTS",
-				"title" => "Coupled Tank Rig");
-
-		$Images["8"] = array( "filename" => "uts/images/FPGA_1.jpg",
-				"alt" => "UTS",
-				"title" => "Single FPGA Rig");
-
-		$Images["9"] = array( "filename" => "uts/images/LoadedBeam_1.jpg",
-				"alt" => "UTS",
-				"title" => "Single Loaded Beam Rig");
-		
-		$Images["10"] = array( "filename" => "uts/images/LoadedBeam_2.jpg",
-				"alt" => "UTS",
-				"title" => "Loaded Beam Rigs");
-
-		$Images["11"] = array( "filename" => "uts/images/PLC_1.jpg",
-				"alt" => "UTS",
-				"title" => "Single PLC Rig");
-
-		$Images["12"] = array( "filename" => "uts/images/PLC_2.jpg",
-				"alt" => "UTS",
-				"title" => "PLC Rigs");
-
-		$Images["13"] = array( "filename" => "uts/images/RL_outside.jpg",
-				"alt" => "UTS",
-				"title" => "Remote Laboratory");
-
-		$Images["14"] = array( "filename" => "uts/images/RL_inside.jpg",
-				"alt" => "UTS",
-				"title" => "Remote Laboratory");
-
-		$Images["15"] = array( "filename" => "uts/images/RL_tanks.jpg",
-				"alt" => "UTS",
-				"title" => "Remote Laboratory");
-
-		return $Images;	
+		return $this->Images;	
 	}
 }

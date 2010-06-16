@@ -38,10 +38,14 @@
 
 class UTS_Contacts
 {
-	public function getContacts()
-	{
+	 /**
+     * Array of contact information. The structure is an associative array
+     * containing role => contact information.
+     * The contact information is an associative array containing the desired 
+     * contact information. This array can contain any key => values as desired.
+     */
 		
-		$allContacts = array("Operational" => array("Contact Name:" => "Michel de la Villefromoy",
+	private	$allContacts = array("Operational" => array("Contact Name:" => "Michel de la Villefromoy",
 										  "Contact Phone:" => "(02) 9514 2406",
 										  "Contact Address:" => "UTS Building 1",
 										  "" => "CB01.23.16",
@@ -52,6 +56,8 @@ class UTS_Contacts
 										  "" => "CB01.23.16",
 										  "Contact Email:" => "<a href=\"mailto:tania.machet@eng.uts.edu.au\">Tania Machet</a>"));
 										  
-		return $allContacts;	
+	public function getContacts()
+	{
+		return $this->allContacts;	
 	}
 }

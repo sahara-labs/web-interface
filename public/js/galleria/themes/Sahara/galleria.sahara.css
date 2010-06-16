@@ -35,7 +35,7 @@ white backgound
 .galleria-thumbnails-container .disabled,
 .galleria-thumbnails-container .disabled:hover{opacity:.2;cursor:default;}
 .galleria-thumb-nav-left:hover,
-.galleria-thumb-nav-right:hover{opacity:1;background-color:#000;}
+.galleria-thumb-nav-right:hover{opacity:1;background-color:#EFEFEF;}
 .galleria-carousel .galleria-thumb-nav-left,
 .galleria-carousel .galleria-thumb-nav-right{display:block;}
 .galleria-thumb-nav-left,
