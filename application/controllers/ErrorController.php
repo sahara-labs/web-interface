@@ -41,12 +41,23 @@
  */
 class ErrorController extends Zend_Controller_Action
 {
+    /** Puesdo role when an error occurs. */
+    const PUESDO_ROLE_ERROR = 'ERROR';
+
     /**
      * Error action.
      */
     public function errorAction()
     {
-        $this->view->headTitle('Remote Labs: Error');
+        $this->view->headTitle('Remote Labs - Error Occurred');
+
+        /* Information that should have been populated by the action
+         * pre-dispatch hook, but because this is an error fallback,
+         * we assume nothing. */
+        $this->view->userRole = self::PUESDO_ROLE_ERROR;
+        $this->view->controller = 'index';
+        $this->view->action = 'index';
+
         $errors = $this->_getParam('error_handler');
 
         switch ($errors->type)
@@ -54,41 +65,26 @@ class ErrorController extends Zend_Controller_Action
             case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_ROUTE:
             case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_CONTROLLER:
             case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_ACTION:
-
-                // 404 error -- controller or action not found
+                /*---- 404 error -- controller or action not found. ---------*/
                 $this->getResponse()->setHttpResponseCode(404);
                 $this->view->message = 'Page not found';
                 break;
             default:
-                // application error
+                /*---- Application error. -----------------------------------*/
+                /* Clear the authentication information. */
+                $auth = Zend_Auth::getInstance()->clearIdentity();
                 $this->getResponse()->setHttpResponseCode(500);
                 $this->view->message = 'Application error';
                 break;
         }
 
-        // Log exception, if logger available
-        if ($log = $this->getLog())
+        if ($log = Sahara_Logger::getInstance())
         {
-            $log->crit($this->view->message, $errors->exception);
+            $log->fatal($this->view->message .': ' . $errors->exception);
         }
 
-        // conditionally display exceptions
-        if ($this->getInvokeArg('displayExceptions') == true)
-        {
-            $this->view->exception = $errors->exception;
-        }
-
-        $this->view->request   = $errors->request;
-    }
-
-    public function getLog()
-    {
-        $bootstrap = $this->getInvokeArg('bootstrap');
-        if (!$bootstrap->hasPluginResource('Log')) {
-            return false;
-        }
-        $log = $bootstrap->getResource('Log');
-        return $log;
+        $this->view->exception = $errors->exception;
+        $this->view->request = $errors->request;
     }
 }
 
