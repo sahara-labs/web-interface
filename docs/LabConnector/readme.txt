@@ -1,11 +1,11 @@
 PATCH INFORMATION
 -----------------
-
-Original File:Soap.php 
-File Modified:Soap_modified.php
-
 Ran the following command: 
-diff -U 8 ../../../trunk/library/Sahara/Soap.php Soap_modified.php > soap.patch
+diff -r -U 8 orig prototype/trunk > wi_directory.patch
 
-Note: Changes were to allow the LabConnector bundle to be recognised and be invoked
+These changes implement the following:
+1. Accessing of labs by Sahara USER
+2. Restrict access to iLabs to RIG:TYPE equalling 'ILABS'
+3. Adjust permissions based on user access rights.
+4. Make the UI appear as seamless as Sahara-WI UI.
 ==================================================================================

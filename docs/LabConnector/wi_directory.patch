@@ -1,0 +1,8837 @@
+diff -r -U 8 orig/application/configs/config.ini prototype/trunk/application/configs/config.ini
+--- orig/application/configs/config.ini	2010-06-17 14:57:51.246822793 +1000
++++ prototype/trunk/application/configs/config.ini	2010-06-16 21:29:40.000000000 +1000
+@@ -4,17 +4,17 @@
+ institution = UTS
+ 
+ ; Scheduling Server hostname and port name
+ SchedulingServer.hostname = localhost
+ SchedulingServer.port = 8080
+ 
+ ; Logger level (FATAL | ERROR | WARN | INFO | DEBUG)
+ logger.level = WARN
+-logger.filename = /home/mdiponio/workspace/WI/webinterface.log
++logger.filename = /Users/neo/Sites/sahara/public/webinterface.log
+ 
+ ; Display Information
+ ; Header Infomation
+ header.logoGraphic = /uts/images/uts.png
+ header.logoLink = http://www.uts.edu.au/ 
+ header.nameImage = /images/Sahara.png
+ ; header.background = /uts/images/sand_again2.png
+ 
+diff -r -U 8 orig/application/configs/.svn/entries prototype/trunk/application/configs/.svn/entries
+--- orig/application/configs/.svn/entries	2010-06-17 14:57:51.246822793 +1000
++++ prototype/trunk/application/configs/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/application/configs
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-05-08T03:01:20.338665Z
+ 838
+ mdiponio
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ application.ini
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.246822Z
++2010-06-11T12:48:14.000000Z
+ 0de0dcf2122b892cf13b3e63d2480ffe
+ 2010-03-17T05:14:14.195312Z
+ 518
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -61,17 +61,17 @@
+ 648
+ 
+ config.ini
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.246822Z
++2010-06-11T12:48:14.000000Z
+ 003dd52b8adeb794110fcf018def5ffa
+ 2010-05-08T03:01:20.338665Z
+ 838
+ mdiponio
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/application/controllers/ErrorController.php prototype/trunk/application/controllers/ErrorController.php
+--- orig/application/controllers/ErrorController.php	2010-06-17 14:57:51.242823407 +1000
++++ prototype/trunk/application/controllers/ErrorController.php	2010-06-11 22:48:14.000000000 +1000
+@@ -36,55 +36,59 @@
+  * @date 17th March 2010
+  */
+ 
+ /**
+  * Error controller.
+  */
+ class ErrorController extends Zend_Controller_Action
+ {
+-    /** Puesdo role when an error occurs. */
+-    const PUESDO_ROLE_ERROR = 'ERROR';
+-
+     /**
+      * Error action.
+      */
+     public function errorAction()
+     {
+-        $this->view->headTitle('Remote Labs - Error Occurred');
+-
+-        /* Information that should have been populated by the action
+-         * pre-dispatch hook, but because this is an error fallback,
+-         * we assume nothing. */
+-        $this->view->userRole = self::PUESDO_ROLE_ERROR;
+-        $this->view->controller = 'index';
+-        $this->view->action = 'index';
+-
++        $this->view->headTitle('Remote Labs: Error');
+         $errors = $this->_getParam('error_handler');
+ 
+         switch ($errors->type)
+         {
+             case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_ROUTE:
+             case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_CONTROLLER:
+             case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_ACTION:
+-                /*---- 404 error -- controller or action not found. ---------*/
++
++                // 404 error -- controller or action not found
+                 $this->getResponse()->setHttpResponseCode(404);
+                 $this->view->message = 'Page not found';
+                 break;
+             default:
+-                /*---- Application error. -----------------------------------*/
+-                /* Clear the authentication information. */
+-                $auth = Zend_Auth::getInstance()->clearIdentity();
++                // application error
+                 $this->getResponse()->setHttpResponseCode(500);
+                 $this->view->message = 'Application error';
+                 break;
+         }
+ 
+-        if ($log = Sahara_Logger::getInstance())
++        // Log exception, if logger available
++        if ($log = $this->getLog())
+         {
+-            $log->fatal($this->view->message .': ' . $errors->exception);
++            $log->crit($this->view->message, $errors->exception);
+         }
+ 
+-        $this->view->exception = $errors->exception;
+-        $this->view->request = $errors->request;
++        // conditionally display exceptions
++        if ($this->getInvokeArg('displayExceptions') == true)
++        {
++            $this->view->exception = $errors->exception;
++        }
++
++        $this->view->request   = $errors->request;
++    }
++
++    public function getLog()
++    {
++        $bootstrap = $this->getInvokeArg('bootstrap');
++        if (!$bootstrap->hasPluginResource('Log')) {
++            return false;
++        }
++        $log = $bootstrap->getResource('Log');
++        return $log;
+     }
+ }
+ 
+Only in prototype/trunk/application/controllers: LabConnectorController.php
+diff -r -U 8 orig/application/controllers/QueueController.php prototype/trunk/application/controllers/QueueController.php
+--- orig/application/controllers/QueueController.php	2010-06-17 14:57:51.242823407 +1000
++++ prototype/trunk/application/controllers/QueueController.php	2010-06-17 12:56:03.000000000 +1000
+@@ -29,16 +29,22 @@
+  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  *
+  * @author Michael Diponio (mdiponio)
+  * @date 21st February 2010
++ * 
++ * @author Herbert Yeung
++ * @date 17th June 2010
++ * Modification: Added extra check for RIG Permission TYPE as 'ILABS'. If so, don't add it.
++ * Another solution is to add conditional above 'if (!array_key_exists($p->userClass->userClassName, $userClasses))'
++ * but this would have impacted if a user group was associated with multiple permissions. 
+  */
+ 
+ /**
+  * Controller for the queue.
+  */
+ class QueueController extends Sahara_Controller_Action_Acl
+ {
+     /**
+@@ -80,31 +86,35 @@
+             }
+ 
+             /* Add the user class if it hasn't already been loaded. */
+             if (!array_key_exists($p->userClass->userClassName, $userClasses))
+             {
+                 $userClasses[$p->userClass->userClassName] = array();
+             }
+ 
+-            /* Load up resource information. */
+-            $resource = array(
+-                'resourceClass' => $p->resourceClass,     // The resource class so either 'RIG', 'TYPE' or 'CAPS'
+-                'resource' => $p->resource->resourceName, // The resource name
+-                'locked' => $perm->isLocked,              // Whether the permission is locked
+-                'active' => Sahara_DateTimeUtil::isBeforeNow($p->start) && // Whether the permission is active
+-                            Sahara_DateTimeUtil::isAfterNow($p->expiry),
+-                'id' => 'permission' . $p->permissionID,  // An ID to hook to a dialog
+-                'start' => $p->start,                     // Start time of the resource
+-                'expiry' => $p->expiry,                   // Expiry time of the resource
+-                'permissionId' => $p->permissionID,       // Permission ID
+-                'display' => isset($p->displayName) ? $p->displayName : $p->resource->resourceName // Display name
+-            );
+-
+-            array_push($userClasses[$p->userClass->userClassName], $resource);
++            /* Extra check for iLabs experment of rig type ILABS. */
++            if($p->resource->resourceName != 'ILABS')
++            {
++	            /* Load up resource information. */
++	            $resource = array(
++	                'resourceClass' => $p->resourceClass,     // The resource class so either 'RIG', 'TYPE' or 'CAPS'
++	                'resource' => $p->resource->resourceName, // The resource name
++	                'locked' => $perm->isLocked,              // Whether the permission is locked
++	                'active' => Sahara_DateTimeUtil::isBeforeNow($p->start) && // Whether the permission is active
++	                            Sahara_DateTimeUtil::isAfterNow($p->expiry),
++	                'id' => 'permission' . $p->permissionID,  // An ID to hook to a dialog
++	                'start' => $p->start,                     // Start time of the resource
++	                'expiry' => $p->expiry,                   // Expiry time of the resource
++	                'permissionId' => $p->permissionID,       // Permission ID
++	                'display' => isset($p->displayName) ? $p->displayName : $p->resource->resourceName // Display name
++	            );
++				
++	            array_push($userClasses[$p->userClass->userClassName], $resource);
++            }
+         }
+ 
+         /* Sort each of the user class permissions by resource name. */
+         foreach ($userClasses as $class => $permList)
+         {
+             $typePerms = array();
+             $rigPerms = array();
+             $capsPerms = array();
+diff -r -U 8 orig/application/controllers/.svn/all-wcprops prototype/trunk/application/controllers/.svn/all-wcprops
+--- orig/application/controllers/.svn/all-wcprops	2010-06-17 14:57:51.242823407 +1000
++++ prototype/trunk/application/controllers/.svn/all-wcprops	2010-06-11 22:48:14.000000000 +1000
+@@ -1,12 +1,12 @@
+ K 25
+ svn:wc:ra_dav:version-url
+-V 76
+-/projects/personal/sahara/svn/!svn/ver/1054/WI/trunk/application/controllers
++V 75
++/projects/personal/sahara/svn/!svn/ver/930/WI/trunk/application/controllers
+ END
+ AcademicController.php
+ K 25
+ svn:wc:ra_dav:version-url
+ V 98
+ /projects/personal/sahara/svn/!svn/ver/522/WI/trunk/application/controllers/AcademicController.php
+ END
+ IndexController.php
+@@ -25,18 +25,18 @@
+ K 25
+ svn:wc:ra_dav:version-url
+ V 99
+ /projects/personal/sahara/svn/!svn/ver/930/WI/trunk/application/controllers/PrimitiveController.php
+ END
+ ErrorController.php
+ K 25
+ svn:wc:ra_dav:version-url
+-V 96
+-/projects/personal/sahara/svn/!svn/ver/1054/WI/trunk/application/controllers/ErrorController.php
++V 95
++/projects/personal/sahara/svn/!svn/ver/581/WI/trunk/application/controllers/ErrorController.php
+ END
+ LabinfoController.php
+ K 25
+ svn:wc:ra_dav:version-url
+ V 97
+ /projects/personal/sahara/svn/!svn/ver/917/WI/trunk/application/controllers/LabinfoController.php
+ END
+ InfoController.php
+diff -r -U 8 orig/application/controllers/.svn/entries prototype/trunk/application/controllers/.svn/entries
+--- orig/application/controllers/.svn/entries	2010-06-17 14:57:51.242823407 +1000
++++ prototype/trunk/application/controllers/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,19 +1,19 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/application/controllers
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+-2010-06-17T00:11:03.156867Z
+-1054
++2010-05-25T05:30:46.700557Z
++930
+ mdiponio
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ AcademicController.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.242823Z
++2010-06-11T12:48:14.000000Z
+ 0394f314b396a22fbea2a729dfa5943d
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -61,17 +61,17 @@
+ 1967
+ 
+ IndexController.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.242823Z
++2010-06-11T12:48:14.000000Z
+ f4646ec383a7ef6a4bbc2025c5631076
+ 2010-05-25T00:30:56.774711Z
+ 929
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -95,17 +95,17 @@
+ 7893
+ 
+ AdminController.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.242823Z
++2010-06-11T12:48:14.000000Z
+ 51b6805b994d7728bce604be9a64d3cf
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -129,17 +129,17 @@
+ 1964
+ 
+ PrimitiveController.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.242823Z
++2010-06-11T12:48:14.000000Z
+ 86a268908cc4ce2d936a91ca3b92c0fc
+ 2010-05-25T05:30:46.700557Z
+ 930
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -163,20 +163,20 @@
+ 15438
+ 
+ ErrorController.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.242823Z
+-c8c5adf3a7c6b9bfa7c7e9b45ea839e4
+-2010-06-17T00:11:03.156867Z
+-1054
++2010-06-11T12:48:14.000000Z
++fd362e0a8f4a67a04b09b9efbd4aff7e
++2010-03-30T21:32:57.892479Z
++581
+ mdiponio
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+@@ -189,25 +189,25 @@
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+-3661
++3480
+ 
+ LabinfoController.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.242823Z
++2010-06-11T12:48:14.000000Z
+ 8d816736de241cc5ac958d8596ae604e
+ 2010-05-21T04:30:10.927915Z
+ 917
+ tmachet
+ 
+ 
+ 
+ 
+@@ -231,17 +231,17 @@
+ 2546
+ 
+ InfoController.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.242823Z
++2010-06-11T12:48:14.000000Z
+ 8093a273ee5aee0655d149e8bd293b7b
+ 2010-05-06T12:31:50.891484Z
+ 837
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -265,17 +265,17 @@
+ 3912
+ 
+ SessionController.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.242823Z
++2010-06-11T12:48:14.000000Z
+ 02fdb171542834f158517701009c75ab
+ 2010-05-06T11:03:49.216438Z
+ 836
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -299,17 +299,17 @@
+ 8647
+ 
+ DemoController.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.242823Z
++2010-06-11T12:48:14.000000Z
+ c345739f8c438335eea1b083a9a1a4f5
+ 2010-03-22T11:12:23.812422Z
+ 527
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -333,17 +333,17 @@
+ 2080
+ 
+ QueueController.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.242823Z
++2010-06-11T12:48:14.000000Z
+ 771b73c6de604e1986f589812e82817a
+ 2010-04-07T23:25:28.854988Z
+ 650
+ mdiponio
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/application/controllers/.svn/text-base/ErrorController.php.svn-base prototype/trunk/application/controllers/.svn/text-base/ErrorController.php.svn-base
+--- orig/application/controllers/.svn/text-base/ErrorController.php.svn-base	2010-06-17 14:57:51.206823066 +1000
++++ prototype/trunk/application/controllers/.svn/text-base/ErrorController.php.svn-base	2010-06-11 22:48:14.000000000 +1000
+@@ -36,55 +36,59 @@
+  * @date 17th March 2010
+  */
+ 
+ /**
+  * Error controller.
+  */
+ class ErrorController extends Zend_Controller_Action
+ {
+-    /** Puesdo role when an error occurs. */
+-    const PUESDO_ROLE_ERROR = 'ERROR';
+-
+     /**
+      * Error action.
+      */
+     public function errorAction()
+     {
+-        $this->view->headTitle('Remote Labs - Error Occurred');
+-
+-        /* Information that should have been populated by the action
+-         * pre-dispatch hook, but because this is an error fallback,
+-         * we assume nothing. */
+-        $this->view->userRole = self::PUESDO_ROLE_ERROR;
+-        $this->view->controller = 'index';
+-        $this->view->action = 'index';
+-
++        $this->view->headTitle('Remote Labs: Error');
+         $errors = $this->_getParam('error_handler');
+ 
+         switch ($errors->type)
+         {
+             case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_ROUTE:
+             case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_CONTROLLER:
+             case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_ACTION:
+-                /*---- 404 error -- controller or action not found. ---------*/
++
++                // 404 error -- controller or action not found
+                 $this->getResponse()->setHttpResponseCode(404);
+                 $this->view->message = 'Page not found';
+                 break;
+             default:
+-                /*---- Application error. -----------------------------------*/
+-                /* Clear the authentication information. */
+-                $auth = Zend_Auth::getInstance()->clearIdentity();
++                // application error
+                 $this->getResponse()->setHttpResponseCode(500);
+                 $this->view->message = 'Application error';
+                 break;
+         }
+ 
+-        if ($log = Sahara_Logger::getInstance())
++        // Log exception, if logger available
++        if ($log = $this->getLog())
+         {
+-            $log->fatal($this->view->message .': ' . $errors->exception);
++            $log->crit($this->view->message, $errors->exception);
+         }
+ 
+-        $this->view->exception = $errors->exception;
+-        $this->view->request = $errors->request;
++        // conditionally display exceptions
++        if ($this->getInvokeArg('displayExceptions') == true)
++        {
++            $this->view->exception = $errors->exception;
++        }
++
++        $this->view->request   = $errors->request;
++    }
++
++    public function getLog()
++    {
++        $bootstrap = $this->getInvokeArg('bootstrap');
++        if (!$bootstrap->hasPluginResource('Log')) {
++            return false;
++        }
++        $log = $bootstrap->getResource('Log');
++        return $log;
+     }
+ }
+ 
+diff -r -U 8 orig/application/models/Sahara/Auth/.svn/entries prototype/trunk/application/models/Sahara/Auth/.svn/entries
+--- orig/application/models/Sahara/Auth/.svn/entries	2010-06-17 14:57:51.042971461 +1000
++++ prototype/trunk/application/models/Sahara/Auth/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/application/models/Sahara/Auth
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-03-22T06:34:56.347162Z
+ 525
+ mdiponio
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ Form.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.042971Z
++2010-06-11T12:48:14.000000Z
+ 6609ef4c7b4f472a4c878bcf39c24e17
+ 2010-03-22T06:34:56.347162Z
+ 525
+ mdiponio
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/application/models/Sahara/Feedback/.svn/entries prototype/trunk/application/models/Sahara/Feedback/.svn/entries
+--- orig/application/models/Sahara/Feedback/.svn/entries	2010-06-17 14:57:51.120147544 +1000
++++ prototype/trunk/application/models/Sahara/Feedback/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/application/models/Sahara/Feedback
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-04-21T08:09:17.713369Z
+ 744
+ mdiponio
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ Form.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.120147Z
++2010-06-11T12:48:14.000000Z
+ 928a336af6148907a10846e02684bcd6
+ 2010-04-21T08:09:17.713369Z
+ 744
+ mdiponio
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/application/models/Sahara/PermissionLock/.svn/entries prototype/trunk/application/models/Sahara/PermissionLock/.svn/entries
+--- orig/application/models/Sahara/PermissionLock/.svn/entries	2010-06-17 14:57:51.086823013 +1000
++++ prototype/trunk/application/models/Sahara/PermissionLock/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/application/models/Sahara/PermissionLock
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-03-26T07:10:22.827105Z
+ 543
+ mdiponio
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ Form.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.084822Z
++2010-06-11T12:48:14.000000Z
+ 01b72300d5c036bff9dae86972f00a5a
+ 2010-03-26T07:10:22.827105Z
+ 543
+ mdiponio
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/application/models/Sahara/.svn/entries prototype/trunk/application/models/Sahara/.svn/entries
+--- orig/application/models/Sahara/.svn/entries	2010-06-17 14:57:51.204207829 +1000
++++ prototype/trunk/application/models/Sahara/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/application/models/Sahara
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-04-21T08:09:17.713369Z
+ 744
+ mdiponio
+diff -r -U 8 orig/application/models/.svn/entries prototype/trunk/application/models/.svn/entries
+--- orig/application/models/.svn/entries	2010-06-17 14:57:51.204207829 +1000
++++ prototype/trunk/application/models/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/application/models
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-04-21T08:09:17.713369Z
+ 744
+ mdiponio
+diff -r -U 8 orig/application/.svn/all-wcprops prototype/trunk/application/.svn/all-wcprops
+--- orig/application/.svn/all-wcprops	2010-06-17 14:57:51.679073274 +1000
++++ prototype/trunk/application/.svn/all-wcprops	2010-06-11 22:48:14.000000000 +1000
+@@ -1,11 +1,11 @@
+ K 25
+ svn:wc:ra_dav:version-url
+ V 64
+-/projects/personal/sahara/svn/!svn/ver/1054/WI/trunk/application
++/projects/personal/sahara/svn/!svn/ver/1033/WI/trunk/application
+ END
+ Bootstrap.php
+ K 25
+ svn:wc:ra_dav:version-url
+ V 77
+ /projects/personal/sahara/svn/!svn/ver/672/WI/trunk/application/Bootstrap.php
+ END
+diff -r -U 8 orig/application/.svn/entries prototype/trunk/application/.svn/entries
+--- orig/application/.svn/entries	2010-06-17 14:57:51.679073274 +1000
++++ prototype/trunk/application/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,20 +1,20 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/application
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+-2010-06-17T00:11:03.156867Z
+-1054
+-mdiponio
++2010-06-10T23:50:08.894666Z
++1033
++tmachet
+ has-props
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+@@ -30,17 +30,17 @@
+ dir
+ 
+ Bootstrap.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.674823Z
++2010-06-11T12:48:14.000000Z
+ 5c23f7d68049bc513a8ed2ba56ccb192
+ 2010-04-11T23:10:13.522990Z
+ 672
+ mdiponio
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/application/views/helpers/.svn/entries prototype/trunk/application/views/helpers/.svn/entries
+--- orig/application/views/helpers/.svn/entries	2010-06-17 14:57:51.571073199 +1000
++++ prototype/trunk/application/views/helpers/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/application/views/helpers
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-04-08T01:43:28.925978Z
+ 652
+ mdiponio
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ StringTransform.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.571073Z
++2010-06-11T12:48:14.000000Z
+ 4ce4e6a760afbc1ecb2ef8c7ea67c697
+ 2010-03-24T08:40:39.602029Z
+ 537
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -61,17 +61,17 @@
+ 2416
+ 
+ TimePad.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.571073Z
++2010-06-11T12:48:14.000000Z
+ 08ab6db1554a263f2330b89a8bd9abc2
+ 2010-04-08T01:43:28.925978Z
+ 652
+ mdiponio
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/application/views/layouts/actionbuttons/.svn/entries prototype/trunk/application/views/layouts/actionbuttons/.svn/entries
+--- orig/application/views/layouts/actionbuttons/.svn/entries	2010-06-17 14:57:51.567022184 +1000
++++ prototype/trunk/application/views/layouts/actionbuttons/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/application/views/layouts/actionbuttons
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-04-12T03:06:55.448376Z
+ 674
+ mdiponio
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ _feedback.phtml
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.567022Z
++2010-06-11T12:48:14.000000Z
+ 26e48eb9353567e719e42d6d4234bc27
+ 2010-04-12T03:06:55.448376Z
+ 674
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -61,17 +61,17 @@
+ 2792
+ 
+ _finishSession.phtml
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.567022Z
++2010-06-11T12:48:14.000000Z
+ bd7e8bde42b6a9b91eaf96b0f76aaafe
+ 2010-04-06T02:43:53.961198Z
+ 622
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -95,17 +95,17 @@
+ 2008
+ 
+ _logout.phtml
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.567022Z
++2010-06-11T12:48:14.000000Z
+ 1001d89defc204971d034203b49d623b
+ 2010-03-28T08:03:57.051792Z
+ 548
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -129,17 +129,17 @@
+ 2151
+ 
+ _cancelQueue.phtml
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.567022Z
++2010-06-11T12:48:14.000000Z
+ c0df5ef10239871b9cf3c4db173af4dd
+ 2010-03-30T00:33:35.753524Z
+ 572
+ mdiponio
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/application/views/layouts/_navbar.phtml prototype/trunk/application/views/layouts/_navbar.phtml
+--- orig/application/views/layouts/_navbar.phtml	2010-06-17 14:57:51.567022184 +1000
++++ prototype/trunk/application/views/layouts/_navbar.phtml	2010-06-17 01:18:39.000000000 +1000
+@@ -29,23 +29,29 @@
+  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  *
+  * @author Michael Diponio (mdiponio)
+  * @date 21st March 2010
++ * 
++ * @author Herbert Yeung
++ * @date  17th June 2010
++ * Modification: Added a menu item for Sahara User titled 'LabConnector' which maps
++ * to LabConnectorController->indexAction()
+  */
+ 
+ switch ($this->userRole)
+ {
+     case Sahara_Acl::USER:
+         $menu = array(
+-            'Rig Selection' => array('controller' => 'queue', 'action' => 'index')
++            'Rig Selection' => array('controller' => 'queue', 'action' => 'index'),
++        	'LabConnector'  => array('controller' => 'labconnector', 'action' => 'index') //Adding LabConnectorController mapped to indexAction()
+         );
+         break;
+     case Sahara_Acl::ACADEMIC:
+         $menu = array();
+         break;
+     case Sahara_Acl::ADMIN:
+         $menu = array();
+         break;
+@@ -54,21 +60,16 @@
+             'Queue' => array('controller' => 'queue', 'action' => 'queuing')
+         );
+         break;
+     case Sahara_Controller_Action_Acl::PSEUDO_ROLE_SESSION:
+         $menu = array(
+             'Session' => array('controller' => 'session', 'action' => 'index')
+         );
+         break;
+-    case 'ERROR':
+-        $menu = array(
+-            'Login' => array('controller' => 'index', 'action' => 'index')
+-        );
+-        break;
+     default:
+         $menu = array(
+         	'Login' => array('controller' => 'index', 'action' => 'index'),
+             'Laboratory Rigs' => array('controller' => 'labinfo', 'action' => 'index'),
+             'Demonstrations' => array('controller' => 'demo', 'action' => 'index'),
+             'News' => array('controller' => 'info', 'action' => 'index'),
+             'FAQ' => array('controller' => 'info', 'action' => 'faq'),
+             'Contact Us' => array('controller' => 'info', 'action' => 'contact')
+diff -r -U 8 orig/application/views/layouts/.svn/all-wcprops prototype/trunk/application/views/layouts/.svn/all-wcprops
+--- orig/application/views/layouts/.svn/all-wcprops	2010-06-17 14:57:51.567022184 +1000
++++ prototype/trunk/application/views/layouts/.svn/all-wcprops	2010-06-11 22:48:14.000000000 +1000
+@@ -1,12 +1,12 @@
+ K 25
+ svn:wc:ra_dav:version-url
+-V 78
+-/projects/personal/sahara/svn/!svn/ver/1053/WI/trunk/application/views/layouts
++V 77
++/projects/personal/sahara/svn/!svn/ver/994/WI/trunk/application/views/layouts
+ END
+ _footer.phtml
+ K 25
+ svn:wc:ra_dav:version-url
+ V 91
+ /projects/personal/sahara/svn/!svn/ver/525/WI/trunk/application/views/layouts/_footer.phtml
+ END
+ layout.phtml
+@@ -25,11 +25,11 @@
+ K 25
+ svn:wc:ra_dav:version-url
+ V 91
+ /projects/personal/sahara/svn/!svn/ver/699/WI/trunk/application/views/layouts/_header.phtml
+ END
+ _navbar.phtml
+ K 25
+ svn:wc:ra_dav:version-url
+-V 92
+-/projects/personal/sahara/svn/!svn/ver/1053/WI/trunk/application/views/layouts/_navbar.phtml
++V 91
++/projects/personal/sahara/svn/!svn/ver/791/WI/trunk/application/views/layouts/_navbar.phtml
+ END
+diff -r -U 8 orig/application/views/layouts/.svn/entries prototype/trunk/application/views/layouts/.svn/entries
+--- orig/application/views/layouts/.svn/entries	2010-06-17 14:57:51.567022184 +1000
++++ prototype/trunk/application/views/layouts/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,19 +1,19 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/application/views/layouts
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+-2010-06-17T00:10:06.206231Z
+-1053
++2010-06-02T01:35:02.102676Z
++994
+ mdiponio
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ _footer.phtml
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.567022Z
++2010-06-11T12:48:14.000000Z
+ 3f80d0958d4b1e620ec412740e5da331
+ 2010-03-22T06:34:56.347162Z
+ 525
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -61,17 +61,17 @@
+ 2097
+ 
+ layout.phtml
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.567022Z
++2010-06-11T12:48:14.000000Z
+ 74c08141a18830e9479913381a634d1c
+ 2010-05-09T07:21:52.456431Z
+ 842
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -95,17 +95,17 @@
+ 4287
+ 
+ _actionbar.phtml
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.567022Z
++2010-06-11T12:48:14.000000Z
+ f29758b3bfddf6c451c821c8a9b94374
+ 2010-06-02T01:35:02.102676Z
+ 994
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -129,17 +129,17 @@
+ 9355
+ 
+ _header.phtml
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.567022Z
++2010-06-11T12:48:14.000000Z
+ 3daba3bb895b7222829dabcf5534bd43
+ 2010-04-15T01:10:53.519457Z
+ 699
+ tmachet
+ 
+ 
+ 
+ 
+@@ -163,20 +163,20 @@
+ 2844
+ 
+ _navbar.phtml
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.567022Z
+-d9663034c76c9c935a7ac64ba2296539
+-2010-06-17T00:10:06.206231Z
+-1053
++2010-06-11T12:48:14.000000Z
++0ddb18190a2a54e559e880bf48fa040f
++2010-04-27T11:00:33.975066Z
++791
+ mdiponio
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+@@ -189,13 +189,13 @@
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+-3576
++3434
+ 
+ actionbuttons
+ dir
+ 
+diff -r -U 8 orig/application/views/layouts/.svn/text-base/_navbar.phtml.svn-base prototype/trunk/application/views/layouts/.svn/text-base/_navbar.phtml.svn-base
+--- orig/application/views/layouts/.svn/text-base/_navbar.phtml.svn-base	2010-06-17 14:57:51.451080817 +1000
++++ prototype/trunk/application/views/layouts/.svn/text-base/_navbar.phtml.svn-base	2010-06-11 22:48:14.000000000 +1000
+@@ -54,21 +54,16 @@
+             'Queue' => array('controller' => 'queue', 'action' => 'queuing')
+         );
+         break;
+     case Sahara_Controller_Action_Acl::PSEUDO_ROLE_SESSION:
+         $menu = array(
+             'Session' => array('controller' => 'session', 'action' => 'index')
+         );
+         break;
+-    case 'ERROR':
+-        $menu = array(
+-            'Login' => array('controller' => 'index', 'action' => 'index')
+-        );
+-        break;
+     default:
+         $menu = array(
+         	'Login' => array('controller' => 'index', 'action' => 'index'),
+             'Laboratory Rigs' => array('controller' => 'labinfo', 'action' => 'index'),
+             'Demonstrations' => array('controller' => 'demo', 'action' => 'index'),
+             'News' => array('controller' => 'info', 'action' => 'index'),
+             'FAQ' => array('controller' => 'info', 'action' => 'faq'),
+             'Contact Us' => array('controller' => 'info', 'action' => 'contact')
+diff -r -U 8 orig/application/views/scripts/academic/.svn/entries prototype/trunk/application/views/scripts/academic/.svn/entries
+--- orig/application/views/scripts/academic/.svn/entries	2010-06-17 14:57:51.627073607 +1000
++++ prototype/trunk/application/views/scripts/academic/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/application/views/scripts/academic
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ index.phtml
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.627073Z
++2010-06-11T12:48:14.000000Z
+ 9a0bb1d1dc788b7f8b7d105f889aa168
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/application/views/scripts/admin/.svn/entries prototype/trunk/application/views/scripts/admin/.svn/entries
+--- orig/application/views/scripts/admin/.svn/entries	2010-06-17 14:57:51.631073360 +1000
++++ prototype/trunk/application/views/scripts/admin/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/application/views/scripts/admin
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ index.phtml
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.631073Z
++2010-06-11T12:48:14.000000Z
+ ae3d7beb1fe232a33240085037bdf8ca
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/application/views/scripts/demo/.svn/entries prototype/trunk/application/views/scripts/demo/.svn/entries
+--- orig/application/views/scripts/demo/.svn/entries	2010-06-17 14:57:51.614822836 +1000
++++ prototype/trunk/application/views/scripts/demo/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/application/views/scripts/demo
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-05-19T04:29:34.493166Z
+ 877
+ tmachet
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ index.phtml
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.614822Z
++2010-06-11T12:48:14.000000Z
+ ed379e5895e7853195b94db4255bacac
+ 2010-05-19T04:29:34.493166Z
+ 877
+ tmachet
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/application/views/scripts/error/.svn/entries prototype/trunk/application/views/scripts/error/.svn/entries
+--- orig/application/views/scripts/error/.svn/entries	2010-06-17 14:57:51.631073360 +1000
++++ prototype/trunk/application/views/scripts/error/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/application/views/scripts/error
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-03-17T05:14:14.195312Z
+ 518
+ mdiponio
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ error.phtml
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.631073Z
++2010-06-11T12:48:14.000000Z
+ 8fcfb060b186d94204942b7b87323472
+ 2010-03-17T05:14:14.195312Z
+ 518
+ mdiponio
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/application/views/scripts/index/.svn/entries prototype/trunk/application/views/scripts/index/.svn/entries
+--- orig/application/views/scripts/index/.svn/entries	2010-06-17 14:57:51.627073607 +1000
++++ prototype/trunk/application/views/scripts/index/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/application/views/scripts/index
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-03-24T08:40:39.602029Z
+ 537
+ mdiponio
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ index.phtml
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.627073Z
++2010-06-11T12:48:14.000000Z
+ 07f10f2bb2f06e4515cd34b6429e0be3
+ 2010-03-24T08:40:39.602029Z
+ 537
+ mdiponio
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/application/views/scripts/info/.svn/entries prototype/trunk/application/views/scripts/info/.svn/entries
+--- orig/application/views/scripts/info/.svn/entries	2010-06-17 14:57:51.674823342 +1000
++++ prototype/trunk/application/views/scripts/info/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/application/views/scripts/info
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-04-28T04:22:51.833968Z
+ 798
+ tmachet
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ faq.phtml
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.674823Z
++2010-06-11T12:48:14.000000Z
+ 5191c34b0ddd8e46017ca729c8956bdb
+ 2010-04-08T01:19:28.452114Z
+ 651
+ tmachet
+ 
+ 
+ 
+ 
+@@ -61,17 +61,17 @@
+ 2939
+ 
+ index.phtml
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.674823Z
++2010-06-11T12:48:14.000000Z
+ 42844d44c9638245b5dd94a6c5b745d2
+ 2010-04-08T01:19:28.452114Z
+ 651
+ tmachet
+ 
+ 
+ 
+ 
+@@ -95,17 +95,17 @@
+ 2914
+ 
+ contact.phtml
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.674823Z
++2010-06-11T12:48:14.000000Z
+ 7820a495552dd365c24a413f29f52834
+ 2010-04-28T04:22:51.833968Z
+ 798
+ tmachet
+ 
+ 
+ 
+ 
+Only in prototype/trunk/application/views/scripts: labconnector
+diff -r -U 8 orig/application/views/scripts/labinfo/index.phtml prototype/trunk/application/views/scripts/labinfo/index.phtml
+--- orig/application/views/scripts/labinfo/index.phtml	2010-06-17 14:57:51.659073321 +1000
++++ prototype/trunk/application/views/scripts/labinfo/index.phtml	2010-06-11 22:48:14.000000000 +1000
+@@ -41,16 +41,15 @@
+ 
+ ?>
+ <script>
+ 	$("document").ready(function(){$('ul.gallery_list').galleria();});
+ </script>
+ 
+ <div class="gallery" >
+ <ul class="gallery_list">
+-<?=$this->labinfo["1"]["filename"];?>
+-	<?php foreach ($this->labinfo as $labinfo):?>
++	<?php foreach ($this->labinfo as $i => $labinfo):?>
+ 	  <li><img src="<?=$this->baseUrl($labinfo["filename"])?>" alt="<?=$labinfo["alt"]?>" title="<?=$labinfo["title"]?>"></li>
+ 	<?php endforeach;?>
+ </ul>
+ 
+ </div>
+ 
+diff -r -U 8 orig/application/views/scripts/labinfo/.svn/all-wcprops prototype/trunk/application/views/scripts/labinfo/.svn/all-wcprops
+--- orig/application/views/scripts/labinfo/.svn/all-wcprops	2010-06-17 14:57:51.659073321 +1000
++++ prototype/trunk/application/views/scripts/labinfo/.svn/all-wcprops	2010-06-11 22:48:14.000000000 +1000
+@@ -1,11 +1,11 @@
+ K 25
+ svn:wc:ra_dav:version-url
+-V 86
+-/projects/personal/sahara/svn/!svn/ver/1049/WI/trunk/application/views/scripts/labinfo
++V 85
++/projects/personal/sahara/svn/!svn/ver/917/WI/trunk/application/views/scripts/labinfo
+ END
+ index.phtml
+ K 25
+ svn:wc:ra_dav:version-url
+-V 98
+-/projects/personal/sahara/svn/!svn/ver/1049/WI/trunk/application/views/scripts/labinfo/index.phtml
++V 97
++/projects/personal/sahara/svn/!svn/ver/917/WI/trunk/application/views/scripts/labinfo/index.phtml
+ END
+diff -r -U 8 orig/application/views/scripts/labinfo/.svn/entries prototype/trunk/application/views/scripts/labinfo/.svn/entries
+--- orig/application/views/scripts/labinfo/.svn/entries	2010-06-17 14:57:51.659073321 +1000
++++ prototype/trunk/application/views/scripts/labinfo/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,19 +1,19 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/application/views/scripts/labinfo
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+-2010-06-16T02:52:04.995535Z
+-1049
++2010-05-21T04:30:10.927915Z
++917
+ tmachet
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+@@ -27,20 +27,20 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ index.phtml
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.659073Z
+-0137799a857fe9b1ba00905015923c11
+-2010-06-16T02:52:04.995535Z
+-1049
++2010-06-11T12:48:14.000000Z
++cca241de9d1ca73985ebb5e09cd8c31e
++2010-05-21T04:30:10.927915Z
++917
+ tmachet
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+@@ -53,10 +53,10 @@
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+-2478
++2446
+ 
+diff -r -U 8 orig/application/views/scripts/labinfo/.svn/text-base/index.phtml.svn-base prototype/trunk/application/views/scripts/labinfo/.svn/text-base/index.phtml.svn-base
+--- orig/application/views/scripts/labinfo/.svn/text-base/index.phtml.svn-base	2010-06-17 14:57:51.659073321 +1000
++++ prototype/trunk/application/views/scripts/labinfo/.svn/text-base/index.phtml.svn-base	2010-06-11 22:48:14.000000000 +1000
+@@ -41,16 +41,15 @@
+ 
+ ?>
+ <script>
+ 	$("document").ready(function(){$('ul.gallery_list').galleria();});
+ </script>
+ 
+ <div class="gallery" >
+ <ul class="gallery_list">
+-<?=$this->labinfo["1"]["filename"];?>
+-	<?php foreach ($this->labinfo as $labinfo):?>
++	<?php foreach ($this->labinfo as $i => $labinfo):?>
+ 	  <li><img src="<?=$this->baseUrl($labinfo["filename"])?>" alt="<?=$labinfo["alt"]?>" title="<?=$labinfo["title"]?>"></li>
+ 	<?php endforeach;?>
+ </ul>
+ 
+ </div>
+ 
+diff -r -U 8 orig/application/views/scripts/queue/.svn/entries prototype/trunk/application/views/scripts/queue/.svn/entries
+--- orig/application/views/scripts/queue/.svn/entries	2010-06-17 14:57:51.623073327 +1000
++++ prototype/trunk/application/views/scripts/queue/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/application/views/scripts/queue
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-06-10T23:50:08.894666Z
+ 1033
+ tmachet
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ queuing.phtml
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.623073Z
++2010-06-11T12:48:14.000000Z
+ dbc3398fba7268fb0c8601f6e0372964
+ 2010-04-05T10:27:54.705407Z
+ 612
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -61,17 +61,17 @@
+ 3310
+ 
+ index.phtml
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.623073Z
++2010-06-11T12:48:14.000000Z
+ 35e20009e3c4b3dfcf3e0ed9429f3190
+ 2010-06-10T23:50:08.894666Z
+ 1033
+ tmachet
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/application/views/scripts/session/.svn/entries prototype/trunk/application/views/scripts/session/.svn/entries
+--- orig/application/views/scripts/session/.svn/entries	2010-06-17 14:57:51.611540622 +1000
++++ prototype/trunk/application/views/scripts/session/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/application/views/scripts/session
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-05-21T00:19:38.664611Z
+ 897
+ mdiponio
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ _rig.phtml
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.611540Z
++2010-06-11T12:48:14.000000Z
+ 1999a2ce456a7bf564d1ae5ebd6a6533
+ 2010-04-19T12:19:57.659739Z
+ 729
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -61,17 +61,17 @@
+ 2046
+ 
+ index.phtml
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.611540Z
++2010-06-11T12:48:14.000000Z
+ 6288cbc55305f084eca6598906d9247a
+ 2010-05-21T00:19:38.664611Z
+ 897
+ mdiponio
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/application/views/scripts/.svn/all-wcprops prototype/trunk/application/views/scripts/.svn/all-wcprops
+--- orig/application/views/scripts/.svn/all-wcprops	2010-06-17 14:57:51.674823342 +1000
++++ prototype/trunk/application/views/scripts/.svn/all-wcprops	2010-06-11 22:48:14.000000000 +1000
+@@ -1,5 +1,5 @@
+ K 25
+ svn:wc:ra_dav:version-url
+ V 78
+-/projects/personal/sahara/svn/!svn/ver/1049/WI/trunk/application/views/scripts
++/projects/personal/sahara/svn/!svn/ver/1033/WI/trunk/application/views/scripts
+ END
+diff -r -U 8 orig/application/views/scripts/.svn/entries prototype/trunk/application/views/scripts/.svn/entries
+--- orig/application/views/scripts/.svn/entries	2010-06-17 14:57:51.674823342 +1000
++++ prototype/trunk/application/views/scripts/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,19 +1,19 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/application/views/scripts
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+-2010-06-16T02:52:04.995535Z
+-1049
++2010-06-10T23:50:08.894666Z
++1033
+ tmachet
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/application/views/.svn/all-wcprops prototype/trunk/application/views/.svn/all-wcprops
+--- orig/application/views/.svn/all-wcprops	2010-06-17 14:57:51.674823342 +1000
++++ prototype/trunk/application/views/.svn/all-wcprops	2010-06-11 22:48:14.000000000 +1000
+@@ -1,5 +1,5 @@
+ K 25
+ svn:wc:ra_dav:version-url
+ V 70
+-/projects/personal/sahara/svn/!svn/ver/1053/WI/trunk/application/views
++/projects/personal/sahara/svn/!svn/ver/1033/WI/trunk/application/views
+ END
+diff -r -U 8 orig/application/views/.svn/entries prototype/trunk/application/views/.svn/entries
+--- orig/application/views/.svn/entries	2010-06-17 14:57:51.674823342 +1000
++++ prototype/trunk/application/views/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,20 +1,20 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/application/views
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+-2010-06-17T00:10:06.206231Z
+-1053
+-mdiponio
++2010-06-10T23:50:08.894666Z
++1033
++tmachet
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/.buildpath prototype/trunk/.buildpath
+--- orig/.buildpath	2010-06-17 14:57:54.250823668 +1000
++++ prototype/trunk/.buildpath	2010-06-16 02:51:55.000000000 +1000
+@@ -1,7 +1,8 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <buildpath>
+ 	<buildpathentry kind="src" path="application"/>
+ 	<buildpathentry kind="con" path="org.eclipse.php.core.LANGUAGE"/>
+-	<buildpathentry kind="src" path="library/Zend"/>
+ 	<buildpathentry kind="src" path="library/Sahara"/>
++	<buildpathentry kind="src" path="library/Zend"/>
++	<buildpathentry kind="src" path="public"/>
+ </buildpath>
+diff -r -U 8 orig/docs/Database Authenication/.svn/entries prototype/trunk/docs/Database Authenication/.svn/entries
+--- orig/docs/Database Authenication/.svn/entries	2010-06-17 14:57:52.106822906 +1000
++++ prototype/trunk/docs/Database Authenication/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/docs/Database%20Authenication
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-05-05T23:37:46.662501Z
+ 833
+ tmachet
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ README.txt
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.106822Z
++2010-06-11T12:48:14.000000Z
+ 01ba1ba865a3ca1f5bca107b41c2e99a
+ 2010-05-03T01:44:47.350653Z
+ 822
+ tmachet
+ 
+ 
+ 
+ 
+@@ -61,17 +61,17 @@
+ 849
+ 
+ DBAuthentication.diff
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.106822Z
++2010-06-11T12:48:14.000000Z
+ 58d95e5f6fb5d3300c066c6cf6440fb9
+ 2010-05-05T23:37:46.662501Z
+ 833
+ tmachet
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/docs/LabConnector/.svn/entries prototype/trunk/docs/LabConnector/.svn/entries
+--- orig/docs/LabConnector/.svn/entries	2010-06-17 14:57:52.110824178 +1000
++++ prototype/trunk/docs/LabConnector/.svn/entries	2010-06-11 22:48:15.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/docs/LabConnector
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-05-25T07:18:05.328350Z
+ 933
+ heyeung
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ soap.patch
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.110824Z
++2010-06-11T12:48:15.000000Z
+ 6b7be9fe57c43b4b4499a0b4b849259e
+ 2010-05-25T07:18:05.328350Z
+ 933
+ heyeung
+ 
+ 
+ 
+ 
+@@ -61,17 +61,17 @@
+ 2918
+ 
+ Soap_modified.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.110824Z
++2010-06-11T12:48:15.000000Z
+ 3a2d91499eda8b0f422b1aa8d2b22eb0
+ 2010-05-25T07:18:05.328350Z
+ 933
+ heyeung
+ 
+ 
+ 
+ 
+@@ -95,17 +95,17 @@
+ 8056
+ 
+ readme.txt
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.110824Z
++2010-06-11T12:48:15.000000Z
+ 9ba0cc525f5d3a379d79f92561c988d0
+ 2010-05-25T07:18:05.328350Z
+ 933
+ heyeung
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/docs/.svn/entries prototype/trunk/docs/.svn/entries
+--- orig/docs/.svn/entries	2010-06-17 14:57:52.114823239 +1000
++++ prototype/trunk/docs/.svn/entries	2010-06-11 22:48:15.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/docs
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-05-25T07:18:05.328350Z
+ 933
+ heyeung
+@@ -33,17 +33,17 @@
+ dir
+ 
+ README.txt
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.110824Z
++2010-06-11T12:48:15.000000Z
+ 2358f4fd2364f45c79ce5d26b1176fdb
+ 2010-04-21T08:09:17.713369Z
+ 744
+ mdiponio
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/institution/.svn/all-wcprops prototype/trunk/institution/.svn/all-wcprops
+--- orig/institution/.svn/all-wcprops	2010-06-17 14:57:52.122823924 +1000
++++ prototype/trunk/institution/.svn/all-wcprops	2010-06-11 22:48:15.000000000 +1000
+@@ -1,5 +1,5 @@
+ K 25
+ svn:wc:ra_dav:version-url
+-V 64
+-/projects/personal/sahara/svn/!svn/ver/1049/WI/trunk/institution
++V 63
++/projects/personal/sahara/svn/!svn/ver/998/WI/trunk/institution
+ END
+diff -r -U 8 orig/institution/.svn/entries prototype/trunk/institution/.svn/entries
+--- orig/institution/.svn/entries	2010-06-17 14:57:52.122823924 +1000
++++ prototype/trunk/institution/.svn/entries	2010-06-11 22:48:15.000000000 +1000
+@@ -1,20 +1,20 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/institution
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+-2010-06-16T02:52:04.995535Z
+-1049
+-tmachet
++2010-06-04T01:04:30.964345Z
++998
++mdiponio
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/institution/UTS/Contacts.php prototype/trunk/institution/UTS/Contacts.php
+--- orig/institution/UTS/Contacts.php	2010-06-17 14:57:52.122823924 +1000
++++ prototype/trunk/institution/UTS/Contacts.php	2010-06-11 22:48:15.000000000 +1000
+@@ -33,31 +33,25 @@
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  *
+  * @author Tania Machet (tmachet)
+  * @date 8th April 2010
+  */
+ 
+ class UTS_Contacts
+ {
+-	 /**
+-     * Array of contact information. The structure is an associative array
+-     * containing role => contact information.
+-     * The contact information is an associative array containing the desired 
+-     * contact information. This array can contain any key => values as desired.
+-     */
++	public function getContacts()
++	{
+ 		
+-	private	$allContacts = array("Operational" => array("Contact Name:" => "Michel de la Villefromoy",
++		$allContacts = array("Operational" => array("Contact Name:" => "Michel de la Villefromoy",
+ 										  "Contact Phone:" => "(02) 9514 2406",
+ 										  "Contact Address:" => "UTS Building 1",
+ 										  "" => "CB01.23.16",
+ 										  "Contact Email:" => "<a href=\"mailto:mville@eng.uts.edu.au\">Michel de la Villefromoy</a>"),
+ 							 "Technical" => array("Contact Name:" => "Tania Machet",
+ 										  "Contact Phone:" => "(02) 9514 2975",
+ 										  "Contact Address:" => "UTS Building 1",
+ 										  "" => "CB01.23.16",
+ 										  "Contact Email:" => "<a href=\"mailto:tania.machet@eng.uts.edu.au\">Tania Machet</a>"));
+ 										  
+-	public function getContacts()
+-	{
+-		return $this->allContacts;	
++		return $allContacts;	
+ 	}
+ }
+diff -r -U 8 orig/institution/UTS/Labinfo.php prototype/trunk/institution/UTS/Labinfo.php
+--- orig/institution/UTS/Labinfo.php	2010-06-17 14:57:52.122823924 +1000
++++ prototype/trunk/institution/UTS/Labinfo.php	2010-06-11 22:48:15.000000000 +1000
+@@ -33,70 +33,73 @@
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  *
+  * @author Tania Machet (tmachet)
+  * @date 8th April 2010
+  */
+ 
+ class UTS_Labinfo
+ {
+-	/** 
+-	 * The images for the Laboratory Information gallery page.
+-	 * A list of arrays containing the image information. The image information
+-	 * is stored as an associative array containing:
+-	 *   - filename => image filename (from baseUrl)
+-	 *   - alt => subtitle for image
+-	 *   - title => title for image    
+-	 */
++	public function getLabinfo()
++	{
++		$Images["1"] = array( "filename" => "uts/images/IPR.jpg",
++				"alt" => "UTS",
++				"title" => "UTS Inclined Plane Rig");
++		
++		$Images["2"] = array( "filename" => "uts/images/IPR_close.jpg",
++				"alt" => "UTS",
++				"title" => "Inclined Plane Blocks");
++
++		$Images["3"] = array( "filename" => "uts/images/ShakeTable_1.jpg",
++				"alt" => "UTS",
++				"title" => "2 Degree-of-Freedom Shaker Table");
+ 
++		$Images["4"] = array( "filename" => "uts/images/ShakeTable_3.jpg",
++				"alt" => "UTS",
++				"title" => "Shaker Table Rigs");
+ 		
+-		private $Images = array (
+-			array( "filename" => "uts/images/IPR.jpg",
+-				"alt" => "Tests coefficients of friction, gravity, static and kinetic friction ..",
+-				"title" => "Inclined Plane Rig"),
+-		    array( "filename" => "uts/images/IPR_close.jpg",
+-				"alt" => "Blocks of different materials used for the Inclined Plane",
+-				"title" => "Inclined Plane Blocks"),
+-			array( "filename" => "uts/images/ShakeTable_1.jpg",
+-				"alt" => "Two Degree-of-Freedom shaker table",
+-				"title" => "Shaker Table"),
+-			array( "filename" => "uts/images/ShakeTable_3.jpg",
+-				"alt" => "Collection of four shaker table rigs",
+-				"title" => "Shaker Table Rigs"),
+-			array( "filename" => "uts/images/ShakeTable_close.jpg",
+-				"alt" => "Three Degree-of-Freedom shaker table",
+-				"title" => "Shaker Table"),
+-			array( "filename" => "uts/images/Coldfire.jpg",
+-				"alt" => "UTS",
+-				"title" => "Coldfire Rig"),
+-			array( "filename" => "uts/images/CoupledTank.jpg",
+-				"alt" => "UTS",
+-				"title" => "Coupled Tank Rig"),
+-			 array( "filename" => "uts/images/FPGA_1.jpg",
+-				"alt" => "UTS",
+-				"title" => "Single FPGA Rig"),
+- 			array( "filename" => "uts/images/LoadedBeam_1.jpg",
+-				"alt" => "UTS",
+-				"title" => "Single Loaded Beam Rig"),
+-			 array( "filename" => "uts/images/LoadedBeam_2.jpg",
+-				"alt" => "UTS",
+-				"title" => "Loaded Beam Rigs"),
+-			 array( "filename" => "uts/images/PLC_1.jpg",
+-				"alt" => "UTS",
+-				"title" => "Single PLC Rig"),
+-			array( "filename" => "uts/images/PLC_2.jpg",
+-				"alt" => "UTS",
+-				"title" => "PLC Rigs"),
+-			array( "filename" => "uts/images/RL_outside.jpg",
++		$Images["5"] = array( "filename" => "uts/images/ShakeTable_close.jpg",
+ 				"alt" => "UTS",
+-				"title" => "Remote Laboratory"),
+-			array( "filename" => "uts/images/RL_inside.jpg",
++				"title" => "3 Degree-of-Freedom Shaker Table");
++		
++		$Images["6"] = array( "filename" => "uts/images/Coldfire.jpg",
+ 				"alt" => "UTS",
+-				"title" => "Remote Laboratory"),
+-			 array( "filename" => "uts/images/RL_tanks.jpg",
++				"title" => "Coldfire Rig");
++
++		$Images["7"] = array( "filename" => "uts/images/CoupledTank.jpg",
+ 				"alt" => "UTS",
+-				"title" => "Remote Laboratory"));
++				"title" => "Coupled Tank Rig");
+ 
+-	public function getLabinfo()
+-	{
+-		return $this->Images;	
++		$Images["8"] = array( "filename" => "uts/images/FPGA_1.jpg",
++				"alt" => "UTS",
++				"title" => "Single FPGA Rig");
++
++		$Images["9"] = array( "filename" => "uts/images/LoadedBeam_1.jpg",
++				"alt" => "UTS",
++				"title" => "Single Loaded Beam Rig");
++		
++		$Images["10"] = array( "filename" => "uts/images/LoadedBeam_2.jpg",
++				"alt" => "UTS",
++				"title" => "Loaded Beam Rigs");
++
++		$Images["11"] = array( "filename" => "uts/images/PLC_1.jpg",
++				"alt" => "UTS",
++				"title" => "Single PLC Rig");
++
++		$Images["12"] = array( "filename" => "uts/images/PLC_2.jpg",
++				"alt" => "UTS",
++				"title" => "PLC Rigs");
++
++		$Images["13"] = array( "filename" => "uts/images/RL_outside.jpg",
++				"alt" => "UTS",
++				"title" => "Remote Laboratory");
++
++		$Images["14"] = array( "filename" => "uts/images/RL_inside.jpg",
++				"alt" => "UTS",
++				"title" => "Remote Laboratory");
++
++		$Images["15"] = array( "filename" => "uts/images/RL_tanks.jpg",
++				"alt" => "UTS",
++				"title" => "Remote Laboratory");
++
++		return $Images;	
+ 	}
+ }
+diff -r -U 8 orig/institution/UTS/scripts/.svn/entries prototype/trunk/institution/UTS/scripts/.svn/entries
+--- orig/institution/UTS/scripts/.svn/entries	2010-06-17 14:57:52.122823924 +1000
++++ prototype/trunk/institution/UTS/scripts/.svn/entries	2010-06-11 22:48:15.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/institution/UTS/scripts
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-06-04T01:04:30.964345Z
+ 998
+ mdiponio
+diff -r -U 8 orig/institution/UTS/.svn/all-wcprops prototype/trunk/institution/UTS/.svn/all-wcprops
+--- orig/institution/UTS/.svn/all-wcprops	2010-06-17 14:57:52.122823924 +1000
++++ prototype/trunk/institution/UTS/.svn/all-wcprops	2010-06-11 22:48:15.000000000 +1000
+@@ -1,17 +1,17 @@
+ K 25
+ svn:wc:ra_dav:version-url
+-V 68
+-/projects/personal/sahara/svn/!svn/ver/1049/WI/trunk/institution/UTS
++V 67
++/projects/personal/sahara/svn/!svn/ver/998/WI/trunk/institution/UTS
+ END
+ Labinfo.php
+ K 25
+ svn:wc:ra_dav:version-url
+-V 80
+-/projects/personal/sahara/svn/!svn/ver/1049/WI/trunk/institution/UTS/Labinfo.php
++V 79
++/projects/personal/sahara/svn/!svn/ver/917/WI/trunk/institution/UTS/Labinfo.php
+ END
+ Contacts.php
+ K 25
+ svn:wc:ra_dav:version-url
+-V 81
+-/projects/personal/sahara/svn/!svn/ver/1049/WI/trunk/institution/UTS/Contacts.php
++V 80
++/projects/personal/sahara/svn/!svn/ver/676/WI/trunk/institution/UTS/Contacts.php
+ END
+diff -r -U 8 orig/institution/UTS/.svn/entries prototype/trunk/institution/UTS/.svn/entries
+--- orig/institution/UTS/.svn/entries	2010-06-17 14:57:52.122823924 +1000
++++ prototype/trunk/institution/UTS/.svn/entries	2010-06-11 22:48:15.000000000 +1000
+@@ -1,20 +1,20 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/institution/UTS
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+-2010-06-16T02:52:04.995535Z
+-1049
+-tmachet
++2010-06-04T01:04:30.964345Z
++998
++mdiponio
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+@@ -27,20 +27,20 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ Labinfo.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.122823Z
+-f092228f9f0204ff02bd305706343125
+-2010-06-16T02:52:04.995535Z
+-1049
++2010-06-11T12:48:15.000000Z
++1a4a0ea90bd1790c1844e0a543fdd5c5
++2010-05-21T04:30:10.927915Z
++917
+ tmachet
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+@@ -53,28 +53,28 @@
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+-4228
++3928
+ 
+ Contacts.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.122823Z
+-97d39c30682c79dc3d7f3f2070908531
+-2010-06-16T02:52:04.995535Z
+-1049
++2010-06-11T12:48:15.000000Z
++740333990ec35501087abbe130bc1913
++2010-04-12T05:13:34.773220Z
++676
+ tmachet
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+@@ -87,13 +87,13 @@
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+-2950
++2635
+ 
+ scripts
+ dir
+ 
+diff -r -U 8 orig/institution/UTS/.svn/text-base/Contacts.php.svn-base prototype/trunk/institution/UTS/.svn/text-base/Contacts.php.svn-base
+--- orig/institution/UTS/.svn/text-base/Contacts.php.svn-base	2010-06-17 14:57:52.122823924 +1000
++++ prototype/trunk/institution/UTS/.svn/text-base/Contacts.php.svn-base	2010-06-11 22:48:15.000000000 +1000
+@@ -33,31 +33,25 @@
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  *
+  * @author Tania Machet (tmachet)
+  * @date 8th April 2010
+  */
+ 
+ class UTS_Contacts
+ {
+-	 /**
+-     * Array of contact information. The structure is an associative array
+-     * containing role => contact information.
+-     * The contact information is an associative array containing the desired 
+-     * contact information. This array can contain any key => values as desired.
+-     */
++	public function getContacts()
++	{
+ 		
+-	private	$allContacts = array("Operational" => array("Contact Name:" => "Michel de la Villefromoy",
++		$allContacts = array("Operational" => array("Contact Name:" => "Michel de la Villefromoy",
+ 										  "Contact Phone:" => "(02) 9514 2406",
+ 										  "Contact Address:" => "UTS Building 1",
+ 										  "" => "CB01.23.16",
+ 										  "Contact Email:" => "<a href=\"mailto:mville@eng.uts.edu.au\">Michel de la Villefromoy</a>"),
+ 							 "Technical" => array("Contact Name:" => "Tania Machet",
+ 										  "Contact Phone:" => "(02) 9514 2975",
+ 										  "Contact Address:" => "UTS Building 1",
+ 										  "" => "CB01.23.16",
+ 										  "Contact Email:" => "<a href=\"mailto:tania.machet@eng.uts.edu.au\">Tania Machet</a>"));
+ 										  
+-	public function getContacts()
+-	{
+-		return $this->allContacts;	
++		return $allContacts;	
+ 	}
+ }
+diff -r -U 8 orig/institution/UTS/.svn/text-base/Labinfo.php.svn-base prototype/trunk/institution/UTS/.svn/text-base/Labinfo.php.svn-base
+--- orig/institution/UTS/.svn/text-base/Labinfo.php.svn-base	2010-06-17 14:57:52.114823239 +1000
++++ prototype/trunk/institution/UTS/.svn/text-base/Labinfo.php.svn-base	2010-06-11 22:48:15.000000000 +1000
+@@ -33,70 +33,73 @@
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  *
+  * @author Tania Machet (tmachet)
+  * @date 8th April 2010
+  */
+ 
+ class UTS_Labinfo
+ {
+-	/** 
+-	 * The images for the Laboratory Information gallery page.
+-	 * A list of arrays containing the image information. The image information
+-	 * is stored as an associative array containing:
+-	 *   - filename => image filename (from baseUrl)
+-	 *   - alt => subtitle for image
+-	 *   - title => title for image    
+-	 */
++	public function getLabinfo()
++	{
++		$Images["1"] = array( "filename" => "uts/images/IPR.jpg",
++				"alt" => "UTS",
++				"title" => "UTS Inclined Plane Rig");
++		
++		$Images["2"] = array( "filename" => "uts/images/IPR_close.jpg",
++				"alt" => "UTS",
++				"title" => "Inclined Plane Blocks");
++
++		$Images["3"] = array( "filename" => "uts/images/ShakeTable_1.jpg",
++				"alt" => "UTS",
++				"title" => "2 Degree-of-Freedom Shaker Table");
+ 
++		$Images["4"] = array( "filename" => "uts/images/ShakeTable_3.jpg",
++				"alt" => "UTS",
++				"title" => "Shaker Table Rigs");
+ 		
+-		private $Images = array (
+-			array( "filename" => "uts/images/IPR.jpg",
+-				"alt" => "Tests coefficients of friction, gravity, static and kinetic friction ..",
+-				"title" => "Inclined Plane Rig"),
+-		    array( "filename" => "uts/images/IPR_close.jpg",
+-				"alt" => "Blocks of different materials used for the Inclined Plane",
+-				"title" => "Inclined Plane Blocks"),
+-			array( "filename" => "uts/images/ShakeTable_1.jpg",
+-				"alt" => "Two Degree-of-Freedom shaker table",
+-				"title" => "Shaker Table"),
+-			array( "filename" => "uts/images/ShakeTable_3.jpg",
+-				"alt" => "Collection of four shaker table rigs",
+-				"title" => "Shaker Table Rigs"),
+-			array( "filename" => "uts/images/ShakeTable_close.jpg",
+-				"alt" => "Three Degree-of-Freedom shaker table",
+-				"title" => "Shaker Table"),
+-			array( "filename" => "uts/images/Coldfire.jpg",
+-				"alt" => "UTS",
+-				"title" => "Coldfire Rig"),
+-			array( "filename" => "uts/images/CoupledTank.jpg",
+-				"alt" => "UTS",
+-				"title" => "Coupled Tank Rig"),
+-			 array( "filename" => "uts/images/FPGA_1.jpg",
+-				"alt" => "UTS",
+-				"title" => "Single FPGA Rig"),
+- 			array( "filename" => "uts/images/LoadedBeam_1.jpg",
+-				"alt" => "UTS",
+-				"title" => "Single Loaded Beam Rig"),
+-			 array( "filename" => "uts/images/LoadedBeam_2.jpg",
+-				"alt" => "UTS",
+-				"title" => "Loaded Beam Rigs"),
+-			 array( "filename" => "uts/images/PLC_1.jpg",
+-				"alt" => "UTS",
+-				"title" => "Single PLC Rig"),
+-			array( "filename" => "uts/images/PLC_2.jpg",
+-				"alt" => "UTS",
+-				"title" => "PLC Rigs"),
+-			array( "filename" => "uts/images/RL_outside.jpg",
++		$Images["5"] = array( "filename" => "uts/images/ShakeTable_close.jpg",
+ 				"alt" => "UTS",
+-				"title" => "Remote Laboratory"),
+-			array( "filename" => "uts/images/RL_inside.jpg",
++				"title" => "3 Degree-of-Freedom Shaker Table");
++		
++		$Images["6"] = array( "filename" => "uts/images/Coldfire.jpg",
+ 				"alt" => "UTS",
+-				"title" => "Remote Laboratory"),
+-			 array( "filename" => "uts/images/RL_tanks.jpg",
++				"title" => "Coldfire Rig");
++
++		$Images["7"] = array( "filename" => "uts/images/CoupledTank.jpg",
+ 				"alt" => "UTS",
+-				"title" => "Remote Laboratory"));
++				"title" => "Coupled Tank Rig");
+ 
+-	public function getLabinfo()
+-	{
+-		return $this->Images;	
++		$Images["8"] = array( "filename" => "uts/images/FPGA_1.jpg",
++				"alt" => "UTS",
++				"title" => "Single FPGA Rig");
++
++		$Images["9"] = array( "filename" => "uts/images/LoadedBeam_1.jpg",
++				"alt" => "UTS",
++				"title" => "Single Loaded Beam Rig");
++		
++		$Images["10"] = array( "filename" => "uts/images/LoadedBeam_2.jpg",
++				"alt" => "UTS",
++				"title" => "Loaded Beam Rigs");
++
++		$Images["11"] = array( "filename" => "uts/images/PLC_1.jpg",
++				"alt" => "UTS",
++				"title" => "Single PLC Rig");
++
++		$Images["12"] = array( "filename" => "uts/images/PLC_2.jpg",
++				"alt" => "UTS",
++				"title" => "PLC Rigs");
++
++		$Images["13"] = array( "filename" => "uts/images/RL_outside.jpg",
++				"alt" => "UTS",
++				"title" => "Remote Laboratory");
++
++		$Images["14"] = array( "filename" => "uts/images/RL_inside.jpg",
++				"alt" => "UTS",
++				"title" => "Remote Laboratory");
++
++		$Images["15"] = array( "filename" => "uts/images/RL_tanks.jpg",
++				"alt" => "UTS",
++				"title" => "Remote Laboratory");
++
++		return $Images;	
+ 	}
+ }
+diff -r -U 8 orig/library/Sahara/Acl.php prototype/trunk/library/Sahara/Acl.php
+--- orig/library/Sahara/Acl.php	2010-06-17 14:57:52.096381510 +1000
++++ prototype/trunk/library/Sahara/Acl.php	2010-06-17 02:01:05.000000000 +1000
+@@ -29,16 +29,20 @@
+  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  *
+  * @author Michael Diponio (mdiponio)
+  * @date 21st February 2010
++ * 
++ * @author Herbert Yeung
++ * @date  17th June 2010
++ * Modification: Added permission so that a user can access the LabConnector and index pages
+  */
+ 
+ class Sahara_Acl extends Zend_Acl
+ {
+     /** Unauthorised user. */
+     const UNAUTH = 'NOTFOUND';
+ 
+     /** Demonstration user. */
+@@ -64,17 +68,18 @@
+     /** @var assoc array Pages a demonstration user may access. */
+     protected $_demoPages = array();
+ 
+     /** @var assoc array Pages a user may access. */
+     protected $_userPages = array('queue' => array('index', 'unlock', 'info', 'queue', 'queuing', 'cancel',
+                                                    'update'),
+                                   'session' => array('index', 'info', 'finish', 'primitivebridge',
+                                                      'attributebridge'),
+-                                  'primitive' => array('json', 'echo', 'file')
++                                  'primitive' => array('json', 'echo', 'file'),
++    							  'labconnector' => array('index', 'error')
+                             );
+ 
+     /** @var assoc array Pages an academic user may access. */
+     protected $_academicPages = array('academic' => array('index'));
+ 
+     /** @var assoc array Pages an administrator user may access. */
+     protected $_adminPages = array('admin' => array('index'));
+ 
+diff -r -U 8 orig/library/Sahara/Controller/Action/Acl.php prototype/trunk/library/Sahara/Controller/Action/Acl.php
+--- orig/library/Sahara/Controller/Action/Acl.php	2010-06-17 14:57:51.687073180 +1000
++++ prototype/trunk/library/Sahara/Controller/Action/Acl.php	2010-06-11 22:48:14.000000000 +1000
+@@ -110,48 +110,47 @@
+             $this->_redirectTo('index', 'index');
+         }
+ 
+         /* Set up some information for the navigation menu. */
+         $this->view->userRole = $this->_acl->getUserRole();
+         $this->view->controller = $controller;
+         $this->view->action = $action;
+ 
+-        $page = $controller . $action;
+ 
+         /* Check if the user has a pending request and should be in the queue
+          * or on a experiment page. */
+         if ($this->_acl->getUserRole() != Sahara_Acl::UNAUTH)
+         {
+             $session = Sahara_Soap::getSchedServerQueuerClient()->isUserInQueue(array('userQName' => $this->_auth->getIdentity()));
+ 
+             /* Force a user to be specific places depending on where they are in session. */
+-            if ($session->inQueue && $page != 'queuequeuing' &&
+-                    !in_array($page, $this->_noRedirectPages))
++            if ($session->inQueue && "$controller$action" != 'queuequeuing' &&
++                    !in_array("$controller$action", $this->_noRedirectPages))
+             {
+                 /* User in queue but not on queueing page. */
+                 $this->_redirectTo('queuing', 'queue');
+             }
+             else if ($session->inQueue)
+             {
+                 $this->view->userRole = self::PSEUDO_ROLE_QUEUE;
+             }
+-            else if ($session->inSession && $page != 'sessionindex' &&
+-                    !in_array($page, $this->_noRedirectPages))
++            else if ($session->inSession && "$controller$action" != 'sessionindex' &&
++                    !in_array("$controller$action", $this->_noRedirectPages))
+             {
+                 /* User in session but not on session page. */
+                 $this->_redirectTo('index', 'session');
+             }
+             else if ($session->inSession)
+             {
+                 $this->view->userRole = self::PSEUDO_ROLE_SESSION;
+             }
+-            else if ($page == 'queuequeuing' || $page == 'sessionindex' || $page == "indexindex")
++            else if ("$controller$action" == 'queuequeuing' || "$controller$action" == 'sessionindex')
+             {
+-                /* Was in queue or in session, but that is finished so redirect
++                /* Was in queue or in session, but thatis finished so redirect
+                  * them back home. */
+                 switch ($this->_acl->getUserRole())
+                 {
+                     case Sahara_Acl::USER:
+                         $this->_redirectTo('index', 'queue');
+                         break;
+                     case Sahara_Acl::ACADEMIC:
+                         $this->_redirectTo('index', 'academic');
+diff -r -U 8 orig/library/Sahara/Controller/Action/.svn/all-wcprops prototype/trunk/library/Sahara/Controller/Action/.svn/all-wcprops
+--- orig/library/Sahara/Controller/Action/.svn/all-wcprops	2010-06-17 14:57:51.687073180 +1000
++++ prototype/trunk/library/Sahara/Controller/Action/.svn/all-wcprops	2010-06-11 22:48:14.000000000 +1000
+@@ -1,11 +1,11 @@
+ K 25
+ svn:wc:ra_dav:version-url
+-V 85
+-/projects/personal/sahara/svn/!svn/ver/1052/WI/trunk/library/Sahara/Controller/Action
++V 84
++/projects/personal/sahara/svn/!svn/ver/839/WI/trunk/library/Sahara/Controller/Action
+ END
+ Acl.php
+ K 25
+ svn:wc:ra_dav:version-url
+-V 93
+-/projects/personal/sahara/svn/!svn/ver/1052/WI/trunk/library/Sahara/Controller/Action/Acl.php
++V 92
++/projects/personal/sahara/svn/!svn/ver/839/WI/trunk/library/Sahara/Controller/Action/Acl.php
+ END
+diff -r -U 8 orig/library/Sahara/Controller/Action/.svn/entries prototype/trunk/library/Sahara/Controller/Action/.svn/entries
+--- orig/library/Sahara/Controller/Action/.svn/entries	2010-06-17 14:57:51.687073180 +1000
++++ prototype/trunk/library/Sahara/Controller/Action/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,19 +1,19 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/library/Sahara/Controller/Action
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+-2010-06-17T00:09:22.188166Z
+-1052
++2010-05-08T03:01:49.700367Z
++839
+ mdiponio
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+@@ -27,20 +27,20 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ Acl.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.687073Z
+-a53bedee188a86388cf304123f4e983b
+-2010-06-17T00:09:22.188166Z
+-1052
++2010-06-11T12:48:14.000000Z
++1a2f7d273d42c6c7fae4695eceaf7002
++2010-05-08T03:01:49.700367Z
++839
+ mdiponio
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+@@ -53,10 +53,10 @@
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+-7175
++7200
+ 
+diff -r -U 8 orig/library/Sahara/Controller/Action/.svn/text-base/Acl.php.svn-base prototype/trunk/library/Sahara/Controller/Action/.svn/text-base/Acl.php.svn-base
+--- orig/library/Sahara/Controller/Action/.svn/text-base/Acl.php.svn-base	2010-06-17 14:57:51.687073180 +1000
++++ prototype/trunk/library/Sahara/Controller/Action/.svn/text-base/Acl.php.svn-base	2010-06-11 22:48:14.000000000 +1000
+@@ -110,48 +110,47 @@
+             $this->_redirectTo('index', 'index');
+         }
+ 
+         /* Set up some information for the navigation menu. */
+         $this->view->userRole = $this->_acl->getUserRole();
+         $this->view->controller = $controller;
+         $this->view->action = $action;
+ 
+-        $page = $controller . $action;
+ 
+         /* Check if the user has a pending request and should be in the queue
+          * or on a experiment page. */
+         if ($this->_acl->getUserRole() != Sahara_Acl::UNAUTH)
+         {
+             $session = Sahara_Soap::getSchedServerQueuerClient()->isUserInQueue(array('userQName' => $this->_auth->getIdentity()));
+ 
+             /* Force a user to be specific places depending on where they are in session. */
+-            if ($session->inQueue && $page != 'queuequeuing' &&
+-                    !in_array($page, $this->_noRedirectPages))
++            if ($session->inQueue && "$controller$action" != 'queuequeuing' &&
++                    !in_array("$controller$action", $this->_noRedirectPages))
+             {
+                 /* User in queue but not on queueing page. */
+                 $this->_redirectTo('queuing', 'queue');
+             }
+             else if ($session->inQueue)
+             {
+                 $this->view->userRole = self::PSEUDO_ROLE_QUEUE;
+             }
+-            else if ($session->inSession && $page != 'sessionindex' &&
+-                    !in_array($page, $this->_noRedirectPages))
++            else if ($session->inSession && "$controller$action" != 'sessionindex' &&
++                    !in_array("$controller$action", $this->_noRedirectPages))
+             {
+                 /* User in session but not on session page. */
+                 $this->_redirectTo('index', 'session');
+             }
+             else if ($session->inSession)
+             {
+                 $this->view->userRole = self::PSEUDO_ROLE_SESSION;
+             }
+-            else if ($page == 'queuequeuing' || $page == 'sessionindex' || $page == "indexindex")
++            else if ("$controller$action" == 'queuequeuing' || "$controller$action" == 'sessionindex')
+             {
+-                /* Was in queue or in session, but that is finished so redirect
++                /* Was in queue or in session, but thatis finished so redirect
+                  * them back home. */
+                 switch ($this->_acl->getUserRole())
+                 {
+                     case Sahara_Acl::USER:
+                         $this->_redirectTo('index', 'queue');
+                         break;
+                     case Sahara_Acl::ACADEMIC:
+                         $this->_redirectTo('index', 'academic');
+diff -r -U 8 orig/library/Sahara/Controller/.svn/all-wcprops prototype/trunk/library/Sahara/Controller/.svn/all-wcprops
+--- orig/library/Sahara/Controller/.svn/all-wcprops	2010-06-17 14:57:51.687073180 +1000
++++ prototype/trunk/library/Sahara/Controller/.svn/all-wcprops	2010-06-11 22:48:14.000000000 +1000
+@@ -1,5 +1,5 @@
+ K 25
+ svn:wc:ra_dav:version-url
+-V 78
+-/projects/personal/sahara/svn/!svn/ver/1052/WI/trunk/library/Sahara/Controller
++V 77
++/projects/personal/sahara/svn/!svn/ver/839/WI/trunk/library/Sahara/Controller
+ END
+diff -r -U 8 orig/library/Sahara/Controller/.svn/entries prototype/trunk/library/Sahara/Controller/.svn/entries
+--- orig/library/Sahara/Controller/.svn/entries	2010-06-17 14:57:51.687073180 +1000
++++ prototype/trunk/library/Sahara/Controller/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,19 +1,19 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/library/Sahara/Controller
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+-2010-06-17T00:09:22.188166Z
+-1052
++2010-05-08T03:01:49.700367Z
++839
+ mdiponio
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/library/Sahara/Decorator/.svn/entries prototype/trunk/library/Sahara/Decorator/.svn/entries
+--- orig/library/Sahara/Decorator/.svn/entries	2010-06-17 14:57:51.687073180 +1000
++++ prototype/trunk/library/Sahara/Decorator/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/library/Sahara/Decorator
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ Table.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.687073Z
++2010-06-11T12:48:14.000000Z
+ 7349c46e4ded7a1307d64cd64646f071
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/library/Sahara/Session/Element/Cameras/.svn/entries prototype/trunk/library/Sahara/Session/Element/Cameras/.svn/entries
+--- orig/library/Sahara/Session/Element/Cameras/.svn/entries	2010-06-17 14:57:51.946850886 +1000
++++ prototype/trunk/library/Sahara/Session/Element/Cameras/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/library/Sahara/Session/Element/Cameras
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-06-10T00:43:06.569137Z
+ 1030
+ mdiponio
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ _cameraPanel.phtml
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.946850Z
++2010-06-11T12:48:14.000000Z
+ 706978dd04caa467603b8c6267624d24
+ 2010-06-10T00:43:06.569137Z
+ 1030
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -61,17 +61,17 @@
+ 4544
+ 
+ _cameras.phtml
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.946850Z
++2010-06-11T12:48:14.000000Z
+ 2895165d45512890be5353571989c8d2
+ 2010-06-09T05:01:55.868385Z
+ 1027
+ mdiponio
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/library/Sahara/Session/Element/FileTransfer/.svn/entries prototype/trunk/library/Sahara/Session/Element/FileTransfer/.svn/entries
+--- orig/library/Sahara/Session/Element/FileTransfer/.svn/entries	2010-06-17 14:57:51.810822864 +1000
++++ prototype/trunk/library/Sahara/Session/Element/FileTransfer/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/library/Sahara/Session/Element/FileTransfer
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-05-27T09:00:17.003834Z
+ 952
+ mdiponio
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ _fileTransferPanel.phtml
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.810822Z
++2010-06-11T12:48:14.000000Z
+ 1e49dd9ba73908ba198585a009d20ad0
+ 2010-05-27T09:00:17.003834Z
+ 952
+ mdiponio
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/library/Sahara/Session/Element/HeaderMagic/.svn/entries prototype/trunk/library/Sahara/Session/Element/HeaderMagic/.svn/entries
+--- orig/library/Sahara/Session/Element/HeaderMagic/.svn/entries	2010-06-17 14:57:51.895794377 +1000
++++ prototype/trunk/library/Sahara/Session/Element/HeaderMagic/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/library/Sahara/Session/Element/HeaderMagic
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-06-07T05:31:47.100879Z
+ 1014
+ mdiponio
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ _headerMagic.phtml
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.895794Z
++2010-06-11T12:48:14.000000Z
+ ea449ce27cbe76f15d7f39951d8f016b
+ 2010-06-07T05:31:47.100879Z
+ 1014
+ mdiponio
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/library/Sahara/Session/Element/LeftRightPush/_leftRightPush.phtml prototype/trunk/library/Sahara/Session/Element/LeftRightPush/_leftRightPush.phtml
+--- orig/library/Sahara/Session/Element/LeftRightPush/_leftRightPush.phtml	2010-06-17 14:57:51.814823110 +1000
++++ prototype/trunk/library/Sahara/Session/Element/LeftRightPush/_leftRightPush.phtml	2010-06-11 22:48:14.000000000 +1000
+@@ -36,44 +36,55 @@
+  * @date 5th May 2010
+  */
+ ?>
+ 
+ <script type="text/javascript">
+ $(document).ready(function() {
+ 	var leftPush = <?=$this->leftPush?>;
+ 	var rightPush = <?=$this->rightPush?>;
+-	var rightTop = <?=$this->rightTop?>;
+ 
+ 	/* Session panel is to be pushed left. */
+ 	var left = parseInt($("#sessioninfo").css("left")) - leftPush;
+ 	$("#sessioninfo").css("left", left);
+ 
+ 	/* Left push contents is to be pushed to the left. */
+ 	var leftPushElements = $(".leftpush").toArray();
+ 	for (var i in leftPushElements)
+ 	{
+ 		var e = leftPushElements[i];
+ 		var oldLeft = parseInt(e.style.left);
+-		e.style.left = (isNaN(oldLeft) ? -leftPush : oldLeft - leftPush) + "px";
++
++		if (isNaN(oldLeft))
++		{
++			left = -leftPush;
++		}
++		else
++		{
++			left = oldLeft - leftPush;
++		}
++		e.style.left = left + "px";
+ 	}
+ 
+-	/* Action bar is to be pushed to the right and up or down. */
+-	var ab = $("#actionbar");
+-	var right = parseInt(ab.css("right")) - rightPush;
+-	ab.css("right", right);
+-	if (rightTop != 0) ab.css("top", rightTop);
+ 
++	/* Action bar is to be pushed to the right. */
++	var right = parseInt($("#actionbar").css("right")) - rightPush;
++	$("#actionbar").css("right", right);
+ 
+-	/* Right push contents is to be pushed to the right and up or down. */
++	/* Right push contents is to be pushed to the right. */
+ 	var rightPushElements = $(".rightpush").toArray();
+ 	for (var i in rightPushElements)
+ 	{
+ 		var e = rightPushElements[i];
+-
+ 		var oldRight = parseInt(e.style.right);
+-		e.style.right = (isNaN(oldRight) ? -rightPush : oldRight - rightPush) + "px";
+ 
+-		var oldTop = parseInt(e.style.top);
+-		e.style.top = (isNan(oldTop) ? rightTop : oldTop + rightTop) + "px";
++		if (isNan(oldRight))
++		{
++			right = -rightPush;
++		}
++		else
++		{
++			right = oldRight - rightPush;
++		}
++		e.style.right = right + "px";
+ 	}
+ });
+ </script>
+\ No newline at end of file
+diff -r -U 8 orig/library/Sahara/Session/Element/LeftRightPush/.svn/all-wcprops prototype/trunk/library/Sahara/Session/Element/LeftRightPush/.svn/all-wcprops
+--- orig/library/Sahara/Session/Element/LeftRightPush/.svn/all-wcprops	2010-06-17 14:57:51.814823110 +1000
++++ prototype/trunk/library/Sahara/Session/Element/LeftRightPush/.svn/all-wcprops	2010-06-11 22:48:14.000000000 +1000
+@@ -1,11 +1,11 @@
+ K 25
+ svn:wc:ra_dav:version-url
+-V 97
+-/projects/personal/sahara/svn/!svn/ver/1043/WI/trunk/library/Sahara/Session/Element/LeftRightPush
++V 96
++/projects/personal/sahara/svn/!svn/ver/832/WI/trunk/library/Sahara/Session/Element/LeftRightPush
+ END
+ _leftRightPush.phtml
+ K 25
+ svn:wc:ra_dav:version-url
+-V 118
+-/projects/personal/sahara/svn/!svn/ver/1043/WI/trunk/library/Sahara/Session/Element/LeftRightPush/_leftRightPush.phtml
++V 117
++/projects/personal/sahara/svn/!svn/ver/832/WI/trunk/library/Sahara/Session/Element/LeftRightPush/_leftRightPush.phtml
+ END
+diff -r -U 8 orig/library/Sahara/Session/Element/LeftRightPush/.svn/entries prototype/trunk/library/Sahara/Session/Element/LeftRightPush/.svn/entries
+--- orig/library/Sahara/Session/Element/LeftRightPush/.svn/entries	2010-06-17 14:57:51.814823110 +1000
++++ prototype/trunk/library/Sahara/Session/Element/LeftRightPush/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,19 +1,19 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/library/Sahara/Session/Element/LeftRightPush
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+-2010-06-15T06:39:49.744928Z
+-1043
++2010-05-05T10:07:58.929641Z
++832
+ mdiponio
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+@@ -27,20 +27,20 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ _leftRightPush.phtml
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.814823Z
+-7dbb329bce523861a6ff55455e80651f
+-2010-06-15T06:39:49.744928Z
+-1043
++2010-06-11T12:48:14.000000Z
++693ed1bb6c99de42ab46ea1c2806c96c
++2010-05-05T10:07:58.929641Z
++832
+ mdiponio
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+@@ -53,10 +53,10 @@
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+-3124
++3006
+ 
+diff -r -U 8 orig/library/Sahara/Session/Element/LeftRightPush/.svn/text-base/_leftRightPush.phtml.svn-base prototype/trunk/library/Sahara/Session/Element/LeftRightPush/.svn/text-base/_leftRightPush.phtml.svn-base
+--- orig/library/Sahara/Session/Element/LeftRightPush/.svn/text-base/_leftRightPush.phtml.svn-base	2010-06-17 14:57:51.814823110 +1000
++++ prototype/trunk/library/Sahara/Session/Element/LeftRightPush/.svn/text-base/_leftRightPush.phtml.svn-base	2010-06-11 22:48:14.000000000 +1000
+@@ -36,44 +36,55 @@
+  * @date 5th May 2010
+  */
+ ?>
+ 
+ <script type="text/javascript">
+ $(document).ready(function() {
+ 	var leftPush = <?=$this->leftPush?>;
+ 	var rightPush = <?=$this->rightPush?>;
+-	var rightTop = <?=$this->rightTop?>;
+ 
+ 	/* Session panel is to be pushed left. */
+ 	var left = parseInt($("#sessioninfo").css("left")) - leftPush;
+ 	$("#sessioninfo").css("left", left);
+ 
+ 	/* Left push contents is to be pushed to the left. */
+ 	var leftPushElements = $(".leftpush").toArray();
+ 	for (var i in leftPushElements)
+ 	{
+ 		var e = leftPushElements[i];
+ 		var oldLeft = parseInt(e.style.left);
+-		e.style.left = (isNaN(oldLeft) ? -leftPush : oldLeft - leftPush) + "px";
++
++		if (isNaN(oldLeft))
++		{
++			left = -leftPush;
++		}
++		else
++		{
++			left = oldLeft - leftPush;
++		}
++		e.style.left = left + "px";
+ 	}
+ 
+-	/* Action bar is to be pushed to the right and up or down. */
+-	var ab = $("#actionbar");
+-	var right = parseInt(ab.css("right")) - rightPush;
+-	ab.css("right", right);
+-	if (rightTop != 0) ab.css("top", rightTop);
+ 
++	/* Action bar is to be pushed to the right. */
++	var right = parseInt($("#actionbar").css("right")) - rightPush;
++	$("#actionbar").css("right", right);
+ 
+-	/* Right push contents is to be pushed to the right and up or down. */
++	/* Right push contents is to be pushed to the right. */
+ 	var rightPushElements = $(".rightpush").toArray();
+ 	for (var i in rightPushElements)
+ 	{
+ 		var e = rightPushElements[i];
+-
+ 		var oldRight = parseInt(e.style.right);
+-		e.style.right = (isNaN(oldRight) ? -rightPush : oldRight - rightPush) + "px";
+ 
+-		var oldTop = parseInt(e.style.top);
+-		e.style.top = (isNan(oldTop) ? rightTop : oldTop + rightTop) + "px";
++		if (isNan(oldRight))
++		{
++			right = -rightPush;
++		}
++		else
++		{
++			right = oldRight - rightPush;
++		}
++		e.style.right = right + "px";
+ 	}
+ });
+ </script>
+\ No newline at end of file
+diff -r -U 8 orig/library/Sahara/Session/Element/LeftRightPush.php prototype/trunk/library/Sahara/Session/Element/LeftRightPush.php
+--- orig/library/Sahara/Session/Element/LeftRightPush.php	2010-06-17 14:57:52.050840388 +1000
++++ prototype/trunk/library/Sahara/Session/Element/LeftRightPush.php	2010-06-11 22:48:14.000000000 +1000
+@@ -55,33 +55,28 @@
+ class Sahara_Session_Element_LeftRightPush extends Sahara_Session_Element
+ {
+     /** @var int The amount to push the left contents in pixels. */
+     private $_leftPush;
+ 
+     /** @var int The amount to push the rig contents in pixels. */
+     private $_rightPush;
+ 
+-    /** @var int The top offset of right. */
+-    private $_rightTop;
+-
+     /**
+      * Constructor.
+-     * @param String $rigClient rig client URL
+-     * @param int $left the amount to push left (optional)
+-     * @param int $right the amount to push right (optional)
+-     * @param int $rightTop the vertical offset of right (optional)
++     * @param String $rigClient Rig client URL.
++     * @param int $left The amount to push left (optional)
++     * @param int $right The amount to push right (optional)
+      */
+-    public function __construct($rigClient, $left = 0, $right = 0, $rightTop = 0)
++    public function __construct($rigClient, $left = 0, $right = 0)
+     {
+         parent::__construct($rigClient);
+ 
+         $this->_leftPush = $left;
+         $this->_rightPush = $right;
+-        $this->_rightTop = $rightTop;
+     }
+ 
+     /**
+      * Sets the left push distance.
+      *
+      * @param int $pixels distance in pixels
+      */
+     public function setLeftPush($pixels)
+@@ -94,27 +89,16 @@
+      *
+      * @param int $pixels distance in pixels
+      */
+     public function setRightPush($pixels)
+     {
+         $this->_rightPush = $pixels;
+     }
+ 
+-    /**
+-     * Sets the right top offset from its normal height.
+-     *
+-     * @param int $pixels right top offset
+-     */
+-    public function setRightTop($pixels)
+-    {
+-        $this->_rightTop = $pixels;
+-    }
+-
+     public function render()
+     {
+         $this->_view->leftPush = $this->_leftPush;
+         $this->_view->rightPush = $this->_rightPush;
+-        $this->_view->rightTop = $this->_rightTop;
+ 
+         return $this->_view->render('LeftRightPush/_leftRightPush.phtml');
+     }
+ }
+\ No newline at end of file
+diff -r -U 8 orig/library/Sahara/Session/Element/RdpApplet/.svn/entries prototype/trunk/library/Sahara/Session/Element/RdpApplet/.svn/entries
+--- orig/library/Sahara/Session/Element/RdpApplet/.svn/entries	2010-06-17 14:57:51.946850886 +1000
++++ prototype/trunk/library/Sahara/Session/Element/RdpApplet/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/library/Sahara/Session/Element/RdpApplet
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-05-18T06:47:14.720537Z
+ 873
+ mdiponio
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ _rdpApplet.phtml
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.946850Z
++2010-06-11T12:48:14.000000Z
+ 48fd17be32a2128e9c4d806e6f66333f
+ 2010-05-18T06:47:14.720537Z
+ 873
+ mdiponio
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/library/Sahara/Session/Element/RemoteDesktop/.svn/entries prototype/trunk/library/Sahara/Session/Element/RemoteDesktop/.svn/entries
+--- orig/library/Sahara/Session/Element/RemoteDesktop/.svn/entries	2010-06-17 14:57:51.814823110 +1000
++++ prototype/trunk/library/Sahara/Session/Element/RemoteDesktop/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/library/Sahara/Session/Element/RemoteDesktop
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-05-18T04:46:36.026667Z
+ 869
+ mdiponio
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ _remoteDesktop.phtml
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:51.814823Z
++2010-06-11T12:48:14.000000Z
+ 685b53cc50c725e4fbb37477120bcb15
+ 2010-05-18T04:46:36.026667Z
+ 869
+ mdiponio
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/library/Sahara/Session/Element/RemoteDesktopAuthDetails/.svn/entries prototype/trunk/library/Sahara/Session/Element/RemoteDesktopAuthDetails/.svn/entries
+--- orig/library/Sahara/Session/Element/RemoteDesktopAuthDetails/.svn/entries	2010-06-17 14:57:52.050056012 +1000
++++ prototype/trunk/library/Sahara/Session/Element/RemoteDesktopAuthDetails/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/library/Sahara/Session/Element/RemoteDesktopAuthDetails
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-05-25T23:55:32.751818Z
+ 937
+ mdiponio
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ _remoteDesktopAuthDetails.phtml
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.050056Z
++2010-06-11T12:48:14.000000Z
+ fe3cded498c29199e50e2c3987238e8e
+ 2010-05-25T23:55:32.751818Z
+ 937
+ mdiponio
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/library/Sahara/Session/Element/.svn/all-wcprops prototype/trunk/library/Sahara/Session/Element/.svn/all-wcprops
+--- orig/library/Sahara/Session/Element/.svn/all-wcprops	2010-06-17 14:57:52.050840388 +1000
++++ prototype/trunk/library/Sahara/Session/Element/.svn/all-wcprops	2010-06-11 22:48:14.000000000 +1000
+@@ -1,12 +1,12 @@
+ K 25
+ svn:wc:ra_dav:version-url
+ V 83
+-/projects/personal/sahara/svn/!svn/ver/1043/WI/trunk/library/Sahara/Session/Element
++/projects/personal/sahara/svn/!svn/ver/1030/WI/trunk/library/Sahara/Session/Element
+ END
+ HeaderMagic.php
+ K 25
+ svn:wc:ra_dav:version-url
+ V 99
+ /projects/personal/sahara/svn/!svn/ver/1014/WI/trunk/library/Sahara/Session/Element/HeaderMagic.php
+ END
+ Cameras.php
+@@ -37,11 +37,11 @@
+ K 25
+ svn:wc:ra_dav:version-url
+ V 100
+ /projects/personal/sahara/svn/!svn/ver/674/WI/trunk/library/Sahara/Session/Element/RemoteDesktop.php
+ END
+ LeftRightPush.php
+ K 25
+ svn:wc:ra_dav:version-url
+-V 101
+-/projects/personal/sahara/svn/!svn/ver/1042/WI/trunk/library/Sahara/Session/Element/LeftRightPush.php
++V 100
++/projects/personal/sahara/svn/!svn/ver/832/WI/trunk/library/Sahara/Session/Element/LeftRightPush.php
+ END
+diff -r -U 8 orig/library/Sahara/Session/Element/.svn/entries prototype/trunk/library/Sahara/Session/Element/.svn/entries
+--- orig/library/Sahara/Session/Element/.svn/entries	2010-06-17 14:57:52.050840388 +1000
++++ prototype/trunk/library/Sahara/Session/Element/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,19 +1,19 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/library/Sahara/Session/Element
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+-2010-06-15T06:39:49.744928Z
+-1043
++2010-06-10T00:43:06.569137Z
++1030
+ mdiponio
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ HeaderMagic.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.050840Z
++2010-06-11T12:48:14.000000Z
+ c35d7fad9daa4f5cdd1a546ddd0f9335
+ 2010-06-07T05:31:47.100879Z
+ 1014
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -61,17 +61,17 @@
+ 2034
+ 
+ Cameras.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.050840Z
++2010-06-11T12:48:14.000000Z
+ f34df2367cf6c48b82d989be1cc32ae6
+ 2010-06-07T07:36:55.068649Z
+ 1015
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -95,17 +95,17 @@
+ 6927
+ 
+ RdpApplet.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.050840Z
++2010-06-11T12:48:14.000000Z
+ 2f4dddd7ec94d82f75f0c457434ad972
+ 2010-05-05T10:07:58.929641Z
+ 832
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -129,17 +129,17 @@
+ 2084
+ 
+ RemoteDesktopAuthDetails.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.050840Z
++2010-06-11T12:48:14.000000Z
+ 0bd844a94fa70e4a2604c2c61f638792
+ 2010-05-13T14:21:43.470807Z
+ 852
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -175,17 +175,17 @@
+ dir
+ 
+ FileTransfer.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.050840Z
++2010-06-11T12:48:14.000000Z
+ 8ed59cd3785342c6da1bec220b400ba2
+ 2010-05-28T02:15:52.035573Z
+ 976
+ tmachet
+ 
+ 
+ 
+ 
+@@ -215,17 +215,17 @@
+ dir
+ 
+ RemoteDesktop.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.050840Z
++2010-06-11T12:48:14.000000Z
+ 465369e1ba3ba57476840b7c204ae417
+ 2010-04-12T03:06:55.448376Z
+ 674
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -252,20 +252,20 @@
+ dir
+ 
+ LeftRightPush.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.050840Z
+-7c505f412dc4248db165339b09e93308
+-2010-06-15T06:35:48.603700Z
+-1042
++2010-06-11T12:48:14.000000Z
++703c7db136d1a910f38e3c817d1263a3
++2010-05-05T10:07:58.929641Z
++832
+ mdiponio
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+@@ -278,10 +278,10 @@
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+-4348
++3894
+ 
+diff -r -U 8 orig/library/Sahara/Session/Element/.svn/text-base/LeftRightPush.php.svn-base prototype/trunk/library/Sahara/Session/Element/.svn/text-base/LeftRightPush.php.svn-base
+--- orig/library/Sahara/Session/Element/.svn/text-base/LeftRightPush.php.svn-base	2010-06-17 14:57:52.050840388 +1000
++++ prototype/trunk/library/Sahara/Session/Element/.svn/text-base/LeftRightPush.php.svn-base	2010-06-11 22:48:14.000000000 +1000
+@@ -55,33 +55,28 @@
+ class Sahara_Session_Element_LeftRightPush extends Sahara_Session_Element
+ {
+     /** @var int The amount to push the left contents in pixels. */
+     private $_leftPush;
+ 
+     /** @var int The amount to push the rig contents in pixels. */
+     private $_rightPush;
+ 
+-    /** @var int The top offset of right. */
+-    private $_rightTop;
+-
+     /**
+      * Constructor.
+-     * @param String $rigClient rig client URL
+-     * @param int $left the amount to push left (optional)
+-     * @param int $right the amount to push right (optional)
+-     * @param int $rightTop the vertical offset of right (optional)
++     * @param String $rigClient Rig client URL.
++     * @param int $left The amount to push left (optional)
++     * @param int $right The amount to push right (optional)
+      */
+-    public function __construct($rigClient, $left = 0, $right = 0, $rightTop = 0)
++    public function __construct($rigClient, $left = 0, $right = 0)
+     {
+         parent::__construct($rigClient);
+ 
+         $this->_leftPush = $left;
+         $this->_rightPush = $right;
+-        $this->_rightTop = $rightTop;
+     }
+ 
+     /**
+      * Sets the left push distance.
+      *
+      * @param int $pixels distance in pixels
+      */
+     public function setLeftPush($pixels)
+@@ -94,27 +89,16 @@
+      *
+      * @param int $pixels distance in pixels
+      */
+     public function setRightPush($pixels)
+     {
+         $this->_rightPush = $pixels;
+     }
+ 
+-    /**
+-     * Sets the right top offset from its normal height.
+-     *
+-     * @param int $pixels right top offset
+-     */
+-    public function setRightTop($pixels)
+-    {
+-        $this->_rightTop = $pixels;
+-    }
+-
+     public function render()
+     {
+         $this->_view->leftPush = $this->_leftPush;
+         $this->_view->rightPush = $this->_rightPush;
+-        $this->_view->rightTop = $this->_rightTop;
+ 
+         return $this->_view->render('LeftRightPush/_leftRightPush.phtml');
+     }
+ }
+\ No newline at end of file
+diff -r -U 8 orig/library/Sahara/Session/.svn/all-wcprops prototype/trunk/library/Sahara/Session/.svn/all-wcprops
+--- orig/library/Sahara/Session/.svn/all-wcprops	2010-06-17 14:57:52.050840388 +1000
++++ prototype/trunk/library/Sahara/Session/.svn/all-wcprops	2010-06-11 22:48:14.000000000 +1000
+@@ -1,11 +1,11 @@
+ K 25
+ svn:wc:ra_dav:version-url
+ V 75
+-/projects/personal/sahara/svn/!svn/ver/1043/WI/trunk/library/Sahara/Session
++/projects/personal/sahara/svn/!svn/ver/1030/WI/trunk/library/Sahara/Session
+ END
+ Element.php
+ K 25
+ svn:wc:ra_dav:version-url
+ V 86
+ /projects/personal/sahara/svn/!svn/ver/946/WI/trunk/library/Sahara/Session/Element.php
+ END
+diff -r -U 8 orig/library/Sahara/Session/.svn/entries prototype/trunk/library/Sahara/Session/.svn/entries
+--- orig/library/Sahara/Session/.svn/entries	2010-06-17 14:57:52.050840388 +1000
++++ prototype/trunk/library/Sahara/Session/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,19 +1,19 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/library/Sahara/Session
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+-2010-06-15T06:39:49.744928Z
+-1043
++2010-06-10T00:43:06.569137Z
++1030
+ mdiponio
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ Element.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.050840Z
++2010-06-11T12:48:14.000000Z
+ e48ba41cadb8700d0fc9fe7c7641b8bd
+ 2010-05-26T08:14:23.220499Z
+ 946
+ mdiponio
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/library/Sahara/Soap.php prototype/trunk/library/Sahara/Soap.php
+--- orig/library/Sahara/Soap.php	2010-06-17 14:57:52.098823162 +1000
++++ prototype/trunk/library/Sahara/Soap.php	2010-06-17 00:13:32.000000000 +1000
+@@ -29,43 +29,49 @@
+  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  *
+  * @author Michael Diponio (mdiponio)
+  * @date  18th March 2010
++ * 
++ * @author Herbert Yeung
++ * @date  25th May 2010
++ * Modification: Added SOAP interface to access SchedServer-LabConnector bundle
+  */
+ 
+ /**
+  * Class to call SOAP methods for SAHARA services.
+  */
+ class Sahara_Soap
+ {
+     /** The bundle containing the Permissions SOAP interface in the Scheduling Server. */
+     const PERMISSIONS_SERVICE_BUNDLE = 'SchedulingServer-Permissions';
+ 
+     /** The bundle containing the Queuer SOAP interface in the Scheduling Server. */
+     const QUEUER_SERVICE_BUNDLE = 'SchedulingServer-Queuer';
+ 
+     /** The bundle containing the Session SOAP interface in the Scheduling Server. */
+     const SESSION_SERVICE_BUNDLE = 'SchedulingServer-Session';
+-
++    
++    /** The bundle containing the LabConnector SOAP interface in the Scheduling Server. */
++    const LABCONNECTOR_SERVICE_BUNDLE = 'SchedServer-LabConnector';
++    
+     /** The SOAP client which points to the SOAP service. */
+     protected $_client;
+ 
+     /** The location to the WSDL. */
+     protected $_wsdl;
+ 
+     /**
+      * Creates a SOAP client and gets the WSDL from the specified URI.
+      *
+-     * @param String $uri URI to the WSDL file
+-     * @param String $location URI to server to use instead of WSDL SOAP address (optional)
++     * @param string $uri URI to the WSDL file
+      * @throws @throws Exception if failed contacting Scheduling Server
+      */
+     public function __construct($uri, $location = null)
+     {
+         $this->_wsdl = $uri;
+ 
+         $opts = array();
+ 
+@@ -163,16 +169,34 @@
+         {
+             Zend_Registry::set(self::SESSION_SERVICE_BUNDLE,
+                     self::createSchedServerClient('Session', self::SESSION_SERVICE_BUNDLE));
+         }
+         return Zend_Registry::get(self::SESSION_SERVICE_BUNDLE);
+     }
+ 
+     /**
++     * Gets a Sahara_Soap instance which points to the LabConnector interface
++     * of the Scheduling Server.
++     *
++     * @return Sahara_Soap instance
++     * @throws Exception if failed contacting Scheduling Server
++     */
++    public static function getSchedServerLabConnectorClient()
++    {
++        if (!Zend_Registry::isRegistered(self::LABCONNECTOR_SERVICE_BUNDLE))
++        {
++            Zend_Registry::set(self::LABCONNECTOR_SERVICE_BUNDLE,
++                    self::createSchedServerClient('LabConnector', self::LABCONNECTOR_SERVICE_BUNDLE));
++        }
++        return Zend_Registry::get(self::LABCONNECTOR_SERVICE_BUNDLE);
++    }
++
++
++    /**
+      * Calls a SOAP operation on the SOAP client.
+      *
+      * @param String $name name of the operation
+      * @param array $params operation parameters
+      * @return mixed
+      */
+     public function __call($name, $params)
+     {
+diff -r -U 8 orig/library/Sahara/.svn/all-wcprops prototype/trunk/library/Sahara/.svn/all-wcprops
+--- orig/library/Sahara/.svn/all-wcprops	2010-06-17 14:57:52.098823162 +1000
++++ prototype/trunk/library/Sahara/.svn/all-wcprops	2010-06-11 22:48:14.000000000 +1000
+@@ -1,12 +1,12 @@
+ K 25
+ svn:wc:ra_dav:version-url
+ V 67
+-/projects/personal/sahara/svn/!svn/ver/1052/WI/trunk/library/Sahara
++/projects/personal/sahara/svn/!svn/ver/1030/WI/trunk/library/Sahara
+ END
+ DateTimeUtil.php
+ K 25
+ svn:wc:ra_dav:version-url
+ V 83
+ /projects/personal/sahara/svn/!svn/ver/538/WI/trunk/library/Sahara/DateTimeUtil.php
+ END
+ Acl.php
+diff -r -U 8 orig/library/Sahara/.svn/entries prototype/trunk/library/Sahara/.svn/entries
+--- orig/library/Sahara/.svn/entries	2010-06-17 14:57:52.098823162 +1000
++++ prototype/trunk/library/Sahara/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,19 +1,19 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/library/Sahara
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+-2010-06-17T00:09:22.188166Z
+-1052
++2010-06-10T00:43:06.569137Z
++1030
+ mdiponio
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ DateTimeUtil.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.096381Z
++2010-06-11T12:48:14.000000Z
+ 0fc37502ee00bca33e768a97674c850c
+ 2010-03-24T22:57:00.551822Z
+ 538
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -70,17 +70,17 @@
+ dir
+ 
+ Acl.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.096381Z
++2010-06-11T12:48:14.000000Z
+ 349fcc6b3f4f127596cb38bf82941d7d
+ 2010-05-08T03:01:49.700367Z
+ 839
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -104,17 +104,17 @@
+ 6759
+ 
+ Logger.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.098823Z
++2010-06-11T12:48:14.000000Z
+ 3cf8f8060dbdc7d3eef5e878350d9cb5
+ 2010-03-18T07:16:21.424578Z
+ 520
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -138,17 +138,17 @@
+ 4437
+ 
+ DefaultInfo.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.098823Z
++2010-06-11T12:48:14.000000Z
+ 350908e00c13fd4d5dea187c9ae7b479
+ 2010-05-21T04:30:10.927915Z
+ 917
+ tmachet
+ 
+ 
+ 
+ 
+@@ -172,17 +172,17 @@
+ 7471
+ 
+ Mail.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.098823Z
++2010-06-11T12:48:14.000000Z
+ edf35607de374f2229309dfd9025d7b9
+ 2010-04-21T08:09:17.713369Z
+ 744
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -206,17 +206,17 @@
+ 4757
+ 
+ Soap.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.098823Z
++2010-06-11T12:48:14.000000Z
+ 4a944b115f313530efad7f1e88e50439
+ 2010-05-25T23:55:06.208242Z
+ 936
+ mdiponio
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/library/.svn/all-wcprops prototype/trunk/library/.svn/all-wcprops
+--- orig/library/.svn/all-wcprops	2010-06-17 14:57:52.098823162 +1000
++++ prototype/trunk/library/.svn/all-wcprops	2010-06-11 22:48:14.000000000 +1000
+@@ -1,5 +1,5 @@
+ K 25
+ svn:wc:ra_dav:version-url
+ V 60
+-/projects/personal/sahara/svn/!svn/ver/1052/WI/trunk/library
++/projects/personal/sahara/svn/!svn/ver/1030/WI/trunk/library
+ END
+diff -r -U 8 orig/library/.svn/entries prototype/trunk/library/.svn/entries
+--- orig/library/.svn/entries	2010-06-17 14:57:52.098823162 +1000
++++ prototype/trunk/library/.svn/entries	2010-06-11 22:48:14.000000000 +1000
+@@ -1,19 +1,19 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/library
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+-2010-06-17T00:09:22.188166Z
+-1052
++2010-06-10T00:43:06.569137Z
++1030
+ mdiponio
+ has-props
+ 
+ 
+ 
+ 
+ 
+ 
+Only in prototype/trunk/library: Zend
+diff -r -U 8 orig/.project prototype/trunk/.project
+--- orig/.project	2010-06-17 14:57:54.250823668 +1000
++++ prototype/trunk/.project	2010-06-12 11:12:41.000000000 +1000
+@@ -1,16 +1,21 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <projectDescription>
+ 	<name>WI</name>
+ 	<comment></comment>
+ 	<projects>
+ 	</projects>
+ 	<buildSpec>
+ 		<buildCommand>
++			<name>org.eclipse.wst.common.project.facet.core.builder</name>
++			<arguments>
++			</arguments>
++		</buildCommand>
++		<buildCommand>
+ 			<name>org.eclipse.wst.jsdt.core.javascriptValidator</name>
+ 			<arguments>
+ 			</arguments>
+ 		</buildCommand>
+ 		<buildCommand>
+ 			<name>org.eclipse.wst.validation.validationbuilder</name>
+ 			<arguments>
+ 			</arguments>
+@@ -19,10 +24,11 @@
+ 			<name>org.eclipse.dltk.core.scriptbuilder</name>
+ 			<arguments>
+ 			</arguments>
+ 		</buildCommand>
+ 	</buildSpec>
+ 	<natures>
+ 		<nature>org.eclipse.php.core.PHPNature</nature>
+ 		<nature>org.eclipse.wst.jsdt.core.jsNature</nature>
++		<nature>org.eclipse.wst.common.project.facet.core.nature</nature>
+ 	</natures>
+ </projectDescription>
+diff -r -U 8 orig/public/applets/.svn/entries prototype/trunk/public/applets/.svn/entries
+--- orig/public/applets/.svn/entries	2010-06-17 14:57:52.814823112 +1000
++++ prototype/trunk/public/applets/.svn/entries	2010-06-11 22:48:15.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/public/applets
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-06-01T08:00:00.244900Z
+ 993
+ mdiponio
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ unsignedsaharardpapplet.jar
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.813173Z
++2010-06-11T12:48:15.000000Z
+ 12819e031f51afa7deadfb223cec3e3f
+ 2010-06-01T08:00:00.244900Z
+ 993
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -61,17 +61,17 @@
+ 327890
+ 
+ ssaharardpapplet.jar
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.814823Z
++2010-06-11T12:48:15.000000Z
+ 9c50d361df2ff0985313723b9429827b
+ 2010-06-01T08:00:00.244900Z
+ 993
+ mdiponio
+ has-props
+ 
+ 
+ 
+diff -r -U 8 orig/public/css/elements/.svn/entries prototype/trunk/public/css/elements/.svn/entries
+--- orig/public/css/elements/.svn/entries	2010-06-17 14:57:52.955205675 +1000
++++ prototype/trunk/public/css/elements/.svn/entries	2010-06-11 22:48:15.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/public/css/elements
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-06-09T02:27:56.250273Z
+ 1026
+ mdiponio
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ cameras.css
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.955205Z
++2010-06-11T12:48:15.000000Z
+ 4b833c49861f6b9c4ba7270ffbaae68e
+ 2010-06-09T02:27:56.250273Z
+ 1026
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -61,17 +61,17 @@
+ 2357
+ 
+ filetransfer.css
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.955205Z
++2010-06-11T12:48:15.000000Z
+ 401d3147be2ffe1c0372557fd63ba829
+ 2010-05-27T09:00:17.003834Z
+ 952
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -95,17 +95,17 @@
+ 3397
+ 
+ remotedesktop.css
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.955205Z
++2010-06-11T12:48:15.000000Z
+ de842ee9cbba43d219b2fe0bfeaecb78
+ 2010-04-12T03:06:55.448376Z
+ 674
+ mdiponio
+ 
+ 
+ 
+ 
+Only in prototype/trunk/public/css: labconnector.css
+diff -r -U 8 orig/public/css/smoothness/images/.svn/entries prototype/trunk/public/css/smoothness/images/.svn/entries
+--- orig/public/css/smoothness/images/.svn/entries	2010-06-17 14:57:52.834822986 +1000
++++ prototype/trunk/public/css/smoothness/images/.svn/entries	2010-06-11 22:48:15.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/public/css/smoothness/images
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-03-22T01:22:31.285132Z
+ 524
+ mdiponio
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ ui-icons_2e83ff_256x240.png
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.830823Z
++2010-06-11T12:48:15.000000Z
+ 2b99a5e48d3c3957d03027d36a25e8bb
+ 2010-03-22T01:22:31.285132Z
+ 524
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -61,17 +61,17 @@
+ 4369
+ 
+ ui-bg_glass_95_fef1ec_1x400.png
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.830823Z
++2010-06-11T12:48:15.000000Z
+ 5a3be2d8fff8324d59aec3df7b0a0c83
+ 2010-03-22T01:22:31.285132Z
+ 524
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -95,17 +95,17 @@
+ 119
+ 
+ ui-icons_888888_256x240.png
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.830823Z
++2010-06-11T12:48:15.000000Z
+ 9c46d7cab43e22a14bad26d2d4806d80
+ 2010-03-22T01:22:31.285132Z
+ 524
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -129,17 +129,17 @@
+ 4369
+ 
+ ui-bg_glass_55_fbf9ee_1x400.png
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.830823Z
++2010-06-11T12:48:15.000000Z
+ f8f4558e0b92ff2cd6136781533902ec
+ 2010-03-22T01:22:31.285132Z
+ 524
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -163,17 +163,17 @@
+ 120
+ 
+ ui-bg_glass_75_dadada_1x400.png
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.834822Z
++2010-06-11T12:48:15.000000Z
+ c12c6510dad3ebfa64c8a30e959a2469
+ 2010-03-22T01:22:31.285132Z
+ 524
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -197,17 +197,17 @@
+ 111
+ 
+ ui-bg_flat_75_ffffff_40x100.png
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.834822Z
++2010-06-11T12:48:15.000000Z
+ 8692e6efddf882acbff144c38ea7dfdf
+ 2010-03-22T01:22:31.285132Z
+ 524
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -231,17 +231,17 @@
+ 178
+ 
+ ui-bg_glass_75_e6e6e6_1x400.png
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.834822Z
++2010-06-11T12:48:15.000000Z
+ f4254356c2a8c9a383205ef2c4de22c4
+ 2010-03-22T01:22:31.285132Z
+ 524
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -265,17 +265,17 @@
+ 110
+ 
+ ui-bg_glass_65_ffffff_1x400.png
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.834822Z
++2010-06-11T12:48:15.000000Z
+ e5a8f32e28fd5c27bf0fed33c8a8b9b5
+ 2010-03-22T01:22:31.285132Z
+ 524
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -299,17 +299,17 @@
+ 105
+ 
+ ui-bg_highlight-soft_75_cccccc_1x100.png
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.834822Z
++2010-06-11T12:48:15.000000Z
+ 72c593d16e998952cd8d798fee33c6f3
+ 2010-03-22T01:22:31.285132Z
+ 524
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -333,17 +333,17 @@
+ 101
+ 
+ ui-icons_cd0a0a_256x240.png
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.834822Z
++2010-06-11T12:48:15.000000Z
+ 3e450c2a2c66328d9498e7001ad7197c
+ 2010-03-22T01:22:31.285132Z
+ 524
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -367,17 +367,17 @@
+ 4369
+ 
+ ui-bg_flat_0_aaaaaa_40x100.png
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.834822Z
++2010-06-11T12:48:15.000000Z
+ 2a44fbdb7360c60122bcf6dcef0387d8
+ 2010-03-22T01:22:31.285132Z
+ 524
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -401,17 +401,17 @@
+ 180
+ 
+ ui-icons_454545_256x240.png
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.834822Z
++2010-06-11T12:48:15.000000Z
+ 119dd0c2e94ad689de873ef39fd43e6e
+ 2010-03-22T01:22:31.285132Z
+ 524
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -435,17 +435,17 @@
+ 4369
+ 
+ ui-icons_222222_256x240.png
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.834822Z
++2010-06-11T12:48:15.000000Z
+ ebe6b6902a408fbf9cac6379a1477525
+ 2010-03-22T01:22:31.285132Z
+ 524
+ mdiponio
+ has-props
+ 
+ 
+ 
+diff -r -U 8 orig/public/css/smoothness/.svn/entries prototype/trunk/public/css/smoothness/.svn/entries
+--- orig/public/css/smoothness/.svn/entries	2010-06-17 14:57:52.870974499 +1000
++++ prototype/trunk/public/css/smoothness/.svn/entries	2010-06-11 22:48:15.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/public/css/smoothness
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-05-11T01:00:28.447126Z
+ 848
+ mdiponio
+@@ -30,17 +30,17 @@
+ dir
+ 
+ jquery-ui.custom.css
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.870974Z
++2010-06-11T12:48:15.000000Z
+ 271e36574f3511786c319265c502abc1
+ 2010-05-11T01:00:28.447126Z
+ 848
+ mdiponio
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/public/css/.svn/entries prototype/trunk/public/css/.svn/entries
+--- orig/public/css/.svn/entries	2010-06-17 14:57:52.958822759 +1000
++++ prototype/trunk/public/css/.svn/entries	2010-06-11 22:48:15.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/public/css
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-06-10T23:50:08.894666Z
+ 1033
+ tmachet
+@@ -30,17 +30,17 @@
+ dir
+ 
+ info.css
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.955205Z
++2010-06-11T12:48:15.000000Z
+ de56c23295c3d79d63b3640181847221
+ 2010-05-24T04:22:21.431517Z
+ 926
+ tmachet
+ 
+ 
+ 
+ 
+@@ -64,17 +64,17 @@
+ 1475
+ 
+ layout.css
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.955205Z
++2010-06-11T12:48:15.000000Z
+ 87dc0cf30518f159bd7dae2b2b887491
+ 2010-06-06T11:30:34.000925Z
+ 1008
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -98,17 +98,17 @@
+ 6475
+ 
+ validationEngine.jquery.css
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.955205Z
++2010-06-11T12:48:15.000000Z
+ 1998a0bdbd863c3d97bd982db730b415
+ 2010-03-22T01:22:31.285132Z
+ 524
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -132,17 +132,17 @@
+ 2590
+ 
+ form.css
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.955205Z
++2010-06-11T12:48:15.000000Z
+ 771799e735a8e04c06a326b75c77eb23
+ 2010-05-09T07:21:52.456431Z
+ 842
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -166,17 +166,17 @@
+ 351
+ 
+ session.css
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.955205Z
++2010-06-11T12:48:15.000000Z
+ f899aa53d275ff3e305c7bfe47086b5c
+ 2010-06-06T22:53:51.137608Z
+ 1009
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -200,17 +200,17 @@
+ 4089
+ 
+ queue.css
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.955205Z
++2010-06-11T12:48:15.000000Z
+ cab5bef70dda5fbac6b67608b0c3ae7b
+ 2010-06-10T23:50:08.894666Z
+ 1033
+ tmachet
+ 
+ 
+ 
+ 
+@@ -237,17 +237,17 @@
+ dir
+ 
+ jqtransform.css
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.958822Z
++2010-06-11T12:48:15.000000Z
+ 355a579969311c77d762af56eea14fb7
+ 2010-03-22T06:34:56.347162Z
+ 525
+ mdiponio
+ has-props
+ 
+ 
+ 
+diff -r -U 8 orig/public/images/balls/.svn/entries prototype/trunk/public/images/balls/.svn/entries
+--- orig/public/images/balls/.svn/entries	2010-06-17 14:57:52.550822913 +1000
++++ prototype/trunk/public/images/balls/.svn/entries	2010-06-11 22:48:15.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/public/images/balls
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-05-24T04:22:21.431517Z
+ 926
+ tmachet
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ yellow.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.550822Z
++2010-06-11T12:48:15.000000Z
+ aed202b1e621b9643a1767ba6787faa1
+ 2010-03-31T05:22:15.206077Z
+ 583
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -61,17 +61,17 @@
+ 1267
+ 
+ green.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.550822Z
++2010-06-11T12:48:15.000000Z
+ 549b7c4387572c33da51c24a5c547e23
+ 2010-03-31T05:22:15.206077Z
+ 583
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -95,17 +95,17 @@
+ 1955
+ 
+ Thumbs.db
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.550822Z
++2010-06-11T12:48:15.000000Z
+ aee4cd04bec904bc0d83f73502170de4
+ 2010-05-24T04:22:21.431517Z
+ 926
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -129,17 +129,17 @@
+ 17920
+ 
+ red_small.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.550822Z
++2010-06-11T12:48:15.000000Z
+ 854336adb5d6f7e4f83974b1569d5ea7
+ 2010-03-31T05:22:15.206077Z
+ 583
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -163,17 +163,17 @@
+ 1207
+ 
+ yellow_small.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.550822Z
++2010-06-11T12:48:15.000000Z
+ 1f2cd0b403079baff7efb8cfd6df34e8
+ 2010-03-31T05:22:15.206077Z
+ 583
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -197,17 +197,17 @@
+ 1217
+ 
+ blue.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.550822Z
++2010-06-11T12:48:15.000000Z
+ d3817dc4882d98db668ba76a593813fa
+ 2010-03-31T05:22:15.206077Z
+ 583
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -231,17 +231,17 @@
+ 1358
+ 
+ green_small.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.550822Z
++2010-06-11T12:48:15.000000Z
+ 2ad233b4a959d387263825ec55f0522b
+ 2010-03-31T05:22:15.206077Z
+ 583
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -265,17 +265,17 @@
+ 794
+ 
+ red.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.550822Z
++2010-06-11T12:48:15.000000Z
+ 24cade7fd9c391ea6a0d3388cddaaaa7
+ 2010-03-31T05:22:15.206077Z
+ 583
+ mdiponio
+ has-props
+ 
+ 
+ 
+diff -r -U 8 orig/public/images/.svn/entries prototype/trunk/public/images/.svn/entries
+--- orig/public/images/.svn/entries	2010-06-17 14:57:52.554823325 +1000
++++ prototype/trunk/public/images/.svn/entries	2010-06-11 22:48:15.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/public/images
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-05-28T02:15:52.035573Z
+ 976
+ tmachet
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ queuing.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.550822Z
++2010-06-11T12:48:15.000000Z
+ 57ca1a2085d82f0574e3ef740b9a5ead
+ 2010-04-04T07:59:13.358278Z
+ 601
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -61,17 +61,17 @@
+ 10819
+ 
+ Sahara.png
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.550822Z
++2010-06-11T12:48:15.000000Z
+ 4dc7c1b6052341f41cb525cd5f690968
+ 2010-05-21T04:30:10.927915Z
+ 917
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -95,17 +95,17 @@
+ 16952
+ 
+ ajax-loading.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.550822Z
++2010-06-11T12:48:15.000000Z
+ 394bafc3cc4dfb3a0ee48c1f54669539
+ 2010-03-25T21:47:47.788772Z
+ 542
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -129,17 +129,17 @@
+ 2608
+ 
+ labshare.png
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.550822Z
++2010-06-11T12:48:15.000000Z
+ 02d566f5dc148441186ca15e40050f81
+ 2010-03-19T04:31:24.648978Z
+ 521
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -163,17 +163,17 @@
+ 15673
+ 
+ permission_launch.png
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.550822Z
++2010-06-11T12:48:15.000000Z
+ 0c5d2d5363d41f89d11a72e9098b389f
+ 2010-05-27T22:50:35.512803Z
+ 955
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -197,17 +197,17 @@
+ 1670
+ 
+ 9907_03_2_prev.jpg
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.554823Z
++2010-06-11T12:48:15.000000Z
+ 7aa6e3c4c51a33c32d4d8e45fd1c56fa
+ 2010-05-21T04:30:10.927915Z
+ 917
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -231,17 +231,17 @@
+ 240638
+ 
+ IPRparts.png
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.554823Z
++2010-06-11T12:48:15.000000Z
+ f192f6d394562e18743e8cfc7fb92b7f
+ 2010-05-28T02:15:52.035573Z
+ 976
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -265,17 +265,17 @@
+ 302463
+ 
+ feedback.png
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.554823Z
++2010-06-11T12:48:15.000000Z
+ 3ccc9e6f7b0efc162bcb192f2c901755
+ 2010-05-27T22:50:35.512803Z
+ 955
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -299,17 +299,17 @@
+ 2417
+ 
+ cancel.png
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.554823Z
++2010-06-11T12:48:15.000000Z
+ 8bb77965860eb186725d1fabfcf8edf8
+ 2010-05-27T22:50:35.512803Z
+ 955
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -333,17 +333,17 @@
+ 2873
+ 
+ alert.png
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.554823Z
++2010-06-11T12:48:15.000000Z
+ 0e5699a3db6b409652d82dd90df56cd0
+ 2010-03-22T11:12:23.812422Z
+ 527
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -367,17 +367,17 @@
+ 8249
+ 
+ permission_expired.png
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.554823Z
++2010-06-11T12:48:15.000000Z
+ 7e3e9ff522d5a494fb51ef907d586ca9
+ 2010-04-12T03:06:55.448376Z
+ 674
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -401,17 +401,17 @@
+ 1854
+ 
+ logout.png
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.554823Z
++2010-06-11T12:48:15.000000Z
+ 6e81635854594f19fbe3ab4d6a19a321
+ 2010-05-27T22:50:35.512803Z
+ 955
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -435,17 +435,17 @@
+ 4245
+ 
+ permission_locked.png
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.554823Z
++2010-06-11T12:48:15.000000Z
+ 36f85cb5da08d29ecc6c95893c4a27f7
+ 2010-04-12T03:06:55.448376Z
+ 674
+ mdiponio
+ has-props
+ 
+ 
+ 
+Only in orig/public/img: ._btn_left.gif
+Only in orig/public/img: ._btn_right.gif
+Only in orig/public/img/input: ._input_left-focus.gif
+Only in orig/public/img/input: ._input_left.gif
+Only in orig/public/img/input: ._input_left-hover.gif
+Only in orig/public/img/input: ._input_right-focus.gif
+Only in orig/public/img/input: ._input_right.gif
+Only in orig/public/img/input: ._input_right-hover.gif
+Only in orig/public/img/input: ._input_text_left.gif
+Only in orig/public/img/input: ._input_text_right.gif
+diff -r -U 8 orig/public/img/input/.svn/entries prototype/trunk/public/img/input/.svn/entries
+--- orig/public/img/input/.svn/entries	2010-06-17 14:57:53.898823381 +1000
++++ prototype/trunk/public/img/input/.svn/entries	2010-06-11 22:48:18.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/public/img/input
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ input_text_left.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.894824Z
++2010-06-11T12:48:18.000000Z
+ ffb39518df0d9c1bdea9cf525b4620ef
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -61,17 +61,17 @@
+ 3284
+ 
+ input_right-hover.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.894824Z
++2010-06-11T12:48:18.000000Z
+ edad615b9ee7313ea0e700dafaf33b0b
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -95,17 +95,17 @@
+ 236
+ 
+ ._input_text_right.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.894824Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -129,17 +129,17 @@
+ 82
+ 
+ input_left-focus.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.898823Z
++2010-06-11T12:48:18.000000Z
+ cfe5f3d5bbbc7b65ca6b7c957836332d
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -163,17 +163,17 @@
+ 1401
+ 
+ ._input_right-focus.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.898823Z
++2010-06-11T12:48:18.000000Z
+ 8c4c65bc6543b6ecc6f19a3b319f05cc
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -197,17 +197,17 @@
+ 46162
+ 
+ ._input_left.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.898823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -231,17 +231,17 @@
+ 82
+ 
+ input_left-hover.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.898823Z
++2010-06-11T12:48:18.000000Z
+ e9b3e31760ed17d3dee3b4f3eaa56255
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -265,17 +265,17 @@
+ 1401
+ 
+ ._input_text_left.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.898823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -299,17 +299,17 @@
+ 82
+ 
+ ._input_right-hover.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.898823Z
++2010-06-11T12:48:18.000000Z
+ b369c56c6e33565da0a93da8f37eb9dc
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -333,17 +333,17 @@
+ 46188
+ 
+ input_right.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.898823Z
++2010-06-11T12:48:18.000000Z
+ c98068753e3bc322ddfab09b860b087c
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -367,17 +367,17 @@
+ 173
+ 
+ input_text_right.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.898823Z
++2010-06-11T12:48:18.000000Z
+ 8e7e93172feb488d7113bc3a60ce3377
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -401,17 +401,17 @@
+ 460
+ 
+ ._input_left-focus.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.898823Z
++2010-06-11T12:48:18.000000Z
+ 488972bb596bb8a1fad12ffbcad7cbce
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -435,17 +435,17 @@
+ 45625
+ 
+ ._input_left-hover.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.898823Z
++2010-06-11T12:48:18.000000Z
+ 035bec1858f0d3f79d6dfe3e694d0115
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -469,17 +469,17 @@
+ 45625
+ 
+ input_left.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.898823Z
++2010-06-11T12:48:18.000000Z
+ fec556cc0357b43ba14f9de72aaf30d9
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -503,17 +503,17 @@
+ 1268
+ 
+ ._input_right.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.898823Z
++2010-06-11T12:48:18.000000Z
+ 0277150f4d41d53d0b740f96a2363830
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -537,17 +537,17 @@
+ 46057
+ 
+ input_right-focus.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.898823Z
++2010-06-11T12:48:18.000000Z
+ 488e2602600b8c01ef631c12213dff28
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+Only in orig/public/img/input/.svn/prop-base: ._input_left-focus.gif.svn-base
+Only in orig/public/img/input/.svn/prop-base: ._input_left.gif.svn-base
+Only in orig/public/img/input/.svn/prop-base: ._input_left-hover.gif.svn-base
+Only in orig/public/img/input/.svn/prop-base: ._input_right-focus.gif.svn-base
+Only in orig/public/img/input/.svn/prop-base: ._input_right.gif.svn-base
+Only in orig/public/img/input/.svn/prop-base: ._input_right-hover.gif.svn-base
+Only in orig/public/img/input/.svn/prop-base: ._input_text_left.gif.svn-base
+Only in orig/public/img/input/.svn/prop-base: ._input_text_right.gif.svn-base
+Only in orig/public/img/input/.svn/text-base: ._input_left-focus.gif.svn-base
+Only in orig/public/img/input/.svn/text-base: ._input_left.gif.svn-base
+Only in orig/public/img/input/.svn/text-base: ._input_left-hover.gif.svn-base
+Only in orig/public/img/input/.svn/text-base: ._input_right-focus.gif.svn-base
+Only in orig/public/img/input/.svn/text-base: ._input_right.gif.svn-base
+Only in orig/public/img/input/.svn/text-base: ._input_right-hover.gif.svn-base
+Only in orig/public/img/input/.svn/text-base: ._input_text_left.gif.svn-base
+Only in orig/public/img/input/.svn/text-base: ._input_text_right.gif.svn-base
+diff -r -U 8 orig/public/img/.svn/entries prototype/trunk/public/img/.svn/entries
+--- orig/public/img/.svn/entries	2010-06-17 14:57:53.990823228 +1000
++++ prototype/trunk/public/img/.svn/entries	2010-06-11 22:48:18.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/public/img
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+@@ -30,17 +30,17 @@
+ dir
+ 
+ select_right.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.986823Z
++2010-06-11T12:48:18.000000Z
+ 652e75f7515419a10f6b8800f8f52ca3
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -64,17 +64,17 @@
+ 316
+ 
+ ._btn_right.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.986823Z
++2010-06-11T12:48:18.000000Z
+ 938560ae198bd5cc420cb5ad96c225ae
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -98,17 +98,17 @@
+ 336
+ 
+ btn_left.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.986823Z
++2010-06-11T12:48:18.000000Z
+ 71c86493a387e6e0d0b07e0dae8a27e8
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -132,17 +132,17 @@
+ 1263
+ 
+ radio.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.986823Z
++2010-06-11T12:48:18.000000Z
+ 0d2d0d69e39c30533e13522e75592e4d
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -166,17 +166,17 @@
+ 528
+ 
+ btn_right.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.986823Z
++2010-06-11T12:48:18.000000Z
+ 7fc1ed1a1952f3079186c3023a406c8e
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -200,17 +200,17 @@
+ 429
+ 
+ checkbox.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.990823Z
++2010-06-11T12:48:18.000000Z
+ d9c5559c4f54e0dafce2caf0bd63373c
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -237,17 +237,17 @@
+ dir
+ 
+ select_left.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.990823Z
++2010-06-11T12:48:18.000000Z
+ 01e82d1f5907fca8f7e546b2c0309edd
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -271,17 +271,17 @@
+ 1469
+ 
+ ._btn_left.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.990823Z
++2010-06-11T12:48:18.000000Z
+ 8d6e6b60495e430b3c4b0b2f20a09b26
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+Only in orig/public/img/.svn/prop-base: ._btn_left.gif.svn-base
+Only in orig/public/img/.svn/prop-base: ._btn_right.gif.svn-base
+Only in orig/public/img/.svn/text-base: ._btn_left.gif.svn-base
+Only in orig/public/img/.svn/text-base: ._btn_right.gif.svn-base
+diff -r -U 8 orig/public/img/textarea/notneeded/.svn/entries prototype/trunk/public/img/textarea/notneeded/.svn/entries
+--- orig/public/img/textarea/notneeded/.svn/entries	2010-06-17 14:57:53.978823256 +1000
++++ prototype/trunk/public/img/textarea/notneeded/.svn/entries	2010-06-11 22:48:18.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/public/img/textarea/notneeded
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ ._textarea-br-hover.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.962823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -61,17 +61,17 @@
+ 82
+ 
+ textarea-ml.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.962823Z
++2010-06-11T12:48:18.000000Z
+ 2bc4df0620f922b319698836cd58afe9
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -95,17 +95,17 @@
+ 68
+ 
+ ._textarea-tl-focus.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.966823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -129,17 +129,17 @@
+ 82
+ 
+ textarea-mm.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.966823Z
++2010-06-11T12:48:18.000000Z
+ ec8ec3da19e716a20174381ee1a9e0a1
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -163,17 +163,17 @@
+ 57
+ 
+ textarea-bl-focus.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.966823Z
++2010-06-11T12:48:18.000000Z
+ 488f702149fed93553ece25de6360502
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -197,17 +197,17 @@
+ 98
+ 
+ ._textarea-tm-focus.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.966823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -231,17 +231,17 @@
+ 82
+ 
+ ._textarea-bl.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.966823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -265,17 +265,17 @@
+ 82
+ 
+ textarea-bm-focus.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.966823Z
++2010-06-11T12:48:18.000000Z
+ 17c7ad3a5bd22b67fc45d7960bd3cc7f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -299,17 +299,17 @@
+ 54
+ 
+ ._textarea-bm.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.966823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -333,17 +333,17 @@
+ 82
+ 
+ ._textarea-tl-hover.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.966823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -367,17 +367,17 @@
+ 82
+ 
+ textarea-bl-hover.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.966823Z
++2010-06-11T12:48:18.000000Z
+ a1ec6c2cc98cf895327532b7be8e3fdc
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -401,17 +401,17 @@
+ 98
+ 
+ ._textarea-tm-hover.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.966823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -435,17 +435,17 @@
+ 82
+ 
+ textarea-mr.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.966823Z
++2010-06-11T12:48:18.000000Z
+ 7c8ea4f80139918213a8208167a7a598
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -469,17 +469,17 @@
+ 54
+ 
+ textarea-bm-hover.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.966823Z
++2010-06-11T12:48:18.000000Z
+ e71a6d6d03cdb7f5fe120dbead838391
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -503,17 +503,17 @@
+ 54
+ 
+ ._textarea-tr-focus.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.966823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -537,17 +537,17 @@
+ 82
+ 
+ ._textarea-br.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.966823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -571,17 +571,17 @@
+ 82
+ 
+ textarea-br-focus.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.966823Z
++2010-06-11T12:48:18.000000Z
+ e66e1bf62c99ac65eae7b4319a3ccae5
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -605,17 +605,17 @@
+ 70
+ 
+ ._textarea-tr-hover.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.966823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -639,17 +639,17 @@
+ 82
+ 
+ textarea-br-hover.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.970823Z
++2010-06-11T12:48:18.000000Z
+ 9898bef1617303eb061f94ca7b477d7f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -673,17 +673,17 @@
+ 70
+ 
+ ._textarea-tl.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.970823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -707,17 +707,17 @@
+ 82
+ 
+ textarea-tl-focus.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.970823Z
++2010-06-11T12:48:18.000000Z
+ 9116910b4dd29e49ce94af2fe8cfe21e
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -741,17 +741,17 @@
+ 152
+ 
+ textarea-bl.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.970823Z
++2010-06-11T12:48:18.000000Z
+ 2cd009d934f2d8bcdfcf52e65dc03444
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -775,17 +775,17 @@
+ 98
+ 
+ ._textarea-tm.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.970823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -809,17 +809,17 @@
+ 82
+ 
+ textarea-tm-focus.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.970823Z
++2010-06-11T12:48:18.000000Z
+ bd7c46b1f1a79d73779b42e13128623d
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -843,17 +843,17 @@
+ 101
+ 
+ textarea-bm.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.970823Z
++2010-06-11T12:48:18.000000Z
+ 757a26c81d12b17ae458cc6c3ddb7192
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -877,17 +877,17 @@
+ 47
+ 
+ textarea-tl-hover.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.970823Z
++2010-06-11T12:48:18.000000Z
+ 1f03f36045ddfb26da603197b2d3a101
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -911,17 +911,17 @@
+ 152
+ 
+ textarea-tm-hover.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.970823Z
++2010-06-11T12:48:18.000000Z
+ 9b327b379c4f3ae9895827af9535801e
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -945,17 +945,17 @@
+ 70
+ 
+ ._textarea-tr.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.970823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -979,17 +979,17 @@
+ 82
+ 
+ ._textarea-ml-focus.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.970823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -1013,17 +1013,17 @@
+ 82
+ 
+ textarea-tr-focus.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.970823Z
++2010-06-11T12:48:18.000000Z
+ a201652e4be4edb039e22439b54ad444
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -1047,17 +1047,17 @@
+ 101
+ 
+ textarea-br.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.970823Z
++2010-06-11T12:48:18.000000Z
+ 17240dc5a0a14312d36f8bcff0857c0a
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -1081,17 +1081,17 @@
+ 55
+ 
+ ._textarea-mm-focus.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.970823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -1115,17 +1115,17 @@
+ 82
+ 
+ ._textarea-ml-hover.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.970823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -1149,17 +1149,17 @@
+ 82
+ 
+ textarea-tr-hover.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.970823Z
++2010-06-11T12:48:18.000000Z
+ 7de988e8b472a36b0a4e2b1abdbef5b6
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -1183,17 +1183,17 @@
+ 101
+ 
+ ._textarea-mm-hover.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.974823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -1217,17 +1217,17 @@
+ 82
+ 
+ ._textarea-mr-focus.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.974823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -1251,17 +1251,17 @@
+ 82
+ 
+ ._textarea-mr-hover.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.974823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -1285,17 +1285,17 @@
+ 82
+ 
+ textarea-tl.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.974823Z
++2010-06-11T12:48:18.000000Z
+ a87fbf7fd01a31c4a248b5c4b8505fe7
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -1319,17 +1319,17 @@
+ 100
+ 
+ textarea-tm.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.974823Z
++2010-06-11T12:48:18.000000Z
+ af36e4b20c04fb75000369d6c03d156f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -1353,17 +1353,17 @@
+ 72
+ 
+ ._textarea-ml.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.974823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -1387,17 +1387,17 @@
+ 82
+ 
+ textarea-ml-focus.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.974823Z
++2010-06-11T12:48:18.000000Z
+ f32c33fc14db22871a0ed33a634def0f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -1421,17 +1421,17 @@
+ 70
+ 
+ textarea-tr.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.974823Z
++2010-06-11T12:48:18.000000Z
+ 65301adea0b352842bf9b16d71b615c3
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -1455,17 +1455,17 @@
+ 99
+ 
+ ._textarea-mm.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.974823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -1489,17 +1489,17 @@
+ 82
+ 
+ textarea-mm-focus.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.974823Z
++2010-06-11T12:48:18.000000Z
+ 3fdab7e69699da1b14e45138c48fb529
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -1523,17 +1523,17 @@
+ 54
+ 
+ ._textarea-bl-focus.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.974823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -1557,17 +1557,17 @@
+ 82
+ 
+ ._textarea-bm-focus.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.974823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -1591,17 +1591,17 @@
+ 82
+ 
+ textarea-ml-hover.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.974823Z
++2010-06-11T12:48:18.000000Z
+ 9e1e8d52a461825a195fd1a855911b7d
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -1625,17 +1625,17 @@
+ 70
+ 
+ textarea-mm-hover.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.974823Z
++2010-06-11T12:48:18.000000Z
+ 4af599f42c08479a931b88210553c238
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -1659,17 +1659,17 @@
+ 53
+ 
+ ._textarea-mr.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.974823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -1693,17 +1693,17 @@
+ 82
+ 
+ ._textarea-bl-hover.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.974823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -1727,17 +1727,17 @@
+ 82
+ 
+ textarea-mr-focus.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.978823Z
++2010-06-11T12:48:18.000000Z
+ a43cc42be9ff13c61185c53b1fd22479
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -1761,17 +1761,17 @@
+ 55
+ 
+ ._textarea-bm-hover.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.978823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -1795,17 +1795,17 @@
+ 82
+ 
+ ._textarea-br-focus.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.978823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -1829,17 +1829,17 @@
+ 82
+ 
+ textarea-mr-hover.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.978823Z
++2010-06-11T12:48:18.000000Z
+ 30c19c093b356b8ddd4779d5afc41df8
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+Only in orig/public/img/textarea/notneeded/.svn/prop-base: ._textarea-bl-focus.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/prop-base: ._textarea-bl.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/prop-base: ._textarea-bl-hover.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/prop-base: ._textarea-bm-focus.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/prop-base: ._textarea-bm.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/prop-base: ._textarea-bm-hover.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/prop-base: ._textarea-br-focus.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/prop-base: ._textarea-br.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/prop-base: ._textarea-br-hover.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/prop-base: ._textarea-ml-focus.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/prop-base: ._textarea-ml.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/prop-base: ._textarea-ml-hover.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/prop-base: ._textarea-mm-focus.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/prop-base: ._textarea-mm.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/prop-base: ._textarea-mm-hover.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/prop-base: ._textarea-mr-focus.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/prop-base: ._textarea-mr.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/prop-base: ._textarea-mr-hover.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/prop-base: ._textarea-tl-focus.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/prop-base: ._textarea-tl.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/prop-base: ._textarea-tl-hover.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/prop-base: ._textarea-tm-focus.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/prop-base: ._textarea-tm.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/prop-base: ._textarea-tm-hover.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/prop-base: ._textarea-tr-focus.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/prop-base: ._textarea-tr.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/prop-base: ._textarea-tr-hover.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/text-base: ._textarea-bl-focus.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/text-base: ._textarea-bl.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/text-base: ._textarea-bl-hover.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/text-base: ._textarea-bm-focus.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/text-base: ._textarea-bm.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/text-base: ._textarea-bm-hover.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/text-base: ._textarea-br-focus.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/text-base: ._textarea-br.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/text-base: ._textarea-br-hover.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/text-base: ._textarea-ml-focus.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/text-base: ._textarea-ml.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/text-base: ._textarea-ml-hover.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/text-base: ._textarea-mm-focus.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/text-base: ._textarea-mm.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/text-base: ._textarea-mm-hover.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/text-base: ._textarea-mr-focus.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/text-base: ._textarea-mr.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/text-base: ._textarea-mr-hover.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/text-base: ._textarea-tl-focus.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/text-base: ._textarea-tl.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/text-base: ._textarea-tl-hover.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/text-base: ._textarea-tm-focus.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/text-base: ._textarea-tm.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/text-base: ._textarea-tm-hover.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/text-base: ._textarea-tr-focus.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/text-base: ._textarea-tr.gif.svn-base
+Only in orig/public/img/textarea/notneeded/.svn/text-base: ._textarea-tr-hover.gif.svn-base
+Only in orig/public/img/textarea/notneeded: ._textarea-bl-focus.gif
+Only in orig/public/img/textarea/notneeded: ._textarea-bl.gif
+Only in orig/public/img/textarea/notneeded: ._textarea-bl-hover.gif
+Only in orig/public/img/textarea/notneeded: ._textarea-bm-focus.gif
+Only in orig/public/img/textarea/notneeded: ._textarea-bm.gif
+Only in orig/public/img/textarea/notneeded: ._textarea-bm-hover.gif
+Only in orig/public/img/textarea/notneeded: ._textarea-br-focus.gif
+Only in orig/public/img/textarea/notneeded: ._textarea-br.gif
+Only in orig/public/img/textarea/notneeded: ._textarea-br-hover.gif
+Only in orig/public/img/textarea/notneeded: ._textarea-ml-focus.gif
+Only in orig/public/img/textarea/notneeded: ._textarea-ml.gif
+Only in orig/public/img/textarea/notneeded: ._textarea-ml-hover.gif
+Only in orig/public/img/textarea/notneeded: ._textarea-mm-focus.gif
+Only in orig/public/img/textarea/notneeded: ._textarea-mm.gif
+Only in orig/public/img/textarea/notneeded: ._textarea-mm-hover.gif
+Only in orig/public/img/textarea/notneeded: ._textarea-mr-focus.gif
+Only in orig/public/img/textarea/notneeded: ._textarea-mr.gif
+Only in orig/public/img/textarea/notneeded: ._textarea-mr-hover.gif
+Only in orig/public/img/textarea/notneeded: ._textarea-tl-focus.gif
+Only in orig/public/img/textarea/notneeded: ._textarea-tl.gif
+Only in orig/public/img/textarea/notneeded: ._textarea-tl-hover.gif
+Only in orig/public/img/textarea/notneeded: ._textarea-tm-focus.gif
+Only in orig/public/img/textarea/notneeded: ._textarea-tm.gif
+Only in orig/public/img/textarea/notneeded: ._textarea-tm-hover.gif
+Only in orig/public/img/textarea/notneeded: ._textarea-tr-focus.gif
+Only in orig/public/img/textarea/notneeded: ._textarea-tr.gif
+Only in orig/public/img/textarea/notneeded: ._textarea-tr-hover.gif
+diff -r -U 8 orig/public/img/textarea/.svn/entries prototype/trunk/public/img/textarea/.svn/entries
+--- orig/public/img/textarea/.svn/entries	2010-06-17 14:57:53.986823379 +1000
++++ prototype/trunk/public/img/textarea/.svn/entries	2010-06-11 22:48:18.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/public/img/textarea
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ textarea_mr.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.982823Z
++2010-06-11T12:48:18.000000Z
+ d1623824a6e80875fd67f1052eac0b59
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -61,17 +61,17 @@
+ 112
+ 
+ textarea_tl.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.982823Z
++2010-06-11T12:48:18.000000Z
+ 3c8ae0df219920f46f08361fceb34e72
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -95,17 +95,17 @@
+ 190
+ 
+ ._textarea_br.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.982823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -129,17 +129,17 @@
+ 82
+ 
+ textarea_tm.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.982823Z
++2010-06-11T12:48:18.000000Z
+ f5777d2d8f98e33c75cd5d3e0beeba76
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -163,17 +163,17 @@
+ 177
+ 
+ ._textarea-mm-focus.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.982823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -197,17 +197,17 @@
+ 82
+ 
+ ._textarea_ml.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.982823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -231,17 +231,17 @@
+ 82
+ 
+ ._textarea-mm-hover.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.982823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -265,17 +265,17 @@
+ 82
+ 
+ textarea_tr.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.982823Z
++2010-06-11T12:48:18.000000Z
+ dd7fc25b9ef496e3f9825972e01c9183
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -299,17 +299,17 @@
+ 188
+ 
+ textarea-mm.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.982823Z
++2010-06-11T12:48:18.000000Z
+ ec8ec3da19e716a20174381ee1a9e0a1
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -333,17 +333,17 @@
+ 57
+ 
+ ._textarea_mr.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.982823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -367,17 +367,17 @@
+ 82
+ 
+ ._textarea_tl.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.982823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -401,17 +401,17 @@
+ 82
+ 
+ textarea_bl.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.982823Z
++2010-06-11T12:48:18.000000Z
+ 26af0de6cc3a7a7ebe4bc4b79fae3907
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -435,17 +435,17 @@
+ 181
+ 
+ ._textarea_tm.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.982823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -469,17 +469,17 @@
+ 82
+ 
+ textarea_bm.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.982823Z
++2010-06-11T12:48:18.000000Z
+ 85af3035d93b7e090a08a04227f7ea9a
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -503,17 +503,17 @@
+ 82
+ 
+ ._textarea_tr.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.982823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -537,17 +537,17 @@
+ 82
+ 
+ textarea_br.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.986823Z
++2010-06-11T12:48:18.000000Z
+ 79b4bd619c416e74611e393c495be53f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -574,17 +574,17 @@
+ dir
+ 
+ textarea-mm-focus.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.986823Z
++2010-06-11T12:48:18.000000Z
+ 3fdab7e69699da1b14e45138c48fb529
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -608,17 +608,17 @@
+ 54
+ 
+ ._textarea-mm.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.986823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -642,17 +642,17 @@
+ 82
+ 
+ textarea-mm-hover.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.986823Z
++2010-06-11T12:48:18.000000Z
+ 4af599f42c08479a931b88210553c238
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -676,17 +676,17 @@
+ 53
+ 
+ textarea_ml.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.986823Z
++2010-06-11T12:48:18.000000Z
+ 4a871b839f6b15faff185abe7c084546
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -710,17 +710,17 @@
+ 171
+ 
+ ._textarea_bl.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.986823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -744,17 +744,17 @@
+ 82
+ 
+ ._textarea_bm.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.986823Z
++2010-06-11T12:48:18.000000Z
+ 1a0855d7d012b4d166e25b3fdc2a1d8f
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+Only in orig/public/img/textarea/.svn/prop-base: ._textarea_bl.gif.svn-base
+Only in orig/public/img/textarea/.svn/prop-base: ._textarea_bm.gif.svn-base
+Only in orig/public/img/textarea/.svn/prop-base: ._textarea_br.gif.svn-base
+Only in orig/public/img/textarea/.svn/prop-base: ._textarea_ml.gif.svn-base
+Only in orig/public/img/textarea/.svn/prop-base: ._textarea-mm-focus.gif.svn-base
+Only in orig/public/img/textarea/.svn/prop-base: ._textarea-mm.gif.svn-base
+Only in orig/public/img/textarea/.svn/prop-base: ._textarea-mm-hover.gif.svn-base
+Only in orig/public/img/textarea/.svn/prop-base: ._textarea_mr.gif.svn-base
+Only in orig/public/img/textarea/.svn/prop-base: ._textarea_tl.gif.svn-base
+Only in orig/public/img/textarea/.svn/prop-base: ._textarea_tm.gif.svn-base
+Only in orig/public/img/textarea/.svn/prop-base: ._textarea_tr.gif.svn-base
+Only in orig/public/img/textarea/.svn/text-base: ._textarea_bl.gif.svn-base
+Only in orig/public/img/textarea/.svn/text-base: ._textarea_bm.gif.svn-base
+Only in orig/public/img/textarea/.svn/text-base: ._textarea_br.gif.svn-base
+Only in orig/public/img/textarea/.svn/text-base: ._textarea_ml.gif.svn-base
+Only in orig/public/img/textarea/.svn/text-base: ._textarea-mm-focus.gif.svn-base
+Only in orig/public/img/textarea/.svn/text-base: ._textarea-mm.gif.svn-base
+Only in orig/public/img/textarea/.svn/text-base: ._textarea-mm-hover.gif.svn-base
+Only in orig/public/img/textarea/.svn/text-base: ._textarea_mr.gif.svn-base
+Only in orig/public/img/textarea/.svn/text-base: ._textarea_tl.gif.svn-base
+Only in orig/public/img/textarea/.svn/text-base: ._textarea_tm.gif.svn-base
+Only in orig/public/img/textarea/.svn/text-base: ._textarea_tr.gif.svn-base
+Only in orig/public/img/textarea: ._textarea_bl.gif
+Only in orig/public/img/textarea: ._textarea_bm.gif
+Only in orig/public/img/textarea: ._textarea_br.gif
+Only in orig/public/img/textarea: ._textarea_ml.gif
+Only in orig/public/img/textarea: ._textarea-mm-focus.gif
+Only in orig/public/img/textarea: ._textarea-mm.gif
+Only in orig/public/img/textarea: ._textarea-mm-hover.gif
+Only in orig/public/img/textarea: ._textarea_mr.gif
+Only in orig/public/img/textarea: ._textarea_tl.gif
+Only in orig/public/img/textarea: ._textarea_tm.gif
+Only in orig/public/img/textarea: ._textarea_tr.gif
+diff -r -U 8 orig/public/js/elements/cameras/.svn/entries prototype/trunk/public/js/elements/cameras/.svn/entries
+--- orig/public/js/elements/cameras/.svn/entries	2010-06-17 14:57:54.247353470 +1000
++++ prototype/trunk/public/js/elements/cameras/.svn/entries	2010-06-11 22:48:18.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/public/js/elements/cameras
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-06-10T07:37:53.752708Z
+ 1032
+ mdiponio
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ cameras.js
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.247353Z
++2010-06-11T12:48:18.000000Z
+ bf151cac2d2b5e18b4e647b0e0581695
+ 2010-06-10T07:37:53.752708Z
+ 1032
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -61,17 +61,17 @@
+ 8432
+ 
+ jquery.media.js
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.247353Z
++2010-06-11T12:48:18.000000Z
+ b13060ad8358e30ec5fe1fc76df4f506
+ 2010-04-19T12:19:57.659739Z
+ 729
+ mdiponio
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/public/js/elements/.svn/entries prototype/trunk/public/js/elements/.svn/entries
+--- orig/public/js/elements/.svn/entries	2010-06-17 14:57:54.247353470 +1000
++++ prototype/trunk/public/js/elements/.svn/entries	2010-06-11 22:48:18.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/public/js/elements
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-06-10T07:37:53.752708Z
+ 1032
+ mdiponio
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ filetransfer.js
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.247353Z
++2010-06-11T12:48:18.000000Z
+ ba3687330a93128bd93e6e85f3f86f61
+ 2010-06-01T07:29:15.755375Z
+ 989
+ mdiponio
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/public/js/galleria/.svn/all-wcprops prototype/trunk/public/js/galleria/.svn/all-wcprops
+--- orig/public/js/galleria/.svn/all-wcprops	2010-06-17 14:57:54.070823969 +1000
++++ prototype/trunk/public/js/galleria/.svn/all-wcprops	2010-06-11 22:48:18.000000000 +1000
+@@ -1,12 +1,12 @@
+ K 25
+ svn:wc:ra_dav:version-url
+-V 71
+-/projects/personal/sahara/svn/!svn/ver/1049/WI/trunk/public/js/galleria
++V 70
++/projects/personal/sahara/svn/!svn/ver/935/WI/trunk/public/js/galleria
+ END
+ jquery.galleria.pack.js
+ K 25
+ svn:wc:ra_dav:version-url
+ V 94
+ /projects/personal/sahara/svn/!svn/ver/878/WI/trunk/public/js/galleria/jquery.galleria.pack.js
+ END
+ galleria.js
+diff -r -U 8 orig/public/js/galleria/.svn/entries prototype/trunk/public/js/galleria/.svn/entries
+--- orig/public/js/galleria/.svn/entries	2010-06-17 14:57:54.070823969 +1000
++++ prototype/trunk/public/js/galleria/.svn/entries	2010-06-11 22:48:18.000000000 +1000
+@@ -1,19 +1,19 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/public/js/galleria
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+-2010-06-16T02:52:04.995535Z
+-1049
++2010-05-25T23:30:28.783275Z
++935
+ tmachet
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+@@ -30,17 +30,17 @@
+ dir
+ 
+ jquery.galleria.pack.js
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.070823Z
++2010-06-11T12:48:18.000000Z
+ 96dbe4505776482c2a4a8cf09a981cc8
+ 2010-05-19T04:30:21.001458Z
+ 878
+ tmachet
+ 
+ 
+ 
+ 
+@@ -64,17 +64,17 @@
+ 4434
+ 
+ galleria.js
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.070823Z
++2010-06-11T12:48:18.000000Z
+ fb22005fb6f801bee11c4ecf22e2c1d0
+ 2010-05-19T04:30:21.001458Z
+ 878
+ tmachet
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/public/js/galleria/themes/classic/.svn/entries prototype/trunk/public/js/galleria/themes/classic/.svn/entries
+--- orig/public/js/galleria/themes/classic/.svn/entries	2010-06-17 14:57:54.050823132 +1000
++++ prototype/trunk/public/js/galleria/themes/classic/.svn/entries	2010-06-11 22:48:18.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/public/js/galleria/themes/classic
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-05-19T04:30:21.001458Z
+ 878
+ tmachet
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ classic-map.png
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.046823Z
++2010-06-11T12:48:18.000000Z
+ 8947b16a5062938787478b94b2f0b89a
+ 2010-05-19T04:30:21.001458Z
+ 878
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -61,17 +61,17 @@
+ 657
+ 
+ Thumbs.db
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.046823Z
++2010-06-11T12:48:18.000000Z
+ b576569b24d20172d301d87127b1cb87
+ 2010-05-19T04:30:21.001458Z
+ 878
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -95,17 +95,17 @@
+ 4096
+ 
+ galleria.classic.css
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.050823Z
++2010-06-11T12:48:18.000000Z
+ 8f2ea1549cadd1b8f9c9936047197abe
+ 2010-05-19T04:30:21.001458Z
+ 878
+ tmachet
+ 
+ 
+ 
+ 
+@@ -129,17 +129,17 @@
+ 2902
+ 
+ classic-loader.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.050823Z
++2010-06-11T12:48:18.000000Z
+ 0b0f6703f12eecd5ad44dbdddbc8b4e4
+ 2010-05-19T04:30:21.001458Z
+ 878
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -163,17 +163,17 @@
+ 1849
+ 
+ galleria.classic.js
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.050823Z
++2010-06-11T12:48:18.000000Z
+ 4775fc090013cf540fd2a4862b02eb5f
+ 2010-05-19T04:30:21.001458Z
+ 878
+ tmachet
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/public/js/galleria/themes/fullscreen/.svn/entries prototype/trunk/public/js/galleria/themes/fullscreen/.svn/entries
+--- orig/public/js/galleria/themes/fullscreen/.svn/entries	2010-06-17 14:57:54.062823239 +1000
++++ prototype/trunk/public/js/galleria/themes/fullscreen/.svn/entries	2010-06-11 22:48:18.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/public/js/galleria/themes/fullscreen
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-05-19T04:30:21.001458Z
+ 878
+ tmachet
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ l.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.058823Z
++2010-06-11T12:48:18.000000Z
+ d1adc21929b44da1dce7c03597372760
+ 2010-05-19T04:30:21.001458Z
+ 878
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -61,17 +61,17 @@
+ 82
+ 
+ n.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.058823Z
++2010-06-11T12:48:18.000000Z
+ 5b8e30a1bb9b02018864d95e6fea795b
+ 2010-05-19T04:30:21.001458Z
+ 878
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -95,17 +95,17 @@
+ 61
+ 
+ p.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.058823Z
++2010-06-11T12:48:18.000000Z
+ 1dbd7c373a28e32e33f77fb057b4c21c
+ 2010-05-19T04:30:21.001458Z
+ 878
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -129,17 +129,17 @@
+ 61
+ 
+ b.png
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.058823Z
++2010-06-11T12:48:18.000000Z
+ ae82ec93dcb60453e71e82c2605d9f9d
+ 2010-05-19T04:30:21.001458Z
+ 878
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -163,17 +163,17 @@
+ 1093
+ 
+ r.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.058823Z
++2010-06-11T12:48:18.000000Z
+ af45f33b3d5724b408aa77b37331a01e
+ 2010-05-19T04:30:21.001458Z
+ 878
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -197,17 +197,17 @@
+ 82
+ 
+ galleria.fullscreen.css
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.058823Z
++2010-06-11T12:48:18.000000Z
+ 0293aff1b0ccb8d97bbe96d2e8d1a007
+ 2010-05-19T04:30:21.001458Z
+ 878
+ tmachet
+ 
+ 
+ 
+ 
+@@ -231,17 +231,17 @@
+ 2025
+ 
+ fix.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.058823Z
++2010-06-11T12:48:18.000000Z
+ 325472601571f31e1bf00674c368d335
+ 2010-05-19T04:30:21.001458Z
+ 878
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -265,17 +265,17 @@
+ 43
+ 
+ loader.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.058823Z
++2010-06-11T12:48:18.000000Z
+ 5193f3f6b2790ee14fee10f512b4607b
+ 2010-05-19T04:30:21.001458Z
+ 878
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -299,17 +299,17 @@
+ 1586
+ 
+ i.png
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.058823Z
++2010-06-11T12:48:18.000000Z
+ 2ea90ac77e71c9f55dbb737fb1022069
+ 2010-05-19T04:30:21.001458Z
+ 878
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -333,17 +333,17 @@
+ 179
+ 
+ galleria.fullscreen.js
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.058823Z
++2010-06-11T12:48:18.000000Z
+ 5ee2a97a76b13f8cd63d6f92d2107e80
+ 2010-05-19T04:30:21.001458Z
+ 878
+ tmachet
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/public/js/galleria/themes/Sahara/galleria.sahara.css prototype/trunk/public/js/galleria/themes/Sahara/galleria.sahara.css
+--- orig/public/js/galleria/themes/Sahara/galleria.sahara.css	2010-06-17 14:57:54.042823091 +1000
++++ prototype/trunk/public/js/galleria/themes/Sahara/galleria.sahara.css	2010-06-11 22:48:18.000000000 +1000
+@@ -30,17 +30,17 @@
+ .galleria-image-nav-left:hover,
+ .galleria-image-nav-right:hover{opacity:.5;}
+ .galleria-thumb-nav-left,
+ .galleria-thumb-nav-right{cursor:pointer;display:block;background-position:-495px 0;border-right:1px solid #444;position:absolute;left:0;top:0;height:30px;width:23px;z-index:3;opacity:.8;}
+ .galleria-thumb-nav-right{background-position:-578px 0;border-left:1px solid #444;border-right:none;right:0;left:auto;}
+ .galleria-thumbnails-container .disabled,
+ .galleria-thumbnails-container .disabled:hover{opacity:.2;cursor:default;}
+ .galleria-thumb-nav-left:hover,
+-.galleria-thumb-nav-right:hover{opacity:1;background-color:#EFEFEF;}
++.galleria-thumb-nav-right:hover{opacity:1;background-color:#000;}
+ .galleria-carousel .galleria-thumb-nav-left,
+ .galleria-carousel .galleria-thumb-nav-right{display:block;}
+ .galleria-thumb-nav-left,
+ .galleria-thumb-nav-right,
+ .galleria-info-link,
+ .galleria-info-close,
+ .galleria-image-nav-left,
+ .galleria-image-nav-right{background-image:url(classic-map.png);background-repeat:no-repeat;}
+diff -r -U 8 orig/public/js/galleria/themes/Sahara/galleria.sahara.js prototype/trunk/public/js/galleria/themes/Sahara/galleria.sahara.js
+--- orig/public/js/galleria/themes/Sahara/galleria.sahara.js	2010-06-17 14:57:54.042823091 +1000
++++ prototype/trunk/public/js/galleria/themes/Sahara/galleria.sahara.js	2010-06-11 22:48:18.000000000 +1000
+@@ -26,19 +26,19 @@
+         this.$('container').hover(this.proxy(function() {
+             this.$('image-nav-left,image-nav-right,counter').fadeIn(200);
+         }), this.proxy(function() {
+             this.$('image-nav-left,image-nav-right,counter').fadeOut(500);
+         }));
+         
+         //this.$('image-nav-left,image-nav-right,counter').hide();
+         
+-        //var elms = this.$('info-link,info-close,info-text').click(function() {
+-        //    elms.toggle();
+-        //});
++        var elms = this.$('info-link,info-close,info-text').click(function() {
++            elms.toggle();
++        });
+         
+         this.bind(Galleria.LOADSTART, function(e) {
+             if (!e.cached) {
+                 this.$('loader').show().fadeTo(200, .4);
+             }
+             if (this.hasInfo()) {
+                 this.$('info').show();
+             } else {
+diff -r -U 8 orig/public/js/galleria/themes/Sahara/.svn/all-wcprops prototype/trunk/public/js/galleria/themes/Sahara/.svn/all-wcprops
+--- orig/public/js/galleria/themes/Sahara/.svn/all-wcprops	2010-06-17 14:57:54.042823091 +1000
++++ prototype/trunk/public/js/galleria/themes/Sahara/.svn/all-wcprops	2010-06-11 22:48:18.000000000 +1000
+@@ -1,35 +1,35 @@
+ K 25
+ svn:wc:ra_dav:version-url
+-V 85
+-/projects/personal/sahara/svn/!svn/ver/1049/WI/trunk/public/js/galleria/themes/Sahara
++V 84
++/projects/personal/sahara/svn/!svn/ver/935/WI/trunk/public/js/galleria/themes/Sahara
+ END
+ classic-map.png
+ K 25
+ svn:wc:ra_dav:version-url
+ V 100
+ /projects/personal/sahara/svn/!svn/ver/935/WI/trunk/public/js/galleria/themes/Sahara/classic-map.png
+ END
+ galleria.sahara.css
+ K 25
+ svn:wc:ra_dav:version-url
+-V 105
+-/projects/personal/sahara/svn/!svn/ver/1049/WI/trunk/public/js/galleria/themes/Sahara/galleria.sahara.css
++V 104
++/projects/personal/sahara/svn/!svn/ver/926/WI/trunk/public/js/galleria/themes/Sahara/galleria.sahara.css
+ END
+ jquery.galleria.pack.js
+ K 25
+ svn:wc:ra_dav:version-url
+ V 108
+ /projects/personal/sahara/svn/!svn/ver/917/WI/trunk/public/js/galleria/themes/Sahara/jquery.galleria.pack.js
+ END
+ classic-loader.gif
+ K 25
+ svn:wc:ra_dav:version-url
+ V 103
+ /projects/personal/sahara/svn/!svn/ver/935/WI/trunk/public/js/galleria/themes/Sahara/classic-loader.gif
+ END
+ galleria.sahara.js
+ K 25
+ svn:wc:ra_dav:version-url
+-V 104
+-/projects/personal/sahara/svn/!svn/ver/1049/WI/trunk/public/js/galleria/themes/Sahara/galleria.sahara.js
++V 103
++/projects/personal/sahara/svn/!svn/ver/917/WI/trunk/public/js/galleria/themes/Sahara/galleria.sahara.js
+ END
+diff -r -U 8 orig/public/js/galleria/themes/Sahara/.svn/entries prototype/trunk/public/js/galleria/themes/Sahara/.svn/entries
+--- orig/public/js/galleria/themes/Sahara/.svn/entries	2010-06-17 14:57:54.042823091 +1000
++++ prototype/trunk/public/js/galleria/themes/Sahara/.svn/entries	2010-06-11 22:48:18.000000000 +1000
+@@ -1,19 +1,19 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/public/js/galleria/themes/Sahara
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+-2010-06-16T02:52:04.995535Z
+-1049
++2010-05-25T23:30:28.783275Z
++935
+ tmachet
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ classic-map.png
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.042823Z
++2010-06-11T12:48:18.000000Z
+ 8947b16a5062938787478b94b2f0b89a
+ 2010-05-25T23:30:28.783275Z
+ 935
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -61,20 +61,20 @@
+ 657
+ 
+ galleria.sahara.css
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.042823Z
+-25b092e7dfc5b5a262954a33f31bf437
+-2010-06-16T02:52:04.995535Z
+-1049
++2010-06-11T12:48:18.000000Z
++2459e33cdcab126bac104fda748c3e15
++2010-05-24T04:22:21.431517Z
++926
+ tmachet
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+@@ -87,25 +87,25 @@
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+-3413
++3410
+ 
+ jquery.galleria.pack.js
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.042823Z
++2010-06-11T12:48:18.000000Z
+ 96dbe4505776482c2a4a8cf09a981cc8
+ 2010-05-21T04:30:10.927915Z
+ 917
+ tmachet
+ 
+ 
+ 
+ 
+@@ -129,17 +129,17 @@
+ 4434
+ 
+ classic-loader.gif
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.042823Z
++2010-06-11T12:48:18.000000Z
+ 0b0f6703f12eecd5ad44dbdddbc8b4e4
+ 2010-05-25T23:30:28.783275Z
+ 935
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -163,20 +163,20 @@
+ 1849
+ 
+ galleria.sahara.js
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.042823Z
+-2e68cb3b48b92a30cfdd076cb20473bc
+-2010-06-16T02:52:04.995535Z
+-1049
++2010-06-11T12:48:18.000000Z
++2698402a86f17ea7ec7edd98e5e5db79
++2010-05-21T04:30:10.927915Z
++917
+ tmachet
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+@@ -189,10 +189,10 @@
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+-1843
++1837
+ 
+diff -r -U 8 orig/public/js/galleria/themes/Sahara/.svn/text-base/galleria.sahara.css.svn-base prototype/trunk/public/js/galleria/themes/Sahara/.svn/text-base/galleria.sahara.css.svn-base
+--- orig/public/js/galleria/themes/Sahara/.svn/text-base/galleria.sahara.css.svn-base	2010-06-17 14:57:54.006823368 +1000
++++ prototype/trunk/public/js/galleria/themes/Sahara/.svn/text-base/galleria.sahara.css.svn-base	2010-06-11 22:48:18.000000000 +1000
+@@ -30,17 +30,17 @@
+ .galleria-image-nav-left:hover,
+ .galleria-image-nav-right:hover{opacity:.5;}
+ .galleria-thumb-nav-left,
+ .galleria-thumb-nav-right{cursor:pointer;display:block;background-position:-495px 0;border-right:1px solid #444;position:absolute;left:0;top:0;height:30px;width:23px;z-index:3;opacity:.8;}
+ .galleria-thumb-nav-right{background-position:-578px 0;border-left:1px solid #444;border-right:none;right:0;left:auto;}
+ .galleria-thumbnails-container .disabled,
+ .galleria-thumbnails-container .disabled:hover{opacity:.2;cursor:default;}
+ .galleria-thumb-nav-left:hover,
+-.galleria-thumb-nav-right:hover{opacity:1;background-color:#EFEFEF;}
++.galleria-thumb-nav-right:hover{opacity:1;background-color:#000;}
+ .galleria-carousel .galleria-thumb-nav-left,
+ .galleria-carousel .galleria-thumb-nav-right{display:block;}
+ .galleria-thumb-nav-left,
+ .galleria-thumb-nav-right,
+ .galleria-info-link,
+ .galleria-info-close,
+ .galleria-image-nav-left,
+ .galleria-image-nav-right{background-image:url(classic-map.png);background-repeat:no-repeat;}
+diff -r -U 8 orig/public/js/galleria/themes/Sahara/.svn/text-base/galleria.sahara.js.svn-base prototype/trunk/public/js/galleria/themes/Sahara/.svn/text-base/galleria.sahara.js.svn-base
+--- orig/public/js/galleria/themes/Sahara/.svn/text-base/galleria.sahara.js.svn-base	2010-06-17 14:57:54.042823091 +1000
++++ prototype/trunk/public/js/galleria/themes/Sahara/.svn/text-base/galleria.sahara.js.svn-base	2010-06-11 22:48:18.000000000 +1000
+@@ -26,19 +26,19 @@
+         this.$('container').hover(this.proxy(function() {
+             this.$('image-nav-left,image-nav-right,counter').fadeIn(200);
+         }), this.proxy(function() {
+             this.$('image-nav-left,image-nav-right,counter').fadeOut(500);
+         }));
+         
+         //this.$('image-nav-left,image-nav-right,counter').hide();
+         
+-        //var elms = this.$('info-link,info-close,info-text').click(function() {
+-        //    elms.toggle();
+-        //});
++        var elms = this.$('info-link,info-close,info-text').click(function() {
++            elms.toggle();
++        });
+         
+         this.bind(Galleria.LOADSTART, function(e) {
+             if (!e.cached) {
+                 this.$('loader').show().fadeTo(200, .4);
+             }
+             if (this.hasInfo()) {
+                 this.$('info').show();
+             } else {
+diff -r -U 8 orig/public/js/galleria/themes/.svn/all-wcprops prototype/trunk/public/js/galleria/themes/.svn/all-wcprops
+--- orig/public/js/galleria/themes/.svn/all-wcprops	2010-06-17 14:57:54.062823239 +1000
++++ prototype/trunk/public/js/galleria/themes/.svn/all-wcprops	2010-06-11 22:48:18.000000000 +1000
+@@ -1,5 +1,5 @@
+ K 25
+ svn:wc:ra_dav:version-url
+-V 78
+-/projects/personal/sahara/svn/!svn/ver/1049/WI/trunk/public/js/galleria/themes
++V 77
++/projects/personal/sahara/svn/!svn/ver/935/WI/trunk/public/js/galleria/themes
+ END
+diff -r -U 8 orig/public/js/galleria/themes/.svn/entries prototype/trunk/public/js/galleria/themes/.svn/entries
+--- orig/public/js/galleria/themes/.svn/entries	2010-06-17 14:57:54.062823239 +1000
++++ prototype/trunk/public/js/galleria/themes/.svn/entries	2010-06-11 22:48:18.000000000 +1000
+@@ -1,19 +1,19 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/public/js/galleria/themes
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+-2010-06-16T02:52:04.995535Z
+-1049
++2010-05-25T23:30:28.783275Z
++935
+ tmachet
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/public/js/.svn/all-wcprops prototype/trunk/public/js/.svn/all-wcprops
+--- orig/public/js/.svn/all-wcprops	2010-06-17 14:57:54.250823668 +1000
++++ prototype/trunk/public/js/.svn/all-wcprops	2010-06-11 22:48:18.000000000 +1000
+@@ -1,12 +1,12 @@
+ K 25
+ svn:wc:ra_dav:version-url
+ V 62
+-/projects/personal/sahara/svn/!svn/ver/1049/WI/trunk/public/js
++/projects/personal/sahara/svn/!svn/ver/1032/WI/trunk/public/js
+ END
+ jquery.jqtransform.js
+ K 25
+ svn:wc:ra_dav:version-url
+ V 83
+ /projects/personal/sahara/svn/!svn/ver/522/WI/trunk/public/js/jquery.jqtransform.js
+ END
+ queue.js
+diff -r -U 8 orig/public/js/.svn/entries prototype/trunk/public/js/.svn/entries
+--- orig/public/js/.svn/entries	2010-06-17 14:57:54.250823668 +1000
++++ prototype/trunk/public/js/.svn/entries	2010-06-11 22:48:18.000000000 +1000
+@@ -1,20 +1,20 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/public/js
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+-2010-06-16T02:52:04.995535Z
+-1049
+-tmachet
++2010-06-10T07:37:53.752708Z
++1032
++mdiponio
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ jquery.jqtransform.js
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.247353Z
++2010-06-11T12:48:18.000000Z
+ a678b3fd95e9130af0ea7d4d1f66a0da
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ has-props
+ 
+ 
+ 
+@@ -61,17 +61,17 @@
+ 13692
+ 
+ queue.js
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.247353Z
++2010-06-11T12:48:18.000000Z
+ 7109bc511de9ab4ada32d9fb3540206a
+ 2010-05-18T05:15:49.541319Z
+ 871
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -98,17 +98,17 @@
+ dir
+ 
+ jquery-ui.js
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.250823Z
++2010-06-11T12:48:18.000000Z
+ 6e7569e2fed16a02a6be092ef4e4d756
+ 2010-03-22T01:22:31.285132Z
+ 524
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -132,17 +132,17 @@
+ 215547
+ 
+ DD_belatedPNG.js
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.250823Z
++2010-06-11T12:48:18.000000Z
+ 622da3b8d2aebd916eecd530a46e0435
+ 2010-04-15T01:10:27.865976Z
+ 698
+ tmachet
+ 
+ 
+ 
+ 
+@@ -166,17 +166,17 @@
+ 12331
+ 
+ jquery.validationEngine-en.js
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.250823Z
++2010-06-11T12:48:18.000000Z
+ c558ef6152523270cba0c50ebaa6656d
+ 2010-03-22T01:22:31.285132Z
+ 524
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -200,17 +200,17 @@
+ 2183
+ 
+ jquery.validationEngine.js
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.250823Z
++2010-06-11T12:48:18.000000Z
+ 40283eaa8ba73af12334fc7669fa529f
+ 2010-03-22T01:22:31.285132Z
+ 524
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -234,17 +234,17 @@
+ 24349
+ 
+ jquery.js
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.250823Z
++2010-06-11T12:48:18.000000Z
+ c0ac4e323dfd52aaf1f80c9880b35e7b
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -271,17 +271,17 @@
+ dir
+ 
+ menueffect.js
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.250823Z
++2010-06-11T12:48:18.000000Z
+ 3e38ed92f98ad17e15bc9fd7cb891956
+ 2010-03-22T06:34:56.347162Z
+ 525
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -305,17 +305,17 @@
+ 1032
+ 
+ session.js
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.250823Z
++2010-06-11T12:48:18.000000Z
+ 09a757131a582f2bd9835cdf3dccbb1e
+ 2010-05-18T04:39:31.843516Z
+ 867
+ mdiponio
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/public/.svn/all-wcprops prototype/trunk/public/.svn/all-wcprops
+--- orig/public/.svn/all-wcprops	2010-06-17 14:57:54.250823668 +1000
++++ prototype/trunk/public/.svn/all-wcprops	2010-06-11 22:48:18.000000000 +1000
+@@ -1,17 +1,23 @@
+ K 25
+ svn:wc:ra_dav:version-url
+ V 59
+-/projects/personal/sahara/svn/!svn/ver/1055/WI/trunk/public
++/projects/personal/sahara/svn/!svn/ver/1033/WI/trunk/public
+ END
+ .htaccess
+ K 25
+ svn:wc:ra_dav:version-url
+ V 68
+ /projects/personal/sahara/svn/!svn/ver/518/WI/trunk/public/.htaccess
+ END
+ index.php
+ K 25
+ svn:wc:ra_dav:version-url
+ V 68
+ /projects/personal/sahara/svn/!svn/ver/672/WI/trunk/public/index.php
+ END
++webinterface.log
++K 25
++svn:wc:ra_dav:version-url
++V 75
++/projects/personal/sahara/svn/!svn/ver/917/WI/trunk/public/webinterface.log
++END
+diff -r -U 8 orig/public/.svn/entries prototype/trunk/public/.svn/entries
+--- orig/public/.svn/entries	2010-06-17 14:57:54.250823668 +1000
++++ prototype/trunk/public/.svn/entries	2010-06-11 22:48:19.000000000 +1000
+@@ -1,20 +1,20 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/public
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+-2010-06-17T00:14:54.978542Z
+-1055
+-mdiponio
++2010-06-10T23:50:08.894666Z
++1033
++tmachet
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+@@ -39,17 +39,17 @@
+ dir
+ 
+ .htaccess
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.250823Z
++2010-06-11T12:48:18.000000Z
+ b9c7baa6a5de951798be967ac63828b1
+ 2010-03-17T05:14:14.195312Z
+ 518
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -79,17 +79,17 @@
+ dir
+ 
+ index.php
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.250823Z
++2010-06-11T12:48:18.000000Z
+ b688f43f63cf851e56d273fcad1446a2
+ 2010-04-11T23:10:13.522990Z
+ 672
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -107,8 +107,42 @@
+ 
+ 
+ 
+ 
+ 
+ 
+ 2696
+ 
++webinterface.log
++file
++
++
++
++
++2010-06-11T12:48:18.000000Z
++d41d8cd98f00b204e9800998ecf8427e
++2010-05-21T04:30:10.927915Z
++917
++tmachet
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++0
++
+Only in prototype/trunk/public/.svn/text-base: webinterface.log.svn-base
+diff -r -U 8 orig/public/uts/images/.svn/entries prototype/trunk/public/uts/images/.svn/entries
+--- orig/public/uts/images/.svn/entries	2010-06-17 14:57:53.850823801 +1000
++++ prototype/trunk/public/uts/images/.svn/entries	2010-06-11 22:48:17.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/public/uts/images
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-05-25T23:30:28.783275Z
+ 935
+ tmachet
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ Thumbs.db
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.843136Z
++2010-06-11T12:48:17.000000Z
+ 8c9cf7a205d4d34d086c9b46ba916a39
+ 2010-05-21T04:30:10.927915Z
+ 917
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -61,17 +61,17 @@
+ 152576
+ 
+ RL_inside.jpg
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.843136Z
++2010-06-11T12:48:17.000000Z
+ e603ee717e7238c9e3accb613f53f032
+ 2010-05-25T23:30:28.783275Z
+ 935
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -95,17 +95,17 @@
+ 132051
+ 
+ RL_outside.jpg
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.843136Z
++2010-06-11T12:48:17.000000Z
+ 23aa70901d4b418e2ad8e5783e000627
+ 2010-05-25T23:30:28.783275Z
+ 935
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -129,17 +129,17 @@
+ 108187
+ 
+ CoupledTank.jpg
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.843136Z
++2010-06-11T12:48:17.000000Z
+ 22fb4e307b41a1e08e0b07a20d246cd9
+ 2010-05-25T23:30:28.783275Z
+ 935
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -163,17 +163,17 @@
+ 124338
+ 
+ RL_tanks.jpg
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.843136Z
++2010-06-11T12:48:17.000000Z
+ 3b400f046849a5c4cc116db26de00222
+ 2010-05-25T23:30:28.783275Z
+ 935
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -197,17 +197,17 @@
+ 137019
+ 
+ IPR_close.jpg
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.843136Z
++2010-06-11T12:48:17.000000Z
+ 9d413e6ca8d889ef35febdcc7539af69
+ 2010-05-25T23:30:28.783275Z
+ 935
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -231,17 +231,17 @@
+ 66202
+ 
+ uts.png
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.843136Z
++2010-06-11T12:48:17.000000Z
+ d568479f4f6fcf7bd30dd647e6521f1a
+ 2010-04-15T00:28:01.723732Z
+ 694
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -265,17 +265,17 @@
+ 7587
+ 
+ ShakeTable_1.jpg
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.843136Z
++2010-06-11T12:48:17.000000Z
+ e37c86d21ad7d04e05838c33027bcc17
+ 2010-05-25T23:30:28.783275Z
+ 935
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -299,17 +299,17 @@
+ 70550
+ 
+ ShakeTable_3.jpg
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.846823Z
++2010-06-11T12:48:17.000000Z
+ 20485034843ccfc2dee8cced18e5fbc2
+ 2010-05-25T23:30:28.783275Z
+ 935
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -333,17 +333,17 @@
+ 94578
+ 
+ Coldfire.jpg
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.846823Z
++2010-06-11T12:48:17.000000Z
+ 87a816f3d54bded20f7ef2cffd167954
+ 2010-05-25T23:30:28.783275Z
+ 935
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -367,17 +367,17 @@
+ 127809
+ 
+ ShakeTable_close.jpg
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.846823Z
++2010-06-11T12:48:17.000000Z
+ 9fd08cef0474a919d7bc44e84e01a665
+ 2010-05-25T23:30:28.783275Z
+ 935
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -401,17 +401,17 @@
+ 74555
+ 
+ IPR.jpg
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.846823Z
++2010-06-11T12:48:17.000000Z
+ 4c580302ee337d7e8e661b26bd733e02
+ 2010-05-25T23:30:28.783275Z
+ 935
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -435,17 +435,17 @@
+ 87299
+ 
+ LoadedBeam_1.jpg
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.846823Z
++2010-06-11T12:48:17.000000Z
+ d7cc6266c92657a1253b1994eeddbfdb
+ 2010-05-25T23:30:28.783275Z
+ 935
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -469,17 +469,17 @@
+ 82157
+ 
+ FPGA_1.jpg
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.846823Z
++2010-06-11T12:48:17.000000Z
+ 2eb48e791062ac806eb42069816e9b1b
+ 2010-05-25T23:30:28.783275Z
+ 935
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -503,17 +503,17 @@
+ 123161
+ 
+ LoadedBeam_2.jpg
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.846823Z
++2010-06-11T12:48:17.000000Z
+ 3fdd49b4e3369ac81cacde9805143de2
+ 2010-05-25T23:30:28.783275Z
+ 935
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -537,17 +537,17 @@
+ 113413
+ 
+ PLC_1.jpg
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.846823Z
++2010-06-11T12:48:17.000000Z
+ 03cf201cab4e34582eeaf774f889ed61
+ 2010-05-25T23:30:28.783275Z
+ 935
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -571,17 +571,17 @@
+ 181402
+ 
+ FPGA_2.jpg
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.846823Z
++2010-06-11T12:48:17.000000Z
+ 896bfda270f16c091533e9c9d082cbb0
+ 2010-05-25T23:30:28.783275Z
+ 935
+ tmachet
+ has-props
+ 
+ 
+ 
+@@ -605,17 +605,17 @@
+ 114984
+ 
+ PLC_2.jpg
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:53.846823Z
++2010-06-11T12:48:17.000000Z
+ 3d64337e5e7096be9fc57c42eea400da
+ 2010-05-25T23:30:28.783275Z
+ 935
+ tmachet
+ has-props
+ 
+ 
+ 
+diff -r -U 8 orig/public/uts/.svn/entries prototype/trunk/public/uts/.svn/entries
+--- orig/public/uts/.svn/entries	2010-06-17 14:57:53.850823801 +1000
++++ prototype/trunk/public/uts/.svn/entries	2010-06-11 22:48:17.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/public/uts
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-05-25T23:30:28.783275Z
+ 935
+ tmachet
+Only in prototype/trunk/public: webinterface.log
+diff -r -U 8 orig/.settings/org.eclipse.php.core.prefs prototype/trunk/.settings/org.eclipse.php.core.prefs
+--- orig/.settings/org.eclipse.php.core.prefs	2010-06-17 14:57:52.126824240 +1000
++++ prototype/trunk/.settings/org.eclipse.php.core.prefs	2010-06-16 02:54:41.000000000 +1000
+@@ -1,3 +1,3 @@
+-#Thu Mar 18 15:36:41 EST 2010
++#Wed Jun 16 02:54:41 EST 2010
+ eclipse.preferences.version=1
+-include_path=0;/WI/library/Zend
++include_path=0;/WI/public\u00050;/WI/application
+diff -r -U 8 orig/.settings/.svn/entries prototype/trunk/.settings/.svn/entries
+--- orig/.settings/.svn/entries	2010-06-17 14:57:52.126824240 +1000
++++ prototype/trunk/.settings/.svn/entries	2010-06-11 22:48:15.000000000 +1000
+@@ -1,12 +1,12 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk/.settings
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+ 2010-03-18T07:16:21.424578Z
+ 520
+ mdiponio
+@@ -27,17 +27,17 @@
+ 7ee224fa-57ca-4419-87f9-1f4314938d77
+ 
+ org.eclipse.wst.jsdt.ui.superType.name
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.126824Z
++2010-06-11T12:48:15.000000Z
+ c89686a387d2b12b3c729ce35a0bcb5b
+ 2010-03-17T05:14:14.195312Z
+ 518
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -61,17 +61,17 @@
+ 6
+ 
+ org.eclipse.php.core.prefs
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.126824Z
++2010-06-11T12:48:15.000000Z
+ 03098d9c8d691058275d91a635e267a9
+ 2010-03-18T07:16:21.424578Z
+ 520
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -95,17 +95,17 @@
+ 92
+ 
+ org.eclipse.wst.jsdt.ui.superType.container
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.126824Z
++2010-06-11T12:48:15.000000Z
+ b27d1cf62dde4473bab7c433317bb0ce
+ 2010-03-17T05:14:14.195312Z
+ 518
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -129,17 +129,17 @@
+ 49
+ 
+ .jsdtscope
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:52.126824Z
++2010-06-11T12:48:15.000000Z
+ 60becf9566a086946234ab57c156ae64
+ 2010-03-17T05:14:14.195312Z
+ 518
+ mdiponio
+ 
+ 
+ 
+ 
+diff -r -U 8 orig/.svn/all-wcprops prototype/trunk/.svn/all-wcprops
+--- orig/.svn/all-wcprops	2010-06-17 14:57:54.250823668 +1000
++++ prototype/trunk/.svn/all-wcprops	2010-06-11 22:48:19.000000000 +1000
+@@ -1,12 +1,12 @@
+ K 25
+ svn:wc:ra_dav:version-url
+ V 52
+-/projects/personal/sahara/svn/!svn/ver/1055/WI/trunk
++/projects/personal/sahara/svn/!svn/ver/1033/WI/trunk
+ END
+ .project
+ K 25
+ svn:wc:ra_dav:version-url
+ V 60
+ /projects/personal/sahara/svn/!svn/ver/518/WI/trunk/.project
+ END
+ .buildpath
+diff -r -U 8 orig/.svn/entries prototype/trunk/.svn/entries
+--- orig/.svn/entries	2010-06-17 14:57:54.250823668 +1000
++++ prototype/trunk/.svn/entries	2010-06-11 22:48:19.000000000 +1000
+@@ -1,20 +1,20 @@
+ 10
+ 
+ dir
+-1060
++1038
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn/WI/trunk
+ http://develop.eng.uts.edu.au/projects/personal/sahara/svn
+ 
+ 
+ 
+-2010-06-17T00:14:54.978542Z
+-1055
+-mdiponio
++2010-06-10T23:50:08.894666Z
++1033
++tmachet
+ has-props
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+@@ -33,17 +33,17 @@
+ dir
+ 
+ .project
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.250823Z
++2010-06-11T12:48:19.000000Z
+ 9aa5a41ccbae3f4b1564f5f9bef3a345
+ 2010-03-17T05:14:14.195312Z
+ 518
+ mdiponio
+ 
+ 
+ 
+ 
+@@ -73,17 +73,17 @@
+ dir
+ 
+ .buildpath
+ file
+ 
+ 
+ 
+ 
+-2010-06-17T04:57:54.250823Z
++2010-06-11T12:48:19.000000Z
+ e3ad7040b296dda84c6a521b3913506a
+ 2010-03-21T23:27:38.393349Z
+ 522
+ mdiponio
+ 
+ 
+ 
+ 
