@@ -115,6 +115,7 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
         $this->view->controller = $controller;
         $this->view->action = $action;
 
+        $page = $controller . $action;
 
         /* Check if the user has a pending request and should be in the queue
          * or on a experiment page. */
@@ -123,8 +124,8 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
             $session = Sahara_Soap::getSchedServerQueuerClient()->isUserInQueue(array('userQName' => $this->_auth->getIdentity()));
 
             /* Force a user to be specific places depending on where they are in session. */
-            if ($session->inQueue && "$controller$action" != 'queuequeuing' &&
-                    !in_array("$controller$action", $this->_noRedirectPages))
+            if ($session->inQueue && $page != 'queuequeuing' &&
+                    !in_array($page, $this->_noRedirectPages))
             {
                 /* User in queue but not on queueing page. */
                 $this->_redirectTo('queuing', 'queue');
@@ -133,8 +134,8 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
             {
                 $this->view->userRole = self::PSEUDO_ROLE_QUEUE;
             }
-            else if ($session->inSession && "$controller$action" != 'sessionindex' &&
-                    !in_array("$controller$action", $this->_noRedirectPages))
+            else if ($session->inSession && $page != 'sessionindex' &&
+                    !in_array($page, $this->_noRedirectPages))
             {
                 /* User in session but not on session page. */
                 $this->_redirectTo('index', 'session');
@@ -143,9 +144,9 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
             {
                 $this->view->userRole = self::PSEUDO_ROLE_SESSION;
             }
-            else if ("$controller$action" == 'queuequeuing' || "$controller$action" == 'sessionindex')
+            else if ($page == 'queuequeuing' || $page == 'sessionindex' || $page == "indexindex")
             {
-                /* Was in queue or in session, but thatis finished so redirect
+                /* Was in queue or in session, but that is finished so redirect
                  * them back home. */
                 switch ($this->_acl->getUserRole())
                 {
