@@ -59,6 +59,11 @@ switch ($this->userRole)
             'Session' => array('controller' => 'session', 'action' => 'index')
         );
         break;
+    case 'ERROR':
+        $menu = array(
+            'Login' => array('controller' => 'index', 'action' => 'index')
+        );
+        break;
     default:
         $menu = array(
         	'Login' => array('controller' => 'index', 'action' => 'index'),
