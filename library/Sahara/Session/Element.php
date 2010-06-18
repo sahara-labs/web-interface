@@ -165,4 +165,9 @@ abstract class Sahara_Session_Element
         list($ns, $name) = explode(':', Zend_Auth::getInstance()->getIdentity(), 2);
         return $name;
     }
+
+    public function __toString()
+    {
+        return $this->render();
+    }
 }
