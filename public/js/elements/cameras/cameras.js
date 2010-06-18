@@ -246,7 +246,7 @@ function setCameraCookie(key, value)
 {
 	var expiry = new Date();
 	expiry.setDate(expiry.getDate() + 365);
-	var cookie = 'Camera_' + cameraRigType + '-' + key + '=' + value + ';expires=' + expiry.toUTCString();
+	var cookie = 'Camera_' + cameraRigType + '-' + key + '=' + value + ';path=/;expires=' + expiry.toUTCString();
 
 	document.cookie = cookie;
 }
