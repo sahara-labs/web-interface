@@ -38,11 +38,19 @@
 
 /**
  * Renders camera plugins for the session webpages.
+ * <br />
+ * The options for this element are:
+ * <ul>
+ * 	<li>draggable - [true|false] - Default is true</li>
+ * </ul>
  */
 class Sahara_Session_Element_Cameras extends Sahara_Session_Element
 {
     /** @var array Camera configuration. */
     private $_cameraConfig;
+
+    /** @var boolean Whether the cameras can be dragged. */
+    private $_draggable = true;
 
     /** @var array Name of Format types. */
     private $_formats = array(
@@ -52,7 +60,7 @@ class Sahara_Session_Element_Cameras extends Sahara_Session_Element
         'mmsh' => 'VLC Media Player'
     );
 
-    public function __construct($rig)
+    public function __construct($rig, $options = array())
     {
         parent::__construct($rig);
 
@@ -61,6 +69,16 @@ class Sahara_Session_Element_Cameras extends Sahara_Session_Element
         if (!is_null($descs))
         {
             $this->_formats = array_merge($this->_formats, $descs->toArray());
+        }
+
+        foreach ($options as $k => $v)
+        {
+            switch ($k)
+            {
+                case 'draggable':
+                    $this->_draggable = $v;
+                    break;
+            }
         }
     }
 
@@ -170,6 +188,7 @@ class Sahara_Session_Element_Cameras extends Sahara_Session_Element
         $this->init();
         $this->_view->cameras = $this->_cameraConfig;
         $this->_view->formats = $this->_formats;
+        $this->_view->draggable = $this->_draggable;
 
         $this->_view->headLink()->appendStylesheet($this->_view->baseUrl('css/elements/cameras.css'));
         $this->_view->headScript()->appendFile($this->_view->baseUrl('js/elements/cameras/jquery.media.js'));
@@ -178,5 +197,11 @@ class Sahara_Session_Element_Cameras extends Sahara_Session_Element
         $html = $this->_view->render('Cameras/_cameraPanel.phtml');
         $html .= $this->_view->render('Cameras/_cameras.phtml');
         return $html;
+    }
+
+    public function setDraggable($b)
+    {
+        $this->_draggable = $b;
+        return $this;
     }
 }

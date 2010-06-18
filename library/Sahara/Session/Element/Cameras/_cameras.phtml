@@ -40,7 +40,7 @@
 <?php for ($i = 0, $k = 1; $i < count($this->cameras); $i++, $k++): $cam = $this->cameras[$i]?>
 	<div class="outcamerapanel" style="height:<?=$cam['height'] + 30?>px;overflow:visible">
 	<div id="camerapanel<?=$k?>" class="ui-corner-all camerapanel" style="width:<?=$cam['width']?>px;">
-		<div class="sessionpanelheader sessionpaneldraggable">
+		<div class="sessionpanelheader <?php if($this->draggable) echo 'sessionpaneldraggable'; ?>">
 			<p>
 				<span class="ui-icon ui-icon-video sessionpanelheadericon"></span><?=$this->cameras[$i]['TITLE']?>
 			</p>
@@ -130,6 +130,7 @@ $(document).ready( function () {
 		undeploy(<?=$k?>);
 	})
 
+<?php if ($this->draggable): ?>
 	/* Make the camera panel draggable. */
 	$("#camerapanel<?=$k?>").draggable({
 		handle: 'p',
@@ -147,7 +148,7 @@ $(document).ready( function () {
 		$("#camerapanel<?=$k?>").css("left", pos[0] + "px");
 		$("#camerapanel<?=$k?>").css("top", pos[1] + "px");
 	}
-
+<?php endif; ?>
 
 <?php endfor; ?>
 

@@ -54,7 +54,9 @@
     		</form>
 		</div>
 	<?php endfor; ?>
-	<button id="camreset">Reset Positions</button>
+	<?php if ($this->draggable): ?>
+		<button id="camreset">Reset Positions</button>
+	<?php endif; ?>
 	</div>
 </div>
 
@@ -96,6 +98,7 @@ $(document).ready( function() {
 	$(".cameraformat .jqTransformSelectWrapper").css("margin-bottom", "10px");
 	$(".cameraformat ul").css("width", "158px");
 
+<?php if($this->draggable): ?>
 	/* Reset position button. */
 	$("#camreset").button();
 	$("#camreset").click( function(){
@@ -108,6 +111,7 @@ $(document).ready( function() {
 			setCameraCookie($(id).parent().attr('id'), "0x0");
 		}
 	});
+<?php endif; ?>
 });
 
 //]]>
