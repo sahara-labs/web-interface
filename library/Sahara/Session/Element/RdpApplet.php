@@ -43,6 +43,6 @@ class Sahara_Session_Element_RdpApplet extends Sahara_Session_Element
 {
     public function render()
     {
-        echo $this->_view->render('RdpApplet/_rdpApplet.phtml');
+        return $this->_view->render('RdpApplet/_rdpApplet.phtml');
     }
 }
