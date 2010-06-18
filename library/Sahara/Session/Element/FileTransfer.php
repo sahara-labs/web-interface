@@ -86,6 +86,6 @@ class Sahara_Session_Element_FileTransfer extends Sahara_Session_Element
         $this->init();
         $this->_view->headLink()->appendStylesheet($this->_view->baseUrl('/css/elements/filetransfer.css'));
 
-        echo $this->_view->render('FileTransfer/_fileTransferPanel.phtml');
+        return $this->_view->render('FileTransfer/_fileTransferPanel.phtml');
     }
 }
