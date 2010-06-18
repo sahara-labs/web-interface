@@ -40,6 +40,6 @@ class Sahara_Session_Element_HeaderMagic extends Sahara_Session_Element
 {
     public function render()
     {
-        echo $this->_view->render('HeaderMagic/_headerMagic.phtml');
+        return $this->_view->render('HeaderMagic/_headerMagic.phtml');
     }
 }
