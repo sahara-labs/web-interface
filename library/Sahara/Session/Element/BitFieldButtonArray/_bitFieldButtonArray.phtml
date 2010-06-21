@@ -36,31 +36,21 @@
  * @date 18th June 2010
  */
 
-class Sahara_Session_Element_BitFieldButtonArray extends Sahara_Session_Element
-{
-    /** The name of this element to use in selectors. */
-    private $_name;
+$this->headScript()->appendFile($this->baseUrl('/js/elements/bitfieldbuttonarray.js'));
 
-    public function __construct($rigClient, $name)
-    {
-        parent::__construct($rigClient);
+?>
 
-        $this->_name = $name;
-        $this->_view->name = $name;
-    }
+<div class="bitFieldButton">
+    <canvas id="<?=$this->name?>" width="400" height="90">
+    	<div class="nocanvas">
+    		Sorry your browser is not supported. Please use Firefox 1.5+, Safari, Chrome or Internet Explorer 6+.
+    	</div>
+    </canvas>
+</div>
 
-    public function init()
-    {
-
-    }
-
-    public function render()
-    {
-        return $this->_view->render('BitFieldButtonArray/_bitFieldButtonArray.phtml');
-    }
-
-    public function __toString()
-    {
-        return $this->render();
-    }
-}
+<script type="text/javascript">
+$(document).ready(function() {
+	var bt = new BitFieldButtonArray("<?=$this->name?>");
+	bt.init();
+});
+</script>
