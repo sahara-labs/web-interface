@@ -61,8 +61,13 @@ BitFieldButtonArray.prototype.draw = function() {
 };
 
 BitFieldButtonArray.prototype.drawDipCell = function(xoff, yoff, bpos) {
+	/* Track position. */
 	var x = xoff + 10;
 	var y = yoff + 5;
+	
+	/* Button position. */
+	var bx = x;
+	var by = y + 50 - bpos;
 	
 	/* Dip switch outline. */
 	this.ctx.strokeStyle = "#000000";
@@ -95,28 +100,26 @@ BitFieldButtonArray.prototype.drawDipCell = function(xoff, yoff, bpos) {
 	this.ctx.stroke();
 	
 	/* Button head. */
-	var bx = x;
-	var by = y + 40 - bpos;
-	lgrad = this.ctx.createLinearGradient(x, y + 41, x + 30, y + 41);
+	lgrad = this.ctx.createLinearGradient(x, y + 31, x + 30, y + 31);
 	lgrad.addColorStop(0.3, "#8B8B8B");
 	lgrad.addColorStop(0.8, "#606060");
 	lgrad.addColorStop(1, "#414141");
 	this.ctx.fillStyle = lgrad;
-	this.ctx.fillRect(bx + 5, by - 5, 30, 40);
+	this.ctx.fillRect(bx + 5, by - 5, 30, 30);
 	this.ctx.strokeStyle = "#000000";
-	this.ctx.strokeRect(bx + 5, by - 5, 30, 40);
+	this.ctx.strokeRect(bx + 5, by - 5, 30, 30);
 	
 	this.ctx.beginPath();
 	this.ctx.moveTo(bx, by);
-	this.ctx.lineTo(bx, by + 40);
-	this.ctx.lineTo(bx + 5, by + 35);
+	this.ctx.lineTo(bx, by + 30);
+	this.ctx.lineTo(bx + 5, by + 25);
 	this.ctx.lineTo(bx + 5, by - 5);
 	this.ctx.lineTo(bx, by);
 	this.ctx.closePath();
 	this.ctx.fill();
 	
 	this.ctx.lineWidth = 0.5;
-	for (var i = 0; i <= 40; i += 2)
+	for (var i = 0; i <= 30; i += 2)
 	{
 		this.ctx.beginPath();
 		this.ctx.moveTo(bx, by + i);
@@ -125,28 +128,28 @@ BitFieldButtonArray.prototype.drawDipCell = function(xoff, yoff, bpos) {
 	}
 	
 	this.ctx.beginPath();
-	this.ctx.moveTo(bx, by + 40);
-	this.ctx.lineTo(bx + 30, by + 40);
-	this.ctx.lineTo(bx + 35, by + 35);
-	this.ctx.lineTo(bx + 5, by + 35);
-	this.ctx.lineTo(bx, by + 40);
+	this.ctx.moveTo(bx, by + 30);
+	this.ctx.lineTo(bx + 30, by + 30);
+	this.ctx.lineTo(bx + 35, by + 25);
+	this.ctx.lineTo(bx + 5, by + 25);
+	this.ctx.lineTo(bx, by + 30);
 	this.ctx.closePath();
 	this.ctx.fill();
 	
 	for (var i = 0; i < 30; i += 2)
 	{
 		this.ctx.beginPath();
-		this.ctx.moveTo(bx + 3 + i, by + 40);
-		this.ctx.lineTo(bx + 8 + i, by + 35);
+		this.ctx.moveTo(bx + 3 + i, by + 30);
+		this.ctx.lineTo(bx + 8 + i, by + 25);
 		this.ctx.stroke();
 	}
 	
 	this.ctx.lineWidth = 1;
-	var rgrad = this.ctx.createRadialGradient(bx + 20, by + 15, 2, bx + 20, by + 15, 10);
-	if (true)
+	var rgrad = this.ctx.createRadialGradient(bx + 20, by + 10, 2, bx + 20, by + 10, 9);
+	if (false)
 	{
 		rgrad.addColorStop(0, '#BCBCBC');  
-		rgrad.addColorStop(0.8, '#606060');  
+		rgrad.addColorStop(0.6, '#606060');  
 		rgrad.addColorStop(1, 'rgba(228,199,0,0)');
 	}
 	else
@@ -159,7 +162,7 @@ BitFieldButtonArray.prototype.drawDipCell = function(xoff, yoff, bpos) {
 	
 	this.ctx.fillStyle = rgrad;
 	this.ctx.beginPath();
-	this.ctx.arc(bx + 20, by + 15, 10, 0, Math.PI * 2, false);
+	this.ctx.arc(bx + 20, by + 10, 10, 0, Math.PI * 2, false);
 	this.ctx.closePath();
 	this.ctx.fill();
 	this.ctx.stroke();
@@ -171,7 +174,7 @@ BitFieldButtonArray.prototype.drawDipCell = function(xoff, yoff, bpos) {
 	lgrad.addColorStop(0.4, "#ABABAB");
 	lgrad.addColorStop(0.6, "#CACACA");
 	this.ctx.fillStyle = lgrad;
-	this.ctx.fillRect(x + 30, y - 1, 10, by - y - 5);
+	//this.ctx.fillRect(x + 30, y - 1, 10, by - y - 5);
 	
 	lgrad = this.ctx.createLinearGradient(x + 35, by - 5, x + 45, by - 5);
 	lgrad.addColorStop(0, "#515151");
