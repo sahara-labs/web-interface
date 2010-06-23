@@ -72,13 +72,13 @@ function provideSessionInfoApplet()
 {
 	var applet = document.getElementById("rdpapplet");
 	var host = document.location.host;
-	if (typeof applet.setSessionInfo !== 'undefined')
+	if (!(typeof applet.setSessionInfo == 'undefined' || $(".overlayelementhide").css('display') == 'none'))
 	{
 		applet.setSessionInfo("http://" + host, document.cookie);
 	}
 	else
 	{
-		setTimeout("provideSessionInfoApplet()", 2000);
+		setTimeout("provideSessionInfoApplet()", 250);
 	}
 }
 </script>
