@@ -290,18 +290,28 @@ $(document).ready(function() {
     </div>
 </div>
 
-<script>
-$("#iconlegends li").hover(
-  function () {
-    $(this).css("font-weight","bold");
-    $(this).children("span").css("display","inline");
-  }, 
-  function () {
-	    $(this).css("font-weight","normal");
-	$(this).children("span").css("display","none");
-  }
-);
-</script>
+
+<!--[if gt IE 7]><!-->
+ <script>
+	$("#iconlegends li").hover(
+  		function () {
+    		$(this).css("font-weight","bold");
+    		$(this).children("span").css("display","inline");
+  		}, 
+  		function () {
+	    	$(this).css("font-weight","normal");
+			$(this).children("span").css("display","none");
+  		}
+	);
+ </script>
+<!-- <![endif]--> 
+
+<!--[if lte IE 7]>
+  <script>
+	$("#iconlegends li").css("font-weight","bold");
+	$("#iconlegends li").children("span").css("display","inline");
+  </script>
+<![endif]--> 
 
 <?php else: ?>
 	<div class="ui-state-error ui-corner-all alertdiv centercontent" style="width:350px">
