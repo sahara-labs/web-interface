@@ -139,7 +139,7 @@ switch ($this->userRole)
 ?>
 
 <?php if (count($actionMenu)):?>
-<div id="actionbar">
+<div id="actionbar" style="display: none">
 	<ul id="actionbarlist">
 	<?php foreach ($actionMenu as $id => $action): ?>
 		<li>
@@ -223,7 +223,10 @@ $(document).ready(function() {
 		$('#<?=$id?>dialog').dialog('open');
 		return false;
 	});
+
 <?php endforeach; ?>
+
+	$("#actionbar").css("display", "block");
 });
 </script>
 <?php endif?>
