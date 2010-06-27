@@ -61,25 +61,35 @@ class Sahara_Soap
      *
      * @param String $uri URI to the WSDL file
      * @param String $location URI to server to use instead of WSDL SOAP address (optional)
-     * @throws @throws Exception if failed contacting Scheduling Server
+     * @throws Exception if failed contacting Scheduling Server
      */
-    public function __construct($uri, $location = null)
+    public function __construct($uri)
     {
         $this->_wsdl = $uri;
 
         $opts = array();
 
-        /* Load whether to cache WSDL. */
-        $cache = $config = Zend_Registry::get('config')->SOAP->get('cacheWSDL', TRUE);
-        if ($cache == FALSE || strcasecmp($cache, 'false')  == 0)
+        /* Whether to cache WSDLs. */
+        $cache = Zend_Registry::get('config')->SOAP->get('cacheWSDL', TRUE);
+        if ($cache == FALSE || strcasecmp($cache, 'false')  === 0)
         {
             ini_set('soap.wsdl_cache_enabled', WSDL_CACHE_NONE);
         }
 
-        $this->_client = new Zend_Soap_Client($this->_wsdl, $opts);
-        if (!is_null($location))
+        /* SOAP timeout. */
+        $tm = Zend_Registry::get('config')->SOAP->get('requestTimeout', 0);
+        if ($tm && is_int($tm))
         {
-            $this->_client->setLocation($location);
+            ini_set('default_socket_timeout', $tm);
+        }
+
+        $this->_client = new Zend_Soap_Client($this->_wsdl, $opts);
+
+        /* Whether to use the WSDL location. */
+        if(!Zend_Registry::get('config')->SOAP->get('useWSDLLocation', FALSE))
+        {
+            list($loc, $junk) = explode('?wsdl', $uri, 2);
+            $this->_client->setLocation($loc);
         }
     }
 
@@ -113,7 +123,7 @@ class Sahara_Soap
         /* Append end point (e.g. 'Permissions'). */
         $uri .= $endPoint;
 
-        return new Sahara_Soap($uri . '?wsdl', $uri);
+        return new Sahara_Soap($uri . '?wsdl');
     }
 
     /**
