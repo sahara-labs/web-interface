@@ -94,6 +94,7 @@
 }
 
 .permissiondialog {
+	overflow: visible;
 }
 
 .permissiondialogloading {
@@ -136,6 +137,7 @@
 
 .dialogcentercontent {
 	text-align: center;
+	width: 275px;
 }
 
 .dialogheader {
@@ -161,6 +163,12 @@
 
 .dialogreslist ul li {
 	display: inline;
+}
+
+.dialogreslistspan {
+	display: block;
+	float: left;
+	width: 135px;
 }
 
 .dialogreslisticon {

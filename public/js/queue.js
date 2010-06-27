@@ -88,13 +88,14 @@ function loadPermissionInfo(pid)
 					else if (!isNaN(key))  t = p.queueTarget[key];
 					else continue;
 					
-					html += "<li>";
+					html += "<li><span class='dialogreslistspan'>";
 					if (!t.viable) html += "<img src='/images/balls/red_small.gif' alt='Not viable' class='dialogreslisticon' />";
 					else if (!t.isFree) html += "<img src='/images/balls/yellow_small.gif' alt='In Use' class='dialogreslisticon' />";
 					else html += "<img src='/images/balls/green_small.gif' alt='Free' class='dialogreslisticon' />";
-					html += t.resource.resourceName.split('_').join(' ') + "</li>";
+					html += t.resource.resourceName.split('_').join(' ') + "</span></li>";
 				}
 				html += "</ul></div>";
+				html += "<div style='clear:both'></div>";
 			}
 			
 			/* Add queue button. */
