@@ -49,7 +49,7 @@ class ErrorController extends Zend_Controller_Action
      */
     public function errorAction()
     {
-        $this->view->headTitle('Remote Labs - Error Occurred');
+        $this->view->headTitle('Remote Labs - Error Occurred', Zend_View_Helper_Placeholder_Container_Abstract::SET);
 
         /* Information that should have been populated by the action
          * pre-dispatch hook, but because this is an error fallback,
