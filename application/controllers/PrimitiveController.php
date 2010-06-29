@@ -39,8 +39,15 @@
 /**
  * Controller for call rig client primitive control.
  */
-class PrimitiveController extends Sahara_Controller_Action_Acl
+class PrimitiveController extends Zend_Controller_Action
 {
+    /** Authentication storage. */
+    private $_auth;
+
+    public function init()
+    {
+        $this->_auth = Zend_Auth::getInstance();
+    }
     /**
      * Action to bridge a primitive call to the in session rigclient. The
      * results are returned as a JSON string (either the response object or
