@@ -41,6 +41,11 @@ function loadPermissionInfo(pid)
 		"/queue/info",   // URL to obtain information about the permission
 		{id: pid},       // GET parameter the permission ID
 		function(p) { // Callback to handle permission information
+			
+			/* Check in case the response isn't JSON indicated the session
+			 * has timed out. */
+			if (typeof p != "object") window.location.reload(); 
+			
 			var diagDiv = "div[aria-labelledby=ui-dialog-title-permission" + pid + "]";
 			var conDiv = "#permission" + pid;
 			
