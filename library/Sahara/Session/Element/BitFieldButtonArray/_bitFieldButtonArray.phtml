@@ -41,16 +41,5 @@ $this->headScript()->appendFile($this->baseUrl('/js/elements/bitfieldbuttonarray
 ?>
 
 <div class="bitFieldButton">
-    <canvas id="<?=$this->name?>" width="400" height="100">
-    	<div class="nocanvas">
-    		Sorry your browser is not supported. Please use Firefox 1.5+, Safari, Chrome or Internet Explorer 6+.
-    	</div>
-    </canvas>
-</div>
 
-<script type="text/javascript">
-$(document).ready(function() {
-	var bt = new BitFieldButtonArray("<?=$this->name?>");
-	bt.init();
-});
-</script>
+</div>
