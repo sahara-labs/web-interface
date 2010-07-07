@@ -97,5 +97,47 @@ Rendered page: institution/UTS/Coupled_Tanks.phtml.
 If no rig type script is provided, a default script is used which
 assumes a Remote Desktop style rig type.
 
-NOTE: Documentation is being written with details of how to develop
+NOTE: Documentation has been written with details of how to develop
 rig type pages, in collaboration with developing rig clients.
+
+Setting Up Custom Information Pages
+===================================
+To set up institution specific information pages i.e. News, FAQ, Contact
+Us and Laboratory Information pages that use the default template but 
+contain institute specific information.
+
+In the folder institution/<Configured institution>/ add a file
+with the name <information Type>.php eg Contacts.php or LabInfo.php. 
+This will set up the information to be displayed on the page.
+
+Include the following information:
+CONTACT US: Create an associative array which contains 
+	role => contact information.  
+  The contact information is again an associative array with any 
+  key => value pair that should be displayed (they will be displayed 
+  in a table as field => value).
+FAQ: The structure is list of associative arrays which contain the 
+  key value pairs:
+	question => question text
+	answer =>  answer text
+  Any links or editing must have the html mark up included.
+NEWS: The structure is list of associative arrays which contain the  
+  key value pairs:
+	header => News item header text
+	info  =>  News item information
+  Any links or editing must have the html mark up included.
+LABORATORY INFORMATION: For similar gallery style presentation, 
+  this script should have a list of arrays with each array containing
+  the information for the image. 
+  The image information is an associative array containing:
+    filename => image filename (from baseUrl)
+    alt => subtitle for image
+    title => title for image
+
+
+If no rig type institute specific content is provided, the default information 
+is used.
+
+NOTE: There are example scripts in docs/InfoExamples.  
+Additional documentation has been written with details of how to develop
+these pages, in collaboration with developing rig clients.
