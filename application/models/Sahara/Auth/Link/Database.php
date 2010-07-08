@@ -33,16 +33,50 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 18th June 2010
+ * @date 8th July 2010
  */
 
-$this->headScript()->appendFile($this->baseUrl('/js/elements/bitfieldbuttonarray.js'));
+class Sahara_Auth_Link_Database implements Sahara_Auth_Link
+{
+    /** Username to authenticate. */
+    private $_user;
 
-?>
+    /** Credential for authentication. */
+    private$_pass;
 
-<div class="bitfieldbutton">
-	<ul class="bitfieldbuttonlist">
+    /**
+     * Constructor for the auth link which takes the user name and password
+     * of the user to authenticate.
+     *
+     * @param $username user name of user
+     * @param $password password of user
+     */
+    public function __construct($username, $password)
+    {
+        $this->_user = $usrename;
+        $this->_cred = $passoword;
+    }
 
-	</ul>
-</div>
+    /**
+     * Returns true if the user can be authenticaed using the
+     * supplied credential.
+     *
+     * @return boolean true if the user is authenticated
+     */
+    public function authenticate();
 
+    /**
+     * Returns the properties value from the underlying record class.
+     *
+     * @param $property proerty to obtain value of
+     * @return mixed String | array | null
+     */
+    public function getAuthInfo($property);
+
+    /**
+     * Returns the type of the authenticator.
+     *
+     * @var String authenticator type
+     */
+    public function getAuthType();
+}

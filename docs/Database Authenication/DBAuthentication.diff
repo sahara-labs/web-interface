@@ -2,12 +2,6 @@ Index: application/configs/config.ini
 ===================================================================
 --- application/configs/config.ini	(revision 820)
 +++ application/configs/config.ini	(working copy)
-@@ -9,7 +9,7 @@
- 
- ; Logger level (FATAL | ERROR | WARN | INFO | DEBUG)
- logger.level = WARN
--logger.filename = /home/mdiponio/workspace/WI/webinterface.log
-+logger.filename = c:/Program Files/Sahara/WI/webinterface.log
  
  ; Display Information
  ; Header Infomation

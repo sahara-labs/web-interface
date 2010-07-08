@@ -33,16 +33,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 18th June 2010
+ * @date 8th July 2010
  */
 
-$this->headScript()->appendFile($this->baseUrl('/js/elements/bitfieldbuttonarray.js'));
+class Sahara_Database
+{
 
-?>
+    public function __call($method, $params)
+    {
 
-<div class="bitfieldbutton">
-	<ul class="bitfieldbuttonlist">
+    }
 
-	</ul>
-</div>
+        public static function getDatabase()
+    {
+        if (is_null(Zend_Registry::get('db')))
+        {
+            $db = new Sahara_Database();
+            Zend_Registry::set('db', $db);
+        }
 
+        return Zend_Registry::get('db');
+    }
+}
