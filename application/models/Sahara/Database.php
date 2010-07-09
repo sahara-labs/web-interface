@@ -36,19 +36,27 @@
  * @date 8th July 2010
  */
 
+/**
+ * Sets up access to the WI database. The following fields must be set up
+ * in configuration:
+ * <ul>
+ * 	<li>
+ * </ul>
+ */
 class Sahara_Database
 {
-
-    public function __call($method, $params)
+    /**
+     * Gets an instance of the Sahara_Database.
+     *
+     * @return Zend_Db instance
+     */
+    public static function getDatabase()
     {
-
-    }
-
-        public static function getDatabase()
-    {
-        if (is_null(Zend_Registry::get('db')))
+        if (!Zend_Registry::isRegistered('db'))
         {
-            $db = new Sahara_Database();
+            $config = Zend_Registry::get('config');
+            $db =  Zend_Db::factory($config->database);
+            Zend_Db_Table::setDefaultAdapter($db);
             Zend_Registry::set('db', $db);
         }
 

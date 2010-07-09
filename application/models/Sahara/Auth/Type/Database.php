@@ -36,34 +36,69 @@
  * @date 8th July 2010
  */
 
-class Sahara_Auth_Link_Database implements Sahara_Auth_Link
+/**
+ * Authentication link class which authenticates of the Sahara database 'users'
+ * table. The 'users' table must be modified to have the following columns
+ * added:
+ * <ul>
+ * 	<li>auth_allowed - boolean | tinyint(1) | bit(1) - Whether database
+ *  database will be allowed for the user.</li>
+ *  <li>password - varchar(64) - The SHA1 hashed authentication credential.</li>
+ * </ul>
+ * The following queries will modify the default Sahara database.
+ * <br /><pre>
+=== MySQL =====================================================================
+ALTER TABLE `users`
+ADD `auth_allowed` TINYINT (1) NOT NULL DEFAULT '0',
+ADD `password` VARCHAR( 64 ) NULL;
+===============================================================================
+</pre>
+ */
+class Sahara_Auth_Type_Database extends Sahara_Auth_Type
 {
-    /** Username to authenticate. */
-    private $_user;
+    /** @var Zend_Db_Table_Row User record. */
+    private $_record;
 
-    /** Credential for authentication. */
-    private$_pass;
-
-    /**
-     * Constructor for the auth link which takes the user name and password
-     * of the user to authenticate.
-     *
-     * @param $username user name of user
-     * @param $password password of user
-     */
-    public function __construct($username, $password)
+    public function __construct()
     {
-        $this->_user = $usrename;
-        $this->_cred = $passoword;
+        Sahara_Database::getDatabase();
     }
 
     /**
      * Returns true if the user can be authenticaed using the
-     * supplied credential.
+     * supplied credential. The tests for success with this authentication
+     * type are:
+     * <ol>
+     * 	<li>The user must exist.</li>
+     * 	<li>The user must have database authorisation enabled
+     * 	(auth_allowed = true).</li>
+     *  <li>The password must match the record password.</li>
+     * </ol>
      *
      * @return boolean true if the user is authenticated
      */
-    public function authenticate();
+    public function authenticate()
+    {
+        $table = new Zend_Db_Table('users');
+        $this->_record = $table->fetchRow($table->select()
+                ->where('name = ?', $this->_user)
+                ->where('namespace = ?', Zend_Registry::get('config')->institution));
+
+        /* 1) User must exist. */
+        if ($this->_record == null) return false;
+
+        $allowed = $this->_record->auth_allowed;
+        if (is_string($allowed)) // Occurs when 'bit(1)' type is used
+        {
+            $allowed = ord($allowed);
+        }
+
+        /* 2) Authorisation must be enabled. */
+        if (!$allowed) return false;
+
+        /* 3) Passwords must match. */
+        return $this->_record->password == sha1($this->_pass);
+    }
 
     /**
      * Returns the properties value from the underlying record class.
@@ -71,12 +106,10 @@ class Sahara_Auth_Link_Database implements Sahara_Auth_Link
      * @param $property proerty to obtain value of
      * @return mixed String | array | null
      */
-    public function getAuthInfo($property);
+    public function getAuthInfo($property)
+    {
+        if ($this->_record == null) return null;
 
-    /**
-     * Returns the type of the authenticator.
-     *
-     * @var String authenticator type
-     */
-    public function getAuthType();
+        return $this->_record->$property;
+    }
 }

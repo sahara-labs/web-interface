@@ -62,9 +62,12 @@ class IndexController extends Sahara_Controller_Action_Acl
             $username = $form->getValue('username');
             $password = $form->getValue('password');
 
-            /******************************************************************
-             ** TODO Add your authentication.                                **
-             ******************************************************************/
+            $auth = new Sahara_Auth($username, $password);
+            if (!$auth->authenticate())
+            {
+                 $this->view->messages = array("Authentication failure.");
+                 return;
+            }
 
             /* Store the authentication information. */
             $qName =  $inst . ':' . $username;

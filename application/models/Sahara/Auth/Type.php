@@ -41,16 +41,13 @@
  * and if successful, provides authentication information from the
  * underlying authentication source record.
  */
-interface Sahara_Auth_Link
+abstract class Sahara_Auth_Type
 {
-    /**
-     * Constructor for the auth link which takes the user name and password
-     * of the user to authenticate.
-     *
-     * @param $username user name of user
-     * @param $password password of user
-     */
-    public function __construct($username, $password);
+    /** Username to authenticate. */
+    protected $_user;
+
+    /** Credential for authentication. */
+    protected $_pass;
 
     /**
      * Returns true if the user can be authenticaed using the
@@ -58,7 +55,7 @@ interface Sahara_Auth_Link
      *
      * @return boolean true if the user is authenticated
      */
-    public function authenticate();
+    public abstract function authenticate();
 
     /**
      * Returns the properties value from the underlying record class.
@@ -66,12 +63,27 @@ interface Sahara_Auth_Link
      * @param $property proerty to obtain value of
      * @return mixed String | array | null
      */
-    public function getAuthInfo($property);
+    public abstract function getAuthInfo($property);
+
+    public function setUsername($user)
+    {
+        $this->_user = $user;
+    }
+
+    public function setPassword($password)
+    {
+        $this->_pass = $password;
+    }
 
     /**
      * Returns the type of the authenticator.
      *
      * @var String authenticator type
      */
-    public function getAuthType();
+    public function getAuthType()
+    {
+        $cls = get_class($this);
+        $clsParts = explode('_', $cls);
+        return end($clsParts);
+    }
 }
