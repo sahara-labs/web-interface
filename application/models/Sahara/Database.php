@@ -40,7 +40,12 @@
  * Sets up access to the WI database. The following fields must be set up
  * in configuration:
  * <ul>
- * 	<li>
+ * 	<li>database.adapter - Database server adapter
+ * (See http://framework.zend.com/manual/en/zend.db.adapter.html).</li>
+ *  <li>database.params.host - Database server address.</li>
+ *  <li>database.params.dbname - Database name.</li>
+ *  <li>database.params.username - Database username.<li>
+ *  <li>database.params.password - Password corresponding to the username.</li>
  * </ul>
  */
 class Sahara_Database
@@ -49,13 +54,20 @@ class Sahara_Database
      * Gets an instance of the Sahara_Database.
      *
      * @return Zend_Db instance
+     * @throws Exception - 100 - Database not configured
      */
     public static function getDatabase()
     {
         if (!Zend_Registry::isRegistered('db'))
         {
-            $config = Zend_Registry::get('config');
-            $db =  Zend_Db::factory($config->database);
+            $dbconfig = Zend_Registry::get('config')->database;
+
+            if (!$dbconfig)
+            {
+                throw new Exception('Database not configured.', 100);
+            }
+
+            $db =  Zend_Db::factory($dbconfig);
             Zend_Db_Table::setDefaultAdapter($db);
             Zend_Registry::set('db', $db);
         }

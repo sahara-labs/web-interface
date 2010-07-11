@@ -80,12 +80,17 @@ class Sahara_Auth
      * succeeds, so no subsequent method is run.
      *
      * @return boolean true if the user can be authenticated
+     * @throws Exception - 101 - Authentication types are not configured
      */
     public function authenticate()
     {
-        $authTypes = Zend_Registry::get('config')->auth->type->toArray();
+        $authTypes = Zend_Registry::get('config')->auth->type;
+        if (!$authTypes)
+        {
+            throw new Exception('Authentication types are not configured.', 101);
+        }
 
-        foreach ($authTypes as $type)
+        foreach ($authTypes->toArray() as $type)
         {
             if (!($auth = $this->_loadclass($this->_institution . "_Auth_Type_$type")) &&
                 !($auth = $this->_loadclass("Sahara_Auth_Type_$type"))) continue;
@@ -127,6 +132,7 @@ class Sahara_Auth
                     break;
                 }
             }
+
             if (!$found) return false;
 
             $cls = new $name();

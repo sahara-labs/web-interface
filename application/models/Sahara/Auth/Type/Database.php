@@ -41,7 +41,7 @@
  * table. The 'users' table must be modified to have the following columns
  * added:
  * <ul>
- * 	<li>auth_allowed - boolean | tinyint(1) | bit(1) - Whether database
+ * 	<li>auth_allowed - boolean | tinyint(1) - Whether database
  *  database will be allowed for the user.</li>
  *  <li>password - varchar(64) - The SHA1 hashed authentication credential.</li>
  * </ul>
@@ -61,6 +61,7 @@ class Sahara_Auth_Type_Database extends Sahara_Auth_Type
 
     public function __construct()
     {
+        parent::__construct();
         Sahara_Database::getDatabase();
     }
 
@@ -76,6 +77,7 @@ class Sahara_Auth_Type_Database extends Sahara_Auth_Type
      * </ol>
      *
      * @return boolean true if the user is authenticated
+     * @see models/Sahara/Auth/Sahara_Auth_Type::authenticate()
      */
     public function authenticate()
     {

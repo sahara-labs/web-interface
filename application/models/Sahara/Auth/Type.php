@@ -49,6 +49,18 @@ abstract class Sahara_Auth_Type
     /** Credential for authentication. */
     protected $_pass;
 
+    /** Configuration. */
+    protected $_config;
+
+    /** Logger. */
+    protected $_logger;
+
+    public function __construct()
+    {
+        $this->_config = Zend_Registry::get('config');
+        $this->_logger = Zend_Registry::get('logger');
+    }
+
     /**
      * Returns true if the user can be authenticaed using the
      * supplied credential.
