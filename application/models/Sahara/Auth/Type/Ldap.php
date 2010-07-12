@@ -111,8 +111,9 @@ class Sahara_Auth_Type_Ldap extends Sahara_Auth_Type
         }
         catch (Exception $ex)
         {
-            if ($ex->getCode() == Zend_Ldap_Exception::LDAP_NO_SUCH_OBJECT ||    // User name not known
-                $ex->getCode() == Zend_Ldap_Exception::LDAP_INVALID_CREDENTIALS) // Password wrong
+            if ($ex->getCode() == Zend_Ldap_Exception::LDAP_NO_SUCH_OBJECT ||       // User name not known
+                $ex->getCode() == Zend_Ldap_Exception::LDAP_INVALID_CREDENTIALS ||  // Password wrong
+                $ex->getCode() == Zend_Ldap_Exception::LDAP_UNWILLING_TO_PERFORM)   // Account is locked
             {
                 return false;
             }
