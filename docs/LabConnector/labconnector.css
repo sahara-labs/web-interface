@@ -1,0 +1,229 @@
+@CHARSET "UTF-8";
+/**
+ * SAHARA Web Interface
+ *
+ * User interface to Sahara Remote Laboratory system.
+ *
+ * @license See LICENSE in the top level directory for complete license terms.
+ *
+ * Copyright (c) 2010, University of Technology, Sydney
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of the University of Technology, Sydney nor the names
+ *    of its contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * @author Herbert Yeung
+ * @date 17th June 2010
+ */
+
+/******************************************************************************
+ ** LabConnector page.                                                       **
+ ******************************************************************************/
+
+#userclasstabs {
+ 	margin: 0 auto;
+ 	width: 610px;
+}
+
+.labconnectorlistbar {
+	list-style: none;
+	margin: 0px;
+	padding: 0px;
+}
+
+.labconnectorbutton {
+	-moz-box-shadow:0 0 4px #B5B5B5;
+	background-color:#EFEFEF;
+	border:1px solid #B5B5B5;
+	display:block;
+	float:left;
+	height:100px;
+	margin:20px;
+	text-align:center;
+	width:100px;
+}
+
+.ilabsicon {
+	padding:5px;
+	border: 0;
+	display: block;
+	margin: 10px auto;
+	height: 40px;
+	width: 40px;
+}
+
+.ilabsexptresulticon {
+	padding:0px;
+	border: 0;
+	display: block;
+	margin: 3px auto;
+	height: 40px;
+	width: 40px;
+}
+
+#experimentresultsbar {
+	font-size: 0.75em;
+	padding: 10px;
+	margin: 10px auto;
+	width:  228px;
+	height: 70px;
+}
+
+#experimentresults div img {
+	height: 38px;
+	width: 180px;
+	padding-right: 10px;
+}
+
+.exptresultsbutton {
+	-moz-box-shadow:0 0 4px #B5B5B5;
+	background-color:#EFEFEF;
+	border:1px solid #B5B5B5;
+	display:block;
+	float:left;
+	height:64px;
+	margin:2px;
+	text-align:center;
+	width:220px;
+}
+
+#iconlegends {
+	font-size: 0.75em;
+	padding: 0px;
+	margin: 0px;
+}
+
+
+#iconlegends div img {
+	height: 25px;
+	width: 25px;
+	padding-right: 10px;
+}
+
+#iconlegend {
+	float: left;
+	width: 30%;
+	padding-top: 15px;
+	padding-left: 150px;
+	padding-right: 50px;
+}
+
+#iconlegends li {
+	list-style: none;
+}
+
+.legendtext {
+	display:none; 
+	padding-left: 4px;
+	font-weight:normal;
+	height: 40px;
+}
+
+.legendhover {
+	display:none;
+	border: 1px solid #999999;
+	-moz-box-shadow: 5px 5px 4px #B5B5B5;
+	margin-top: -35px;
+	margin-left: -35px;
+	backgrond-color:white;
+}
+
+.hoverimg{
+	/*float: left;
+	background-color: #B5B5B5;*/	
+}
+
+#balliconlegend {
+	padding-top: 15px;
+	
+}
+ 
+.bordered {
+	margin:auto;
+	width:600px;
+}
+
+.contacttable {
+	border-collapse:collapse;
+	border-color:#EFEFEF;
+	border-style:solid;
+	border-width:0 2px;
+	width:100%;	
+}
+
+.contacthead {
+	text-align:left;
+	padding-left:15px;
+	background-color:#606060;
+	width:370px;
+	height:40px;
+	color:#FFFFFF;
+}
+
+.grey {
+	background-color:#EFEFEF;
+}
+
+.white {
+	background-color:white;
+}
+
+.contactLabel {
+	width:30%;
+	font-weight:bold;
+}
+	
+.contactValue {
+	width:70%
+	
+}
+		
+.news {
+	padding:15px;
+	font-size:12pt;
+	line-height:20px;
+}
+
+.bordered .h3 {
+	font-size:12pt;
+	font-weight:bold;
+}
+
+.gallery{
+	position:relative;
+	margin-top:20px;
+	background:white;
+	width:80%;
+	margin-left:30px;
+}
+
+.gallery_list{width:800px}
+.gallery_list li{width:100px;height:70px;border:3px solid #eee;margin: 0 14px 14px 0;overflow:hidden;background:#000;}
+.gallery_list li div{left:240px}
+.gallery_list li img.thumb{opacity:.5}
+.gallery_list li.active img.thumb,.gallery_demo li:hover img.thumb{opacity:.99} /* safari bug */
+.gallery_list li div .caption{font:italic 0.7em/1.4 georgia,serif;}
+#main_image{margin:0 auto 33px auto;height:450px;width:600px;background:white;padding:1px;border:3px double #777;}
+#main_image img{margin-bottom:10px;}
+.nav{padding-top:15px;clear:both;font:90% 'helvetica neue',sans-serif;letter-spacing:2px;text-align:center;font:80%/140% georgia,serif;}
+.caption{font-size: 0.85em;color:#000;}
