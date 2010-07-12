@@ -84,7 +84,7 @@ class Sahara_Auth_Type_Database extends Sahara_Auth_Type
         $table = new Zend_Db_Table('users');
         $this->_record = $table->fetchRow($table->select()
                 ->where('name = ?', $this->_user)
-                ->where('namespace = ?', Zend_Registry::get('config')->institution));
+                ->where('namespace = ?', $this->_config->institution));
 
         /* 1) User must exist. */
         if ($this->_record == null) return false;

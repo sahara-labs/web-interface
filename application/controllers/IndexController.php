@@ -68,6 +68,7 @@ class IndexController extends Sahara_Controller_Action_Acl
                  $this->view->messages = array("Authentication failure.");
                  return;
             }
+            $auth->setupSession();
 
             /* Store the authentication information. */
             $qName =  $inst . ':' . $username;
@@ -75,14 +76,7 @@ class IndexController extends Sahara_Controller_Action_Acl
             $storage->clear();
             $storage->write($qName);
 
-
             $user = Sahara_Soap::getSchedServerPermissionsClient()->getUser(array('userQName' => $qName));
-            if ($user->persona == 'NOTFOUND')
-            {
-                /**************************************************************
-                 ** TODO Try to find about the user and add permissions.     **
-                 **************************************************************/
-            }
 
             /* Redirect to an appropriate page. */
             switch ($user->persona)

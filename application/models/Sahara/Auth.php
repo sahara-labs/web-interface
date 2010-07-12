@@ -41,14 +41,6 @@ class Sahara_Auth
     /** @var UTS_Auth The successful authentication type. */
     private $_successType;
 
-    /** @var assoc array Chain of session setup authenticators. */
-    private $_sessionChain = array(
-        'LdapAccount'   => array('Database'),          // LDAP account if it does not exist
-        'Permissions'   => array('Ldap'),              // Permissions based on subject or user class
-        'SambaPassword' => array('Dat', 'Database'),   // Reset the Samba passwords
-        'HomeDirectory' => array('Ldap', 'Database')   // Sets up the users home directory
-    );
-
     /** @var String Institution name. */
     private $_institution;
 
@@ -84,7 +76,7 @@ class Sahara_Auth
      */
     public function authenticate()
     {
-        $authTypes = Zend_Registry::get('config')->auth->type;
+        $authTypes = $this->_config->auth->type;
         if (!$authTypes)
         {
             throw new Exception('Authentication types are not configured.', 101);
@@ -105,9 +97,33 @@ class Sahara_Auth
         return !is_null($this->_successType);
     }
 
-    public function setUpSession()
+    public function setupSession()
     {
+        $sessionTypes = $this->_config->auth->session;
+        if (!$sessionTypes) return;
 
+        foreach ($sessionTypes as $session)
+        {
+            /* Configuration format is <Session Type>{<Succeeding auth type>,...,}. */
+            list($setup, $auth) = explode('{', $session, 2);
+
+            /* If no auth types are configured for the session setup to run, don't
+             * run it. */
+            if (!strpos($auth, '}')) continue;
+
+
+
+            /* Only run the session setup, if it is configured to run for the
+             * the succeeding auth type. */
+            $auth = substr($auth, 0, -1);
+            if (!in_array($this->_successType->getAuthType(), explode(',', $auth))) continue;
+
+            if (!($obj = $this->_loadclass($this->_institution . "_Auth_Session_$setup")) &&
+                !($obj = $this->_loadclass("Sahara_Auth_Session_$setup"))) continue;
+
+            $obj->setSuccessfulAuthType($this->_successType);
+            $obj->setup();
+        }
     }
 
     /**

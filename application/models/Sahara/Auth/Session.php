@@ -33,23 +33,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 8th July 2010
+ * @date 12th July 2010
  */
 
 /**
- * Authentication link which first attempts to authenticate a user,
- * and if successful, provides authentication information from the
- * underlying authentication source record.
+ * Authentication session classes are run after authentication is successful and
+ * are used to configure a session ready for use.
  */
-abstract class Sahara_Auth_Type
+abstract class Sahara_Auth_Session
 {
-    /** Username to authenticate. */
-    protected $_user;
+    /** The auth type that was used to authenticate the user. */
+    protected $_authType;
 
-    /** Credential for authentication. */
-    protected $_pass;
-
-    /** Configuration. */
+     /** Configuration. */
     protected $_config;
 
     /** Logger. */
@@ -62,50 +58,30 @@ abstract class Sahara_Auth_Type
     }
 
     /**
-     * Returns true if the user can be authenticaed using the
-     * supplied credential.
-     *
-     * @return boolean true if the user is authenticated
+     * Sets up a session.
      */
-    public abstract function authenticate();
+    public abstract function setup();
 
-    /**
-     * Returns the properties value from the underlying record class.
+	/**
+     * Returns the session setup type.
      *
-     * @param $property proerty to obtain value of
-     * @return mixed String | array | null
+     * @var String session setup type
      */
-    public abstract function getAuthInfo($property);
-
-    public function getUsername()
-    {
-        return $this->_user;
-    }
-
-    public function setUsername($user)
-    {
-        $this->_user = $user;
-    }
-
-    public function getPassword()
-    {
-        return $this->_pass;
-    }
-
-    public function setPassword($password)
-    {
-        $this->_pass = $password;
-    }
-
-    /**
-     * Returns the type of the authenticator.
-     *
-     * @var String authenticator type
-     */
-    public function getAuthType()
+    public function getSessionType()
     {
         $cls = get_class($this);
         $clsParts = explode('_', $cls);
         return end($clsParts);
+    }
+
+    /**
+	 * Sets the authentication type that was used to
+	 * authenticate the user.
+	 *
+     * @param $type authentication type
+     */
+    public function setSuccessfulAuthType($type)
+    {
+        $this->_authType = $type;
     }
 }

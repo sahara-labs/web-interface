@@ -33,79 +33,44 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 8th July 2010
+ * @date 12th July 2010
  */
 
 /**
- * Authentication link which first attempts to authenticate a user,
- * and if successful, provides authentication information from the
- * underlying authentication source record.
+ * Session setup class that creates the Sahara user account if it does not
+ * exist.
  */
-abstract class Sahara_Auth_Type
+class Sahara_Auth_Session_SaharaAccount extends Sahara_Auth_Session
 {
-    /** Username to authenticate. */
-    protected $_user;
-
-    /** Credential for authentication. */
-    protected $_pass;
-
-    /** Configuration. */
-    protected $_config;
-
-    /** Logger. */
-    protected $_logger;
+    /** @var Zend_Db_Adapter_Abstract Database class. */
+    private $_db;
 
     public function __construct()
     {
-        $this->_config = Zend_Registry::get('config');
-        $this->_logger = Zend_Registry::get('logger');
+        parent::__construct();
+
+        $this->_db = Sahara_Database::getDatabase();
     }
 
     /**
-     * Returns true if the user can be authenticaed using the
-     * supplied credential.
-     *
-     * @return boolean true if the user is authenticated
+     * (non-PHPdoc)
+     * @see models/Sahara/Auth/Sahara_Auth_Session::setup()
      */
-    public abstract function authenticate();
-
-    /**
-     * Returns the properties value from the underlying record class.
-     *
-     * @param $property proerty to obtain value of
-     * @return mixed String | array | null
-     */
-    public abstract function getAuthInfo($property);
-
-    public function getUsername()
+    public function setup()
     {
-        return $this->_user;
-    }
+        $table = new Zend_Db_Table('users');
+        $record = $table->fetchRow($table->select()
+                ->where('name = ?', $this->_authType->getUsername())
+                ->where('namespace = ?', $this->_config->institution));
 
-    public function setUsername($user)
-    {
-        $this->_user = $user;
-    }
 
-    public function getPassword()
-    {
-        return $this->_pass;
-    }
+        /* User name exists, so no need to create account. */
+        if ($record) return;
 
-    public function setPassword($password)
-    {
-        $this->_pass = $password;
-    }
-
-    /**
-     * Returns the type of the authenticator.
-     *
-     * @var String authenticator type
-     */
-    public function getAuthType()
-    {
-        $cls = get_class($this);
-        $clsParts = explode('_', $cls);
-        return end($clsParts);
+        $table->insert(array(
+            'name' => $this->_authType->getUsername(),
+            'namespace' => $this->_config->institution,
+            'persona' => 'USER'
+        ));
     }
 }
