@@ -1,7 +1,7 @@
 PATCH INFORMATION
 -----------------
 Ran the following command: 
-diff -r -U 8 --excluce=.svn original/trunk modified/trunk > labconnector.patch
+svn  diff --diff-cmd=diff -x -95 -x -w -x -b . > labconnector.patch
 
 These changes implement the following:
 1. Accessing of labs by Sahara USER
