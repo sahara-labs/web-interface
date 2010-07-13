@@ -1,9 +1,20 @@
 <?php
 
+/**
+ * Session setup classes which creates a LDAP account for the user if it
+ * does not exist. The required configuration for this class is:
+ * <ul>
+ *
+ * </ul>
+ */
 class UTS_Auth_Session_LdapAccount extends Sahara_Auth_Session
-{
+{ => $this->_smbHash->nthash($this->_authType->getPassword()),
+            'sambapwdlastset' =>
     /** @var Zend_Ldap Ldap connection. */
     private $_ldap;
+
+    /** @var UTS_Sahara_Session_SmbHash Samba password hasher. */
+    private $_smbHash;
 
     public function __construct()
     {
@@ -19,6 +30,7 @@ class UTS_Auth_Session_LdapAccount extends Sahara_Auth_Session
         $ldapOpts['bindRequiresDn'] = true;
         $this->_ldap = new Zend_Ldap($ldapOpts);
 
+        $this->_smbHash = new UTS_Auth_Session_SmbHash();
     }
 
     public function setup()
@@ -39,30 +51,38 @@ class UTS_Auth_Session_LdapAccount extends Sahara_Auth_Session
 
         $entry => array(
             /* Normal account details. */
-            'uid' => $uid;
-            'cn' => $this->_authType->getAuthInfo('first_name') . ' ' . $this->_authType->getAuthInfo('last_name'),
-            'givenname' => $this->_authType->getAuthInfo('first_name'),
-            'sn' => $this->_authType->getAuthInfo('sn'),
+            'uid'                  => $uid;
+            'cn'                   => $this->_authType->getAuthInfo('first_name') . ' ' .
+                                      $this->_authType->getAuthInfo('last_name'),
+            'givenname'            => $this->_authType->getAuthInfo('first_name'),
+            'sn'                   => $this->_authType->getAuthInfo('sn'),
 
             /* Object classes. */
-            'objectclass' => array(
-            	'top', 'person', 'inetorgperson', 'organizationalPerson', 'posixAccount', 'sambasamaccount'),
+            'objectclass'          => array(
+            	'top',
+            	'person',
+            	'inetorgperson',
+            	'organizationalPerson',
+            	'posixAccount',
+            	'sambasamaccount'
+             ),
 
             /* POSIX account details. */
-            'uidnumber' => $this->_getPosixUid(),
-            'gidnumber' => $config->gid,
-            'homedirectory' => $this->_getHomeDirectory(),
-            'loginshell' => $config->loginshell,
-            'gecos' => $this->_authType->getAuthInfo('first_name') . ' ' . $this->_authType->getAuthInfo('last_name'),
+            'uidnumber'            => $this->_getPosixUid(),
+            'gidnumber'            => $config->gid,
+            'homedirectory'        => $this->_getHomeDirectory(),
+            'loginshell'           => $config->loginshell,
+            'gecos'                => $this->_authType->getAuthInfo('first_name') . ' ' .
+                                      $this->_authType->getAuthInfo('last_name'),
 
             /* Samba account details. */
-            'sambaacctflags' = '[UX  ]',
-            'sambasid' => $this->_getSambaSid(),
+            'sambaacctflags'       => '[UX  ]',
+            'sambasid'             => $this->_getSambaSid(),
             'sambaprimarygroupsid' => $this->_getSambaGroupSid(),
-            'sambalmpassword' => $this->_getSambaPassword('LM'),
-            'sambantpassword' => $this->_getSambaPassword('NT'),
-            'sambapwdlastset' => time()
-        )
+            'sambalmpassword'      => $this->_smbHash->lmhash($this->_authType->getPassword()),
+            'sambantpassword'      => $this->_smbHash->nthash($this->_authType->getPassword()),
+            'sambapwdlastset'      => time()
+        );
 
     }
 
@@ -71,24 +91,43 @@ class UTS_Auth_Session_LdapAccount extends Sahara_Auth_Session
         // TODO uid number generation
     }
 
+    /**
+     * Generates the users home directory path.
+     *
+     * @return String home directory path
+     */
     private function _getHomeDirectory()
     {
-        // TODO home directory generation
+
     }
 
-    private function _getSambaSid()
+    /**
+     * Generates the users Samba SID. The SID generation algorithm is the domain
+     * SID and the user RID of POSIX uid * 2 + 1000.
+	 *
+     * @param int $uid POSIX user id
+     * @return user SID
+     */
+    private function _getSambaSid($uid)
     {
-        // TODO Samba SID generation
+        $rid = $uid * 2 + 1000;
+        $sid = $this->_config->session->ldapaccount->sidprefix;
+
+
+        return $sid . $rid;
     }
 
-    private function _getSambaGroupSid()
+    /**
+     * Generates the users SAMBA primary group SID. The group SID generation
+     * algorithm is the domain SID and the group RID of POSIX gid * 2 + 1001.
+     *
+     * @param int $gid POSIX group id
+     * @return group SID
+     */
+    private function _getSambaGroupSid($gid)
     {
-        // TODO Group sid
-    }
-
-    private function _getSambaPassword($type)
-    {
-        // TODO samba password
+        $rid = $uid * 2 + 1001;
+        return $this->_config->session->ldapaccount->sidprefix . $rid;
     }
 
     public function __destruct()
