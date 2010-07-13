@@ -111,8 +111,6 @@ class Sahara_Auth
              * run it. */
             if (!strpos($auth, '}')) continue;
 
-
-
             /* Only run the session setup, if it is configured to run for the
              * the succeeding auth type. */
             $auth = substr($auth, 0, -1);

@@ -139,6 +139,14 @@ class Sahara_Auth_Type_Ldap extends Sahara_Auth_Type
     }
 
     /**
+     * Returns the users LDAP entry.
+     */
+    public function getLdapEntry()
+    {
+        return $this->_userRecord;
+    }
+
+    /**
      * Returns whether the LDAP record attribute matches the specified
      * value.
      *
