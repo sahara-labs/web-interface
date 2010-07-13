@@ -110,26 +110,60 @@ class Sahara_Auth_Session_LdapPermission extends Sahara_Auth_Session
         }
         $requiredPermissions = array_unique($requiredPermissions);
 
-        $additions = array_diff($requiredPermissions, $existingPermissions);
-        $removal = array_diff($existingPermissions, $requiredPermissions);
-
-        echo 'Existing<br />';
-        var_dump($existingPermissions);
-        echo '<br />Required<br />';
-        var_dump($requiredPermissions);
-        echo '<br />Additions<br />';
-        var_dump($additions);
-        echo '<br />Removal<br />';
-        var_dump($removal);
+        $this->_addAssociations($user['id'], array_diff($requiredPermissions, $existingPermissions));
+        $this->_removeAssociations($user['id'], array_diff($existingPermissions, $requiredPermissions));
     }
 
+    /**
+     * Adds user associations between the user and the list of classes.
+     *
+     * @param int $uid user identifier
+     * @param array $classes list of user class names
+     */
     private function _addAssociations($uid, $classes)
     {
-        // TODO
+        if (!count($classes)) return;
+
+        $select = $this->_db->select()->from('user_class');
+        foreach ($classes as $c)
+        {
+            $select->orWhere('name = ?', $c);
+        }
+        $classes = $this->_db->fetchAll($select);
+
+        foreach ($classes as $c)
+        {
+            $data = array(
+                'users_id' => $uid,
+                'user_class_id' => $c['id']
+            );
+            $this->_db->insert('user_association', $data);
+        }
     }
 
+    /**
+     * Adds user associations between the user and the list of classes.
+     *
+     * @param int $uid user identifier
+     * @param array $classes list of user class names
+     */
     private function _removeAssociations($uid, $classes)
     {
-        // TODO
+        if (!count($classes)) return;
+
+        $select = $this->_db->select()->from('user_class');
+        foreach ($classes as $c)
+        {
+            $select->orWhere('name = ?', $c);
+        }
+        $classes = $this->_db->fetchAll($select);
+
+        foreach ($classes as $c)
+        {
+            $where = $this->_db->quoteInto('users_id = ? AND ', $uid) .
+                     $this->_db->quoteInto('user_class_id = ?', $c['id']);
+
+            $this->_db->delete('user_association', $where);
+        }
     }
 }
