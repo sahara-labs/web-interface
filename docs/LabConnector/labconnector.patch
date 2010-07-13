@@ -9,73 +9,6 @@ Index: application/Bootstrap.php
 >         $autoloader->registerNamespace('Labconnector_');
 111d115
 < 
-Index: application/controllers/LabconnectorController.php
-===================================================================
-97c97
-<             if($p->resourceClass == 'TYPE' && $p->resource->resourceName == 'ILABS')
----
->             if ($p->resourceClass == 'TYPE' && $p->resource->resourceName == 'ILABS')
-112c112
-<   		           	if ($p->displayName == $resourceClass["display"])
----
->   		           	if ($p->displayName == $resourceClass["display"] || $p->resourceName == $resourceClass["display"])
-116c116
-<                 if(!$nonUnique)
----
->                 if (!$nonUnique)
-129c129
-<         if(!$resourceClasses)
----
->         if (!$resourceClasses)
-137,151d136
-<         
-<      	/* Load the labconnector for the user. */
-< 		//$this->_redirectTo('index', 'labconnector'); //Get the User choice of Experiment first
-<         //$clientLabConnector = Sahara_Soap::getSchedServerLabConnectorClient();
-<         //$exptID = $clientLabConnector->submitExperiment(array('userQName' => $this->_auth->getIdentity()));
-<     }	
-<     
-<     /**
-<      * Action to show any errors encountered e.g. Permissions denied for Rig/Lab type
-<      */
-<     public function errorAction()
-<     {
-<     	$this->view->headTitle('LabShare - iLabs Experiments');
-<         $this->view->messages = $this->_flashMessenger->addMessage($this->errMsg);    	
-<         //$this->_flashMessenger->addMessage($this->errMsg);   	
-183c168
-< 	    if(isset($form))
----
-> 	    if (isset($form))
-196d180
-<         //$params = $this->_request->getPost();
-203c187,188
-<      	if($params['exptname'] == "Time Of Day - Batch")
----
->      	/* This is unique to the experiments offered & will need to be updated upon each experiment, respectively */
->      	if ($params['exptname'] == "Time Of Day - Batch")
-208c193
-<      	else if($params['exptname'] == "UQ Radioactivity Expt1") 
----
->      	else if ($params['exptname'] == "UQ Radioactivity Expt1") 
-218,219d202
-< 	//var_dump($exptSpecsXMLObj->asXML());
-< 	
-239d221
-<             	//echo var_dump($ex);
-291,292c273
-<     	$userdirectoryID = $this->_request->getParam('userdirectoryID', '0');
-<     	$userPath = str_replace(":", "_", $userdirectoryID); //Namespace contains colons which is replaced
----
->     	$userPath = str_replace(":", "_",  $this->_auth->getIdentity()); //Namespace contains colons which is replaced
-297,300c278,279
-< 	    if($experimentStorage)
-<     		echo $fileStoragePath . ":<br><br>" . $experimentStorage;
-<     	else
-<     		$this->_redirectTo('labconnector', 'error');
----
-> 	    if ($experimentStorage)
->     		echo $fileStoragePath . ":<br /><br />" . $experimentStorage;
 Index: application/controllers/QueueController.php
 ===================================================================
 36a37,42
@@ -87,7 +20,7 @@ Index: application/controllers/QueueController.php
 >  * but this would have impacted if a user group was associated with multiple permissions. 
 87a94,96
 >             /* Extra check for iLabs experment of rig type ILABS. */
->             if($p->resource->resourceName != 'ILABS')
+>             if ($p->resource->resourceName != 'ILABS')
 >             {
 103a113
 >         }
@@ -126,8 +59,6 @@ Index: application/views/layouts/_navbar.phtml
 ---
 >             'Rig Selection' => array('controller' => 'queue', 'action' => 'index'),
 >         	'LabConnector'  => array('controller' => 'labconnector', 'action' => 'index') //Adding LabConnectorController mapped to indexAction()
-Index: application/views/scripts/labconnector/index.phtml
-===================================================================
 Index: library/Sahara/Acl.php
 ===================================================================
 36a37,40
@@ -172,12 +103,92 @@ Index: library/Sahara/Soap.php
 >     /**
 Index: docs/LabConnector/labconnector.patch
 ===================================================================
-173c173
-< Index: public/js/elements/cameras/cameras.js
+12,78d11
+< Index: application/controllers/LabconnectorController.php
+< ===================================================================
+< 97c97
+< <             if($p->resourceClass == 'TYPE' && $p->resource->resourceName == 'ILABS')
+< ---
+< >             if ($p->resourceClass == 'TYPE' && $p->resource->resourceName == 'ILABS')
+< 112c112
+< <   		           	if ($p->displayName == $resourceClass["display"])
+< ---
+< >   		           	if ($p->displayName == $resourceClass["display"] || $p->resourceName == $resourceClass["display"])
+< 116c116
+< <                 if(!$nonUnique)
+< ---
+< >                 if (!$nonUnique)
+< 129c129
+< <         if(!$resourceClasses)
+< ---
+< >         if (!$resourceClasses)
+< 137,151d136
+< <         
+< <      	/* Load the labconnector for the user. */
+< < 		//$this->_redirectTo('index', 'labconnector'); //Get the User choice of Experiment first
+< <         //$clientLabConnector = Sahara_Soap::getSchedServerLabConnectorClient();
+< <         //$exptID = $clientLabConnector->submitExperiment(array('userQName' => $this->_auth->getIdentity()));
+< <     }	
+< <     
+< <     /**
+< <      * Action to show any errors encountered e.g. Permissions denied for Rig/Lab type
+< <      */
+< <     public function errorAction()
+< <     {
+< <     	$this->view->headTitle('LabShare - iLabs Experiments');
+< <         $this->view->messages = $this->_flashMessenger->addMessage($this->errMsg);    	
+< <         //$this->_flashMessenger->addMessage($this->errMsg);   	
+< 183c168
+< < 	    if(isset($form))
+< ---
+< > 	    if (isset($form))
+< 196d180
+< <         //$params = $this->_request->getPost();
+< 203c187,188
+< <      	if($params['exptname'] == "Time Of Day - Batch")
+< ---
+< >      	/* This is unique to the experiments offered & will need to be updated upon each experiment, respectively */
+< >      	if ($params['exptname'] == "Time Of Day - Batch")
+< 208c193
+< <      	else if($params['exptname'] == "UQ Radioactivity Expt1") 
+< ---
+< >      	else if ($params['exptname'] == "UQ Radioactivity Expt1") 
+< 218,219d202
+< < 	//var_dump($exptSpecsXMLObj->asXML());
+< < 	
+< 239d221
+< <             	//echo var_dump($ex);
+< 291,292c273
+< <     	$userdirectoryID = $this->_request->getParam('userdirectoryID', '0');
+< <     	$userPath = str_replace(":", "_", $userdirectoryID); //Namespace contains colons which is replaced
+< ---
+< >     	$userPath = str_replace(":", "_",  $this->_auth->getIdentity()); //Namespace contains colons which is replaced
+< 297,300c278,279
+< < 	    if($experimentStorage)
+< <     		echo $fileStoragePath . ":<br><br>" . $experimentStorage;
+< <     	else
+< <     		$this->_redirectTo('labconnector', 'error');
+< ---
+< > 	    if ($experimentStorage)
+< >     		echo $fileStoragePath . ":<br /><br />" . $experimentStorage;
+90c23
+< >             if($p->resource->resourceName != 'ILABS')
 ---
-> Index: docs/LabConnector/labconnector.patch
-175,176d174
-< 59a60
-< > 	case 'rcjpeg':
-Index: docs/LabConnector/labconnector.patch
+> >             if ($p->resource->resourceName != 'ILABS')
+129,130d61
+< Index: application/views/scripts/labconnector/index.phtml
+< ===================================================================
+175,183d105
+< 173c173
+< < Index: public/js/elements/cameras/cameras.js
+< ---
+< > Index: docs/LabConnector/labconnector.patch
+< 175,176d174
+< < 59a60
+< < > 	case 'rcjpeg':
+< Index: docs/LabConnector/labconnector.patch
+< ===================================================================
+Index: public/js/elements/cameras/cameras.js
 ===================================================================
+59a60
+> 	case 'rcjpeg':
