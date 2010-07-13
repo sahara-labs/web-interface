@@ -170,6 +170,15 @@ Index: library/Sahara/Soap.php
 > 
 > 
 >     /**
+Index: docs/LabConnector/labconnector.patch
+===================================================================
+173c173
+< Index: public/js/elements/cameras/cameras.js
+---
+> Index: docs/LabConnector/labconnector.patch
+175,176d174
+< 59a60
+< > 	case 'rcjpeg':
 Index: public/js/elements/cameras/cameras.js
 ===================================================================
 59a60
