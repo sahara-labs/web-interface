@@ -52,13 +52,7 @@ function loadExperimentResults(userID)
 		"/labconnector/results",   // URL to experiment results
 		{userdirectoryID : userID},
 		function(p) { // Callback to handle permission information
-			var pt = p.split('<');
-			var p = "";
-			for (var i in pt) p += '&lt;' + pt[i];
-			var pt = p.split('>');
-			p = "";
-			for (var i in pt) p += pt[i] + '&gt;';
-
+			splitData(p);
 			$("#experimentresultsdialog").html(
 					"<div class='dialogcentercontent'>" +
 					"	<div class='dialogheader'>" +
@@ -69,4 +63,19 @@ function loadExperimentResults(userID)
 					"</div>");
 		}
 	);
+}
+//Methods to format the XML data so that it is more readable in HTML dialog
+function splitData(p)
+{
+	if(p == null) //Test condition added to satify unit testing as p.split() fails
+	{
+		var pt = p.split('<');
+		var p = "";
+		for (var i in pt) p += '&lt;' + pt[i];
+		var pt = p.split('>');
+		p = "";
+		for (var i in pt) p += pt[i] + '&gt;';
+	}
+
+	return p;
 }
