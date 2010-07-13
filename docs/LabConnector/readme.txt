@@ -7,6 +7,7 @@ patch -p0 < docs/LabConnector/labconnector.patch
 
 Ran the following command: 
 
+cd WI/trunk
 svn  diff --diff-cmd=diff -x -95 -x -w -x -b . > labconnector.patch
 
 These changes implement the following:
