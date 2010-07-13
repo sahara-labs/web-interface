@@ -36,6 +36,14 @@
  * @date 13th July 2010
  */
 
+/**
+ * Adds permission to an user based on their LDAP account details. The
+ * configuration for this class is:
+ * <ul>
+ * 	<li>session.ldappermission.rule - Rules which define which users have
+ *  the specified permissions.</li>
+ * </ul>
+ */
 class Sahara_Auth_Session_LdapPermission extends Sahara_Auth_Session
 {
     /** @var array The list of filter rules. */
