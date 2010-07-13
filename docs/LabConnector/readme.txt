@@ -3,7 +3,7 @@ PATCH INFORMATION
 To apply the patch:
 
 cd WI/trunk
-patch -p0 docs/LabConnector/labconnector.patch
+patch -p0 < docs/LabConnector/labconnector.patch
 
 Ran the following command: 
 
