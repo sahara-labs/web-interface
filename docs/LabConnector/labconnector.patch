@@ -1,421 +1,176 @@
-diff -r -U 8 --exclude=.svn original/trunk/application/Bootstrap.php modified/trunk/application/Bootstrap.php
---- original/trunk/application/Bootstrap.php	2010-07-12 18:45:55.186826362 +1000
-+++ modified/trunk/application/Bootstrap.php	2010-07-12 19:02:19.546823749 +1000
-@@ -64,24 +64,25 @@
-      *
-      * @return unknown_type
-      */
-     protected function _initLogger()
-     {
-         require_once 'Sahara/Logger.php'; // The autoloader isn't set up at this point
-         Zend_Registry::set('logger', Sahara_Logger::getInstance());
-     }
--
-+    
-     /**
-      * Initialise the Zend autoloader.
-      */
-     protected function _initAutoLoader()
-     {
-         $autoloader = Zend_Loader_Autoloader::getInstance();
-         $autoloader->registerNamespace('Sahara_');
-+        $autoloader->registerNamespace('Labconnector_');
- 
-         $inst = Zend_Registry::get('config')->institution;
-         if (is_dir(self::$rootDirectory . '/../institution/' . $inst))
-         {
-             $autoloader->registerNamespace($inst . '_');
-         }
-     }
- 
-diff -r -U 8 --exclude=.svn original/trunk/application/configs/config.ini modified/trunk/application/configs/config.ini
---- original/trunk/application/configs/config.ini	2010-07-12 18:45:55.122824699 +1000
-+++ modified/trunk/application/configs/config.ini	2010-07-12 19:02:44.638823918 +1000
-@@ -1,20 +1,20 @@
--	[production]
-+[production]
- 
- ; The institution namespace
- institution = UTS
- 
- ; Scheduling Server hostname and port name
- SchedulingServer.hostname = localhost
- SchedulingServer.port = 8080
- 
- ; Logger level (FATAL | ERROR | WARN | INFO | DEBUG)
- logger.level = WARN
--logger.filename = /home/mdiponio/workspace/WI/webinterface.log
-+logger.filename = /home/heyeung/workspace/WI/trunk/public/webinterface.log
- 
- ; Display Information
- ; Header Infomation
- header.logoGraphic = /uts/images/uts.png
- header.logoLink = http://www.uts.edu.au/ 
- header.nameImage = /images/Sahara.png
- ; header.background = /uts/images/sand_again2.png
- 
-@@ -30,69 +30,48 @@
- ; Session callback interval (seconds, default is 60)
- session.interval = 20
- 
- ; Camera format strings
- camera.jpeg = http://<HOST>:<PORT>/stream<NUM>.jpg
- camera.mms = mms://<HOST>:<PORT>/stream<NUM>_v_medium.asf
- camera.mmsh = mmsh://<HOST>:<PORT>/stream<NUM>_v_medium.asf
- camera.httpasf = http://<HOST>:<PORT>/stream<NUM>.asf
--
-+camera.rcjpeg = /primitive/file/pc/FileTransferController/pa/binaryFile/tf/base64/filename/<FILE>
- ; Camera format descriptions
- cameradesc.httpasf = WMV Format
-+cameradesc.rcjpeg = Rig Client Cam
- 
- ; Remote Desktop domain
- remotedesktop.domain = REMOTELABS
- 
- ; Feedback email address(s). To set more than one address
- ; append '[]' to the property name.
- feedback.address[] = mdiponio@eng.uts.edu.au
- feedback.address[] = tmachet@eng.uts.edu.au
- 
- ; Host name of SMTP server to send email to.
- email.smtp = postoffice.eng.uts.edu.au
- ; Information to be shown on the from field of emails.
- email.from.address = donotreply@eng.uts.edu.au
- email.from.name = Sahara
- 
- ; Whether the WSDL file obtained from the Scheduling Server should be cached.
--; The default is to cache the wSDL.
-+; By default it is cached.
- SOAP.cacheWSDL = true
--; Whether to use the WSDL address when requesting to service, or use the
--; base address the WSDL was obtained from. The default value is to not
--; use the WSDL provided location.
--SOAP.useWSDLLocation = false
--; SOAP Request timeout. After this time is elapsed an error is thrown.
--; The default is to not set a timeout.
--SOAP.requestTimeout = 20
- 
- ; Primitive default content-type
- primitive.file.mime = text/csv
- 
--; Database configuration
--database.adapter = Pdo_Mysql
--database.params.host = 127.0.0.1
--database.params.dbname = sahara
--database.params.username = sahara
--database.params.password = saharapasswd
--
--; LDAP connection parameters
--ldap.params.host = 138.25.47.106
--ldap.params.username = "cn=Directory Manager"
--ldap.params.password = dmpasswd
--ldap.params.baseDn = "o=UTS"
--
--; Authentication configuration
--auth.type[] = Database
--auth.type[] = Ldap
--auth.session[] = SaharaAccount{Ldap}
--;auth.session[] = LdapPermission{Ldap}
--
--; LDAP auth required attributes and values
--auth.ldap.objectclass = utsperson
--
--
-+; LabConnector Experiment Storage root directory
-+experiment.storage.dir = /home/heyeung
- 
--; LDAP permissions
-+;Database for user password information
-+db.adapter = PDO_MYSQL
-+db.params.host = localhost
-+db.params.username = sahara
-+db.params.password = saharapasswd
-+db.params.dbname = sahara
-+db.params.port = 3306
- 
- [development : production]
- 
- logger.level = DEBUG
-Only in modified/trunk/application/controllers: LabconnectorController.php
-diff -r -U 8 --exclude=.svn original/trunk/application/controllers/QueueController.php modified/trunk/application/controllers/QueueController.php
---- original/trunk/application/controllers/QueueController.php	2010-07-12 18:45:55.118826035 +1000
-+++ modified/trunk/application/controllers/QueueController.php	2010-07-12 19:03:34.579073191 +1000
-@@ -29,16 +29,22 @@
-  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  *
-  * @author Michael Diponio (mdiponio)
-  * @date 21st February 2010
-+ * 
-+ * @author Herbert Yeung
-+ * @date 17th June 2010
-+ * Modification: Added extra check for RIG Permission TYPE as 'ILABS'. If so, don't add it.
-+ * Another solution is to add conditional above 'if (!array_key_exists($p->userClass->userClassName, $userClasses))'
-+ * but this would have impacted if a user group was associated with multiple permissions. 
-  */
- 
- /**
-  * Controller for the queue.
-  */
- class QueueController extends Sahara_Controller_Action_Acl
- {
-     /**
-@@ -80,31 +86,35 @@
-             }
- 
-             /* Add the user class if it hasn't already been loaded. */
-             if (!array_key_exists($p->userClass->userClassName, $userClasses))
-             {
-                 $userClasses[$p->userClass->userClassName] = array();
-             }
- 
--            /* Load up resource information. */
--            $resource = array(
--                'resourceClass' => $p->resourceClass,     // The resource class so either 'RIG', 'TYPE' or 'CAPS'
--                'resource' => $p->resource->resourceName, // The resource name
--                'locked' => $perm->isLocked,              // Whether the permission is locked
--                'active' => Sahara_DateTimeUtil::isBeforeNow($p->start) && // Whether the permission is active
--                            Sahara_DateTimeUtil::isAfterNow($p->expiry),
--                'id' => 'permission' . $p->permissionID,  // An ID to hook to a dialog
--                'start' => $p->start,                     // Start time of the resource
--                'expiry' => $p->expiry,                   // Expiry time of the resource
--                'permissionId' => $p->permissionID,       // Permission ID
--                'display' => isset($p->displayName) ? $p->displayName : $p->resource->resourceName // Display name
--            );
--
--            array_push($userClasses[$p->userClass->userClassName], $resource);
-+            /* Extra check for iLabs experment of rig type ILABS. */
-+            if($p->resource->resourceName != 'ILABS')
-+            {
-+	            /* Load up resource information. */
-+	            $resource = array(
-+	                'resourceClass' => $p->resourceClass,     // The resource class so either 'RIG', 'TYPE' or 'CAPS'
-+	                'resource' => $p->resource->resourceName, // The resource name
-+	                'locked' => $perm->isLocked,              // Whether the permission is locked
-+	                'active' => Sahara_DateTimeUtil::isBeforeNow($p->start) && // Whether the permission is active
-+	                            Sahara_DateTimeUtil::isAfterNow($p->expiry),
-+	                'id' => 'permission' . $p->permissionID,  // An ID to hook to a dialog
-+	                'start' => $p->start,                     // Start time of the resource
-+	                'expiry' => $p->expiry,                   // Expiry time of the resource
-+	                'permissionId' => $p->permissionID,       // Permission ID
-+	                'display' => isset($p->displayName) ? $p->displayName : $p->resource->resourceName // Display name
-+	            );
-+				
-+	            array_push($userClasses[$p->userClass->userClassName], $resource);
-+            }
-         }
- 
-         /* Sort each of the user class permissions by resource name. */
-         foreach ($userClasses as $class => $permList)
-         {
-             $typePerms = array();
-             $rigPerms = array();
-             $capsPerms = array();
-Only in modified/trunk/application/views/scripts: labconnector
-diff -r -U 8 --exclude=.svn original/trunk/library/Sahara/Acl.php modified/trunk/library/Sahara/Acl.php
---- original/trunk/library/Sahara/Acl.php	2010-07-12 18:45:55.255073451 +1000
-+++ modified/trunk/library/Sahara/Acl.php	2010-07-12 19:05:03.914823809 +1000
-@@ -29,16 +29,20 @@
-  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  *
-  * @author Michael Diponio (mdiponio)
-  * @date 21st February 2010
-+ * 
-+ * @author Herbert Yeung
-+ * @date  17th June 2010
-+ * Modification: Added permission so that a user can access the LabConnector and index pages
-  */
- 
- class Sahara_Acl extends Zend_Acl
- {
-     /** Unauthorised user. */
-     const UNAUTH = 'NOTFOUND';
- 
-     /** Demonstration user. */
-@@ -64,17 +68,18 @@
-     /** @var assoc array Pages a demonstration user may access. */
-     protected $_demoPages = array();
- 
-     /** @var assoc array Pages a user may access. */
-     protected $_userPages = array('queue' => array('index', 'unlock', 'info', 'queue', 'queuing', 'cancel',
-                                                    'update'),
-                                   'session' => array('index', 'info', 'finish', 'primitivebridge',
-                                                      'attributebridge'),
--                                  'primitive' => array('json', 'echo', 'file')
-+                                  'primitive' => array('json', 'echo', 'file'),
-+    							  'labconnector' => array('index', 'error', 'experiment', 'results', 'refreshresults', 'submitexperiment')
-                             );
- 
-     /** @var assoc array Pages an academic user may access. */
-     protected $_academicPages = array('academic' => array('index'));
- 
-     /** @var assoc array Pages an administrator user may access. */
-     protected $_adminPages = array('admin' => array('index'));
- 
-@@ -174,9 +179,9 @@
-      * Gets the users role.
-      *
-      * @return String users role
-      */
-     public function getUserRole()
-     {
-         return $this->_userRole;
-     }
--}
-\ No newline at end of file
-+}
-diff -r -U 8 --exclude=.svn original/trunk/library/Sahara/Soap.php modified/trunk/library/Sahara/Soap.php
---- original/trunk/library/Sahara/Soap.php	2010-07-12 18:45:55.255073451 +1000
-+++ modified/trunk/library/Sahara/Soap.php	2010-07-12 19:05:12.026823673 +1000
-@@ -29,72 +29,68 @@
-  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  *
-  * @author Michael Diponio (mdiponio)
-  * @date  18th March 2010
-+ * 
-+ * @author Herbert Yeung
-+ * @date  25th May 2010
-+ * Modification: Added SOAP interface to access SchedServer-LabConnector bundle
-  */
- 
- /**
-  * Class to call SOAP methods for SAHARA services.
-  */
- class Sahara_Soap
- {
-     /** The bundle containing the Permissions SOAP interface in the Scheduling Server. */
-     const PERMISSIONS_SERVICE_BUNDLE = 'SchedulingServer-Permissions';
- 
-     /** The bundle containing the Queuer SOAP interface in the Scheduling Server. */
-     const QUEUER_SERVICE_BUNDLE = 'SchedulingServer-Queuer';
- 
-     /** The bundle containing the Session SOAP interface in the Scheduling Server. */
-     const SESSION_SERVICE_BUNDLE = 'SchedulingServer-Session';
--
-+    
-+    /** The bundle containing the LabConnector SOAP interface in the Scheduling Server. */
-+    const LABCONNECTOR_SERVICE_BUNDLE = 'SchedulingServer-LabConnector';
-+    
-     /** The SOAP client which points to the SOAP service. */
-     protected $_client;
- 
-     /** The location to the WSDL. */
-     protected $_wsdl;
- 
-     /**
-      * Creates a SOAP client and gets the WSDL from the specified URI.
-      *
--     * @param String $uri URI to the WSDL file
--     * @param String $location URI to server to use instead of WSDL SOAP address (optional)
--     * @throws Exception if failed contacting Scheduling Server
-+     * @param string $uri URI to the WSDL file
-+     * @throws @throws Exception if failed contacting Scheduling Server
-      */
--    public function __construct($uri)
-+    public function __construct($uri, $location = null)
-     {
-         $this->_wsdl = $uri;
- 
-         $opts = array();
- 
--        /* Whether to cache WSDLs. */
--        $cache = Zend_Registry::get('config')->SOAP->get('cacheWSDL', TRUE);
--        if ($cache == FALSE || strcasecmp($cache, 'false')  === 0)
-+        /* Load whether to cache WSDL. */
-+        $cache = $config = Zend_Registry::get('config')->SOAP->get('cacheWSDL', TRUE);
-+        if ($cache == FALSE || strcasecmp($cache, 'false')  == 0)
-         {
-             ini_set('soap.wsdl_cache_enabled', WSDL_CACHE_NONE);
-         }
- 
--        /* SOAP timeout. */
--        $tm = Zend_Registry::get('config')->SOAP->get('requestTimeout', 0);
--        if ($tm && is_int($tm))
--        {
--            ini_set('default_socket_timeout', $tm);
--        }
--
-         $this->_client = new Zend_Soap_Client($this->_wsdl, $opts);
--
--        /* Whether to use the WSDL location. */
--        if(!Zend_Registry::get('config')->SOAP->get('useWSDLLocation', FALSE))
-+        if (!is_null($location))
-         {
--            list($loc, $junk) = explode('?wsdl', $uri, 2);
--            $this->_client->setLocation($loc);
-+            $this->_client->setLocation($location);
-         }
-     }
- 
-     /**
-      * Creates a Scheduling Server SOAP client for the specified end point and
-      * optionally prefix. The end point is the name of the service
-      * (e.g. 'Permissions') and the prefix is generally the symbolic name
-      * of the bundle that exports the service.
-@@ -118,17 +114,17 @@
-         /* Append the prefix, for the Scheduling Server this is generally the symbolic name of the bundle
-          * hosting the service (e.g. SchedulingServer-Permissions). */
-         if ($prefix != null) $uri .= $prefix . '/';
-         /* Append 'services' for Axis. */
-         $uri .= 'services/';
-         /* Append end point (e.g. 'Permissions'). */
-         $uri .= $endPoint;
- 
--        return new Sahara_Soap($uri . '?wsdl');
-+        return new Sahara_Soap($uri . '?wsdl', $uri);
-     }
- 
-     /**
-      * Gets a Sahara_Soap instance which points to the Permissions interface
-      * of the Scheduling Server.
-      *
-      * @return Sahara_Soap instance
-      * @throws Exception if failed contacting Scheduling Server
-@@ -173,16 +169,34 @@
-         {
-             Zend_Registry::set(self::SESSION_SERVICE_BUNDLE,
-                     self::createSchedServerClient('Session', self::SESSION_SERVICE_BUNDLE));
-         }
-         return Zend_Registry::get(self::SESSION_SERVICE_BUNDLE);
-     }
- 
-     /**
-+     * Gets a Sahara_Soap instance which points to the LabConnector interface
-+     * of the Scheduling Server.
-+     *
-+     * @return Sahara_Soap instance
-+     * @throws Exception if failed contacting Scheduling Server
-+     */
-+    public static function getSchedServerLabConnectorClient()
-+    {
-+        if (!Zend_Registry::isRegistered(self::LABCONNECTOR_SERVICE_BUNDLE))
-+        {
-+            Zend_Registry::set(self::LABCONNECTOR_SERVICE_BUNDLE,
-+                    self::createSchedServerClient('LabConnector', self::LABCONNECTOR_SERVICE_BUNDLE));
-+        }
-+        return Zend_Registry::get(self::LABCONNECTOR_SERVICE_BUNDLE);
-+    }
-+
-+
-+    /**
-      * Calls a SOAP operation on the SOAP client.
-      *
-      * @param String $name name of the operation
-      * @param array $params operation parameters
-      * @return mixed
-      */
-     public function __call($name, $params)
-     {
-Only in modified/trunk/public/css: labconnector.css
-Only in modified/trunk/public/js: labconnector.js
+Index: application/Bootstrap.php
+===================================================================
+36a37,40
+>  *
+>  * @author Herbert Yeung
+>  * @date 13th July 2010
+>  * Modification: Added the namespace for LabConnector.
+79a84
+>         $autoloader->registerNamespace('Labconnector_');
+111d115
+< 
+Index: application/controllers/LabconnectorController.php
+===================================================================
+97c97
+<             if($p->resourceClass == 'TYPE' && $p->resource->resourceName == 'ILABS')
+---
+>             if ($p->resourceClass == 'TYPE' && $p->resource->resourceName == 'ILABS')
+112c112
+<   		           	if ($p->displayName == $resourceClass["display"])
+---
+>   		           	if ($p->displayName == $resourceClass["display"] || $p->resourceName == $resourceClass["display"])
+116c116
+<                 if(!$nonUnique)
+---
+>                 if (!$nonUnique)
+129c129
+<         if(!$resourceClasses)
+---
+>         if (!$resourceClasses)
+137,151d136
+<         
+<      	/* Load the labconnector for the user. */
+< 		//$this->_redirectTo('index', 'labconnector'); //Get the User choice of Experiment first
+<         //$clientLabConnector = Sahara_Soap::getSchedServerLabConnectorClient();
+<         //$exptID = $clientLabConnector->submitExperiment(array('userQName' => $this->_auth->getIdentity()));
+<     }	
+<     
+<     /**
+<      * Action to show any errors encountered e.g. Permissions denied for Rig/Lab type
+<      */
+<     public function errorAction()
+<     {
+<     	$this->view->headTitle('LabShare - iLabs Experiments');
+<         $this->view->messages = $this->_flashMessenger->addMessage($this->errMsg);    	
+<         //$this->_flashMessenger->addMessage($this->errMsg);   	
+183c168
+< 	    if(isset($form))
+---
+> 	    if (isset($form))
+196d180
+<         //$params = $this->_request->getPost();
+203c187,188
+<      	if($params['exptname'] == "Time Of Day - Batch")
+---
+>      	/* This is unique to the experiments offered & will need to be updated upon each experiment, respectively */
+>      	if ($params['exptname'] == "Time Of Day - Batch")
+208c193
+<      	else if($params['exptname'] == "UQ Radioactivity Expt1") 
+---
+>      	else if ($params['exptname'] == "UQ Radioactivity Expt1") 
+218,219d202
+< 	//var_dump($exptSpecsXMLObj->asXML());
+< 	
+239d221
+<             	//echo var_dump($ex);
+291,292c273
+<     	$userdirectoryID = $this->_request->getParam('userdirectoryID', '0');
+<     	$userPath = str_replace(":", "_", $userdirectoryID); //Namespace contains colons which is replaced
+---
+>     	$userPath = str_replace(":", "_",  $this->_auth->getIdentity()); //Namespace contains colons which is replaced
+297,300c278,279
+< 	    if($experimentStorage)
+<     		echo $fileStoragePath . ":<br><br>" . $experimentStorage;
+<     	else
+<     		$this->_redirectTo('labconnector', 'error');
+---
+> 	    if ($experimentStorage)
+>     		echo $fileStoragePath . ":<br /><br />" . $experimentStorage;
+Index: application/controllers/QueueController.php
+===================================================================
+36a37,42
+>  * 
+>  * @author Herbert Yeung
+>  * @date 17th June 2010
+>  * Modification: Added extra check for RIG Permission TYPE as 'ILABS'. If so, don't add it.
+>  * Another solution is to add conditional above 'if (!array_key_exists($p->userClass->userClassName, $userClasses))'
+>  * but this would have impacted if a user group was associated with multiple permissions. 
+87a94,96
+>             /* Extra check for iLabs experment of rig type ILABS. */
+>             if($p->resource->resourceName != 'ILABS')
+>             {
+103a113
+>         }
+Index: application/configs/config.ini
+===================================================================
+12c12
+< logger.filename = /home/mdiponio/workspace/WI/webinterface.log
+---
+> logger.filename = /var/www/sahara/public/webinterface.log
+38c38
+< 
+---
+> camera.rcjpeg = /primitive/file/pc/FileTransferController/pa/binaryFile/tf/base64/filename/<FILE>
+40a41
+> cameradesc.rcjpeg = Rig Client Cam
+70,75c71,72
+< ; Database configuration
+< database.adapter = Pdo_Mysql
+< database.params.host = 127.0.0.1
+< database.params.dbname = sahara
+< database.params.username = sahara
+< database.params.password = saharapasswd
+---
+> ; LabConnector Experiment Storage root directory
+> experiment.storage.dir = /home/saharausrs
+Index: application/views/layouts/_navbar.phtml
+===================================================================
+36a37,41
+>  * 
+>  * @author Herbert Yeung
+>  * @date  17th June 2010
+>  * Modification: Added a menu item for Sahara User titled 'LabConnector' which maps
+>  * to LabConnectorController->indexAction()
+43c48,49
+<             'Rig Selection' => array('controller' => 'queue', 'action' => 'index')
+---
+>             'Rig Selection' => array('controller' => 'queue', 'action' => 'index'),
+>         	'LabConnector'  => array('controller' => 'labconnector', 'action' => 'index') //Adding LabConnectorController mapped to indexAction()
+Index: application/views/scripts/labconnector/index.phtml
+===================================================================
+Index: library/Sahara/Acl.php
+===================================================================
+36a37,40
+>  * 
+>  * @author Herbert Yeung
+>  * @date  17th June 2010
+>  * Modification: Added permission so that a user can access the LabConnector and index pages
+72c76,77
+<                                   'primitive' => array('json', 'echo', 'file')
+---
+>                                   'primitive' => array('json', 'echo', 'file'),
+>     							  'labconnector' => array('index', 'error', 'experiment', 'results', 'refreshresults', 'submitexperiment')
+Index: library/Sahara/Soap.php
+===================================================================
+36a37,40
+>  * 
+>  * @author Herbert Yeung
+>  * @date  25th May 2010
+>  * Modification: Added SOAP interface to access SchedServer-LabConnector bundle
+52a57,59
+>     /** The bundle containing the LabConnector SOAP interface in the Scheduling Server. */
+>     const LABCONNECTOR_SERVICE_BUNDLE = 'SchedulingServer-LabConnector';
+>     
+180a188,205
+>      * Gets a Sahara_Soap instance which points to the LabConnector interface
+>      * of the Scheduling Server.
+>      *
+>      * @return Sahara_Soap instance
+>      * @throws Exception if failed contacting Scheduling Server
+>      */
+>     public static function getSchedServerLabConnectorClient()
+>     {
+>         if (!Zend_Registry::isRegistered(self::LABCONNECTOR_SERVICE_BUNDLE))
+>         {
+>             Zend_Registry::set(self::LABCONNECTOR_SERVICE_BUNDLE,
+>                     self::createSchedServerClient('LabConnector', self::LABCONNECTOR_SERVICE_BUNDLE));
+>         }
+>         return Zend_Registry::get(self::LABCONNECTOR_SERVICE_BUNDLE);
+>     }
+> 
+> 
+>     /**
+Index: public/js/elements/cameras/cameras.js
+===================================================================
+59a60
+> 	case 'rcjpeg':
