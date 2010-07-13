@@ -16,7 +16,7 @@ test("Experiment Results", function() {
 		options = param;
 	};
 	
-	loadExperimentResults("TestParam");
+	loadExperimentResults();
 	options.success({p : null}); //We want to assign null to the data
 	
 	var expectedValue = "<div class=\"dialogcentercontent\">" +
