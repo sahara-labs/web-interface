@@ -94,7 +94,7 @@ class LabconnectorController extends Sahara_Controller_Action_Acl
             }
 
             /* Load up resource information. */
-            if($p->resourceClass == 'TYPE' && $p->resource->resourceName == 'ILABS')
+            if ($p->resourceClass == 'TYPE' && $p->resource->resourceName == 'ILABS')
             {
             	//Store permissionID to correlate it with resourceClass being 'RIG'
             	 $resource = array(
@@ -109,11 +109,11 @@ class LabconnectorController extends Sahara_Controller_Action_Acl
                 foreach ($resourceClasses as $resourceClass)
                 {
                 	//Check for duplicates
-  		           	if ($p->displayName == $resourceClass["display"])
+  		           	if ($p->displayName == $resourceClass["display"] || $p->resourceName == $resourceClass["display"])
     					$nonUnique = True;
                 }
                 	
-                if(!$nonUnique)
+                if (!$nonUnique)
                 	array_push($resourceClasses, $resource);
                 		
                 $nonUnique = False;//Reset back to false for next iteration
@@ -126,7 +126,7 @@ class LabconnectorController extends Sahara_Controller_Action_Acl
         /*
          * Account for when we have Sahara Labs that have permission but no iLabs Experiment permissions
          */
-        if(!$resourceClasses)
+        if (!$resourceClasses)
         {    
         	$this->view->hasclass = false;
         	$this->view->errMsg = 'No Permissions for any iLabs Experiments';
@@ -134,21 +134,6 @@ class LabconnectorController extends Sahara_Controller_Action_Acl
         }
         
         $this->view->ilabsExpts = $resourceClasses;
-        
-     	/* Load the labconnector for the user. */
-		//$this->_redirectTo('index', 'labconnector'); //Get the User choice of Experiment first
-        //$clientLabConnector = Sahara_Soap::getSchedServerLabConnectorClient();
-        //$exptID = $clientLabConnector->submitExperiment(array('userQName' => $this->_auth->getIdentity()));
-    }	
-    
-    /**
-     * Action to show any errors encountered e.g. Permissions denied for Rig/Lab type
-     */
-    public function errorAction()
-    {
-    	$this->view->headTitle('LabShare - iLabs Experiments');
-        $this->view->messages = $this->_flashMessenger->addMessage($this->errMsg);    	
-        //$this->_flashMessenger->addMessage($this->errMsg);   	
     }
     
     /**
@@ -180,7 +165,7 @@ class LabconnectorController extends Sahara_Controller_Action_Acl
     	else if($exptname == "UQ Radioactivity Expt1")
 	    	$form = new Labconnector_Batch_UQRadioactivity_Form();
     	
-	    if(isset($form))
+	    if (isset($form))
     		$this->view->form = $form;
     }
     
@@ -193,19 +178,19 @@ class LabconnectorController extends Sahara_Controller_Action_Acl
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout()->disableLayout();
     	
-        //$params = $this->_request->getPost();
         $params = $this->_request->getParams();
         
         /* Check the Experiment Specs are what they are before submitting */
         $xmlText = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n<experimentSpecification></experimentSpecification>";
      	$exptSpecsXMLObj = simplexml_load_string($xmlText);
      	
-     	if($params['exptname'] == "Time Of Day - Batch")
+     	/* This is unique to the experiments offered & will need to be updated upon each experiment, respectively */
+     	if ($params['exptname'] == "Time Of Day - Batch")
      	{
      		$exptSpecsXMLObj->addChild("setupId", $params['timesetup']);
      		$exptSpecsXMLObj->addChild("formatName", $params['timefmt']);
      	}
-     	else if($params['exptname'] == "UQ Radioactivity Expt1") 
+     	else if ($params['exptname'] == "UQ Radioactivity Expt1") 
      	{ 
      		$exptSpecsXMLObj->addChild("setupId", $params['radioactivitysetup']);
      		$exptSpecsXMLObj->addChild("sourceName", $params['sourcename']);
@@ -215,8 +200,6 @@ class LabconnectorController extends Sahara_Controller_Action_Acl
      		$exptSpecsXMLObj->addChild("repeat", $params['repeat']);
      	}
      
-	//var_dump($exptSpecsXMLObj->asXML());
-	
      	if ($this->_auth->getIdentity())
         {
          	try
@@ -236,7 +219,6 @@ class LabconnectorController extends Sahara_Controller_Action_Acl
             }
             catch (Exception $ex)
             {
-            	//echo var_dump($ex);
                 echo "Exception when connecting to the SchedServer-LabConnector: " . $ex->getMessage() . "\n";
             }
         }
@@ -288,15 +270,12 @@ class LabconnectorController extends Sahara_Controller_Action_Acl
     	
     	/* Read the Experiment Storage location for user */
 	    $config = Zend_Registry::get('config');
-    	$userdirectoryID = $this->_request->getParam('userdirectoryID', '0');
-    	$userPath = str_replace(":", "_", $userdirectoryID); //Namespace contains colons which is replaced
+    	$userPath = str_replace(":", "_",  $this->_auth->getIdentity()); //Namespace contains colons which is replaced
     	$fileStoragePath = $config->experiment->storage->dir . "/" . $userPath . "/" . "results.txt";
 	    $experimentStorage = file_get_contents($fileStoragePath);
 	    //$this->view->experimentStorage = $experimentStorage;
 	    
-	    if($experimentStorage)
-    		echo $fileStoragePath . ":<br><br>" . $experimentStorage;
-    	else
-    		$this->_redirectTo('labconnector', 'error');
+	    if ($experimentStorage)
+    		echo $fileStoragePath . ":<br /><br />" . $experimentStorage;
     }
 }
