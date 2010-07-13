@@ -1,0 +1,234 @@
+<?php
+/**
+ * SAHARA Web Interface - LabConnector
+ *
+ * User interface to LabConnector.
+ *
+ * @license See LICENSE in the top level directory for complete license terms.
+ *
+ * Copyright (c) 2010, University of Technology, Sydney
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of the University of Technology, Sydney nor the names
+ *    of its contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * @author Herbert Yeung
+ * @date 16th June 2010
+ */
+$this->headLink()->appendStylesheet($this->baseUrl('css/labconnector.css'));
+$this->headScript()->appendFile($this->baseUrl('js/labconnector.js'));
+if ($this->hasclass)
+{
+	if (!$this->noPermissions)
+	{
+	    /* Work out the height of the tab div. */
+	    $tabHeight = 0;
+	    foreach ($this->ilabsExpts as $ilabsExpt)
+	    {
+	        $height = 0;
+	        foreach ($ilabsExpt as $type => $expt)
+	        {
+	            $height += ceil(count($expt) / 4) * 100 + ceil((count($expt) / 4)) * 50;
+	        }
+	        if ($height > $tabHeight) $tabHeight = $height;
+	    }
+	}
+}
+?>
+
+
+<div class="contentheader">
+	<h2>LabConnector - iLabs Experiments</h2>
+</div>
+
+<?php if ($this->hasclass): ?>
+<!-- Tab bar. -->
+<div id="userclasstabs" class="ui-tabs ui-widget ui-widget-content ui-corner-all">
+
+<!-- Tab content. -->
+<div id=ilabsclass class="ui-tabs-panel ui-widget-content ui-corner-bottom" style="height:<?=$tabHeight/4?>px">
+
+<!-- iLab Experiment list for class <?=$id?> -->
+<?php foreach ($this->ilabsExpts as $value):
+      if (count($type)): ?>
+	<div class="labconnectorbar">
+		<ul class="labconnectorlistbar">
+		<li>
+			<a id="ilabsexpt<?=$value['permissionId']?>_link" class="labconnectorbutton plaina ui-corner-all" href="#">
+				<img class="ilabsicon" src="<?=$this->baseUrl('images/permission_launch.png')?>" alt="Allowed" />
+				<?=$this->stringTransform($value['display'], '_', ' ')?>
+			</a>
+		</li>
+		</ul>
+	</div>
+<?php endif;
+      endforeach; ?>
+
+<!-- End tab content. -->
+</div>
+<!-- End tab bar. -->
+</div>
+
+<!-- Procesing for ilabs experiment form dialogs. -->
+<?php foreach ($this->ilabsExpts as $value): ?>
+<div id="experimentdialog<?=$value['permissionId']?>">
+<script type="text/javascript">
+$(document).ready(function() {
+
+	 /*Experiment Dialogs section*/
+	$('#experimentdialog<?=$value['permissionId']?>').dialog({
+		autoOpen: false,
+		modal: true,
+		resizable: false,		
+		width:  420,
+		height: 380,
+		close: function(ev, ui) { $('#experimentdialog<?=$value['permissionId']?>').hide(); },
+		open:  function(ev, ui) { loadExperimentEntryInfo("<?=$value['permissionId']?>", "<?=$value['display']?>");}
+	});
+	
+	$('#ilabsexpt<?=$value['permissionId']?>_link').click(function(){
+		$('#experimentdialog<?=$value['permissionId']?>').dialog({title : "<?=$value['display']?>"});
+		$('#experimentdialog<?=$value['permissionId']?>').dialog('open');});
+
+	//return false;
+});
+</script>
+</div>
+<?php endforeach; ?>
+<!-- End Procesing for ilabs experiment form dialogs. -->
+
+
+<!-- Experiment Results. -->
+
+<div id="experimentresultsbar" class="ui-tabs ui-widget ui-widget-content ui-corner-all">
+<?php /* We want to set the registery for every time the user is on the index page */ 
+		$config = Zend_Registry::get('config');
+		$userPath = str_replace(":", "_", $this->userID); //Namespace contains colons which is replaced
+		$fileStoragePath = $config->experiment->storage->dir . "/" . $userPath . "/" . "results.txt";
+		Zend_Registry::set('filesizeval', filesize($fileStoragePath));?>
+	<div id="experimentresultsborder">	
+    <div>
+		<a id="exptresults_link" class="exptresultsbutton plaina ui-corner-all" href="#">
+			<img class="ilabsexptresulticon" src="<?=$this->baseUrl('images/balls/green.gif')?>" alt="Allowed" />
+			Experiment Results Available
+		</a>
+    </div>
+	</div>
+</div>
+
+<!-- Start for Processing Experiment Results -->
+<script type="text/javascript">
+function callComplete(response) 
+{
+	//Place the alert as a spinning icon near the div id:
+	if (response != null)
+		$('#exptresults_link').css({opacity: 1, color:'green'}); //Colour the link to active colour
+};
+
+function connect() 
+{
+	// When call completes, callComplete() will be called along with the response returned
+	$.post('/labconnector/refreshresults', {userdirectoryID : "<?=$this->userID?>"}, callComplete, 'text/xml');
+};
+
+$(document).ready(function() {		
+	//Poll the filesystem to see what is available
+	setInterval(connect,5000); 	//setTimeout(connect,10000);
+});
+</script>
+<!-- End for Processing Experiment Results -->
+
+<!-- Start of Showing Experiment Results -->
+<div id="experimentresultsdialog">
+<script type="text/javascript">
+$(document).ready(function() {
+
+	 /*Experiment Results section*/
+	$('#experimentresultsdialog').dialog({
+		autoOpen: false,
+		modal: true,
+		resizable: false,		
+		width:  480,
+		height: 380,
+		close: function(ev, ui) { $('#experimentresultsdialog').hide(); },
+		open:  function(ev, ui) { loadExperimentResults("<?=$this->userID?>");}
+	});
+	
+	$('#exptresults_link').click(function(){
+		$('#experimentresultsdialog').dialog({title : "Experiment Results"});
+		$('#exptresults_link').css({'color' : 'black'});  //Colour the Experiment results link to inactive as it was clicked
+		$('#experimentresultsdialog').dialog('open');});
+});
+</script>
+</div>
+<!-- End of Showing Experiment Results -->
+
+<!-- Legend for icon information. -->
+
+<div id="iconlegends" class="legend">
+    <div id="iconlegend">
+		<h3>Permision Descriptions:</h3>
+		<ul>
+    		<li><img src="<?=$this->baseUrl('images/permission_launch.png')?>" alt="Allowed" />  
+    		 Active <span class="legendtext"> You may queue for this resource.  </span></li>
+    		<li><img src="<?=$this->baseUrl('images/permission_expired.png')?>" alt="Expired" />
+    		Not Active <span class="legendtext"> You do not currently have permission to queue.</span></li>
+   	 	</ul>
+    </div>
+    <div id="balliconlegend">
+		<h3>Experiment Results Status Descriptions:</h3>
+		<ul>
+			<li><img src="<?=$this->baseUrl('images/balls/green_small.gif')?>" alt="Available" />
+    		Updated and Available <span class="legendtext"> The experiment results have been updated and are available.</span></li>
+    		<li><img src="<?=$this->baseUrl('images/balls/red_small.gif')?>" alt="NotAvailable" />
+    		Not Updated <span class="legendtext"> The experiment results have not been updated.</span></li>
+    	</ul>
+    </div>
+</div>
+
+<script>
+$("#iconlegends li").hover(
+  function () {
+    $(this).css("font-weight","bold");
+    $(this).children("span").css("display","inline");
+  }, 
+  function () {
+	    $(this).css("font-weight","normal");
+	$(this).children("span").css("display","none");
+  }
+);
+</script>
+
+<!-- End for normal functionalities, the rest below are errors -->
+
+<?php else: ?>
+<div style="width:310px; margin: 0 auto">
+	<div class="ui-state-error ui-corner-all alertdiv">
+		<p class="alertp">
+    		<span class="ui-icon ui-icon-alert alertspan"></span>
+    		 No Permissions for any iLabs Experiments
+    		<?//TODO: Not Working: //=$this->messages[0]?>
+    	</p>
+	</div>
+</div>
+<?php endif; ?>
