@@ -8,7 +8,7 @@ patch -p0 < docs/LabConnector/labconnector.patch
 Ran the following command: 
 
 cd WI/trunk
-svn  diff --diff-cmd=diff -x -95 -x -w -x -b . > labconnector.patch
+svn  diff --diff-cmd=diff -x -95 -x -w -x -b -x '--exclude=docs/LabConnector/labconnector.patch' . > labconnector.patch
 
 These changes implement the following:
 1. Accessing of labs by Sahara USER
