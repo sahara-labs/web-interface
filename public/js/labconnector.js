@@ -46,11 +46,10 @@ function loadExperimentEntryInfo(pid, displayname)
 	);
 }
 
-function loadExperimentResults(userID)
+function loadExperimentResults()
 {
 	$.get(
 		"/labconnector/results",   // URL to experiment results
-		{userdirectoryID : userID},
 		function(p) { // Callback to handle permission information
 			splitData(p);
 			$("#experimentresultsdialog").html(
