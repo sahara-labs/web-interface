@@ -1,7 +1,6 @@
 #!/bin/bash
 # directory to write output XML (if this doesn't exist, the results will not be generated!)
 OUTPUT_DIR="coverage"
-mkdir $OUTPUT_DIR
 
 XVFB=`which Xvfb`
 if [ "$?" -eq 1 ];
