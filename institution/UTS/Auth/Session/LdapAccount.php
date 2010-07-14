@@ -54,6 +54,22 @@
  *  <li>session.ldapaccount.sidprefix - The Samba domain SID to generate
  *  the Samba domain user SID and primary group SID.</li>
  * </ul>
+ * Using this setup class also requires the following fields to be added
+ * to the users table.
+ * <ul>
+ * 	<li>first_name - varchar - The first name of the user.</li>
+ *  <li>last_name - varchar - The last name of the user.</li>
+ *  <li>email - varchar - The email address of the user.</li>
+ *  <li>ldapou - varchar - The organizational group the user
+ *  should be a member of.</li>
+ * </ul>
+ * The SQL to do this is:
+ * <pre>
+    ALTER TABLE `users` ADD `ldapou` VARCHAR( 50 ) NULL ,
+    ADD `first_name` VARCHAR( 50 ) NULL ,
+    ADD `last_name` VARCHAR( 50 ) NULL ,
+    ADD `email` VARCHAR( 100 ) NULL
+ * </pre>
  */
 class UTS_Auth_Session_LdapAccount extends Sahara_Auth_Session
 {
@@ -115,6 +131,7 @@ class UTS_Auth_Session_LdapAccount extends Sahara_Auth_Session
             'givenname'            => $this->_authType->getAuthInfo('first_name'),
             'sn'                   => $this->_authType->getAuthInfo('last_name'),
             'userpassword'         => $this->_authType->getPassword(),
+            'mail'                => $this->_authType->getAuthInfo('email'),
 
             /* Object classes. */
             'objectclass'          => array(
