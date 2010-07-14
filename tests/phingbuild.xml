@@ -17,7 +17,7 @@
 			#pear install phing/phing
 -->
  <project name="test" basedir="." default="app">
-    <property name="builddir" value="${ws}trunk\tests\coverage" />
+    <property name="builddir" value="${ws}\trunk\tests\coverage" />
 
     <!-- PHP copy/paste analysis -->
     <target name="phpcpd">
