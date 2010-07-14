@@ -329,7 +329,7 @@ var $sbox = array(array(array(14,  4, 13,  1,  2, 15, 11,  8,  3, 10,  6, 12,  5
 	* @return string hash value
 	*/
 	function nthash($password = "") {
-		return strtoupper(bin2hex(mhash(MHASH_MD4, iconv("UTF-8","UTF-16LE",$password))));
+		return strtoupper(hash("md4", iconv("UTF-8","UTF-16LE", $password), false));
 	}
 
 	/**
