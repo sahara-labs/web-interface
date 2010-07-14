@@ -3,6 +3,7 @@
 <!-- Based on http://luhman.org/blog/2009/12/16/installing-hudson-phing-phpunit-and-git-ubuntu -->
 <!-- Based on http://phing.info/trac/wiki/Users/Documentation/Gotcha%27s -->
 <!-- Need to make sure the following modules are installed via PHP-PEAR: phpcpd, pdepend, phpcs and phpunit.
+			#pear channel-discover components.ez.no
 			#pear channel-discover pear.phpunit.de
 			#pear install phpunit/phpcpd
 			#pear channel-discover pear.pdepend.org
@@ -12,9 +13,13 @@
 			#pear install phpunit/PHPUnit 
 			#pecl install xdebug (if under windows follow instructions on http://devzone.zend.com/article/2803)
 			
-			#Also on windows:
+			On M$ Windows:
 			#pear channel-disover pear.phing.info
 			#pear install phing/phing
+			
+			Was getting the following error: '".\php.exe"' is not recognized as an internal or external command, operable program or batch file.
+			Fix: Go to each script i.e. phpunit.bat, phpcs.bat, pdepend.bat, phpcpd.bat and change .\php.exe to php.exe. 
+			Also make sure the PATH is set correctly Environment Variables and Reboot PC.
 -->
  <project name="test" basedir="." default="app">
     <property name="builddir" value="${ws}\trunk\tests\coverage" />
@@ -22,24 +27,24 @@
     <!-- PHP copy/paste analysis -->
     <target name="phpcpd">
         <echo msg="PHP Copy/Paste..." />
-        <exec command="phpcpd --log-pmd=${builddir}\pmd.xml application" escape="false" />
+        <exec command="phpcpd --log-pmd=${builddir}\pmd.xml ${ws}\trunk\application" escape="false" />
     </target>
 
     <!-- PHP dependency checker -->
     <target name="pdepend">
         <echo msg="PHP Depend..." />
-        <exec command="pdepend --jdepend-xml=${builddir}\jdepend.xml ${ws}\application" escape="false" />
+        <exec command="pdepend --jdepend-xml=${builddir}\jdepend.xml ${ws}\trunk\application" escape="false" />
     </target>
 
     <!-- PHP CodeSniffer -->
     <target name="phpcs">
         <echo msg="PHP CodeSniffer..." />
-        <exec command="phpcs --standard=ZEND --report=checkstyle ${ws}\application > ${builddir}\checkstyle.xml" escape="false" />
+        <exec command="phpcs --standard=ZEND --report=checkstyle ${ws}\trunk\application > ${builddir}\checkstyle.xml" escape="false" />
     </target>
 
     <!-- Unit Tests & coverage analysis -->
     <target name="phpunit">
         <echo msg="PHP Unit..." />
-        <exec command="phpunit --log-junit ${builddir}\logs\phpunit.xml --log-pmd ${builddir}\phpunit.pmd.xml --coverage-clover ${builddir}\clover.xml --coverage-html ${builddir}\html\ ${ws}\application"/>
+        <exec command="phpunit --log-junit ${ws}\trunk\tests\phpunit.xml --log-pmd ${builddir}\phpunit.pmd.xml --coverage-clover ${builddir}\clover.xml --coverage-html ${builddir}\html\ ${ws}\trunk\application"/>
     </target>
 </project>
