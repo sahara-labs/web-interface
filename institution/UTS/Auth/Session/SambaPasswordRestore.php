@@ -74,6 +74,7 @@ class UTS_Auth_Session_SambaPasswordRestore extends Sahara_Auth_Session
         $entry['sambantpassword'] = $this->_smbHash->nthash($this->_authType->getPassword());
 
         $this->_ldap->save($entry['dn'], $entry);
+        $this->_logger->debug("Restored password of user with DN " . $entry['dn']);
     }
 
     public function __destruct()
