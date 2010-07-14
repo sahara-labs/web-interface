@@ -105,7 +105,6 @@ class Sahara_Acl extends Zend_Acl
         	/* Attempt to find the user's 'persona' which defines their role. */
             $user = Sahara_Soap::getSchedServerPermissionsClient()->getUser(array('userQName' => $this->_user));
             $this->_userRole = $user->persona;
-            $this->_logger->debug("Loaded role of $this->_user as $this->_userRole persona.");
         }
         else
         {
