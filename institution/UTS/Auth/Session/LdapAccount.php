@@ -2,14 +2,22 @@
 
 /**
  * Session setup classes which creates a LDAP account for the user if it
- * does not exist. The required configuration for this class is:
+ * does not exist. The required configuration properties for generated
+ * user accounts are:
  * <ul>
- *
+ *	<li>session.ldapaccount.defaultou - The default organizational unit
+ *  (OU) of generated user accounts.</li>
+ *  <li>session.ldapaccount.gid - POSIX account gid.</li>
+ *  <li>session.ldapaccount.loginshell - POSIX account login shell.</li>
+ *  <li>session.ldapaccount.homebase - POSIX account home directory
+ *  base. The generated home directory path will be
+ *  &lt;homebase&gt;/&lt;account OU&gt;/&lt;uid&gt;
+ *  <li>session.ldapaccount.sidprefix - The Samba domain SID to generate
+ *  the Samba domain user SID and primary group SID.</li>
  * </ul>
  */
 class UTS_Auth_Session_LdapAccount extends Sahara_Auth_Session
-{ => $this->_smbHash->nthash($this->_authType->getPassword()),
-            'sambapwdlastset' =>
+{
     /** @var Zend_Ldap Ldap connection. */
     private $_ldap;
 
@@ -33,14 +41,21 @@ class UTS_Auth_Session_LdapAccount extends Sahara_Auth_Session
         $this->_smbHash = new UTS_Auth_Session_SmbHash();
     }
 
+    /**
+     * Generates the LDAP user account if it doesn't exist.
+     *
+     * (non-PHPdoc)
+     * @see models/Sahara/Auth/Sahara_Auth_Session::setup()
+     */
     public function setup()
     {
         $config = $this->_config->session->ldapaccount;
-        if (!$config) throw new Exception('LDAP account information not configured.'. 106);
+        if (!$config) throw new Exception('LDAP account information not configured.'. 104);
 
         $ou = $this->_authType->getAuthInfo('ldapou');
-        if (!$ou) $config->defaultou
+        if (!$ou) $ou = $config->defaultou;
         if (!$ou) throw new Exception('LDAP account default OU not configured.', 104);
+
         if (!$basedn = $this->_config->ldap->params->baseDn) throw new Exception('LDAP options not configured.', 102);
 
         $uid = $this->_authType->getUsername();
@@ -49,13 +64,18 @@ class UTS_Auth_Session_LdapAccount extends Sahara_Auth_Session
         $dn = 'uid=' . $uid . ",ou=$ou,$basedn";
         if ($this->_ldap->exists($dn)) return;
 
-        $entry => array(
+        $this->_logger->info("Generating account for user $uid with DN $dn.");
+
+        $uidNumber = $this->_getPosixUidNumber();
+
+        $entry = array(
             /* Normal account details. */
-            'uid'                  => $uid;
+            'uid'                  => $uid,
             'cn'                   => $this->_authType->getAuthInfo('first_name') . ' ' .
                                       $this->_authType->getAuthInfo('last_name'),
             'givenname'            => $this->_authType->getAuthInfo('first_name'),
-            'sn'                   => $this->_authType->getAuthInfo('sn'),
+            'sn'                   => $this->_authType->getAuthInfo('last_name'),
+            'userpassword'         => $this->_authType->getPassword(),
 
             /* Object classes. */
             'objectclass'          => array(
@@ -68,37 +88,68 @@ class UTS_Auth_Session_LdapAccount extends Sahara_Auth_Session
              ),
 
             /* POSIX account details. */
-            'uidnumber'            => $this->_getPosixUid(),
+            'uidnumber'            => $this->_getPosixUidNumber(),
             'gidnumber'            => $config->gid,
-            'homedirectory'        => $this->_getHomeDirectory(),
+            'homedirectory'        => $this->_getHomeDirectory($ou),
             'loginshell'           => $config->loginshell,
             'gecos'                => $this->_authType->getAuthInfo('first_name') . ' ' .
                                       $this->_authType->getAuthInfo('last_name'),
 
             /* Samba account details. */
             'sambaacctflags'       => '[UX  ]',
-            'sambasid'             => $this->_getSambaSid(),
+            'sambasid'             => $this->_getSambaSid($uidNumber),
             'sambaprimarygroupsid' => $this->_getSambaGroupSid(),
             'sambalmpassword'      => $this->_smbHash->lmhash($this->_authType->getPassword()),
             'sambantpassword'      => $this->_smbHash->nthash($this->_authType->getPassword()),
             'sambapwdlastset'      => time()
         );
 
+        $this->_ldap->add($dn, $entry);
+        $this->_logger->info('Generated account is: ' . print_r($entry, true));
     }
 
+    /**
+     * Gets a POSIX uid. The uid number is the next free UID number determined
+     * by incrementing the response from the command:
+     * <pre>
+     * getent passwd | tail -n 1 | cut -d ':' -f3
+     * </pre>
+     *
+     * @return int uid number
+     */
     private function _getPosixUidNumber()
     {
-        // TODO uid number generation
+        $out = array();
+        $ret = 0;
+
+        $uid = exec("getent passwd | tail -n 1 | cut -d ':' -f3", $out, $ret);
+        if ($ret) throw new Exception("Response from determining UID was non-zero ($ret)", 107);
+
+        for ($i = 0; $i < 100; $i++)
+        {
+            $out = array();
+            $ret = 0;
+            exec('getent passwd ' . ($uid + $i), $out, $ret);
+            if ($ret == 2) return $uid + $i;
+        }
+
+        throw new Exception("Unable to find a free UID in 100 attempts.");
     }
 
     /**
      * Generates the users home directory path.
      *
+     * @param String ou The account OU
      * @return String home directory path
      */
-    private function _getHomeDirectory()
+    private function _getHomeDirectory($ou)
     {
+        $home = $this->_config->session->ldapaccount->homebase;
+        if (!$home) throw new Exception("LDAP account home directory base not configured.", 104);
 
+        if (strrpos($home, '/') != strlen($home) - 1) $home .= '/';
+
+        return $home . $ou . '/' . $this->_authType->getUsername();
     }
 
     /**
@@ -110,11 +161,11 @@ class UTS_Auth_Session_LdapAccount extends Sahara_Auth_Session
      */
     private function _getSambaSid($uid)
     {
-        $rid = $uid * 2 + 1000;
         $sid = $this->_config->session->ldapaccount->sidprefix;
+        if (!$sid) throw new Exception("LDAP account Samba SID not configured.", 104);
+        if (strrpos($sid, '-') != strlen($sid) - 1) $sid .= '-';
 
-
-        return $sid . $rid;
+        return "$sid" . ($uid * 2 + 1000);
     }
 
     /**
@@ -124,10 +175,16 @@ class UTS_Auth_Session_LdapAccount extends Sahara_Auth_Session
      * @param int $gid POSIX group id
      * @return group SID
      */
-    private function _getSambaGroupSid($gid)
+    private function _getSambaGroupSid()
     {
-        $rid = $uid * 2 + 1001;
-        return $this->_config->session->ldapaccount->sidprefix . $rid;
+        $sid = $this->_config->session->ldapaccount->sidprefix;
+        if (!$sid) throw new Exception("LDAP account Samba SID not configured.", 104);
+        if (strrpos($sid, '-') != strlen($sid) - 1) $sid .= '-';
+
+        $gid = $this->_config->session->ldapaccount->gid;
+        if (!$gid) throw new Exception("LDAP account gid not configured.", 104);
+
+        return "$sid-" . ($gid * 2 + 1001);
     }
 
     public function __destruct()
