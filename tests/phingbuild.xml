@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Based on http://www.davegardner.me.uk/blog/2009/11/09/continuous-integration-for-php-using-hudson-and-phing/ -->
+<!-- Based on http://luhman.org/blog/2009/12/16/installing-hudson-phing-phpunit-and-git-ubuntu -->
+<!-- Need to make sure the following modules are installed via PHP-PEAR: phpcpd, pdepend, phpcs and phpunit.
+			#pear channel-discover pear.phpunit.de
+			#pear install phpunit/phpcpd
+			#pear channel-discover pear.pdepend.org
+			#pear install pdepend/PHP_Depend-beta
+			#pear install PHP_CodeSniffer-1.2.0
+			#pear channel-discover pear.phpunit.de
+			#pear install phpunit/PHPUnit 
+			#pecl install xdebug (if under windows follow instructions on http://devzone.zend.com/article/2803)
+-->
+ <project name="test" basedir="." default="app">
+    <property name="builddir" value="${ws}/coverage" />
+
+    <!-- PHP copy/paste analysis -->
+    <target name="phpcpd">
+        <echo msg="PHP Copy/Paste..." />
+        <exec command="phpcpd --log-pmd=${builddir}/pmd.xml application" escape="false" />
+    </target>
+
+    <!-- PHP dependency checker -->
+    <target name="pdepend">
+        <echo msg="PHP Depend..." />
+        <exec command="pdepend --jdepend-xml=${builddir}/logs/jdepend.xml ${ws}/application" escape="false" />
+    </target>
+
+    <!-- PHP CodeSniffer -->
+    <target name="phpcs">
+        <echo msg="PHP CodeSniffer..." />
+        <exec command="phpcs --standard=ZEND --report=checkstyle ${ws}/application > ${builddir}/checkstyle.xml" escape="false" />
+    </target>
+
+    <!-- Unit Tests & coverage analysis -->
+    <target name="phpunit">
+        <echo msg="PHP Unit..." />
+        <exec command="phpunit --log-junit ${builddir}/logs/phpunit.xml --log-pmd ${builddir}/phpunit.pmd.xml --coverage-clover ${builddir}/clover.xml --coverage-html ${builddir}/html/ ${ws}/application"/>
+    </target>
+</project>
