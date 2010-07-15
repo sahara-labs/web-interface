@@ -38,7 +38,12 @@
 
 /**
  * Sahara session setup class that creates the users home directory if it
- * doesn't exist.
+ * doesn't exist. The required configured for this script is:
+ * <ul>
+ * 	<li>session.homedirectory.script - The location to the script which
+ *  creates the users home directories.</li>
+ * </ul>
+ * <strong>NOTE:</strong>Apache will need permission
  */
 class UTS_Auth_Session_HomeDirectory extends Sahara_Auth_Session
 {
@@ -91,6 +96,7 @@ class UTS_Auth_Session_HomeDirectory extends Sahara_Auth_Session
             throw new Exception('Home directory creation does not exist or is not executable.', 108);
         }
 
-
+        $command = "$script " . escapeshellarg($this->_authType()->getUsername()) . ' ' . escapeshellarg($path);
+        exec($command);
     }
 }

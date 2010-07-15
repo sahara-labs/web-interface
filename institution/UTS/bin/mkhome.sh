@@ -1,11 +1,18 @@
 #!/bin/sh
 
+#
+# Generates a users home directory.
+#
+# Author: Michael Diponio
+#
+
+
 # Home directory skeleton directory
 SKEL=/etc/skel
 
 if [ ! $# -eq 2 ] ; then
-    echo "Usage: $0 <user name> <directory path>"
-    exit 1
+	echo "Usage: $0 <user name> <directory path>"
+	exit 1
 fi
 
 USER=$1
@@ -16,18 +23,27 @@ mkdir -p -m 0700 $HOME
 
 # If skeleton home directory exists, populate it with skeleton files
 if [ -d $SKEL ] ; then
-    for FILE in `ls -a $SKEL` ; do
+	for FILE in `ls -a $SKEL` ; do
 	case $FILE in
-	    .)
-		;;
-	    ..)
-		;;
-	    *)
-		cp -r $SKEL/$FILE $HOME
+		.)
+			# Don't copy the directory itself
+			;;
+		..)
+			# Don't copy the parent directory
+			;;
+		*)
+			# Copy everything else
+			cp -r $SKEL/$FILE $HOME
 		;;
 	esac
-    done
+	done
 fi
+
+# Create the Windows roaming profile directory
+mkdir $HOME/.profile
+mkdir $HOME/Desktop
+ln -sf $HOME/Desktop $HOME/.profile/Desktop
+ln -sf $HOME "$HOME/.profile/My Documents"
 
 # Change ownership of the home directory to the user
 chown -R $USER $HOME
