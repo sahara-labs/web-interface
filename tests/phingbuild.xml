@@ -20,8 +20,11 @@
 			Was getting the following error: '".\php.exe"' is not recognized as an internal or external command, operable program or batch file.
 			Fix: Go to each script i.e. phpunit.bat, phpcs.bat, pdepend.bat, phpcpd.bat and change .\php.exe to php.exe. 
 			Also make sure the PATH is set correctly Environment Variables and Reboot PC.
+			
+			Another Quirk (Refer to http://stackoverflow.com/questions/2403675/xdebug-is-not-loaded-in-php-vista-apache-module)
+			From PHP 5.3 onwards if using XDEBUG need to use zend_extension instead of zend_extension_ts to define the module. 
 -->
- <project name="test" basedir="." default="app">
+ <project name="test" basedir="." default="phpunit">
     <property name="builddir" value="${ws}\trunk\tests\coverage" />
 
     <!-- PHP copy/paste analysis -->
@@ -45,6 +48,7 @@
     <!-- Unit Tests & coverage analysis -->
     <target name="phpunit">
         <echo msg="PHP Unit..." />
-        <exec command="phpunit --configuration ${ws}\trunk\tests\phpunit.xml --log-junit ${builddir}\phpunitoutput.xml --log-pmd ${builddir}\phpunit.pmd.xml --coverage-clover ${builddir}\clover.xml --coverage-html ${builddir}\html\ ${ws}\trunk\application"/>
+        <exec command="cd ${ws}\trunk\tests"/>
+        <exec command="phpunit --configuration ${ws}\trunk\tests\phpunit.xml --log-junit ${builddir}\phpunitoutput.xml --coverage-clover ${builddir}\clover.xml --coverage-html ${builddir}\html\ ${ws}\trunk\application"/>
     </target>
 </project>
