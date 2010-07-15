@@ -4,6 +4,7 @@ To apply the patch:
 
 cd WI/trunk
 patch -p0 < docs/LabConnector/labconnector.patch
+patch -p0 < docs/LabConnector/labconnector_newfiles.patch
 
 To revert the patch:
 cd WI/trunk
@@ -14,8 +15,13 @@ rm -rf application/views/scripts/labconnector
 
 Ran the following command: 
 
+OLD FILES:
 cd WI/trunk
 svn  diff --diff-cmd=diff -x -95 -x -w -x -b -x '--exclude=docs/LabConnector/labconnector.patch' . > labconnector.patch
+
+NEW FILES:
+cd WI/trunk
+svn diff -N application/views/scripts/labconnector application/models/Labconnector application/controllers/LabconnectorController.php application/views/scripts/labconnector . > docs/LabConnector/labconnector_newfiles.patch
 
 These changes implement the following:
 1. Accessing of labs by Sahara USER
