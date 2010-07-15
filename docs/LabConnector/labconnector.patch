@@ -241,9 +241,36 @@ Index: application/models/Labconnector/Batch/TimeOfDay/Form.php
 >     }
 > }
 \ No newline at end of file
+Index: application/Bootstrap.php
+===================================================================
+36a37,40
+>  *
+>  * @author Herbert Yeung
+>  * @date 13th July 2010
+>  * Modification: Added the namespace for LabConnector.
+72c76
+< 
+---
+>     
+79a84
+>         $autoloader->registerNamespace('Labconnector_');
+Index: application/controllers/IndexController.php
+===================================================================
+65,67c65,71
+<             /******************************************************************
+<              ** TODO Add your authentication.                                **
+<              ******************************************************************/
+---
+>             $auth = new Sahara_Auth($username, $password);
+>             if (!$auth->authenticate())
+>             {
+>                  $this->view->messages = array("Authentication failure.");
+>                  return;
+>             }
+>             $auth->setupSession();
 Index: application/controllers/LabconnectorController.php
 ===================================================================
-0a1,281
+0a1,290
 > <?php
 > /**
 >  * SAHARA LabConnector Controller
@@ -380,7 +407,12 @@ Index: application/controllers/LabconnectorController.php
 >         }
 >         
 >         $this->view->ilabsExpts = $resourceClasses;
->     }
+>         
+>      	/* Load the labconnector for the user. */
+> 		//$this->_redirectTo('index', 'labconnector'); //Get the User choice of Experiment first
+>         //$clientLabConnector = Sahara_Soap::getSchedServerLabConnectorClient();
+>         //$exptID = $clientLabConnector->submitExperiment(array('userQName' => $this->_auth->getIdentity()));
+>     }	
 >     
 >     /**
 >      * Action to show a list of the lab connector experiments (TimeOfDay & Radioactivity).
@@ -408,7 +440,7 @@ Index: application/controllers/LabconnectorController.php
 >     	//Check which type of experiment is being invoked before displaying the formset
 >     	if ($exptname == "Time Of Day - Batch")
 >     		$form = new Labconnector_Batch_TimeOfDay_Form();
->     	else if($exptname == "UQ Radioactivity Expt1")
+>     	else if ($exptname == "UQ Radioactivity Expt1")
 > 	    	$form = new Labconnector_Batch_UQRadioactivity_Form();
 >     	
 > 	    if (isset($form))
@@ -424,13 +456,13 @@ Index: application/controllers/LabconnectorController.php
 >         $this->_helper->viewRenderer->setNoRender();
 >         $this->_helper->layout()->disableLayout();
 >     	
+>         //$params = $this->_request->getPost();
 >         $params = $this->_request->getParams();
 >         
 >         /* Check the Experiment Specs are what they are before submitting */
 >         $xmlText = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n<experimentSpecification></experimentSpecification>";
 >      	$exptSpecsXMLObj = simplexml_load_string($xmlText);
 >      	
->      	/* This is unique to the experiments offered & will need to be updated upon each experiment, respectively */
 >      	if ($params['exptname'] == "Time Of Day - Batch")
 >      	{
 >      		$exptSpecsXMLObj->addChild("setupId", $params['timesetup']);
@@ -446,6 +478,8 @@ Index: application/controllers/LabconnectorController.php
 >      		$exptSpecsXMLObj->addChild("repeat", $params['repeat']);
 >      	}
 >      
+> 	//var_dump($exptSpecsXMLObj->asXML());
+> 	
 >      	if ($this->_auth->getIdentity())
 >         {
 >          	try
@@ -465,6 +499,7 @@ Index: application/controllers/LabconnectorController.php
 >             }
 >             catch (Exception $ex)
 >             {
+>             	//echo var_dump($ex);
 >                 echo "Exception when connecting to the SchedServer-LabConnector: " . $ex->getMessage() . "\n";
 >             }
 >         }
@@ -492,13 +527,13 @@ Index: application/controllers/LabconnectorController.php
 > 	        $resultsfilesize = 0;
 > 	    	
 > 	        /* Check file exists & file's modified timestamp has changed */
-> 	        if(($resultsfilesize < filesize($fileStoragePath)))
+> 	        if (($resultsfilesize < filesize($fileStoragePath)))
 > 	        {
 > 	        	Zend_Registry::set('filesizeval', filesize($fileStoragePath));
 > 	        	//$this->resultsfilesize = filesize($fileStoragePath);
 > 	        	
 > 	        	$experimentStorage = file_get_contents($fileStoragePath);
-> 	        	if($experimentStorage)
+> 	        	if ($experimentStorage)
 > 	        		echo $this->view->$experiemntStorage;
 > 	        	else
 > 	        		echo "Error";
@@ -516,7 +551,8 @@ Index: application/controllers/LabconnectorController.php
 >     	
 >     	/* Read the Experiment Storage location for user */
 > 	    $config = Zend_Registry::get('config');
->     	$userPath = str_replace(":", "_",  $this->_auth->getIdentity()); //Namespace contains colons which is replaced
+>     	$userdirectoryID = $this->_request->getParam('userdirectoryID', '0');
+>     	$userPath = str_replace(":", "_", $userdirectoryID); //Namespace contains colons which is replaced
 >     	$fileStoragePath = $config->experiment->storage->dir . "/" . $userPath . "/" . "results.txt";
 > 	    $experimentStorage = file_get_contents($fileStoragePath);
 > 	    //$this->view->experimentStorage = $experimentStorage;
@@ -525,28 +561,96 @@ Index: application/controllers/LabconnectorController.php
 >     		echo $fileStoragePath . ":<br /><br />" . $experimentStorage;
 >     }
 > }
+Index: application/controllers/QueueController.php
+===================================================================
+36a37,42
+>  * 
+>  * @author Herbert Yeung
+>  * @date 17th June 2010
+>  * Modification: Added extra check for RIG Permission TYPE as 'ILABS'. If so, don't add it.
+>  * Another solution is to add conditional above 'if (!array_key_exists($p->userClass->userClassName, $userClasses))'
+>  * but this would have impacted if a user group was associated with multiple permissions. 
+88,102c94,112
+<             /* Load up resource information. */
+<             $resource = array(
+<                 'resourceClass' => $p->resourceClass,     // The resource class so either 'RIG', 'TYPE' or 'CAPS'
+<                 'resource' => $p->resource->resourceName, // The resource name
+<                 'locked' => $perm->isLocked,              // Whether the permission is locked
+<                 'active' => Sahara_DateTimeUtil::isBeforeNow($p->start) && // Whether the permission is active
+<                             Sahara_DateTimeUtil::isAfterNow($p->expiry),
+<                 'id' => 'permission' . $p->permissionID,  // An ID to hook to a dialog
+<                 'start' => $p->start,                     // Start time of the resource
+<                 'expiry' => $p->expiry,                   // Expiry time of the resource
+<                 'permissionId' => $p->permissionID,       // Permission ID
+<                 'display' => isset($p->displayName) ? $p->displayName : $p->resource->resourceName // Display name
+<             );
+< 
+<             array_push($userClasses[$p->userClass->userClassName], $resource);
+---
+>             /* Extra check for iLabs experment of rig type ILABS. */
+>             if($p->resource->resourceName != 'ILABS')
+>             {
+> 	            /* Load up resource information. */
+> 	            $resource = array(
+> 	                'resourceClass' => $p->resourceClass,     // The resource class so either 'RIG', 'TYPE' or 'CAPS'
+> 	                'resource' => $p->resource->resourceName, // The resource name
+> 	                'locked' => $perm->isLocked,              // Whether the permission is locked
+> 	                'active' => Sahara_DateTimeUtil::isBeforeNow($p->start) && // Whether the permission is active
+> 	                            Sahara_DateTimeUtil::isAfterNow($p->expiry),
+> 	                'id' => 'permission' . $p->permissionID,  // An ID to hook to a dialog
+> 	                'start' => $p->start,                     // Start time of the resource
+> 	                'expiry' => $p->expiry,                   // Expiry time of the resource
+> 	                'permissionId' => $p->permissionID,       // Permission ID
+> 	                'display' => isset($p->displayName) ? $p->displayName : $p->resource->resourceName // Display name
+> 	            );
+> 				
+> 	            array_push($userClasses[$p->userClass->userClassName], $resource);
+>             }
 Index: application/configs/config.ini
 ===================================================================
-12c12
-< logger.filename = /home/mdiponio/workspace/WI/webinterface.log
----
-> logger.filename = /var/www/sahara/public/webinterface.log
 38c38
 < 
 ---
 > camera.rcjpeg = /primitive/file/pc/FileTransferController/pa/binaryFile/tf/base64/filename/<FILE>
 40a41
 > cameradesc.rcjpeg = Rig Client Cam
-70,75c71,72
+70,94c71,80
 < ; Database configuration
 < database.adapter = Pdo_Mysql
 < database.params.host = 127.0.0.1
 < database.params.dbname = sahara
 < database.params.username = sahara
 < database.params.password = saharapasswd
+< 
+< ; LDAP connection parameters
+< ldap.params.host = 138.25.47.106
+< ldap.params.username = "cn=Directory Manager"
+< ldap.params.password = dmpasswd
+< ldap.params.baseDn = "o=UTS"
+< 
+< ; Authentication configuration
+< auth.type[] = Database
+< auth.type[] = Ldap
+< ;auth.session[] = SaharaAccount{Ldap}
+< auth.session[] = LdapPermission{Ldap}
+< 
+< ; LDAP auth required attributes and values
+< auth.ldap.objectclass = utsperson
+< 
+< ; LDAP permissions
+< session.ldappermission.rule[] = "utsaccounttype=Staff{Physical Modelling}"
+< session.ldappermission.rule[] = "objectclass=utsperson{Dynamics and Control}"
 ---
 > ; LabConnector Experiment Storage root directory
 > experiment.storage.dir = /home/saharausrs
+> 
+> ;Database for user password information
+> db.adapter = PDO_MYSQL
+> db.params.host = localhost
+> db.params.username = sahara
+> db.params.password = saharapasswdaustria101
+> db.params.dbname = sahara
+> db.params.port = 3306
 Index: application/views/layouts/_navbar.phtml
 ===================================================================
 36a37,41
@@ -938,6 +1042,7 @@ Index: application/views/scripts/labconnector/index.phtml
 > 	</div>
 > </div>
 > <?php endif; ?>
+\ No newline at end of file
 Index: application/views/scripts/labconnector/error.phtml
 ===================================================================
 0a1,50
@@ -992,1124 +1097,1283 @@ Index: application/views/scripts/labconnector/error.phtml
 > 	</div>
 > </div>
 \ No newline at end of file
-Index: library/Sahara/Acl.php
-===================================================================
-36a37,40
->  * 
->  * @author Herbert Yeung
->  * @date  17th June 2010
->  * Modification: Added permission so that a user can access the LabConnector and index pages
-72c76,77
-<                                   'primitive' => array('json', 'echo', 'file')
----
->                                   'primitive' => array('json', 'echo', 'file'),
->     							  'labconnector' => array('index', 'error', 'experiment', 'results', 'refreshresults', 'submitexperiment')
-Index: library/Sahara/Soap.php
-===================================================================
-36a37,40
->  * 
->  * @author Herbert Yeung
->  * @date  25th May 2010
->  * Modification: Added SOAP interface to access SchedServer-LabConnector bundle
-52a57,59
->     /** The bundle containing the LabConnector SOAP interface in the Scheduling Server. */
->     const LABCONNECTOR_SERVICE_BUNDLE = 'SchedulingServer-LabConnector';
->     
-180a188,205
->      * Gets a Sahara_Soap instance which points to the LabConnector interface
->      * of the Scheduling Server.
->      *
->      * @return Sahara_Soap instance
->      * @throws Exception if failed contacting Scheduling Server
->      */
->     public static function getSchedServerLabConnectorClient()
->     {
->         if (!Zend_Registry::isRegistered(self::LABCONNECTOR_SERVICE_BUNDLE))
->         {
->             Zend_Registry::set(self::LABCONNECTOR_SERVICE_BUNDLE,
->                     self::createSchedServerClient('LabConnector', self::LABCONNECTOR_SERVICE_BUNDLE));
->         }
->         return Zend_Registry::get(self::LABCONNECTOR_SERVICE_BUNDLE);
->     }
-> 
-> 
->     /**
 Index: docs/LabConnector/labconnector.patch
 ===================================================================
-1c1
-< Index: application/Bootstrap.php
+243a244,270
+> Index: application/Bootstrap.php
+> ===================================================================
+> 36a37,40
+> >  *
+> >  * @author Herbert Yeung
+> >  * @date 13th July 2010
+> >  * Modification: Added the namespace for LabConnector.
+> 72c76
+> < 
+> ---
+> >     
+> 79a84
+> >         $autoloader->registerNamespace('Labconnector_');
+> Index: application/controllers/IndexController.php
+> ===================================================================
+> 65,67c65,71
+> <             /******************************************************************
+> <              ** TODO Add your authentication.                                **
+> <              ******************************************************************/
+> ---
+> >             $auth = new Sahara_Auth($username, $password);
+> >             if (!$auth->authenticate())
+> >             {
+> >                  $this->view->messages = array("Authentication failure.");
+> >                  return;
+> >             }
+> >             $auth->setupSession();
+246c273
+< 0a1,281
 ---
-> Index: application/models/Labconnector/Batch/UQRadioactivity/Form.php
-3c3,36
-< 36a37,40
+> 0a1,290
+383c410,415
+< >     }
 ---
-> 0a1,136
-> > <?php
-> > /**
-> >  * LabConnector Model Web Interface for UQ's Radioactivity experiment
-> >  *
-> >  * User interface to Sahara Remote Laboratory system.
-> >  *
-> >  * @license See LICENSE in the top level directory for complete license terms.
-> >  *
-> >  * Copyright (c) 2010, University of Technology, Sydney
-> >  * All rights reserved.
-> >  *
-> >  * Redistribution and use in source and binary forms, with or without
-> >  * modification, are permitted provided that the following conditions are met:
-> >  *
-> >  *  * Redistributions of source code must retain the above copyright notice,
-> >  *    this list of conditions and the following disclaimer.
-> >  *  * Redistributions in binary form must reproduce the above copyright
-> >  *    notice, this list of conditions and the following disclaimer in the
-> >  *    documentation and/or other materials provided with the distribution.
-> >  *  * Neither the name of the University of Technology, Sydney nor the names
-> >  *    of its contributors may be used to endorse or promote products derived from
-> >  *    this software without specific prior written permission.
-> >  *
-> >  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-> >  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-> >  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-> >  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-> >  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-> >  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-> >  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-> >  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-> >  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-> >  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-6,12c39,141
-< >  * @date 13th July 2010
-< >  * Modification: Added the namespace for LabConnector.
-< 79a84
-< >         $autoloader->registerNamespace('Labconnector_');
-< 111d115
-< < 
-< Index: application/controllers/QueueController.php
+> >         
+> >      	/* Load the labconnector for the user. */
+> > 		//$this->_redirectTo('index', 'labconnector'); //Get the User choice of Experiment first
+> >         //$clientLabConnector = Sahara_Soap::getSchedServerLabConnectorClient();
+> >         //$exptID = $clientLabConnector->submitExperiment(array('userQName' => $this->_auth->getIdentity()));
+> >     }	
+411c443
+< >     	else if($exptname == "UQ Radioactivity Expt1")
 ---
+> >     	else if ($exptname == "UQ Radioactivity Expt1")
+426a459
+> >         //$params = $this->_request->getPost();
+433d465
+< >      	/* This is unique to the experiments offered & will need to be updated upon each experiment, respectively */
+448a481,482
+> > 	//var_dump($exptSpecsXMLObj->asXML());
+> > 	
+467a502
+> >             	//echo var_dump($ex);
+495c530
+< > 	        if(($resultsfilesize < filesize($fileStoragePath)))
+---
+> > 	        if (($resultsfilesize < filesize($fileStoragePath)))
+501c536
+< > 	        	if($experimentStorage)
+---
+> > 	        	if ($experimentStorage)
+519c554,555
+< >     	$userPath = str_replace(":", "_",  $this->_auth->getIdentity()); //Namespace contains colons which is replaced
+---
+> >     	$userdirectoryID = $this->_request->getParam('userdirectoryID', '0');
+> >     	$userPath = str_replace(":", "_", $userdirectoryID); //Namespace contains colons which is replaced
+528c564
+< Index: application/configs/config.ini
+---
+> Index: application/controllers/QueueController.php
+530,531c566,588
+< 12c12
+< < logger.filename = /home/mdiponio/workspace/WI/webinterface.log
+---
+> 36a37,42
+> >  * 
+> >  * @author Herbert Yeung
 > >  * @date 17th June 2010
-> >  */
+> >  * Modification: Added extra check for RIG Permission TYPE as 'ILABS'. If so, don't add it.
+> >  * Another solution is to add conditional above 'if (!array_key_exists($p->userClass->userClassName, $userClasses))'
+> >  * but this would have impacted if a user group was associated with multiple permissions. 
+> 88,102c94,112
+> <             /* Load up resource information. */
+> <             $resource = array(
+> <                 'resourceClass' => $p->resourceClass,     // The resource class so either 'RIG', 'TYPE' or 'CAPS'
+> <                 'resource' => $p->resource->resourceName, // The resource name
+> <                 'locked' => $perm->isLocked,              // Whether the permission is locked
+> <                 'active' => Sahara_DateTimeUtil::isBeforeNow($p->start) && // Whether the permission is active
+> <                             Sahara_DateTimeUtil::isAfterNow($p->expiry),
+> <                 'id' => 'permission' . $p->permissionID,  // An ID to hook to a dialog
+> <                 'start' => $p->start,                     // Start time of the resource
+> <                 'expiry' => $p->expiry,                   // Expiry time of the resource
+> <                 'permissionId' => $p->permissionID,       // Permission ID
+> <                 'display' => isset($p->displayName) ? $p->displayName : $p->resource->resourceName // Display name
+> <             );
+> < 
+> <             array_push($userClasses[$p->userClass->userClassName], $resource);
+533c590,610
+< > logger.filename = /var/www/sahara/public/webinterface.log
+---
+> >             /* Extra check for iLabs experment of rig type ILABS. */
+> >             if($p->resource->resourceName != 'ILABS')
+> >             {
+> > 	            /* Load up resource information. */
+> > 	            $resource = array(
+> > 	                'resourceClass' => $p->resourceClass,     // The resource class so either 'RIG', 'TYPE' or 'CAPS'
+> > 	                'resource' => $p->resource->resourceName, // The resource name
+> > 	                'locked' => $perm->isLocked,              // Whether the permission is locked
+> > 	                'active' => Sahara_DateTimeUtil::isBeforeNow($p->start) && // Whether the permission is active
+> > 	                            Sahara_DateTimeUtil::isAfterNow($p->expiry),
+> > 	                'id' => 'permission' . $p->permissionID,  // An ID to hook to a dialog
+> > 	                'start' => $p->start,                     // Start time of the resource
+> > 	                'expiry' => $p->expiry,                   // Expiry time of the resource
+> > 	                'permissionId' => $p->permissionID,       // Permission ID
+> > 	                'display' => isset($p->displayName) ? $p->displayName : $p->resource->resourceName // Display name
+> > 	            );
+> > 				
+> > 	            array_push($userClasses[$p->userClass->userClassName], $resource);
+> >             }
+> Index: application/configs/config.ini
+> ===================================================================
+540c617
+< 70,75c71,72
+---
+> 70,94c71,80
+546a624,642
+> < 
+> < ; LDAP connection parameters
+> < ldap.params.host = 138.25.47.106
+> < ldap.params.username = "cn=Directory Manager"
+> < ldap.params.password = dmpasswd
+> < ldap.params.baseDn = "o=UTS"
+> < 
+> < ; Authentication configuration
+> < auth.type[] = Database
+> < auth.type[] = Ldap
+> < ;auth.session[] = SaharaAccount{Ldap}
+> < auth.session[] = LdapPermission{Ldap}
+> < 
+> < ; LDAP auth required attributes and values
+> < auth.ldap.objectclass = utsperson
+> < 
+> < ; LDAP permissions
+> < session.ldappermission.rule[] = "utsaccounttype=Staff{Physical Modelling}"
+> < session.ldappermission.rule[] = "objectclass=utsperson{Dynamics and Control}"
+549a646,653
 > > 
-> > /**
-> >  * Experiment form for user to fill in for Radioactivity Experiment.
-> >  */
-> > class Labconnector_Batch_UQRadioactivity_Form extends Zend_Form
-> > {
-> > /*
-> > 	 * For UQ's Radioactivity Experiment we need to construc the follwing:
-> > 	 * 1. ExptSpecs - Only thing to show on the form. Rest is implied or read off variables.
-> > 	 * 			-><ExperimentSpecification>
-> > 	 * 			-><setupId>RadioactivityVsTime</setupId> 		(Should provide options)
-> > 	 * 			-><sourceName>Strontium-90</sourceName>			(Should provide options)
-> > 	 * 			-><absorberName>None</absorberName>				(Choice?)
-> > 	 * 			-><distance>55</distance>						(Should be an numerical input box)
-> > 	 * 			-><duration>5</duration>						(Should be an numerical input box)
-> > 	 * 			-><repeat>10</repeat>							(Should be a numerical input box)
-> > 	 * 			-></ExperimentSpecification> 
-> > 	 * 2. UserID    - SchedServer-Labconnector needs to track for results returned back
-> > 	 * 3. LabID     - SchedServer-LabConnector ProxyClient should track as will always be unique
-> > 	 * 4. Priority  - Set it to 1. Cannot see it actually being used by iLabs all that much
-> > 	 * 
-> > 	 */
-> > 	public function __construct()
-> >     {
-> >         parent::__construct();
-> > 
-> >         $this->setMethod('POST');
-> >         
-> > 		/*
-> > 		 * Fields for the Experiment Specificaiton data (XML) to be entered 
-> > 		 * */
-> > 
-> >         /* SetupID field. - This is a choice filed of radioactivity plot setup */
-> >         $setupID = new Zend_Form_Element_Select('radioactivitysetup');
-> >         $setupID->setLabel('Radioactivity Setup:')
-> >              	->setMultiOptions(array(
-> >                 		'RadioactivityVsTime'   => 'RadioactivityVsTime'
-> >              			))
-> >              	->setDecorators(Sahara_Decorator_Table::$ELEMENT);
-> >         $this->addElement($setupID);
-> >         
-> >         /* sourceName field. - This is a choice filed of computer date/time setup */
-> >         $sourceName = new Zend_Form_Element_Select('sourcename');
-> >         $sourceName->setLabel('Source Name:')
-> >              	->setMultiOptions(array(
-> >                 		'Strontium-90' => 'Strontium-90'
-> >              			))
-> >              	->setDecorators(Sahara_Decorator_Table::$ELEMENT);
-> >         $this->addElement($sourceName);
-> >         
-> >         /* absorberName field. - This is a choice (not sure about text field */
-> >         $absorberName = new Zend_Form_Element_Select('absorbername');
-> >         $absorberName->setLabel('Absorber Name:')
-> >              	->setMultiOptions(array(
-> >                 		'None' => 'None'
-> >              			))
-> >              	->setDecorators(Sahara_Decorator_Table::$ELEMENT);
-> >         $this->addElement($absorberName);
-> >         
-> >         /* distance field. - This is input text field in numeric only*/
-> >         $distance = new Zend_Form_Element_Text('distance');
-> >         $distance->setLabel('Distance:')
-> >              ->setRequired(true)
-> >              ->addValidator('NotEmpty')
-> >              ->setErrorMessages(array('You must supply a numerical value.'))
-> >              ->setDecorators(Sahara_Decorator_Table::$ELEMENT);
-> >         $this->addElement($distance);
-> > 
-> >         /* duration field. - This is input text field in numeric only*/
-> >         $duration = new Zend_Form_Element_Text('duration');
-> >         $duration->setLabel('Duration:')
-> >              ->setRequired(true)
-> >              ->addValidator('NotEmpty')
-> >              ->setErrorMessages(array('You must supply a numerical value.'))
-> >              ->setDecorators(Sahara_Decorator_Table::$ELEMENT);
-> >         $this->addElement($duration);
-> >         
-> >         /* repeat field. - This is input text field in numeric only*/
-> >         $repeat = new Zend_Form_Element_Text('repeat');
-> >         $repeat->setLabel('Repeat:')
-> >              ->setRequired(true)
-> >              ->addValidator('NotEmpty')
-> >              ->setErrorMessages(array('You must supply a numerical value.'))
-> >              ->setDecorators(Sahara_Decorator_Table::$ELEMENT);
-> >         $this->addElement($repeat);
-> >         
-> >         /* Submit button. */
-> >         //$submit = new Zend_Form_Element_Submit('submitradioactivity');
-> >         //$submit->setLabel('Submit')
-> >         //       ->setDecorators(Sahara_Decorator_Table::$SUBMIT);
-> >         //$this->addElement($submit);
-> >         
-> >          /* From display group container. */
-> >         $this->addDisplayGroup(array('radioactivitysetup', 'sourcename', 'absorbername', 'distance', 'duration', 'repeat'), 'radioactivity_form');
-> >         $dg = $this->getDisplayGroup('radioactivity_form');
-> >         $dg->setDecorators(Sahara_Decorator_Table::$DISPLAYGROUP);
-> >         
-> >     }
-> > }
+> > ;Database for user password information
+> > db.adapter = PDO_MYSQL
+> > db.params.host = localhost
+> > db.params.username = sahara
+> > db.params.password = saharapasswdaustria101
+> > db.params.dbname = sahara
+> > db.params.port = 3306
+940a1045
 > \ No newline at end of file
-> Index: application/models/Labconnector/Batch/TimeOfDay/Form.php
-14,15c143,177
-< 36a37,42
+995,1036d1099
+< Index: library/Sahara/Acl.php
+< ===================================================================
+< 36a37,40
 < >  * 
----
-> 0a1,99
-> > <?php
-> > /**
-> >  * LabConnector Model Web Interface for TimeofDay experiment
-> >  *
-> >  * User interface to Sahara Remote Laboratory system.
-> >  *
-> >  * @license See LICENSE in the top level directory for complete license terms.
-> >  *
-> >  * Copyright (c) 2010, University of Technology, Sydney
-> >  * All rights reserved.
-> >  *
-> >  * Redistribution and use in source and binary forms, with or without
-> >  * modification, are permitted provided that the following conditions are met:
-> >  *
-> >  *  * Redistributions of source code must retain the above copyright notice,
-> >  *    this list of conditions and the following disclaimer.
-> >  *  * Redistributions in binary form must reproduce the above copyright
-> >  *    notice, this list of conditions and the following disclaimer in the
-> >  *    documentation and/or other materials provided with the distribution.
-> >  *  * Neither the name of the University of Technology, Sydney nor the names
-> >  *    of its contributors may be used to endorse or promote products derived from
-> >  *    this software without specific prior written permission.
-> >  *
-> >  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-> >  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-> >  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-> >  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-> >  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-> >  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-> >  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-> >  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-> >  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-> >  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-> >  *
-18,23c180,451
-< >  * Modification: Added extra check for RIG Permission TYPE as 'ILABS'. If so, don't add it.
-< >  * Another solution is to add conditional above 'if (!array_key_exists($p->userClass->userClassName, $userClasses))'
-< >  * but this would have impacted if a user group was associated with multiple permissions. 
-< 87a94,96
-< >             /* Extra check for iLabs experment of rig type ILABS. */
-< >             if ($p->resource->resourceName != 'ILABS')
----
-> >  */
-> > 
-> > /**
-> >  * Experiment form for user to fill in for TimeOfDay Experiment.
-> >  */
-> > class Labconnector_Batch_TimeOfDay_Form extends Zend_Form
-> > {
-> > 
-> > 	/*
-> > 	 * For time of Day Experiment we need to construc the follwing:
-> > 	 * 1. ExptSpecs - Only thing to show on the form. Rest is implied or read off variables.
-> > 	 * 			-><ExperimentSpecification>
-> > 	 * 			-><setupId id="LocalClock">LocalClock</setupId> (Should provide options)
-> > 	 * 			-><formatName>12-Hour</formatName>				(Should provide options)
-> > 	 * 			-></ExperimentSpecification> 
-> > 	 * 2. UserID    - SchedServer-Labconnector needs to track for results returned back
-> > 	 * 3. LabID     - SchedServer-LabConnector ProxyClient should track as will always be unique
-> > 	 * 4. Priority  - Set it to 1. Cannot see it actually being used by iLabs all that much
-> > 	 * 
-> > 	 */
-> > 	public function __construct()
-> >     {
-> >         parent::__construct();
-> > 
-> >         $this->setMethod('POST');
-> >         
-> > 		/*
-> > 		 * Fields for the Experiment Specificaiton data (XML) to be entered 
-> > 		 * */
-> > 
-> >         /* SetupID field. - This is a choice filed of computer date/time setup */
-> >         $setupID = new Zend_Form_Element_Select('timesetup');
-> >         $setupID->setLabel('Time Setup:')
-> >              	->setMultiOptions(array(
-> >                 		'LocalClock'   => 'LocalClock',
-> >                	  		'NetworkClock' => 'NetworkClock'
-> >              			))
-> >              	->setDecorators(Sahara_Decorator_Table::$ELEMENT);
-> >         $this->addElement($setupID);
-> >         
-> >         /* FormatName field. - This is a choice filed of computer date/time setup */
-> >         $timeFmt = new Zend_Form_Element_Select('timefmt');
-> >         $timeFmt->setLabel('Time Format:')
-> >              	->setMultiOptions(array(
-> >                 		'12-Hour' => '12-Hour',
-> >                	  		'24-Hour' => '24-Hour'
-> >              			))
-> >              	->setDecorators(Sahara_Decorator_Table::$ELEMENT);
-> >         $this->addElement($timeFmt);
-> >         
-> >         /* Submit button. */
-> >         //$submit = new Zend_Form_Element_Submit('submittimeofday');
-> >         //$submit->setLabel('Submit')
-> >         //       ->setDecorators(Sahara_Decorator_Table::$SUBMIT);
-> >         //$this->addElement($submit);
-> > 
-> >         /* From display group container. */
-> >         $this->addDisplayGroup(array('timesetup', 'timefmt'), 'timeofday_form');
-> >         $dg = $this->getDisplayGroup('timeofday_form');
-> >         $dg->setDecorators(Sahara_Decorator_Table::$DISPLAYGROUP);
-> >         
-> >     }
-> > }
-> \ No newline at end of file
-> Index: application/controllers/LabconnectorController.php
-> ===================================================================
-> 0a1,281
-> > <?php
-> > /**
-> >  * SAHARA LabConnector Controller
-> >  *
-> >  * Controller access the web service calls on SchedServer-LabConnector bundle.
-> >  *
-> >  * @license See LICENSE in the top level directory for complete license terms.
-> >  *
-> >  * Copyright (c) 2010, University of Technology, Sydney
-> >  * All rights reserved.
-> >  *
-> >  * Redistribution and use in source and binary forms, with or without
-> >  * modification, are permitted provided that the following conditions are met:
-> >  *
-> >  *  * Redistributions of source code must retain the above copyright notice,
-> >  *    this list of conditions and the following disclaimer.
-> >  *  * Redistributions in binary form must reproduce the above copyright
-> >  *    notice, this list of conditions and the following disclaimer in the
-> >  *    documentation and/or other materials provided with the distribution.
-> >  *  * Neither the name of the University of Technology, Sydney nor the names
-> >  *    of its contributors may be used to endorse or promote products derived from
-> >  *    this software without specific prior written permission.
-> >  *
-> >  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-> >  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-> >  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-> >  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-> >  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-> >  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-> >  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-> >  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-> >  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-> >  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-> >  *
-> >  * @author Herbert Yeung
-> >  * @date 16th June 2010
-> >  */
-> > 
-> > /**
-> >  * Controller for the LabConnector.
-> >  */
-> > class LabconnectorController extends Sahara_Controller_Action_Acl
-> > {
-> > 	/**
-> >      * Action to show a list of the lab connector experiments (TimeOfDay & Radioactivity).
-> >      */
-> >     public function indexAction()
-> >     {
-> >     	//$this->view->message = 'LabConnector string';
-> >     	 
-> >      	$this->view->headTitle('LabShare - iLabs Experiments');
-> > 
-> >      	 /* 
-> >          * 1. a) Display to the user the experiment he/she has available to them
-> >          * 	  b) Based of RIG_TYPE == ILABS  (Will become the reserved word)
-> >          * 		 i.e. Permissions->getResourceClass()->getValue() == 'TYPE' (ResourceClass._TYPE)
-> >          * 		   && Permissions->getResource()->getResourceName == 'ILABS'
-> >          * 2. Redirect the user with the use of buttons to the experiment page (*.phtml)
-> >          * 3. Display results once the results are available (via a Notification message)
-> >          * */
-> > 
-> >         /* Load the permissions of the user. */
-> >         $clientPerm = Sahara_Soap::getSchedServerPermissionsClient();
-> >        
-> >         $this->view->hasclass = true;
-> >         $perms = $clientPerm->getPermissionsForUser(array('userQName' => $this->_auth->getIdentity()));        
-> >     	$this->view->userID = $this->_auth->getIdentity();
-> >         if (!isset($perms->permission))
-> >         {
-> >         	$this->view->hasclass = false;
-> >             $this->view->errMsg = 'No Permissions for any iLabs Experiments';
-> >             return;
-> >         }
-> >      	
-> >          /* Translate the permissions into a form to display based on user class. */
-> >         $resourceClasses = array();
-> > 		$nonUnique  = False;
-> >         
-> >     	foreach ($perms->permission as $perm)
-> >         {
-> >             /* This is a hack because PHPSoap / Zend SOAP seems to have some quirks
-> >              * parsing WSDLs. It generates a different object structure
-> >              * depending if there is one permission, or multiple permissions. */
-> >             if ($perm->permission == null)
-> >             {
-> >                 if (is_bool($perm)) continue;
-> >                 $p = $perm;
-> >                 $perm = $perms;
-> >                 $perm->isLocked = $perm->permission->isLocked;
-> >             }
-> >             else
-> >             {
-> >                 $p = $perm->permission;
-> >             }
-> > 
-> >             /* Load up resource information. */
-> >             if ($p->resourceClass == 'TYPE' && $p->resource->resourceName == 'ILABS')
-> >             {
-> >             	//Store permissionID to correlate it with resourceClass being 'RIG'
-> >             	 $resource = array(
-> >                 'resourceClass' => $p->resourceClass,     // The resource class so either 'RIG', 'TYPE' or 'CAPS'
-> >                 'resource' => $p->resource->resourceName, // The resource name
-> >                 'permissionId' => $p->permissionID,       // Permission ID
-> >                 'display' => isset($p->displayName) ? $p->displayName : $p->resource->resourceName // Display name
-> >            		 );
-> >            		 
-> >            		//For first instance we want to store it as it will be unique
-> >                 //TODO TO FIX UP - PRODUCING DUPLICATES
-> >                 foreach ($resourceClasses as $resourceClass)
-> >                 {
-> >                 	//Check for duplicates
-> >   		           	if ($p->displayName == $resourceClass["display"] || $p->resourceName == $resourceClass["display"])
-> >     					$nonUnique = True;
-> >                 }
-> >                 	
-> >                 if (!$nonUnique)
-> >                 	array_push($resourceClasses, $resource);
-> >                 		
-> >                 $nonUnique = False;//Reset back to false for next iteration
-> >             }          
-> >         } //End
-> >         
-> >         //foreach($resourceClasses as $tmp)
-> >         //   print($tmp["display"] . "<br>");
-> >         
-> >         /*
-> >          * Account for when we have Sahara Labs that have permission but no iLabs Experiment permissions
-> >          */
-> >         if (!$resourceClasses)
-> >         {    
-> >         	$this->view->hasclass = false;
-> >         	$this->view->errMsg = 'No Permissions for any iLabs Experiments';
-> >         	return;
-> >         }
-> >         
-> >         $this->view->ilabsExpts = $resourceClasses;
-> >     }
-> >     
-> >     /**
-> >      * Action to show a list of the lab connector experiments (TimeOfDay & Radioactivity).
-> >      */
-> >    	public function experimentAction()
-> >     {
-> >     	$this->_helper->layout()->disableLayout();
-> >     	/*
-> >     	 * Check which experiment has been selected:
-> >     	 * 1. At the moment there are only 2 choices:
-> >     	 * 		a) Time Of Day (Batch)
-> >     	 * 		b) UQ's Radioactivity experiment
-> >     	 * 2. Activate each form based on the clicking the item
-> >     	 * 3. Extrapolate the name to decide on which action to take
-> >     	 */
-> >     	
-> >     	//Get the Experiment Name one is looking for & id
-> >     	$exptname = $this->_request->getParam('exptname', '0');
-> >     	$exptid   = $this->_request->getParam('exptid', '1');
-> >     	
-> >     	//Make the name available to the view
-> >     	$this->view->exptname = $exptname;
-> >     	$this->view->exptid   = $exptid;
-> >     	
-> >     	//Check which type of experiment is being invoked before displaying the formset
-> >     	if ($exptname == "Time Of Day - Batch")
-> >     		$form = new Labconnector_Batch_TimeOfDay_Form();
-> >     	else if($exptname == "UQ Radioactivity Expt1")
-> > 	    	$form = new Labconnector_Batch_UQRadioactivity_Form();
-> >     	
-> > 	    if (isset($form))
-> >     		$this->view->form = $form;
-> >     }
-> >     
-> >     /**
-> >      * Action to handle submit experiment calls
-> >      */
-> >   	public function submitexperimentAction()
-> >     {
-> >     	/* Disable layout. */
-> >         $this->_helper->viewRenderer->setNoRender();
-> >         $this->_helper->layout()->disableLayout();
-> >     	
-> >         $params = $this->_request->getParams();
-> >         
-> >         /* Check the Experiment Specs are what they are before submitting */
-> >         $xmlText = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n<experimentSpecification></experimentSpecification>";
-> >      	$exptSpecsXMLObj = simplexml_load_string($xmlText);
-> >      	
-> >      	/* This is unique to the experiments offered & will need to be updated upon each experiment, respectively */
-> >      	if ($params['exptname'] == "Time Of Day - Batch")
-> >      	{
-> >      		$exptSpecsXMLObj->addChild("setupId", $params['timesetup']);
-> >      		$exptSpecsXMLObj->addChild("formatName", $params['timefmt']);
-> >      	}
-> >      	else if ($params['exptname'] == "UQ Radioactivity Expt1") 
-> >      	{ 
-> >      		$exptSpecsXMLObj->addChild("setupId", $params['radioactivitysetup']);
-> >      		$exptSpecsXMLObj->addChild("sourceName", $params['sourcename']);
-> >      		$exptSpecsXMLObj->addChild("absorberName", $params['absorbername']);
-> >      		$exptSpecsXMLObj->addChild("distance", $params['distance']);
-> >      		$exptSpecsXMLObj->addChild("duration", $params['duration']);
-> >      		$exptSpecsXMLObj->addChild("repeat", $params['repeat']);
-> >      	}
-> >      
-> >      	if ($this->_auth->getIdentity())
-> >         {
-> >          	try
-25c453,469
-< 103a113
----
-> >                 $submitExperimentResponse = Sahara_Soap::getSchedServerLabConnectorClient()
-> >                         ->submitExperiment(array('userID' => $this->_auth->getIdentity(),
-> >                         						 'labID'  => $params['exptname'], //Pass to SchedServer-LabConnector LabName than rather ID
-> >                         						 'priority' => $params['exptpriority'],
-> >                         						 'experimentSpecs' => $exptSpecsXMLObj->asXML()));
-> >                  
-> >                  /* Display the experiment ID to the user as well as a successful message */ 
-> >                  $this->view->exptresponseid = $submitExperimentResponse->experimentID;
-> >                  $this->view->exptresponsemsg = $submitExperimentResponse->errorMessage;  
-> > 
-> >                  /* Tells validation engine that submission succeeded. */
-> >                  echo ($submitExperimentResponse->experimentID >= 0 ? 'true' :  $this->view->json(array("failed" => "failed")));
-> >             }
-> >             catch (Exception $ex)
-> >             {
-> >                 echo "Exception when connecting to the SchedServer-LabConnector: " . $ex->getMessage() . "\n";
-> >             }
-26a471,527
-> >     }
-> >     
-> >     /**
-> >      * Action to refresh the retrieval the results for the user
-> >      */
-> >    	public function refreshresultsAction()
-> >     {
-> >     	/* Disable the renderer and layout as we are only returning the results as JSON */
-> >     	$this->_helper->viewRenderer->setNoRender();
-> >         $this->_helper->layout()->disableLayout();
-> >         
-> >     	/* 
-> >          * Check if the user has permissions and the directory exists 
-> >          * If not display nothing to the user 
-> >          * */
-> >     	if ($this->_auth->getIdentity())
-> >         {
-> >         	/* Read the Experiment Storage location for user */
-> > 	    	$config = Zend_Registry::get('config');
-> > 	    	$userPath = str_replace(":", "_", $this->_auth->getIdentity()); //Namespace contains colons which is replaced
-> > 	    	$fileStoragePath = $config->experiment->storage->dir . "/" . $userPath . "/" . "results.txt";
-> > 	        $resultsfilesize = 0;
-> > 	    	
-> > 	        /* Check file exists & file's modified timestamp has changed */
-> > 	        if(($resultsfilesize < filesize($fileStoragePath)))
-> > 	        {
-> > 	        	Zend_Registry::set('filesizeval', filesize($fileStoragePath));
-> > 	        	//$this->resultsfilesize = filesize($fileStoragePath);
-> > 	        	
-> > 	        	$experimentStorage = file_get_contents($fileStoragePath);
-> > 	        	if($experimentStorage)
-> > 	        		echo $this->view->$experiemntStorage;
-> > 	        	else
-> > 	        		echo "Error";
-> > 	        }
-> >       	}
-> >     }
-> >     
-> >    /**
-> >     * Action to retrieve the results for the user
-> >     */
-> >    	public function resultsAction()
-> >     {
-> >     	$this->_helper->viewRenderer->setNoRender();
-> >     	$this->_helper->layout()->disableLayout();
-> >     	
-> >     	/* Read the Experiment Storage location for user */
-> > 	    $config = Zend_Registry::get('config');
-> >     	$userPath = str_replace(":", "_",  $this->_auth->getIdentity()); //Namespace contains colons which is replaced
-> >     	$fileStoragePath = $config->experiment->storage->dir . "/" . $userPath . "/" . "results.txt";
-> > 	    $experimentStorage = file_get_contents($fileStoragePath);
-> > 	    //$this->view->experimentStorage = $experimentStorage;
-> > 	    
-> > 	    if ($experimentStorage)
-> >     		echo $fileStoragePath . ":<br /><br />" . $experimentStorage;
-> >     }
-> > }
-61a563,994
-> Index: application/views/scripts/labconnector/experiment.phtml
-> ===================================================================
-> 0a1,88
-> > <?php
-> > /**
-> >  * LabConnector Batch Experiment Web Interface page
-> >  *
-> >  * Experiment Page to allow user to enter in values & submit
-> >  *
-> >  * @license See LICENSE in the top level directory for complete license terms.
-> >  *
-> >  * Copyright (c) 2010, University of Technology, Sydney
-> >  * All rights reserved.
-> >  *
-> >  * Redistribution and use in source and binary forms, with or without
-> >  * modification, are permitted provided that the following conditions are met:
-> >  *
-> >  *  * Redistributions of source code must retain the above copyright notice,
-> >  *    this list of conditions and the following disclaimer.
-> >  *  * Redistributions in binary form must reproduce the above copyright
-> >  *    notice, this list of conditions and the following disclaimer in the
-> >  *    documentation and/or other materials provided with the distribution.
-> >  *  * Neither the name of the University of Technology, Sydney nor the names
-> >  *    of its contributors may be used to endorse or promote products derived from
-> >  *    this software without specific prior written permission.
-> >  *
-> >  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-> >  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-> >  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-> >  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-> >  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-> >  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-> >  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-> >  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-> >  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-> >  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-> >  *
-> >  * @author Herbert Yeung
-> >  * @date 18th June 2010
-> >  */
-> > 
-> > ?>
-> > 
-> > <div id="exptdialog_<?=$this->exptid?>" title="<?=$this->exptname?>">
-> > 	<form id="expt_form_<?=$this->exptid?>" method="POST">
-> > 		<!-- Start: These values set as default & hidden, change accordingly if allowing user to input these values -->
-> > 		<input type="hidden" name="exptname" value="<?=$this->exptname?>" style="display:none"/>
-> > 		<input type="hidden" name="exptpriority" value="0" style="display:none"/>  
-> > 		<!-- End: These values set as default & hidden, change accordingly if allowing user to input these values -->
-> > 		<?php if ($this->exptname == "Time Of Day - Batch"): ?>
-> > 			<?=$this->form->getDisplayGroup('timeofday_form')->render()?>
-> > 		<?php elseif ($this->exptname == "UQ Radioactivity Expt1"): ?>
-> > 			<?=$this->form->getDisplayGroup('radioactivity_form')->render()?>
-> > 		<?php endif; ?>
-> > 		<?php /* Submit button - for batch experiments. */ ?>
-> > 		<div id="submit_button" align="right" class="ui-corner-all">
-> >         <?php $submit = new Zend_Form_Element_Submit('submit');?>
-> >         <?php $submit->setLabel('Submit'); ?>
-> >         <?php $submit->setDecorators(Sahara_Decorator_Table::$SUBMIT) ?>
-> >         <?=$submit->render();?>
-> >         </div>
-> > 	</form>
-> > </div>
-> > 
-> > <script type="text/javascript">
-> > function submitSuccess()
-> > {
-> > 	$("div[aria-labelledby=ui-dialog-title-experimentdialog] .ui-dialog-buttonpane").css("display", "none");
-> > }
-> > 
-> > function submitFailure()
-> > {
-> > 	$("div[aria-labelledby=ui-dialog-title-experimentdialog] .ui-dialog-buttonpane").css("display", "none");
-> > }
-> > 
-> > $(document).ready(function () {
-> > 	 $("#expt_form_<?=$this->exptid?>").jqTransform();
-> > 	 $("#expt_form_<?=$this->exptid?>").validationEngine({
-> >     	 ajaxSubmit: true,
-> >     	 ajaxSubmitFile: "<?= $this->url(array('controller' => 'labconnector', 'action' => 'submitexperiment'))?>",	 
-> >     	 ajaxSubmitMessage: "Experiment Submitted!",
-> >        	 success: function() { submitSuccess(); },
-> >     	 failure: function() { submitFailure(); }
-> > 	 });
-> > 
-> > 	 $("#expt_form_<?=$this->exptid?> div.jqTransformInputWrapper").css("width", "100%");
-> > 	 $("#expt_form_<?=$this->exptid?> input.jqTransformInput").css("width", "100%");
-> > });
-> > </script>
-> > 
-> > 
-> Index: application/views/scripts/labconnector/results.phtml
-> ===================================================================
-> 0a1,46
-> > <?php
-> > /**
-> >  * LabConnector Batch Experiment Web Interface page
-> >  *
-> >  * Experiment Page to allow user to enter in values & submit
-> >  *
-> >  * @license See LICENSE in the top level directory for complete license terms.
-> >  *
-> >  * Copyright (c) 2010, University of Technology, Sydney
-> >  * All rights reserved.
-> >  *
-> >  * Redistribution and use in source and binary forms, with or without
-> >  * modification, are permitted provided that the following conditions are met:
-> >  *
-> >  *  * Redistributions of source code must retain the above copyright notice,
-> >  *    this list of conditions and the following disclaimer.
-> >  *  * Redistributions in binary form must reproduce the above copyright
-> >  *    notice, this list of conditions and the following disclaimer in the
-> >  *    documentation and/or other materials provided with the distribution.
-> >  *  * Neither the name of the University of Technology, Sydney nor the names
-> >  *    of its contributors may be used to endorse or promote products derived from
-> >  *    this software without specific prior written permission.
-> >  *
-> >  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-> >  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-> >  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-> >  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-> >  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-> >  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-> >  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-> >  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-> >  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-> >  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-> >  *
-> >  * @author Herbert Yeung
-> >  * @date 18th June 2010
-> >  */
-> > ?>
-> > <div id="exptresultsdialog">
-> > </div>
-> > <script type="text/javascript">
-> > $(document).ready(function () {
-> > 	$("#exptresultsdialog div.jqTransformInputWrapper").css("width", "100%");
-> > 	$("#exptresultsdialog input.jqTransformInput").css("width", "100%");
-> > });
-> > </script>
-> \ No newline at end of file
-> Index: application/views/scripts/labconnector/index.phtml
-> ===================================================================
-> 0a1,234
-> > <?php
-> > /**
-> >  * SAHARA Web Interface - LabConnector
-> >  *
-> >  * User interface to LabConnector.
-> >  *
-> >  * @license See LICENSE in the top level directory for complete license terms.
-> >  *
-> >  * Copyright (c) 2010, University of Technology, Sydney
-> >  * All rights reserved.
-> >  *
-> >  * Redistribution and use in source and binary forms, with or without
-> >  * modification, are permitted provided that the following conditions are met:
-> >  *
-> >  *  * Redistributions of source code must retain the above copyright notice,
-> >  *    this list of conditions and the following disclaimer.
-> >  *  * Redistributions in binary form must reproduce the above copyright
-> >  *    notice, this list of conditions and the following disclaimer in the
-> >  *    documentation and/or other materials provided with the distribution.
-> >  *  * Neither the name of the University of Technology, Sydney nor the names
-> >  *    of its contributors may be used to endorse or promote products derived from
-> >  *    this software without specific prior written permission.
-> >  *
-> >  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-> >  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-> >  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-> >  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-> >  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-> >  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-> >  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-> >  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-> >  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-> >  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-> >  *
-> >  * @author Herbert Yeung
-> >  * @date 16th June 2010
-> >  */
-> > $this->headLink()->appendStylesheet($this->baseUrl('css/labconnector.css'));
-> > $this->headScript()->appendFile($this->baseUrl('js/labconnector.js'));
-> > if ($this->hasclass)
-> > {
-> > 	if (!$this->noPermissions)
-> > 	{
-> > 	    /* Work out the height of the tab div. */
-> > 	    $tabHeight = 0;
-> > 	    foreach ($this->ilabsExpts as $ilabsExpt)
-> > 	    {
-> > 	        $height = 0;
-> > 	        foreach ($ilabsExpt as $type => $expt)
-> > 	        {
-> > 	            $height += ceil(count($expt) / 4) * 100 + ceil((count($expt) / 4)) * 50;
-> > 	        }
-> > 	        if ($height > $tabHeight) $tabHeight = $height;
-> > 	    }
-> > 	}
-> > }
-> > ?>
-> > 
-> > 
-> > <div class="contentheader">
-> > 	<h2>LabConnector - iLabs Experiments</h2>
-> > </div>
-> > 
-> > <?php if ($this->hasclass): ?>
-> > <!-- Tab bar. -->
-> > <div id="userclasstabs" class="ui-tabs ui-widget ui-widget-content ui-corner-all">
-> > 
-> > <!-- Tab content. -->
-> > <div id=ilabsclass class="ui-tabs-panel ui-widget-content ui-corner-bottom" style="height:<?=$tabHeight/4?>px">
-> > 
-> > <!-- iLab Experiment list for class <?=$id?> -->
-> > <?php foreach ($this->ilabsExpts as $value):
-> >       if (count($type)): ?>
-> > 	<div class="labconnectorbar">
-> > 		<ul class="labconnectorlistbar">
-> > 		<li>
-> > 			<a id="ilabsexpt<?=$value['permissionId']?>_link" class="labconnectorbutton plaina ui-corner-all" href="#">
-> > 				<img class="ilabsicon" src="<?=$this->baseUrl('images/permission_launch.png')?>" alt="Allowed" />
-> > 				<?=$this->stringTransform($value['display'], '_', ' ')?>
-> > 			</a>
-> > 		</li>
-> > 		</ul>
-> > 	</div>
-> > <?php endif;
-> >       endforeach; ?>
-> > 
-> > <!-- End tab content. -->
-> > </div>
-> > <!-- End tab bar. -->
-> > </div>
-> > 
-> > <!-- Procesing for ilabs experiment form dialogs. -->
-> > <?php foreach ($this->ilabsExpts as $value): ?>
-> > <div id="experimentdialog<?=$value['permissionId']?>">
-> > <script type="text/javascript">
-> > $(document).ready(function() {
-> > 
-> > 	 /*Experiment Dialogs section*/
-> > 	$('#experimentdialog<?=$value['permissionId']?>').dialog({
-> > 		autoOpen: false,
-> > 		modal: true,
-> > 		resizable: false,		
-> > 		width:  420,
-> > 		height: 380,
-> > 		close: function(ev, ui) { $('#experimentdialog<?=$value['permissionId']?>').hide(); },
-> > 		open:  function(ev, ui) { loadExperimentEntryInfo("<?=$value['permissionId']?>", "<?=$value['display']?>");}
-> > 	});
-> > 	
-> > 	$('#ilabsexpt<?=$value['permissionId']?>_link').click(function(){
-> > 		$('#experimentdialog<?=$value['permissionId']?>').dialog({title : "<?=$value['display']?>"});
-> > 		$('#experimentdialog<?=$value['permissionId']?>').dialog('open');});
-> > 
-> > 	//return false;
-> > });
-> > </script>
-> > </div>
-> > <?php endforeach; ?>
-> > <!-- End Procesing for ilabs experiment form dialogs. -->
-> > 
-> > 
-> > <!-- Experiment Results. -->
-> > 
-> > <div id="experimentresultsbar" class="ui-tabs ui-widget ui-widget-content ui-corner-all">
-> > <?php /* We want to set the registery for every time the user is on the index page */ 
-> > 		$config = Zend_Registry::get('config');
-> > 		$userPath = str_replace(":", "_", $this->userID); //Namespace contains colons which is replaced
-> > 		$fileStoragePath = $config->experiment->storage->dir . "/" . $userPath . "/" . "results.txt";
-> > 		Zend_Registry::set('filesizeval', filesize($fileStoragePath));?>
-> > 	<div id="experimentresultsborder">	
-> >     <div>
-> > 		<a id="exptresults_link" class="exptresultsbutton plaina ui-corner-all" href="#">
-> > 			<img class="ilabsexptresulticon" src="<?=$this->baseUrl('images/balls/green.gif')?>" alt="Allowed" />
-> > 			Experiment Results Available
-> > 		</a>
-> >     </div>
-> > 	</div>
-> > </div>
-> > 
-> > <!-- Start for Processing Experiment Results -->
-> > <script type="text/javascript">
-> > function callComplete(response) 
-> > {
-> > 	//Place the alert as a spinning icon near the div id:
-> > 	if (response != null)
-> > 		$('#exptresults_link').css({opacity: 1, color:'green'}); //Colour the link to active colour
-> > };
-> > 
-> > function connect() 
-> > {
-> > 	// When call completes, callComplete() will be called along with the response returned
-> > 	$.post('/labconnector/refreshresults', {userdirectoryID : "<?=$this->userID?>"}, callComplete, 'text/xml');
-> > };
-> > 
-> > $(document).ready(function() {		
-> > 	//Poll the filesystem to see what is available
-> > 	setInterval(connect,5000); 	//setTimeout(connect,10000);
-> > });
-> > </script>
-> > <!-- End for Processing Experiment Results -->
-> > 
-> > <!-- Start of Showing Experiment Results -->
-> > <div id="experimentresultsdialog">
-> > <script type="text/javascript">
-> > $(document).ready(function() {
-> > 
-> > 	 /*Experiment Results section*/
-> > 	$('#experimentresultsdialog').dialog({
-> > 		autoOpen: false,
-> > 		modal: true,
-> > 		resizable: false,		
-> > 		width:  480,
-> > 		height: 380,
-> > 		close: function(ev, ui) { $('#experimentresultsdialog').hide(); },
-> > 		open:  function(ev, ui) { loadExperimentResults("<?=$this->userID?>");}
-> > 	});
-> > 	
-> > 	$('#exptresults_link').click(function(){
-> > 		$('#experimentresultsdialog').dialog({title : "Experiment Results"});
-> > 		$('#exptresults_link').css({'color' : 'black'});  //Colour the Experiment results link to inactive as it was clicked
-> > 		$('#experimentresultsdialog').dialog('open');});
-> > });
-> > </script>
-> > </div>
-> > <!-- End of Showing Experiment Results -->
-> > 
-> > <!-- Legend for icon information. -->
-> > 
-> > <div id="iconlegends" class="legend">
-> >     <div id="iconlegend">
-> > 		<h3>Permision Descriptions:</h3>
-> > 		<ul>
-> >     		<li><img src="<?=$this->baseUrl('images/permission_launch.png')?>" alt="Allowed" />  
-> >     		 Active <span class="legendtext"> You may queue for this resource.  </span></li>
-> >     		<li><img src="<?=$this->baseUrl('images/permission_expired.png')?>" alt="Expired" />
-> >     		Not Active <span class="legendtext"> You do not currently have permission to queue.</span></li>
-> >    	 	</ul>
-> >     </div>
-> >     <div id="balliconlegend">
-> > 		<h3>Experiment Results Status Descriptions:</h3>
-> > 		<ul>
-> > 			<li><img src="<?=$this->baseUrl('images/balls/green_small.gif')?>" alt="Available" />
-> >     		Updated and Available <span class="legendtext"> The experiment results have been updated and are available.</span></li>
-> >     		<li><img src="<?=$this->baseUrl('images/balls/red_small.gif')?>" alt="NotAvailable" />
-> >     		Not Updated <span class="legendtext"> The experiment results have not been updated.</span></li>
-> >     	</ul>
-> >     </div>
-> > </div>
-> > 
-> > <script>
-> > $("#iconlegends li").hover(
-> >   function () {
-> >     $(this).css("font-weight","bold");
-> >     $(this).children("span").css("display","inline");
-> >   }, 
-> >   function () {
-> > 	    $(this).css("font-weight","normal");
-> > 	$(this).children("span").css("display","none");
-> >   }
-> > );
-> > </script>
-> > 
-> > <!-- End for normal functionalities, the rest below are errors -->
-> > 
-> > <?php else: ?>
-> > <div style="width:310px; margin: 0 auto">
-> > 	<div class="ui-state-error ui-corner-all alertdiv">
-> > 		<p class="alertp">
-> >     		<span class="ui-icon ui-icon-alert alertspan"></span>
-> >     		 No Permissions for any iLabs Experiments
-> >     		<?//TODO: Not Working: //=$this->messages[0]?>
-> >     	</p>
-> > 	</div>
-> > </div>
-> > <?php endif; ?>
-> Index: application/views/scripts/labconnector/error.phtml
-> ===================================================================
-> 0a1,50
-> > <?php
-> > /**
-> >  * SAHARA Web Interface - LabConnector
-> >  *
-> >  * User interface to LabConnector.
-> >  *
-> >  * @license See LICENSE in the top level directory for complete license terms.
-> >  *
-> >  * Copyright (c) 2010, University of Technology, Sydney
-> >  * All rights reserved.
-> >  *
-> >  * Redistribution and use in source and binary forms, with or without
-> >  * modification, are permitted provided that the following conditions are met:
-> >  *
-> >  *  * Redistributions of source code must retain the above copyright notice,
-> >  *    this list of conditions and the following disclaimer.
-> >  *  * Redistributions in binary form must reproduce the above copyright
-> >  *    notice, this list of conditions and the following disclaimer in the
-> >  *    documentation and/or other materials provided with the distribution.
-> >  *  * Neither the name of the University of Technology, Sydney nor the names
-> >  *    of its contributors may be used to endorse or promote products derived from
-> >  *    this software without specific prior written permission.
-> >  *
-> >  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-> >  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-> >  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-> >  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-> >  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-> >  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-> >  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-> >  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-> >  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-> >  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-> >  *
-> >  * @author Herbert Yeung
-> >  * @date 16th June 2010
-> >  */
-> > $this->headLink()->appendStylesheet($this->baseUrl('css/labconnector.css'));
-> > ?>
-> > <div class="contentheader">
-> > 	<h2>LabConnector - iLabs Experiments</h2>
-> > </div>
-> > <div style="width:310px; margin: 0 auto">
-> > 	<div class="ui-state-error ui-corner-all alertdiv">
-> > 		<p class="alertp">
-> >     		<span class="ui-icon ui-icon-alert alertspan"></span>
-> >     		<?=$this->errMsg?>
-> >     	</p>
-> > 	</div>
-> > </div>
-> \ No newline at end of file
-106,194d1038
-< 12,78d11
-< < Index: application/controllers/LabconnectorController.php
-< < ===================================================================
-< < 97c97
-< < <             if($p->resourceClass == 'TYPE' && $p->resource->resourceName == 'ILABS')
-< < ---
-< < >             if ($p->resourceClass == 'TYPE' && $p->resource->resourceName == 'ILABS')
-< < 112c112
-< < <   		           	if ($p->displayName == $resourceClass["display"])
-< < ---
-< < >   		           	if ($p->displayName == $resourceClass["display"] || $p->resourceName == $resourceClass["display"])
-< < 116c116
-< < <                 if(!$nonUnique)
-< < ---
-< < >                 if (!$nonUnique)
-< < 129c129
-< < <         if(!$resourceClasses)
-< < ---
-< < >         if (!$resourceClasses)
-< < 137,151d136
-< < <         
-< < <      	/* Load the labconnector for the user. */
-< < < 		//$this->_redirectTo('index', 'labconnector'); //Get the User choice of Experiment first
-< < <         //$clientLabConnector = Sahara_Soap::getSchedServerLabConnectorClient();
-< < <         //$exptID = $clientLabConnector->submitExperiment(array('userQName' => $this->_auth->getIdentity()));
-< < <     }	
-< < <     
-< < <     /**
-< < <      * Action to show any errors encountered e.g. Permissions denied for Rig/Lab type
-< < <      */
-< < <     public function errorAction()
-< < <     {
-< < <     	$this->view->headTitle('LabShare - iLabs Experiments');
-< < <         $this->view->messages = $this->_flashMessenger->addMessage($this->errMsg);    	
-< < <         //$this->_flashMessenger->addMessage($this->errMsg);   	
-< < 183c168
-< < < 	    if(isset($form))
-< < ---
-< < > 	    if (isset($form))
-< < 196d180
-< < <         //$params = $this->_request->getPost();
-< < 203c187,188
-< < <      	if($params['exptname'] == "Time Of Day - Batch")
-< < ---
-< < >      	/* This is unique to the experiments offered & will need to be updated upon each experiment, respectively */
-< < >      	if ($params['exptname'] == "Time Of Day - Batch")
-< < 208c193
-< < <      	else if($params['exptname'] == "UQ Radioactivity Expt1") 
-< < ---
-< < >      	else if ($params['exptname'] == "UQ Radioactivity Expt1") 
-< < 218,219d202
-< < < 	//var_dump($exptSpecsXMLObj->asXML());
-< < < 	
-< < 239d221
-< < <             	//echo var_dump($ex);
-< < 291,292c273
-< < <     	$userdirectoryID = $this->_request->getParam('userdirectoryID', '0');
-< < <     	$userPath = str_replace(":", "_", $userdirectoryID); //Namespace contains colons which is replaced
-< < ---
-< < >     	$userPath = str_replace(":", "_",  $this->_auth->getIdentity()); //Namespace contains colons which is replaced
-< < 297,300c278,279
-< < < 	    if($experimentStorage)
-< < <     		echo $fileStoragePath . ":<br><br>" . $experimentStorage;
-< < <     	else
-< < <     		$this->_redirectTo('labconnector', 'error');
-< < ---
-< < > 	    if ($experimentStorage)
-< < >     		echo $fileStoragePath . ":<br /><br />" . $experimentStorage;
-< 90c23
-< < >             if($p->resource->resourceName != 'ILABS')
+< >  * @author Herbert Yeung
+< >  * @date  17th June 2010
+< >  * Modification: Added permission so that a user can access the LabConnector and index pages
+< 72c76,77
+< <                                   'primitive' => array('json', 'echo', 'file')
 < ---
-< > >             if ($p->resource->resourceName != 'ILABS')
-< 129,130d61
-< < Index: application/views/scripts/labconnector/index.phtml
-< < ===================================================================
-< 175,183d105
-< < 173c173
-< < < Index: public/js/elements/cameras/cameras.js
+< >                                   'primitive' => array('json', 'echo', 'file'),
+< >     							  'labconnector' => array('index', 'error', 'experiment', 'results', 'refreshresults', 'submitexperiment')
+< Index: library/Sahara/Soap.php
+< ===================================================================
+< 36a37,40
+< >  * 
+< >  * @author Herbert Yeung
+< >  * @date  25th May 2010
+< >  * Modification: Added SOAP interface to access SchedServer-LabConnector bundle
+< 52a57,59
+< >     /** The bundle containing the LabConnector SOAP interface in the Scheduling Server. */
+< >     const LABCONNECTOR_SERVICE_BUNDLE = 'SchedulingServer-LabConnector';
+< >     
+< 180a188,205
+< >      * Gets a Sahara_Soap instance which points to the LabConnector interface
+< >      * of the Scheduling Server.
+< >      *
+< >      * @return Sahara_Soap instance
+< >      * @throws Exception if failed contacting Scheduling Server
+< >      */
+< >     public static function getSchedServerLabConnectorClient()
+< >     {
+< >         if (!Zend_Registry::isRegistered(self::LABCONNECTOR_SERVICE_BUNDLE))
+< >         {
+< >             Zend_Registry::set(self::LABCONNECTOR_SERVICE_BUNDLE,
+< >                     self::createSchedServerClient('LabConnector', self::LABCONNECTOR_SERVICE_BUNDLE));
+< >         }
+< >         return Zend_Registry::get(self::LABCONNECTOR_SERVICE_BUNDLE);
+< >     }
+< > 
+< > 
+< >     /**
+1039,2115d1101
+< 1c1
+< < Index: application/Bootstrap.php
+< ---
+< > Index: application/models/Labconnector/Batch/UQRadioactivity/Form.php
+< 3c3,36
+< < 36a37,40
+< ---
+< > 0a1,136
+< > > <?php
+< > > /**
+< > >  * LabConnector Model Web Interface for UQ's Radioactivity experiment
+< > >  *
+< > >  * User interface to Sahara Remote Laboratory system.
+< > >  *
+< > >  * @license See LICENSE in the top level directory for complete license terms.
+< > >  *
+< > >  * Copyright (c) 2010, University of Technology, Sydney
+< > >  * All rights reserved.
+< > >  *
+< > >  * Redistribution and use in source and binary forms, with or without
+< > >  * modification, are permitted provided that the following conditions are met:
+< > >  *
+< > >  *  * Redistributions of source code must retain the above copyright notice,
+< > >  *    this list of conditions and the following disclaimer.
+< > >  *  * Redistributions in binary form must reproduce the above copyright
+< > >  *    notice, this list of conditions and the following disclaimer in the
+< > >  *    documentation and/or other materials provided with the distribution.
+< > >  *  * Neither the name of the University of Technology, Sydney nor the names
+< > >  *    of its contributors may be used to endorse or promote products derived from
+< > >  *    this software without specific prior written permission.
+< > >  *
+< > >  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+< > >  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+< > >  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+< > >  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+< > >  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+< > >  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+< > >  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+< > >  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+< > >  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+< > >  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+< 6,12c39,141
+< < >  * @date 13th July 2010
+< < >  * Modification: Added the namespace for LabConnector.
+< < 79a84
+< < >         $autoloader->registerNamespace('Labconnector_');
+< < 111d115
+< < < 
+< < Index: application/controllers/QueueController.php
+< ---
+< > >  * @date 17th June 2010
+< > >  */
+< > > 
+< > > /**
+< > >  * Experiment form for user to fill in for Radioactivity Experiment.
+< > >  */
+< > > class Labconnector_Batch_UQRadioactivity_Form extends Zend_Form
+< > > {
+< > > /*
+< > > 	 * For UQ's Radioactivity Experiment we need to construc the follwing:
+< > > 	 * 1. ExptSpecs - Only thing to show on the form. Rest is implied or read off variables.
+< > > 	 * 			-><ExperimentSpecification>
+< > > 	 * 			-><setupId>RadioactivityVsTime</setupId> 		(Should provide options)
+< > > 	 * 			-><sourceName>Strontium-90</sourceName>			(Should provide options)
+< > > 	 * 			-><absorberName>None</absorberName>				(Choice?)
+< > > 	 * 			-><distance>55</distance>						(Should be an numerical input box)
+< > > 	 * 			-><duration>5</duration>						(Should be an numerical input box)
+< > > 	 * 			-><repeat>10</repeat>							(Should be a numerical input box)
+< > > 	 * 			-></ExperimentSpecification> 
+< > > 	 * 2. UserID    - SchedServer-Labconnector needs to track for results returned back
+< > > 	 * 3. LabID     - SchedServer-LabConnector ProxyClient should track as will always be unique
+< > > 	 * 4. Priority  - Set it to 1. Cannot see it actually being used by iLabs all that much
+< > > 	 * 
+< > > 	 */
+< > > 	public function __construct()
+< > >     {
+< > >         parent::__construct();
+< > > 
+< > >         $this->setMethod('POST');
+< > >         
+< > > 		/*
+< > > 		 * Fields for the Experiment Specificaiton data (XML) to be entered 
+< > > 		 * */
+< > > 
+< > >         /* SetupID field. - This is a choice filed of radioactivity plot setup */
+< > >         $setupID = new Zend_Form_Element_Select('radioactivitysetup');
+< > >         $setupID->setLabel('Radioactivity Setup:')
+< > >              	->setMultiOptions(array(
+< > >                 		'RadioactivityVsTime'   => 'RadioactivityVsTime'
+< > >              			))
+< > >              	->setDecorators(Sahara_Decorator_Table::$ELEMENT);
+< > >         $this->addElement($setupID);
+< > >         
+< > >         /* sourceName field. - This is a choice filed of computer date/time setup */
+< > >         $sourceName = new Zend_Form_Element_Select('sourcename');
+< > >         $sourceName->setLabel('Source Name:')
+< > >              	->setMultiOptions(array(
+< > >                 		'Strontium-90' => 'Strontium-90'
+< > >              			))
+< > >              	->setDecorators(Sahara_Decorator_Table::$ELEMENT);
+< > >         $this->addElement($sourceName);
+< > >         
+< > >         /* absorberName field. - This is a choice (not sure about text field */
+< > >         $absorberName = new Zend_Form_Element_Select('absorbername');
+< > >         $absorberName->setLabel('Absorber Name:')
+< > >              	->setMultiOptions(array(
+< > >                 		'None' => 'None'
+< > >              			))
+< > >              	->setDecorators(Sahara_Decorator_Table::$ELEMENT);
+< > >         $this->addElement($absorberName);
+< > >         
+< > >         /* distance field. - This is input text field in numeric only*/
+< > >         $distance = new Zend_Form_Element_Text('distance');
+< > >         $distance->setLabel('Distance:')
+< > >              ->setRequired(true)
+< > >              ->addValidator('NotEmpty')
+< > >              ->setErrorMessages(array('You must supply a numerical value.'))
+< > >              ->setDecorators(Sahara_Decorator_Table::$ELEMENT);
+< > >         $this->addElement($distance);
+< > > 
+< > >         /* duration field. - This is input text field in numeric only*/
+< > >         $duration = new Zend_Form_Element_Text('duration');
+< > >         $duration->setLabel('Duration:')
+< > >              ->setRequired(true)
+< > >              ->addValidator('NotEmpty')
+< > >              ->setErrorMessages(array('You must supply a numerical value.'))
+< > >              ->setDecorators(Sahara_Decorator_Table::$ELEMENT);
+< > >         $this->addElement($duration);
+< > >         
+< > >         /* repeat field. - This is input text field in numeric only*/
+< > >         $repeat = new Zend_Form_Element_Text('repeat');
+< > >         $repeat->setLabel('Repeat:')
+< > >              ->setRequired(true)
+< > >              ->addValidator('NotEmpty')
+< > >              ->setErrorMessages(array('You must supply a numerical value.'))
+< > >              ->setDecorators(Sahara_Decorator_Table::$ELEMENT);
+< > >         $this->addElement($repeat);
+< > >         
+< > >         /* Submit button. */
+< > >         //$submit = new Zend_Form_Element_Submit('submitradioactivity');
+< > >         //$submit->setLabel('Submit')
+< > >         //       ->setDecorators(Sahara_Decorator_Table::$SUBMIT);
+< > >         //$this->addElement($submit);
+< > >         
+< > >          /* From display group container. */
+< > >         $this->addDisplayGroup(array('radioactivitysetup', 'sourcename', 'absorbername', 'distance', 'duration', 'repeat'), 'radioactivity_form');
+< > >         $dg = $this->getDisplayGroup('radioactivity_form');
+< > >         $dg->setDecorators(Sahara_Decorator_Table::$DISPLAYGROUP);
+< > >         
+< > >     }
+< > > }
+< > \ No newline at end of file
+< > Index: application/models/Labconnector/Batch/TimeOfDay/Form.php
+< 14,15c143,177
+< < 36a37,42
+< < >  * 
+< ---
+< > 0a1,99
+< > > <?php
+< > > /**
+< > >  * LabConnector Model Web Interface for TimeofDay experiment
+< > >  *
+< > >  * User interface to Sahara Remote Laboratory system.
+< > >  *
+< > >  * @license See LICENSE in the top level directory for complete license terms.
+< > >  *
+< > >  * Copyright (c) 2010, University of Technology, Sydney
+< > >  * All rights reserved.
+< > >  *
+< > >  * Redistribution and use in source and binary forms, with or without
+< > >  * modification, are permitted provided that the following conditions are met:
+< > >  *
+< > >  *  * Redistributions of source code must retain the above copyright notice,
+< > >  *    this list of conditions and the following disclaimer.
+< > >  *  * Redistributions in binary form must reproduce the above copyright
+< > >  *    notice, this list of conditions and the following disclaimer in the
+< > >  *    documentation and/or other materials provided with the distribution.
+< > >  *  * Neither the name of the University of Technology, Sydney nor the names
+< > >  *    of its contributors may be used to endorse or promote products derived from
+< > >  *    this software without specific prior written permission.
+< > >  *
+< > >  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+< > >  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+< > >  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+< > >  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+< > >  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+< > >  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+< > >  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+< > >  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+< > >  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+< > >  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+< > >  *
+< 18,23c180,451
+< < >  * Modification: Added extra check for RIG Permission TYPE as 'ILABS'. If so, don't add it.
+< < >  * Another solution is to add conditional above 'if (!array_key_exists($p->userClass->userClassName, $userClasses))'
+< < >  * but this would have impacted if a user group was associated with multiple permissions. 
+< < 87a94,96
+< < >             /* Extra check for iLabs experment of rig type ILABS. */
+< < >             if ($p->resource->resourceName != 'ILABS')
+< ---
+< > >  */
+< > > 
+< > > /**
+< > >  * Experiment form for user to fill in for TimeOfDay Experiment.
+< > >  */
+< > > class Labconnector_Batch_TimeOfDay_Form extends Zend_Form
+< > > {
+< > > 
+< > > 	/*
+< > > 	 * For time of Day Experiment we need to construc the follwing:
+< > > 	 * 1. ExptSpecs - Only thing to show on the form. Rest is implied or read off variables.
+< > > 	 * 			-><ExperimentSpecification>
+< > > 	 * 			-><setupId id="LocalClock">LocalClock</setupId> (Should provide options)
+< > > 	 * 			-><formatName>12-Hour</formatName>				(Should provide options)
+< > > 	 * 			-></ExperimentSpecification> 
+< > > 	 * 2. UserID    - SchedServer-Labconnector needs to track for results returned back
+< > > 	 * 3. LabID     - SchedServer-LabConnector ProxyClient should track as will always be unique
+< > > 	 * 4. Priority  - Set it to 1. Cannot see it actually being used by iLabs all that much
+< > > 	 * 
+< > > 	 */
+< > > 	public function __construct()
+< > >     {
+< > >         parent::__construct();
+< > > 
+< > >         $this->setMethod('POST');
+< > >         
+< > > 		/*
+< > > 		 * Fields for the Experiment Specificaiton data (XML) to be entered 
+< > > 		 * */
+< > > 
+< > >         /* SetupID field. - This is a choice filed of computer date/time setup */
+< > >         $setupID = new Zend_Form_Element_Select('timesetup');
+< > >         $setupID->setLabel('Time Setup:')
+< > >              	->setMultiOptions(array(
+< > >                 		'LocalClock'   => 'LocalClock',
+< > >                	  		'NetworkClock' => 'NetworkClock'
+< > >              			))
+< > >              	->setDecorators(Sahara_Decorator_Table::$ELEMENT);
+< > >         $this->addElement($setupID);
+< > >         
+< > >         /* FormatName field. - This is a choice filed of computer date/time setup */
+< > >         $timeFmt = new Zend_Form_Element_Select('timefmt');
+< > >         $timeFmt->setLabel('Time Format:')
+< > >              	->setMultiOptions(array(
+< > >                 		'12-Hour' => '12-Hour',
+< > >                	  		'24-Hour' => '24-Hour'
+< > >              			))
+< > >              	->setDecorators(Sahara_Decorator_Table::$ELEMENT);
+< > >         $this->addElement($timeFmt);
+< > >         
+< > >         /* Submit button. */
+< > >         //$submit = new Zend_Form_Element_Submit('submittimeofday');
+< > >         //$submit->setLabel('Submit')
+< > >         //       ->setDecorators(Sahara_Decorator_Table::$SUBMIT);
+< > >         //$this->addElement($submit);
+< > > 
+< > >         /* From display group container. */
+< > >         $this->addDisplayGroup(array('timesetup', 'timefmt'), 'timeofday_form');
+< > >         $dg = $this->getDisplayGroup('timeofday_form');
+< > >         $dg->setDecorators(Sahara_Decorator_Table::$DISPLAYGROUP);
+< > >         
+< > >     }
+< > > }
+< > \ No newline at end of file
+< > Index: application/controllers/LabconnectorController.php
+< > ===================================================================
+< > 0a1,281
+< > > <?php
+< > > /**
+< > >  * SAHARA LabConnector Controller
+< > >  *
+< > >  * Controller access the web service calls on SchedServer-LabConnector bundle.
+< > >  *
+< > >  * @license See LICENSE in the top level directory for complete license terms.
+< > >  *
+< > >  * Copyright (c) 2010, University of Technology, Sydney
+< > >  * All rights reserved.
+< > >  *
+< > >  * Redistribution and use in source and binary forms, with or without
+< > >  * modification, are permitted provided that the following conditions are met:
+< > >  *
+< > >  *  * Redistributions of source code must retain the above copyright notice,
+< > >  *    this list of conditions and the following disclaimer.
+< > >  *  * Redistributions in binary form must reproduce the above copyright
+< > >  *    notice, this list of conditions and the following disclaimer in the
+< > >  *    documentation and/or other materials provided with the distribution.
+< > >  *  * Neither the name of the University of Technology, Sydney nor the names
+< > >  *    of its contributors may be used to endorse or promote products derived from
+< > >  *    this software without specific prior written permission.
+< > >  *
+< > >  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+< > >  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+< > >  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+< > >  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+< > >  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+< > >  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+< > >  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+< > >  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+< > >  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+< > >  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+< > >  *
+< > >  * @author Herbert Yeung
+< > >  * @date 16th June 2010
+< > >  */
+< > > 
+< > > /**
+< > >  * Controller for the LabConnector.
+< > >  */
+< > > class LabconnectorController extends Sahara_Controller_Action_Acl
+< > > {
+< > > 	/**
+< > >      * Action to show a list of the lab connector experiments (TimeOfDay & Radioactivity).
+< > >      */
+< > >     public function indexAction()
+< > >     {
+< > >     	//$this->view->message = 'LabConnector string';
+< > >     	 
+< > >      	$this->view->headTitle('LabShare - iLabs Experiments');
+< > > 
+< > >      	 /* 
+< > >          * 1. a) Display to the user the experiment he/she has available to them
+< > >          * 	  b) Based of RIG_TYPE == ILABS  (Will become the reserved word)
+< > >          * 		 i.e. Permissions->getResourceClass()->getValue() == 'TYPE' (ResourceClass._TYPE)
+< > >          * 		   && Permissions->getResource()->getResourceName == 'ILABS'
+< > >          * 2. Redirect the user with the use of buttons to the experiment page (*.phtml)
+< > >          * 3. Display results once the results are available (via a Notification message)
+< > >          * */
+< > > 
+< > >         /* Load the permissions of the user. */
+< > >         $clientPerm = Sahara_Soap::getSchedServerPermissionsClient();
+< > >        
+< > >         $this->view->hasclass = true;
+< > >         $perms = $clientPerm->getPermissionsForUser(array('userQName' => $this->_auth->getIdentity()));        
+< > >     	$this->view->userID = $this->_auth->getIdentity();
+< > >         if (!isset($perms->permission))
+< > >         {
+< > >         	$this->view->hasclass = false;
+< > >             $this->view->errMsg = 'No Permissions for any iLabs Experiments';
+< > >             return;
+< > >         }
+< > >      	
+< > >          /* Translate the permissions into a form to display based on user class. */
+< > >         $resourceClasses = array();
+< > > 		$nonUnique  = False;
+< > >         
+< > >     	foreach ($perms->permission as $perm)
+< > >         {
+< > >             /* This is a hack because PHPSoap / Zend SOAP seems to have some quirks
+< > >              * parsing WSDLs. It generates a different object structure
+< > >              * depending if there is one permission, or multiple permissions. */
+< > >             if ($perm->permission == null)
+< > >             {
+< > >                 if (is_bool($perm)) continue;
+< > >                 $p = $perm;
+< > >                 $perm = $perms;
+< > >                 $perm->isLocked = $perm->permission->isLocked;
+< > >             }
+< > >             else
+< > >             {
+< > >                 $p = $perm->permission;
+< > >             }
+< > > 
+< > >             /* Load up resource information. */
+< > >             if ($p->resourceClass == 'TYPE' && $p->resource->resourceName == 'ILABS')
+< > >             {
+< > >             	//Store permissionID to correlate it with resourceClass being 'RIG'
+< > >             	 $resource = array(
+< > >                 'resourceClass' => $p->resourceClass,     // The resource class so either 'RIG', 'TYPE' or 'CAPS'
+< > >                 'resource' => $p->resource->resourceName, // The resource name
+< > >                 'permissionId' => $p->permissionID,       // Permission ID
+< > >                 'display' => isset($p->displayName) ? $p->displayName : $p->resource->resourceName // Display name
+< > >            		 );
+< > >            		 
+< > >            		//For first instance we want to store it as it will be unique
+< > >                 //TODO TO FIX UP - PRODUCING DUPLICATES
+< > >                 foreach ($resourceClasses as $resourceClass)
+< > >                 {
+< > >                 	//Check for duplicates
+< > >   		           	if ($p->displayName == $resourceClass["display"] || $p->resourceName == $resourceClass["display"])
+< > >     					$nonUnique = True;
+< > >                 }
+< > >                 	
+< > >                 if (!$nonUnique)
+< > >                 	array_push($resourceClasses, $resource);
+< > >                 		
+< > >                 $nonUnique = False;//Reset back to false for next iteration
+< > >             }          
+< > >         } //End
+< > >         
+< > >         //foreach($resourceClasses as $tmp)
+< > >         //   print($tmp["display"] . "<br>");
+< > >         
+< > >         /*
+< > >          * Account for when we have Sahara Labs that have permission but no iLabs Experiment permissions
+< > >          */
+< > >         if (!$resourceClasses)
+< > >         {    
+< > >         	$this->view->hasclass = false;
+< > >         	$this->view->errMsg = 'No Permissions for any iLabs Experiments';
+< > >         	return;
+< > >         }
+< > >         
+< > >         $this->view->ilabsExpts = $resourceClasses;
+< > >     }
+< > >     
+< > >     /**
+< > >      * Action to show a list of the lab connector experiments (TimeOfDay & Radioactivity).
+< > >      */
+< > >    	public function experimentAction()
+< > >     {
+< > >     	$this->_helper->layout()->disableLayout();
+< > >     	/*
+< > >     	 * Check which experiment has been selected:
+< > >     	 * 1. At the moment there are only 2 choices:
+< > >     	 * 		a) Time Of Day (Batch)
+< > >     	 * 		b) UQ's Radioactivity experiment
+< > >     	 * 2. Activate each form based on the clicking the item
+< > >     	 * 3. Extrapolate the name to decide on which action to take
+< > >     	 */
+< > >     	
+< > >     	//Get the Experiment Name one is looking for & id
+< > >     	$exptname = $this->_request->getParam('exptname', '0');
+< > >     	$exptid   = $this->_request->getParam('exptid', '1');
+< > >     	
+< > >     	//Make the name available to the view
+< > >     	$this->view->exptname = $exptname;
+< > >     	$this->view->exptid   = $exptid;
+< > >     	
+< > >     	//Check which type of experiment is being invoked before displaying the formset
+< > >     	if ($exptname == "Time Of Day - Batch")
+< > >     		$form = new Labconnector_Batch_TimeOfDay_Form();
+< > >     	else if($exptname == "UQ Radioactivity Expt1")
+< > > 	    	$form = new Labconnector_Batch_UQRadioactivity_Form();
+< > >     	
+< > > 	    if (isset($form))
+< > >     		$this->view->form = $form;
+< > >     }
+< > >     
+< > >     /**
+< > >      * Action to handle submit experiment calls
+< > >      */
+< > >   	public function submitexperimentAction()
+< > >     {
+< > >     	/* Disable layout. */
+< > >         $this->_helper->viewRenderer->setNoRender();
+< > >         $this->_helper->layout()->disableLayout();
+< > >     	
+< > >         $params = $this->_request->getParams();
+< > >         
+< > >         /* Check the Experiment Specs are what they are before submitting */
+< > >         $xmlText = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n<experimentSpecification></experimentSpecification>";
+< > >      	$exptSpecsXMLObj = simplexml_load_string($xmlText);
+< > >      	
+< > >      	/* This is unique to the experiments offered & will need to be updated upon each experiment, respectively */
+< > >      	if ($params['exptname'] == "Time Of Day - Batch")
+< > >      	{
+< > >      		$exptSpecsXMLObj->addChild("setupId", $params['timesetup']);
+< > >      		$exptSpecsXMLObj->addChild("formatName", $params['timefmt']);
+< > >      	}
+< > >      	else if ($params['exptname'] == "UQ Radioactivity Expt1") 
+< > >      	{ 
+< > >      		$exptSpecsXMLObj->addChild("setupId", $params['radioactivitysetup']);
+< > >      		$exptSpecsXMLObj->addChild("sourceName", $params['sourcename']);
+< > >      		$exptSpecsXMLObj->addChild("absorberName", $params['absorbername']);
+< > >      		$exptSpecsXMLObj->addChild("distance", $params['distance']);
+< > >      		$exptSpecsXMLObj->addChild("duration", $params['duration']);
+< > >      		$exptSpecsXMLObj->addChild("repeat", $params['repeat']);
+< > >      	}
+< > >      
+< > >      	if ($this->_auth->getIdentity())
+< > >         {
+< > >          	try
+< 25c453,469
+< < 103a113
+< ---
+< > >                 $submitExperimentResponse = Sahara_Soap::getSchedServerLabConnectorClient()
+< > >                         ->submitExperiment(array('userID' => $this->_auth->getIdentity(),
+< > >                         						 'labID'  => $params['exptname'], //Pass to SchedServer-LabConnector LabName than rather ID
+< > >                         						 'priority' => $params['exptpriority'],
+< > >                         						 'experimentSpecs' => $exptSpecsXMLObj->asXML()));
+< > >                  
+< > >                  /* Display the experiment ID to the user as well as a successful message */ 
+< > >                  $this->view->exptresponseid = $submitExperimentResponse->experimentID;
+< > >                  $this->view->exptresponsemsg = $submitExperimentResponse->errorMessage;  
+< > > 
+< > >                  /* Tells validation engine that submission succeeded. */
+< > >                  echo ($submitExperimentResponse->experimentID >= 0 ? 'true' :  $this->view->json(array("failed" => "failed")));
+< > >             }
+< > >             catch (Exception $ex)
+< > >             {
+< > >                 echo "Exception when connecting to the SchedServer-LabConnector: " . $ex->getMessage() . "\n";
+< > >             }
+< 26a471,527
+< > >     }
+< > >     
+< > >     /**
+< > >      * Action to refresh the retrieval the results for the user
+< > >      */
+< > >    	public function refreshresultsAction()
+< > >     {
+< > >     	/* Disable the renderer and layout as we are only returning the results as JSON */
+< > >     	$this->_helper->viewRenderer->setNoRender();
+< > >         $this->_helper->layout()->disableLayout();
+< > >         
+< > >     	/* 
+< > >          * Check if the user has permissions and the directory exists 
+< > >          * If not display nothing to the user 
+< > >          * */
+< > >     	if ($this->_auth->getIdentity())
+< > >         {
+< > >         	/* Read the Experiment Storage location for user */
+< > > 	    	$config = Zend_Registry::get('config');
+< > > 	    	$userPath = str_replace(":", "_", $this->_auth->getIdentity()); //Namespace contains colons which is replaced
+< > > 	    	$fileStoragePath = $config->experiment->storage->dir . "/" . $userPath . "/" . "results.txt";
+< > > 	        $resultsfilesize = 0;
+< > > 	    	
+< > > 	        /* Check file exists & file's modified timestamp has changed */
+< > > 	        if(($resultsfilesize < filesize($fileStoragePath)))
+< > > 	        {
+< > > 	        	Zend_Registry::set('filesizeval', filesize($fileStoragePath));
+< > > 	        	//$this->resultsfilesize = filesize($fileStoragePath);
+< > > 	        	
+< > > 	        	$experimentStorage = file_get_contents($fileStoragePath);
+< > > 	        	if($experimentStorage)
+< > > 	        		echo $this->view->$experiemntStorage;
+< > > 	        	else
+< > > 	        		echo "Error";
+< > > 	        }
+< > >       	}
+< > >     }
+< > >     
+< > >    /**
+< > >     * Action to retrieve the results for the user
+< > >     */
+< > >    	public function resultsAction()
+< > >     {
+< > >     	$this->_helper->viewRenderer->setNoRender();
+< > >     	$this->_helper->layout()->disableLayout();
+< > >     	
+< > >     	/* Read the Experiment Storage location for user */
+< > > 	    $config = Zend_Registry::get('config');
+< > >     	$userPath = str_replace(":", "_",  $this->_auth->getIdentity()); //Namespace contains colons which is replaced
+< > >     	$fileStoragePath = $config->experiment->storage->dir . "/" . $userPath . "/" . "results.txt";
+< > > 	    $experimentStorage = file_get_contents($fileStoragePath);
+< > > 	    //$this->view->experimentStorage = $experimentStorage;
+< > > 	    
+< > > 	    if ($experimentStorage)
+< > >     		echo $fileStoragePath . ":<br /><br />" . $experimentStorage;
+< > >     }
+< > > }
+< 61a563,994
+< > Index: application/views/scripts/labconnector/experiment.phtml
+< > ===================================================================
+< > 0a1,88
+< > > <?php
+< > > /**
+< > >  * LabConnector Batch Experiment Web Interface page
+< > >  *
+< > >  * Experiment Page to allow user to enter in values & submit
+< > >  *
+< > >  * @license See LICENSE in the top level directory for complete license terms.
+< > >  *
+< > >  * Copyright (c) 2010, University of Technology, Sydney
+< > >  * All rights reserved.
+< > >  *
+< > >  * Redistribution and use in source and binary forms, with or without
+< > >  * modification, are permitted provided that the following conditions are met:
+< > >  *
+< > >  *  * Redistributions of source code must retain the above copyright notice,
+< > >  *    this list of conditions and the following disclaimer.
+< > >  *  * Redistributions in binary form must reproduce the above copyright
+< > >  *    notice, this list of conditions and the following disclaimer in the
+< > >  *    documentation and/or other materials provided with the distribution.
+< > >  *  * Neither the name of the University of Technology, Sydney nor the names
+< > >  *    of its contributors may be used to endorse or promote products derived from
+< > >  *    this software without specific prior written permission.
+< > >  *
+< > >  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+< > >  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+< > >  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+< > >  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+< > >  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+< > >  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+< > >  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+< > >  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+< > >  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+< > >  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+< > >  *
+< > >  * @author Herbert Yeung
+< > >  * @date 18th June 2010
+< > >  */
+< > > 
+< > > ?>
+< > > 
+< > > <div id="exptdialog_<?=$this->exptid?>" title="<?=$this->exptname?>">
+< > > 	<form id="expt_form_<?=$this->exptid?>" method="POST">
+< > > 		<!-- Start: These values set as default & hidden, change accordingly if allowing user to input these values -->
+< > > 		<input type="hidden" name="exptname" value="<?=$this->exptname?>" style="display:none"/>
+< > > 		<input type="hidden" name="exptpriority" value="0" style="display:none"/>  
+< > > 		<!-- End: These values set as default & hidden, change accordingly if allowing user to input these values -->
+< > > 		<?php if ($this->exptname == "Time Of Day - Batch"): ?>
+< > > 			<?=$this->form->getDisplayGroup('timeofday_form')->render()?>
+< > > 		<?php elseif ($this->exptname == "UQ Radioactivity Expt1"): ?>
+< > > 			<?=$this->form->getDisplayGroup('radioactivity_form')->render()?>
+< > > 		<?php endif; ?>
+< > > 		<?php /* Submit button - for batch experiments. */ ?>
+< > > 		<div id="submit_button" align="right" class="ui-corner-all">
+< > >         <?php $submit = new Zend_Form_Element_Submit('submit');?>
+< > >         <?php $submit->setLabel('Submit'); ?>
+< > >         <?php $submit->setDecorators(Sahara_Decorator_Table::$SUBMIT) ?>
+< > >         <?=$submit->render();?>
+< > >         </div>
+< > > 	</form>
+< > > </div>
+< > > 
+< > > <script type="text/javascript">
+< > > function submitSuccess()
+< > > {
+< > > 	$("div[aria-labelledby=ui-dialog-title-experimentdialog] .ui-dialog-buttonpane").css("display", "none");
+< > > }
+< > > 
+< > > function submitFailure()
+< > > {
+< > > 	$("div[aria-labelledby=ui-dialog-title-experimentdialog] .ui-dialog-buttonpane").css("display", "none");
+< > > }
+< > > 
+< > > $(document).ready(function () {
+< > > 	 $("#expt_form_<?=$this->exptid?>").jqTransform();
+< > > 	 $("#expt_form_<?=$this->exptid?>").validationEngine({
+< > >     	 ajaxSubmit: true,
+< > >     	 ajaxSubmitFile: "<?= $this->url(array('controller' => 'labconnector', 'action' => 'submitexperiment'))?>",	 
+< > >     	 ajaxSubmitMessage: "Experiment Submitted!",
+< > >        	 success: function() { submitSuccess(); },
+< > >     	 failure: function() { submitFailure(); }
+< > > 	 });
+< > > 
+< > > 	 $("#expt_form_<?=$this->exptid?> div.jqTransformInputWrapper").css("width", "100%");
+< > > 	 $("#expt_form_<?=$this->exptid?> input.jqTransformInput").css("width", "100%");
+< > > });
+< > > </script>
+< > > 
+< > > 
+< > Index: application/views/scripts/labconnector/results.phtml
+< > ===================================================================
+< > 0a1,46
+< > > <?php
+< > > /**
+< > >  * LabConnector Batch Experiment Web Interface page
+< > >  *
+< > >  * Experiment Page to allow user to enter in values & submit
+< > >  *
+< > >  * @license See LICENSE in the top level directory for complete license terms.
+< > >  *
+< > >  * Copyright (c) 2010, University of Technology, Sydney
+< > >  * All rights reserved.
+< > >  *
+< > >  * Redistribution and use in source and binary forms, with or without
+< > >  * modification, are permitted provided that the following conditions are met:
+< > >  *
+< > >  *  * Redistributions of source code must retain the above copyright notice,
+< > >  *    this list of conditions and the following disclaimer.
+< > >  *  * Redistributions in binary form must reproduce the above copyright
+< > >  *    notice, this list of conditions and the following disclaimer in the
+< > >  *    documentation and/or other materials provided with the distribution.
+< > >  *  * Neither the name of the University of Technology, Sydney nor the names
+< > >  *    of its contributors may be used to endorse or promote products derived from
+< > >  *    this software without specific prior written permission.
+< > >  *
+< > >  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+< > >  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+< > >  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+< > >  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+< > >  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+< > >  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+< > >  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+< > >  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+< > >  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+< > >  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+< > >  *
+< > >  * @author Herbert Yeung
+< > >  * @date 18th June 2010
+< > >  */
+< > > ?>
+< > > <div id="exptresultsdialog">
+< > > </div>
+< > > <script type="text/javascript">
+< > > $(document).ready(function () {
+< > > 	$("#exptresultsdialog div.jqTransformInputWrapper").css("width", "100%");
+< > > 	$("#exptresultsdialog input.jqTransformInput").css("width", "100%");
+< > > });
+< > > </script>
+< > \ No newline at end of file
+< > Index: application/views/scripts/labconnector/index.phtml
+< > ===================================================================
+< > 0a1,234
+< > > <?php
+< > > /**
+< > >  * SAHARA Web Interface - LabConnector
+< > >  *
+< > >  * User interface to LabConnector.
+< > >  *
+< > >  * @license See LICENSE in the top level directory for complete license terms.
+< > >  *
+< > >  * Copyright (c) 2010, University of Technology, Sydney
+< > >  * All rights reserved.
+< > >  *
+< > >  * Redistribution and use in source and binary forms, with or without
+< > >  * modification, are permitted provided that the following conditions are met:
+< > >  *
+< > >  *  * Redistributions of source code must retain the above copyright notice,
+< > >  *    this list of conditions and the following disclaimer.
+< > >  *  * Redistributions in binary form must reproduce the above copyright
+< > >  *    notice, this list of conditions and the following disclaimer in the
+< > >  *    documentation and/or other materials provided with the distribution.
+< > >  *  * Neither the name of the University of Technology, Sydney nor the names
+< > >  *    of its contributors may be used to endorse or promote products derived from
+< > >  *    this software without specific prior written permission.
+< > >  *
+< > >  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+< > >  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+< > >  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+< > >  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+< > >  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+< > >  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+< > >  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+< > >  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+< > >  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+< > >  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+< > >  *
+< > >  * @author Herbert Yeung
+< > >  * @date 16th June 2010
+< > >  */
+< > > $this->headLink()->appendStylesheet($this->baseUrl('css/labconnector.css'));
+< > > $this->headScript()->appendFile($this->baseUrl('js/labconnector.js'));
+< > > if ($this->hasclass)
+< > > {
+< > > 	if (!$this->noPermissions)
+< > > 	{
+< > > 	    /* Work out the height of the tab div. */
+< > > 	    $tabHeight = 0;
+< > > 	    foreach ($this->ilabsExpts as $ilabsExpt)
+< > > 	    {
+< > > 	        $height = 0;
+< > > 	        foreach ($ilabsExpt as $type => $expt)
+< > > 	        {
+< > > 	            $height += ceil(count($expt) / 4) * 100 + ceil((count($expt) / 4)) * 50;
+< > > 	        }
+< > > 	        if ($height > $tabHeight) $tabHeight = $height;
+< > > 	    }
+< > > 	}
+< > > }
+< > > ?>
+< > > 
+< > > 
+< > > <div class="contentheader">
+< > > 	<h2>LabConnector - iLabs Experiments</h2>
+< > > </div>
+< > > 
+< > > <?php if ($this->hasclass): ?>
+< > > <!-- Tab bar. -->
+< > > <div id="userclasstabs" class="ui-tabs ui-widget ui-widget-content ui-corner-all">
+< > > 
+< > > <!-- Tab content. -->
+< > > <div id=ilabsclass class="ui-tabs-panel ui-widget-content ui-corner-bottom" style="height:<?=$tabHeight/4?>px">
+< > > 
+< > > <!-- iLab Experiment list for class <?=$id?> -->
+< > > <?php foreach ($this->ilabsExpts as $value):
+< > >       if (count($type)): ?>
+< > > 	<div class="labconnectorbar">
+< > > 		<ul class="labconnectorlistbar">
+< > > 		<li>
+< > > 			<a id="ilabsexpt<?=$value['permissionId']?>_link" class="labconnectorbutton plaina ui-corner-all" href="#">
+< > > 				<img class="ilabsicon" src="<?=$this->baseUrl('images/permission_launch.png')?>" alt="Allowed" />
+< > > 				<?=$this->stringTransform($value['display'], '_', ' ')?>
+< > > 			</a>
+< > > 		</li>
+< > > 		</ul>
+< > > 	</div>
+< > > <?php endif;
+< > >       endforeach; ?>
+< > > 
+< > > <!-- End tab content. -->
+< > > </div>
+< > > <!-- End tab bar. -->
+< > > </div>
+< > > 
+< > > <!-- Procesing for ilabs experiment form dialogs. -->
+< > > <?php foreach ($this->ilabsExpts as $value): ?>
+< > > <div id="experimentdialog<?=$value['permissionId']?>">
+< > > <script type="text/javascript">
+< > > $(document).ready(function() {
+< > > 
+< > > 	 /*Experiment Dialogs section*/
+< > > 	$('#experimentdialog<?=$value['permissionId']?>').dialog({
+< > > 		autoOpen: false,
+< > > 		modal: true,
+< > > 		resizable: false,		
+< > > 		width:  420,
+< > > 		height: 380,
+< > > 		close: function(ev, ui) { $('#experimentdialog<?=$value['permissionId']?>').hide(); },
+< > > 		open:  function(ev, ui) { loadExperimentEntryInfo("<?=$value['permissionId']?>", "<?=$value['display']?>");}
+< > > 	});
+< > > 	
+< > > 	$('#ilabsexpt<?=$value['permissionId']?>_link').click(function(){
+< > > 		$('#experimentdialog<?=$value['permissionId']?>').dialog({title : "<?=$value['display']?>"});
+< > > 		$('#experimentdialog<?=$value['permissionId']?>').dialog('open');});
+< > > 
+< > > 	//return false;
+< > > });
+< > > </script>
+< > > </div>
+< > > <?php endforeach; ?>
+< > > <!-- End Procesing for ilabs experiment form dialogs. -->
+< > > 
+< > > 
+< > > <!-- Experiment Results. -->
+< > > 
+< > > <div id="experimentresultsbar" class="ui-tabs ui-widget ui-widget-content ui-corner-all">
+< > > <?php /* We want to set the registery for every time the user is on the index page */ 
+< > > 		$config = Zend_Registry::get('config');
+< > > 		$userPath = str_replace(":", "_", $this->userID); //Namespace contains colons which is replaced
+< > > 		$fileStoragePath = $config->experiment->storage->dir . "/" . $userPath . "/" . "results.txt";
+< > > 		Zend_Registry::set('filesizeval', filesize($fileStoragePath));?>
+< > > 	<div id="experimentresultsborder">	
+< > >     <div>
+< > > 		<a id="exptresults_link" class="exptresultsbutton plaina ui-corner-all" href="#">
+< > > 			<img class="ilabsexptresulticon" src="<?=$this->baseUrl('images/balls/green.gif')?>" alt="Allowed" />
+< > > 			Experiment Results Available
+< > > 		</a>
+< > >     </div>
+< > > 	</div>
+< > > </div>
+< > > 
+< > > <!-- Start for Processing Experiment Results -->
+< > > <script type="text/javascript">
+< > > function callComplete(response) 
+< > > {
+< > > 	//Place the alert as a spinning icon near the div id:
+< > > 	if (response != null)
+< > > 		$('#exptresults_link').css({opacity: 1, color:'green'}); //Colour the link to active colour
+< > > };
+< > > 
+< > > function connect() 
+< > > {
+< > > 	// When call completes, callComplete() will be called along with the response returned
+< > > 	$.post('/labconnector/refreshresults', {userdirectoryID : "<?=$this->userID?>"}, callComplete, 'text/xml');
+< > > };
+< > > 
+< > > $(document).ready(function() {		
+< > > 	//Poll the filesystem to see what is available
+< > > 	setInterval(connect,5000); 	//setTimeout(connect,10000);
+< > > });
+< > > </script>
+< > > <!-- End for Processing Experiment Results -->
+< > > 
+< > > <!-- Start of Showing Experiment Results -->
+< > > <div id="experimentresultsdialog">
+< > > <script type="text/javascript">
+< > > $(document).ready(function() {
+< > > 
+< > > 	 /*Experiment Results section*/
+< > > 	$('#experimentresultsdialog').dialog({
+< > > 		autoOpen: false,
+< > > 		modal: true,
+< > > 		resizable: false,		
+< > > 		width:  480,
+< > > 		height: 380,
+< > > 		close: function(ev, ui) { $('#experimentresultsdialog').hide(); },
+< > > 		open:  function(ev, ui) { loadExperimentResults("<?=$this->userID?>");}
+< > > 	});
+< > > 	
+< > > 	$('#exptresults_link').click(function(){
+< > > 		$('#experimentresultsdialog').dialog({title : "Experiment Results"});
+< > > 		$('#exptresults_link').css({'color' : 'black'});  //Colour the Experiment results link to inactive as it was clicked
+< > > 		$('#experimentresultsdialog').dialog('open');});
+< > > });
+< > > </script>
+< > > </div>
+< > > <!-- End of Showing Experiment Results -->
+< > > 
+< > > <!-- Legend for icon information. -->
+< > > 
+< > > <div id="iconlegends" class="legend">
+< > >     <div id="iconlegend">
+< > > 		<h3>Permision Descriptions:</h3>
+< > > 		<ul>
+< > >     		<li><img src="<?=$this->baseUrl('images/permission_launch.png')?>" alt="Allowed" />  
+< > >     		 Active <span class="legendtext"> You may queue for this resource.  </span></li>
+< > >     		<li><img src="<?=$this->baseUrl('images/permission_expired.png')?>" alt="Expired" />
+< > >     		Not Active <span class="legendtext"> You do not currently have permission to queue.</span></li>
+< > >    	 	</ul>
+< > >     </div>
+< > >     <div id="balliconlegend">
+< > > 		<h3>Experiment Results Status Descriptions:</h3>
+< > > 		<ul>
+< > > 			<li><img src="<?=$this->baseUrl('images/balls/green_small.gif')?>" alt="Available" />
+< > >     		Updated and Available <span class="legendtext"> The experiment results have been updated and are available.</span></li>
+< > >     		<li><img src="<?=$this->baseUrl('images/balls/red_small.gif')?>" alt="NotAvailable" />
+< > >     		Not Updated <span class="legendtext"> The experiment results have not been updated.</span></li>
+< > >     	</ul>
+< > >     </div>
+< > > </div>
+< > > 
+< > > <script>
+< > > $("#iconlegends li").hover(
+< > >   function () {
+< > >     $(this).css("font-weight","bold");
+< > >     $(this).children("span").css("display","inline");
+< > >   }, 
+< > >   function () {
+< > > 	    $(this).css("font-weight","normal");
+< > > 	$(this).children("span").css("display","none");
+< > >   }
+< > > );
+< > > </script>
+< > > 
+< > > <!-- End for normal functionalities, the rest below are errors -->
+< > > 
+< > > <?php else: ?>
+< > > <div style="width:310px; margin: 0 auto">
+< > > 	<div class="ui-state-error ui-corner-all alertdiv">
+< > > 		<p class="alertp">
+< > >     		<span class="ui-icon ui-icon-alert alertspan"></span>
+< > >     		 No Permissions for any iLabs Experiments
+< > >     		<?//TODO: Not Working: //=$this->messages[0]?>
+< > >     	</p>
+< > > 	</div>
+< > > </div>
+< > > <?php endif; ?>
+< > Index: application/views/scripts/labconnector/error.phtml
+< > ===================================================================
+< > 0a1,50
+< > > <?php
+< > > /**
+< > >  * SAHARA Web Interface - LabConnector
+< > >  *
+< > >  * User interface to LabConnector.
+< > >  *
+< > >  * @license See LICENSE in the top level directory for complete license terms.
+< > >  *
+< > >  * Copyright (c) 2010, University of Technology, Sydney
+< > >  * All rights reserved.
+< > >  *
+< > >  * Redistribution and use in source and binary forms, with or without
+< > >  * modification, are permitted provided that the following conditions are met:
+< > >  *
+< > >  *  * Redistributions of source code must retain the above copyright notice,
+< > >  *    this list of conditions and the following disclaimer.
+< > >  *  * Redistributions in binary form must reproduce the above copyright
+< > >  *    notice, this list of conditions and the following disclaimer in the
+< > >  *    documentation and/or other materials provided with the distribution.
+< > >  *  * Neither the name of the University of Technology, Sydney nor the names
+< > >  *    of its contributors may be used to endorse or promote products derived from
+< > >  *    this software without specific prior written permission.
+< > >  *
+< > >  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+< > >  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+< > >  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+< > >  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+< > >  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+< > >  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+< > >  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+< > >  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+< > >  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+< > >  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+< > >  *
+< > >  * @author Herbert Yeung
+< > >  * @date 16th June 2010
+< > >  */
+< > > $this->headLink()->appendStylesheet($this->baseUrl('css/labconnector.css'));
+< > > ?>
+< > > <div class="contentheader">
+< > > 	<h2>LabConnector - iLabs Experiments</h2>
+< > > </div>
+< > > <div style="width:310px; margin: 0 auto">
+< > > 	<div class="ui-state-error ui-corner-all alertdiv">
+< > > 		<p class="alertp">
+< > >     		<span class="ui-icon ui-icon-alert alertspan"></span>
+< > >     		<?=$this->errMsg?>
+< > >     	</p>
+< > > 	</div>
+< > > </div>
+< > \ No newline at end of file
+< 106,194d1038
+< < 12,78d11
+< < < Index: application/controllers/LabconnectorController.php
+< < < ===================================================================
+< < < 97c97
+< < < <             if($p->resourceClass == 'TYPE' && $p->resource->resourceName == 'ILABS')
+< < < ---
+< < < >             if ($p->resourceClass == 'TYPE' && $p->resource->resourceName == 'ILABS')
+< < < 112c112
+< < < <   		           	if ($p->displayName == $resourceClass["display"])
+< < < ---
+< < < >   		           	if ($p->displayName == $resourceClass["display"] || $p->resourceName == $resourceClass["display"])
+< < < 116c116
+< < < <                 if(!$nonUnique)
+< < < ---
+< < < >                 if (!$nonUnique)
+< < < 129c129
+< < < <         if(!$resourceClasses)
+< < < ---
+< < < >         if (!$resourceClasses)
+< < < 137,151d136
+< < < <         
+< < < <      	/* Load the labconnector for the user. */
+< < < < 		//$this->_redirectTo('index', 'labconnector'); //Get the User choice of Experiment first
+< < < <         //$clientLabConnector = Sahara_Soap::getSchedServerLabConnectorClient();
+< < < <         //$exptID = $clientLabConnector->submitExperiment(array('userQName' => $this->_auth->getIdentity()));
+< < < <     }	
+< < < <     
+< < < <     /**
+< < < <      * Action to show any errors encountered e.g. Permissions denied for Rig/Lab type
+< < < <      */
+< < < <     public function errorAction()
+< < < <     {
+< < < <     	$this->view->headTitle('LabShare - iLabs Experiments');
+< < < <         $this->view->messages = $this->_flashMessenger->addMessage($this->errMsg);    	
+< < < <         //$this->_flashMessenger->addMessage($this->errMsg);   	
+< < < 183c168
+< < < < 	    if(isset($form))
+< < < ---
+< < < > 	    if (isset($form))
+< < < 196d180
+< < < <         //$params = $this->_request->getPost();
+< < < 203c187,188
+< < < <      	if($params['exptname'] == "Time Of Day - Batch")
+< < < ---
+< < < >      	/* This is unique to the experiments offered & will need to be updated upon each experiment, respectively */
+< < < >      	if ($params['exptname'] == "Time Of Day - Batch")
+< < < 208c193
+< < < <      	else if($params['exptname'] == "UQ Radioactivity Expt1") 
+< < < ---
+< < < >      	else if ($params['exptname'] == "UQ Radioactivity Expt1") 
+< < < 218,219d202
+< < < < 	//var_dump($exptSpecsXMLObj->asXML());
+< < < < 	
+< < < 239d221
+< < < <             	//echo var_dump($ex);
+< < < 291,292c273
+< < < <     	$userdirectoryID = $this->_request->getParam('userdirectoryID', '0');
+< < < <     	$userPath = str_replace(":", "_", $userdirectoryID); //Namespace contains colons which is replaced
+< < < ---
+< < < >     	$userPath = str_replace(":", "_",  $this->_auth->getIdentity()); //Namespace contains colons which is replaced
+< < < 297,300c278,279
+< < < < 	    if($experimentStorage)
+< < < <     		echo $fileStoragePath . ":<br><br>" . $experimentStorage;
+< < < <     	else
+< < < <     		$this->_redirectTo('labconnector', 'error');
+< < < ---
+< < < > 	    if ($experimentStorage)
+< < < >     		echo $fileStoragePath . ":<br /><br />" . $experimentStorage;
+< < 90c23
+< < < >             if($p->resource->resourceName != 'ILABS')
 < < ---
-< < > Index: docs/LabConnector/labconnector.patch
-< < 175,176d174
-< < < 59a60
-< < < > 	case 'rcjpeg':
-< < Index: docs/LabConnector/labconnector.patch
+< < > >             if ($p->resource->resourceName != 'ILABS')
+< < 129,130d61
+< < < Index: application/views/scripts/labconnector/index.phtml
+< < < ===================================================================
+< < 175,183d105
+< < < 173c173
+< < < < Index: public/js/elements/cameras/cameras.js
+< < < ---
+< < < > Index: docs/LabConnector/labconnector.patch
+< < < 175,176d174
+< < < < 59a60
+< < < < > 	case 'rcjpeg':
+< < < Index: docs/LabConnector/labconnector.patch
+< < < ===================================================================
+< < Index: public/js/elements/cameras/cameras.js
 < < ===================================================================
+< < 59a60
+< < > 	case 'rcjpeg':
 < Index: public/js/elements/cameras/cameras.js
 < ===================================================================
 < 59a60
 < > 	case 'rcjpeg':
-Index: public/js/elements/cameras/cameras.js
-===================================================================
-59a60
-> 	case 'rcjpeg':

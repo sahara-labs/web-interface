@@ -5,6 +5,11 @@ To apply the patch:
 cd WI/trunk
 patch -p0 < docs/LabConnector/labconnector.patch
 
+To revert the patch:
+cd WI/trunk
+svn revert -R .
+<Also remove all the files that were added - all the new files as part of LabConnector>
+
 Ran the following command: 
 
 cd WI/trunk
