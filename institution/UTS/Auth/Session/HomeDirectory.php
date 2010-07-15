@@ -36,10 +36,61 @@
  * @date 14th July 2010
  */
 
+/**
+ * Sahara session setup class that creates the users home directory if it
+ * doesn't exist.
+ */
 class UTS_Auth_Session_HomeDirectory extends Sahara_Auth_Session
 {
     public function setup()
     {
+        $path = '';
+        if ($this->_authType->getAuthType() == 'Ldap')
+        {
+            $path = $this->_authType->getAuthInfo('homedirectory');
+        }
+
+        if (!$path)
+        {
+            $ldapOpts = $this->_config->ldap->params;
+            if ($ldapOpts == null)
+            {
+                throw new Exception('LDAP options not configured.', 102);
+            }
+
+            $ldapOpts = $ldapOpts->toArray();
+            $ldapOpts['bindRequiresDn'] = true;
+            $ldap = new Zend_Ldap($ldapOpts);
+
+            $entry = $ldap->search('uid=' . $this->_authType->getUsername())->getFirst();
+            if (!$entry)
+            {
+                throw new Exception('User ' . $this->_authType->getUsername() . ' LDAP entry not found to create ' .
+                		'their home directory.');
+            }
+
+            $path = $entry['homedirectory'];
+            if (!$path) throw new Exception('User ' . $this->_authType->getUsername() . ' home directory location ' .
+            		'not found.');
+
+            if (is_array($path)) $path = $path[0];
+        }
+
+        /* Only create the home directory if the path doesn't exist. */
+        if (is_dir($path)) return;
+
+        /* Canonicalize path. */
+        $path = realpath($path);
+
+        /* Run the home directory creation script. */
+        $script = $this->_config->session->homedirectory->script;
+        if (!$script) throw new Exception('Home directory creation script not configured.', 108);
+
+        if (!($script = realpath($script) && is_executable($script))
+        {
+            throw new Exception('Home directory creation does not exist or is not executable.', 108);
+        }
+
 
     }
 }
