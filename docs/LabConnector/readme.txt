@@ -8,7 +8,9 @@ patch -p0 < docs/LabConnector/labconnector.patch
 To revert the patch:
 cd WI/trunk
 svn revert -R .
-<Also remove all the files that were added - all the new files as part of LabConnector>
+rm -rf application/models/LabconnectorController.php
+rm -rf application/controllers/LabconnectorController.php
+rm -rf application/views/scripts/labconnector
 
 Ran the following command: 
 
