@@ -1,6 +1,6 @@
 <?php
 /**
- * SAHARA LabconnectonrControllerTestCase tests Zend Controller for LabConnector:
+ * SAHARA LabconnectonrControllerTest tests Zend Controller for LabConnector:
  * index, submitexperiment, error, results & refreshresults actions
  *
  * @license See LICENSE in the top level directory for complete license terms.
@@ -45,7 +45,7 @@ require_once APPLICATION_PATH . '/controllers/LabconnectorController.php';
  * @author heyeung
  *
  */
-class LabconnectorControllerTestCase extends AbstractControllerTestCase
+class LabconnectorControllerTest extends AbstractControllerTestCase
 {
 	/**
  	* @test
