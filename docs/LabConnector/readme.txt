@@ -1,10 +1,16 @@
 PATCH INFORMATION
 -----------------
-To apply the patch:
+To apply the patch in UNIX platforms:
 
 cd WI/trunk
 patch -p0 < docs/LabConnector/labconnector.patch
 patch -p0 < docs/LabConnector/labconnector_newfiles.patch
+
+To apply the patch in M$ Windows platforms:
+<Make sure to install the Gnu32 version of patch.exe & diffutils and add to %PATH% in environment variables>
+cd WI/trunk
+patch -p0 < docs/LabConnector/labconnector.patch --verbose --binary
+patch -p0 < docs/LabConnector/labconnector_newfiles.patch --verbose --binary
 
 To revert the patch:
 cd WI/trunk
