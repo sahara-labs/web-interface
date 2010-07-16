@@ -43,13 +43,16 @@ require_once APPLICATION_PATH . '/controllers/LabconnectorController.php';
  * LabConnectorTestCase: Test cases for indexAction(), errorAction(), experimentAction, 
  * submitExperimentAction(), refreshResultsAction() and resultsAction()
  * @author heyeung
+ * 
+ * Note: There appears to be a bug with the AT covers property for PHPUnit.
+ * Removed it to make the unit tests run.
  *
  */
 class LabconnectorControllerTest extends AbstractControllerTestCase
 {
 	/**
  	* @test
- 	* @covers LabconnectorController::indexAction()
+ 	* covers LabconnectorController::indexAction()
  	*/
     public function defaultIndex()
     {
@@ -60,7 +63,7 @@ class LabconnectorControllerTest extends AbstractControllerTestCase
 
     /**
  	* @test
- 	* @covers LabconnectorController::submitexperimentAction()
+ 	* covers LabconnectorController::submitexperimentAction()
  	*/
     public function submitTimeOfDayExperiment()
     {
@@ -74,7 +77,7 @@ class LabconnectorControllerTest extends AbstractControllerTestCase
        
  	/**
  	* @test
- 	* @covers LabconnectorController::resultsAction()
+ 	* covers LabconnectorController::resultsAction()
  	*/
 	public function resultsInXMLFormat()
     {
@@ -90,7 +93,7 @@ class LabconnectorControllerTest extends AbstractControllerTestCase
     
 	/**
  	* @test
- 	* @covers LabconnectorController::refreshresultsAction()
+ 	* covers LabconnectorController::refreshresultsAction()
  	*/
 	public function refreshresultsAsync()
     {
@@ -103,7 +106,7 @@ class LabconnectorControllerTest extends AbstractControllerTestCase
     
 	/**
  	* @test
- 	* @covers LabconnectorController::experimentAction()
+ 	* covers LabconnectorController::experimentAction()
  	*/
 	public function listAvailableExperiments()
     {
