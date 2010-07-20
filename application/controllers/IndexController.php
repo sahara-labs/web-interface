@@ -62,9 +62,13 @@ class IndexController extends Sahara_Controller_Action_Acl
             $username = $form->getValue('username');
             $password = $form->getValue('password');
 
-            /******************************************************************
-             ** TODO Add your authentication.                                **
-             ******************************************************************/
+            $auth = new Sahara_Auth($username, $password);
+            if (!$auth->authenticate())
+            {
+                $this->view->messages = array("Authentication failure.");
+                return;
+            }
+            $auth->setupSession();
 
             /* Store the authentication information. */
             $qName =  $inst . ':' . $username;
@@ -123,6 +127,15 @@ class IndexController extends Sahara_Controller_Action_Acl
         $this->_logger->info('Received feedback email from ' . $params['name'] . ' (' . $params['email'] . '). ' .
                 'Feedback type: ' . $params['type'] . '. Purpose of user: ' . $params['purpose'] . '. Feedback: ' .
                 $params['feedback'] . '.');
+
+        /* Make sure the fields are populated. */
+        if (!(isset($params['name']) && isset($params['email']) && isset($params['type']) &&
+              isset($params['purpose']) && isset($params['feedback'])))
+        {
+            echo 'failed';
+            return;
+        }
+
 
         $mail = new Sahara_Mail();
         $mail->setFrom($this->_config->email->from->address, $this->_config->email->from->name);
