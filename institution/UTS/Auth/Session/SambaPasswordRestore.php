@@ -70,8 +70,29 @@ class UTS_Auth_Session_SambaPasswordRestore extends Sahara_Auth_Session
         $entry = $this->_ldap->search('uid=' . $this->_authType->getUsername())->getFirst();
         if (!$entry) throw new Exception('LDAP entry with uid=' . $this->_authType->getUsername() . ' not found.');
 
-        $entry['sambalmpassword'] = $this->_smbHash->lmhash($this->_authType->getPassword());
-        $entry['sambantpassword'] = $this->_smbHash->nthash($this->_authType->getPassword());
+        if (isset($entry['l']))
+        {
+            /* Having the l attribute can mean a user is in session. */
+            $session = Sahara_Soap::getSchedServerQueuerClient()->
+                    isUserInQueue(array('userQName' => Zend_Auth::getInstance()->getIdentity()));
+
+            /* If in session, don't play around with Samba passwords, they are probably
+             * already set with batch login passwords. */
+            if ($session->inSession) return;
+
+            /* Having 'l' and not in session means something f'ed up, so delete it. */
+            $this->_logger->warn('Account with DN ' . $entry['dn'] . " has 'l' attribute and is not in session. " .
+                    'This attribute will be deleted.');
+
+            $entry['l'] = '';
+        }
+
+        $lmHash = $this->_smbHash->lmhash($this->_authType->getPassword());
+        $ntHash = $this->_smbHash->nthash($this->_authType->getPassword());
+        if ($lmHash == $entry['sambalmpassword'] && $ntHash == $entry['sambantpassword']) return;
+
+        $entry['sambalmpassword'] = $lmHash;
+        $entry['sambantpassword'] = $ntHash;
 
         $this->_ldap->save($entry['dn'], $entry);
         $this->_logger->debug("Restored password of user with DN " . $entry['dn']);
