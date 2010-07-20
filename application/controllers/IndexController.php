@@ -119,6 +119,14 @@ class IndexController extends Sahara_Controller_Action_Acl
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout()->disableLayout();
 
+        /* Make sure the fields are populated. */
+        if (!(isset($params['name']) && isset($params['email']) && isset($params['type']) &&
+              isset($params['purpose']) && isset($params['feedback'])))
+        {
+            echo 'false';
+            return;
+        }
+
         $params = $this->_request->getPost();
         $this->_logger->info('Received feedback email from ' . $params['name'] . ' (' . $params['email'] . '). ' .
                 'Feedback type: ' . $params['type'] . '. Purpose of user: ' . $params['purpose'] . '. Feedback: ' .
