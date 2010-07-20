@@ -73,8 +73,9 @@ class UTS_Auth_Session_SambaPasswordRestore extends Sahara_Auth_Session
         if (isset($entry['l']))
         {
             /* Having the l attribute can mean a user is in session. */
+            $qname = Zend_Registry::get('config')->institution . ':' . $this->_authType->getUsername();
             $session = Sahara_Soap::getSchedServerQueuerClient()->
-                    isUserInQueue(array('userQName' => Zend_Auth::getInstance()->getIdentity()));
+                    isUserInQueue(array('userQName' => $qname));
 
             /* If in session, don't play around with Samba passwords, they are probably
              * already set with batch login passwords. */
