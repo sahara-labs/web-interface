@@ -69,10 +69,12 @@ class ErrorController extends Zend_Controller_Action
                 $this->getResponse()->setHttpResponseCode(404);
                 $this->view->code = 404;
                 $this->view->message = 'Page not found';
+                  $this->sendErrorEmail($errors);
                 break;
             default:
                 /*---- Application error. -----------------------------------*/
                 /* Clear the authentication information. */
+                $this->sendErrorEmail($errors);
                 $auth = Zend_Auth::getInstance()->clearIdentity();
                 $this->getResponse()->setHttpResponseCode(500);
                 $this->view->code = 500;
@@ -88,6 +90,98 @@ class ErrorController extends Zend_Controller_Action
 
         $this->view->exception = $errors->exception;
         $this->view->request = $errors->request;
+    }
+
+    private function sendErrorEmail($errors)
+    {
+        $request = $errors->request;
+        $exception = $errors->exception;
+
+        $mail = new Sahara_Mail();
+        $mail->setFrom($this->_config->email->from->address, $this->_config->email->from->name);
+        $mail->setSubject('Sahara WI fatal error occurred at ' . date('r'));
+
+        $body  = "#################################################################\n";
+        $body .= "## Sahara Fatal Error\n";
+        $body .= "#################################################################\n\n";
+        $body .= "Time: " . date('r') . "\n";
+        $body .= "Request: " . $request->getRequestUri() . "\n";
+        $body .= "Params: ";
+        foreach ($request->getParams() as $p => $v)
+        {
+            $body .= "$p=$v ";
+        }
+        $body .= "\n\n";
+
+        /* ---- Error Information ---------------------------------------------*/
+        $body .= "#################################################################\n";
+        $body .= "## Error information\n";
+        $body .= "Type: " . $errors->type . "\n";
+        $body .= "Exception: " . get_class($exception) . "\n";
+        $body .= "Message: " . $exception->getMessage(). "\n";
+        $body .= "Code: " . $exception->getCode() . "\n";
+        $body .= "File: " . $exception->getFile() . "\n";
+        $body .= "Line: " . $exception->getLine() . "\n";
+        $body .= "Trace: \n";
+        $body .= $exception->getTraceAsString() . "\n\n";
+
+        /* ---- Session Information -------------------------------------------*/
+        if ($cred = Zend_Auth::getInstance()->getIdentity())
+        {
+            $body .= "#################################################################\n";
+            $body .= "## Session information\n";
+            $body .= "Credential: $cred\n";
+
+            try
+            {
+                $session = Sahara_Soap::getSchedServerQueuerClient()
+                        ->isUserInQueue(array('userQName' => $this->_auth->getIdentity()));
+                $body .= "In Queue: " . ($session->inQueue ? 'true' : 'false') . "\n";
+                $body .= "In Session: " . ($session->inSession ? 'true' : 'false') . "\n";
+
+                if ($session->inQueue)
+                {
+                    $body .= "Queued resource ID: " . $session->queuedResouce->resourceID . "\n";
+                    $body .= "Queued resource name: " . $session->queuedResouce->resourceName . "\n";
+                    $body .= "Queued resource type: " . $session->queuedResouce->type . "\n";
+                }
+
+                if ($session->inSession)
+                {
+                    $body .= "Session resource ID: " . $session->assignedResource->resourceID . "\n";
+                    $body .= "Session resource name: " . $session->assignedResource->resourceName . "\n";
+                    $body .= "Session resource type: " . $session->assignedResource->type . "\n";
+                }
+            }
+            catch (Exception $ex)
+            {
+                $body .= "Exception when attempting to determine session status with message '" .
+                        $ex->getMessage() . "', code " . $ex->getCode() . ".\n";
+            }
+        }
+        else
+        {
+            $body .= "#################################################################\n";
+            $body .= "## No session information\n";
+            $body .= "#################################################################\n";
+        }
+
+        $mail->setBody($body);
+
+        $addresses = $this->_config->feedback->address;
+        if ($addresses instanceof Zend_Config)
+        {
+            foreach ($addresses as $addr)
+            {
+                $mail->addTo($addr);
+            }
+        }
+        else
+        {
+            $mail->addTo($addresses);
+        }
+
+        $mail->send();
     }
 }
 

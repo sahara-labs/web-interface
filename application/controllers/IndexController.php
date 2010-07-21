@@ -72,14 +72,7 @@ class IndexController extends Sahara_Controller_Action_Acl
             $storage->clear();
             $storage->write($qName);
 
-
             $user = Sahara_Soap::getSchedServerPermissionsClient()->getUser(array('userQName' => $qName));
-            if ($user->persona == 'NOTFOUND')
-            {
-                /**************************************************************
-                 ** TODO Try to find about the user and add permissions.     **
-                 **************************************************************/
-            }
 
             /* Redirect to an appropriate page. */
             switch ($user->persona)
@@ -119,15 +112,14 @@ class IndexController extends Sahara_Controller_Action_Acl
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout()->disableLayout();
 
+        $params = $this->_request->getPost();
         /* Make sure the fields are populated. */
         if (!(isset($params['name']) && isset($params['email']) && isset($params['type']) &&
               isset($params['purpose']) && isset($params['feedback'])))
         {
-            echo 'false';
+            echo 'true';
             return;
         }
-
-        $params = $this->_request->getPost();
         $this->_logger->info('Received feedback email from ' . $params['name'] . ' (' . $params['email'] . '). ' .
                 'Feedback type: ' . $params['type'] . '. Purpose of user: ' . $params['purpose'] . '. Feedback: ' .
                 $params['feedback'] . '.');
@@ -200,7 +192,15 @@ class IndexController extends Sahara_Controller_Action_Acl
             $mail->addTo($addresses);
         }
 
-        $mail->send();
+        try
+        {
+            $mail->send();
+        }
+        catch (Exception $ex)
+        {
+            $this->_logger->error('Failed to send feedback email. Error message: ' .
+                    $ex->getMessage() . ". Message body: $body");
+        }
 
         /* Tells validation engine that submission succeeded. */
         echo 'true';
