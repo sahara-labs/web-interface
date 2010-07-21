@@ -67,6 +67,7 @@ class ErrorController extends Zend_Controller_Action
             case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_ACTION:
                 /*---- 404 error -- controller or action not found. ---------*/
                 $this->getResponse()->setHttpResponseCode(404);
+                $this->view->code = 404;
                 $this->view->message = 'Page not found';
                 break;
             default:
@@ -74,11 +75,13 @@ class ErrorController extends Zend_Controller_Action
                 /* Clear the authentication information. */
                 $auth = Zend_Auth::getInstance()->clearIdentity();
                 $this->getResponse()->setHttpResponseCode(500);
+                $this->view->code = 500;
                 $this->view->message = 'Application error';
                 break;
         }
 
-        if ($log = Sahara_Logger::getInstance())
+        if (($log = Sahara_Logger::getInstance()) &&
+                ($this->view->code != 404 || APPLICATION_ENV == 'development'))
         {
             $log->fatal($this->view->message .': ' . $errors->exception);
         }
