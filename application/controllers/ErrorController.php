@@ -69,7 +69,6 @@ class ErrorController extends Zend_Controller_Action
                 $this->getResponse()->setHttpResponseCode(404);
                 $this->view->code = 404;
                 $this->view->message = 'Page not found';
-                  $this->sendErrorEmail($errors);
                 break;
             default:
                 /*---- Application error. -----------------------------------*/
@@ -96,9 +95,10 @@ class ErrorController extends Zend_Controller_Action
     {
         $request = $errors->request;
         $exception = $errors->exception;
+        $config = Zend_Registry::get('config');
 
         $mail = new Sahara_Mail();
-        $mail->setFrom($this->_config->email->from->address, $this->_config->email->from->name);
+        $mail->setFrom($config->email->from->address, $config->email->from->name);
         $mail->setSubject('Sahara WI fatal error occurred at ' . date('r'));
 
         $body  = "#################################################################\n";
@@ -163,12 +163,13 @@ class ErrorController extends Zend_Controller_Action
         {
             $body .= "#################################################################\n";
             $body .= "## No session information\n";
-            $body .= "#################################################################\n";
         }
+
+        $body .= "#################################################################\n\n";
 
         $mail->setBody($body);
 
-        $addresses = $this->_config->feedback->address;
+        $addresses = $config->feedback->address;
         if ($addresses instanceof Zend_Config)
         {
             foreach ($addresses as $addr)
@@ -181,7 +182,14 @@ class ErrorController extends Zend_Controller_Action
             $mail->addTo($addresses);
         }
 
-        $mail->send();
+        try
+        {
+            $mail->send();
+        }
+        catch (Exception $ex)
+        {
+            /* Nothing much more we can do. */
+        }
     }
 }
 
