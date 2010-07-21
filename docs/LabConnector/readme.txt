@@ -31,7 +31,9 @@ cd WI/trunk;
 svn add application/views/scripts/labconnector
 svn add application/models/Labconnector
 svn add application/controllers/LabconnectorController.php
-svn diff -N application/views/scripts/labconnector application/models/Labconnector/Batch/UQRadioactivity/Form.php application/models/Labconnector/Batch/TimeOfDay/Form.php application/controllers/LabconnectorController.php application/views/scripts/labconnector > docs/LabConnector/labconnector_newfiles.patch
+svn add public/css/labconnector.css
+svn add public/js/labconnector.js
+svn diff -N application/views/scripts/labconnector application/models/Labconnector/Batch/UQRadioactivity/Form.php application/models/Labconnector/Batch/TimeOfDay/Form.php application/controllers/LabconnectorController.php application/views/scripts/labconnector public/css/labconnector.css public/js/labconnector.js > docs/LabConnector/labconnector_newfiles.patch
 
 These changes implement the following:
 1. Accessing of labs by Sahara USER
