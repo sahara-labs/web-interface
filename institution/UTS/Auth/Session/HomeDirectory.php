@@ -78,25 +78,24 @@ class UTS_Auth_Session_HomeDirectory extends Sahara_Auth_Session
             if (!$path) throw new Exception('User ' . $this->_authType->getUsername() . ' home directory location ' .
             		'not found.');
 
-            if (is_array($path)) $path = $path[0];
         }
+	
+        if (is_array($path)) $path = $path[0];
 
         /* Only create the home directory if the path doesn't exist. */
         if (is_dir($path)) return;
-
-        /* Canonicalize path. */
-        $path = realpath($path);
 
         /* Run the home directory creation script. */
         $script = $this->_config->session->homedirectory->script;
         if (!$script) throw new Exception('Home directory creation script not configured.', 108);
 
-        if (!($script = realpath($script) && is_executable($script))
+        if (!is_executable($script))
         {
-            throw new Exception('Home directory creation does not exist or is not executable.', 108);
+            throw new Exception('Home directory creation scruipt does not exist or is not executable.', 108);
         }
 
-        $command = "$script " . escapeshellarg($this->_authType()->getUsername()) . ' ' . escapeshellarg($path);
-        exec($command);
+        $args = escapeshellarg($this->_authType->getUsername()) . ' ' . escapeshellarg($path);
+        exec("sudo $script $args");
     }
 }
+

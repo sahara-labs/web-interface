@@ -4,14 +4,13 @@
 # Generates a users home directory.
 #
 # Author: Michael Diponio
+# Author: Tania Machet
 #
 
 
 # Home directory skeleton directory
 SKEL=/etc/skel
-
-# Apache server group
-chown -R $USER.apache $HOME
+LOG=/var/log/messages
 
 if [ ! $# -eq 2 ] ; then
 	echo "Usage: $0 <user name> <directory path>"
@@ -20,6 +19,13 @@ fi
 
 USER=$1
 HOME=$2
+
+if [ -d $HOME ] ; then
+    echo "No need to create home directory $HOME, it already exists." >> $LOG
+    exit 0
+fi 
+
+echo "Creating home directory $HOME for user $USER." >> $LOG
 
 # Create the directory with user access mask
 mkdir -p -m 0770 $HOME
@@ -43,12 +49,10 @@ if [ -d $SKEL ] ; then
 fi
 
 # Create the Windows roaming profile directory
-mkdir  $HOME/.profile
-mkdir 770 $HOME/Desktop
-ln -sf 770 $HOME/Desktop $HOME/.profile/Desktop
-ln -sf 770 $HOME "$HOME/.profile/My Documents"
+mkdir -m 770 $HOME/.profile
+mkdir -m 770 $HOME/Desktop
 
 # Change ownership of the home directory to the user
-chown -R $USER.apache $HOME
+chown -R $USER:apache $HOME
 
 
