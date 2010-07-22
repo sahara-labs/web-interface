@@ -45,7 +45,7 @@ class Sahara_Session_Element_RdpApplet extends Sahara_Session_Element
     {
         parent::__construct($rig);
 
-        $this->view->params = $params;
+        $this->_view->params = $params;
     }
 
 
