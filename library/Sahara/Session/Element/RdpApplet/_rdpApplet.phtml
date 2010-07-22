@@ -45,7 +45,10 @@
 		<applet id="rdpapplet" name="Control Applet" style="margin-left:5px;margin-top:5px"
 				code="au.edu.uts.eng.remotelabs.rdp.SaharaRdpApplet.class" archive="<?=$this->baseUrl('/applets/ssaharardpapplet.jar')?>"
 				width="165" height="95">
-		<a href="http://java.com/en/download/">Install Java 6.</a>
+		<?php foreach ($this->params as $p => $v): ?>
+			<param name="<?=$p?>" value="<?=$v?>" />
+		<?php endforeach; ?>
+			<a href="http://java.com/en/download/">Install Java 6.</a>
 		</applet>
 	</div>
 </div>

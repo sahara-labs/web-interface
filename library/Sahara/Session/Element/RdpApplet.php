@@ -41,6 +41,14 @@
  */
 class Sahara_Session_Element_RdpApplet extends Sahara_Session_Element
 {
+    public function __construct($rig, $params = array())
+    {
+        parent::__construct($rig);
+
+        $this->view->params = $params;
+    }
+
+
     public function render()
     {
         return $this->_view->render('RdpApplet/_rdpApplet.phtml');
