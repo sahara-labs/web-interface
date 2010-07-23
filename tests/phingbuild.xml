@@ -49,6 +49,6 @@
     <target name="phpunit">
         <echo msg="PHP Unit..." />
         <exec command="cd ${ws}\trunk\tests"/>
-        <exec command="phpunit --configuration ${ws}\trunk\tests\phpunit.xml --log-junit ${builddir}\phpunitoutput.xml --coverage-clover ${builddir}\clover.xml --coverage-html ${builddir}\html\ ${ws}\trunk\tests"/>
+        <exec command="phpunit --configuration ${ws}\trunk\tests\phpunit.xml --log-junit ${builddir}\phpunitoutput.xml --coverage-clover ${builddir}\clover.xml --coverage-html ${builddir}\html\"/>
     </target>
 </project>
