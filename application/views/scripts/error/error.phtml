@@ -36,20 +36,35 @@
  * @date 20th March 2010
  */
  ?>
-<h1>An error occurred</h1>
-<h2><?php echo $this->message ?></h2>
+<div class="contentheader" ><h2><?php echo $this->message ?></h2>
+</div>
+<?php if ($this->env == "production"):?>
+<div align="center" >
+	<?php if ($this->code == 404):?>
+        <img style="padding:20px;" src="<?=$this->baseUrl('images/file_broken.png')?>" alt="Page Not Found"></img>
+		<div class="ui-priority-secondary ui-corner-all">
+			<h3>The page you are trying to find doesn't exist.<br>
+			If you used a bookmark to get here, please update it.</h3>
+		</div>
+	<?php else: ?>
+        <img style="padding:20px;" src="<?=$this->baseUrl('images/no.png')?>" alt="Page Not Found"></img>
+		<div class="ui-state-error ui-corner-all" style="width:45%">
+          <h3>Please use the "Send Feedback" button to let us know.</h3>
+		   <h3>We will get back to you shortly.</h3>
+		</div>
+	<?php endif ?>
+</div>
+<?php else: ?>
+	<?php if (isset($this->exception)): ?>
+       <h3>Exception information:</h3>
+       <p><b>Message:</b> <?php echo $this->exception->getMessage() ?></p>
 
-<?php if (isset($this->exception)): ?>
+       <h3>Stack trace:</h3>
+	   <pre><?php echo $this->exception->getTraceAsString() ?>
+  	   </pre>
 
-<h3>Exception information:</h3>
-<p><b>Message:</b> <?php echo $this->exception->getMessage() ?></p>
-
-<h3>Stack trace:</h3>
-<pre><?php echo $this->exception->getTraceAsString() ?>
-  </pre>
-
-<h3>Request Parameters:</h3>
-<pre><?php echo var_export($this->request->getParams(), true) ?>
-  </pre>
+	   <h3>Request Parameters:</h3>
+	   <pre><?php echo var_export($this->request->getParams(), true) ?>
+  	   </pre>
+    <?php endif ?>
 <?php endif ?>
-
