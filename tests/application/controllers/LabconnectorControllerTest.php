@@ -54,12 +54,12 @@ class LabconnectorControllerTest extends AbstractControllerTestCase
  	* @test
  	* covers LabconnectorController::indexAction()
  	*/
-    public function defaultIndex()
-    {
-        $this->dispatch('/labconnector/index');
-        $this->assertController('labconnector');
-        $this->assertAction('index');
-    }
+    //public function defaultIndex()
+    //{
+    //    $this->dispatch('/labconnector/index');
+    //    $this->assertController('labconnector');
+    //    $this->assertAction('index');
+    //}
 
     /**
  	* @test
