@@ -136,7 +136,7 @@ class ErrorController extends Zend_Controller_Action
             try
             {
                 $session = Sahara_Soap::getSchedServerQueuerClient()
-                        ->isUserInQueue(array('userQName' => $this->_auth->getIdentity()));
+                        ->isUserInQueue(array('userQName' => Zend_Auth::getInstance()->getIdentity()));
                 $body .= "In Queue: " . ($session->inQueue ? 'true' : 'false') . "\n";
                 $body .= "In Session: " . ($session->inSession ? 'true' : 'false') . "\n";
 
