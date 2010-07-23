@@ -49,6 +49,7 @@
                 <directory suffix=".phtml">../application/views</directory>
                 <file>../application/Bootstrap.php</file>
                 <directory suffix=".php">../application/models/Sahara/Auth/Session</directory>
+                <directory suffix=".php">../application/models/Sahara/Auth/Type</directory>
             </exclude>
         </whitelist>
     </filter>
