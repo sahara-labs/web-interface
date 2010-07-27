@@ -91,7 +91,7 @@ class Sahara_Session_Element_RemoteDesktop extends Sahara_Session_Element
     {
         $this->init();
 
-        if ($this->_userDomain) $this->_view->domain = $this->_config->remotedesktop->domain;
+        if ($this->_useDomain) $this->_view->domain = $this->_config->remotedesktop->domain;
         $this->_view->ip = $this->_ip;
         return $this->_view->render('RemoteDesktop/_remoteDesktop.phtml');
     }
