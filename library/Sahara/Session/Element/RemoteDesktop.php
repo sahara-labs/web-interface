@@ -68,7 +68,7 @@ class Sahara_Session_Element_RemoteDesktop extends Sahara_Session_Element
             switch ($o)
             {
                 case 'domain':
-                    $this->_useDomain == $v;
+                    $this->_useDomain = $v;
                     break;
             }
         }
