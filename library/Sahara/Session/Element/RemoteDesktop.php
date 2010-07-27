@@ -37,15 +37,42 @@
  */
 
 /**
- * Renders remote desktop information. THe rig cleint needs the property:
+ * Renders remote desktop information. The rig client needs the property:
  * <ul>
  * 	<li><tt>Remote_Desktop_IP</tt> - IP address for the remote desktop.
+ * </ul>
+ * An option array can be given as a constructor parameter to customise
+ * the behaviour of this class. The options are:
+ * <ul>
+ * 	<li>domain => [true|false] - Whether to provide a domain selection
+ *  help step. The default is true. <strong>NOTE:</strong> If a domain
+ *  is to be displayed, the property <tt>remotedesktop.domain</tt> should
+ *  be set with the domain name.</li>
  * </ul>
  */
 class Sahara_Session_Element_RemoteDesktop extends Sahara_Session_Element
 {
     /** @var String IP address to the remote desktop. */
     protected $_ip;
+
+    /** @var boolean Whether a domain should be given in the instructions. */
+    protected $_useDomain = true;
+
+    public function __construct($rig, $options = array())
+    {
+        parent::__construct($rig);
+
+        if (!is_array($options)) return;
+        foreach ($options as $o => $v)
+        {
+            switch ($o)
+            {
+                case 'domain':
+                    $this->_useDomain == $v;
+                    break;
+            }
+        }
+    }
 
     /**
      * Sets up the information for rendering.
@@ -64,7 +91,7 @@ class Sahara_Session_Element_RemoteDesktop extends Sahara_Session_Element
     {
         $this->init();
 
-        $this->_view->domain = $this->_config->remotedesktop->domain;
+        if ($this->_userDomain) $this->_view->domain = $this->_config->remotedesktop->domain;
         $this->_view->ip = $this->_ip;
         return $this->_view->render('RemoteDesktop/_remoteDesktop.phtml');
     }

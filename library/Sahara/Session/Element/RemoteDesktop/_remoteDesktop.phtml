@@ -52,8 +52,10 @@ $this->headLink()->appendStylesheet($this->baseUrl('css/elements/remotedesktop.c
 			<li>Launch <em>Remote Desktop Connection</em> (Start &gt; Programs &gt; Accessories &gt; Remote Desktop
 			Connection).</li>
 			<li>Connect to the IP address '<span class="remotedesktopaddress"><?=$this->ip?></span>'.</li>
+			<?php if (isset($this->domain)): ?>
 			<li>Select the Log on to: '<span class="remotedesktopaddress"><?=$this->domain?></span>' from the
 			drop down list.</li>
+			<?php endif; ?>
 			<li>Login using the same user name and password as was used to access this site.</li>
 		</ol>
 	</div>
