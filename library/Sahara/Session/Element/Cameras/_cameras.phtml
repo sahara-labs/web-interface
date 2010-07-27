@@ -43,7 +43,7 @@
 		<div class="sessionpanelheader <?php if($this->draggable) echo 'sessionpaneldraggable'; ?>">
 			<p>
 				<span class="ui-icon ui-icon-video sessionpanelheadericon"></span>
-				<?=$this->_stringTransform($this->cameras[$i]['TITLE'])?>
+				<?=$this->stringTransform($this->cameras[$i]['TITLE'], '_', ' ')?>
 			</p>
 			<a id="cameraclose<?=$k?>" class="sessionpanelhide plaina" href="#">
 				<span class="ui-icon ui-icon-close"></span>Turn Off
