@@ -265,10 +265,8 @@
 }
 
 #queuestalewarning {
-	width: 300px;
 	padding: 10px;
 	margin-top: 40px;
-	margin-left: -20px;
 	padding: 10px;
 	text-align: left;
 }
@@ -279,10 +277,8 @@
 }
 
 #queueredirectinfo {
-	width: 300px;
 	padding: 10px;
 	margin-top: 20px;
-	margin-left: -20px;
 	padding: 10px;
 	text-align: left;
 }
