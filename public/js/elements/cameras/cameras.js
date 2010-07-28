@@ -57,7 +57,7 @@ function changeCameraOption(id, vid, url)
 		$("#camerapanel" + id).slideUp("slow");
 		break;
 	case 'jpeg':
-		deployJpeg(id, url, 0);
+		deployJpeg(id, url, (Math.floor(vcameras[id].width)));
 		break;
 	case 'mms':
 		deployWinMedia(id, url);
@@ -104,7 +104,13 @@ function deployJpeg(id, url, tm)
 	html += "</div>"; // jpegsliderholder
 
 	$(cameraDiv).html(html);
+	
+	var cameraInfo = "#cameraInfo" + id;
+	var htmlInfo = "<div class=\"cameraInfo\"> * Move this slider to change the refresh rate <br> </div>"; 
+	$(cameraInfo).html(htmlInfo);
+	$(cameraInfo).css("display", "block");
 
+	
 	$("#jpegslider" + id).slider({
 		animate: true,
 		min: 0,
@@ -120,6 +126,8 @@ function deployJpeg(id, url, tm)
 			{
 				if (jpegIntervals[id] != undefined) clearInterval(jpegIntervals[id]);
 				jpegIntervals[id] = setInterval("updateJpeg(" + id + ", '" + url + "', " + spe + ")", spe);
+				$(cameraInfo).css("display", "none");
+				setCameraCookie("CamInterval-" + id, spe);
 			}
 		}
 	});
@@ -138,6 +146,7 @@ function deployJpeg(id, url, tm)
 	
 	if (tm > 0)
 	{
+		$("#jpegslider" + id).slider("value", 28);
 		jpegIntervals[id] = setInterval("updateJpeg(" + id + ", '" + url + "')", tm);
 	}
 }
