@@ -88,7 +88,7 @@ function deployJpeg(id, url, tm)
 {
 	var cameraDiv = "#camera" + id;
 	
-	var html = "<div id='jpegframe" + id + "' style='height:" + (vcameras[id].height + 10) + "px'>" +
+	var html = "<div id='jpegframe" + id + "' style='height:" + (vcameras[id].height + 20) + "px'>" +
 				"	<img src='" + url + "?" + new Date().getTime() + "'/>" +
 				"</div>" +
 				"<div class='jpegsliderholder'>" +
