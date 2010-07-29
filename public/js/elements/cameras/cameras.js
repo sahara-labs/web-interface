@@ -57,7 +57,7 @@ function changeCameraOption(id, vid, url)
 		$("#camerapanel" + id).slideUp("slow");
 		break;
 	case 'jpeg':
-		deployJpeg(id, url, (Math.floor(vcameras[id].width)));
+		deployJpeg(id, url, 2000);
 		break;
 	case 'mms':
 		deployWinMedia(id, url);
@@ -106,7 +106,12 @@ function deployJpeg(id, url, tm)
 	$(cameraDiv).html(html);
 	
 	var cameraInfo = "#cameraInfo" + id;
-	var htmlInfo = "<div class=\"cameraInfo\"> * Move this slider to change the refresh rate <br> </div>"; 
+	var htmlInfo = "<div class=\"cameraInfo\"> <div class=\"text\" >* Move this slider to change the refresh rate <br> </div>"; 
+	htmlInfo += "<div class=\"arrow\">";
+	htmlInfo += "<div class=\"line10\"></div>  <div class=\"line9\"></div> <div class=\"line8\"></div>";
+	htmlInfo += "<div class=\"line7\"></div>  <div class=\"line6\"></div> <div class=\"line5\"></div>";
+	htmlInfo += "<div class=\"line4\"></div>  <div class=\"line3\"></div> <div class=\"line2\"></div>";
+	htmlInfo += "<div class=\"line1\"></div>  </div>  </div>";
 	$(cameraInfo).html(htmlInfo);
 	$(cameraInfo).css("display", "block");
 
@@ -127,7 +132,8 @@ function deployJpeg(id, url, tm)
 				if (jpegIntervals[id] != undefined) clearInterval(jpegIntervals[id]);
 				jpegIntervals[id] = setInterval("updateJpeg(" + id + ", '" + url + "', " + spe + ")", spe);
 				$(cameraInfo).css("display", "none");
-				setCameraCookie("CamInterval-" + id, spe);
+				setCameraCookie("CamSlideValue-" + id, ui.value);
+				setCameraCookie("CamSlideInterval-" + id, spe);
 			}
 		}
 	});
@@ -144,10 +150,21 @@ function deployJpeg(id, url, tm)
 	$(cameraDiv).css("background-image", "url(" + url + ")");
 	$(cameraDiv).css("background-repeat", "no-repeat");
 	
-	if (tm > 0)
+	//Check for cookie for slider value and interval, if not set use sent value
+	var iOpt = getCameraCookie("CamSlideInterval-" + id);
+	var vOpt = getCameraCookie("CamSlideValue-" + id);
+	if (iOpt == "" || vOpt == "")
 	{
-		$("#jpegslider" + id).slider("value", 28);
-		jpegIntervals[id] = setInterval("updateJpeg(" + id + ", '" + url + "')", tm);
+		if (tm > 0)
+		{
+			$("#jpegslider" + id).slider("value", 28);
+			jpegIntervals[id] = setInterval("updateJpeg(" + id + ", '" + url + "')", tm);
+		}
+	}
+	else
+	{
+		$("#jpegslider" + id).slider("value", vOpt);
+		jpegIntervals[id] = setInterval("updateJpeg(" + id + ", '" + url + "')", iOpt);
 	}
 }
 
@@ -246,6 +263,9 @@ function undeploy(id)
 	$(cameraDiv).css("height", vcameras[id].height);
 	$(cameraDiv).parent().parent().css("height", vcameras[id].height + 30); // Outer camera div
 	
+	var cameraInfo = "#cameraInfo" + id;
+	$(cameraInfo).html("");
+	$(cameraInfo).css("display", "none");
 	
 	
 	resizeFooter();

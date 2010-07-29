@@ -87,11 +87,18 @@
 	margin: 0 auto;
 }
 
-.cameraInfo {
+
+.cameraInfo	{
 	display:block;
-	margin-left:auto;
-	margin-right:auto;
-	width:70%;
+	position: relative;
+	margin-top: -85px;
+	width: 75%;
+	margin-left: 20%;
+	z-index: 5000;
+	opacity: 87%;
+}
+
+.cameraInfo .text{
 	background:#ee0101;
 	color:#fff;
 	font-family:tahoma;
@@ -105,3 +112,35 @@
 	-moz-border-radius: 6px;
 	-webkit-border-radius: 6px;
 }
+
+.cameraInfo .arrow{
+	position: relative;
+	margin-top:-2px;
+	left:70%;
+	width:15px; 
+	height:15px;
+	z-index:6001;
+}
+
+.cameraInfo .arrow div{
+	border-left:2px solid #ddd;
+	border-right:2px solid #ddd;
+	box-shadow: 0px 2px 3px #444;
+	-moz-box-shadow: 0px 2px 3px #444;
+	-webkit-box-shadow: 0px 2px 3px #444;
+	font-size:0px; height:1px; background:#ee0101;margin:0 auto;line-height:0px; font-size:0px; display:block;
+}
+
+.cameraInfo .arrow .line10{width:15px;border:none;} 
+.cameraInfo .arrow .line9{width:13px;border:none;} 
+.cameraInfo .arrow .line8{width:11px;} 
+.cameraInfo .arrow .line7{width:9px;} 
+.cameraInfo .arrow .line6{width:7px;} 
+.cameraInfo .arrow .line5{width:5px;} 
+.cameraInfo .arrow .line4{width:3px;} 
+.cameraInfo .arrow .line3{width:1px;
+					border-left:2px solid #ddd;
+					border-right:2px solid #ddd;
+					border-bottom:0px solid #ddd;} 
+.cameraInfo .arrow .line2{width:3px;border:none;background:#ddd;}
+.cameraInfo .arrow .line1{width:1px;border:none;background:#ddd;}  
