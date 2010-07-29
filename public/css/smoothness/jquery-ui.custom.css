@@ -273,7 +273,7 @@
 .ui-corner-bottom { -moz-border-radius-bottomleft: 4px; -webkit-border-bottom-left-radius: 4px; border-bottom-left-radius: 4px; -moz-border-radius-bottomright: 4px; -webkit-border-bottom-right-radius: 4px; border-bottom-right-radius: 4px; }
 .ui-corner-right {  -moz-border-radius-topright: 4px; -webkit-border-top-right-radius: 4px; border-top-right-radius: 4px; -moz-border-radius-bottomright: 4px; -webkit-border-bottom-right-radius: 4px; border-bottom-right-radius: 4px; }
 .ui-corner-left { -moz-border-radius-topleft: 4px; -webkit-border-top-left-radius: 4px; border-top-left-radius: 4px; -moz-border-radius-bottomleft: 4px; -webkit-border-bottom-left-radius: 4px; border-bottom-left-radius: 4px; }
-.ui-corner-all { -moz-border-radius: 4px; -webkit-border-radius: 4px; border-radius: 4px; }
+.ui-corner-all { -moz-border-radius: 4px; -webkit-border-radius: 4px; border-radius: 4px; } 
 
 /* Overlays */
 .ui-widget-overlay { background: #aaaaaa url(images/ui-bg_flat_0_aaaaaa_40x100.png) 50% 50% repeat-x; opacity: .30;filter:Alpha(Opacity=30); overflow: hidden; }
@@ -300,7 +300,7 @@
 .ui-accordion .ui-accordion-content { padding: 1em 2.2em; border-top: 0; margin-top: -2px; position: relative; top: 1px; margin-bottom: 2px; overflow: auto; display: none; zoom: 1; }
 .ui-accordion .ui-accordion-content-active { display: block; }/* Autocomplete
 ----------------------------------*/
-.ui-autocomplete { position: absolute; cursor: default; }	
+.ui-autocomplete { position: absolute; cursor: default; }   
 .ui-autocomplete-loading { background: white url('images/ui-anim_basic_16x16.gif') right center no-repeat; }
 
 /* workarounds */
@@ -309,29 +309,29 @@
 /* Menu
 ----------------------------------*/
 .ui-menu {
-	list-style:none;
-	padding: 2px;
-	margin: 0;
-	display:block;
+    list-style:none;
+    padding: 2px;
+    margin: 0;
+    display:block;
 }
 .ui-menu .ui-menu {
-	margin-top: -3px;
+    margin-top: -3px;
 }
 .ui-menu .ui-menu-item {
-	margin:0;
-	padding: 0;
-	width: 100%;
+    margin:0;
+    padding: 0;
+    width: 100%;
 }
 .ui-menu .ui-menu-item a {
-	text-decoration:none;
-	display:block;
-	padding:.2em .4em;
-	line-height:1.5;
-	zoom:1;
+    text-decoration:none;
+    display:block;
+    padding:.2em .4em;
+    line-height:1.5;
+    zoom:1;
 }
 .ui-menu .ui-menu-item a.ui-state-hover,
 .ui-menu .ui-menu-item a.ui-state-active {
-	margin: -1px;
+    margin: -1px;
 }
 /* Button
 ----------------------------------*/
@@ -370,7 +370,7 @@ button.ui-button::-moz-focus-inner { border: 0; padding: 0; } /* reset extra pad
 
 /* Dialog
 ----------------------------------*/
-.ui-dialog { position: absolute; padding: .2em; width: 300px; overflow-x: hidden; overflow-y: hidden; -moz-box-shadow: 0 0 10px black; -webkit-box-shadow: 0 0 10px black; box-shadow: 0 0 10px black; }
+.ui-dialog { position: absolute; padding: .2em; width: 300px; overflow-x: hidden; overflow-y: hidden; -moz-box-shadow: 0 0 10px black; -webkit-box-shadow: 0 0 10px black; box-shadow: 0 0 10px black; filter: progid:DXImageTransform.Microsoft.Shadow(color=#969696, Strength=4); }
 .ui-dialog .ui-dialog-titlebar { padding: .5em 1em .3em; position: relative;  }
 .ui-dialog .ui-dialog-title { float: left; margin: .1em 16px .2em 0; } 
 .ui-dialog .ui-dialog-titlebar-close { position: absolute; right: .3em; top: 50%; width: 19px; margin: -10px 0 0 0; padding: 1px; height: 18px; }
