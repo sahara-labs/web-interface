@@ -123,6 +123,10 @@ $(document).ready( function () {
 		}
 	}
 
+	/* Camera Info click event to hide. */
+	$("#cameraInfo<?=$k?>").click( function () {
+		$("#cameraInfo<?=$k?>").css("display", "none");
+	})
 	
 	/* Close click event. */
 	$("#cameraclose<?=$k?>").click( function () {
