@@ -40,11 +40,30 @@ var ty = new Array(8);
 
 function initIO(types)
 {
+	performPrimitiveJSON('FPGAController', 'setDataByte', null, restoreIO, null);
+	
 	for (var i = 0; i < 8; i++)
 	{
 		io[i] = 0;
 		$("#io" + i).css('background-color', '#ED8686');
 		ty[i] = types.charAt(i);
+	}
+}
+
+function restoreIO(resp)
+{
+	if (typeof resp != "object") alert(resp);
+	
+	var val = res.data;
+	
+	for (var i = 0; i < 8; i++)
+	{
+		if (val & Math.pow(2, i))
+		{
+			io[i] = 1;
+			$("#io" + i).css('background-color', '#62E877');
+			$("#io" + i + " img").attr('src', '/uts/fpga/images/' + (ty[i] == 'P' ? 'pushbuttondown.png' :'switchdown.png'));
+		}
 	}
 }
 
@@ -69,9 +88,9 @@ function setIO(i)
 		val += io[i] * Math.pow(2, i);
 	}
 	
-	alert("Value " + val);
-	
-	return false;
+	var params = new Object;
+	params.value = val;
+	performPrimitiveJSON('FPGAController', 'setDataByte', params, null, null);
 }
 
 function resetIO()
