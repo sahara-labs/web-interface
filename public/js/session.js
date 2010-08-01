@@ -35,6 +35,51 @@
  * @date 6th April 2010
  */
 
+function performPrimitiveJSON(controller, action, params, callback, overlay)
+{
+	if (overlay != null)
+	{
+		var width = $(document).width();
+		var height = $(document).height();
+		$("body").append(
+			'<div class="ui-widget-overlay primcalloverlay" style="width:' + width + 'px;height=:' + height + 'px;">' +
+			'</div>' +
+			'<div class="primcalloverlaydialog ui-corner-all" style="left:' + Math.floor(width / 2 - 125) + 'px;top:' + 
+					+ Math.floor(height / 2 - 40) + 'px">' +
+				'<img src="/images/ajax-loading.gif" alt="Loading" />' +
+				'<h3>' + overlay + '</h3>' +
+			'</div>'
+		);
+	}
+	
+	var primRequest = "/primitive/json/pc/" + controller + "/pa/" + action;
+	if (params != null)
+	{
+		for (k in params)
+		{
+			primRequest += "/" + k + "/" + params[k];
+		}
+	}
+	
+	$.get(
+		primRequest,
+		{},
+		function (data)
+		{
+			if (overlay != null)
+			{
+				$(".primcalloverlay").remove();
+				$(".primcalloverlaydialog").remove();
+			}
+			
+			if (callback != null)
+			{
+				callback(data);
+			}
+		}
+	);
+}
+
 function updateSession()
 {
 	$.get(

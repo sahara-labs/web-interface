@@ -151,7 +151,7 @@
 	left: 185px;
 }
  
- /******************************************************************************
+/*******************************************************************************
  ** Finish dialog                                                             **
  ******************************************************************************/
 
@@ -172,3 +172,25 @@
 	margin: 0px 5px -15px;
 }
 
+/*******************************************************************************
+ ** Session primitive call overlay                                            **
+ ******************************************************************************/
+.primcalloverlay {
+ 	z-index: 1001;
+}
+
+.primcalloverlaydialog {
+	position:absolute;
+	width:250px;
+	background-color: #FFFFFF;
+	height:60px;
+	border: 1px solid #606060;
+	padding: 10px;
+	text-align: center;
+	z-index: 1002;
+	color: #606060;
+	-moz-box-shadow: 0 0 10px black; 
+	-webkit-box-shadow: 0 0 10px black; 
+	box-shadow: 0 0 10px black; 
+	filter: progid:DXImageTransform.Microsoft.Shadow(color=#969696, Strength=4); 
+}

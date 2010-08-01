@@ -1,4 +1,6 @@
-#Fri Jul 09 08:42:09 EST 2010
+#Sat Jul 31 21:59:27 EST 2010
 eclipse.preferences.version=1
 include_path=0;/WI/library/Zend
 org.eclipse.php.core.phpDoc=true
+org.eclipse.php.core.phpForamtterIndentationSize=4
+org.eclipse.php.core.phpForamtterUseTabs=false

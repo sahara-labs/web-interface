@@ -1,0 +1,93 @@
+<?php
+/**
+ * SAHARA Web Interface
+ *
+ * User interface to Sahara Remote Laboratory system.
+ *
+ * @license See LICENSE in the top level directory for complete license terms.
+ *
+ * Copyright (c) 2010, University of Technology, Sydney
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of the University of Technology, Sydney nor the names
+ *    of its contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * @author Michael Diponio (mdiponio)
+ * @date 31st July 2010
+ */
+
+$this->headScript()->appendFile($this->baseUrl('js/elements/multibuttons.js'));
+$this->headLink()->appendStylesheet($this->baseUrl('css/elements/multibuttons.css'));
+
+$numButtons = count($this->buttons);
+?>
+
+<div id="<?=$this->name?>" class="multibuttons" style="left:<?=$this->left?>px;top:<?=$this->top?>px">
+	<ul class="multibuttonslist">
+	<?php for ($i = 0; $i < $numButtons; $i++): $b = $this->buttons[$i]; ?>
+		<li style="<?php if ($this->isHoriz) echo 'float:left';?>">
+			<a id="<?=$this->name . $i?>" style="width:<?=$this->width?>px;height:<?=$this->height?>px"
+			   <?php if (array_key_exists("click", $b))     echo 'onclick="'   . $b['click'] . '"'?>
+			   <?php if (array_key_exists("mousedown", $b)) echo 'onmousedown="' . $b['mousedown'] . '"'?>
+			   <?php if (array_key_exists("mouseup", $b))   echo 'onmouseup="'   . $b['mouseup'] . '"'?>
+			   class="plaina multibutton <?php if ($i == 0 && $this->isHoriz) echo 'ui-corner-left';
+				                               else if ($i == 0) echo 'ui-corner-top';
+				                               else if ($i == $numButtons - 1 && $this->isHoriz) echo 'ui-corner-right';
+				                               else if ($i == $numButtons -1) echo 'ui-corner-bottom' ?>">
+				<img alt="<?$this->name?>" src="<?=$this->baseUrl($b['icon'])?>" />
+				<br />
+				<?=$b['title']?>
+			</a>
+			<?php if (array_key_exists('tooltip', $b)):?>
+			<span id="<?=$this->name . $i?>tooltip" class="multibuttontooltip ui-corner-all">
+				<?=$b['tooltip']?>
+			</span>
+			<?php endif; ?>
+		</li>
+	<?php endfor; ?>
+	</ul>
+</div>
+
+<script type="text/javascript">
+
+<?=$this->name?>TTStates = new Object;
+
+<?php for ($i = 0; $i < $numButtons; $i++): $b = $this->buttons[$i]; ?>
+<?php if (array_key_exists('tooltip', $b)): ?>
+$("#<?=$this->name . $i?>").hover(
+	function() {
+		<?=$this->name?>TTStates["<?=$this->name . $i?>tooltip"] = true;
+		setTimeout("loadMultiButtonTooltip('<?=$this->name . $i?>tooltip', <?=$this->name?>TTStates)", 1000);
+	},
+	function() {
+		if (<?=$this->name?>TTStates["<?=$this->name . $i?>tooltip"])
+		{
+			$("#<?=$this->name . $i?>tooltip").fadeOut();
+		}
+		<?=$this->name?>TTStates["<?=$this->name . $i?>tooltip"] = false;
+	}
+);
+<?php endif; ?>
+
+<?php endfor; ?>
+</script>

@@ -36,17 +36,128 @@
  * @date 21st February 2010
  */
 
+$this->headScript()->appendFile($this->baseUrl('uts/fpga/fpga.js'));
+
 $cam = new Sahara_Session_Element_Cameras($this->rigClient);
 $cam->setDraggable(false);
 
-$input = new Sahara_Session_Element_BitFieldButtonArray($this->rigClient, 'datainput');
+/* Code upload buttons. */
+$code = new Sahara_Session_Element_MultiButtons($this->rigClient, 'codebutton',
+    array(
+        array(
+        	'title' => 'Program Bitstream',
+            'tooltip' => 'Program the FPGA with an uploaded bitstream file.',
+			'icon' => '/uts/fpga/images/run.png'
+        ),
+        array(
+        	'title' => 'Program Demo',
+            'tooltip' => 'Program the FPGA with a demonstration program (binary to decimal converter).',
+            'icon' => '/uts/fpga/images/rundemo.png',
+            'click' => "performPrimitiveJSON('FPGAController', 'loadDemo', null, null, 'Loading demo...')"
+        )
+    ),
+    array(
+        'orientation' => Sahara_Session_Element_MultiButtons::VERTICAL,
+        'top'         => 100,
+        'left'        => 65,
+        'width'       => 70,
+        'height'      => 70
+    )
+);
+
+/* Reset buttons. */
+$reset = new Sahara_Session_Element_MultiButtons($this->rigClient, 'reset',
+    array(
+        array(
+        	'title' => 'Soft Reset',
+            'tooltip' => 'Puts FPGA in FPGA mode, then back to LOCK mode to soft reset the FPGA. IO is preserved.',
+            'icon' => '/uts/fpga/images/softreset.png',
+            'click' => "performPrimitiveJSON('FPGAController', 'softReset', null, null, null)"
+        ),
+        array(
+        	'title' => 'Hard Reset',
+        	'tooltip' => 'Power cycles the FPGA. IO is not preserved.',
+            'icon' => '/uts/fpga/images/hardreset.png',
+            'click' => "performPrimitiveJSON('FPGAController', 'softReset', null, resetIO, 'Resetting...')"
+        )
+    ),
+    array(
+        'orientation' => Sahara_Session_Element_MultiButtons::VERTICAL,
+        'top'         => 100,
+        'left'        => 525,
+        'width'       => 70,
+        'height'      => 70
+    )
+);
+
+/* IO buttons. */
+$io = new Sahara_Session_Element_MultiButtons($this->rigClient, 'io',
+    array(
+        array(
+        	'title' => '7',
+        	'icon' => '/uts/fpga/images/pushbuttonup.png',
+            'mousedown' => 'setIO(0)',
+			'mouseup' => 'setIO(0)'
+        ),
+        array(
+        	'title' => '6',
+        	'icon' => '/uts/fpga/images/pushbuttonup.png',
+            'mousedown' => 'setIO(1)',
+			'mouseup' => 'setIO(1)'
+        ),
+        array(
+        	'title' => '5',
+            'icon'  => '/uts/fpga/images/switchup.png',
+            'click' => 'setIO(2)'
+        ),
+        array(
+        	'title' => '4',
+            'icon'  => '/uts/fpga/images/switchup.png',
+            'click' => 'setIO(3)'
+        ),
+        array(
+        	'title' => '3',
+            'icon'  => '/uts/fpga/images/switchup.png',
+            'click' => 'setIO(4)'
+        ),
+        array(
+        	'title' => '2',
+            'icon'  => '/uts/fpga/images/switchup.png',
+            'click' => 'setIO(5)'
+        ),
+        array(
+        	'title' => '1',
+            'icon'  => '/uts/fpga/images/switchup.png',
+            'click' => 'setIO(6)'
+        ),
+        array(
+        	'title' => '0',
+            'icon'  => '/uts/fpga/images/switchup.png',
+            'click' => 'setIO(7)'
+        )
+    ),
+    array(
+        'orientation' => Sahara_Session_Element_MultiButtons::HORIZONTAL,
+        'top'         => 380,
+        'left'        => 100,
+        'width'       => 45,
+        'height'      => 60
+    )
+);
 ?>
 
 <!-- Cameras -->
 <?=$cam?>
 
-<div id="datainputcontainer" class="overlayelementhide" style="margin:-30px auto 1000px;width:400px;">
-	<?=$input?>
+<?=$code?>
+<?=$reset?>
+<?=$io?>
+
+<script type="text/javascript">
+$(document).ready(function() {
+	initIO('PPSSSSSS');
+});
+</script>
+
+<div style="height:120px">
 </div>
-
-
