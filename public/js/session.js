@@ -35,7 +35,7 @@
  * @date 6th April 2010
  */
 
-function performPrimitiveJSON(controller, action, params, callback, overlay)
+function performPrimitiveJSON(controller, action, params, callback, overlay, clearOverlay)
 {
 	if (overlay != null)
 	{
@@ -52,6 +52,11 @@ function performPrimitiveJSON(controller, action, params, callback, overlay)
 		);
 	}
 	
+	if (clearOverlay == null)
+	{
+		clearOverlay = true;
+	}
+	
 	var primRequest = "/primitive/json/pc/" + controller + "/pa/" + action;
 	if (params != null)
 	{
@@ -66,10 +71,9 @@ function performPrimitiveJSON(controller, action, params, callback, overlay)
 		{},
 		function (data)
 		{
-			if (overlay != null)
+			if (overlay != null && clearOverlay)
 			{
-				$(".primcalloverlay").remove();
-				$(".primcalloverlaydialog").remove();
+				performPrimitiveClearOverlay();
 			}
 			
 			if (callback != null)
@@ -78,6 +82,12 @@ function performPrimitiveJSON(controller, action, params, callback, overlay)
 			}
 		}
 	);
+}
+
+function performPrimitiveClearOverlay()
+{
+	$(".primcalloverlay").remove();
+	$(".primcalloverlaydialog").remove();
 }
 
 function updateSession()

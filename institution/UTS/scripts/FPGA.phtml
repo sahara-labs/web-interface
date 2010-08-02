@@ -53,7 +53,7 @@ $code = new Sahara_Session_Element_MultiButtons($this->rigClient, 'codebutton',
         	'title' => 'Program Demo',
             'tooltip' => 'Program the FPGA with a demonstration program (binary to decimal converter).',
             'icon' => '/uts/fpga/images/rundemo.png',
-            'click' => "performPrimitiveJSON('FPGAController', 'loadDemo', null, null, 'Loading demo...')"
+            'click' => "performPrimitiveJSON('FPGAController', 'loadDemo', null, checkDemoLoadedStart, 'Loading demo...', false)"
         )
     ),
     array(
@@ -72,13 +72,13 @@ $reset = new Sahara_Session_Element_MultiButtons($this->rigClient, 'reset',
         	'title' => 'Soft Reset',
             'tooltip' => 'Puts FPGA in FPGA mode, then back to LOCK mode to soft reset the FPGA. IO is preserved.',
             'icon' => '/uts/fpga/images/softreset.png',
-            'click' => "performPrimitiveJSON('FPGAController', 'softReset', null, null, null)"
+            'click' => "performPrimitiveJSON('FPGAController', 'softReset')"
         ),
         array(
         	'title' => 'Hard Reset',
         	'tooltip' => 'Power cycles the FPGA. IO is not preserved.',
             'icon' => '/uts/fpga/images/hardreset.png',
-            'click' => "performPrimitiveJSON('FPGAController', 'softReset', null, resetIO, 'Resetting...')"
+            'click' => "performPrimitiveJSON('FPGAController', 'hardReset', null, resetIO, 'Resetting...')"
         )
     ),
     array(
@@ -138,8 +138,8 @@ $io = new Sahara_Session_Element_MultiButtons($this->rigClient, 'io',
     ),
     array(
         'orientation' => Sahara_Session_Element_MultiButtons::HORIZONTAL,
-        'top'         => 380,
-        'left'        => 100,
+        'top'         => 420,
+        'left'        => 110,
         'width'       => 45,
         'height'      => 60
     )

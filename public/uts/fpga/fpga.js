@@ -40,7 +40,7 @@ var ty = new Array(8);
 
 function initIO(types)
 {
-	performPrimitiveJSON('FPGAController', 'setDataByte', null, restoreIO, null);
+	performPrimitiveJSON('FPGAController', 'getDataByte', null, restoreIO, null);
 	
 	for (var i = 0; i < 8; i++)
 	{
@@ -54,7 +54,7 @@ function restoreIO(resp)
 {
 	if (typeof resp != "object") alert(resp);
 	
-	var val = res.data;
+	var val = resp.value;
 	
 	for (var i = 0; i < 8; i++)
 	{
@@ -90,7 +90,46 @@ function setIO(i)
 	
 	var params = new Object;
 	params.value = val;
-	performPrimitiveJSON('FPGAController', 'setDataByte', params, null, null);
+	performPrimitiveJSON('FPGAController', 'setDataByte', params);
+}
+
+function checkDemoLoadedStart()
+{
+	setTimeout(checkDemoLoaded, 2000);
+}
+
+function checkDemoLoaded()
+{
+	performPrimitiveJSON('FPGAController', 'isDemoUploaded', null, checkDemoLoadedCallback);
+}
+
+function checkDemoLoadedCallback(data)
+{
+	if (typeof data != "object")
+	{
+		alert(data);
+	}
+	
+	for (var i in data)
+	{
+		if (i == 'name')
+		{
+			setTimeout(checkDemoLoaded, 2000);
+			return;
+		}
+		
+		if (data[i].name != "uploaded") continue;
+		
+		if (data[i].value == 'true')
+		{
+			performPrimitiveClearOverlay();	
+		}
+		else
+		{
+			setTimeout(checkDemoLoaded, 2000);
+		}
+		break;
+	}
 }
 
 function resetIO()
