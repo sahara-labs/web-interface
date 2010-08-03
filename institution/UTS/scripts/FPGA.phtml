@@ -45,15 +45,16 @@ $cam->setDraggable(false);
 $code = new Sahara_Session_Element_MultiButtons($this->rigClient, 'codebutton',
     array(
         array(
-        	'title' => 'Program Bitstream',
+        	'title' => 'Program FPGA',
             'tooltip' => 'Program the FPGA with an uploaded bitstream file.',
-			'icon' => '/uts/fpga/images/run.png'
+			'icon' => '/uts/fpga/images/run.png',
+            'click' => "$('#bitstreamupload').dialog('open');"
         ),
         array(
         	'title' => 'Program Demo',
             'tooltip' => 'Program the FPGA with a demonstration program (binary to decimal converter).',
             'icon' => '/uts/fpga/images/rundemo.png',
-            'click' => "performPrimitiveJSON('FPGAController', 'loadDemo', null, checkDemoLoadedStart, 'Loading demo...', false)"
+            'click' => "performPrimitiveJSON('FPGAAuxController', 'loadDemo', null, checkDemoLoadedStart, 'Loading demo...', false)"
         )
     ),
     array(
@@ -138,23 +139,54 @@ $io = new Sahara_Session_Element_MultiButtons($this->rigClient, 'io',
     ),
     array(
         'orientation' => Sahara_Session_Element_MultiButtons::HORIZONTAL,
-        'top'         => 420,
+        'top'         => 390,
         'left'        => 110,
         'width'       => 45,
         'height'      => 60
     )
 );
+
+echo $cam;
+echo $code;
+echo $reset;
+echo $io;
 ?>
 
-<!-- Cameras -->
-<?=$cam?>
+<div id="bitstreamupload">
+Please select the JTAG Bitstream (.bit) file you wish to upload.
+<ul>
+	<li>Compressed bitstreams in .zip and .bit.gz format are also acceptable.</li>
+	<li>Bitstreams must be less than 2Mb in size (2097152 bytes).</li>
+</ul>
 
-<?=$code?>
-<?=$reset?>
-<?=$io?>
+<form id="bitstreamuploadform" method="post" enctype="multipart/form-data"
+	  action="<?=$this->baseUrl('/batch/torigclient')?>">
+	<!-- <input type="hidden" name="MAX_FILE_SIZE" value="2097152" /> -->
+	<input name="file" id="file" size="27" type="file" />
+	<br />
+	<input name="submit" type="submit" />
+	<!-- <iframe id="upload_target" name="upload_target" src="" style="width:0;height:0;border:0px;"></iframe> -->
+</form>
+</div>
 
 <script type="text/javascript">
 $(document).ready(function() {
+
+	$("#bitstreamupload").dialog({
+		autoOpen: false,
+		buttons: {
+			'Submit': function() {
+			},
+			'Cancel': function() {
+				$(this).dialog('close');
+			}
+		},
+		modal: true,
+		title: 'Program FPGA',
+		width: 400,
+		height: 350
+	});
+
 	initIO('PPSSSSSS');
 });
 </script>
