@@ -52,7 +52,10 @@ function initIO(types)
 
 function restoreIO(resp)
 {
-	if (typeof resp != "object") alert(resp);
+	if (typeof resp != "object")
+	{
+		// alert(resp);
+	}
 	
 	var val = resp.value;
 	
@@ -100,35 +103,23 @@ function checkDemoLoadedStart()
 
 function checkDemoLoaded()
 {
-	performPrimitiveJSON('FPGAController', 'isDemoUploaded', null, checkDemoLoadedCallback);
+	performPrimitiveJSON('FPGAAuxController', 'isDemoUploaded', null, checkDemoLoadedCallback);
 }
 
 function checkDemoLoadedCallback(data)
 {
 	if (typeof data != "object")
 	{
-		alert(data);
+		// alert(data);
 	}
-	
-	for (var i in data)
+		
+	if (data.value == 'true')
 	{
-		if (i == 'name')
-		{
-			setTimeout(checkDemoLoaded, 2000);
-			return;
-		}
-		
-		if (data[i].name != "uploaded") continue;
-		
-		if (data[i].value == 'true')
-		{
-			performPrimitiveClearOverlay();	
-		}
-		else
-		{
-			setTimeout(checkDemoLoaded, 2000);
-		}
-		break;
+		performPrimitiveClearOverlay();	
+	}
+	else
+	{
+		setTimeout(checkDemoLoaded, 2000);
 	}
 }
 

@@ -61,7 +61,115 @@ class BatchController extends Sahara_Controller_Action_Acl
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout()->disableLayout();
 
-        echo 'Not yet implemented.';
+        $response = Sahara_Soap::getSchedServerSessionClient()->getSessionInformation(array(
+            'userQName' => $this->_auth->getIdentity()
+        ));
+
+        if (!$response->isInSession)
+        {
+            /* Not in session, so unable to determine the rig clients address. */
+            $error = array(
+                'success' => 'false',
+                'error' => array(
+                    'code' => -1,
+                    'operation' => 'Batch control request',
+                    'reason' => 'not in session'
+                )
+            );
+            echo $this->view->json($error);
+            return;
+        }
+
+        $adapter = new Zend_File_Transfer_Adapter_Http();
+
+        $dest = $this->_config->upload->dir;
+        if (!$dest)
+        {
+            $this->_logger->error("Batch download directory not configured, 'upload.dir' property.");
+            throw new Exception("Batch download directory not configured.");
+        }
+
+        $adapter->setDestination($dest)
+                ->addValidator('Count', false, 1);
+
+        /* Size file validator. */
+        if ($size = $this->_config->upload->size)
+        {
+             $adapter->addValidator('FilesSize', false, $size);
+        }
+
+        /* Extension file validator. */
+        if ($ext = $this->_config->upload->extension)
+        {
+             $adapter->addValidator('Extension', false, $ext);
+        }
+
+        if (!$adapter->receive())
+        {
+            $error = 'File validation has failed.';
+            foreach ($adapter->getMessages() as $k => $v)
+            {
+                switch ($k)
+                {
+                    case 'fileExtensionFalse':
+                        $error .= ' The file extension was incorrect.';
+                        break;
+                    case 'fileUploadErrorIniSize':
+                    case 'fileUploadErrorFormSize':
+                        $error .= ' The file size was too large.';
+                        break;
+                    default:
+                        $error .= ' ' . $v;
+                        break;
+                }
+            }
+
+            echo $this->view->json(array(
+                'success' => false,
+                'error' => array(
+                    'code' => -10,
+                    'operation' => 'Batch file upload',
+                    'reason' => $error
+                )
+            ));
+            return;
+        }
+
+        $file = $adapter->getFileName();
+        list($ns, $name) = explode(':', $this->_auth->getIdentity());
+        $request = array(
+            'requestor' => $name,
+            'fileName'  => basename($file),
+            'batchFile' => file_get_contents($file)
+        );
+
+        if (!$request['batchFile'])
+        {
+            $this->_logger->warn("Failed to read batch file $file.");
+             echo $this->view->json(array(
+                'success' => false,
+                'error' => array(
+                    'code' => -10,
+                    'operation' => 'Batch file upload',
+                    'reason' => 'Failed to read batch file'
+                )
+            ));
+            return;
+        }
+
+        unlink($file);
+
+        try
+        {
+            $rigClient = new Sahara_Soap($response->contactURL . '?wsdl');
+            echo $this->view->json($rigClient->performBatchControl($request));
+        }
+        catch (Exception $ex)
+        {
+            $this->_logger->error("Soap error bcalling batch 'performPrimitiveControl'. Message: "
+            . $ex->getMessage() . ', code: ' . $ex->getCode() . '.');
+            echo $this->view->json($ex);
+        }
     }
 
     /**
@@ -72,7 +180,29 @@ class BatchController extends Sahara_Controller_Action_Acl
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout()->disableLayout();
 
-        echo 'Not yet implemented.';
+        $response = Sahara_Soap::getSchedServerSessionClient()->getSessionInformation(array(
+            'userQName' => $this->_auth->getIdentity()
+        ));
+
+        if (!$response->isInSession)
+        {
+            /* Not in session, so unable to determine the rig clients address. */
+            $error = array(
+                'success' => 'false',
+                'error' => array(
+                    'code' => -1,
+                    'operation' => 'Batch status request',
+                    'reason' => 'not in session'
+                )
+            );
+            echo $this->view->json($error);
+            return;
+        }
+
+        $rigClient = new Sahara_Soap($response->contactURL . '?wsdl');
+        echo $this->view->json($rigClient->getBatchStatus(
+        ));
+        return;
     }
 
     /**
@@ -83,6 +213,26 @@ class BatchController extends Sahara_Controller_Action_Acl
         // TODO batch terminate
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout()->disableLayout();
+
+        $response = Sahara_Soap::getSchedServerSessionClient()->getSessionInformation(array(
+            'userQName' => $this->_auth->getIdentity()
+        ));
+
+        if (!$response->isInSession)
+        {
+            /* Not in session, so unable to determine the rig clients address. */
+            $error = array(
+                'success' => 'false',
+                'error' => array(
+                    'code' => -1,
+                    'operation' => 'Batch control request',
+                    'reason' => 'not in session'
+                )
+            );
+            echo $this->view->json($error);
+            return;
+        }
+
 
         echo 'Not yet implemented.';
     }
