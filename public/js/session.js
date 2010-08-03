@@ -39,10 +39,11 @@ function performPrimitiveJSON(controller, action, params, callback, overlay, cle
 {
 	if (overlay != null)
 	{
-		var width = $(document).width();
-		var height = $(document).height();
+		var width = $("body").width();
+		var height = $("body").height();
+		
 		$("body").append(
-			'<div class="ui-widget-overlay primcalloverlay" style="width:' + width + 'px;height=:' + height + 'px;">' +
+			'<div class="ui-widget-overlay primcalloverlay" style="width:' + width + 'px;height:' + height + 'px">' +
 			'</div>' +
 			'<div class="primcalloverlaydialog ui-corner-all" style="left:' + Math.floor(width / 2 - 125) + 'px;top:' + 
 					+ Math.floor(height / 2 - 40) + 'px">' +
