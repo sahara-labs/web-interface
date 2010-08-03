@@ -74,7 +74,8 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
     								  'queuecancel', 'queueupdate',
                                       'sessionfinish', 'sessioninfo',
                                       'sessionprimitivebridge', 'sessionattributebridge',
-                                      'primitivejson', 'primitiveecho', 'primitivefile'
+                                      'primitivejson', 'primitiveecho', 'primitivefile',
+                                      'batchtorigclient', 'batchstatus', 'batchterminate'
         					    );
 
     /**
