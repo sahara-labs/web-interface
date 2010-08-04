@@ -55,6 +55,14 @@ class BatchController extends Sahara_Controller_Action_Acl
     /**
      * Uploads a batch file to the rig client. The user must already been to be
      * assigned to a rig.
+     * <br />
+     * Unlike the other functions in this controller, the response is not JSON but
+     * a text string with the format:
+     * <ul>
+     *  <li>true - Succeeding uploading and invoking batch control.</li>
+     *  <li>false; &lt;error reason;&gt; - Failed uploading or invoking batch
+     *  control with a provided reason.</li>
+     * </ul>
 	 */
     public function torigclientAction()
     {
@@ -76,7 +84,7 @@ class BatchController extends Sahara_Controller_Action_Acl
                     'reason' => 'not in session'
                 )
             );
-            echo $this->view->json($error);
+            echo "error; Not in session.";
             return;
         }
 
@@ -124,14 +132,7 @@ class BatchController extends Sahara_Controller_Action_Acl
                 }
             }
 
-            echo $this->view->json(array(
-                'success' => false,
-                'error' => array(
-                    'code' => -2,
-                    'operation' => 'Batch file upload',
-                    'reason' => $error
-                )
-            ));
+            echo "error; $error";
             return;
         }
 
@@ -146,14 +147,7 @@ class BatchController extends Sahara_Controller_Action_Acl
         if (!$request['batchFile'])
         {
             $this->_logger->warn("Failed to read batch file $file.");
-             echo $this->view->json(array(
-                'success' => false,
-                'error' => array(
-                    'code' => -3,
-                    'operation' => 'Batch file upload',
-                    'reason' => 'Failed to read batch file'
-                )
-            ));
+            echo 'false; Upload to read batch file.';
             return;
         }
 
@@ -162,20 +156,15 @@ class BatchController extends Sahara_Controller_Action_Acl
         try
         {
             $rigClient = new Sahara_Soap($response->contactURL . '?wsdl');
-            echo $this->view->json($rigClient->performBatchControl($request));
+            header('Content-Type', 'text/plain');
+            $response = $rigClient->performBatchControl($request);
+            echo $response->success ? 'true' : 'false; ' . $response->error->reason;
         }
         catch (Exception $ex)
         {
             $this->_logger->error("Soap error calling batch 'performPrimitiveControl'. Message: "
             . $ex->getMessage() . ', code: ' . $ex->getCode() . '.');
-            echo $this->view->json(array(
-                'success' => false,
-                'error' => array(
-                    'code' => -4,
-                    'operation' => 'Batch file upload',
-                    'reason' => 'Exception invoking batch control, message: ' . $ex->getMessage()
-                )
-            ));
+            echo 'false; ' . $ex->getMessage();
         }
     }
 
