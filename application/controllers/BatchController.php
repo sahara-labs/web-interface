@@ -127,7 +127,7 @@ class BatchController extends Sahara_Controller_Action_Acl
             echo $this->view->json(array(
                 'success' => false,
                 'error' => array(
-                    'code' => -10,
+                    'code' => -2,
                     'operation' => 'Batch file upload',
                     'reason' => $error
                 )
@@ -149,7 +149,7 @@ class BatchController extends Sahara_Controller_Action_Acl
              echo $this->view->json(array(
                 'success' => false,
                 'error' => array(
-                    'code' => -10,
+                    'code' => -3,
                     'operation' => 'Batch file upload',
                     'reason' => 'Failed to read batch file'
                 )
@@ -166,9 +166,16 @@ class BatchController extends Sahara_Controller_Action_Acl
         }
         catch (Exception $ex)
         {
-            $this->_logger->error("Soap error bcalling batch 'performPrimitiveControl'. Message: "
+            $this->_logger->error("Soap error calling batch 'performPrimitiveControl'. Message: "
             . $ex->getMessage() . ', code: ' . $ex->getCode() . '.');
-            echo $this->view->json($ex);
+            echo $this->view->json(array(
+                'success' => false,
+                'error' => array(
+                    'code' => -4,
+                    'operation' => 'Batch file upload',
+                    'reason' => 'Exception invoking batch control, message: ' . $ex->getMessage()
+                )
+            ));
         }
     }
 
@@ -199,18 +206,34 @@ class BatchController extends Sahara_Controller_Action_Acl
             return;
         }
 
-        $rigClient = new Sahara_Soap($response->contactURL . '?wsdl');
-        echo $this->view->json($rigClient->getBatchStatus(
-        ));
-        return;
+        try
+        {
+            list($ns, $name) = explode(':', $this->_auth->getIdentity());
+            $rigClient = new Sahara_Soap($response->contactURL . '?wsdl');
+            echo $this->view->json($rigClient->getBatchControlStatus(array(
+                'requestor' => $name
+            )));
+        }
+        catch (Exception $ex)
+        {
+            $this->_logger->error("Soap error calling batch 'getBatchControlStatus'. Message: "
+                    . $ex->getMessage() . ', code: ' . $ex->getCode() . '.');
+            echo $this->view->json(array(
+                'success' => false,
+                'error' => array(
+                    'code' => -4,
+                    'operation' => 'Batch status request',
+                    'reason' => 'Exception getting batch status, message: ' . $ex->getMessage()
+                )
+            ));
+        }
     }
 
     /**
      * Terminates a running batch invocation.
      */
-    public function terminateAction()
+    public function abortAction()
     {
-        // TODO batch terminate
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout()->disableLayout();
 
@@ -225,7 +248,7 @@ class BatchController extends Sahara_Controller_Action_Acl
                 'success' => 'false',
                 'error' => array(
                     'code' => -1,
-                    'operation' => 'Batch control request',
+                    'operation' => 'Batch abort request',
                     'reason' => 'not in session'
                 )
             );
@@ -233,7 +256,26 @@ class BatchController extends Sahara_Controller_Action_Acl
             return;
         }
 
-
-        echo 'Not yet implemented.';
+        try
+        {
+            list($ns, $name) = explode(':', $this->_auth->getIdentity());
+            $rigClient = new Sahara_Soap($response->contactURL . '?wsdl');
+            echo $this->view->json($rigClient->abortBatchControl(array(
+                'requestor' => $name
+            )));
+        }
+        catch (Exception $ex)
+        {
+            $this->_logger->error("Soap error calling batch 'abortBatchControl'. Message: "
+                    . $ex->getMessage() . ', code: ' . $ex->getCode() . '.');
+            echo $this->view->json(array(
+                'success' => false,
+                'error' => array(
+                    'code' => -4,
+                    'operation' => 'Batch abort request',
+                    'reason' => 'Exception aborting batch, message: ' . $ex->getMessage()
+                )
+            ));
+        }
     }
 }

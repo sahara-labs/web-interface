@@ -70,7 +70,7 @@ class Sahara_Acl extends Zend_Acl
                                   'session' => array('index', 'info', 'finish', 'primitivebridge',
                                                      'attributebridge'),
                                   'primitive' => array('json', 'echo', 'file'),
-                                  'batch' => array('upload', 'torigclient', 'status', 'terminate')
+                                  'batch' => array('upload', 'torigclient', 'status', 'abort')
                             );
 
     /** @var assoc array Pages an academic user may access. */
