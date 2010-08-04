@@ -50,7 +50,8 @@ $numButtons = count($this->buttons);
 			   <?php if (array_key_exists("click", $b))     echo 'onclick="'   . $b['click'] . '"'?>
 			   <?php if (array_key_exists("mousedown", $b)) echo 'onmousedown="' . $b['mousedown'] . '"'?>
 			   <?php if (array_key_exists("mouseup", $b))   echo 'onmouseup="'   . $b['mouseup'] . '"'?>
-			   class="plaina multibutton <?php if ($i == 0 && $this->isHoriz) echo 'ui-corner-left';
+			   class="plaina multibutton <?=$this->name?>class
+			   							 <?php if ($i == 0 && $this->isHoriz) echo 'ui-corner-left';
 				                               else if ($i == 0) echo 'ui-corner-top';
 				                               else if ($i == $numButtons - 1 && $this->isHoriz) echo 'ui-corner-right';
 				                               else if ($i == $numButtons -1) echo 'ui-corner-bottom' ?>">
