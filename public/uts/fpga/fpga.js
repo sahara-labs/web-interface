@@ -56,7 +56,6 @@ function uploadBitStream()
 				+ Math.floor(height / 2 - 40) + 'px">' +
 			'<img src="/images/ajax-loading.gif" alt="Loading" />' +
 			'<h3>Programming FPGA...</h3>' +
-			'Please do not refresh.' +
 		'</div>'
 	);
 	
@@ -99,7 +98,6 @@ function checkUploadStatus()
 		'/batch/status',
 		null,
 		function (data) {
-			alert(data.state);
 			if (typeof data != "object" || data.state == undefined)
 			{
 				addFPGAMessage('Failed programming FPGA.');	
