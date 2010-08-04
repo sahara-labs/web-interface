@@ -72,13 +72,13 @@ $reset = new Sahara_Session_Element_MultiButtons($this->rigClient, 'reset',
     array(
         array(
         	'title' => 'Soft Reset',
-            'tooltip' => 'Puts FPGA in FPGA mode, then back to LOCK mode to soft reset the FPGA. IO is preserved.',
+            'tooltip' => 'Soft resets back to un-programmed state. This will leave switch state untouched.',
             'icon' => '/uts/fpga/images/softreset.png',
             'click' => "disableFPGAButtons();performPrimitiveJSON('FPGAController', 'softReset', null, softResetCallback)"
         ),
         array(
         	'title' => 'Hard Reset',
-        	'tooltip' => 'Power cycles the FPGA. IO is not preserved.',
+        	'tooltip' => 'Power cycles the FPGA. This will clear switch state.',
             'icon' => '/uts/fpga/images/hardreset.png',
             'click' => "disableFPGAButtons();performPrimitiveJSON('FPGAController', 'hardReset', null, hardResetCallback, 'Resetting...')"
         )
@@ -175,6 +175,8 @@ echo $io;
 	<ul id="bitstreamuploadinfo" >
 		<li>Compressed bitstreams in .zip and .bit.gz format are also acceptable.</li>
 		<li>Bitstreams must be less than 2Mb in size (2097152 bytes).</li>
+		<li>Do not refresh the page when uploading a bitstream because programming the
+		FPGA will fail.</li>
 	</ul>
 
 	<div id="bitstreamuploaderror" class="ui-state-error ui-corner-all" style="display:none">
@@ -188,7 +190,7 @@ echo $io;
 		<form id="bitstreamuploadform" method="post" enctype="multipart/form-data"
 		  		action="<?=$this->baseUrl('/batch/torigclient')?>" target="uploadtarget">
 			<input type="hidden" name="MAX_FILE_SIZE" value="2097152" />
-			<input name="file" id="file" size="27" type="file" />
+			<input id="bitstreamuploadformfile" name="file" id="file" size="27" type="file" />
 		</form>
 	</div>
 </div>
@@ -201,7 +203,7 @@ $(document).ready(function() {
 	$("#bitstreamupload").dialog({
 		autoOpen: false,
 		buttons: {
-			'Submit': function() {
+			'Program': function() {
 				uploadBitStream();
 			},
 			'Cancel': function() {
@@ -212,7 +214,6 @@ $(document).ready(function() {
 		modal: true,
 		title: 'Program FPGA',
 		width: 400,
-		height: 300,
 		resizable: false
 	});
 

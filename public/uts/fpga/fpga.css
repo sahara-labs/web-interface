@@ -47,7 +47,7 @@
 
 #bitstreamuploadformdiv {
 	text-align: center;
-	padding: 20px;
+	padding: 10px;
 }
 
 #uploadtarget {
@@ -101,5 +101,9 @@
 	-webkit-box-shadow: 0 0 10px black; 
 	box-shadow: 0 0 10px black; 
 	filter: progid:DXImageTransform.Microsoft.Shadow(color=#969696, Strength=4); 
+}
+
+#bitstreamuploaderror p {
+	padding: 5px;
 }
 	

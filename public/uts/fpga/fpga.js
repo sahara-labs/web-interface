@@ -43,8 +43,11 @@ function uploadBitStream()
 	var width = $("body").width();
 	var height = $("body").height();
 	
+	var file = $("#bitstreamuploadformfile").val();
+	
+	
 	disableFPGAButtons();
-	addFPGAMessage("Started bitstream upload.");
+	addFPGAMessage("Started bitstream of file " + file + ".");
 	$("#bitstreamuploadform").submit();
 	
 	$("#bitstreamupload").dialog('close');
