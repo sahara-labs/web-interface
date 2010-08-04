@@ -38,6 +38,101 @@
 var io = new Array(8);
 var ty = new Array(8);
 
+function uploadBitStream()
+{
+	var width = $("body").width();
+	var height = $("body").height();
+	
+	disableFPGAButtons();
+	addFPGAMessage("Started bitstream upload.");
+	$("#bitstreamuploadform").submit();
+	
+	$("#bitstreamupload").dialog('close');
+
+	$("body").append(
+		'<div class="ui-widget-overlay bitstreamuploadoverlay" style="width:' + width + 'px;height:' + height + 'px">' +
+		'</div>' +
+		'<div class="bitstreamuploadoverlaydialog ui-corner-all" style="left:' + Math.floor(width / 2 - 125) + 'px;top:' + 
+				+ Math.floor(height / 2 - 40) + 'px">' +
+			'<img src="/images/ajax-loading.gif" alt="Loading" />' +
+			'<h3>Programming FPGA...</h3>' +
+			'Please do not refresh.' +
+		'</div>'
+	);
+	
+	setTimeout(checkBitstreamPost, 2000);	
+}
+
+function checkBitstreamPost()
+{
+	var response = $("#uploadtarget").contents().text();
+	
+	if (response == undefined || response == "") // Still waiting for the post response
+	{
+		setTimeout(checkBitstreamPost, 2000);
+		return;
+	}
+	else if (response == "true") // Correct response
+	{
+		setTimeout(checkUploadStatus, 2000);
+	}
+	else // Failed response
+	{
+		addFPGAMessage('Failed programming FPGA.');
+		
+		enableFPGAButtons();
+		clearBitstreamUploadOverlay();
+		
+		$("#bitstreamuploaderrormessage").html(response.substr(response.indexOf(';') + 2));
+		$("#bitstreamuploaderror").css('display', 'block');
+		$("#bitstreamupload").dialog('open');
+	}
+}
+
+function checkUploadStatus()
+{
+	/* Getting this far means the upload was successful. */
+	$("#bitstreamuploaderrormessage").empty();
+	$("#bitstreamuploaderror").css('display', 'none');
+	
+	$.get(
+		'/batch/status',
+		null,
+		function (data) {
+			alert(data.state);
+			if (typeof data != "object" || data.state == undefined)
+			{
+				addFPGAMessage('Failed programming FPGA.');	
+				enableFPGAButtons();
+				clearBitstreamUploadOverlay();
+			}
+			
+			if (data.state == 'IN_PROGRESS') // Still programming
+			{
+				setTimeout(checkUploadStatus, 2000);
+			}
+			else if (data.state == 'FAILED')
+			{
+				addFPGAMessage('Failed programming FPGA.');	
+				enableFPGAButtons();
+				clearBitstreamUploadOverlay();
+			}
+			else if (data.state == 'CLEAR' || data.state == 'COMPLETE')
+			{
+				addFPGAMessage('Finished programming FPGA.');
+				enableFPGAButtons();
+				clearBitstreamUploadOverlay();
+			}
+		}
+	);
+}
+
+function clearBitstreamUploadOverlay()
+{
+	$(".bitstreamuploadoverlaydialog").remove();
+	$(".bitstreamuploadoverlay").remove();
+}
+
 function initIO(types)
 {
 	performPrimitiveJSON('FPGAController', 'getDataByte', null, restoreIO, null);
@@ -52,10 +147,7 @@ function initIO(types)
 
 function restoreIO(resp)
 {
-	if (typeof resp != "object")
-	{
-		// alert(resp);
-	}
+	if (typeof resp != "object") return;
 	
 	var val = resp.value;
 	
@@ -94,6 +186,7 @@ function setIO(i)
 	var params = new Object;
 	params.value = val;
 	performPrimitiveJSON('FPGAController', 'setDataByte', params);
+	addFPGAMessage("Input changed to " + val + ".");
 }
 
 function checkDemoLoadedStart()
@@ -110,17 +203,37 @@ function checkDemoLoadedCallback(data)
 {
 	if (typeof data != "object")
 	{
-		// alert(data);
+		performPrimitiveClearOverlay();
+		enableFPGAButtons();
+		addFPGAMessage("Loading demonstration program has failed.");
+		return;
 	}
 		
 	if (data.value == 'true')
 	{
-		performPrimitiveClearOverlay();	
+		performPrimitiveClearOverlay();
+		enableFPGAButtons();
+		addFPGAMessage("Finished loading demonstration program.");
+		
 	}
 	else
 	{
 		setTimeout(checkDemoLoaded, 2000);
 	}
+}
+
+function softResetCallback()
+{
+	addFPGAMessage("FPGA has been soft reset.");
+	enableFPGAButtons();
+}
+
+function hardResetCallback()
+{
+	addFPGAMessage("FPGA has been power cycled.");
+	resetIO();
+	addFPGAMessage("Input has been reset.");
+	enableFPGAButtons();
 }
 
 function resetIO()
@@ -131,4 +244,34 @@ function resetIO()
 		$("#io" + i).css('background-color', '#ED8686');
 		$("#io" + i + " img").attr('src', '/uts/fpga/images/' + (ty[i] == 'P' ? 'pushbuttonup.png' :'switchup.png'));
 	}
+}
+
+function enableFPGAButtons()
+{
+	$(".ioclass").addClass('ui-state-enabled')
+		.removeClass('ui-state-disabled');
+	
+	$(".resetclass").addClass('ui-state-enabled')
+		.removeClass('ui-state-disabled');
+	
+	$(".codebuttonclass").addClass('ui-state-enabled')
+		.removeClass('ui-state-disabled');
+
+}
+
+function disableFPGAButtons()
+{
+	$(".ioclass").addClass('ui-state-disabled')
+		.removeClass('ui-state-enabled');
+	
+	$(".resetclass").addClass('ui-state-disabled')
+		.removeClass('ui-state-enabled');
+	
+	$(".codebuttonclass").addClass('ui-state-disabled')
+		.removeClass('ui-state-enabled');
+}
+
+function addFPGAMessage(m)
+{
+	$("#operationpanellist").append("<li>" + m + "</li>");
 }
