@@ -1,0 +1,10 @@
+<?php
+$cams = new Sahara_Session_Element_Cameras($this->rigClient);
+$rdp = new Sahara_Session_Element_RemoteDesktop($this->rigClient, array(
+	'domain' => false
+));
+
+echo $rdp;
+echo $cams;
+
+?>
