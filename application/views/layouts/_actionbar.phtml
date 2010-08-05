@@ -47,6 +47,12 @@ switch ($this->userRole)
                     	'Yes' => 'location.href="' . $this->url(array('controller' => 'index', 'action' => 'logout')) . '";',
                         'No'  => '$(this).dialog("close");'
                     )),
+            'userhelp' => array('title' => 'Help', 'script' => '_userhelp.phtml',
+                    'icon' => $this->baseUrl('images/help.png'), 'alt' => 'help',
+                    'width' => 650,
+                    'buttons' => array(
+                        'Close' => '$(this).dialog("close");'
+                    )),
         	'feedback' => array('title' => 'Send Feedback', 'script' => '_feedback.phtml',
                     'icon' => $this->baseUrl('images/feedback.png'), 'alt' => 'feedback',
                     'width' => 600,
@@ -54,6 +60,7 @@ switch ($this->userRole)
                         'Send' => '$("#feedback_form").submit();',
                         'Cancel' => '$(this).dialog("close");'
                     ))
+
         );
         break;
     case Sahara_Controller_Action_Acl::PSEUDO_ROLE_QUEUE:
@@ -71,6 +78,12 @@ switch ($this->userRole)
                     'buttons' => array(
                     	'Yes' => 'location.href="' . $this->url(array('controller' => 'index', 'action' => 'logout')) . '";',
                         'No'  => '$(this).dialog("close");'
+                    )),
+            'queuehelp' => array('title' => 'Help', 'script' => '_queuehelp.phtml',
+                    'icon' => $this->baseUrl('images/help.png'), 'alt' => 'help',
+                    'width' => 650,
+                    'buttons' => array(
+                        'Close' => '$(this).dialog("close");'
                     )),
         	'feedback' => array('title' => 'Send Feedback', 'script' => '_feedback.phtml',
                     'icon' => $this->baseUrl('images/feedback.png'), 'alt' => 'feedback',
@@ -96,6 +109,12 @@ switch ($this->userRole)
                     'buttons' => array(
                     	'Yes' => 'location.href="' . $this->url(array('controller' => 'index', 'action' => 'logout')) . '";',
                         'No'  => '$(this).dialog("close");'
+                    )),
+            'sessionhelp' => array('title' => 'Help', 'script' => '_sessionhelp.phtml',
+                    'icon' => $this->baseUrl('images/help.png'), 'alt' => 'help',
+                    'width' => 650,
+                    'buttons' => array(
+                        'Close' => '$(this).dialog("close");'
                     )),
         	'feedback' => array('title' => 'Send Feedback', 'script' => '_feedback.phtml',
                     'icon' => $this->baseUrl('images/feedback.png'), 'alt' => 'feedback',
@@ -126,6 +145,12 @@ switch ($this->userRole)
         break;
     default:
         $actionMenu = array(
+        	'unauthhelp' => array('title' => 'Help', 'script' => '_unauthhelp.phtml',
+                    'icon' => $this->baseUrl('images/help.png'), 'alt' => 'help',
+                    'width' => 650,
+                    'buttons' => array(
+                        'Close' => '$(this).dialog("close");'
+                    )),
         	'feedback' => array('title' => 'Send Feedback', 'script' => '_feedback.phtml',
                     'icon' => $this->baseUrl('images/feedback.png'), 'alt' => 'feedback',
                     'width' => 600,
