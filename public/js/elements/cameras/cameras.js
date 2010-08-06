@@ -96,7 +96,7 @@ function deployJpeg(id, url, tm)
 	
 	for (i = 0; i < 5; i++)
 	{
-		html += "<div style='width:" + Math.floor(vcameras[id].width / 5) + "px;float:left;text-align:center'>" +
+		html += "<div class='jpegtickblock' style='width:" + Math.floor(vcameras[id].width / 5) + "px;'>" +
 				"	<span class='ui-icon ui-icon-arrowthick-1-n jpegtickarrow'></span>" +
 				"   <span class='jpegtick'>" + (i == 0 ? "Off" : (0.25 * Math.pow(2, i - 1)) + "s") + "</span>" +
 				"</div>";
@@ -106,12 +106,21 @@ function deployJpeg(id, url, tm)
 	$(cameraDiv).html(html);
 	
 	var cameraInfo = "#cameraInfo" + id;
-	var htmlInfo = "<div class=\"cameraInfo\"> <div class=\"text\" >* Move this slider to change the refresh rate <br> </div>"; 
-	htmlInfo += "<div class=\"arrow\">";
-	htmlInfo += "<div class=\"line10\"></div>  <div class=\"line9\"></div> <div class=\"line8\"></div>";
-	htmlInfo += "<div class=\"line7\"></div>  <div class=\"line6\"></div> <div class=\"line5\"></div>";
-	htmlInfo += "<div class=\"line4\"></div>  <div class=\"line3\"></div> <div class=\"line2\"></div>";
-	htmlInfo += "<div class=\"line1\"></div>  </div>  </div>";
+	var htmlInfo = "<div class='cameraInfo'>" +
+			       "    <div class='text'>* Move this slider to change the refresh interval</div>" +
+			       "	<div class='arrow'>" +
+                   "    	<div class='line10'></div>" +
+                   "		<div class='line9'></div>" +
+                   "		<div class='line8'></div>" +
+                   "		<div class='line7'></div>" +
+                   "		<div class='line6'></div>" +
+                   "		<div class='line5'></div>" +
+                   "		<div class='line4'></div>" +
+                   "		<div class='line3'></div>" +
+                   "		<div class='line2'></div>" +
+                   "		<div class='line1'></div>" +
+                   "	</div>" +
+                   "</div>";
 	$(cameraInfo).html(htmlInfo);
 	$(cameraInfo).css("display", "block");
 
