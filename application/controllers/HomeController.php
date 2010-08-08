@@ -42,27 +42,152 @@ class HomeController extends Sahara_Controller_Action_Acl
     {
         $this->view->headTitle("Remote Labs - Home Directory");
 
-        $path = '/home/tuser';
-
-        $this->view->homeExists = true;
-        if (!is_dir($path) && is_readable($path))
+        $home = new Sahara_Home($this->_getHomeDirectory());
+        if (!$home->isValid())
         {
             $this->view->homeExists = false;
             return;
         }
+        $this->view->homeExists = true;
+        $this->view->home = $home;
 
-        $dirs = array();
-        $files = array();
-        foreach (scandir($path) as $file)
-        {
-            if (strpos($file, '.') === 0) continue; // Hide dot files
-            if (is_dir($path . '/' . $file)) array_push($dirs, $file);
-            array_push($files, $file);
-        }
-
-        var_dump($dirs);
-        var_dump($files);
-
+        /* Use the flattened contents because directories will not get displayed. */
+        $home->loadContents();
+        $this->view->files = $home->getFlattenedContents();
     }
 
+    public function listAction()
+    {
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayouy();
+
+        $home = new Sahara_Home($this->_getHomeDirectory());
+        $home->loadContents();
+        echo $this->view->json($home->getFlattenedContents());
+    }
+
+    /**
+     * Action to download a file.
+     */
+    public function downloadAction()
+    {
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();
+
+        $path = $this->_getHomeDirectory();
+
+        $reqPath = $this->_getParam('path');
+        if ($reqPath) $reqPath = implode('/', explode(':', $reqPath));
+        $reqFile = $this->_getParam('file');
+        $mime = $this->_getParam('mime');
+        if ($mime) $mime = implode('/', explode(':', $mime));
+
+        list($junk, $user) = explode(':', $this->_auth->getIdentity(), 2);
+
+        /* If a path was provided, add that to the download path. */
+        if ($reqPath && !($path = realpath($path . '/' . $reqPath)))
+        {
+            $this->_logger->warn("Unable to download file $reqFile because path $path does not exist in home directory " .
+            		"$homeDir.");
+            echo "FAILED: Path $reqPath does not exist.";
+            return;
+        }
+
+        /* Make sure the download path contains the users name. The assumption
+         * is the home directory is composed of something like:
+         * 	  '/home/<user name>/<request path>/<request file>' or
+         *    'C:/Users/<user name>/<request path>/<request file>'. */
+        if (strpos($path, $user) === false)
+        {
+            $this->_logger->warn("Unable to download file $reqFile because path $path does not contain user name $user.");
+            echo "FAILED: Path does not include name $user.";
+            return;
+        }
+
+        $file = $path . '/' . $reqFile;
+        if (!is_file($file))
+        {
+            $this->_logger->warn("Unable file download of $reqFile because it does not exist.");
+            echo "FAILED: File $reqFile does not exist.";
+            return;
+        }
+
+        if (!is_readable($file))
+        {
+            $this->_logger->warn("Unable to download file $reqFile because it is not readable.");
+            echo "FAILED: File $reqFile is not readable.";
+            return;
+        }
+
+        header('Content-Description: File Transfer');
+        header('Content-Type: ' . ($mime ? mime : 'application/octet-stream'));
+        header('Content-Disposition: attachment; filename='.basename($file));
+        header('Content-Transfer-Encoding: binary');
+        header('Expires: 0');
+        header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+        header('Pragma: public');
+        header('Content-Length: ' . filesize($file));
+        ob_clean();
+        flush();
+        readfile($file);
+        return;
+    }
+
+    /**
+     * Action to delete a file.
+     */
+    public function deleteAction()
+    {
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();
+
+        $path = $homePath = $this->_getHomeDirectory();
+
+        $reqPath = $this->_getParam('path');
+        if ($reqPath) $reqPath = implode('/', explode(':', $reqPath));
+        $reqFile = $this->_getParam('file');
+
+        list($junk, $user) = explode(':', $this->_auth->getIdentity(), 2);
+
+        if ($reqPath && !($path = realpath($path . '/' . $reqPath)))
+        {
+            $this->_logger->warn("Unable to delete $reqFile because path $path does not exist in home directory " .
+            		"$homeDir.");
+            echo "FAILED: Path $reqPath does not exist.";
+            return;
+        }
+
+        if (strpos($path, $user) === false)
+        {
+            $this->_logger->warn("Unable to delete $reqFile because path $path does not contain user name $user.");
+            echo "FAILED: Path does not include name $user.";
+            return;
+        }
+
+        $file = $path . '/' . $reqFile;
+        if (!is_file($file))
+        {
+            $this->_logger->warn("Unable to delete $reqFile because it does not exist.");
+            echo "FAILED: File $reqFile does not exist.";
+            return;
+        }
+
+        if (!unlink($file))
+        {
+            echo 'FAILED: Permission denied.';
+            return;
+        }
+
+        $home = new Sahara_Home($homePath);
+        $home->loadContents();
+        echo $this->view->json($home->getFlattenedContents());
+    }
+
+    /**
+     * Gets your the users home directory.
+     */
+    private function _getHomeDirectory()
+    {
+        return '/home/user';
+    }
 }

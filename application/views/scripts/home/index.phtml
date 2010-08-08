@@ -35,14 +35,55 @@
  * @author Michael Diponio (mdiponio)
  * @date 21st July 2010
  */
+
+$this->headLink()->appendStylesheet($this->baseUrl('css/home.css'));
+$this->headScript()->appendFile($this->baseUrl('js/home.js'));
 ?>
+
 <div class="contentheader">
     <h2>Home Directory</h2>
 </div>
 
-<?php if ($this->homeExists): ?>
+<div id="homedirectory">
+
+<div id="homedirmessage">
+
+</div>
+
+<?php if ($this->homeExists && count($this->files)): ?>
+	<!-- Normal file listing. -->
+<div id="homedircontainer" class="ui-corner-all">
+	<div id="homedirheader">
+		<span class="ui-icon ui-icon-folder-open" style="width:15px"></span>
+		Select a file to download:
+	</div>
+	<div id="homedircontents">
+		<ul id="homedirlist" style="width:550px">
+		    <?php foreach($this->files as $name => $url): ?>
+			<li>
+				<a class="plaina hddownloadlink" href="/home/download<?=$url?>" style="width:450px">
+					<span class="ui-icon ui-icon-circle-arrow-s" style="width:15px"></span><?=$name?>
+				</a>
+				<a class="plaina hddelfilelink" href="#" onclick="deleteHomeFile('<?=$name?>', '<?=$url?>')">
+					<span class="ui-icon ui-icon-trash"></span>Delete
+				</a>
+			</li>
+			<?php endforeach; ?>
+		</ul>
+	</div>
+</div>
+
+<?php elseif (!count($this->files)): ?>
+	<!-- No files. -->
+	<div class="ui-state-error ui-corner-all alertdiv centercontent" style="width:360px">
+		<p class="alertp">
+    		<span class="ui-icon ui-icon-alert alertspan"></span>
+    		You currently have no files in your home directory.
+    	</p>
+    </div>
 
 <?php else: ?>
+	<!-- Error getting home directory. -->
 	<div class="ui-state-error ui-corner-all alertdiv centercontent" style="width:360px">
 		<p class="alertp">
     		<span class="ui-icon ui-icon-alert alertspan"></span>
@@ -51,3 +92,5 @@
     	</p>
     </div>
 <?php endif; ?>
+
+</div>
