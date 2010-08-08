@@ -191,4 +191,14 @@ class Sahara_Home
         $link .= '/file/' . $file;
         return $link;
     }
+
+    /**
+     * Returns the home directory location.
+     *
+     * @return String home directory location.
+     */
+    public static function getHomeDirectoryLocation()
+    {
+        return '/home/user';
+    }
 }

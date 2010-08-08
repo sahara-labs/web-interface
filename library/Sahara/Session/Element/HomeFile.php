@@ -33,64 +33,39 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 21st July 2010
+ * @date 8th August 2010
  */
 
-$this->headLink()->appendStylesheet($this->baseUrl('css/home.css'));
-$this->headScript()->appendFile($this->baseUrl('js/home.js'));
-?>
+/**
+ * Session elements that lists the files in that have been created in session
+ * and put in the users home directory.
+ */
+class Sahara_Session_Element_HomeFile extends Sahara_Session_Element
+{
+    /** The default refresh time in seconds. */
+    const DEFAULT_REFRESH_SEC = 60;
 
-<div class="contentheader">
-    <h2>Home Directory</h2>
-</div>
+    public function init()
+    {
+        $response = Sahara_Soap::getSchedServerSessionClient()->getSessionInformation(array(
+            'userQName' => Zend_Auth::getInstance()->getIdentity()
+        ));
 
-<div id="homedirectory">
+        $home = new Sahara_Home(Sahara_Home::getHomeDirectoryLocation(), time() - $response->time);
+        $home->loadContents();
+        $this->_view->files = $home->getFlattenedContents();
 
-<div id="homedirmessage">
+        $this->view->refreshTime = $this->_config->home->sessionrefresh;
+        if (!$this->view->refreshTime)
+        {
+            $this->view->refreshTime = self::DEFAULT_REFRESH_SEC;
+        }
+    }
 
-</div>
+    public function render()
+    {
+        $this->init();
 
-<?php if ($this->homeExists && count($this->files)): ?>
-	<!-- Normal file listing. -->
-<div id="homedircontainer" class="ui-corner-all">
-	<div id="homedirheader">
-		<span class="ui-icon ui-icon-folder-open" style="width:15px"></span>
-		Select a file to download:
-	</div>
-	<div id="homedircontents">
-		<ul id="homedirlist" style="width:550px">
-		    <?php foreach($this->files as $name => $url): ?>
-			<li>
-				<a class="plaina hddownloadlink" href="/home/download<?=$url?>" style="width:450px">
-					<span class="ui-icon ui-icon-circle-arrow-s" style="width:15px"></span><?=$name?>
-				</a>
-				<a class="plaina hddelfilelink" href="#" onclick="deleteHomeFile('<?=$name?>', '<?=$url?>');return false;">
-					<span class="ui-icon ui-icon-trash"></span>Delete
-				</a>
-			</li>
-			<?php endforeach; ?>
-		</ul>
-	</div>
-</div>
-
-<?php elseif (!count($this->files)): ?>
-	<!-- No files. -->
-	<div class="ui-state-error ui-corner-all alertdiv centercontent" style="width:360px">
-		<p class="alertp">
-    		<span class="ui-icon ui-icon-alert alertspan"></span>
-    		You currently have no files in your home directory.
-    	</p>
-    </div>
-
-<?php else: ?>
-	<!-- Error getting home directory. -->
-	<div class="ui-state-error ui-corner-all alertdiv centercontent" style="width:360px">
-		<p class="alertp">
-    		<span class="ui-icon ui-icon-alert alertspan"></span>
-    		Sorry, your home directory does not exist.<br />
-    		&nbsp;&nbsp;Please use the 'Send Feedback' button to report this.
-    	</p>
-    </div>
-<?php endif; ?>
-
-</div>
+        return $this->_view->render('HomeFile/_homeFile.phtml');
+    }
+}

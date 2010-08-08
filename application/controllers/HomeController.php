@@ -42,7 +42,7 @@ class HomeController extends Sahara_Controller_Action_Acl
     {
         $this->view->headTitle("Remote Labs - Home Directory");
 
-        $home = new Sahara_Home($this->_getHomeDirectory());
+        $home = new Sahara_Home(Sahara_Home::getHomeDirectoryLocation());
         if (!$home->isValid())
         {
             $this->view->homeExists = false;
@@ -56,12 +56,32 @@ class HomeController extends Sahara_Controller_Action_Acl
         $this->view->files = $home->getFlattenedContents();
     }
 
+    /**
+     * Action to list files in a directory as JSON.
+     */
     public function listAction()
     {
         $this->_helper->viewRenderer->setNoRender();
-        $this->_helper->layout()->disableLayouy();
+        $this->_helper->layout()->disableLayout();
 
-        $home = new Sahara_Home($this->_getHomeDirectory());
+        $home = new Sahara_Home(Sahara_Home::getHomeDirectoryLocation());
+        $home->loadContents();
+        echo $this->view->json($home->getFlattenedContents());
+    }
+
+    /**
+     * Action list files generated during a session as JSON.
+     */
+    public function listsessionAction()
+    {
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();
+
+        $response = Sahara_Soap::getSchedServerSessionClient()->getSessionInformation(array(
+            'userQName' => $this->_auth->getIdentity()
+        ));
+
+        $home = new Sahara_Home(Sahara_Home::getHomeDirectoryLocation(), time() - $response->time);
         $home->loadContents();
         echo $this->view->json($home->getFlattenedContents());
     }
@@ -74,7 +94,7 @@ class HomeController extends Sahara_Controller_Action_Acl
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout()->disableLayout();
 
-        $path = $this->_getHomeDirectory();
+        $path = Sahara_Home::getHomeDirectoryLocation();
 
         $reqPath = $this->_getParam('path');
         if ($reqPath) $reqPath = implode('/', explode(':', $reqPath));
@@ -141,7 +161,7 @@ class HomeController extends Sahara_Controller_Action_Acl
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout()->disableLayout();
 
-        $path = $homePath = $this->_getHomeDirectory();
+        $path = $homePath = Sahara_Home::getHomeDirectoryLocation();
 
         $reqPath = $this->_getParam('path');
         if ($reqPath) $reqPath = implode('/', explode(':', $reqPath));
@@ -184,10 +204,56 @@ class HomeController extends Sahara_Controller_Action_Acl
     }
 
     /**
-     * Gets your the users home directory.
+     * Action to delete a file.
      */
-    private function _getHomeDirectory()
+    public function deletesessionAction()
     {
-        return '/home/user';
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();
+
+        $path = $homePath = Sahara_Home::getHomeDirectoryLocation();
+
+        $reqPath = $this->_getParam('path');
+        if ($reqPath) $reqPath = implode('/', explode(':', $reqPath));
+        $reqFile = $this->_getParam('file');
+
+        list($junk, $user) = explode(':', $this->_auth->getIdentity(), 2);
+
+        if ($reqPath && !($path = realpath($path . '/' . $reqPath)))
+        {
+            $this->_logger->warn("Unable to delete $reqFile because path $path does not exist in home directory " .
+            		"$homeDir.");
+            echo "FAILED: Path $reqPath does not exist.";
+            return;
+        }
+
+        if (strpos($path, $user) === false)
+        {
+            $this->_logger->warn("Unable to delete $reqFile because path $path does not contain user name $user.");
+            echo "FAILED: Path does not include name $user.";
+            return;
+        }
+
+        $file = $path . '/' . $reqFile;
+        if (!is_file($file))
+        {
+            $this->_logger->warn("Unable to delete $reqFile because it does not exist.");
+            echo "FAILED: File $reqFile does not exist.";
+            return;
+        }
+
+        if (!unlink($file))
+        {
+            echo 'FAILED: Permission denied.';
+            return;
+        }
+
+        $response = Sahara_Soap::getSchedServerSessionClient()->getSessionInformation(array(
+            'userQName' => $this->_auth->getIdentity()
+        ));
+
+        $home = new Sahara_Home($homePath, time() - $response->time);
+        $home->loadContents();
+        echo $this->view->json($home->getFlattenedContents());
     }
 }

@@ -75,7 +75,8 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
                                       'sessionfinish', 'sessioninfo',
                                       'sessionprimitivebridge', 'sessionattributebridge',
                                       'primitivejson', 'primitiveecho', 'primitivefile',
-                                      'batchtorigclient', 'batchstatus', 'batchabort'
+                                      'batchtorigclient', 'batchstatus', 'batchabort',
+                                      'homedownload', 'homelistsession', 'homedeletesession'
         					    );
 
     /**

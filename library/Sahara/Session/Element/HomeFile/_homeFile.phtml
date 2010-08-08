@@ -33,64 +33,44 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 21st July 2010
+ * @date 8th August 2010
  */
 
 $this->headLink()->appendStylesheet($this->baseUrl('css/home.css'));
 $this->headScript()->appendFile($this->baseUrl('js/home.js'));
+
+
+
 ?>
 
-<div class="contentheader">
-    <h2>Home Directory</h2>
-</div>
-
-<div id="homedirectory">
-
-<div id="homedirmessage">
-
-</div>
-
-<?php if ($this->homeExists && count($this->files)): ?>
-	<!-- Normal file listing. -->
-<div id="homedircontainer" class="ui-corner-all">
-	<div id="homedirheader">
-		<span class="ui-icon ui-icon-folder-open" style="width:15px"></span>
-		Select a file to download:
+<div id="homedirsessioncontainer" class="ui-corner-all overlayelementhide">
+	<div class="sessionpanelheader">
+		<p><span class="ui-icon ui-icon-folder-open sessionpanelheadericon"></span>
+		Session files:</p>
 	</div>
-	<div id="homedircontents">
-		<ul id="homedirlist" style="width:550px">
+	<div id="homedircontents" style="overflow-y:<?= count($this->files) > 10 ? "scroll;height:240px" : "hidden"?>">
+
+		<ul id="homedirlist" style="width:<?= count($this->files) > 10 ? "530px" : "550px"?>">
+		    <?php if (count($this->files)): ?>
 		    <?php foreach($this->files as $name => $url): ?>
-			<li>
-				<a class="plaina hddownloadlink" href="/home/download<?=$url?>" style="width:450px">
+			<li >
+				<a class="plaina hddownloadlink" href="/home/download<?=$url?>" style="width:<?= count($this->files) > 10 ? "430px" : "450px"?>">
 					<span class="ui-icon ui-icon-circle-arrow-s" style="width:15px"></span><?=$name?>
 				</a>
-				<a class="plaina hddelfilelink" href="#" onclick="deleteHomeFile('<?=$name?>', '<?=$url?>');return false;">
+				<a class="plaina hddelfilelink" onclick="deleteHomeSessionFile('<?=$url?>');return false" href="#">
 					<span class="ui-icon ui-icon-trash"></span>Delete
 				</a>
 			</li>
 			<?php endforeach; ?>
+			<?php endif; ?>
 		</ul>
 	</div>
 </div>
 
-<?php elseif (!count($this->files)): ?>
-	<!-- No files. -->
-	<div class="ui-state-error ui-corner-all alertdiv centercontent" style="width:360px">
-		<p class="alertp">
-    		<span class="ui-icon ui-icon-alert alertspan"></span>
-    		You currently have no files in your home directory.
-    	</p>
-    </div>
-
-<?php else: ?>
-	<!-- Error getting home directory. -->
-	<div class="ui-state-error ui-corner-all alertdiv centercontent" style="width:360px">
-		<p class="alertp">
-    		<span class="ui-icon ui-icon-alert alertspan"></span>
-    		Sorry, your home directory does not exist.<br />
-    		&nbsp;&nbsp;Please use the 'Send Feedback' button to report this.
-    	</p>
-    </div>
-<?php endif; ?>
-
-</div>
+<script type="text/javascript">
+<!--
+$(document).ready(function() {
+	setInterval(updateHomeFileList, <?=$this->refreshTime * 1000?>);
+});
+//-->
+</script>

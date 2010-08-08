@@ -36,7 +36,7 @@
  */
 
 function deleteHomeFile(name, urlsuffix)
-{
+{	
 	$.get(
 		'/home/delete' + urlsuffix,
 		null,
@@ -61,7 +61,7 @@ function deleteHomeFile(name, urlsuffix)
 						   '	<a class="plaina hddownloadlink" href="/home/download' + response[k] + '" style="width:450px">' +
 						   '		<span class="ui-icon ui-icon-circle-arrow-s" style="width:15px"></span>' + k +
 						   '	</a>' +
-						   '	<a class="plaina hddelfilelink" href="#" onclick=\'deleteHomeFile("' + k + '", "' + response[k] + '")\'>' +
+						   '	<a class="plaina hddelfilelink" href="#" onclick=\'deleteHomeFile("' + k + '", "' + response[k] + '");return false\'>' +
 					       '		<span class="ui-icon ui-icon-trash"></span>Delete' +
 					       '	</a>' +
 					       '</li>';
@@ -96,4 +96,61 @@ function deleteHomeFile(name, urlsuffix)
 			}
 		}
 	);
+}
+
+function deleteHomeSessionFile(urlsuffix)
+{
+	$.get(
+		'/home/deletesession' + urlsuffix,
+		null,
+		function (response) {
+			if (typeof response == "object") replaceSessionFiles(response);
+		}
+	);
+	return false;
+}
+
+function updateHomeFileList()
+{
+	$.get(
+		'/home/listsession',
+		null,
+		function (response) {
+			if (typeof response == "object") replaceSessionFiles(response);
+		}
+	);
+}
+
+function replaceSessionFiles(files)
+{
+	var html = '', len = 0;
+	for (var k in files)
+	{
+		len++;
+		html += '<li>' +
+		'	<a class="plaina hddownloadlink" href="/home/download' + files[k] + '">' +
+		'		<span class="ui-icon ui-icon-circle-arrow-s" style="width:15px"></span>' + k +
+		'	</a>' +
+		'	<a class="plaina hddelfilelink" onclick=\'deleteHomeSessionFile("' + files[k] + '");return false\' href="#">' +
+		'		<span class="ui-icon ui-icon-trash"></span>Delete' +
+		'	</a>' +
+		'</li>';
+	}
+	$("#homedirlist").html(html);
+
+	if (len > 10)
+	{
+		$("#homedircontents").css('overflow-y', 'scroll');
+				$("#homedircontents").css('height', 240);
+		$("#homedirlist").css('width', 530);
+		$(".hddownloadlink").css('width', 430);
+	}
+	else
+	{
+		$("#homedircontents").css('overflow-y', 'hidden');
+		$("#homedircontents").css('height', 25 * len);
+		$("#homedirlist").css('width', 550);
+		$(".hddownloadlink").css('width', 450);
+	}
+	resizeFooter();
 }
