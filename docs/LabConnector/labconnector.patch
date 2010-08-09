@@ -74,11 +74,6 @@ Index: application/configs/config.ini
 ===================================================================
 30a31
 > cameradesc.rcjpeg = Rig Client Cam
-71c72,73
-< database.params.password = saharapasswd
----
-> database.params.password = saharapasswdaustria101
-> database.params.port = 3306
 91a94,96
 > ; LabConnector Experiment Storage root directory
 > experiment.storage.dir = /home/saharausrs
