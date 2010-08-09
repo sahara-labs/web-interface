@@ -190,6 +190,26 @@ function setIO(i)
 	addFPGAMessage("Input changed to " + val + ".");
 }
 
+function clearIO(i)
+{
+	if (io[i] == 0) return;
+	
+	io[i] = 0;
+	$("#io" + i).css('background-color', '#ED8686');
+	$("#io" + i + " img").attr('src', '/uts/fpga/images/' + (ty[i] == 'P' ? 'pushbuttonup.png' :'switchup.png'));
+	
+	var val = 0;
+	for (var i = 0; i < 8; i++)
+	{
+		val += io[i] * Math.pow(2, i);
+	}
+	
+	var params = new Object;
+	params.value = val;
+	performPrimitiveJSON('FPGAController', 'setDataByte', params);
+	addFPGAMessage("Input changed to " + val + ".");
+}
+
 function checkDemoLoadedStart()
 {
 	setTimeout(checkDemoLoaded, 2000);

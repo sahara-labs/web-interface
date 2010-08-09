@@ -53,7 +53,7 @@ $code = new Sahara_Session_Element_MultiButtons($this->rigClient, 'codebutton',
         ),
         array(
         	'title' => 'Program Demo',
-            'tooltip' => 'Program the FPGA with a demonstration program (binary to decimal converter).',
+            'tooltip' => 'Program the FPGA with a demonstration program (binary to hexadecimal converter).',
             'icon' => '/uts/fpga/images/rundemo.png',
             'click' => "disableFPGAButtons();performPrimitiveJSON('FPGAAuxController', 'loadDemo', null, checkDemoLoadedStart, 'Loading demo...', false)"
         )
@@ -96,16 +96,18 @@ $reset = new Sahara_Session_Element_MultiButtons($this->rigClient, 'reset',
 $io = new Sahara_Session_Element_MultiButtons($this->rigClient, 'io',
     array(
         array(
-        	'title' => '7',
-        	'icon' => '/uts/fpga/images/pushbuttonup.png',
-            'mousedown' => 'setIO(0)',
-			'mouseup' => 'setIO(0)'
+        	'title'      => '7',
+        	'icon'       => '/uts/fpga/images/pushbuttonup.png',
+            'mousedown'  => 'setIO(0)',
+			'mouseup'    => 'setIO(0)',
+            'mouseleave' => 'clearIO(0)'
         ),
         array(
-        	'title' => '6',
-        	'icon' => '/uts/fpga/images/pushbuttonup.png',
-            'mousedown' => 'setIO(1)',
-			'mouseup' => 'setIO(1)'
+        	'title'      => '6',
+        	'icon'       => '/uts/fpga/images/pushbuttonup.png',
+            'mousedown'  => 'setIO(1)',
+			'mouseup'    => 'setIO(1)',
+			'mouseleave' => 'clearIO(1)'
         ),
         array(
         	'title' => '5',

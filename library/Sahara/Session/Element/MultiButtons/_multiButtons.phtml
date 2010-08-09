@@ -50,6 +50,8 @@ $numButtons = count($this->buttons);
 			   <?php if (array_key_exists("click", $b))     echo 'onclick="'   . $b['click'] . '"'?>
 			   <?php if (array_key_exists("mousedown", $b)) echo 'onmousedown="' . $b['mousedown'] . '"'?>
 			   <?php if (array_key_exists("mouseup", $b))   echo 'onmouseup="'   . $b['mouseup'] . '"'?>
+			   <?php if (array_key_exists("mouseenter", $b))   echo 'onmousein="'   . $b['mouseenter'] . '"'?>
+			   <?php if (array_key_exists("mouseleave", $b))   echo 'onmouseout="'   . $b['mouseleave'] . '"'?>
 			   class="plaina multibutton <?=$this->name?>class overlayelementhide
 			   							 <?php if ($i == 0 && $this->isHoriz) echo 'ui-corner-left';
 				                               else if ($i == 0) echo 'ui-corner-top';
