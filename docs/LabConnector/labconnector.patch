@@ -74,21 +74,11 @@ Index: application/configs/config.ini
 ===================================================================
 30a31
 > cameradesc.rcjpeg = Rig Client Cam
-66,71c67,73
-< ; Database configuration
-< database.adapter = Pdo_Mysql
-< database.params.host = 127.0.0.1
-< database.params.dbname = sahara
-< database.params.username = sahara
+71c72,73
 < database.params.password = saharapasswd
 ---
-> ;Database for user password information
-> db.adapter = PDO_MYSQL
-> db.params.host = localhost
-> db.params.username = sahara
-> db.params.password = saharapasswdaustria101
-> db.params.dbname = sahara
-> db.params.port = 3306
+> database.params.password = saharapasswdaustria101
+> database.params.port = 3306
 91a94,96
 > ; LabConnector Experiment Storage root directory
 > experiment.storage.dir = /home/saharausrs
