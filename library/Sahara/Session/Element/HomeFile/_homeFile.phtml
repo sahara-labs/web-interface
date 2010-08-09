@@ -70,7 +70,7 @@ $this->headScript()->appendFile($this->baseUrl('js/home.js'));
 <script type="text/javascript">
 <!--
 $(document).ready(function() {
-	setInterval(updateHomeFileList, <?=$this->refreshTime * 1000?>);
+	setInterval(updateHomeFileList, 30000);
 });
 //-->
 </script>
