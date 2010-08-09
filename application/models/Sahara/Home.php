@@ -239,6 +239,18 @@ class Sahara_Home
      */
     public static function getHomeDirectoryLocation()
     {
-        return '/home/user';
+        // TODO Make this abstract, make this OS agnostic
+        list($jk, $user) = explode(':', Zend_Auth::getInstance()->getIdentity());
+        exec("getent passwd $user", $output, $ret);
+
+        if ($ret != 0)
+        {
+            Sahara_Logger::getInstance()->error("Getting home directory for user $user failed, getent return code is " .
+            		"$ret.");
+            return null;
+        }
+
+        $parts = explode(':', $output[0]);
+        return $parts[5];
     }
 }
