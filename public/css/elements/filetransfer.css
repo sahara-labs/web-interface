@@ -69,13 +69,15 @@
 	-moz-box-shadow: 0 0 15px #B5B5B5;
 	-webkit-box-shadow: 0 0 15px #B5B5B5;
 	background: -moz-linear-gradient(top, #FFFFFF, #F2F2F2);
-	background: -webkit-gradient(linear, left top, left bottom, from(#FFFFFF), to(#F2F2F2))
+	background: -webkit-gradient(linear, left top, left bottom, from(#FFFFFF), to(#F2F2F2));
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#FFFFFF', endColorstr='#F2F2F2');
 }
 
 .newdownloadlink {
 	background-color: #D1FFD0;
 	background: -moz-linear-gradient(bottom, #D1FFD0, #FFFFFF);
 	background: -webkit-gradient(linear, left bottom, left top, from(#D1FFD0), to(#FFFFFF));
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#D1FFD0', endColorstr='#FFFFFF');
 }
 
 .downloadlink span {
@@ -103,7 +105,8 @@
 	-moz-box-shadow: 0px 0 10px #F75555;
 	-webkit-box-shadow: 0 0 15px #F75555;
 	background: -moz-linear-gradient(top, #FFFFFF, #F75555);
-	background: -webkit-gradient(linear, left top, left bottom, from(#FFFFFF), to(#F75555))
+	background: -webkit-gradient(linear, left top, left bottom, from(#FFFFFF), to(#F75555));
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#FFFFFF', endColorstr='#F75555');
 }
 
 .delfilelink span {
