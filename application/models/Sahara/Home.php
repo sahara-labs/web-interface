@@ -241,7 +241,7 @@ class Sahara_Home
     {
         // TODO Make this abstract, make this OS agnostic
         list($jk, $user) = explode(':', Zend_Auth::getInstance()->getIdentity());
-        exec("getent passwd $user", $output, $ret);
+        exec("getent passwd `id -u $user`", $output, $ret);
 
         if ($ret != 0)
         {
