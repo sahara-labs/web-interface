@@ -52,11 +52,20 @@
  */
 class Sahara_Session_Element_RemoteDesktop extends Sahara_Session_Element
 {
+    /** @var String The RDP file generation controller. */
+    const RDP_Controller = "au.edu.labshare.rigclient.primitive.RDPConfigurationController";
+
     /** @var String IP address to the remote desktop. */
     protected $_ip;
 
     /** @var boolean Whether a domain should be given in the instructions. */
     protected $_useDomain = true;
+
+    /** @var boolean Whether to request RDP file generation from the rigclient. */
+    protected $_generateRDP = false;
+
+    /** @var String Name of RDP file. */
+    protected $_rdpFileName;
 
     public function __construct($rig, $options = array())
     {
@@ -69,6 +78,12 @@ class Sahara_Session_Element_RemoteDesktop extends Sahara_Session_Element
             {
                 case 'domain':
                     $this->_useDomain = $v;
+                    break;
+                case 'generaterdp':
+                    $this->_generateRDP = $v;
+                    break;
+                case 'rdpfile':
+                    $this->_rdpFileName = $v;
                     break;
             }
         }
@@ -85,6 +100,18 @@ class Sahara_Session_Element_RemoteDesktop extends Sahara_Session_Element
             $this->_logger->warn('Unable to render Remote Desktop information because the remote desktop IP' .
                     ' was not found (Remote_Desktop_Host rig client property).');
         }
+
+        if ($this->_rdpFileName)
+        {
+            if (!strrpos($this->_rdpFileName, '.rdp'))
+            {
+                $this->_rdpFileName .= '.rdp';
+            }
+        }
+        else
+        {
+            $this->_rdpFileName = 'remotelabs.rdp';
+        }
     }
 
     public function render()
@@ -92,6 +119,16 @@ class Sahara_Session_Element_RemoteDesktop extends Sahara_Session_Element
         $this->init();
 
         if ($this->_useDomain) $this->_view->domain = $this->_config->remotedesktop->domain;
+        if ($this->_generateRDP)
+        {
+            $this->_view->rdpFile = $this->_view->baseUrl(
+                '/primitive/file' .
+                '/pc/' . self::RDP_Controller .
+                '/pa/getRDPFile' .
+                '/mime/application-x-rdp' .
+                '/filename/' . $this->_rdpFileName
+           	);
+        }
         $this->_view->ip = $this->_ip;
         return $this->_view->render('RemoteDesktop/_remoteDesktop.phtml');
     }

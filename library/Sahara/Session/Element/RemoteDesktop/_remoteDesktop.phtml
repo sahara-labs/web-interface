@@ -41,7 +41,13 @@ $this->headLink()->appendStylesheet($this->baseUrl('css/elements/remotedesktop.c
 <div id="remotedesktopcontainer" class="ui-corner-all overlayelementhide">
 	<div class="sessionpanelheader">
 		<p><span class="ui-icon ui-icon-lightbulb sessionpanelheadericon"></span>
-		Remote Desktop Address: <span class="remotedesktopaddress"><?=$this->ip?></span></p>
+		Remote Desktop Address: <span class="remotedesktopaddress">
+		<?php if ($this->rdpFile): ?>
+			<a href="<?=$this->rdpFile?>" class="plaina"> <?=$this->ip?> </a>
+		<?php else: ?>
+		    <?=$this->ip?>
+		<?php endif; ?>
+		</span></p>
 		<a href="#" id="remotedesktophide" class="sessionpanelhide plaina">
 			<span class="ui-icon ui-icon-arrowthickstop-1-s"></span>Show Help
 		</a>
@@ -58,6 +64,9 @@ $this->headLink()->appendStylesheet($this->baseUrl('css/elements/remotedesktop.c
 			<?php endif; ?>
 			<li>Login using the same user name and password as was used to access this site.</li>
 		</ol>
+		<?php if ($this->rdpFile): ?>
+
+		<?php endif; ?>
 	</div>
 </div>
 
