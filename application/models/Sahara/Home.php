@@ -48,6 +48,10 @@ class Sahara_Home
     /** @var array Directory contents. */
     private $_contents;
 
+    /** @var The extra directories to check (these are relative to the base
+	 *       home directory. */
+    private $_extraDirs;
+
     /** The names of files of folders to ignore. */
     private $_exclusionList;
 
@@ -61,9 +65,23 @@ class Sahara_Home
     {
         $this->_homeDirectory = $home;
 
-        if (($ex = Zend_Registry::get('config')->home->exclusions))
+        $config = Zend_Registry::get('config');
+        if ($ex = $config->home->exclusions)
         {
             $this->_exclusionList = explode(',', $ex);
+        }
+        else
+        {
+            $this->_exclusionList = array();
+        }
+
+        if ($ex = $config->home->extradirs)
+        {
+            $this->_extraDirs = explode(',', $ex);
+        }
+        else
+        {
+            $this->_extraDirs = false;
         }
 
         if ($ts)
@@ -88,6 +106,16 @@ class Sahara_Home
     public function loadContents()
     {
         $this->_contents = $this->_recursiveList($this->_homeDirectory);
+
+        if ($this->_extraDirs)
+        {
+            foreach ($this->_extraDirs as $dir)
+            {
+                $this->_contents[$dir] = $this->_recursiveList($this->_homeDirectory . '/' . $dir);
+
+            }
+        }
+
         return $this->_contents;
     }
 
