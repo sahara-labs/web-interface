@@ -167,12 +167,18 @@ function setIO(i)
 {
 	if (io[i] == 0)
 	{
+		if (ty[i] == 'S') addFPGAMessage("Switch " + (7 - i) + " turned on.");
+		else addFPGAMessage("Push button " + (7 - i) + " pressed.");
+		
 		io[i] = 1;
 		$("#io" + i).css('background-color', '#62E877');
 		$("#io" + i + " img").attr('src', '/uts/fpga/images/' + (ty[i] == 'P' ? 'pushbuttondown.png' :'switchdown.png'));
 	}
 	else
 	{
+		if (ty[i] == 'S') addFPGAMessage("Switch " + (7 - i) + " turned off.");
+		else addFPGAMessage("Push button " + (7 - i) + " released.");
+		
 		io[i] = 0;
 		$("#io" + i).css('background-color', '#ED8686');
 		$("#io" + i + " img").attr('src', '/uts/fpga/images/' + (ty[i] == 'P' ? 'pushbuttonup.png' :'switchup.png'));
@@ -187,7 +193,6 @@ function setIO(i)
 	var params = new Object;
 	params.value = val;
 	performPrimitiveJSON('FPGAController', 'setDataByte', params);
-	addFPGAMessage("Input changed to " + val + ".");
 }
 
 function clearIO(i)
@@ -197,6 +202,10 @@ function clearIO(i)
 	io[i] = 0;
 	$("#io" + i).css('background-color', '#ED8686');
 	$("#io" + i + " img").attr('src', '/uts/fpga/images/' + (ty[i] == 'P' ? 'pushbuttonup.png' :'switchup.png'));
+
+	if (ty[i] == 'S') addFPGAMessage("Switch " + (7 - i) + " turned off.");
+	else addFPGAMessage("Push button " + (7 - i) + " released.");
+
 	
 	var val = 0;
 	for (var i = 0; i < 8; i++)
@@ -207,7 +216,6 @@ function clearIO(i)
 	var params = new Object;
 	params.value = val;
 	performPrimitiveJSON('FPGAController', 'setDataByte', params);
-	addFPGAMessage("Input changed to " + val + ".");
 }
 
 function checkDemoLoadedStart()
@@ -294,5 +302,7 @@ function disableFPGAButtons()
 
 function addFPGAMessage(m)
 {
-	$("#operationpanellist").append("<li>" + m + "</li>");
+	$("#operationpanellist").prepend("<li class='newoperation'>" + m + "</li>");
+	$("#operationpanellist li:even").removeClass("oplistodd").addClass("oplisteven");
+	$("#operationpanellist li:odd").removeClass("oplisteven").addClass("oplistodd");
 }

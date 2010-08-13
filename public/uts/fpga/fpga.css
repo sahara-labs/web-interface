@@ -65,7 +65,7 @@
 
 #operationpanelcontents {
 	height: 155px;
-	overflow-y: scroll;
+	overflow-y: hidden;
 }
 
 #operationpanellist {
@@ -76,6 +76,14 @@
 
 #operationpanellist li {
 	padding: 2px 5px;	
+}
+
+.oplisteven {
+	background-color: #FFFFFF;
+}
+
+.oplistodd {
+	background-color: #EFEFEF;
 }
 
 .bitstreamuploadicon {
