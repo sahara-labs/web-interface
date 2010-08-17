@@ -47,7 +47,7 @@ function uploadBitStream()
 	
 	
 	disableFPGAButtons();
-	addFPGAMessage("Started bitstream of file " + file + ".");
+	addFPGAMessage("Started programming FPGA with bitstream file " + file + ".");
 	$("#bitstreamuploadform").submit();
 	
 	$("#bitstreamupload").dialog('close');
