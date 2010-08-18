@@ -139,6 +139,7 @@ button.jqTransformButton_click span { background-position: right -66px ; }
 table.jqTransformTextarea td#jqTransformTextarea-mm textarea{
 	font-size: 12px;
 	line-height: 16px;
+	width: 465px;      /* Hack to stretch text area to whole width of div */
 }
 
 table.jqTransformTextarea td{
