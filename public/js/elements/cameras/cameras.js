@@ -36,6 +36,7 @@
  */
 
 jpegIntervals = new Array();
+jpegImage = new Image();
 
 function changeCameraOption(id, vid, url)
 {
@@ -134,12 +135,12 @@ function deployJpeg(id, url, tm)
 			var spe = Math.floor(Math.pow(2, (ui.value / 10)) * 250) - 100;
 			if (spe < 250)
 			{
-				if (jpegIntervals[id] != undefined) clearInterval(jpegIntervals[id]);
+				if (jpegIntervals[id] != undefined) clearTimeout(jpegIntervals[id]);
 			}
 			else
 			{
-				if (jpegIntervals[id] != undefined) clearInterval(jpegIntervals[id]);
-				jpegIntervals[id] = setInterval("updateJpeg(" + id + ", '" + url + "', " + spe + ")", spe);
+				if (jpegIntervals[id] != undefined) clearTimeout(jpegIntervals[id]);
+				jpegIntervals[id] = setTimeout("updateJpeg(" + id + ", '" + url + "', " + spe + ")", spe);
 				$(cameraInfo).css("display", "none");
 				setCameraCookie("CamSlideValue-" + id, ui.value);
 				setCameraCookie("CamSlideInterval-" + id, spe);
@@ -156,9 +157,6 @@ function deployJpeg(id, url, tm)
 	 * image is downloading. */
 	resizeFooter();
 	
-	$(cameraDiv).css("background-image", "url(" + url + ")");
-	$(cameraDiv).css("background-repeat", "no-repeat");
-	
 	//Check for cookie for slider value and interval, if not set use sent value
 	var iOpt = getCameraCookie("CamSlideInterval-" + id);
 	var vOpt = getCameraCookie("CamSlideValue-" + id);
@@ -167,22 +165,30 @@ function deployJpeg(id, url, tm)
 		if (tm > 0)
 		{
 			$("#jpegslider" + id).slider("value", 28);
-			jpegIntervals[id] = setInterval("updateJpeg(" + id + ", '" + url + "')", tm);
+			jpegIntervals[id] = setTimeout("updateJpeg(" + id + ", '" + url + "' , " + tm + ")", tm);
 		}
 	}
 	else
 	{
 		$("#jpegslider" + id).slider("value", vOpt);
-		jpegIntervals[id] = setInterval("updateJpeg(" + id + ", '" + url + "')", iOpt);
+		jpegIntervals[id] = setTimeout("updateJpeg(" + id + ", '" + url + "' , " + iOpt + ")", iOpt);
 	}
 }
 
 function updateJpeg(id, url, tm)
 {
 	var tUrl = url + "?" + new Date().getTime();
-	$("#jpegframe" + id + " img").attr("src", url + "?" + new Date().getTime()).load(function() {
-		$("#camera" + id).css("background-image", "url(" + tUrl + ")");
-	});
+	
+	jpegImage.onload = function(){
+			var el = document.getElementById("jpegframe" + id)
+			for(var i = el.childNodes.length; i > 0 ; i--)
+   			{   
+      			el.removeChild(el.childNodes[i-1]);
+   			}
+			el.appendChild(jpegImage);
+			jpegIntervals[id] = setTimeout("updateJpeg(" + id + ", '" + url + "' , " + tm + ")", tm);
+		};
+	jpegImage.src = tUrl;
 }
 
 function deployWinMedia(id, url)
@@ -302,5 +308,5 @@ function getCameraCookie(key)
 		}
 	}
 	return "";
-}
 
+}
