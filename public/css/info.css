@@ -51,7 +51,7 @@
 	font-weight:bold;
 }
 
-.gallery{
+#slideshow{
 	position:relative;
 	margin-top:20px;
 	background:white;
@@ -59,13 +59,58 @@
 	margin-left:30px;
 }
 
-.gallery_list{width:800px}
-.gallery_list li{width:100px;height:70px;border:3px solid #eee;margin: 0 14px 14px 0;overflow:hidden;background:#000;}
-.gallery_list li div{left:240px}
-.gallery_list li img.thumb{opacity:.5}
-.gallery_list li.active img.thumb,.gallery_demo li:hover img.thumb{opacity:.99} /* safari bug */
-.gallery_list li div .caption{font:italic 0.7em/1.4 georgia,serif;}
-#main_image{margin:0 auto 33px auto;height:450px;width:600px;background:white;padding:1px;border:3px double #777;}
-#main_image img{margin-bottom:10px;}
-.nav{padding-top:15px;clear:both;font:90% 'helvetica neue',sans-serif;letter-spacing:2px;text-align:center;font:80%/140% georgia,serif;}
-.caption{font-size: 0.85em;color:#000;}
+#slideshow #slidesContainer {
+  margin: 0px auto;
+  width:480px;
+  height:370px;
+  overflow:auto; /* allow scrollbar */
+  position:relative;
+}
+
+#slideshow #slidesContainer .slide {
+  margin:0 auto;
+  width:460px; /* reduce by 20 pixels to avoid horizontal scroll */
+  height:370px;
+}
+
+/**
+ * Slideshow controls style rules.
+ */
+.control {
+  display:block;
+  width:39px;
+  height:140px;
+  text-indent:-10000px;
+  position:absolute;
+  cursor: pointer;
+}
+#leftControl {
+  top:140px;
+  left:0;
+  background:transparent no-repeat 0 0;
+}
+#rightControl {
+  top:135px;
+  right:0;
+  background:transparent no-repeat 0 0;
+}
+
+.imagetitle {
+  display: block;
+  margin-left: 20px;
+  background:transparent no-repeat 0 0;
+  font-weight: bold;
+  font-size:small;
+}
+	
+.imagealt {
+  display: block;
+  text-align: centre;
+  margin-left: 20px;
+  background:transparent no-repeat 0 0;
+  font-style: italic;
+  font-size:small;
+}
+	
+
+
