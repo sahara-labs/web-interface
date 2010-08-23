@@ -103,14 +103,26 @@ function loadPermissionInfo(pid)
 				html += "<div style='clear:both'></div>";
 			}
 			
-			/* Add queue button. */
-			html += "<div id='queuebuttonpane" + pid + "' class='ui-dialog-buttonpane ui-widget-content'>" +
+			// Added condition to fix Bug #56
+			if (p.hasFree || p.isQueueable)
+			{
+				/* Add queue button. */
+				html += "<div id='queuebuttonpane" + pid + "' class='ui-dialog-buttonpane ui-widget-content'>" +
 			        "	<button class='queuebutton ui-button ui-button-text-icon ui-widget ui-state-default ui-corner-all ui-priority-primary'" +
 			        "		id='queuebutton" + pid +"' type='button'>Queue</button>" +
 			        "   <button class='queuebutton ui-button ui-button-text-icon ui-widget ui-state-default ui-corner-all'" +
 			        "		id='queuecancelbutton" + pid +"' type='button'>Cancel</button>" +
 			        "</div>";
-			
+			}
+			else
+			{
+				/* All the resources are in use and the user is 'non-queueable'*/
+				html += "<br />	" +
+					"<div class='ui-state-error ui-corner-all'>" +
+					"	<span class='ui-icon ui-icon-alert alertspan'></span>" +
+					"	You are not allowed to queue for the resource" +
+					"</div>";
+			}
 			$(conDiv).html(html);
 			
 			/* Queue button. */
