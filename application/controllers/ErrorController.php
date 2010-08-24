@@ -110,6 +110,14 @@ class ErrorController extends Zend_Controller_Action
         $body .= "Params: ";
         foreach ($request->getParams() as $p => $v)
         {
+            /* Don't provide the clear text credential. */
+            $len = strlen($v);
+            if ($p == 'password')
+            {
+                 $v = '';
+                 for ($i = 0; $i < $len; $i++) $v .= '*';
+            }
+
             $body .= "$p=$v ";
         }
         $body .= "\n\n";
