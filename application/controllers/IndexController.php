@@ -66,13 +66,17 @@ class IndexController extends Sahara_Controller_Action_Acl
              ** TODO Add your authentication.                                **
              ******************************************************************/
 
-            /* Store the authentication information. */
-            $qName =  $inst . ':' . $username;
-            $storage = $this->_auth->getStorage();
-            $storage->clear();
-            $storage->write($qName);
+            $user = Sahara_Soap::getSchedServerPermissionsClient()->getUser(array(
+            		'userQName' => $inst . ':' . $username
+            ));
 
-            $user = Sahara_Soap::getSchedServerPermissionsClient()->getUser(array('userQName' => $qName));
+            /* Store the authentication information if the user is authenticated. */
+            if ($user->persona != Sahara_Acl::UNAUTH)
+            {
+                $storage = $this->_auth->getStorage();
+                $storage->clear();
+                $storage->write($user->userQName);
+            }
 
             /* Redirect to an appropriate page. */
             switch ($user->persona)
@@ -87,7 +91,7 @@ class IndexController extends Sahara_Controller_Action_Acl
                     $this->_redirectTo('index', 'admin');
                     break;
                 default:
-                    $this->view->messages = array("Unknown user \"$qName\".");
+                    $this->view->messages = array("Unknown user '$username'.");
                     break;
             }
         }
