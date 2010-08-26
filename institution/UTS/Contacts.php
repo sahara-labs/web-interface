@@ -41,23 +41,24 @@ class UTS_Contacts
 	 /**
      * Array of contact information. The structure is an associative array
      * containing role => contact information.
-     * The contact information is an associative array containing the desired 
+     * The contact information is an associative array containing the desired
      * contact information. This array can contain any key => values as desired.
      */
-		
-	private	$allContacts = array("Operational" => array("Contact Name:" => "Michel de la Villefromoy",
-										  "Contact Phone:" => "(02) 9514 2406",
-										  "Contact Address:" => "UTS Building 1",
-										  "" => "CB01.23.16",
-										  "Contact Email:" => "<a href=\"mailto:mville@eng.uts.edu.au\">Michel de la Villefromoy</a>"),
-							 "Technical" => array("Contact Name:" => "Tania Machet",
-										  "Contact Phone:" => "(02) 9514 2975",
-										  "Contact Address:" => "UTS Building 1",
-										  "" => "CB01.23.16",
-										  "Contact Email:" => "<a href=\"mailto:tania.machet@eng.uts.edu.au\">Tania Machet</a>"));
-										  
+
+	private	$allContacts = array("Labshare" => array(
+										"Postal Address:" => "Labshare<br />
+										                      Faculty of Engineering and IT<br />
+									 	                      University of Technology, Sydney<br />
+	                                                          P.O. Box 123<br />
+	                                                          Broadway, NSW 2007<br />
+	                                                          Australia",
+	                                ),
+	                              "Labshare Help Desk" => array(
+	                                    "Email:"       => "<a href='mailto:helpdesk@labshare.edu.au'>helpdesk@labshare.edu.au</a>"
+	                                ));
+
 	public function getContacts()
 	{
-		return $this->allContacts;	
+		return $this->allContacts;
 	}
 }
