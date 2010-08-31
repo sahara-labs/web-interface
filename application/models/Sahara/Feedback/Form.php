@@ -71,8 +71,9 @@ class Sahara_Feedback_Form extends Zend_Form
         $type = new Zend_Form_Element_Select('type');
         $type->setLabel('Type:')
              ->setMultiOptions(array(
+                 'Help Request' => 'Help Request',
                  'General comment' => 'General comment',
-                 'Bug report'     => 'Bug report',
+                 'Fault report'     => 'Fault report',
                  'Feature request' => 'Feature request'
              ))
              ->setDecorators(Sahara_Decorator_Table::$ELEMENT);
