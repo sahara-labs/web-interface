@@ -88,11 +88,15 @@ legend {
     position: relative;
 }
 
-#headerimg {
+.headerimg {
     float: left;
     padding-right: 10px;
     height: 100%;
     margin-top: 7px;
+}
+
+.headerimg a img {
+	border: 0;
 }
 
 #headername {
@@ -110,6 +114,10 @@ legend {
     float: right;
     margin-top: -7px;
     margin-right:10px;
+}
+
+#labshareimg img {
+	border: 0;
 }
 
 /******************************************************************************

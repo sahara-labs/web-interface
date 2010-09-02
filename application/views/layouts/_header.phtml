@@ -52,22 +52,22 @@ $headerName = $this->baseUrl($headerName);
 <script>
   DD_belatedPNG.fix('img');
 </script>
-<![endif]--> 
+<![endif]-->
 
-<div id="headerimg" >
-	<?php if ($headerImgLink != null): 
-    			echo "<a href=\"".$headerImgLink."\">";
-    			endif; ?>
-	<img src="<?=$headerImg?>" border="0" alt="Institution Logo" />
-	<?php if ($headerImgLink != null): 
-    			echo "</a>"; endif; ?>
+<div class="headerimg" >
+<?php if ($headerImgLink != null): ?>
+   	<a href="<?=$headerImgLink?>">
+		<img src="<?=$headerImg?>" alt="Institution Logo" />
+    </a>
+<?php endif; ?>
 </div>
 
-<div id="headerimg" >
+<div class="headerimg" >
 	<img src="<?=$headerName?>" alt="Lab Name" />
 </div>
 
 <div id="labshareimg">
 	<a href="http://www.labshare.edu.au/">
-		<img src="<?=$this->baseUrl('images/labshare.png')?>" border="0" alt="LabShare" /></a>
+		<img src="<?=$this->baseUrl('images/labshare.png')?>" alt="LabShare" />
+	</a>
 </div>
