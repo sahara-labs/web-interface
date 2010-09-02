@@ -38,7 +38,7 @@
 $form = new Sahara_Feedback_Form();
 ?>
 
-<div id="feedbackdialog" title="Contact Support">
+<div id="supportdialog" title="Contact Support">
 	The request will be sent to the Remote Labs support team:
 	<form id="feedback_form">
 	    <?=$form->getDisplayGroup('feedback_form')->render()?>
@@ -48,7 +48,7 @@ $form = new Sahara_Feedback_Form();
 <script type="text/javascript">
 function feedbackSuccess()
 {
-	$("div[aria-labelledby=ui-dialog-title-feedbackdialog] .ui-dialog-buttonpane").css("display", "none");
+	$("div[aria-labelledby=ui-dialog-title-supportdialog] .ui-dialog-buttonpane").css("display", "none");
 }
 
 $(document).ready(function () {
@@ -56,7 +56,7 @@ $(document).ready(function () {
 	 $("#feedback_form").validationEngine({
     	 ajaxSubmit: true,
     	 ajaxSubmitFile: "<?= $this->url(array('controller' => 'index', 'action' => 'feedback'))?>",
-    	 ajaxSubmitMessage: "Thank you for your feedback.",
+    	 ajaxSubmitMessage: "Thank you for your support request submission.",
        	 success: function() { feedbackSuccess(); },
        	 failure: function() { }
 	 });
