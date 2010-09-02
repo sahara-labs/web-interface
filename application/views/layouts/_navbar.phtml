@@ -77,12 +77,12 @@ switch ($this->userRole)
 ?>
 
 <div class="menu ui-corner-bottom">
-	<ul id="menu">
+	<ol id="menu">
 	<?php foreach ($menu as $title => $url): ?>
 		<li <?php if ($this->controller == $url['controller'] && $this->action == $url['action']) echo 'value="1"'; ?>>
 			<a class="plaina apad" href="<?=$this->url($url, null, true)?>"><?=$title?></a>
 		</li>
 	<?php endforeach; ?>
-	</ul>
+	</ol>
 	<div id="slide"></div>
 </div>
