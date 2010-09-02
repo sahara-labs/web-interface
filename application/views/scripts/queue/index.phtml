@@ -257,54 +257,52 @@ $(document).ready(function() {
 
 <!-- Legend for icon information. -->
 
-<div id="iconlegends" class="legend">
-    <div id="iconlegend">
-		<h3>Permision Descriptions:</h3>
+<div id="iconlegend" class="ui-corner-all ">
+	<div class="legendheading">
+		<p>Legend:</p>
 		<ul>
-    		<li><img src="<?=$this->baseUrl('images/permission_launch.png')?>" alt="Allowed" />  
-    		 Active <span class="legendtext"> You may queue for this resource.  </span></li>
-    		<li><img src="<?=$this->baseUrl('images/permission_expired.png')?>" alt="Expired" />
-    		Not Active <span class="legendtext"> You do not currently have permission to queue.</span></li>
-    		<li><img src="<?=$this->baseUrl('images/permission_locked.png')?>" alt="Locked" />
-    		Locked <span class="legendtext"> The resource is active but locked. You must supply a pass key before you can queue.</span></li>
-   	 	</ul>
-    </div>
-    <div id="balliconlegend">
-		<h3>Resource Status Descriptions:</h3>
-		<ul>
-			<li><img src="<?=$this->baseUrl('images/balls/green_small.gif')?>" alt="Free" />
-    		Free <span class="legendtext"> The resource is free to use.</span></li>
-    		<li><img src="<?=$this->baseUrl('images/balls/yellow_small.gif')?>" alt="In Use" />
-    		In Use <span class="legendtext"> The resource is online and in use. You will be queued to use the resource after the current user and
-    		any preceding queued users.</span></li>
-    		<li><img src="<?=$this->baseUrl('images/balls/red_small.gif')?>" alt="Offline" />
-    		Offline <span class="legendtext"> The resource is offline and can not be used.</span></li>
-    	</ul>
-    </div>
+			<li class="legendlabel0"> <img src="<?=$this->baseUrl('/images/permission_launch22.png')?>")/>Active
+				<div class="legendtext lt0"><div class = legendimage><img src="/images/permission_launch.png" alt="Allowed" /></div><div class="desc" >
+					Active: You may queue for this resource.</div></div></li>
+			<li class="legendlabel1"> <img src="<?=$this->baseUrl('/images/permission_expired22.png')?>") />Inactive
+				<div class="legendtext lt1"><div class = legendimage><img src="/images/permission_expired.png" alt="Allowed" /></div><div class="desc" >
+					Inactive: You do not currently have permission to queue.</div></div></li>
+			<li class="legendlabel2"> <img src="<?=$this->baseUrl('/images/permission_locked22.png')?>") />Locked
+				<div class="legendtext lt2"><div class = legendimage><img src="/images/permission_locked.png" alt="Allowed" /></div><div class="desc" >
+					Locked: The resource is active but locked.  You must supply a pass key before you can queue.</div></div></li>
+			<li class="legendlabel3"> <img src="<?=$this->baseUrl('/images/balls/green_small.gif')?>")/>Free
+				<div class="legendtext lt3"><div class = legendimage><img src="/images/balls/green.gif" alt="Allowed" /></div><div class="desc" >
+					Free: The resource is free to use.</div></div></li>
+			<li class="legendlabel4"> <img src="<?=$this->baseUrl('/images/balls/yellow_small.gif')?>") />In Use
+				<div class="legendtext lt4"><div class = legendimage><img src="/images/balls/yellow.gif" alt="Allowed" /></div><div class="desc" >
+					In Use: The resource is online and in use. You will be queued to use the resource after the current user and any preceding queued users.</div></div></li>
+			<li class="legendlabel5"> <img src="<?=$this->baseUrl('/images/balls/red_small.gif')?>") />Offline
+				<div class="legendtext lt5"><div class = legendimage><img src="/images/balls/red.gif" alt="Allowed" /></div><div class="desc" >
+					Offline: The resource is offline and cannot be used.</div></div></li>
+		</ul>
+	</div>
 </div>
 
 
-<!--[if gt IE 7]><!-->
  <script>
-	$("#iconlegends li").hover(
+TTStates = new Object;
+<?php for ($i = 0; $i < 6; $i++): ?>
+$(".legendlabel<?=$i?>").hover(
+		function () {
+  	  		TTStates["<?=$i?>"] = true;
+    		setTimeout("loadLegendTooltip(<?=$i?>, TTStates)", 1200);
+		},
   		function () {
-    		$(this).css("font-weight","bold");
-    		$(this).children("span").css("display","inline");
-  		}, 
-  		function () {
-	    	$(this).css("font-weight","normal");
-			$(this).children("span").css("display","none");
+  			if (TTStates["<?=$i?>"])
+  			{
+  				$(".legendlabel" + <?=$i?>).css("font-weight","normal");
+  				$(".legendtext.lt" + <?=$i?>).fadeOut();
+  			}
+  			TTStates["<?=$i?>"] = false;
   		}
-	);
- </script>
-<!-- <![endif]--> 
-
-<!--[if lte IE 7]>
-  <script>
-	$("#iconlegends li").css("font-weight","bold");
-	$("#iconlegends li").children("span").css("display","inline");
-  </script>
-<![endif]--> 
+);
+<?php endfor; ?>
+</script>
 
 <?php else: ?>
 	<div class="ui-state-error ui-corner-all alertdiv centercontent" style="width:350px">

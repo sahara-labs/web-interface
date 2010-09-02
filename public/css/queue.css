@@ -188,57 +188,74 @@
 .queuerequestloading {
 }
 
-#iconlegends {
-    font-size: 0.75em;
-    padding: 0px;
-    margin: 0px;
+/******************************************************************************
+ ** Legend                                                                   **
+ ******************************************************************************/
+
+
+#iconlegend {
+	top: 185px;
+	position:absolute;
+	width:10em;
+	
 }
 
+.legendheading {
+	padding-left:5px; 
+	font-weight:bold;
+}
 
-#iconlegends div img {
-    height: 25px;
-    width: 25px;
+	
+#iconlegend ul {
+	list-style-type: circle;
+    padding: 0;
+    margin: 0;
+    margin-left: 10px;
+	font-weight:normal;
+    font-size: 0.8em;
+}
+	
+#iconlegend li {
+    margin-top: 5px;
+}
+
+#iconlegend img {
     padding-right: 10px;
 }
 
-#iconlegend {
-    float: left;
-    width: 30%;
-    padding-top: 15px;
-    padding-left: 150px;
-    padding-right: 50px;
-}
-
-#iconlegends li {
-    list-style: none;
-}
-
 .legendtext {
-    display:none; 
-    padding-left: 4px;
-    font-weight:normal;
-    height: 40px;
+	display: none;
+	position: absolute;
+	width:250px;
+	margin-left: -125px;
+	margin-top: 15px;
+	background-color: #606060;
+	color: #FEFEFE;
+	order:1px solid #000000;
+	padding: 6px;
+	font-weight:normal;
+	-webkit-box-shadow: 0 0 8px #606060;
+	-moz-box-shadow:0 0 8px #606060;
+    box-shadow: 0 0 8px #606060;
+    opacity: 0.7;
+    filter: alpha(opacity = 70);
+    filter: progid:DXImageTransform.Microsoft.Shadow(color=#606060, Strength=8);
+    z-index: 100;
+}	
+
+.legendimage{
+    padding-right: 0px;
+	width: 20%;
+	float: left;
+	background-color: white;
 }
 
-.legendhover {
-    display:none;
-    border: 1px solid #999999;
-    -moz-box-shadow: 5px 5px 4px #B5B5B5;
-    margin-top: -35px;
-    margin-left: -35px;
-    background-color:white;
+.legendtext .desc{
+	padding-left: 10px;
+	width: 75%;
+	float: left;
 }
 
-.hoverimg{
-    /*float: left;
-    background-color: #B5B5B5;*/    
-}
-    
-
-#balliconlegend {
-    padding-top: 15px;
-    
-}
 
 /******************************************************************************
  ** Queuing page.                                                            **
