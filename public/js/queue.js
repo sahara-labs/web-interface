@@ -393,11 +393,11 @@ function updateQueueInfo()
 	);
 }
 
-function loadLegendTooltip(ttId,ttStates)
+function loadLegendTooltip(ttId, ttStates)
 {
 	if (ttStates[ttId])
 	{
-		$(".legendlabel" + ttId).css("font-weight","bold");
-		$(".legendtext.lt" + ttId).fadeIn();
+		$("#legendlabel" + ttId).css("font-weight","bold");
+		$("#lt" + ttId).fadeIn();
 	}
 }
