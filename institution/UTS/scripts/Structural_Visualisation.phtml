@@ -37,18 +37,142 @@
  */
 
 $this->headLink()->appendStylesheet($this->baseUrl('uts/structuralvisualisation/structuralvisualisation.css'));
+$this->headScript()->appendFile($this->baseUrl('uts/structuralvisualisation/structuralvisualisation.js'));
 
 $cam = new Sahara_Session_Element_Cameras($this->rigClient);
 $cam->setDraggable(false);
+
+
+/* Forces buttons. */
+$horizforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'force',
+    array(
+        array(
+        	'title'      => 'Vertical 1',
+        	'icon'       => '/uts/fpga/images/switchup.png',
+            'click'		 => 'setIO(1)'
+            ),
+        array(
+        	'title'      => 'Vertical 2',
+        	'icon'       => '/uts/fpga/images/switchup.png',
+            'click'		 => 'setIO(1)'
+            ),
+    ),
+    array(
+        'orientation' => Sahara_Session_Element_MultiButtons::VERTICAL,
+        'top'         => 30,
+        'left'        => 550,
+        'width'       => 65,
+        'height'      => 60
+    )
+);
+    
+$vertforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'force',
+    array(
+    	array(
+        	'title'      => 'Horizontal 1',
+        	'icon'       => '/uts/fpga/images/switchup.png',
+            'click'		 => 'setIO(1)'
+                ),
+        array(
+        	'title'      => 'Horizontal 2',
+        	'icon'       => '/uts/fpga/images/switchup.png',
+            'click'		 => 'setIO(1)'
+                ),
+    ),
+    array(
+        'orientation' => Sahara_Session_Element_MultiButtons::VERTICAL,
+        'top'         => 200,
+        'left'        => 550,
+        'width'       => 65,
+        'height'      => 60
+    )
+);
+
 ?>
-<div id="SVradio" >
-	<input type="radio" name="model" value="0" checked="checked" style="vertical-align: middle; margin: 0px;"/> Model 1: Modellabel 1 <br/>
-	<input type="radio" name="model" value="1" style="vertical-align: middle; margin: 0px;"/> Model 2: Modellabel 2<br/>
-	<input type="radio" name="model" value="1" style="vertical-align: middle; margin: 0px;"/> Model 3: Modellabel 3<br/>
-	<input type="radio" name="model" value="1" style="vertical-align: middle; margin: 0px;"/> Model 4: Modellabel 4<br/>
+
+<div id="SVradio" class="ui-corner-all">
+	<h2>Select a model:</h2>
+	<ul>
+		<li><input type="radio" name="model" value="0" checked="checked" style="vertical-align: middle; margin: 0px;"/> Model 1: Modellabel 1 <br/></li>
+		<li><input type="radio" name="model" value="1" style="vertical-align: middle; margin: 0px;"/> Model 2: Modellabel 2<br/></li>
+		<li><input type="radio" name="model" value="1" style="vertical-align: middle; margin: 0px;"/> Model 3: Modellabel 3<br/></li>
+		<li><input type="radio" name="model" value="1" style="vertical-align: middle; margin: 0px;"/> Model 4: Modellabel 4<br/></li>
+	</ul>
+</div>
+
+<div id="modeldesc" class="ui-corner-all overlayelementhide">
+	<div class="sessionpanelheader">
+		<p style="text-align:left; font-weight:bold"><span class="ui-icon ui-icon-lightbulb sessionpanelheadericon"></span>
+		Description of Model x:</p>
+		<a href="#" id="modelhide" class="sessionpanelhide plaina">
+			<span class="ui-icon ui-icon-arrowthickstop-1-s"></span>Hide Description
+		</a>
+	</div>
+	<div id="modelcontent" style="display:block">
+		This is an example of what can be shown in this panel, what do you think?
+	</div>
+</div>
+
+<div id="forcedesc" class="ui-corner-all overlayelementhide">
+	<div class="sessionpanelheader">
+		<p style="text-align:left; font-weight:bold"><span class="ui-icon ui-icon-lightbulb sessionpanelheadericon"></span>
+		Force application scenario:</p>
+		<a href="#" id="forcehide" class="sessionpanelhide plaina">
+			<span class="ui-icon ui-icon-arrowthickstop-1-s"></span>Hide Description
+		</a>
+	</div>
+	<div id="forcecontent" style="display:block">
+		This is an example of what can be shown in this panel, what do you think?
+	</div>
 </div>
 
 <?php
 echo $cam;
+echo $horizforce;
+echo $vertforce;
 ?>
 
+<script type="text/javascript">
+//<![CDATA[
+$(document).ready( function() {
+	
+	$properties = performPrimitiveJSON('StructuralVisualisation','loadConfig',null);
+	
+	$("#modelhide").click(function() {
+		if ($("#modelcontent").css('display') == 'block')
+		{
+			$("#modelcontent").slideUp('slow', function() {
+				setTimeout("resizeFooter()", 100);
+			});
+			$("#modelhide").html('<span class="ui-icon ui-icon-arrowthickstop-1-s"></span>Show Description');
+		}
+		else
+		{
+			$("#modelcontent").slideDown('slow', function() {
+				setTimeout("resizeFooter()", 100);
+			});
+			$("#modelhide").html('<span class="ui-icon ui-icon-arrowthickstop-1-n"></span>Hide Description');
+		}
+	});
+
+	$("#forcehide").click(function() {
+		if ($("#forcecontent").css('display') == 'block')
+		{
+			$("#forcecontent").slideUp('slow', function() {
+				setTimeout("resizeFooter()", 100);
+			});
+			$("#forcehide").html('<span class="ui-icon ui-icon-arrowthickstop-1-s"></span>Show Description');
+		}
+		else
+		{
+			$("#forcecontent").slideDown('slow', function() {
+				setTimeout("resizeFooter()", 100);
+			});
+			$("#forcehide").html('<span class="ui-icon ui-icon-arrowthickstop-1-n"></span>Hide Description');
+		}
+	});
+
+});
+
+//]]>
+</script>
