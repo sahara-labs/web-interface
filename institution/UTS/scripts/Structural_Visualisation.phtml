@@ -42,12 +42,13 @@ $this->headScript()->appendFile($this->baseUrl('uts/structuralvisualisation/stru
 $cam = new Sahara_Session_Element_Cameras($this->rigClient);
 $cam->setDraggable(false);
 
+$model = new UTS_StructuralVisualisation($this->rigClient);
 
 /* Forces buttons. */
-$horizforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'force',
+$horizforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'hforce',
     array(
         array(
-        	'title'      => 'Vertical 1',
+        	'title'      => $this->models[0]['label'],
         	'icon'       => '/uts/fpga/images/switchup.png',
             'click'		 => 'setIO(1)'
             ),
@@ -66,7 +67,7 @@ $horizforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'force',
     )
 );
     
-$vertforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'force',
+$vertforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'vforce',
     array(
     	array(
         	'title'      => 'Horizontal 1',
