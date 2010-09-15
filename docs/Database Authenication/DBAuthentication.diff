@@ -1,28 +1,8 @@
-Index: application/configs/config.ini
-===================================================================
---- application/configs/config.ini	(revision 820)
-+++ application/configs/config.ini	(working copy)
- 
- ; Display Information
- ; Header Infomation
-@@ -53,6 +53,14 @@
- ; By default it is cached.
- SOAP.cacheWSDL = false
- 
-+;Database for user password information
-+db.adapter = PDO_MYSQL
-+db.params.host = localhost
-+db.params.username = authuser
-+db.params.password = auth1
-+db.params.dbname = sahara
-+db.params.port = 3306
-+
- [development : production]
- 
- logger.level = DEBUG
+### Eclipse Workspace Patch 1.0
+#P WI
 Index: application/controllers/IndexController.php
 ===================================================================
---- application/controllers/IndexController.php	(revision 820)
+--- application/controllers/IndexController.php	(revision 1639)
 +++ application/controllers/IndexController.php	(working copy)
 @@ -55,6 +55,11 @@
          $form = new Sahara_Auth_Form();
@@ -32,15 +12,14 @@ Index: application/controllers/IndexController.php
 +        $db = Zend_Db::factory($this->_config->db);
 +        Zend_Db_Table_Abstract::setDefaultAdapter($db);
 +        Zend_Registry::set('db', $db);
-+
++        
          if ($this->_request->isPost() && $form->isValid($this->_request->getParams()))
          {
              Zend_Session::regenerateId();
-@@ -65,14 +70,30 @@
-             /******************************************************************
+@@ -66,6 +71,30 @@
               ** TODO Add your authentication.                                **
               ******************************************************************/
--
+ 
 +            $adapter = new Zend_Auth_Adapter_DbTable(Zend_Registry::get('db'),
 +									'users',		// Contact table
 +									'name', 		// Column containing identity
@@ -59,18 +38,17 @@ Index: application/controllers/IndexController.php
 +				return;				
 +			}
 +            
-             /* Store the authentication information. */
-             $qName =  $inst . ':' . $username;
-             $storage = $this->_auth->getStorage();
-             $storage->clear();
-             $storage->write($qName);
- 
--
-             $user = Sahara_Soap::getSchedServerPermissionsClient()->getUser(array('userQName' => $qName));
-             if ($user->persona == 'NOTFOUND')
-             {
-@@ -81,22 +102,22 @@
-                  **************************************************************/
++            /* Store the authentication information. */
++            $qName =  $inst . ':' . $username;
++            $storage = $this->_auth->getStorage();
++            $storage->clear();
++            $storage->write($qName);
++ 
+             $user = Sahara_Soap::getSchedServerPermissionsClient()->getUser(array(
+             		'userQName' => $inst . ':' . $username
+             ));
+@@ -78,22 +107,22 @@
+                 $storage->write($user->userQName);
              }
  
 -            /* Redirect to an appropriate page. */
@@ -86,10 +64,10 @@ Index: application/controllers/IndexController.php
 -                    $this->_redirectTo('index', 'admin');
 -                    break;
 -                default:
--                    $this->view->messages = array("Unknown user \"$qName\".");
+-                    $this->view->messages = array("Unknown user '$username'.");
 -                    break;
 -            }
-+           /* Redirect to an appropriate page. */
++          /* Redirect to an appropriate page. */
 +		   switch ($user->persona)
 +		   {
 +		   		case Sahara_Acl::USER:
@@ -108,3 +86,23 @@ Index: application/controllers/IndexController.php
          }
      }
  
+Index: application/configs/config.ini
+===================================================================
+--- application/configs/config.ini	(revision 1047)
++++ application/configs/config.ini	(working copy)
+ 
+@@ -60,6 +60,14 @@
+ ; Primitive default content-type
+ primitive.file.mime = text/csv
+ 
++;Database for user password information
++db.adapter = PDO_MYSQL
++db.params.host = localhost
++db.params.username = authuser
++db.params.password = auth1
++db.params.dbname = sahara
++db.params.port = 3306
++
+ [development : production]
+ 
+ logger.level = DEBUG
