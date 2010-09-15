@@ -64,7 +64,7 @@ class UTS_News
 						Additional funding has been recieved by the <a href='http://labshare.edu.au'>
 						<strong>Labshare</strong></a> project for <em>research remote laboratory use</em> and
 						a <em>federated access </em>implementation using Shibboleth with the infrastructure provided by
-						the <a href='http://www.aaf.com.au'>Australian Access Federation</strong></a>.
+						the <a href='http://www.aaf.edu.au'>Australian Access Federation</strong></a>.
 					</li>
 					<li style='margin-bottom:15px'>
 						Labshare is conducting its sharing trials where multiple installations of Sahara at different
