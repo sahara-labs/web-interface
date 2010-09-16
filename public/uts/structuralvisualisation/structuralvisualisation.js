@@ -35,7 +35,63 @@
  * @date 6th September 2010
  */
 
-function checkConfig()
+var modelState = 1;
+var maxModel = 4;
+var maxVertical = 4;
+var maxHorizontal = 4;
+var models = new Array();
+
+/* Initialise the values for the model from the config read at the rig client */
+function initConfig(param)
 {
-	echo "test";
+	for (var i in param)
+	{
+		if (param[i].name == "MaxModels" ) maxModel = param[i].value;
+		if (param[i].name == "MaxHorizontal" ) maxHorizontal = param[i].value;
+		if (param[i].name == "MaxVertical" ) maxVertical = param[i].value;
+
+		var modelID = param[i].name.split("_");
+
+		if (modelID[1] == "LABEL")
+		{
+			models[modelID[0]] = param[i].value;
+		};
+	};
+
+	for (var mod in models)
+	{
+		$("#SVradio ul").append(
+			'<li><input type="radio" name="model" value="' + mod + '" style="vertical-align: middle; margin: 0px;"/>'
+				+  models[mod] + '<br/></li>' 
+		);
+	};
+}
+
+function setIO(i)
+{
+	if (io[i] == 0)
+	{
+		addSVMessage("Force " + i + " turned on.");
+		
+		io[i] = 1;
+		$("#vforce" + i).css('background-color', '#62E877');
+		$("#vforce" + i + " img").attr('src', '/uts/fpga/images/' + 'switchdown.png');
+	}
+	else
+	{
+		addSVMessage("Force " +  i + " turned off.");
+		
+		io[i] = 0;
+		$("#vforce" + i).css('background-color', '#ED8686');
+		$("#vforce" + i + " img").attr('src', '/uts/fpga/images/' + 'switchup.png');
+	}
+	
+	var val = 0;
+	for (var i = 0; i < 8; i++)
+	{
+		val += io[i] * Math.pow(2, i);
+	}
+	//TODO
+	//Send value
+	
 }

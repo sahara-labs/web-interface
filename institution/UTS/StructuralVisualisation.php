@@ -46,6 +46,10 @@ class UTS_StructuralVisualisation extends Sahara_Session_Element
     {
     	parent::__construct($rig);
     	
+    	$this->_view->setScriptPath(realpath(dirname(__FILE__)));
+    	
+    	$this->init();
+    	
     }
 
 	/**
@@ -143,7 +147,6 @@ class UTS_StructuralVisualisation extends Sahara_Session_Element
     {
         $this->init();
         $this->_view->models = $this->_modelConfig;
-        
     }
     
     

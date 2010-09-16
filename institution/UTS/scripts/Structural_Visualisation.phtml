@@ -36,26 +36,26 @@
  * @date 03 September 2010
  */
 
-$this->headLink()->appendStylesheet($this->baseUrl('uts/structuralvisualisation/structuralvisualisation.css'));
 $this->headScript()->appendFile($this->baseUrl('uts/structuralvisualisation/structuralvisualisation.js'));
+$this->headLink()->appendStylesheet($this->baseUrl('uts/structuralvisualisation/structuralvisualisation.css'));
 
 $cam = new Sahara_Session_Element_Cameras($this->rigClient);
 $cam->setDraggable(false);
 
-$model = new UTS_StructuralVisualisation($this->rigClient);
+//$model = new UTS_StructuralVisualisation($this->rigClient);
 
 /* Forces buttons. */
-$horizforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'hforce',
+$horizforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'vforce',
     array(
         array(
         	'title'      => $this->models[0]['label'],
         	'icon'       => '/uts/fpga/images/switchup.png',
-            'click'		 => 'setIO(1)'
+            'click'      => "performPrimitiveJSON('StructuralVisualisationController', 'getConfig', null, checkState, 'Does this work...', false)"
             ),
         array(
         	'title'      => 'Vertical 2',
         	'icon'       => '/uts/fpga/images/switchup.png',
-            'click'		 => 'setIO(1)'
+            'click'      => "setIO(1)"
             ),
     ),
     array(
@@ -67,7 +67,7 @@ $horizforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'hforce'
     )
 );
     
-$vertforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'vforce',
+$vertforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'hforce',
     array(
     	array(
         	'title'      => 'Horizontal 1',
@@ -94,10 +94,6 @@ $vertforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'vforce',
 <div id="SVradio" class="ui-corner-all">
 	<h2>Select a model:</h2>
 	<ul>
-		<li><input type="radio" name="model" value="0" checked="checked" style="vertical-align: middle; margin: 0px;"/> Model 1: Modellabel 1 <br/></li>
-		<li><input type="radio" name="model" value="1" style="vertical-align: middle; margin: 0px;"/> Model 2: Modellabel 2<br/></li>
-		<li><input type="radio" name="model" value="1" style="vertical-align: middle; margin: 0px;"/> Model 3: Modellabel 3<br/></li>
-		<li><input type="radio" name="model" value="1" style="vertical-align: middle; margin: 0px;"/> Model 4: Modellabel 4<br/></li>
 	</ul>
 </div>
 
@@ -137,8 +133,8 @@ echo $vertforce;
 //<![CDATA[
 $(document).ready( function() {
 	
-	$properties = performPrimitiveJSON('StructuralVisualisation','loadConfig',null);
-	
+	performPrimitiveJSON('StructuralVisualisationController','getConfig',null,initConfig,null,null);
+
 	$("#modelhide").click(function() {
 		if ($("#modelcontent").css('display') == 'block')
 		{
