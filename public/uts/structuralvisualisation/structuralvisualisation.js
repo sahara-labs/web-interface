@@ -35,15 +35,19 @@
  * @date 6th September 2010
  */
 
-var modelState = 1;
+var modelState = 2;
 var maxModel = 4;
 var maxVertical = 4;
 var maxHorizontal = 4;
 var models = new Array();
+var data;
+var vforcebuttons = null;
 
 /* Initialise the values for the model from the config read at the rig client */
 function initConfig(param)
 {
+	data = param;
+
 	for (var i in param)
 	{
 		if (param[i].name == "MaxModels" ) maxModel = param[i].value;
@@ -51,11 +55,7 @@ function initConfig(param)
 		if (param[i].name == "MaxVertical" ) maxVertical = param[i].value;
 
 		var modelID = param[i].name.split("_");
-
-		if (modelID[1] == "LABEL")
-		{
-			models[modelID[0]] = param[i].value;
-		};
+		if (modelID[1] == "LABEL")			models[modelID[0]] = param[i].value;
 	};
 
 	for (var mod in models)
@@ -65,6 +65,21 @@ function initConfig(param)
 				+  models[mod] + '<br/></li>' 
 		);
 	};
+}
+function checkState(param)
+{
+	alert(param);
+}
+
+function addVerticalForce(force,details)
+{
+	var tmp = details.split(",");
+	var label = tmp[0].split("=");
+	var desc = tmp[1].split("=");
+    vforcebuttons += "array('title' => " + label[1] +
+	        		" 'icon'   => '/uts/fpga/images/switchup.png'," +
+	            	" 'click'  => \"performPrimitiveJSON('StructuralVisualisationController', 'getConfig', null, checkState, 'Does this work...', false)" +
+	            ")";
 }
 
 function setIO(i)

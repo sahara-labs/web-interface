@@ -150,6 +150,10 @@
 	
 }
 
+#modelcontent{
+	padding: 5px;
+}
+
 #forcedesc{
 	width: 48%;
 	top:370px;

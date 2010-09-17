@@ -45,10 +45,11 @@ $cam->setDraggable(false);
 //$model = new UTS_StructuralVisualisation($this->rigClient);
 
 /* Forces buttons. */
-$horizforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'vforce',
+
+$vertforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'vforce',
     array(
         array(
-        	'title'      => $this->models[0]['label'],
+        	'title'      => "tania",
         	'icon'       => '/uts/fpga/images/switchup.png',
             'click'      => "performPrimitiveJSON('StructuralVisualisationController', 'getConfig', null, checkState, 'Does this work...', false)"
             ),
@@ -67,7 +68,7 @@ $horizforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'vforce'
     )
 );
     
-$vertforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'hforce',
+$horizforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'hforce',
     array(
     	array(
         	'title'      => 'Horizontal 1',
@@ -100,13 +101,12 @@ $vertforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'hforce',
 <div id="modeldesc" class="ui-corner-all overlayelementhide">
 	<div class="sessionpanelheader">
 		<p style="text-align:left; font-weight:bold"><span class="ui-icon ui-icon-lightbulb sessionpanelheadericon"></span>
-		Description of Model x:</p>
+		Description of Model:</p>
 		<a href="#" id="modelhide" class="sessionpanelhide plaina">
 			<span class="ui-icon ui-icon-arrowthickstop-1-s"></span>Hide Description
 		</a>
 	</div>
 	<div id="modelcontent" style="display:block">
-		This is an example of what can be shown in this panel, what do you think?
 	</div>
 </div>
 
@@ -119,7 +119,6 @@ $vertforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'hforce',
 		</a>
 	</div>
 	<div id="forcecontent" style="display:block">
-		This is an example of what can be shown in this panel, what do you think?
 	</div>
 </div>
 
@@ -129,13 +128,34 @@ echo $horizforce;
 echo $vertforce;
 ?>
 
+
 <script type="text/javascript">
 //<![CDATA[
+
 $(document).ready( function() {
 	
 	performPrimitiveJSON('StructuralVisualisationController','getConfig',null,initConfig,null,null);
 
-	$("#modelhide").click(function() {
+	var vforces=0;
+	var hforces=0;
+	for (var i in data)
+	{
+		var modelParam = data[i].name.split("_");
+		if (modelParam[0] == modelState)
+		{
+			if (modelParam[1]=="DESCRIPTION")
+			{
+				document.getElementById("modelcontent").lastChild.replaceWholeText(data[i].value); 
+			} 	
+			if (modelParam[1]=="VERTICAL")
+			{
+				vforces++;
+				addVerticalForce(modelParam, data[i].value); 
+			} 	
+		}
+	};
+
+     $("#modelhide").click(function() {
 		if ($("#modelcontent").css('display') == 'block')
 		{
 			$("#modelcontent").slideUp('slow', function() {
