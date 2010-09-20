@@ -1,3 +1,5 @@
+/* Menu slider from http://www.leigeber.com/2008/05/sliding-javascript-menu-highlight-1kb/ */
+
 var menuSlider=function(){
 	var m,e,g,s,q,i; e=[]; q=8; i=8;
 	return{
