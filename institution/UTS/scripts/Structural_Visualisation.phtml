@@ -42,10 +42,8 @@ $this->headLink()->appendStylesheet($this->baseUrl('uts/structuralvisualisation/
 $cam = new Sahara_Session_Element_Cameras($this->rigClient);
 $cam->setDraggable(false);
 
-//$model = new UTS_StructuralVisualisation($this->rigClient);
 
 /* Forces buttons. */
-
 $vertforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'vforce',
     array(
         array(
@@ -53,15 +51,10 @@ $vertforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'vforce',
         	'icon'       => '/uts/fpga/images/switchup.png',
             'click'      => "performPrimitiveJSON('StructuralVisualisationController', 'getConfig', null, checkState, 'Does this work...', false)"
             ),
-        array(
-        	'title'      => 'Vertical 2',
-        	'icon'       => '/uts/fpga/images/switchup.png',
-            'click'      => "setIO(1)"
-            ),
     ),
     array(
         'orientation' => Sahara_Session_Element_MultiButtons::VERTICAL,
-        'top'         => 30,
+        'top'         => 50,
         'left'        => 550,
         'width'       => 65,
         'height'      => 60
@@ -72,11 +65,6 @@ $horizforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'hforce'
     array(
     	array(
         	'title'      => 'Horizontal 1',
-        	'icon'       => '/uts/fpga/images/switchup.png',
-            'click'		 => 'setIO(1)'
-                ),
-        array(
-        	'title'      => 'Horizontal 2',
         	'icon'       => '/uts/fpga/images/switchup.png',
             'click'		 => 'setIO(1)'
                 ),
@@ -119,6 +107,11 @@ $horizforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'hforce'
 		</a>
 	</div>
 	<div id="forcecontent" style="display:block">
+		<div id="vforcecontent" style="display:block">  No vertical force is applied (0 Newtons)
+		</div>
+		<br></br>
+		<div id="hforcecontent" style="display:block"> No horizontal force is applied (0 Newtons)
+		</div>
 	</div>
 </div>
 
@@ -136,24 +129,6 @@ $(document).ready( function() {
 	
 	performPrimitiveJSON('StructuralVisualisationController','getConfig',null,initConfig,null,null);
 
-	var vforces=0;
-	var hforces=0;
-	for (var i in data)
-	{
-		var modelParam = data[i].name.split("_");
-		if (modelParam[0] == modelState)
-		{
-			if (modelParam[1]=="DESCRIPTION")
-			{
-				document.getElementById("modelcontent").lastChild.replaceWholeText(data[i].value); 
-			} 	
-			if (modelParam[1]=="VERTICAL")
-			{
-				vforces++;
-				addVerticalForce(modelParam, data[i].value); 
-			} 	
-		}
-	};
 
      $("#modelhide").click(function() {
 		if ($("#modelcontent").css('display') == 'block')

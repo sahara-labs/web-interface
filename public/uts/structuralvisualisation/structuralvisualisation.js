@@ -37,33 +37,76 @@
 
 var modelState = 2;
 var maxModel = 4;
-var maxVertical = 4;
-var maxHorizontal = 4;
-var models = new Array();
+var verticalState = new Array(0,0,0,0,0,0,0,0,0);
+var horizontalState = new Array(0,0,0,0,0,0,0,0,0);
 var data;
-var vforcebuttons = null;
+
+var models = new Array();
+function ModelInfo(label)
+{
+	this.label = label;
+	this.description = null;
+	this.HForce = null;
+	this.HForceLabel = null;
+	this.HForceDescription = null;
+	this.VForce = null;
+	this.VForceLabel = null;
+	this.VForceDescription = null;
+}
 
 /* Initialise the values for the model from the config read at the rig client */
 function initConfig(param)
 {
 	data = param;
+	for (j=0; j<=maxModel; j++)
+	{
+		models[j] = new ModelInfo("INACTIVE");
+	}
 
 	for (var i in param)
 	{
-		if (param[i].name == "MaxModels" ) maxModel = param[i].value;
-		if (param[i].name == "MaxHorizontal" ) maxHorizontal = param[i].value;
-		if (param[i].name == "MaxVertical" ) maxVertical = param[i].value;
+		var modelData = param[i].name.split("_");
+		var forceData = param[i].value.split(",");
 
-		var modelID = param[i].name.split("_");
-		if (modelID[1] == "LABEL")			models[modelID[0]] = param[i].value;
+		if (modelData[1] == "LABEL")			models[modelData[0]].label = param[i].value;
+		if (modelData[1] == "DESCRIPTION")		models[modelData[0]].description = param[i].value;
+		if (modelData[1] == "HORIZONTAL")
+		{
+			models[modelData[0]].HForce = modelData[3];
+			for (force in forceData)
+			{
+				var fdata = forceData[force].split("=");
+				if (fdata[0].indexOf("LABEL") != -1) 		models[modelData[0]].HForceLabel = fdata[1];
+				if (fdata[0].indexOf("DESCRIPTION") != -1) 	models[modelData[0]].HForceDescription = fdata[1];
+			}
+		}
+		if (modelData[1] == "VERTICAL")
+		{
+			models[modelData[0]].VForce = modelData[3];
+			for (force in forceData)
+			{
+				var fdata = forceData[force].split("=");
+				if (fdata[0].indexOf("LABEL") != -1) 		models[modelData[0]].VForceLabel = fdata[1];
+				if (fdata[0].indexOf("DESCRIPTION") != -1) 	models[modelData[0]].VForceDescription = fdata[1];
+			}
+		}
 	};
 
 	for (var mod in models)
 	{
-		$("#SVradio ul").append(
-			'<li><input type="radio" name="model" value="' + mod + '" style="vertical-align: middle; margin: 0px;"/>'
-				+  models[mod] + '<br/></li>' 
-		);
+		//Dodgy - just see if model configured
+		if (models[mod].label != "INACTIVE")
+		{
+			$("#SVradio ul").append(
+				'<li><input type="radio" name="modelRadio" value="' + mod + '" style="vertical-align: middle; margin: 0px;"/>'
+					+  models[mod].label + '<br/></li>' 
+			);
+		};
+		
+		if (mod == modelState)
+		{
+			setState(mod);
+		}
 	};
 }
 function checkState(param)
@@ -71,17 +114,14 @@ function checkState(param)
 	alert(param);
 }
 
-function addVerticalForce(force,details)
+function setState(stateID)
 {
-	var tmp = details.split(",");
-	var label = tmp[0].split("=");
-	var desc = tmp[1].split("=");
-    vforcebuttons += "array('title' => " + label[1] +
-	        		" 'icon'   => '/uts/fpga/images/switchup.png'," +
-	            	" 'click'  => \"performPrimitiveJSON('StructuralVisualisationController', 'getConfig', null, checkState, 'Does this work...', false)" +
-	            ")";
-}
+	//document.SVRadio.modelRadio[stateID].checked = true;
+	document.getElementById("modelcontent").lastChild.replaceWholeText(models[stateID].description); 
+	if (verticalState[stateID] != 0)	document.getElementById("vforcecontent").lastChild.replaceWholeText(models[stateID].VForceDescription);
+	if (verticalState[stateID] != 0)	document.getElementById("hforcecontent").lastChild.replaceWholeText(models[stateID].HForceDescription);
 
+}
 function setIO(i)
 {
 	if (io[i] == 0)
