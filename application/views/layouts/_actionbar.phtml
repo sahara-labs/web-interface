@@ -219,6 +219,9 @@ $(document).ready(function() {
 				embedMargins[i] = embeds[i].style.marginLeft;
 				embeds[i].style.marginLeft = "10000px";
 			}
+
+			/* Remove the validation tooltips. */
+			$(".formError").remove();
 		},
 		close: function (event, ui) {
 			/* Move the applet, object and embeds back to their original
@@ -240,6 +243,8 @@ $(document).ready(function() {
 				{
 					embeds[i].style.marginLeft = embedMargins[i];
 				}
+				/* Remove the validation tooltips. */
+				$(".formError").remove();
 		}
 
 	});
