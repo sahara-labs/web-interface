@@ -39,9 +39,8 @@
 $this->headScript()->appendFile($this->baseUrl('uts/structuralvisualisation/structuralvisualisation.js'));
 $this->headLink()->appendStylesheet($this->baseUrl('uts/structuralvisualisation/structuralvisualisation.css'));
 
-$cam = new Sahara_Session_Element_Cameras($this->rigClient);
-$cam->setDraggable(false);
-
+$cams = new Sahara_Session_Element_Cameras($this->rigClient);
+$cams->setDraggable(false);
 
 /* Forces buttons. */
 $vertforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'vforce',
@@ -57,7 +56,7 @@ $vertforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'vforce',
         'top'         => 50,
         'left'        => 550,
         'width'       => 65,
-        'height'      => 60
+        'height'      => 100
     )
 );
     
@@ -74,16 +73,23 @@ $horizforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'hforce'
         'top'         => 200,
         'left'        => 550,
         'width'       => 65,
-        'height'      => 60
+        'height'      => 100
     )
 );
 
+echo $cams;
+echo $horizforce;
+echo $vertforce;
 ?>
 
-<div id="SVradio" class="ui-corner-all">
+
+<div>
+<form name="modelForm" id="SVradio" class="ui-corner-all">
 	<h2>Select a model:</h2>
 	<ul>
+		<!--Filled in by javascript-->
 	</ul>
+</form>
 </div>
 
 <div id="modeldesc" class="ui-corner-all overlayelementhide">
@@ -115,13 +121,6 @@ $horizforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'hforce'
 	</div>
 </div>
 
-<?php
-echo $cam;
-echo $horizforce;
-echo $vertforce;
-?>
-
-
 <script type="text/javascript">
 //<![CDATA[
 
@@ -129,7 +128,7 @@ $(document).ready( function() {
 	
 	performPrimitiveJSON('StructuralVisualisationController','getConfig',null,initConfig,null,null);
 
-
+	
      $("#modelhide").click(function() {
 		if ($("#modelcontent").css('display') == 'block')
 		{
@@ -164,7 +163,11 @@ $(document).ready( function() {
 		}
 	});
 
+	
 });
+
+
+
 
 //]]>
 </script>

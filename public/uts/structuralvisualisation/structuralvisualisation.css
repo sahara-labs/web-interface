@@ -57,11 +57,15 @@
 
 #SVradio ul {
 	list-style: none;
+	text-align: left;
 }
  
 #SVradio li {
 	padding-top: 5px;
-	float: left;
+}
+
+#SVradio li label{
+	margin-left: 5px;
 }
 
 #HorizForces {
@@ -175,4 +179,9 @@
 
 #forcecontent{
 	padding: 5px;
+}
+
+.disableselect{
+	opacity: 0.15; 
+	filter: alpha(opacity=60);
 }

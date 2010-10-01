@@ -37,11 +37,15 @@
 
 var modelState = 2;
 var maxModel = 4;
-var verticalState = new Array(0,0,0,0,0,0,0,0,0);
-var horizontalState = new Array(0,0,0,0,0,0,0,0,0);
-var data;
+var verticalState = new Array(1,1,1,1,0,0,0,0,0);
+var horizontalState = new Array(0,0,0,0,1,1,1,1,1);
+var HORIZONTAL_DEFAULT = "No horizontal force applied (0 Newtons)";
+var VERTICAL_DEFAULT = "No vertical force applied (0 Newtons)";
+
+//Array with the model data in it
 
 var models = new Array();
+
 function ModelInfo(label)
 {
 	this.label = label;
@@ -52,17 +56,18 @@ function ModelInfo(label)
 	this.VForce = null;
 	this.VForceLabel = null;
 	this.VForceDescription = null;
+	this.Camera = 1;
 }
 
 /* Initialise the values for the model from the config read at the rig client */
 function initConfig(param)
 {
-	data = param;
 	for (j=0; j<=maxModel; j++)
 	{
 		models[j] = new ModelInfo("INACTIVE");
 	}
 
+	// Get the data from the param 
 	for (var i in param)
 	{
 		var modelData = param[i].name.split("_");
@@ -70,6 +75,7 @@ function initConfig(param)
 
 		if (modelData[1] == "LABEL")			models[modelData[0]].label = param[i].value;
 		if (modelData[1] == "DESCRIPTION")		models[modelData[0]].description = param[i].value;
+		if (modelData[1] == "CAMERA")			models[modelData[0]].camera = param[i].value;
 		if (modelData[1] == "HORIZONTAL")
 		{
 			models[modelData[0]].HForce = modelData[3];
@@ -92,39 +98,98 @@ function initConfig(param)
 		}
 	};
 
+	// Model
 	for (var mod in models)
 	{
+		//Set up Models to Select
 		//Dodgy - just see if model configured
 		if (models[mod].label != "INACTIVE")
 		{
+			//TODO - Change from 'in-line' onClick to jQuery
 			$("#SVradio ul").append(
-				'<li><input type="radio" name="modelRadio" value="' + mod + '" style="vertical-align: middle; margin: 0px;"/>'
-					+  models[mod].label + '<br/></li>' 
+				'<li> <input type="radio" name="modelRadio" value="' + mod + '" style="vertical-align: middle; margin: 0px;" onClick="setState(' 
+					+ mod + ')"/> <label>' +  models[mod].label + '</label><br/></li>' 
 			);
 		};
 		
 		if (mod == modelState)
 		{
+			document.modelForm.modelRadio[mod-1].checked=true;
 			setState(mod);
 		}
 	};
-}
-function checkState(param)
-{
-	alert(param);
+	
+
 }
 
+//Sets the descriptions, values and labels for the forces and models for the model selected 
 function setState(stateID)
 {
-	//document.SVRadio.modelRadio[stateID].checked = true;
-	document.getElementById("modelcontent").lastChild.replaceWholeText(models[stateID].description); 
-	if (verticalState[stateID] != 0)	document.getElementById("vforcecontent").lastChild.replaceWholeText(models[stateID].VForceDescription);
-	if (verticalState[stateID] != 0)	document.getElementById("hforcecontent").lastChild.replaceWholeText(models[stateID].HForceDescription);
+	//Set Model Description for this state
+	$("#modelcontent").empty().append(models[stateID].description); 
+	$("#vforce0:last-child").append(models[stateID].VForceLabel);
+	$("#hforce0 img").empty().append(models[stateID].HForceLabel);
 
+	//Set force description for the state if force is applied
+	if (verticalState[stateID] != 0)
+	{
+		$("#vforcecontent").empty().append(models[stateID].VForceDescription);
+	}
+	else
+	{	
+		$("#vforcecontent").empty().append(VERTICAL_DEFAULT);
+	}
+	
+	if (horizontalState[stateID] != 0)
+	{
+		$("#hforcecontent").empty().append(models[stateID].HForceDescription);
+	}
+	else
+	{
+		$("#hforcecontent").empty().append(HORIZONTAL_DEFAULT);
+	}
+
+	setCamera(stateID);
+
+}
+
+
+function setCamera(stateID)
+{
+	// TODO - clean up so more 'intelligent'
+	if(models[stateID].camera == 1)
+	{
+		//Enable Camera 1
+		$("#camselect1").attr("disabled",false);
+		$("#camformat1").removeClass('disableselect');
+		$("#camerapanel1").css('margin-left','195px');
+
+		//Disable Camera 2
+		$("#camselect2").attr("disabled",true);
+		$("#camformat2").addClass("disableselect");
+		$("#camerapanel2").css('margin-top','-330px');
+		$("#camerapanel2").css('margin-left','3000px');
+	}
+	else
+	{
+		//Enable Camera 2
+		$("#camselect2").attr("disabled",false);
+		$("#camformat2").removeClass('disableselect');
+		$("#camerapanel2").css('margin-left','195px');
+		$("#camerapanel2").css('margin-top','-330px');
+
+		//Disable Camera 1
+		$("#camselect1").attr("disabled",true);
+		$("#camformat1").addClass("disableselect");
+		$("#camerapanel1").css('margin-left','3000px');
+	}
+	
+	//Set position of Camera
+	
 }
 function setIO(i)
 {
-	if (io[i] == 0)
+	/*if (io[i] == 0)
 	{
 		addSVMessage("Force " + i + " turned on.");
 		
@@ -145,7 +210,7 @@ function setIO(i)
 	for (var i = 0; i < 8; i++)
 	{
 		val += io[i] * Math.pow(2, i);
-	}
+	}*/
 	//TODO
 	//Send value
 	
