@@ -35,7 +35,7 @@
  * @date 6th September 2010
  */
 
-var modelState = 2;
+var modelState = 1;
 var maxModel = 4;
 var verticalState = new Array(1,1,1,1,0,0,0,0,0);
 var horizontalState = new Array(0,0,0,0,1,1,1,1,1);
@@ -111,14 +111,17 @@ function initConfig(param)
 					+ mod + ')"/> <label>' +  models[mod].label + '</label><br/></li>' 
 			);
 		};
-		
+	};
+
+	// Have to set up Radio buttons first before the correct one can be checked, error for model 1 otherwise
+	for (var mod in models)
+	{
 		if (mod == modelState)
 		{
-			document.modelForm.modelRadio[mod-1].checked=true;
 			setState(mod);
+			document.modelForm.modelRadio[mod-1].checked=true;
 		}
-	};
-	
+	}
 
 }
 
@@ -127,30 +130,55 @@ function setState(stateID)
 {
 	//Set Model Description for this state
 	$("#modelcontent").empty().append(models[stateID].description); 
-	$("#vforce0:last-child").append(models[stateID].VForceLabel);
-	$("#hforce0 img").empty().append(models[stateID].HForceLabel);
+	//TODO - see if this can be made to work with jquery  
+	document.getElementById("vforce0").lastChild.replaceWholeText(models[stateID].VForceLabel);
+	document.getElementById("hforce0").lastChild.replaceWholeText(models[stateID].HForceLabel);
+	
+	//Set click functions for forces
+	$("#vforce0").unbind('click');
+	$("#vforce0").click( function() {
+		setVertical(models[stateID].VForce - 1);
+		});
+	$("#hforce0").unbind('click');
+	$("#hforce0").click( function() {
+		setHorizontal(models[stateID].HForce - 1);
+		});
 
-	//Set force description for the state if force is applied
-	if (verticalState[stateID] != 0)
+	//Set force description and click values for the state if force is applied
+	if (verticalState[models[stateID].VForce - 1] != 0)
 	{
 		$("#vforcecontent").empty().append(models[stateID].VForceDescription);
+		$("#vforce0").css('background-color', '#62E877');
+		$("#vforce0 img").attr('src', '/uts/fpga/images/' + 'switchdown.png');
 	}
 	else
 	{	
 		$("#vforcecontent").empty().append(VERTICAL_DEFAULT);
+		$("#vforce0").css('background-color', '#ED8686');
+		$("#vforce0 img").attr('src', '/uts/fpga/images/' + 'switchup.png');
 	}
 	
-	if (horizontalState[stateID] != 0)
+	if (horizontalState[models[stateID].HForce - 1] != 0)
 	{
 		$("#hforcecontent").empty().append(models[stateID].HForceDescription);
+		$("#hforce0").css('background-color', '#62E877');
+		$("#hforce0 img").attr('src', '/uts/fpga/images/' + 'switchdown.png');
 	}
 	else
 	{
 		$("#hforcecontent").empty().append(HORIZONTAL_DEFAULT);
+		$("#hforce0").css('background-color', '#ED8686');
+		$("#hforce0 img").attr('src', '/uts/fpga/images/' + 'switchup.png');
 	}
 
 	setCamera(stateID);
 
+	modelState = stateID;
+	
+	var params = new Object;
+	params.state = stateID;
+	performPrimitiveJSON('StructuralVisualisationController', 'changeState', params);
+	
 }
 
 
@@ -183,35 +211,73 @@ function setCamera(stateID)
 		$("#camformat1").addClass("disableselect");
 		$("#camerapanel1").css('margin-left','3000px');
 	}
-	
-	//Set position of Camera
-	
 }
-function setIO(i)
+
+
+function setVertical(i)
 {
-	/*if (io[i] == 0)
+	if (verticalState[i] == 0)
 	{
-		addSVMessage("Force " + i + " turned on.");
+		// TODO - change this to message on screen
+		alert("Vertical Force " + i + " turned on.");
 		
-		io[i] = 1;
-		$("#vforce" + i).css('background-color', '#62E877');
-		$("#vforce" + i + " img").attr('src', '/uts/fpga/images/' + 'switchdown.png');
+		verticalState[i] = 1;
+		$("#vforce0").css('background-color', '#62E877');
+		$("#vforce0 img").attr('src', '/uts/fpga/images/' + 'switchdown.png');
+		
+		$("#vforcecontent").empty().append(models[modelState].VForceDescription);
 	}
 	else
 	{
-		addSVMessage("Force " +  i + " turned off.");
+		alert("Vertical Force " +  i + " turned off.");
 		
-		io[i] = 0;
-		$("#vforce" + i).css('background-color', '#ED8686');
-		$("#vforce" + i + " img").attr('src', '/uts/fpga/images/' + 'switchup.png');
+		verticalState[i] = 0;
+		$("#vforce0").css('background-color', '#ED8686');
+		$("#vforce0 img").attr('src', '/uts/fpga/images/' + 'switchup.png');
+		
+		$("#vforcecontent").empty().append(VERTICAL_DEFAULT);
 	}
 	
-	var val = 0;
-	for (var i = 0; i < 8; i++)
-	{
-		val += io[i] * Math.pow(2, i);
-	}*/
-	//TODO
-	//Send value
+	var params = new Object;
+	params.force = "Vertical_" + i;
+	params.value = verticalState[i];
+	performPrimitiveJSON('StructuralVisualisationController', 'toggleForce', params);
 	
+}
+
+function setHorizontal(i)
+{
+	if (horizontalState[i] == 0)
+	{
+		// TODO - change this to message on screen
+		alert("Horizontal Force " + i + " turned on.");
+		
+		horizontalState[i] = 1;
+		$("#hforce0").css('background-color', '#62E877');
+		$("#hforce0 img").attr('src', '/uts/fpga/images/' + 'switchdown.png');
+
+		$("#hforcecontent").empty().append(models[modelState].HForceDescription);
+}
+	else
+	{
+		alert("Horizontal Force " +  i + " turned off.");
+		
+		horizontalState[i] = 0;
+		$("#hforce0").css('background-color', '#ED8686');
+		$("#hforce0 img").attr('src', '/uts/fpga/images/' + 'switchup.png');
+
+		$("#hforcecontent").empty().append(HORIZONTAL_DEFAULT);
+}
+
+	var params = new Object;
+	params.force = "Horizontal_" + i;
+	params.value = verticalState[i];
+	performPrimitiveJSON('StructuralVisualisationController', 'toggleForce', params);
+	
+}
+
+//Just to check
+function checkState(param)
+{
+	alert(param);
 }

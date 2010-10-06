@@ -43,12 +43,12 @@ $cams = new Sahara_Session_Element_Cameras($this->rigClient);
 $cams->setDraggable(false);
 
 /* Forces buttons. */
+/* TODO Possibly remove multibutton, much functionality not used */
 $vertforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'vforce',
     array(
         array(
-        	'title'      => "tania",
+        	'title'      => "Vertical Force",
         	'icon'       => '/uts/fpga/images/switchup.png',
-            'click'      => "performPrimitiveJSON('StructuralVisualisationController', 'getConfig', null, checkState, 'Does this work...', false)"
             ),
     ),
     array(
@@ -63,10 +63,9 @@ $vertforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'vforce',
 $horizforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'hforce',
     array(
     	array(
-        	'title'      => 'Horizontal 1',
+        	'title'      => 'Horizontal Force',
         	'icon'       => '/uts/fpga/images/switchup.png',
-            'click'		 => 'setIO(1)'
-                ),
+             ),
     ),
     array(
         'orientation' => Sahara_Session_Element_MultiButtons::VERTICAL,
