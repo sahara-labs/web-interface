@@ -46,7 +46,51 @@ class BookingsController extends Sahara_Controller_Action_Acl
      */
     public function indexAction()
     {
-        // TODO
+        $this->view->headTitle('Remote Labs - Bookings');
+
+        if (($pid = $this->_getParam('pid', 0)) == 0)
+        {
+            /* No permission identifier supplied, so back to the queue page. */
+            $this->_flashMessenger->addMessage('No permission identifier supplied.');
+            $this->_redirectTo('index', 'queue');
+        }
+
+        $client = Sahara_Soap::getSchedServerPermissionsClient();
+        $perm = $client->getPermission(array('permissionID' => $pid));
+
+        /* Pre-conditions to display a booking page. This should all be handled
+         * by the queue page (i.e. the user should not be allowed to get here,
+         * so give them a forcible redirect. */
+        if ($perm->permissionID == 0) // Must exist
+        {
+            $this->_logger->warn("Can't book because permission with identifier '$pid' not found.");
+            $this->_flashMessenger->addMessage("Permission with identifier '$pid' not found.");
+            $this->_redirectTo('index', 'queue');
+        }
+        else if (!$perm->canBook) // Must allow bookings
+        {
+            $this->_logger->warn("Can't book because permission with identifier '$pid' does not allow bookings.");
+            $this->_flashMessenger->addMessage("Permission with identifier '$pid' does not allow bookings.");
+            $this->_redirectTo('index', 'queue');
+        }
+        else if (Sahara_DateTimeUtil::isBeforeNow($perm->expiry) || Sahara_DateTimeUtil::isAfterNow($perm->start))
+        {
+            $this->_logger->warn("Can't book because permission with identifier '$pid' is expired.");
+            $this->_flashMessenger->addMessage("Permission with identifier '$pid' is expired.");
+            $this->_redirectTo('index', 'queue');
+        }
+
+        /* More pre-conditions to display a booking page. However, these aren't
+         * handled by the queue page, so give a *helpful* warning. */
+
+        // Booking horizon has elapsed expiry
+        // Too may existing permission
+
+        $this->view->permission = $perm;
+
+        echo "<pre>";
+        var_dump($perm);
+        echo "</pre>";
     }
 
     /**

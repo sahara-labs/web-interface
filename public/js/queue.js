@@ -108,7 +108,7 @@ function loadPermissionInfo(pid)
 			if (p.isBookable)
 			{
 				html += "	<button class='queuebutton ui-button ui-button-text-icon ui-widget ui-state-default ui-corner-all ui-priority-primary'" +
-	        			"		id='reservebutton" + pid +"' type='button'>Reserve</button>";			
+	        			"		id='bookbutton" + pid +"' type='button'>Book</button>";			
 			}
 			
 			if (p.isQueueable)
@@ -133,11 +133,11 @@ function loadPermissionInfo(pid)
 			if (p.isBookable)
 			{
 				/* Reserve button. */
-				$("#reservebutton" + pid).hover(
+				$("#bookbutton" + pid).hover(
 						function() { $(this).addClass("ui-state-hover"); },
 						function() { $(this).removeClass("ui-state-hover"); }
 				);
-				$("#reservebutton" + pid).click(function() {
+				$("#bookbutton" + pid).click(function() {
 					window.location.replace("/bookings/index/pid/" + pid);
 				});
 			}

@@ -1,4 +1,3 @@
-<?php
 /**
  * SAHARA Web Interface
  *
@@ -33,40 +32,5 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 9th March 2010
+ * @date 9th November 2010
  */
-
-$this->headLink()->appendStylesheet($this->baseUrl('/css/bookings.css'));
-$this->headScript()->appendFile($this->baseUrl('/js/bookings.js'));
-
-
-$header = $this->permission->displayName;
-if (!$header) $header = $this->permission->resource->resourceName;
-
-?>
-
-<div class="contentheader">
-	<h2>Booking for <?=$this->stringTransform($header, '_', ' ')?></h2>
-</div>
-
-<!-- Day picker bar. -->
-<div id="daypickerbar">
-	<div id="leftarrowbox" class="arrowbox">
-		<a id="leftarrow" class="plaina daybutton ui-corner-all">
-			<img src="<?=$this->baseUrl('/images/left_arrow.png')?>" alt="Previous" />
-		</a>
-	</div>
-
-	<div id="daypickerouter">
-		<div id="daypicker">
-			Day selected:
-		</div>
-	</div>
-
-	<div id="rightarrowbox" class="arrowbox">
-		<a id="rightarrow" class="plaina daybutton ui-corner-all">
-			<img src="<?=$this->baseUrl('/images/right_arrow.png')?>" alt="Next" />
-		</a>
-	</div>
-</div>
-

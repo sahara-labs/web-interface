@@ -118,6 +118,8 @@ class QueueController extends Sahara_Controller_Action_Acl
             ksort($typePerms);
             ksort($rigPerms);
             ksort($capsPerms);
+
+            // FIXME Do not make a perceptible distinction between type and caps
             $userClasses[$class] = array(
                 'Rig Types:' => array_values($typePerms),
                 'Specific Rigs:'  => array_values($rigPerms),
