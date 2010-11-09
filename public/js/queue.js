@@ -103,36 +103,56 @@ function loadPermissionInfo(pid)
 				html += "<div style='clear:both'></div>";
 			}
 			
-			// Added condition to fix Bug #56
-			if (p.hasFree || p.isQueueable)
+			html += "<div id='queuebuttonpane" + pid + "' class='ui-dialog-buttonpane ui-widget-content' style='margin-right:-25px'>";
+			
+			if (p.isBookable)
 			{
-				/* Add queue button. */
-				html += "<div id='queuebuttonpane" + pid + "' class='ui-dialog-buttonpane ui-widget-content'>" +
-			        "	<button class='queuebutton ui-button ui-button-text-icon ui-widget ui-state-default ui-corner-all ui-priority-primary'" +
-			        "		id='queuebutton" + pid +"' type='button'>Queue</button>" +
-			        "   <button class='queuebutton ui-button ui-button-text-icon ui-widget ui-state-default ui-corner-all'" +
-			        "		id='queuecancelbutton" + pid +"' type='button'>Cancel</button>" +
-			        "</div>";
+				html += "	<button class='queuebutton ui-button ui-button-text-icon ui-widget ui-state-default ui-corner-all ui-priority-primary'" +
+	        			"		id='reservebutton" + pid +"' type='button'>Reserve</button>";			
 			}
-			else
+			
+			if (p.isQueueable)
 			{
-				/* All the resources are in use and the user is 'non-queueable'*/
-				html += "<br />	" +
-					"<div class='ui-state-error ui-corner-all'>" +
-					"	<span class='ui-icon ui-icon-alert alertspan'></span>" +
-					"	You are not allowed to queue for the resource" +
+			    html += "	<button class='queuebutton ui-button ui-button-text-icon ui-widget ui-state-default ui-corner-all ui-priority-primary'" +
+			        	"		id='queuebutton" + pid +"' type='button'>Queue</button>";			        
+			}
+			
+			if (!p.isQueueable && !p.isBookable && p.isFree)
+			{
+			    html += "	<button class='queuebutton ui-button ui-button-text-icon ui-widget ui-state-default ui-corner-all ui-priority-primary'" +
+			        	"		id='queuebutton" + pid +"' type='button'>Queue</button>";			        
+			}
+			
+			html += "   <button class='queuebutton ui-button ui-button-text-icon ui-widget ui-state-default ui-corner-all'" +
+					"		id='queuecancelbutton" + pid +"' type='button'>Cancel</button>" +
 					"</div>";
-			}
+			
 			$(conDiv).html(html);
 			
-			/* Queue button. */
-			$("#queuebutton" + pid).hover(
-					function() { $(this).addClass("ui-state-hover"); },
-					function() { $(this).removeClass("ui-state-hover"); }
-			);
-			$("#queuebutton" + pid).click(function() {
-				queueResourceRequest(pid);
-			});
+			
+			if (p.isBookable)
+			{
+				/* Reserve button. */
+				$("#reservebutton" + pid).hover(
+						function() { $(this).addClass("ui-state-hover"); },
+						function() { $(this).removeClass("ui-state-hover"); }
+				);
+				$("#reservebutton" + pid).click(function() {
+					window.location.replace("/bookings/index/pid/" + pid);
+				});
+			}
+			
+			if (p.isQueueable || !p.isQueueable && !p.isBookable && p.isFree)
+			{
+				/* Queue button. */
+				$("#queuebutton" + pid).hover(
+						function() { $(this).addClass("ui-state-hover"); },
+						function() { $(this).removeClass("ui-state-hover"); }
+				);
+				$("#queuebutton" + pid).click(function() {
+					queueResourceRequest(pid);
+				});
+			}
 			
 			/* Cancel button. */
 			$("#queuecancelbutton" + pid).hover(

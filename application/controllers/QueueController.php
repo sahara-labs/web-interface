@@ -133,7 +133,7 @@ class QueueController extends Sahara_Controller_Action_Acl
      */
     public function queuingAction()
     {
-        $this->view->headTitle('Remote Lab: Queue');
+        $this->view->headTitle('Remote Labs - Queue');
 
         $queueInfo = Sahara_Soap::getSchedServerQueuerClient()->getUserQueuePosition(array(
         		'userQName' => $this->_auth->getIdentity()
