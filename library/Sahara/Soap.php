@@ -47,6 +47,9 @@ class Sahara_Soap
     /** The bundle containing the Queuer SOAP interface in the Scheduling Server. */
     const QUEUER_SERVICE_BUNDLE = 'SchedulingServer-Queuer';
 
+    /** The bundle containing the Bookings SOAP interface in the Schduling Server. */
+    const BOOKINGS_SERVICE_BUNDLE = 'SchedulingServer-Bookings';
+
     /** The bundle containing the Session SOAP interface in the Scheduling Server. */
     const SESSION_SERVICE_BUNDLE = 'SchedulingServer-Session';
 
@@ -158,6 +161,23 @@ class Sahara_Soap
                     self::createSchedServerClient('Queuer', self::QUEUER_SERVICE_BUNDLE));
         }
         return Zend_Registry::get(self::QUEUER_SERVICE_BUNDLE);
+    }
+
+    /**
+     * Gets a Sahara_SOAP instane which points to the Bookings interface of
+     * the SchedulingServer.
+	 *
+	 * @return Sahara_Soap instance
+	 * @throws Exception if failed contacting Scheduling Server
+     */
+    public static function getSchedServerBookingsClient()
+    {
+        if (!Zend_Registry::isRegistered(self::BOOKINGS_SERVICE_BUNDLE))
+        {
+            Zend_Registry::set(self::BOOKINGS_SERVICE_BUNDLE,
+                    self::createSchedServerClient('Bookings', self::BOOKINGS_SERVICE_BUNDLE));
+        }
+        return Zend_Registry::get(self::BOOKINGS_SERVICE_BUNDLE);
     }
 
     /**

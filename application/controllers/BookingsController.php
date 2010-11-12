@@ -55,8 +55,7 @@ class BookingsController extends Sahara_Controller_Action_Acl
             $this->_redirectTo('index', 'queue');
         }
 
-        $client = Sahara_Soap::getSchedServerPermissionsClient();
-        $perm = $client->getPermission(array('permissionID' => $pid));
+        $perm = Sahara_Soap::getSchedServerPermissionsClient()->getPermission(array('permissionID' => $pid));
 
         /* Pre-conditions to display a booking page. This should all be handled
          * by the queue page (i.e. the user should not be allowed to get here,
@@ -82,6 +81,12 @@ class BookingsController extends Sahara_Controller_Action_Acl
 
         /* More pre-conditions to display a booking page. However, these aren't
          * handled by the queue page, so give a *helpful* warning. */
+        $bookings = Sahara_Soap::getSchedServerBookingsClient()->getBookings(array(
+            'userID' => array('userQName', $this->_auth->getIdentity()),
+            'permissionID' => array('permissionID' => $perm->permissionID),
+            'showCancelled' => false,
+            'showFinished' => false
+        ));
 
         // Booking horizon has elapsed expiry
         // Too may existing permission
@@ -89,7 +94,7 @@ class BookingsController extends Sahara_Controller_Action_Acl
         $this->view->permission = $perm;
 
         echo "<pre>";
-        var_dump($perm);
+        var_dump($bookings);
         echo "</pre>";
     }
 
