@@ -91,7 +91,7 @@ class UTS_Auth_Session_HomeDirectory extends Sahara_Auth_Session
 
         if (!is_executable($script))
         {
-            throw new Exception('Home directory creation scruipt does not exist or is not executable.', 108);
+            throw new Exception('Home directory creation script does not exist or is not executable.', 108);
         }
 
         $args = escapeshellarg($this->_authType->getUsername()) . ' ' . escapeshellarg($path);
