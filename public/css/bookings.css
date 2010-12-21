@@ -76,4 +76,17 @@
 	-moz-box-shadow: 0 0 4px #606060;
 	-webkit-box-shadow: 0 0 4px #606060;
 }
+
+.daybuttonlabel {
+	color: #606060;
+	font-size: 0.8em;
+}
+
+#daybuttonlabelleft {
+	margin: 5px -10px 0;
+}
+
+#daybuttonlabelright {
+	margin: 5px -1px 0;
+}
  

@@ -46,7 +46,7 @@ class BookingsController extends Sahara_Controller_Action_Acl
      */
     public function indexAction()
     {
-        $this->view->headTitle('Remote Labs - Bookings');
+        $this->view->headTitle('Sahara Labs - Reservation');
 
         if (($pid = $this->_getParam('pid', 0)) == 0)
         {
@@ -78,15 +78,34 @@ class BookingsController extends Sahara_Controller_Action_Acl
             $this->_flashMessenger->addMessage("Permission with identifier '$pid' is expired.");
             $this->_redirectTo('index', 'queue');
         }
+        $this->view->permission = $perm;
 
         /* More pre-conditions to display a booking page. However, these aren't
          * handled by the queue page, so give a *helpful* warning. */
-        $bookings = Sahara_Soap::getSchedServerBookingsClient()->getBookings(array(
+        $bookingsResponse = Sahara_Soap::getSchedServerBookingsClient()->getBookings(array(
             'userID' => array('userQName' => $this->_auth->getIdentity()),
             'permissionID' => array('permissionID' => $perm->permissionID),
             'showCancelled' => false,
             'showFinished' => false
         ));
+        $bookings = $bookingsResponse->bookings;
+
+        /* Work out the number of bookings. */
+        $numBookings = 0;
+        if (is_array($bookings)) $numBookings = count($bookings);
+        else if ($bookings != NULL) $numBookings = 1;
+
+        if ($numBookings >= $perm->maxBookings)
+        {
+            $this->view->canBook = false;
+            return;
+        }
+        $this->view->canBook = true;
+
+        $horizon = new DateTime();
+      //  $horizon = $horizon->add(new DateInterval('P' . $perm->timeHorizion . 'S'));
+
+       echo "Current Time: " . $horizon->format(DateTime::ISO8601);
 
         // Booking horizon has elapsed expiry
         // Too may existing permission
@@ -94,17 +113,21 @@ class BookingsController extends Sahara_Controller_Action_Acl
         $freeTimes = Sahara_Soap::getSchedServerBookingsClient()->findFreeBookings(array(
             'userID' => array('userQName' => $this->_auth->getIdentity()),
             'permissionID' => array('permissionID' => $perm->permissionID),
-            'period' => array('startTime' => '2010-12-14T00:00:00',
-                              'endTime'   => '2010-12-15T00:00:00')
+            'period' => array('startTime' => '2010-12-21T00:00:00',
+                              'endTime'   => '2010-12-22T00:00:00')
         ));
 
 
 
-        $this->view->permission = $perm;
 
-        echo "<br />";
+
+        echo "<br /><br /><br /><br /><br />";
+        echo "<br /><br />Number of bookings $numBookings<br />";
         echo "<pre>";
-        var_dump($freeTimes);
+
+        var_dump($perm);
+
+  //      var_dump($freeTimes);
         echo "</pre>";
     }
 

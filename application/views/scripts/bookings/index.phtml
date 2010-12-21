@@ -46,8 +46,10 @@ if (!$header) $header = $this->permission->resource->resourceName;
 ?>
 
 <div class="contentheader">
-	<h2>Booking for <?=$this->stringTransform($header, '_', ' ')?></h2>
+	<h2>Reservation for <?=$this->stringTransform($header, '_', ' ')?></h2>
 </div>
+
+<?php if ($this->canBook): ?>
 
 <!-- Day picker bar. -->
 <div id="daypickerbar">
@@ -55,6 +57,7 @@ if (!$header) $header = $this->permission->resource->resourceName;
 		<a id="leftarrow" class="plaina daybutton ui-corner-all">
 			<img src="<?=$this->baseUrl('/images/left_arrow.png')?>" alt="Previous" />
 		</a>
+		<div id="daybuttonlabelleft" class="daybuttonlabel">Previous Day</div>
 	</div>
 
 	<div id="daypickerouter">
@@ -67,6 +70,10 @@ if (!$header) $header = $this->permission->resource->resourceName;
 		<a id="rightarrow" class="plaina daybutton ui-corner-all">
 			<img src="<?=$this->baseUrl('/images/right_arrow.png')?>" alt="Next" />
 		</a>
+		<div id="daybuttonlabelright" class="daybuttonlabel">Next Day</div>
 	</div>
 </div>
 
+<?php else: ?>
+<h2>Maximum bookings elasped.</h2>
+<?php endif; ?>
