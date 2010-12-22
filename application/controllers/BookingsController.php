@@ -41,6 +41,8 @@
  */
 class BookingsController extends Sahara_Controller_Action_Acl
 {
+    /** @var String date format. */
+    const DATE_FORMAT = 'Y-m-d';
     /**
 	 * View to make a booking.
      */
@@ -55,24 +57,51 @@ class BookingsController extends Sahara_Controller_Action_Acl
             $this->_redirectTo('index', 'queue');
         }
 
-        $perm = Sahara_Soap::getSchedServerPermissionsClient()->getPermission(array('permissionID' => $pid));
+        $permissions = Sahara_Soap::getSchedServerPermissionsClient()->getPermissionsForUser(
+                array('userQName' => $this->_auth->getIdentity())
+        );
+
+
+        $permissions = $permissions->permission;
+        if (is_array($permissions))
+        {
+            /* Multiple permissions. */
+            foreach ($permissions as $p)
+            {
+                if ($p->permission->permissionID == $pid)
+                {
+                    $perm = $p->permission;
+                }
+            }
+        }
+        else if ($permissions != NULL)
+        {
+            /* Just the one. */
+            if ($permissions->permission->permissionID == $pid)
+            {
+                $perm = $permissions->permission;
+            }
+        }
+
+        /* Make sure the user has the permission. */
+        if (!isset($perm))
+        {
+            $this->_logger->warn("Can't book because user " . $this->_auth->getIdentity() . " doesn't have permission " +
+                    "with identifier '$pid'.");
+            $this->_flashMessenger->addMessage("Doesn't have permissions with identifier '$pid'.");
+            $this->_redirectTo('index', 'queue');
+        }
 
         /* Pre-conditions to display a booking page. This should all be handled
          * by the queue page (i.e. the user should not be allowed to get here,
          * so give them a forcible redirect. */
-        if ($perm->permissionID == 0) // Must exist
-        {
-            $this->_logger->warn("Can't book because permission with identifier '$pid' not found.");
-            $this->_flashMessenger->addMessage("Permission with identifier '$pid' not found.");
-            $this->_redirectTo('index', 'queue');
-        }
-        else if (!$perm->canBook) // Must allow bookings
+        if (!$perm->canBook) // Must allow bookings
         {
             $this->_logger->warn("Can't book because permission with identifier '$pid' does not allow bookings.");
             $this->_flashMessenger->addMessage("Permission with identifier '$pid' does not allow bookings.");
             $this->_redirectTo('index', 'queue');
         }
-        else if (Sahara_DateTimeUtil::isBeforeNow($perm->expiry) || Sahara_DateTimeUtil::isAfterNow($perm->start))
+        else if (Sahara_DateTimeUtil::isBeforeNow($perm->expiry))
         {
             $this->_logger->warn("Can't book because permission with identifier '$pid' is expired.");
             $this->_flashMessenger->addMessage("Permission with identifier '$pid' is expired.");
@@ -102,33 +131,31 @@ class BookingsController extends Sahara_Controller_Action_Acl
         }
         $this->view->canBook = true;
 
+        /* The start time is which ever of the time horizion or permission start
+         * that comes first. */
         $horizon = new DateTime();
-      //  $horizon = $horizon->add(new DateInterval('P' . $perm->timeHorizion . 'S'));
+        if ($perm->timeHorizon > 0)
+        {
+            $horizon->add(new DateInterval('PT' . $perm->timeHorizon . 'S'));
+        }
 
-       echo "Current Time: " . $horizon->format(DateTime::ISO8601);
+        $start = new DateTime($perm->start);
+        if ($start->getTimestamp() < $horizon->getTimestamp())
+        {
+            $start = $horizon;
+        }
 
-        // Booking horizon has elapsed expiry
-        // Too may existing permission
+        $this->view->currentDay = $start->format(self::DATE_FORMAT);
+        $end = new DateTime($perm->expiry);
+        $this->view->endDay = $end->format(self::DATE_FORMAT);
 
         $freeTimes = Sahara_Soap::getSchedServerBookingsClient()->findFreeBookings(array(
             'userID' => array('userQName' => $this->_auth->getIdentity()),
             'permissionID' => array('permissionID' => $perm->permissionID),
-            'period' => array('startTime' => '2010-12-21T00:00:00',
-                              'endTime'   => '2010-12-22T00:00:00')
+            'period' => array('startTime' => $this->view->currentDay . 'T00:00:00',
+                              'endTime'   => $this->view->currentDay . 'T23:59:59')
         ));
 
-
-
-
-
-        echo "<br /><br /><br /><br /><br />";
-        echo "<br /><br />Number of bookings $numBookings<br />";
-        echo "<pre>";
-
-        var_dump($perm);
-
-  //      var_dump($freeTimes);
-        echo "</pre>";
     }
 
     /**

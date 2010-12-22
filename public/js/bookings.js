@@ -34,3 +34,29 @@
  * @author Michael Diponio (mdiponio)
  * @date 9th November 2010
  */
+
+var currentDay;
+var startDay;
+var endDay;
+
+function initPage(start, end)
+{
+	startDay = start;
+	currentDay = start;
+	endDay = end;
+	
+	$('#daypicker').datepicker({
+		defaultDate: startDay,
+		minDate: startDay,
+		maxDate: endDay,
+		dateFormat: 'dd/mm/yy',
+		onSelect: function(dateText, inst) {
+			dateChanged(dateText);
+		}
+	});
+}
+
+function dateChanged(dateText)
+{
+	alert(dateText);
+}

@@ -47,9 +47,14 @@
 	width: 100px;
 }
 
-#daypicker {
+#daypickercontainer {
 	float:left;
-	width: 400px;
+	width: 200px;
+}
+
+#daypickericonbox {
+	float:left;
+	width: 100px;
 }
 
 #rightarrowbox {
@@ -89,4 +94,5 @@
 #daybuttonlabelright {
 	margin: 5px -1px 0;
 }
+
  

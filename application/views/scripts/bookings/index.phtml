@@ -43,6 +43,18 @@ $this->headScript()->appendFile($this->baseUrl('/js/bookings.js'));
 $header = $this->permission->displayName;
 if (!$header) $header = $this->permission->resource->resourceName;
 
+list($year, $mon, $day) = explode('-', $this->currentDay, 3);
+$sDate = "$day/$mon/$year";
+list($year, $mon, $day) = explode('-', $this->endDay, 3);
+$eDate = "$day/$mon/$year";
+
+
+$this->headScript()->appendScript('
+$(document).ready(function(){
+	initPage("' . $sDate . '", "' . $eDate . '");
+});
+');
+
 ?>
 
 <div class="contentheader">
@@ -61,9 +73,15 @@ if (!$header) $header = $this->permission->resource->resourceName;
 	</div>
 
 	<div id="daypickerouter">
-		<div id="daypicker">
-			Day selected:
+		<div id="daypickercontainer">
+			<input id="daypicker" type="text" value="<?=$sDate?>"/>
 		</div>
+	</div>
+
+	<div id="daypickericonbox" class="arrowbox">
+		<a id="daypickericon" class="plaina daybutton ui-corner-all">
+			<img src="<?=$this->baseUrl('/images/daypicker.png')?>" alt="Pick" />
+		</a>
 	</div>
 
 	<div id="rightarrowbox" class="arrowbox">
