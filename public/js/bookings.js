@@ -35,28 +35,160 @@
  * @date 9th November 2010
  */
 
-var currentDay;
-var startDay;
-var endDay;
 
-function initPage(start, end)
+/**
+ * Bookings page.
+ * 
+ * @param start start date
+ * @param end end date
+ */
+function BookingPage(start, end)
 {
-	startDay = start;
-	currentDay = start;
-	endDay = end;
-	
-	$('#daypicker').datepicker({
-		defaultDate: startDay,
-		minDate: startDay,
-		maxDate: endDay,
-		dateFormat: 'dd/mm/yy',
-		onSelect: function(dateText, inst) {
-			dateChanged(dateText);
-		}
-	});
+	this.date = this.start = strToDate(start);
+	this.end = new Date(strToDate(end).getTime() + this.DAY_MILLISECONDS - 1000);
 }
 
-function dateChanged(dateText)
+/* ----------------------------------------------------------------------------
+ * -- Constants.                                                             --
+ * ---------------------------------------------------------------------------- */
+BookingPage.prototype.DAY_MILLISECONDS = 24 * 60 * 60 * 1000;
+
+BookingPage.prototype.changeDate = function(newDate) {
+	
+	if ((typeof newDate) == "string") newDate = strToDate(newDate);
+	
+	/* Range check. */
+	var dmillis = newDate.getTime();
+	if (dmillis < this.start.getTime() || dmillis > this.end.getTime())
+	{
+		alert("Error: " + newDate.toDateString() + " out of range.");
+		return;
+	}
+
+	/* Button states. */
+	if (Math.abs(dmillis - this.start.getTime()) < this.DAY_MILLISECONDS)
+	{
+		this.enableDayButton(false);
+		this.disableDayButton(true);
+	}
+	else if (Math.abs(this.end.getTime() - dmillis) < this.DAY_MILLISECONDS)
+	{
+		this.enableDayButton(true);
+		this.disableDayButton(false);
+	}
+	else
+	{
+		this.enableDayButton(false);
+		this.enableDayButton(true);
+	}
+	
+	this.date = newDate;
+    $('#daypicker').datepicker('setDate', this.date);
+    $('#bookingstimetitle').empty().append(dateToStr(this.date));
+    
+    
+};
+
+/* ----------------------------------------------------------------------------
+ * -- Button behaviour.                                                      --
+ * ---------------------------------------------------------------------------- */
+BookingPage.prototype.nextEnabled = true;
+BookingPage.prototype.previousEnabled = false;
+
+BookingPage.prototype.nextDay = function() {
+	if (!this.nextEnabled) return;
+
+	this.changeDate(new Date(this.date.getTime() + this.DAY_MILLISECONDS));
+};
+
+BookingPage.prototype.previousDay = function() {
+	if (!this.previousEnabled) return;
+	
+	this.changeDate(new Date(this.date.getTime() - this.DAY_MILLISECONDS));
+};
+
+BookingPage.prototype.enableDayButton = function(prev) {
+    if (prev && this.previousEnabled || !prev && this.nextEnabled) return;
+    
+	var base;
+    if (prev)
+    {
+        this.previousEnabled = true;
+        base = 'leftarrow';
+    }
+    else
+    {
+        this.nextEnabled = true;
+        base = 'rightarrow';
+    }
+    
+	$('#' + base).removeClass('disdaybutton')
+		 .addClass('daybutton')
+		 .children('img').attr('src', '/images/' + base + '.png');
+};
+
+BookingPage.prototype.disableDayButton = function(prev) {
+    if (prev && !this.previousEnabled || !prev && !this.nextEnabled) return;
+    
+    var base;
+    if (prev)
+    {
+        this.previousEnabled = false;
+        base = 'leftarrow';
+    }
+    else
+    {
+        this.nextEnabled = false;
+        base = 'rightarrow';
+    }
+    
+	$('#' + base).removeClass('daybutton')
+		 .addClass('disdaybutton')
+		 .children('img').attr('src', '/images/dis_' + base + '.png');
+};
+
+/* ----------------------------------------------------------------------------
+ * -- Accessors.                                                             --
+ * ---------------------------------------------------------------------------- */
+BookingPage.prototype.getStart = function() {
+	return dateToStr(this.start);
+};
+
+BookingPage.prototype.getCurrent= function() {
+	return dateToStr(this.date);
+};
+
+BookingPage.prototype.getEnd = function() {
+	return dateToStr(this.end);
+};
+
+/* ----------------------------------------------------------------------------
+ * -- Utility functions.                                                     --
+ * ---------------------------------------------------------------------------- */
+
+/**
+ * Converts a date string to a Date object.
+ * 
+ * @param str string date in the form dd/mm/yyyy.
+ * @returns {Date} date object
+ */
+function strToDate(str)
 {
-	alert(dateText);
+	var dts = str.split('/', 3);
+	
+	var dobj = new Date();
+	dobj.setFullYear(dts[2], dts[1] - 1, dts[0]);
+	dobj.setHours(0, 0, 0, 0);
+	return dobj;
+}
+
+/**
+ * Converts a Date object to a date string in the format dd/mm/yyyy.
+ * 
+ * @param date date object
+ * @return {String} date string
+ */
+function dateToStr(date)
+{
+	return date.getDate() + "/" + (date.getMonth() + 1) + "/" + date.getFullYear();
 }

@@ -48,7 +48,7 @@ class BookingsController extends Sahara_Controller_Action_Acl
      */
     public function indexAction()
     {
-        $this->view->headTitle('Sahara Labs - Reservation');
+        $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Create Reservations');
 
         if (($pid = $this->_getParam('pid', 0)) == 0)
         {
@@ -163,6 +163,7 @@ class BookingsController extends Sahara_Controller_Action_Acl
      */
     public function existingAction()
     {
+        $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Reservations');
         // TODO
     }
 }

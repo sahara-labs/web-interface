@@ -46,7 +46,7 @@ class QueueController extends Sahara_Controller_Action_Acl
      */
     public function indexAction()
     {
-        $this->view->headTitle('Remote Labs - Select a resource');
+        $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Rig Selection');
 
         /* Load the permissions of the user. */
         $client = Sahara_Soap::getSchedServerPermissionsClient();
@@ -135,7 +135,7 @@ class QueueController extends Sahara_Controller_Action_Acl
      */
     public function queuingAction()
     {
-        $this->view->headTitle('Remote Labs - Queue');
+        $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Queue');
 
         $queueInfo = Sahara_Soap::getSchedServerQueuerClient()->getUserQueuePosition(array(
         		'userQName' => $this->_auth->getIdentity()

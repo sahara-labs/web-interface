@@ -43,6 +43,9 @@
  */
 class Sahara_Controller_Action_Acl extends Zend_Controller_Action
 {
+    /** The branding prefix for head titles. */
+    const HEAD_TITLE_PREFIX = 'Sahara Labs - ';
+
     /** Pseudo role for in queue users. */
     const PSEUDO_ROLE_QUEUE = "INQUEUE";
 

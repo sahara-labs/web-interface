@@ -44,21 +44,44 @@
 
 #leftarrowbox {
 	float: left;
+	margin-left: 50px;
 	width: 100px;
 }
 
 #daypickercontainer {
-	float:left;
-	width: 200px;
+	float: left;
+	width: 300px;
+}
+
+#daypickerinner {
+	margin: 0 auto;
+}
+
+#daypickerinput {
+	float: left;
+	width: 140px;
+	margin-top: 5px;
+}
+
+#daypickerleft {
+	float: left;
+	width: 20px;
+}
+
+#daypicker {
+	font-size: 0.95em;
+	font-weight: bold;
 }
 
 #daypickericonbox {
-	float:left;
+	float: left;
 	width: 100px;
+	margin-left: 15px;
 }
 
 #rightarrowbox {
 	float: left;
+	margin-right: 50px;
 	width: 100px;
 }
 
@@ -82,6 +105,20 @@
 	-webkit-box-shadow: 0 0 4px #606060;
 }
 
+.disdaybutton {
+	background-color: #EFEFEF;
+	border: 1px solid #B5B5B5;
+	display: block;
+	width: 35px;
+	height: 35px;
+	padding: 5px;
+	text-align: center;
+	cursor: default;
+	box-shadow: 0 0 2px #B5B5B5;
+	-moz-box-shadow: 0 0 2px #B5B5B5;
+	-webkit-box-shadow: 0 0 2px #B5B5B5;
+}
+
 .daybuttonlabel {
 	color: #606060;
 	font-size: 0.8em;
@@ -95,4 +132,25 @@
 	margin: 5px -1px 0;
 }
 
- 
+#bookingstimecontainer {
+	margin: 25px auto;
+	width: 700px;
+	height: 400px;
+	border: 1px solid #B5B5B5;
+	box-shadow: 0 0 2px #B5B5B5;
+	-moz-box-shadow: 0 0 2px #B5B5B5;
+	-webkit-box-shadow: 0 0 2px #B5B5B5;
+}
+
+#bookingstimetitle {
+	font-size: 1.0 em;
+	font-weight: bold;
+	margin: -15px 20px 0px;
+	padding: 5px;
+	border: 1px solid #B5B5B5;
+	background-color: #EFEFEF;
+	width: 75px;
+	box-shadow: 0 0 2px #B5B5B5;
+	-moz-box-shadow: 0 0 2px #B5B5B5;
+	-webkit-box-shadow: 0 0 2px #B5B5B5;
+}

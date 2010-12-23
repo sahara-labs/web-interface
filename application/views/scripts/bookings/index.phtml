@@ -47,14 +47,6 @@ list($year, $mon, $day) = explode('-', $this->currentDay, 3);
 $sDate = "$day/$mon/$year";
 list($year, $mon, $day) = explode('-', $this->endDay, 3);
 $eDate = "$day/$mon/$year";
-
-
-$this->headScript()->appendScript('
-$(document).ready(function(){
-	initPage("' . $sDate . '", "' . $eDate . '");
-});
-');
-
 ?>
 
 <div class="contentheader">
@@ -66,31 +58,76 @@ $(document).ready(function(){
 <!-- Day picker bar. -->
 <div id="daypickerbar">
 	<div id="leftarrowbox" class="arrowbox">
-		<a id="leftarrow" class="plaina daybutton ui-corner-all">
-			<img src="<?=$this->baseUrl('/images/left_arrow.png')?>" alt="Previous" />
+		<a id="leftarrow" class="plaina disdaybutton ui-corner-all">
+			<img src="<?=$this->baseUrl('/images/dis_leftarrow.png')?>" alt="Previous" />
 		</a>
 		<div id="daybuttonlabelleft" class="daybuttonlabel">Previous Day</div>
 	</div>
+	<div id="daypickercontainer">
+		<div id="daypickerinner">
+			<div id="daypickerleft">&nbsp;</div>
+    		<div id="daypickerinput" class="jqTransformInputWrapper">
+    			<div class="jqTransformInputInner">
+    				<div>
+    					<input id="daypicker" class="jqTransformInput jqtranformdone" type="text" value="<?=$sDate?>"/>
+					</div>
+    			</div>
+    		</div>
 
-	<div id="daypickerouter">
-		<div id="daypickercontainer">
-			<input id="daypicker" type="text" value="<?=$sDate?>"/>
+    		<div id="daypickericonbox" class="arrowbox">
+    			<a id="daypickericon" class="plaina daybutton ui-corner-all">
+    				<img src="<?=$this->baseUrl('/images/daypicker.png')?>" alt="Pick" />
+    			</a>
+    		</div>
 		</div>
-	</div>
-
-	<div id="daypickericonbox" class="arrowbox">
-		<a id="daypickericon" class="plaina daybutton ui-corner-all">
-			<img src="<?=$this->baseUrl('/images/daypicker.png')?>" alt="Pick" />
-		</a>
 	</div>
 
 	<div id="rightarrowbox" class="arrowbox">
 		<a id="rightarrow" class="plaina daybutton ui-corner-all">
-			<img src="<?=$this->baseUrl('/images/right_arrow.png')?>" alt="Next" />
+			<img src="<?=$this->baseUrl('/images/rightarrow.png')?>" alt="Next" />
 		</a>
 		<div id="daybuttonlabelright" class="daybuttonlabel">Next Day</div>
 	</div>
 </div>
+
+<script type="text/javascript">
+//<!--
+var vp = new BookingPage('<?=$sDate?>', '<?=$eDate?>');
+
+$(document).ready(function() {
+	$('#daypicker').datepicker({
+		defaultDate: vp.getCurrent(),
+		minDate: vp.getStart(),
+		maxDate: vp.getEnd(),
+		dateFormat: 'dd/mm/yy',
+		onSelect: function(dateText, inst) {
+			vp.changeDate(dateText);
+		}
+	});
+
+	$("#daypickerinput").hover(
+		function() {
+			$(this).addClass("jqTransformInputWrapper_hover");
+		},
+		function() {
+			$(this).removeClass("jqTransformInputWrapper_hover");
+		}
+	 );
+
+	 $("#daypickericon").click(function() { $("#daypicker").datepicker("show"); });
+	 $("#leftarrow").click(function() { vp.previousDay(); });
+	 $("#rightarrow").click(function() { vp.nextDay(); } );
+});
+//-->
+</script>
+
+<div style="clear:both"></div>
+
+<div id="bookingstimecontainer" class="ui-corner-all">
+	<div id="bookingstimetitle" class="ui-corner-all"><?=$sDate?></div>
+
+</div>
+
 
 <?php else: ?>
 <h2>Maximum bookings elasped.</h2>
