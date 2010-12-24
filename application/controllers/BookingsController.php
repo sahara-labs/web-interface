@@ -156,6 +156,18 @@ class BookingsController extends Sahara_Controller_Action_Acl
                               'endTime'   => $this->view->currentDay . 'T23:59:59')
         ));
 
+        $times = $freeTimes->bookingSlot;
+        $slots = array();
+        $i = 0;
+        if (is_array($times))
+        {
+            foreach ($times as $t)
+            {
+                $st = new DateTime($t->slot->startTime);
+                $secs = $st->format('G') * 3600 + $st->format('i') * 60 + $st->format('s');
+
+            }
+        }
     }
 
     /**
