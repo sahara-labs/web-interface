@@ -114,4 +114,67 @@ class Sahara_DateTimeUtil
 
         return mktime($hour, $min, $sec, $mon, $day, $year);
     }
+
+    /**
+     * Returns an array contains hour, minute, second from
+     * a ISO8601 timestamp.
+     *
+     * @param String $tm timestamp
+     * @return array hour, minute, second
+     */
+    public static function getTimeFromISO8601($tm)
+    {
+        list($date, $time) = explode('T', $tm, 2);
+        $arr = explode(':', $time, 3);
+
+        if (strlen($arr[2]) > 2)
+        {
+            $arr[2] = substr($arr[2], 0, 2);
+        }
+        return $arr;
+    }
+
+    /**
+     * Returns the slot number for a time.
+     *
+     * @param String $tm ISO8601 time
+     * @return int slot number
+     */
+    public static function getSlotTimeFromISO8601($tm)
+    {
+        list($hr, $min, $sec) = self::getTimeFromISO8601($tm);
+        return ($hr * 3600 + $min * 60 + $sec) / BookingsController::SLOT_DURATION;
+    }
+
+    /**
+     * Returns a display hour from a slot.
+     *
+     * @param int $sl slot
+     * @return String display hour
+     */
+    public static function displayHourFromSlot($sl)
+    {
+        $sec = $sl * BookingsController::SLOT_DURATION;
+        $hr = floor($sec / 3600);
+
+        if ($hr == 0 || $hr == 24) return '12 am';
+	    else if ($hr < 12) return $hr . ' am';
+	    else if ($hr == 12) return '12 pm';
+	    else return ($hr -12) . ' pm';
+    }
+
+    /**
+     * Zero pads a field.
+     *
+     * @param int $tm time field
+     * @return String zero padded field
+     */
+    public static function zeroPad($tm)
+    {
+        if ($tm < 10)
+        {
+            return "0$tm";
+        }
+        return $tm;
+    }
 }

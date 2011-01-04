@@ -43,6 +43,10 @@ class BookingsController extends Sahara_Controller_Action_Acl
 {
     /** @var String date format. */
     const DATE_FORMAT = 'Y-m-d';
+
+    /** @var int Duration of each booking slot in seconds. */
+    const SLOT_DURATION = 900;  // 15 minutes
+
     /**
 	 * View to make a booking.
      */
@@ -60,7 +64,6 @@ class BookingsController extends Sahara_Controller_Action_Acl
         $permissions = Sahara_Soap::getSchedServerPermissionsClient()->getPermissionsForUser(
                 array('userQName' => $this->_auth->getIdentity())
         );
-
 
         $permissions = $permissions->permission;
         if (is_array($permissions))
@@ -108,28 +111,8 @@ class BookingsController extends Sahara_Controller_Action_Acl
             $this->_redirectTo('index', 'queue');
         }
         $this->view->permission = $perm;
-
-        /* More pre-conditions to display a booking page. However, these aren't
-         * handled by the queue page, so give a *helpful* warning. */
-        $bookingsResponse = Sahara_Soap::getSchedServerBookingsClient()->getBookings(array(
-            'userID' => array('userQName' => $this->_auth->getIdentity()),
-            'permissionID' => array('permissionID' => $perm->permissionID),
-            'showCancelled' => false,
-            'showFinished' => false
-        ));
-        $bookings = $bookingsResponse->bookings;
-
-        /* Work out the number of bookings. */
-        $numBookings = 0;
-        if (is_array($bookings)) $numBookings = count($bookings);
-        else if ($bookings != NULL) $numBookings = 1;
-
-        if ($numBookings >= $perm->maxBookings)
-        {
-            $this->view->canBook = false;
-            return;
-        }
-        $this->view->canBook = true;
+        $this->view->name = $perm->displayName;
+        if (!$this->view->name) $this->view->name = $perm->resource->resourceName;
 
         /* The start time is which ever of the time horizion or permission start
          * that comes first. */
@@ -149,25 +132,190 @@ class BookingsController extends Sahara_Controller_Action_Acl
         $end = new DateTime($perm->expiry);
         $this->view->endDay = $end->format(self::DATE_FORMAT);
 
+        /* More pre-conditions to display a booking page. However, these aren't
+         * handled by the queue page, so give a *helpful* warning. */
+        $bookingsResponse = Sahara_Soap::getSchedServerBookingsClient()->getBookings(array(
+            'userID' => array('userQName' => $this->_auth->getIdentity()),
+            'showCancelled' => false,
+            'showFinished' => false
+        ));
+        $bookings = $bookingsResponse->bookings;
+
+        /* Make sure the user has not exceeded the number of permission allowed
+         * bookings. Also we want to annotate the interface with existing bookings
+         * so the user may not make concurrent bookings. */
+        $this->view->userBookings = array();
+        $numBookings = 0;
+        if (is_array($bookings))
+        {
+            foreach ($bookings as $b)
+            {
+                if ($b->permissionID->permissionID = $pid) $numBookings++;
+                if (strpos($b->startTime, $this->view->currentDay) === 0)
+                {
+                    $ss = Sahara_DateTimeUtil::getSlotTimeFromISO8601($b->startTime) - 1;
+                    $es = Sahara_DateTimeUtil::getSlotTimeFromISO8601($b->endTime);
+                    while (++$ss < $es) array_push($this->view->userBookings, $ss);
+                }
+            }
+        }
+        else if ($bookings != NULL)
+        {
+            if ($bookings->permissionID->permissionID = $pid) $numBookings++;
+            if (strpos($bookings->startTime, $this->view->currentDay) === 0)
+            {
+                $ss = Sahara_DateTimeUtil::getSlotTimeFromISO8601($bookings->startTime) - 1;
+                $es = Sahara_DateTimeUtil::getSlotTimeFromISO8601($bookings->endTime);
+                while (++$ss < $es) array_push($this->view->userBookings, $ss);
+            }
+        }
+        $this->view->canBook = $numBookings < $perm->maxBookings;
+
+        /* Timezone information. */
+        $this->view->tz = Sahara_Soap::getSchedServerBookingsClient()->getTimezoneProfiles();
+        $tzOff = ($this->view->tz->offsetFromUTC ? '+' : '-') .
+                Sahara_DateTimeUtil::zeroPad(floor(abs($this->view->tz->offsetFromUTC) / 3600)) . ':' .
+                Sahara_DateTimeUtil::zeroPad(floor(abs($this->view->tz->offsetFromUTC) % 3600 / 60));
+
         $freeTimes = Sahara_Soap::getSchedServerBookingsClient()->findFreeBookings(array(
             'userID' => array('userQName' => $this->_auth->getIdentity()),
             'permissionID' => array('permissionID' => $perm->permissionID),
-            'period' => array('startTime' => $this->view->currentDay . 'T00:00:00',
-                              'endTime'   => $this->view->currentDay . 'T23:59:59')
+            'period' => array('startTime' => $this->view->currentDay . 'T00:00:00' . $tzOff,
+                              'endTime'   => $this->view->currentDay . 'T23:59:59' . $tzOff)
         ));
+        $freeTimes = $freeTimes->bookingSlot;
 
-        $times = $freeTimes->bookingSlot;
-        $slots = array();
-        $i = 0;
-        if (is_array($times))
+        $this->view->slots = array();
+        $this->view->numSlots = 24 * 60 * 60 / self::SLOT_DURATION;
+        $this->view->midSlot = $this->view->numSlots / 2;
+        if (is_array($freeTimes))
         {
-            foreach ($times as $t)
+            foreach ($freeTimes as $t)
             {
-                $st = new DateTime($t->slot->startTime);
-                $secs = $st->format('G') * 3600 + $st->format('i') * 60 + $st->format('s');
-
+                $this->view->slots[Sahara_DateTimeUtil::getSlotTimeFromISO8601($t->slot->startTime)] = $t->state;
             }
         }
+        else if ($freeTimes != NULL)
+        {
+            $this->view->slots[Sahara_DateTimeUtil::getSlotTimeFromISO8601($freeTimes->slot->startTime)] = $freeTimes->state;
+        }
+        else
+        {
+            /* For some reason the resource free times response didn't actually
+             * provide any times. We will assume we are in a no-permission
+             * range. */
+            $this->view->slots[0] = 'NOPERMISSION';
+        }
+    }
+
+    /**
+     * Commits a boooking.
+     */
+    public function commitAction()
+    {
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();
+
+        $params = $this->_request->getParams();
+
+        $response = Sahara_Soap::getSchedServerBookingsClient()->createBooking(array(
+            'userID' => array('userQName' => $this->_auth->getIdentity()),
+            'booking' => array(
+                'bookingID' => 0,
+                'permissionID' => array('permissionID' => $params['pid']),
+                'startTime' => $params['start'],
+                'endTime' => $params['end']
+            ),
+            'sendNotification' => (bool)$params['send'],
+
+        ));
+
+        echo $this->view->json($response);
+    }
+
+    /**
+     * Action to get the list of times for a day.
+     */
+    public function timesAction()
+    {
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();
+
+        $numSlots = 24 * 60 * 60 / self::SLOT_DURATION;
+
+        if (!($date = $this->_request->getParam('day')) ||
+            !($tz   = $this->_request->getParam('tz')) ||
+            !($pid  = $this->_request->getParam('pid')))
+        {
+            $response = array();
+            for ($i = 0; $i < $numSlots; $i++) $response[$i] = 'NOPERMISSION';
+
+            echo $this->view->json($response);
+            return;
+        }
+
+        $bookingsResponse = Sahara_Soap::getSchedServerBookingsClient()->getBookings(array(
+            'userID' => array('userQName' => $this->_auth->getIdentity()),
+            'showCancelled' => false,
+            'showFinished' => false
+        ));
+        $bookings = $bookingsResponse->bookings;
+
+        $userBookings = array();
+        if (is_array($bookings))
+        {
+            foreach ($bookings as $b)
+            {
+                if (strpos($b->startTime, $date) === 0)
+                {
+                    $ss = Sahara_DateTimeUtil::getSlotTimeFromISO8601($b->startTime) - 1;
+                    $es = Sahara_DateTimeUtil::getSlotTimeFromISO8601($b->endTime);
+                    while (++$ss < $es) array_push($userBookings, $ss);
+                }
+            }
+        }
+        else if ($bookings != NULL)
+        {
+            if (strpos($bookings->startTime, $date) === 0)
+            {
+                $ss = Sahara_DateTimeUtil::getSlotTimeFromISO8601($bookings->startTime) - 1;
+                $es = Sahara_DateTimeUtil::getSlotTimeFromISO8601($bookings->endTime);
+                while (++$ss < $es) array_push($userBookings, $ss);
+            }
+        }
+
+        $freeTimes = Sahara_Soap::getSchedServerBookingsClient()->findFreeBookings(array(
+            'userID' => array('userQName' => $this->_auth->getIdentity()),
+            'permissionID' => array('permissionID' => $this->_request->getParam('pid')),
+            'period' => array('startTime' => $date . "T00:00:00" . $tz,
+                              'endTime'   => $date . "T23:59:59" . $tz)
+        ));
+        $freeTimes = $freeTimes->bookingSlot;
+
+        $freeSlots = array();
+        if (is_array($freeTimes))
+        {
+            foreach ($freeTimes as $t)
+            {
+                $freeSlots[Sahara_DateTimeUtil::getSlotTimeFromISO8601($t->slot->startTime)] = $t->state;
+            }
+        }
+        else if ($freeTimes != NULL)
+        {
+            $freeSlots[Sahara_DateTimeUtil::getSlotTimeFromISO8601($freeTimes->slot->startTime)] = $freeTimes->state;
+        }
+
+        /* Combine the user bookings and free times. */
+        $state = 'NOPERMISSION';
+        $response = array();
+        for ($i = 0; $i < $numSlots; $i++)
+        {
+            if (array_key_exists($i, $freeSlots)) $state = $freeSlots[$i];
+
+            $response[$i] = in_array($i, $userBookings) ? 'OWNBOOKING' : $state;
+        }
+
+        echo $this->view->json($response);
     }
 
     /**

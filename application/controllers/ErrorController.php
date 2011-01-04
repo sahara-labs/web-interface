@@ -73,9 +73,11 @@ class ErrorController extends Zend_Controller_Action
                 break;
             default:
                 /*---- Application error. -----------------------------------*/
-                /* Clear the authentication information. */
                 $this->sendErrorEmail($errors);
-                $auth = Zend_Auth::getInstance()->clearIdentity();
+
+                /* Clear the authentication information, if not in debug. */
+                if (APPLICATION_ENV != 'development') $auth = Zend_Auth::getInstance()->clearIdentity();
+
                 $this->getResponse()->setHttpResponseCode(500);
                 $this->view->code = 500;
                 $this->view->message = 'Application error';
