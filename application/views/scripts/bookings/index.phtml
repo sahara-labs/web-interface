@@ -50,6 +50,8 @@ $initScript = "var vp = new Booking(" . $this->permission->permissionID .
 		$this->name . "', '" . $this->tz->systemTimezone . "', " . $this->tz->offsetFromUTC . ");\n";
 foreach ($this->tz->supportedTimezones as $t)
     $initScript .= "vp.addTimezone('" . $t->timezone . "', " . $t->offsetFromSystem . ");\n";
+
+$initScript .= '$(document).ready(function() { vp.initTimezone() });';
 $this->headScript()->appendScript($initScript);
 ?>
 

@@ -210,6 +210,44 @@ Booking.prototype.disableDayButton = function(prev) {
 		 .children('img').attr('src', '/images/dis_' + base + '.png');
 };
 
+Booking.prototype.TZ_COOKIE = "Bookings-Timezone";
+Booking.prototype.initTimezone = function() {
+	var cname = this.TZ_COOKIE + "=";
+	var cparts = document.cookie.split(";");
+	
+	var tz = null;
+	for (var i in cparts)
+	{
+		var c = cparts[i];
+		while (c.charAt(0) == ' ') c = c.substr(1);
+		if (c.indexOf(cname) == 0) tz = unescape(c.substr(c.indexOf("=") + 1));
+	}
+	
+	if (tz && this.timezones[tz])
+	{
+		/* Use the cookie stored value. */
+		this.changeTimezone(tz);
+	}
+	else
+	{
+		/* Detect the value from the browser provided offset. */
+		var tzOffset = -((new Date().getTimezoneOffset() * 60) + this.systemOffset);
+		if (tzOffset == 0) return;
+		
+		for (var i in this.timezones)
+		{
+			if (this.timezones[i] == tzOffset)
+			{
+				this.inuseTimezone = i;
+				this.inuseOffset = this.timezones[i];
+				this.changeTimezone(i, false);
+				return;
+			}
+		}
+	}
+	
+};
+
 Booking.prototype.displayTzSelector = function() {
 	
 	if (this.regions == null)
@@ -223,23 +261,32 @@ Booking.prototype.displayTzSelector = function() {
 		}
 	}
 	
+	var utcOff = (this.inuseOffset + this.systemOffset);
+	var offHr = Math.floor(utcOff / 3600);
+	var offMin = Math.floor(utcOff % 3600 / 60);
+	if (offMin < 0)
+	{
+		offHr--;
+		offMin += 60;
+	}
+	offHr = Math.abs(offHr);
+	
 	var html = 
 		"<div id='tzselector' title='Timezone Selector'>" +
-			"<p>Current timezone: <span id='inusetz'>" + this.inuseTimezone.split("_").join(" ") + "<span></p>" +
+			"<p>Current timezone: <span id='inusetz'>GMT " + (utcOff >= 0 ? "+" : "&ndash;") + offHr + ':' + zeroPad(offMin) + "<span></p>" +
 			"<ul id='tzlist'>";
 	
 	for (var reg in this.regions)
 	{
 		html += 
-			"<li id='" + reg + "' class='tzregion " + (this.inuseTimezone.indexOf(reg) == 0 ? "inuseregion'" : "'") + ">" +
+			"<li id='" + reg + "' class='tzregion' >" +
 				 "<span class='ui-icon ui-icon-arrowthick-1-e tzicon'></span>" + reg +
 				 "<div id='" + reg + "region' class='tzregioncontainer'>" +
 					"<ul class='innertzlist'>";
 		
 		for (var tz in this.regions[reg])
 		{	
-			html += 	"<li class='timezoneregion " + (this.inuseTimezone == this.regions[reg][tz] ? "inuseregion'" : "'") + 
-									" tz='" + this.regions[reg][tz] + "'>" + 
+			html += 	"<li class='timezoneregion' tz='" + this.regions[reg][tz] + "'>" + 
 							"<span class='ui-icon ui-icon-arrowthick-1-e tzicon'></span>" + 
 							this.regions[reg][tz].substr(this.regions[reg][tz].indexOf('/') + 1).split('_').join(' ') + 
 						"</li>";
@@ -282,7 +329,7 @@ Booking.prototype.displayTzSelector = function() {
 				$(this).children(".tzregioncontainer").show()
 					.children()
 					.children(".timezoneregion").click(function () {
-						vp.changeTimezone($(this).attr('tz'));
+						vp.changeTimezone($(this).attr('tz'), true);
 				});
 			}
 		},
@@ -290,15 +337,19 @@ Booking.prototype.displayTzSelector = function() {
 	);
 };
 
-Booking.prototype.changeTimezone = function(tz) {
-	$("#inusetz").empty().append(tz.split("_").join(" "));
-	
-	$(".inuseregion").removeClass("inuseregion");
-	$("#" + tz.substr(0, tz.indexOf("/"))).addClass("inuseregion");
-	$("li[tz=" + tz + "]").addClass("inuseregion");
-	
+Booking.prototype.changeTimezone = function(tz, userSelected) {
 	this.inuseTimezone = tz;
 	this.inuseOffset = this.timezones[tz];
+	
+	var utcOff = (this.inuseOffset + this.systemOffset);
+	var offHr = Math.floor(utcOff / 3600);
+	var offMin = Math.floor(utcOff % 3600 / 60);
+	if (offMin < 0)
+	{
+		offHr--;
+		offMin += 60;
+	}
+	$("#inusetz").empty().append("GMT " + (utcOff >= 0 ? "+" : "&ndash;") + Math.abs(offHr) + ':' + zeroPad(offMin)); 
 	
 	var hrOff = Math.floor(this.timezones[tz] / 3600);
 	var minOff = Math.floor(this.timezones[tz] % 3600 / 60);
@@ -306,6 +357,12 @@ Booking.prototype.changeTimezone = function(tz) {
 	for (var i = 0; i < 24; i++)
 	{
 		$("#timelabel" + i).empty().append(this.displayHour(i + hrOff));
+	}
+	
+	if (userSelected)
+	{
+		/* Store the timezone in a session cookie. */
+		document.cookie = this.TZ_COOKIE + "=" + escape(tz) + ";path=/;";
 	}
 };
 
@@ -315,11 +372,31 @@ Booking.prototype.changeTimezone = function(tz) {
 
 Booking.prototype.confirmBooking = function() {
 	var html = 
-		"<div id='bookingconfirmation' title='Reservation Confirmation'>" +
-			"<p>You have requested to reserve '<span>" + this.name + "</span>' on <span>" + dateToStr(this.date) + 
-			"</span> from <span>" + this.slotToTime(this.booking) + "</span> to <span>" + 
-			this.slotToTime(this.bookingEnd + 1) + "</span>.</p>" +
-		"</div>";
+		"<div id='bookingconfirmation' title='Reservation Confirmation'>";
+	
+	
+	var bkStart = this.slotToTime(this.booking);
+	var bkEnd = this.slotToTime(this.bookingEnd + 1);
+
+	if (bkStart.substr(bkStart.length - 2) == 'pm' && bkEnd.substr(bkEnd.length - 2) == 'am')
+	{
+		var bkStartDate = dateToStr(this.date);
+		var bkEndDate = bkStartDate;
+		if (this.inuseOffset < 0) bkStartDate = dateToStr(new Date(this.date.getTime() - this.DAY_MILLISECONDS));
+		else bkEndDate = dateToStr(new Date(this.date.getTime() + this.DAY_MILLISECONDS));
+
+		html += "<p>You have requested to reserve '<span>" + this.name.split('_').join(' ') + "</span>' from <span>" + 
+				bkStart + "</span> on <span>" + bkStartDate + "</span> to <span>" + bkEnd + "</span> on <span>" + 
+				bkEndDate + "</span>.</p>";
+	}
+	else
+	{
+		html += "<p>You have requested to reserve '<span>" + this.name.split('_').join(' ') + "</span>' on <span>" + 
+				dateToStr(this.date) + "</span> from <span>" + bkStart + "</span> to <span>" + 
+				bkEnd + "</span>.</p>";
+	}
+	html += '</div>';
+
 	$("body").append(html);
 	
 	$('#bookingconfirmation').dialog({
@@ -432,6 +509,14 @@ Booking.prototype.confirmBookingCallback = function(resp) {
 	/* Some error. */
 	if (typeof resp == "string") window.location.reload();
 	
+	var bkStart = this.slotToTime(this.booking);
+	var bkEnd = this.slotToTime(this.bookingEnd + 1);
+	var bkStartDate = dateToStr(this.date);
+	var bkEndDate = bkStartDate;
+	
+	if (this.inuseOffset < 0)      bkStartDate = dateToStr(new Date(this.date.getTime() - this.DAY_MILLISECONDS));
+	else if (this.inuseOffset > 0) bkEndDate = dateToStr(new Date(this.date.getTime() + this.DAY_MILLISECONDS));
+	
 	var bs = this.booking;
 	var be = this.bookingEnd;
 		
@@ -450,11 +535,25 @@ Booking.prototype.confirmBookingCallback = function(resp) {
 		/* Success dialog. */
 		var html = 
 			"<div id='bookingsuccess' title='Reservation Created'>" +
-				"<div><img src='/images/booking_success.png' alt='Success' /></div>" +
-				"<p>A reservation was successfully created for '<span>" + this.name + "</span>' on <span>" + dateToStr(this.date) + 
-				"</span> from <span>" + this.slotToTime(bs) + "</span> to <span>" + 
-				this.slotToTime(be + 1) + "</span>.</p>" +
-				"<div class='ui-state-highlight ui-corner-all'>" +
+				"<div><img src='/images/booking_success.png' alt='Success' /></div>";
+		
+		if (bkStart.substr(bkStart.length - 2) == 'pm' && bkEnd.substr(bkEnd.length - 2) == 'am')
+		{
+			html += 
+				"<p>A reservation was successfully created for '<span>" + this.name.split('_').join(' ') + 
+				"</span>' from <span>" + bkStart + "</span> on <span>" + bkStartDate + "</span> to <span>" + 
+				bkEnd + "</span> on <span>" + bkEndDate + ".</p>";				
+		}
+		else
+		{
+			html += 
+				"<p>A reservation was successfully created for '<span>" + this.name.split('_').join(' ') + 
+				"</span>' on <span>" + bkStartDate + "</span> from <span>" + bkStart + 
+				"</span> to <span>" + bkEnd + "</span>.</p>";
+		}
+		
+		
+		html += "<div class='ui-state-highlight ui-corner-all'>" +
 					"<span class='ui-icon ui-icon-info' style='float:left;margin-right:5px;'> </span>" +
 					"Please log on at this time to use your reservation." +
 				"</div>" +
@@ -481,11 +580,23 @@ Booking.prototype.confirmBookingCallback = function(resp) {
 	{
 		var html = 
 			"<div id='bookingfailed' title='Reservation Not Created'>" +
-				"<div><img src='/images/booking_failed.png' alt='Failed' /></div>" +
-				"<p>The reservation for '<span>" + this.name + "</span>' on <span>" + dateToStr(this.date) + 
-				"</span> from <span>" + this.slotToTime(bs) + "</span> to <span>" + 
-				this.slotToTime(be + 1) + "</span> could not be created. The options to resolve this are:</p>" +
-				"<ul class='bookingfailedlist'>";
+				"<div><img src='/images/booking_failed.png' alt='Failed' /></div>";
+		
+		if (bkStart.substr(bkStart.length - 2) == 'pm' && bkEnd.substr(bkEnd.length - 2) == 'am')
+		{
+			html += 
+				"<p>The reservation for '<span>" + this.name.split('_').join(' ') + "</span>' from <span>" + 
+				bkStart + "</span> on <span>" + bkStartDate + "</span> to <span>" + bkEnd + "</span> on <span>" +
+				bkEndDate + "</span> could not be created. The options to resolve this are:</p>";
+		}
+		else
+		{
+			html += 
+				"<p>The reservation for '<span>" + this.name.split('_').join(' ') + "</span>' on <span>" + 
+				bkStartDate + "</span> from <span>" + bkStart + "</span> to <span>" + 
+				bkEnd + "</span> could not be created. The options to resolve this are:</p>";
+		}	
+		html +=	"<ul class='bookingfailedlist'>";
 		
 		if (resp.bestFits != null)
 		{
@@ -499,15 +610,36 @@ Booking.prototype.confirmBookingCallback = function(resp) {
 			for (var i in this.bestFits)
 			{
 				var startTime = this.bestFits[i].startTime;
+				var bfStart = this.isoToTime(startTime);
+				var bfEnd = this.isoToTime(this.bestFits[i].endTime);
 				var bfDate = startTime.substr(0, startTime.indexOf("T")).split("-");
 				
 				html += 
 					"<li>" +
 						"<a id='bestfit" + i + "' class='bookingfailedoption bestfit ui-icon-all'>" +
-							"<span class='ui-icon ui-icon-arrowthick-1-e bookingfailedicon'> </span>" +
-							"Accept a reservation on <span>" + bfDate[2] + "/" + bfDate[1] + "/" + bfDate[0] + 
-							"</span> from <span>" + isoToTime(this.bestFits[i].startTime) + "</span> to <span>" + 
-							isoToTime(this.bestFits[i].endTime) + "</span>.";
+							"<span class='ui-icon ui-icon-arrowthick-1-e bookingfailedicon'> </span>";
+				
+				if (bfStart.substr(bfStart.length - 2) == 'pm' && bfEnd.substr(bfEnd.length - 2) == 'am')
+				{
+					var bfStartDate = bfDate[2] + "/" + bfDate[1] + "/" + bfDate[0];
+					var bfEndDate = bfStartDate;
+					
+					bfDate = strToDate(bfStartDate);
+					if (this.inuseOffset < 0) bfStartDate = dateToStr(new Date(bfDate.getTime() - this.DAY_MILLISECONDS));
+					else bfEndDate = dateToStr(new Date(bfDate.getTime() + this.DAY_MILLISECONDS));
+
+					html += 
+						"Accept a reservation from <span>" + bfStart + "</span> on <span>" + bfStartDate + 
+						"</span> to <span>" + bfEnd + "</span> on <span>" + bfEndDate + "</span>.";
+				}
+				else
+				{
+					html += 
+						"Accept a reservation on <span>" + bfDate[2] + "/" + bfDate[1] + "/" + bfDate[0] + 
+						"</span> from <span>" + bfStart + "</span> to <span>" + bfEnd + "</span>.";
+				}
+				
+				html += 	
 						"</a>" +
 					"</li>";
 			}
@@ -601,7 +733,7 @@ Booking.prototype.startBooking = function(slot) {
 	
 	for (var i = this.booking; i <= this.bookingEnd; i++)
 	{
-		slot.removeClass('free').addClass('createbooking').unbind();
+		$("#slot" + i).removeClass('free').addClass('createbooking').unbind();
 	}
 	
 	$(".timeselector").resizable({
@@ -793,20 +925,23 @@ Booking.prototype.addTimezone = function(tz, off) {
  * -- Utility functions.                                                     --
  * ---------------------------------------------------------------------------- */
 Booking.prototype.slotToTime = function(slot) {
+	
 	/* Stript the slot ID prefix. */
 	if ((typeof slot ) == 'string' && slot.indexOf('slot') == 0)
 	{
 		slot = parseInt(slot.substr(4));
 	}
 	
-	var hr = Math.floor(slot / this.SLOTS_PER_HOUR);
-	var min = (slot % this.SLOTS_PER_HOUR) * this.MINS_PER_SLOT;
-	if (min == 0) min = "00";
+	var hr = Math.floor(slot / this.SLOTS_PER_HOUR) + Math.floor(this.inuseOffset / 3600);
+	var min = ((slot % this.SLOTS_PER_HOUR) * this.MINS_PER_SLOT) +  Math.floor(this.inuseOffset % 3600 / 60);
+	if (min < 0)
+	{
+		hr--;
+		min = 60 + min;
+	}
 	
-	if (hr == 0 || hr == 24) return '12:' + min + ' am';
-	else if (hr < 12) return hr + ':' + min + ' am';
-	else if (hr == 12) return '12:' + min + ' pm';
-	else return (hr -12) + ':' + min + ' pm';
+	var tm  = this.displayHour(hr).split(' ');
+	return tm[0] + ':' + zeroPad(min) + ' ' + tm[1];
 };
 
 Booking.prototype.slotToISOTime = function(slot) {
@@ -832,32 +967,35 @@ Booking.prototype.isoTimeToSlot = function(iso) {
 	return Math.ceil((parseInt(time[0]) * 60 + parseInt(time[1])) / this.MINS_PER_SLOT);
 };
 
-Booking.prototype.displayHour = function(hr) {
-	var time = '';
-		
-	if (hr < 0)
+Booking.prototype.isoToTime = function(iso) {
+	var time = iso.substr(iso.indexOf("T") + 1);
+	var pos = time.indexOf("+");
+	if (pos != -1) time = time.substr(0, pos);
+	if ((pos = time.indexOf("-")) != -1) time.substr(0, pos);
+	
+	time = time.split(":");
+	var hr = parseInt(time[0]) + Math.floor(this.inuseOffset / 3600);
+	var min = parseInt(time[1]) + Math.floor(this.inuseOffset % 3600 / 60);
+	if (min < 0)
 	{
-		if (24 + hr == 23)
-		{
-			time = dateToStr(new Date(this.date.getTime() - this.DAY_MILLISECONDS));
-			time += "<br />";
-		}
-		time += this.displayHour(24 + hr);
+		hr--;
+		min = 60 + min;
 	}
+	
+	var tm  = this.displayHour(hr).split(' ');
+	return tm[0] + ':' + zeroPad(min) + ' ' + tm[1];
+};
+
+Booking.prototype.displayHour = function(hr) {
+	var time;
+	
+	if (hr < 0) time = this.displayHour(24 + hr);
 	else if (hr == 0 || hr == 24) time = '12 am';
 	else if (hr < 12) time = hr + ' am';
 	else if (hr == 12) time = '12 pm';
 	else if (hr < 24) time = (hr - 12) + ' pm';
-	else 
-	{
-		if (hr - 24 == 0)
-		{
-				time = dateToStr(new Date(this.date.getTime() + this.DAY_MILLISECONDS));
-				time += "<br />";
-		
-		}
-		time += this.displayHour(hr - 24);
-	}
+	else time = this.displayHour(hr - 24);
+
 	return time;
 };
 
@@ -889,29 +1027,6 @@ function dateToStr(date)
 }
 
 /**
- * Converts a ISO8601 time to a display time.
- * 
- * @param iso ISO8601 time
- * @returns {String} display time
- */
-function isoToTime(iso)
-{
-	var time = iso.substr(iso.indexOf("T") + 1);
-	var pos = time.indexOf("+");
-	if (pos != -1) time = time.substr(0, pos);
-	if ((pos = time.indexOf("-")) != -1) time.substr(0, pos);
-	
-	time = time.split(":");
-	var hr = parseInt(time[0]);
-	var min = parseInt(time[1]);
-	
-	if (hr == 0 || hr == 24) return '12:' + zeroPad(min) + ' am';
-	else if (hr < 12) return zeroPad(hr) + ':' + zeroPad(min) + ' am';
-	else if (hr == 12) return '12:' + zeroPad(min) + ' pm';
-	else return zeroPad(hr -12) + ':' + zeroPad(min) + ' pm';
-}
-
-/**
  * Zero pads with a leading 0 if parameter is one digit.
  * 
  * @param t param to pad
@@ -929,4 +1044,13 @@ function zeroPad(t)
 	}
 	
 	return t;
+}
+
+function setTZCookie(value)
+{
+	var expiry = new Date();
+	expiry.setDate(expiry.getDate() + 365);
+	var cookie = 'Camera_' + cameraRigType + '-' + key + '=' + value + ';path=/;expires=' + expiry.toUTCString();
+
+	
 }
