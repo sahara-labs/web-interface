@@ -45,10 +45,12 @@
  * @param dur session duration
  * @param extdur extension duration
  * @param name resource name
+ * @param num number of bookings
+ * @oaram max maximum allowed bookings
  * @param tz system timezone
  * @param sysoff system offset from UTC
  */
-function Booking(pid, start, end, dur, ext, extdur, name, tz, sysoff)
+function Booking(pid, start, end, dur, ext, extdur, name, num, max, tz, sysoff)
 {
 	this.pid = pid;
 	
@@ -79,6 +81,9 @@ function Booking(pid, start, end, dur, ext, extdur, name, tz, sysoff)
 	this.regions = null;
 	
 	this.bestFits = null;
+	
+	this.numBookings = num;
+	this.maxBookings = max;
 }
 
 /* ----------------------------------------------------------------------------
@@ -147,6 +152,11 @@ Booking.prototype.changeDate = function(newDate) {
     			$("#slot" + i).removeClass('slotloading').addClass(s);
     			
     			if (s == 'free') vp.restoreFreeSlot(i);
+    		}
+    		
+    		if (vp.numBookings >= vp.maxBookings)
+    		{
+    			vp.setMaximumBookings();
     		}
     	}
     );
@@ -568,13 +578,18 @@ Booking.prototype.confirmBookingCallback = function(resp) {
 			buttons: {
 				'OK': function() {
 					$(this).dialog('close');
-					vp.destroyBooking();
 				}
 			},
 			close: function(event, ui) {
 					$(this).dialog('destroy').remove();
+					vp.destroyBooking();
 			}
 		});
+		
+		if (++this.numBookings >= this.maxBookings)
+		{
+			this.setMaximumBookings();
+		}
 	}
 	else
 	{
@@ -888,6 +903,17 @@ Booking.prototype.drawHover = function(id) {
 Booking.prototype.clearHover = function(slot) {
 	this.slotHovers[slot.attr('id')] = false;
 	slot.children('.slothover').fadeOut().remove();
+};
+
+Booking.prototype.setMaximumBookings = function() {
+	$("#nobookwarning").show();
+	
+	$("#bookingstimecontainer").addClass("bookingsdisabled");
+	
+	this.disableHovers = true;
+	$(".free").unbind()
+		.removeClass("free")
+		.addClass("freedisabled");
 };
 
 /* ----------------------------------------------------------------------------

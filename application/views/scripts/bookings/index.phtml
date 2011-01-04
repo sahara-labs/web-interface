@@ -47,7 +47,8 @@ $eDate = "$day/$mon/$year";
 $initScript = "var vp = new Booking(" . $this->permission->permissionID .
         ", '$sDate', '$eDate', " . $this->permission->sessionDuration . ", " .
 		$this->permission->allowedExtensions . ", " . $this->permission->extensionDuration . ", '" .
-		$this->name . "', '" . $this->tz->systemTimezone . "', " . $this->tz->offsetFromUTC . ");\n";
+		$this->name . "', " . $this->numBookings . ", " . $this->permission->maxBookings . ", '" .
+		$this->tz->systemTimezone . "', " . $this->tz->offsetFromUTC . ");\n";
 foreach ($this->tz->supportedTimezones as $t)
     $initScript .= "vp.addTimezone('" . $t->timezone . "', " . $t->offsetFromSystem . ");\n";
 
@@ -59,7 +60,13 @@ $this->headScript()->appendScript($initScript);
 	<h2>Reservation for <?=$this->stringTransform($this->name, '_', ' ')?></h2>
 </div>
 
-<?php if ($this->canBook): ?>
+<div id="nobookwarning" class="ui-state-error ui-corner-all">
+    <span class="ui-icon ui-icon-alert" style="float:left;margin-right:5px"></span>
+    <p>You cannot create any more reservations because you already have the maximum number of allowed
+    <span class='warningem'>concurrent</span> reservations for
+    '<span class="warninghighlight"><?=$this->stringTransform($this->name, '_', ' ')?></span>'. You may create more
+    reservations after your current reservations are either finished or cancelled.</p>
+</div>
 
 <!-- Day picker bar. -->
 <div id="daypickerbar">
@@ -110,10 +117,14 @@ $(document).ready(function() {
 		minDate: vp.getStart(),
 		maxDate: vp.getEnd(),
 		dateFormat: 'dd/mm/yy',
+		showAnim: '',
 		onSelect: function(dateText, inst) {
 			vp.changeDate(dateText);
 		}
-	});
+	})
+	.datepicker('show')
+	.datepicker('hide')
+	.datepicker('option', 'showAnim', 'show');
 
 	$("#daypickerinput").hover(
 		function() {
@@ -129,6 +140,10 @@ $(document).ready(function() {
 	 $("#rightarrow").click(function() { vp.nextDay(); } );
 	 <?php if ($this->currentDay == $this->endDay): ?>
 	 vp.nextEnabled = false;
+	 <?php endif; ?>
+
+	 <?php if ($this->numBookings >= $this->permission->maxBookings): ?>
+	 vp.setMaximumBookings();
 	 <?php endif; ?>
 });
 //-->
@@ -207,7 +222,3 @@ $(document).ready(function() {
 });
 //-->
 </script>
-
-<?php else: ?>
-<h2>Maximum bookings elasped.</h2>
-<?php endif; ?>

@@ -169,7 +169,7 @@ class BookingsController extends Sahara_Controller_Action_Acl
                 while (++$ss < $es) array_push($this->view->userBookings, $ss);
             }
         }
-        $this->view->canBook = $numBookings < $perm->maxBookings;
+        $this->view->numBookings = $numBookings;
 
         /* Timezone information. */
         $this->view->tz = Sahara_Soap::getSchedServerBookingsClient()->getTimezoneProfiles();

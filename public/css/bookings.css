@@ -37,6 +37,21 @@
  * @date 9th November 2010
  */
  
+#nobookwarning {
+	margin: 10px auto 20px;
+	padding: 10px;
+	width: 575px;
+	display: none;
+}
+
+.warninghighlight {
+	font-weight: bold;
+}
+
+.warningem {
+	font-style: italic;
+}
+ 
 #daypickerbar {
 	margin: 10px auto 0;
 	width: 600px;
@@ -141,6 +156,14 @@
 	-webkit-box-shadow: 0 0 2px #B5B5B5;
 }
 
+.bookingsdisabled {
+	opacity: 0.3;
+	-moz-opacity: 0.3;
+	-webkit-opacity: 0.3;
+	filter: alpha(opacity = 30);
+	background: url(images/ui-bg_flat_0_aaaaaa_40x100.png) repeat-x scroll 50% 50% #AAAAAA;
+}
+
 #bookingstimetitle {
 	font-size: 1.0 em;
 	font-weight: bold;
@@ -154,11 +177,13 @@
 	-webkit-box-shadow: 0 0 2px #B5B5B5;
 	overflow: hidden;
 	text-align: center;
+	z-index: 10;
 }
 
 #timezonebutton {
 	float: right;
 	margin: -35px 20px 0;
+	z-index: 10;
 }
 
 #timezone {
@@ -223,6 +248,9 @@
 	background-color: #68BC68;
 }
 
+.freedisabled {
+	background-color: #68BC68;
+}
 .free:hover {
 	background-color: #489148;
 }
