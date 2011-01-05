@@ -54,9 +54,9 @@ function BookingPage(sysoff, tz)
 }
 
 BookingPage.prototype.TZ_COOKIE = "Bookings-Timezone";
-Booking.prototype.DAY_MILLISECONDS = 24 * 60 * 60 * 1000;
-Booking.prototype.MINS_PER_SLOT = 15;
-Booking.prototype.SLOTS_PER_HOUR = 4;
+BookingPage.prototype.DAY_MILLISECONDS = 24 * 60 * 60 * 1000;
+BookingPage.prototype.MINS_PER_SLOT = 15;
+BookingPage.prototype.SLOTS_PER_HOUR = 4;
 
 BookingPage.prototype.initTimezone = function() {
 	var cname = this.TZ_COOKIE + "=";
