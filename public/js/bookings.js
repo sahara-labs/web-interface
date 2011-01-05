@@ -38,10 +38,10 @@
 /**
  * Abstract bookings page.
  * 
- * @param sysoff system offset
  * @param tz system timezone
+ * @param sysoff system offset
  */
-function BookingPage(sysoff, tz)
+function BookingPage(tz, sysoff)
 {	
 	this.systemOffset = sysoff;
 	this.systemTimezone = tz;
@@ -160,12 +160,6 @@ BookingPage.prototype.displayTzSelector = function() {
 		},
 		close: function() { $(this).dialog('destroy').remove(); }
 	});
-	
-	$("#" + this.inuseTimezone.substr(0, this.inuseTimezone.indexOf("/")) + "region").show()
-		.children()
-		.children(".timezoneregion").click(function() {
-			vp.changeTimezone($(this).attr('tz'));
-		});
 	
 	$(".tzregion").hover(
 		function() {
@@ -311,6 +305,8 @@ BookingPage.prototype.displayHour = function(hr) {
  */
 function Booking(pid, start, end, dur, ext, extdur, name, num, max, tz, sysoff)
 {
+	BookingPage.call(this, tz, sysoff);
+	
 	this.pid = pid;
 	
 	this.date = this.start = strToDate(start);
@@ -327,22 +323,6 @@ function Booking(pid, start, end, dur, ext, extdur, name, num, max, tz, sysoff)
 	/* Hover states. */
 	this.disableHovers = false;
 	this.slotHovers = new Object();
-	
-	this.systemOffset = sysoff;
-	this.systemTimezone = tz;
-	
-	this.inuseTimezone = tz;
-	this.inuseOffset = 0;
-	
-	this.timezones = new Object();
-	this.regions = null;this.systemOffset = sysoff;
-	this.systemTimezone = tz;
-	
-	this.inuseTimezone = tz;
-	this.inuseOffset = 0;
-	
-	this.timezones = new Object();
-	this.regions = null;
 	
 	this.name = name;
 	
@@ -1046,11 +1026,20 @@ Booking.prototype.isSlotBookable = function(slot) {
 	return $('#slot' + slot).hasClass('free');
 };
 
-
-function Existing()
+/**
+ * Existing reservations page.
+ * 
+ * @param tz system timezone
+ * @param sysoff system offset from UTC
+ */
+function Existing(tz, sysoff)
 {
+	BookingPage.call(this, tz, sysoff);
 	this.bookings = new Array();
 }
+Existing.prototype = BookingPage.prototype;
+
+
 
 /**
  * Converts a date string to a Date object.
