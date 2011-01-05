@@ -150,7 +150,7 @@ class BookingsController extends Sahara_Controller_Action_Acl
         {
             foreach ($bookings as $b)
             {
-                if ($b->permissionID->permissionID = $pid) $numBookings++;
+                if ($b->permissionID->permissionID == $pid) $numBookings++;
                 if (strpos($b->startTime, $this->view->currentDay) === 0)
                 {
                     $ss = Sahara_DateTimeUtil::getSlotTimeFromISO8601($b->startTime) - 1;
@@ -161,7 +161,7 @@ class BookingsController extends Sahara_Controller_Action_Acl
         }
         else if ($bookings != NULL)
         {
-            if ($bookings->permissionID->permissionID = $pid) $numBookings++;
+            if ($bookings->permissionID->permissionID == $pid) $numBookings++;
             if (strpos($bookings->startTime, $this->view->currentDay) === 0)
             {
                 $ss = Sahara_DateTimeUtil::getSlotTimeFromISO8601($bookings->startTime) - 1;
@@ -323,7 +323,27 @@ class BookingsController extends Sahara_Controller_Action_Acl
      */
     public function existingAction()
     {
-        $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Reservations');
-        // TODO
+        $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Existing Reservations');
+
+        $this->view->list = $this->_request->getParam('format', 'list') != 'cal';
+
+        $bookingsResponse = Sahara_Soap::getSchedServerBookingsClient()->getBookings(array(
+            'userID' => array('userQName' => $this->_auth->getIdentity()),
+            'showCancelled' => false,
+            'showFinished' => false
+        ));
+
+        if (is_array($bookingsResponse->bookings))
+        {
+            $this->view->bookings = $bookingsResponse->bookings;
+        }
+        else if ($bookingsResponse->bookings != NULL)
+        {
+            $this->view->bookings = array($bookingsResponse->bookings);
+        }
+        else
+        {
+            $this->view->bookings = false;
+        }
     }
 }

@@ -35,6 +35,31 @@
  * @author Michael Diponio (mdiponio)
  * @date 9th March 2010
  */
+
+$this->headLink()->appendStylesheet($this->baseUrl('/css/bookings.css'));
 ?>
 
-<h2>View bookings</h2>
+<div class="contentheader">
+	<h2>Existing Reservations</h2>
+</div>
+
+<?php if ($this->bookings): ?>
+<div id="tabscontainer">
+    <div id="formattabbar">
+    	<a class="formattab ui-corner-top <?= $this->list ? 'selectedtab' : 'notselectedtab'?>"
+    			href="<?=$this->baseUrl('/bookings/existing/format/list')?>">List</a>
+    	<a class="formattab ui-corner-top <?= $this->list ? 'notselectedtab' : 'selectedtab'?>"
+				href="<?=$this->baseUrl('/bookings/existing/format/cal')?>">Calendar</a>
+    </div>
+    <div id="formatcontents" class="ui-corner-all">
+<?php if ($this->list): ?>
+<!-- Bookings list view. -->
+<?php else: ?>
+<!--  Calendar view. -->
+<?php endif; ?>
+	</div>
+</div>
+
+<?php else: ?>
+No bookings
+<?php endif; ?>
