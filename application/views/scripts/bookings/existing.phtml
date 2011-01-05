@@ -37,6 +37,7 @@
  */
 
 $this->headLink()->appendStylesheet($this->baseUrl('/css/bookings.css'));
+$this->headScript()->appendFile($this->baseUrl('/js/bookings.js'));
 ?>
 
 <div class="contentheader">
@@ -54,6 +55,17 @@ $this->headLink()->appendStylesheet($this->baseUrl('/css/bookings.css'));
     <div id="formatcontents" class="ui-corner-all">
 <?php if ($this->list): ?>
 <!-- Bookings list view. -->
+<table id="bookingstable">
+<?php foreach ($this->bookings as $b): ?>
+<tr>
+	<td><?=$b->displayName?></td>
+	<td><?=$b->startTime?></td>
+	<td><?=$b->startTime?></td>
+	<td><?=$b->endTime?></td>
+	<td><?=$b->cancelReason?></td>
+</tr>
+<?php endforeach; ?>
+</table>
 <?php else: ?>
 <!--  Calendar view. -->
 <?php endif; ?>

@@ -329,7 +329,7 @@ class BookingsController extends Sahara_Controller_Action_Acl
 
         $bookingsResponse = Sahara_Soap::getSchedServerBookingsClient()->getBookings(array(
             'userID' => array('userQName' => $this->_auth->getIdentity()),
-            'showCancelled' => false,
+            'showCancelled' => true,
             'showFinished' => false
         ));
 

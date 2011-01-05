@@ -35,6 +35,265 @@
  * @date 9th November 2010
  */
 
+/**
+ * Abstract bookings page.
+ * 
+ * @param sysoff system offset
+ * @param tz system timezone
+ */
+function BookingPage(sysoff, tz)
+{	
+	this.systemOffset = sysoff;
+	this.systemTimezone = tz;
+	
+	this.inuseTimezone = tz;
+	this.inuseOffset = 0;
+	
+	this.timezones = new Object();
+	this.regions = null;
+}
+
+BookingPage.prototype.TZ_COOKIE = "Bookings-Timezone";
+Booking.prototype.DAY_MILLISECONDS = 24 * 60 * 60 * 1000;
+Booking.prototype.MINS_PER_SLOT = 15;
+Booking.prototype.SLOTS_PER_HOUR = 4;
+
+BookingPage.prototype.initTimezone = function() {
+	var cname = this.TZ_COOKIE + "=";
+	var cparts = document.cookie.split(";");
+	
+	var tz = null;
+	for (var i in cparts)
+	{
+		var c = cparts[i];
+		while (c.charAt(0) == ' ') c = c.substr(1);
+		if (c.indexOf(cname) == 0) tz = unescape(c.substr(c.indexOf("=") + 1));
+	}
+	
+	if (tz && this.timezones[tz])
+	{
+		/* Use the cookie stored value. */
+		this.changeTimezone(tz);
+	}
+	else
+	{
+		/* Detect the value from the browser provided offset. */
+		var tzOffset = -((new Date().getTimezoneOffset() * 60) + this.systemOffset);
+		if (tzOffset == 0) return;
+		
+		for (var i in this.timezones)
+		{
+			if (this.timezones[i] == tzOffset)
+			{
+				this.inuseTimezone = i;
+				this.inuseOffset = this.timezones[i];
+				this.changeTimezone(i, false);
+				return;
+			}
+		}
+	}
+	
+};
+
+BookingPage.prototype.displayTzSelector = function() {
+	
+	if (this.regions == null)
+	{
+		this.regions = new Object();
+		for (var tz in this.timezones)
+		{
+			var r = tz.substr(0, tz.indexOf('/'));
+			if (typeof this.regions[r] == 'undefined') this.regions[r] = new Array();
+			this.regions[r].push(tz);
+		}
+	}
+	
+	var utcOff = (this.inuseOffset + this.systemOffset);
+	var offHr = Math.floor(utcOff / 3600);
+	var offMin = Math.floor(utcOff % 3600 / 60);
+	if (offMin < 0)
+	{
+		offHr--;
+		offMin += 60;
+	}
+	offHr = Math.abs(offHr);
+	
+	var html = 
+		"<div id='tzselector' title='Timezone Selector'>" +
+			"<p>Current timezone: <span id='inusetz'>GMT " + (utcOff >= 0 ? "+" : "&ndash;") + offHr + ':' + zeroPad(offMin) + "<span></p>" +
+			"<ul id='tzlist'>";
+	
+	for (var reg in this.regions)
+	{
+		html += 
+			"<li id='" + reg + "' class='tzregion' >" +
+				 "<span class='ui-icon ui-icon-arrowthick-1-e tzicon'></span>" + reg +
+				 "<div id='" + reg + "region' class='tzregioncontainer'>" +
+					"<ul class='innertzlist'>";
+		
+		for (var tz in this.regions[reg])
+		{	
+			html += 	"<li class='timezoneregion' tz='" + this.regions[reg][tz] + "'>" + 
+							"<span class='ui-icon ui-icon-arrowthick-1-e tzicon'></span>" + 
+							this.regions[reg][tz].substr(this.regions[reg][tz].indexOf('/') + 1).split('_').join(' ') + 
+						"</li>";
+		}
+		
+		html += 	"</ul>" +
+				"</div>" +
+			"</li>";
+	}
+	
+	html += "</ul>" +
+		"</div>";
+	
+	$("body").append(html);
+	
+	$("#tzselector").dialog({
+		autoOpen: true,
+		modal: true,
+		resizable: false,
+		width: 400,
+		height: 494,
+		buttons: {
+			'Close': function() { $(this).dialog('close'); }
+		},
+		close: function() { $(this).dialog('destroy').remove(); }
+	});
+	
+	$("#" + this.inuseTimezone.substr(0, this.inuseTimezone.indexOf("/")) + "region").show()
+		.children()
+		.children(".timezoneregion").click(function() {
+			vp.changeTimezone($(this).attr('tz'));
+		});
+	
+	$(".tzregion").hover(
+		function() {
+			if ($(this).children(".tzregioncontainer").css("display") == "none")
+			{
+				$(".tzregioncontainer").hide();
+				$(".timezoneregion").unbind();
+				$(this).children(".tzregioncontainer").show()
+					.children()
+					.children(".timezoneregion").click(function () {
+						vp.changeTimezone($(this).attr('tz'), true);
+				});
+			}
+		},
+		function() { }
+	);
+};
+
+BookingPage.prototype.changeTimezone = function(tz, userSelected) {
+	this.inuseTimezone = tz;
+	this.inuseOffset = this.timezones[tz];
+	
+	var utcOff = (this.inuseOffset + this.systemOffset);
+	var offHr = Math.floor(utcOff / 3600);
+	var offMin = Math.floor(utcOff % 3600 / 60);
+	if (offMin < 0)
+	{
+		offHr--;
+		offMin += 60;
+	}
+	$("#inusetz").empty().append("GMT " + (utcOff >= 0 ? "+" : "&ndash;") + Math.abs(offHr) + ':' + zeroPad(offMin)); 
+	
+	var hrOff = Math.floor(this.timezones[tz] / 3600);
+	var minOff = Math.floor(this.timezones[tz] % 3600 / 60);
+	
+	for (var i = 0; i < 24; i++)
+	{
+		$("#timelabel" + i).empty().append(this.displayHour(i + hrOff));
+	}
+	
+	if (userSelected)
+	{
+		/* Store the timezone in a session cookie. */
+		document.cookie = this.TZ_COOKIE + "=" + escape(tz) + ";path=/;";
+	}
+};
+
+BookingPage.prototype.addTimezone = function(tz, off) {
+	this.timezones[tz] = off;
+};
+
+/* ----------------------------------------------------------------------------
+ * -- Utility functions.                                                     --
+ * ---------------------------------------------------------------------------- */
+BookingPage.prototype.slotToTime = function(slot) {
+	
+	/* Stript the slot ID prefix. */
+	if ((typeof slot ) == 'string' && slot.indexOf('slot') == 0)
+	{
+		slot = parseInt(slot.substr(4));
+	}
+	
+	var hr = Math.floor(slot / this.SLOTS_PER_HOUR) + Math.floor(this.inuseOffset / 3600);
+	var min = ((slot % this.SLOTS_PER_HOUR) * this.MINS_PER_SLOT) +  Math.floor(this.inuseOffset % 3600 / 60);
+	if (min < 0)
+	{
+		hr--;
+		min = 60 + min;
+	}
+	
+	var tm  = this.displayHour(hr).split(' ');
+	return tm[0] + ':' + zeroPad(min) + ' ' + tm[1];
+};
+
+BookingPage.prototype.slotToISOTime = function(slot) {
+	/* Stript the slot ID prefix. */
+	if ((typeof slot ) == 'string' && slot.indexOf('slot') == 0)
+	{
+		slot = parseInt(slot.substr(4));
+	}
+	
+	var hr = Math.floor(slot / this.SLOTS_PER_HOUR);
+	var min = (slot % this.SLOTS_PER_HOUR) * this.MINS_PER_SLOT;
+	
+	return zeroPad(hr) + ':' + zeroPad(min) + ":" + "00";
+};
+
+BookingPage.prototype.isoTimeToSlot = function(iso) {
+	var time = iso.substr(iso.indexOf("T") + 1);
+	var pos = time.indexOf("+");
+	if (pos != -1) time = time.substr(0, pos);
+	if ((pos = time.indexOf("-")) != -1) time.substr(0, pos);
+	
+	time = time.split(":");	
+	return Math.ceil((parseInt(time[0]) * 60 + parseInt(time[1])) / this.MINS_PER_SLOT);
+};
+
+BookingPage.prototype.isoToTime = function(iso) {
+	var time = iso.substr(iso.indexOf("T") + 1);
+	var pos = time.indexOf("+");
+	if (pos != -1) time = time.substr(0, pos);
+	if ((pos = time.indexOf("-")) != -1) time.substr(0, pos);
+	
+	time = time.split(":");
+	var hr = parseInt(time[0]) + Math.floor(this.inuseOffset / 3600);
+	var min = parseInt(time[1]) + Math.floor(this.inuseOffset % 3600 / 60);
+	if (min < 0)
+	{
+		hr--;
+		min = 60 + min;
+	}
+	
+	var tm  = this.displayHour(hr).split(' ');
+	return tm[0] + ':' + zeroPad(min) + ' ' + tm[1];
+};
+
+BookingPage.prototype.displayHour = function(hr) {
+	var time;
+	
+	if (hr < 0) time = this.displayHour(24 + hr);
+	else if (hr == 0 || hr == 24) time = '12 am';
+	else if (hr < 12) time = hr + ' am';
+	else if (hr == 12) time = '12 pm';
+	else if (hr < 24) time = (hr - 12) + ' pm';
+	else time = this.displayHour(hr - 24);
+
+	return time;
+};
 
 /**
  * Bookings page.
@@ -69,9 +328,14 @@ function Booking(pid, start, end, dur, ext, extdur, name, num, max, tz, sysoff)
 	this.disableHovers = false;
 	this.slotHovers = new Object();
 	
-	this.name = name;
-	
 	this.systemOffset = sysoff;
+	this.systemTimezone = tz;
+	
+	this.inuseTimezone = tz;
+	this.inuseOffset = 0;
+	
+	this.timezones = new Object();
+	this.regions = null;this.systemOffset = sysoff;
 	this.systemTimezone = tz;
 	
 	this.inuseTimezone = tz;
@@ -80,18 +344,14 @@ function Booking(pid, start, end, dur, ext, extdur, name, num, max, tz, sysoff)
 	this.timezones = new Object();
 	this.regions = null;
 	
+	this.name = name;
+	
 	this.bestFits = null;
 	
 	this.numBookings = num;
 	this.maxBookings = max;
 }
-
-/* ----------------------------------------------------------------------------
- * -- Constants.                                                             --
- * ---------------------------------------------------------------------------- */
-Booking.prototype.DAY_MILLISECONDS = 24 * 60 * 60 * 1000;
-Booking.prototype.MINS_PER_SLOT = 15;
-Booking.prototype.SLOTS_PER_HOUR = 4;
+Booking.prototype = BookingPage.prototype;
 
 Booking.prototype.changeDate = function(newDate) {
 	
@@ -218,162 +478,6 @@ Booking.prototype.disableDayButton = function(prev) {
 	$('#' + base).removeClass('daybutton')
 		 .addClass('disdaybutton')
 		 .children('img').attr('src', '/images/dis_' + base + '.png');
-};
-
-Booking.prototype.TZ_COOKIE = "Bookings-Timezone";
-Booking.prototype.initTimezone = function() {
-	var cname = this.TZ_COOKIE + "=";
-	var cparts = document.cookie.split(";");
-	
-	var tz = null;
-	for (var i in cparts)
-	{
-		var c = cparts[i];
-		while (c.charAt(0) == ' ') c = c.substr(1);
-		if (c.indexOf(cname) == 0) tz = unescape(c.substr(c.indexOf("=") + 1));
-	}
-	
-	if (tz && this.timezones[tz])
-	{
-		/* Use the cookie stored value. */
-		this.changeTimezone(tz);
-	}
-	else
-	{
-		/* Detect the value from the browser provided offset. */
-		var tzOffset = -((new Date().getTimezoneOffset() * 60) + this.systemOffset);
-		if (tzOffset == 0) return;
-		
-		for (var i in this.timezones)
-		{
-			if (this.timezones[i] == tzOffset)
-			{
-				this.inuseTimezone = i;
-				this.inuseOffset = this.timezones[i];
-				this.changeTimezone(i, false);
-				return;
-			}
-		}
-	}
-	
-};
-
-Booking.prototype.displayTzSelector = function() {
-	
-	if (this.regions == null)
-	{
-		this.regions = new Object();
-		for (var tz in this.timezones)
-		{
-			var r = tz.substr(0, tz.indexOf('/'));
-			if (typeof this.regions[r] == 'undefined') this.regions[r] = new Array();
-			this.regions[r].push(tz);
-		}
-	}
-	
-	var utcOff = (this.inuseOffset + this.systemOffset);
-	var offHr = Math.floor(utcOff / 3600);
-	var offMin = Math.floor(utcOff % 3600 / 60);
-	if (offMin < 0)
-	{
-		offHr--;
-		offMin += 60;
-	}
-	offHr = Math.abs(offHr);
-	
-	var html = 
-		"<div id='tzselector' title='Timezone Selector'>" +
-			"<p>Current timezone: <span id='inusetz'>GMT " + (utcOff >= 0 ? "+" : "&ndash;") + offHr + ':' + zeroPad(offMin) + "<span></p>" +
-			"<ul id='tzlist'>";
-	
-	for (var reg in this.regions)
-	{
-		html += 
-			"<li id='" + reg + "' class='tzregion' >" +
-				 "<span class='ui-icon ui-icon-arrowthick-1-e tzicon'></span>" + reg +
-				 "<div id='" + reg + "region' class='tzregioncontainer'>" +
-					"<ul class='innertzlist'>";
-		
-		for (var tz in this.regions[reg])
-		{	
-			html += 	"<li class='timezoneregion' tz='" + this.regions[reg][tz] + "'>" + 
-							"<span class='ui-icon ui-icon-arrowthick-1-e tzicon'></span>" + 
-							this.regions[reg][tz].substr(this.regions[reg][tz].indexOf('/') + 1).split('_').join(' ') + 
-						"</li>";
-		}
-		
-		html += 	"</ul>" +
-				"</div>" +
-			"</li>";
-	}
-	
-	html += "</ul>" +
-		"</div>";
-	
-	$("body").append(html);
-	
-	$("#tzselector").dialog({
-		autoOpen: true,
-		modal: true,
-		resizable: false,
-		width: 400,
-		height: 494,
-		buttons: {
-			'Close': function() { $(this).dialog('close'); }
-		},
-		close: function() { $(this).dialog('destroy').remove(); }
-	});
-	
-	$("#" + this.inuseTimezone.substr(0, this.inuseTimezone.indexOf("/")) + "region").show()
-		.children()
-		.children(".timezoneregion").click(function() {
-			vp.changeTimezone($(this).attr('tz'));
-		});
-	
-	$(".tzregion").hover(
-		function() {
-			if ($(this).children(".tzregioncontainer").css("display") == "none")
-			{
-				$(".tzregioncontainer").hide();
-				$(".timezoneregion").unbind();
-				$(this).children(".tzregioncontainer").show()
-					.children()
-					.children(".timezoneregion").click(function () {
-						vp.changeTimezone($(this).attr('tz'), true);
-				});
-			}
-		},
-		function() { }
-	);
-};
-
-Booking.prototype.changeTimezone = function(tz, userSelected) {
-	this.inuseTimezone = tz;
-	this.inuseOffset = this.timezones[tz];
-	
-	var utcOff = (this.inuseOffset + this.systemOffset);
-	var offHr = Math.floor(utcOff / 3600);
-	var offMin = Math.floor(utcOff % 3600 / 60);
-	if (offMin < 0)
-	{
-		offHr--;
-		offMin += 60;
-	}
-	$("#inusetz").empty().append("GMT " + (utcOff >= 0 ? "+" : "&ndash;") + Math.abs(offHr) + ':' + zeroPad(offMin)); 
-	
-	var hrOff = Math.floor(this.timezones[tz] / 3600);
-	var minOff = Math.floor(this.timezones[tz] % 3600 / 60);
-	
-	for (var i = 0; i < 24; i++)
-	{
-		$("#timelabel" + i).empty().append(this.displayHour(i + hrOff));
-	}
-	
-	if (userSelected)
-	{
-		/* Store the timezone in a session cookie. */
-		document.cookie = this.TZ_COOKIE + "=" + escape(tz) + ";path=/;";
-	}
 };
 
 /* ----------------------------------------------------------------------------
@@ -698,7 +802,6 @@ Booking.prototype.startBooking = function(slot) {
 	
 	this.disableHovers = true;
 	this.clearHover(slot);
-
 	
 	/* Clear any other creation overlays. */
 	if (this.booking >= 0) this.destroyBooking();
@@ -943,87 +1046,11 @@ Booking.prototype.isSlotBookable = function(slot) {
 	return $('#slot' + slot).hasClass('free');
 };
 
-Booking.prototype.addTimezone = function(tz, off) {
-	this.timezones[tz] = off;
-};
 
-/* ----------------------------------------------------------------------------
- * -- Utility functions.                                                     --
- * ---------------------------------------------------------------------------- */
-Booking.prototype.slotToTime = function(slot) {
-	
-	/* Stript the slot ID prefix. */
-	if ((typeof slot ) == 'string' && slot.indexOf('slot') == 0)
-	{
-		slot = parseInt(slot.substr(4));
-	}
-	
-	var hr = Math.floor(slot / this.SLOTS_PER_HOUR) + Math.floor(this.inuseOffset / 3600);
-	var min = ((slot % this.SLOTS_PER_HOUR) * this.MINS_PER_SLOT) +  Math.floor(this.inuseOffset % 3600 / 60);
-	if (min < 0)
-	{
-		hr--;
-		min = 60 + min;
-	}
-	
-	var tm  = this.displayHour(hr).split(' ');
-	return tm[0] + ':' + zeroPad(min) + ' ' + tm[1];
-};
-
-Booking.prototype.slotToISOTime = function(slot) {
-	/* Stript the slot ID prefix. */
-	if ((typeof slot ) == 'string' && slot.indexOf('slot') == 0)
-	{
-		slot = parseInt(slot.substr(4));
-	}
-	
-	var hr = Math.floor(slot / this.SLOTS_PER_HOUR);
-	var min = (slot % this.SLOTS_PER_HOUR) * this.MINS_PER_SLOT;
-	
-	return zeroPad(hr) + ':' + zeroPad(min) + ":" + "00";
-};
-
-Booking.prototype.isoTimeToSlot = function(iso) {
-	var time = iso.substr(iso.indexOf("T") + 1);
-	var pos = time.indexOf("+");
-	if (pos != -1) time = time.substr(0, pos);
-	if ((pos = time.indexOf("-")) != -1) time.substr(0, pos);
-	
-	time = time.split(":");	
-	return Math.ceil((parseInt(time[0]) * 60 + parseInt(time[1])) / this.MINS_PER_SLOT);
-};
-
-Booking.prototype.isoToTime = function(iso) {
-	var time = iso.substr(iso.indexOf("T") + 1);
-	var pos = time.indexOf("+");
-	if (pos != -1) time = time.substr(0, pos);
-	if ((pos = time.indexOf("-")) != -1) time.substr(0, pos);
-	
-	time = time.split(":");
-	var hr = parseInt(time[0]) + Math.floor(this.inuseOffset / 3600);
-	var min = parseInt(time[1]) + Math.floor(this.inuseOffset % 3600 / 60);
-	if (min < 0)
-	{
-		hr--;
-		min = 60 + min;
-	}
-	
-	var tm  = this.displayHour(hr).split(' ');
-	return tm[0] + ':' + zeroPad(min) + ' ' + tm[1];
-};
-
-Booking.prototype.displayHour = function(hr) {
-	var time;
-	
-	if (hr < 0) time = this.displayHour(24 + hr);
-	else if (hr == 0 || hr == 24) time = '12 am';
-	else if (hr < 12) time = hr + ' am';
-	else if (hr == 12) time = '12 pm';
-	else if (hr < 24) time = (hr - 12) + ' pm';
-	else time = this.displayHour(hr - 24);
-
-	return time;
-};
+function Existing()
+{
+	this.bookings = new Array();
+}
 
 /**
  * Converts a date string to a Date object.
