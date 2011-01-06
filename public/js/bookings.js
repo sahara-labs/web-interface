@@ -200,6 +200,12 @@ BookingPage.prototype.changeTimezone = function(tz, userSelected) {
 		$("#timelabel" + i).empty().append(this.displayHour(i + hrOff));
 	}
 	
+	if (typeof this.changeMode == "function")
+	{
+		/* Update existing page. */
+		this.changeMode(this.mode);
+	}
+	
 	if (userSelected)
 	{
 		/* Store the timezone in a session cookie. */
@@ -274,6 +280,26 @@ BookingPage.prototype.isoToTime = function(iso) {
 	
 	var tm  = this.displayHour(hr).split(' ');
 	return tm[0] + ':' + zeroPad(min) + ' ' + tm[1];
+};
+
+BookingPage.prototype.isoToDate = function(iso) {
+	
+	var time = iso.substr(iso.indexOf("T") + 1);
+	var pos = time.indexOf("+");
+	if (pos != -1) time = time.substr(0, pos);
+	if ((pos = time.indexOf("-")) != -1) time.substr(0, pos);
+	
+	time = time.split(":");
+	var hr = parseInt(time[0]) + Math.floor(this.inuseOffset / 3600);
+	var min = parseInt(time[1]) + Math.floor(this.inuseOffset % 3600 / 60);
+	if (min < 0)
+	{
+		hr--;
+		min = 60 + min;
+	}
+	
+	var date = iso.substr(0, iso.indexOf("T")).split("-");
+	return date[2] + "/" + date[1] + "/" + date[0];
 };
 
 BookingPage.prototype.displayHour = function(hr) {
@@ -1029,17 +1055,137 @@ Booking.prototype.isSlotBookable = function(slot) {
 /**
  * Existing reservations page.
  * 
+ * @param mode display mode
  * @param tz system timezone
  * @param sysoff system offset from UTC
  */
-function Existing(tz, sysoff)
+function Existing(mode, tz, sysoff)
 {
 	BookingPage.call(this, tz, sysoff);
-	this.bookings = new Array();
+	this.bookings = new Object();
+	
+	this.mode == mode;
 }
 Existing.prototype = BookingPage.prototype;
 
+Existing.prototype.addBooking = function(bid, name, start, end, isFinished, isCancelled, reason){
+	var bObj = new Object();
+	bObj.bookingID = bid;
+	bObj.startTime = start;
+	bObj.endTime = end;
+	bObj.displayName = name;
+	bObj.isCancelled = isCancelled;
+	bObj.isFinished = isFinished;
+	bObj.cancelReason = reason;
+	this.bookings[bid] = bObj;
+};
 
+Existing.prototype.changeMode = function(mode) {
+	this.mode = mode;
+	if (mode = "list")
+	{
+		$("#listtab").removeClass("notselectedtab").addClass("selectedtab");
+		$("#caltab").removeClass("selectedtab").addClass("notselectedtab");
+		this.drawList();
+	}
+	else
+	{
+		$("#listtab").removeClass("selectedtab").addClass("notselectedtab");
+		$("#caltab").removeClass("notselectedtab").addClass("selectedtab");
+		this.drawCalendar();
+	}
+};
+
+Existing.prototype.drawList = function() {
+
+	var html = 
+		"<div class='stateselector ui-corner-top'>" +
+			"<div class='stateselectoritem'>" +
+				"<input class='showactivecb' type='checkbox' name='showactive' checked='checked' /> Active</span>" +
+			"</div>" +
+			"<div class='stateselectoritem'>" +
+				"<input class='showcancelledcb' type='checkbox' name='showcancelled' checked='checked' /> Cancelled</span>" +
+			"</div>" +
+			"<div class='stateselectoritem'>" +
+				"<input class='showfinishedcb' type='checkbox' name='showactive' checked='checked' /> Finished</span>" +
+				"</div>" +
+		"</div>" +
+		"<table class='bookingstable'>";
+	for (var i in this.bookings)
+	{
+		var b = this.bookings[i];
+		html += "<tr id='booking" + i + "'class='" + (b.isCancelled ? "bcancelled" : (b.isFinished ? "bfinished" : "bactive")) + "'>" +
+					"<td class='namecell'>" + b.displayName.split('_').join(' ') + "</td>" +
+					"<td class='datecell'>" + this.isoToDate(b.startTime) + "</td>" +
+					"<td class='timecell'>" + this.isoToTime(b.startTime) + "</td>" +
+					"<td class='timecell'>" + this.isoToTime(b.endTime) + "</td>" +
+					"<td class='statecell'>";
+		
+		if (b.isCancelled) html += b.cancelReason;
+		else if (b.isFinished) html += 'Reservation complete.';
+		else 
+		{
+			html += "&nbsp";
+		}
+		
+		html += 	"</td>" +
+				"</tr>";
+	}
+	html += "</table>";
+	
+	$("#modecontents").empty().append(html);
+	
+	$(".bookingstable tr.bactive").hover(
+		function() {
+			$(this).addClass("rowhover")
+				   .children(".statecell").append("Click To Cancel");
+		},
+		function() {
+			$(this).removeClass("rowhover");
+			$(this).children(".statecell").empty();
+		}
+	);
+	
+	$(".showactivecb").click(function() {
+		if ($(".showactivecb:checked").length == 0) $(".bactive").hide();
+		else $(".bactive").show();
+	});
+	
+	$(".showfinishedcb").click(function() {
+		if ($(".showfinishedcb:checked").length == 0) $(".bfinished").hide();
+		else $(".bfinished").show();
+	});
+	
+	$(".showcancelledcb").click(function() {
+		if ($(".showcancelledcb:checked").length == 0) $(".bcancelled").hide();
+		else $(".bcancelled").show();
+	});
+	
+	$(".bactive").click(function() {
+		vp.cancelBooking($(this).attr('id'));
+	});
+};
+
+Existing.prototype.drawCalendar = function() {
+	var html = 'cal view';
+	
+	$("#modecontents").empty().append(html);
+};
+
+Existing.prototype.cancelBooking = function(id) {
+	var bid = id.substr(7);
+	$.post(
+		'/bookings/cancel',
+		{
+			bid: bid
+		},
+		function(response) { vp.cancelBookingCallback(response); }
+	);
+};
+
+Existing.prototype.cancelBookingCallback = function(response) {
+	alert(response.success ? "Cancelled" : "Failed");
+};
 
 /**
  * Converts a date string to a Date object.

@@ -38,39 +38,72 @@
 
 $this->headLink()->appendStylesheet($this->baseUrl('/css/bookings.css'));
 $this->headScript()->appendFile($this->baseUrl('/js/bookings.js'));
+
+$initScript = "var vp = new Existing('" . $this->mode . "', '" . $this->tz->systemTimezone . "', " . $this->tz->offsetFromUTC . ");\n";
+foreach ($this->tz->supportedTimezones as $t)
+{
+    $initScript .= "vp.addTimezone('" . $t->timezone . "', " . $t->offsetFromSystem . ");\n";
+}
+foreach ($this->bookings as $b)
+{
+    $initScript .= "vp.addBooking(" . $b->bookingID . ", '" . $b->displayName . "', '" . $b->startTime .
+            "', '" . $b->endTime . "', " . ($b->isFinished ? 'true' : 'false') . ", " .
+            ($b->isCancelled ? 'true' : 'false') . ", '" . $b->cancelReason ."');\n";
+}
+$initScript .= '$(document).ready(function() { vp.initTimezone() });';
+$this->headScript()->appendScript($initScript);
 ?>
 
 <div class="contentheader">
 	<h2>Existing Reservations</h2>
 </div>
 
+<div id="timezonebutton">
+        <a id="timezone" class="ui-corner-br">
+            <img src="/images/timezone.png" alt="Tz" />
+        </a>
+</div>
+<script type="text/javascript">
+<!--
+$(document).ready(function() {
+	 $("#timezone").click(function() {
+        vp.displayTzSelector();
+    });
+});
+//-->
+</script>
+
 <?php if ($this->bookings): ?>
 <div id="tabscontainer">
-    <div id="formattabbar">
-    	<a class="formattab ui-corner-top <?= $this->list ? 'selectedtab' : 'notselectedtab'?>"
-    			href="<?=$this->baseUrl('/bookings/existing/format/list')?>">List</a>
-    	<a class="formattab ui-corner-top <?= $this->list ? 'notselectedtab' : 'selectedtab'?>"
-				href="<?=$this->baseUrl('/bookings/existing/format/cal')?>">Calendar</a>
+    <div id="modetabbar">
+    	<div id="listtab" class="modetab ui-corner-top <?=$this->mode == 'list' ? 'selectedtab' : 'notselectedtab'?>">
+    		List
+    	</div>
+    	<div id='caltab' class="modetab ui-corner-top <?=$this->mode == 'list' ? 'notselectedtab' : 'selectedtab'?>">
+    		Calendar
+    	</div>
     </div>
-    <div id="formatcontents" class="ui-corner-all">
-<?php if ($this->list): ?>
-<!-- Bookings list view. -->
-<table id="bookingstable">
-<?php foreach ($this->bookings as $b): ?>
-<tr>
-	<td><?=$b->displayName?></td>
-	<td><?=$b->startTime?></td>
-	<td><?=$b->startTime?></td>
-	<td><?=$b->endTime?></td>
-	<td><?=$b->cancelReason?></td>
-</tr>
-<?php endforeach; ?>
-</table>
-<?php else: ?>
-<!--  Calendar view. -->
-<?php endif; ?>
+    <div id="modecontents" class="ui-corner-all">
+
 	</div>
 </div>
+
+<script type="text/javascript">
+<!--
+$(document).ready(function() {
+	vp.changeMode('<?=$this->mode?>');
+
+	$("#listtab").click(function() {
+		vp.changeMode("list");
+	});
+
+	$("#caltab").click(function() {
+		vp.changeMode("cal");
+	});
+
+});
+//-->
+</script>
 
 <?php else: ?>
 No bookings

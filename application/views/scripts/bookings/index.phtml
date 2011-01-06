@@ -50,8 +50,9 @@ $initScript = "var vp = new Booking(" . $this->permission->permissionID .
 		$this->name . "', " . $this->numBookings . ", " . $this->permission->maxBookings . ", '" .
 		$this->tz->systemTimezone . "', " . $this->tz->offsetFromUTC . ");\n";
 foreach ($this->tz->supportedTimezones as $t)
+{
     $initScript .= "vp.addTimezone('" . $t->timezone . "', " . $t->offsetFromSystem . ");\n";
-
+}
 $initScript .= '$(document).ready(function() { vp.initTimezone() });';
 $this->headScript()->appendScript($initScript);
 ?>
@@ -59,6 +60,21 @@ $this->headScript()->appendScript($initScript);
 <div class="contentheader">
 	<h2>Reservation for <?=$this->stringTransform($this->name, '_', ' ')?></h2>
 </div>
+
+<div id="timezonebutton">
+        <a id="timezone" class="ui-corner-br">
+            <img src="/images/timezone.png" alt="Tz" />
+        </a>
+</div>
+<script type="text/javascript">
+<!--
+$(document).ready(function() {
+	 $("#timezone").click(function() {
+        vp.displayTzSelector();
+    });
+});
+//-->
+</script>
 
 <div id="nobookwarning" class="ui-state-error ui-corner-all">
     <span class="ui-icon ui-icon-alert" style="float:left;margin-right:5px"></span>
@@ -153,11 +169,6 @@ $(document).ready(function() {
 
 <div id="bookingstimecontainer" class="ui-corner-all">
 	<div id="bookingstimetitle" class="ui-corner-all"><?=$sDate?></div>
-    <div id="timezonebutton">
-        <a id="timezone" class="ui-corner-br">
-            <img src="/images/timezone.png" alt="Tz" />
-        </a>
-    </div>
 
 	<div id="timecols">
     	<!-- Left time column. -->
@@ -203,10 +214,6 @@ $(document).ready(function() {
 <script type="text/javascript">
 <!--
 $(document).ready(function() {
-    $("#timezone").click(function() {
-        vp.displayTzSelector();
-    });
-
 	$(".free").click(function(){
 		vp.startBooking($(this));
 	})

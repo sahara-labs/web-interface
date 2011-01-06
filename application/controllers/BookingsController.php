@@ -172,6 +172,7 @@ class BookingsController extends Sahara_Controller_Action_Acl
         $this->view->numBookings = $numBookings;
 
         /* Timezone information. */
+        // TODO Cache timezone results
         $this->view->tz = Sahara_Soap::getSchedServerBookingsClient()->getTimezoneProfiles();
         $tzOff = ($this->view->tz->offsetFromUTC ? '+' : '-') .
                 Sahara_DateTimeUtil::zeroPad(floor(abs($this->view->tz->offsetFromUTC) / 3600)) . ':' .
@@ -325,12 +326,19 @@ class BookingsController extends Sahara_Controller_Action_Acl
     {
         $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Existing Reservations');
 
-        $this->view->list = $this->_request->getParam('format', 'list') != 'cal';
+        $this->view->mode = $this->_request->getParam('format', 'list');
+        if ($this->view-mode != 'list' || $this->view->mode != 'cal')
+        {
+            $this->view->mode = 'list';
+        }
+
+        // TODO Cache timezone results
+        $this->view->tz = Sahara_Soap::getSchedServerBookingsClient()->getTimezoneProfiles();
 
         $bookingsResponse = Sahara_Soap::getSchedServerBookingsClient()->getBookings(array(
             'userID' => array('userQName' => $this->_auth->getIdentity()),
             'showCancelled' => true,
-            'showFinished' => false
+            'showFinished' => true
         ));
 
         if (is_array($bookingsResponse->bookings))
@@ -344,6 +352,28 @@ class BookingsController extends Sahara_Controller_Action_Acl
         else
         {
             $this->view->bookings = false;
+        }
+    }
+
+    /**
+     * Action to cancel a booking.
+     */
+    public function cancelAction()
+    {
+        $this->_helper->viewRenderer->setNoRender();
+        $this->view->layout()->disableLayout();
+
+        $bid = $this->_request->getParam('bid');
+        if ($bid > 0)
+        {
+            echo $this->view->json(Sahara_Soap::getSchedServerBookingsClient()->cancelBooking(array(
+                'userID' => array('userQName' => $this->_auth->getIdentity()),
+                'bookingID' => array('bookingID' => $bid)
+            )));
+        }
+        else
+        {
+            echo $this->view->json(array('success' => false));
         }
     }
 }

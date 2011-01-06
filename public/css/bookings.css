@@ -713,18 +713,19 @@
 	width: 850px;
 }
 
-#formattabbar {
+#modetabbar {
 	float: right;
 	margin-right: 20px;
 }
 
-.formattab {
+.modetab {
 	display: block;
 	float: left;
 	width: 80px;
 	text-decoration: none;
 	padding: 7px;
 	text-align: center;
+	cursor: pointer;
 }
 
 .selectedtab {
@@ -758,7 +759,7 @@
 	box-shadow: 0 0 6px #606060;
 }
 
-#formatcontents {
+#modecontents {
 	clear: both;
 	width: 100%;
 	border-top: 7px solid #606060;
@@ -769,4 +770,94 @@
 	-moz-box-shadow: 0 0 4px #B5B5B5;
 	-webkit-box-shadow: 0 0 4px #B5B5B5;
 	box-shadow: 0 0 4px #B5B5B5;
+}
+
+.stateselector {
+	clear: left;
+	height: 15px;
+	margin-top: -28px;
+	margin-left: 10px;
+	color: #EFEFEF;
+	background-color: #606060;
+	padding: 5px;
+	width: 240px;
+	-moz-box-shadow: 0 0 4px #606060;
+	-webkit-box-shadow: 0 0 4px #606060;
+	box-shadow: 0 0 4px #606060;
+}
+
+.stateselectoritem {
+	margin: 0 5px;
+	float: left;
+	overflow: hidden;
+}
+
+.bookingstable {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.bookingstable tr td {
+	padding: 6px 10px;
+	border-bottom: 3px solid #606060;
+	border-right: 1px solid #606060;
+}
+
+.bookingstable tr td.statecell {
+	border-right: none;
+}
+
+.namecell {
+	text-align: left;
+	font-weight: bold;
+	width: 125px;
+}
+
+.datecell {
+	text-align: right;
+	width: 90px;
+}
+.timecell {
+	text-align: right;
+	width: 75px;
+}
+
+.bcancelled {
+	background-image: linear-gradient(top, #FFCDCD, #FFAAAA);
+	background-image: -moz-linear-gradient(top, #FFCDCD, #FFAAAA);
+	background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0, #FFCDCD), color-stop(1, #FFAAAA));
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#FFCDCD', endColorstr='#FFAAAA');
+	background-color: #FFCDCD;
+}
+
+.bactive {
+	background-image: linear-gradient(top, #DDFFE6, #C4F7CD);
+	background-image: -moz-linear-gradient(top, #DDFFE6, #C4F7CD);
+	background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0, #DDFFE6), color-stop(1, #C4F7CD));
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#DDFFE6', endColorstr='#C4F7CD');
+	background-color: #DDFFE6;
+	cursor: pointer;
+}
+
+.bactive .statecell {
+	text-align: center;
+	font-weight: bolder;
+	color: #000000;
+	text-shadow: 2px 2px 20px #FFCDCD;
+}
+
+.bfinished {
+	background-image: linear-gradient(top, #FEFEFE, #EFEFEF);
+	background-image: -moz-linear-gradient(top, #FEFEFE, #EFEFEF);
+	background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0, #FEFEFE), color-stop(1, #EFEFEF));
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#FEFEFE', endColorstr='#EFEFEF');
+	background-color: #EFEFEF;
+}
+
+.rowhover {
+	background-image: linear-gradient(top, #FAFFDD, #FAFFCC);
+	background-image: -moz-linear-gradient(top, #FAFFDD, #FAFFCC);
+	background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0, #FAFFDD), color-stop(1, #FAFFCC));
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#FAFFDD', endColorstr='#FAFFCC');
+	background-color: #EFEFEF;
 }
