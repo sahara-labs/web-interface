@@ -1162,7 +1162,7 @@ Existing.prototype.drawList = function() {
 	});
 	
 	$(".bactive").click(function() {
-		vp.cancelBooking($(this).attr('id'));
+		vp.confirmCancel($(this).attr('id'));
 	});
 };
 
@@ -1172,12 +1172,41 @@ Existing.prototype.drawCalendar = function() {
 	$("#modecontents").empty().append(html);
 };
 
+Existing.prototype.confirmCancel = function(id) {
+	var b = this.bookings[id.substr(7)];
+	var html = 
+		"<div id='confirmcancel' title='Cancel Reservation'>" +
+			"<p>Are you sure you want to cancel the reservation for '<span>" + b.displayName.split('_').join(' ') +
+			"</span>'";
+	
+	
+	html += "</div>";
+	
+	$("body").append(html);
+	$("#confirmcancel").dialog({
+		autoOpen: true,
+		modal: true,
+		width: 400,
+		resizable: false,
+		buttons: {
+			'Cancel Reservation': function() {
+				vp.cancelBooking(id);
+			},
+			'Close': function() {
+				$(this).dialog('close');
+			}
+		},
+		close: function() {
+			$(this).dialog('destroy').remove();
+		}
+	});
+};
+
 Existing.prototype.cancelBooking = function(id) {
-	var bid = id.substr(7);
 	$.post(
 		'/bookings/cancel',
 		{
-			bid: bid
+			bid: id
 		},
 		function(response) { vp.cancelBookingCallback(response); }
 	);

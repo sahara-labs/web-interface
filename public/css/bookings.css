@@ -861,3 +861,7 @@
 	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#FAFFDD', endColorstr='#FAFFCC');
 	background-color: #EFEFEF;
 }
+
+#confirmcancel span {
+	font-weight: bold;
+}
