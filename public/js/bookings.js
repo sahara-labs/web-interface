@@ -299,7 +299,21 @@ BookingPage.prototype.isoToDate = function(iso) {
 	}
 	
 	var date = iso.substr(0, iso.indexOf("T")).split("-");
-	return date[2] + "/" + date[1] + "/" + date[0];
+	date = date[2] + "/" + date[1] + "/" + date[0];
+	if (hr < 0)
+	{
+		var dt = new Date(strToDate(date).getTime() - this.DAY_MILLISECONDS);
+		return zeroPad(dt.getDate()) + "/" + zeroPad(dt.getMonth() + 1) + "/" + zeroPad(dt.getFullYear());
+	}
+	else if (hr > 23)
+	{
+		var dt = new Date(strToDate(date).getTime() + this.DAY_MILLISECONDS);
+		return zeroPad(dt.getDate()) + "/" + zeroPad(dt.getMonth() + 1) + "/" + zeroPad(dt.getFullYear());
+	}
+	else
+	{
+		return date;
+	}
 };
 
 BookingPage.prototype.displayHour = function(hr) {
@@ -1080,19 +1094,34 @@ Existing.prototype.addBooking = function(bid, name, start, end, isFinished, isCa
 	this.bookings[bid] = bObj;
 };
 
-Existing.prototype.changeMode = function(mode) {
-	this.mode = mode;
-	if (mode = "list")
+Existing.prototype.initPage = function() {
+	var stateMode = window.location.hash;
+	if (stateMode.substring(6) == "cal")
 	{
-		$("#listtab").removeClass("notselectedtab").addClass("selectedtab");
-		$("#caltab").removeClass("selectedtab").addClass("notselectedtab");
-		this.drawList();
+		this.changeMode("cal");
 	}
 	else
 	{
+		this.changeMode("list");	
+	}
+};
+
+Existing.prototype.changeMode = function(mode) {
+
+	this.mode = mode;
+	if (mode == "cal")
+	{
+		window.location.hash = 'dmodecal';
 		$("#listtab").removeClass("selectedtab").addClass("notselectedtab");
 		$("#caltab").removeClass("notselectedtab").addClass("selectedtab");
 		this.drawCalendar();
+	}
+	else
+	{
+		if (window.location.hash.length > 0) window.location.hash = 'dmodelist';
+		$("#listtab").removeClass("notselectedtab").addClass("selectedtab");
+		$("#caltab").removeClass("selectedtab").addClass("notselectedtab");
+		this.drawList();
 	}
 };
 
@@ -1113,7 +1142,7 @@ Existing.prototype.drawList = function() {
 		"<table class='bookingstable'>";
 	for (var i in this.bookings)
 	{
-		var b = this.bookings[i];
+		var b = this.bookings[i];	
 		html += "<tr id='booking" + i + "'class='" + (b.isCancelled ? "bcancelled" : (b.isFinished ? "bfinished" : "bactive")) + "'>" +
 					"<td class='namecell'>" + b.displayName.split('_').join(' ') + "</td>" +
 					"<td class='datecell'>" + this.isoToDate(b.startTime) + "</td>" +
@@ -1177,10 +1206,9 @@ Existing.prototype.confirmCancel = function(id) {
 	var html = 
 		"<div id='confirmcancel' title='Cancel Reservation'>" +
 			"<p>Are you sure you want to cancel the reservation for '<span>" + b.displayName.split('_').join(' ') +
-			"</span>'";
-	
-	
-	html += "</div>";
+			"</span>' on <span>" + this.isoToDate(b.startTime) + "</span> from <span>" + this.isoToTime(b.startTime) + 
+			"</span> to <span>" + this.isoToTime(b.endTime) + "</span>.<p>" +
+		"</div>";
 	
 	$("body").append(html);
 	$("#confirmcancel").dialog({
@@ -1230,8 +1258,7 @@ Existing.prototype.cancelBookingCallback = function(response, id) {
 	
 	if (response.success)
 	{
-		$("#booking" + id).removeClass("bactive")
-			 .addClass("bcancelled")
+		$("#booking" + id).switchClass("bactive", "bcancelled", 0)
 			 .unbind()
 			 .children(".statecell").append("User cancellation.");
 	}
@@ -1239,7 +1266,6 @@ Existing.prototype.cancelBookingCallback = function(response, id) {
 	{
 		alert("FAILED: " + response.failureReason);
 	}
-
 };
 
 /**
@@ -1289,11 +1315,3 @@ function zeroPad(t)
 	return t;
 }
 
-function setTZCookie(value)
-{
-	var expiry = new Date();
-	expiry.setDate(expiry.getDate() + 365);
-	var cookie = 'Camera_' + cameraRigType + '-' + key + '=' + value + ';path=/;expires=' + expiry.toUTCString();
-
-	
-}

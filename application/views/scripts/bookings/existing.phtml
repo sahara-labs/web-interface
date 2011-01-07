@@ -44,11 +44,15 @@ foreach ($this->tz->supportedTimezones as $t)
 {
     $initScript .= "vp.addTimezone('" . $t->timezone . "', " . $t->offsetFromSystem . ");\n";
 }
-foreach ($this->bookings as $b)
+
+if ($this->bookings)
 {
-    $initScript .= "vp.addBooking(" . $b->bookingID . ", '" . $b->displayName . "', '" . $b->startTime .
-            "', '" . $b->endTime . "', " . ($b->isFinished ? 'true' : 'false') . ", " .
-            ($b->isCancelled ? 'true' : 'false') . ", '" . $b->cancelReason ."');\n";
+    foreach ($this->bookings as $b)
+    {
+        $initScript .= "vp.addBooking(" . $b->bookingID . ", '" . $b->displayName . "', '" . $b->startTime .
+                "', '" . $b->endTime . "', " . ($b->isFinished ? 'true' : 'false') . ", " .
+                ($b->isCancelled ? 'true' : 'false') . ", '" . $b->cancelReason ."');\n";
+    }
 }
 $initScript .= '$(document).ready(function() { vp.initTimezone() });';
 $this->headScript()->appendScript($initScript);
@@ -91,7 +95,7 @@ $(document).ready(function() {
 <script type="text/javascript">
 <!--
 $(document).ready(function() {
-	vp.changeMode('<?=$this->mode?>');
+	vp.initPage();
 
 	$("#listtab").click(function() {
 		vp.changeMode("list");
@@ -106,5 +110,8 @@ $(document).ready(function() {
 </script>
 
 <?php else: ?>
-No bookings
+<div class="ui-state-error ui-corner-all nobookingsalert">
+	<span class="ui-icon ui-icon-alert"></span>
+	You do not have any existing reservations.
+</div>
 <?php endif; ?>

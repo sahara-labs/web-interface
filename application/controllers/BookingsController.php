@@ -326,12 +326,6 @@ class BookingsController extends Sahara_Controller_Action_Acl
     {
         $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Existing Reservations');
 
-        $this->view->mode = $this->_request->getParam('format', 'list');
-        if ($this->view-mode != 'list' || $this->view->mode != 'cal')
-        {
-            $this->view->mode = 'list';
-        }
-
         // TODO Cache timezone results
         $this->view->tz = Sahara_Soap::getSchedServerBookingsClient()->getTimezoneProfiles();
 
