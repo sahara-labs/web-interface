@@ -130,6 +130,15 @@ class BookingsController extends Sahara_Controller_Action_Acl
 
         $this->view->currentDay = $start->format(self::DATE_FORMAT);
         $end = new DateTime($perm->expiry);
+
+        if ($start->getTimestamp() > $end->getTimestamp())
+        {
+            /* The horizon has moved passed the end of the permission, so no
+             * bookings are allowed. */
+            $this->view->currentDay = $end->format(self::DATE_FORMAT);
+            $this->view->horizonPassed = true;
+        }
+
         $this->view->endDay = $end->format(self::DATE_FORMAT);
 
         /* More pre-conditions to display a booking page. However, these aren't

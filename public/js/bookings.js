@@ -59,13 +59,14 @@ BookingPage.prototype.MINS_PER_SLOT = 15;
 BookingPage.prototype.SLOTS_PER_HOUR = 4;
 
 BookingPage.prototype.initTimezone = function() {
-	var cname = this.TZ_COOKIE + "=";
-	var cparts = document.cookie.split(";");
+	var cname = this.TZ_COOKIE + "=",
+	    cparts = document.cookie.split(";"),
+	    tz = null,
+	    i, c;
 	
-	var tz = null;
-	for (var i in cparts)
+	for (i in cparts)
 	{
-		var c = cparts[i];
+		c = cparts[i];
 		while (c.charAt(0) == ' ') c = c.substr(1);
 		if (c.indexOf(cname) == 0) tz = unescape(c.substr(c.indexOf("=") + 1));
 	}
@@ -81,7 +82,7 @@ BookingPage.prototype.initTimezone = function() {
 		var tzOffset = -((new Date().getTimezoneOffset() * 60) + this.systemOffset);
 		if (tzOffset == 0) return;
 		
-		for (var i in this.timezones)
+		for (i in this.timezones)
 		{
 			if (this.timezones[i] == tzOffset)
 			{
@@ -108,9 +109,10 @@ BookingPage.prototype.displayTzSelector = function() {
 		}
 	}
 	
-	var utcOff = (this.inuseOffset + this.systemOffset);
-	var offHr = Math.floor(utcOff / 3600);
-	var offMin = Math.floor(utcOff % 3600 / 60);
+	var utcOff = (this.inuseOffset + this.systemOffset),
+	    offHr = Math.floor(utcOff / 3600),
+	    offMin = Math.floor(utcOff % 3600 / 60),
+	    reg, tz;
 	if (offMin < 0)
 	{
 		offHr--;
@@ -123,7 +125,7 @@ BookingPage.prototype.displayTzSelector = function() {
 			"<p>Current timezone: <span id='inusetz'>GMT " + (utcOff >= 0 ? "+" : "&ndash;") + offHr + ':' + zeroPad(offMin) + "<span></p>" +
 			"<ul id='tzlist'>";
 	
-	for (var reg in this.regions)
+	for (reg in this.regions)
 	{
 		html += 
 			"<li id='" + reg + "' class='tzregion' >" +
@@ -131,7 +133,7 @@ BookingPage.prototype.displayTzSelector = function() {
 				 "<div id='" + reg + "region' class='tzregioncontainer'>" +
 					"<ul class='innertzlist'>";
 		
-		for (var tz in this.regions[reg])
+		for (tz in this.regions[reg])
 		{	
 			html += 	"<li class='timezoneregion' tz='" + this.regions[reg][tz] + "'>" + 
 							"<span class='ui-icon ui-icon-arrowthick-1-e tzicon'></span>" + 
@@ -1031,6 +1033,10 @@ Booking.prototype.clearHover = function(slot) {
 Booking.prototype.setMaximumBookings = function() {
 	$("#nobookwarning").show();
 	
+	this.disableBookings();
+};
+
+Booking.prototype.disableBookings = function() {
 	$("#bookingstimecontainer").addClass("bookingsdisabled");
 	
 	this.disableHovers = true;

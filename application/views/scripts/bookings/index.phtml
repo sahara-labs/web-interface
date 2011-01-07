@@ -76,6 +76,22 @@ $(document).ready(function() {
 //-->
 </script>
 
+<?php if ($this->horizonPassed): ?>
+<div id="nobookwarning" class="ui-state-error ui-corner-all">
+    <span class="ui-icon ui-icon-alert" style="float:left;margin-right:5px"></span>
+    <p>You cannot create any more reservations because the time allowed to create reservations has passed.</p>
+</div>
+
+<script type="text/javascript">
+<!--
+$(document).ready(function() {
+	$("#nobookwarning").show();
+	vp.disableBookings();
+});
+//-->
+</script>
+
+<?php else: ?>
 <div id="nobookwarning" class="ui-state-error ui-corner-all">
     <span class="ui-icon ui-icon-alert" style="float:left;margin-right:5px"></span>
     <p>You cannot create any more reservations because you already have the maximum number of allowed
@@ -83,6 +99,7 @@ $(document).ready(function() {
     '<span class="warninghighlight"><?=$this->stringTransform($this->name, '_', ' ')?></span>'. You may create more
     reservations after your current reservations are either finished or cancelled.</p>
 </div>
+<?php endif; ?>
 
 <!-- Day picker bar. -->
 <div id="daypickerbar">
