@@ -1190,7 +1190,7 @@ Existing.prototype.confirmCancel = function(id) {
 		resizable: false,
 		buttons: {
 			'Cancel Reservation': function() {
-				vp.cancelBooking(id);
+				vp.cancelBooking(b.bookingID);
 			},
 			'Close': function() {
 				$(this).dialog('close');
@@ -1203,17 +1203,43 @@ Existing.prototype.confirmCancel = function(id) {
 };
 
 Existing.prototype.cancelBooking = function(id) {
+	/* Tear down dialog. */
+	var diagsel = "div[aria-labelledby=ui-dialog-title-confirmcancel]";
+	$(diagsel + " div.ui-dialog-titlebar").css("display", "none");
+	$(diagsel + " div.ui-dialog-buttonpane").css("display", "none");
+	$("#confirmcancel").html(
+		"<div class='bookingconfirmationloading'>" +
+		"	<img src='/images/ajax-loading.gif' alt='Loading' /><br />" +
+		"	<p>Requesting...</p>" +
+		"</div>");
+	
 	$.post(
 		'/bookings/cancel',
 		{
-			bid: id
+			bid: id,
+			reason: "User cancellation."
 		},
-		function(response) { vp.cancelBookingCallback(response); }
+		function(response) { vp.cancelBookingCallback(response, id); }
 	);
 };
 
-Existing.prototype.cancelBookingCallback = function(response) {
-	alert(response.success ? "Cancelled" : "Failed");
+Existing.prototype.cancelBookingCallback = function(response, id) {
+	if (typeof response != "object") window.location.reload();
+	
+	$("#confirmcancel").dialog('close');
+	
+	if (response.success)
+	{
+		$("#booking" + id).removeClass("bactive")
+			 .addClass("bcancelled")
+			 .unbind()
+			 .children(".statecell").append("User cancellation.");
+	}
+	else
+	{
+		alert("FAILED: " + response.failureReason);
+	}
+
 };
 
 /**

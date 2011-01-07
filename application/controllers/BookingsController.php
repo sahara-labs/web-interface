@@ -368,7 +368,8 @@ class BookingsController extends Sahara_Controller_Action_Acl
         {
             echo $this->view->json(Sahara_Soap::getSchedServerBookingsClient()->cancelBooking(array(
                 'userID' => array('userQName' => $this->_auth->getIdentity()),
-                'bookingID' => array('bookingID' => $bid)
+                'bookingID' => array('bookingID' => $bid),
+                'reason' => $this->_request->getParam('reason', 'User cancellation.')
             )));
         }
         else
