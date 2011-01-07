@@ -104,7 +104,8 @@ function loadPermissionInfo(pid)
 				}
 			}
 			
-			html += "<div id='queuebuttonpane" + pid + "' class='ui-dialog-buttonpane ui-widget-content'>";
+			html += "<div id='queuebuttonpane" + pid + "' class='ui-dialog-buttonpane ui-widget-content'>" +
+						"<div class='permbuttonpaneshift'>";
 			
 			if (p.isQueueable && p.viable)
 			{
@@ -126,7 +127,8 @@ function loadPermissionInfo(pid)
 			
 			html += "   <button class='queuebutton ui-button ui-button-text-icon ui-widget ui-state-default ui-corner-all'" +
 					"		id='queuecancelbutton" + pid +"' type='button'>Cancel</button>" +
-					"</div>";
+					"<div>" +
+				"</div>";
 			
 			$(conDiv).html(html);
 			

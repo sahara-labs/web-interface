@@ -99,6 +99,10 @@
     overflow: visible;
 }
 
+.permbuttonpaneshift {
+	margin-right: -20px;
+}
+
 .permissiondialogloading {
     text-align: center;
     font-size: 1.4em;
