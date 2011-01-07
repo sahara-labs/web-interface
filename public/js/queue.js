@@ -50,9 +50,10 @@ function loadPermissionInfo(pid)
 			var conDiv = "#permission" + pid;
 			
 			/* The permission is not viable, so put up an error */
+			var html = '';
 			if (!p.viable)
 			{
-				$(conDiv).html(
+				html =
 					"<div class='dialogcentercontent'>" +
 					"	<div class='dialogheader'>" +
 					"		<img src='/images/balls/red.gif' alt='Not viable' />" +
@@ -62,65 +63,65 @@ function loadPermissionInfo(pid)
 					"   <span class='ui-icon ui-icon-alert alertspan'></span>" +
 					"   	You cannot queue for this rig because all of its resources are offline." +
 					"   </div>" +
-					"</div>"
-				);
-				return;
-			}
-			
-			var html = "<div class='dialogcentercontent'>" +
-					   "	<div class='dialogheader'>";
-			if (p.hasFree)
-			{
-				/* The permission resource(s) is free, so put up the number free. */
-				html += "<img src='/images/balls/green.gif' alt='Free' />" +
-						"<h3>" + (p.queuedResource.type == "RIG" ? "Free" : p.numberFree + " Free") + "</h3>";
+					"</div>";
 			}
 			else
 			{
-				/* The permission resource(s) are in use. */
-				html += "<img src='/images/balls/yellow.gif' alt='In Use' />" +
-						"<h3>" + (p.queuedResource.type == "RIG" ? "In Use" : "All In Use") + "</h3>";
-			}
-			html += "</div>";
-			
-			/* List out all the target resources. */
-			if (p.queuedResource.type == 'TYPE' || p.queuedResource.type == 'CAPABILITY')
-			{
-				html += "<div class='dialogreslist'><ul>";
-				for (key in p.queueTarget)
+				html = "<div class='dialogcentercontent'>" +
+						   "	<div class='dialogheader'>";
+				if (p.hasFree)
 				{
-					if (key == "resource") t = p.queueTarget;
-					else if (!isNaN(key))  t = p.queueTarget[key];
-					else continue;
-					
-					html += "<li><span class='dialogreslistspan'>";
-					if (!t.viable) html += "<img src='/images/balls/red_small.gif' alt='Not viable' class='dialogreslisticon' />";
-					else if (!t.isFree) html += "<img src='/images/balls/yellow_small.gif' alt='In Use' class='dialogreslisticon' />";
-					else html += "<img src='/images/balls/green_small.gif' alt='Free' class='dialogreslisticon' />";
-					html += t.resource.resourceName.split('_').join(' ') + "</span></li>";
+					/* The permission resource(s) is free, so put up the number free. */
+					html += "<img src='/images/balls/green.gif' alt='Free' />" +
+							"<h3>" + (p.queuedResource.type == "RIG" ? "Free" : p.numberFree + " Free") + "</h3>";
 				}
-				html += "</ul></div>";
-				html += "<div style='clear:both'></div>";
+				else
+				{
+					/* The permission resource(s) are in use. */
+					html += "<img src='/images/balls/yellow.gif' alt='In Use' />" +
+							"<h3>" + (p.queuedResource.type == "RIG" ? "In Use" : "All In Use") + "</h3>";
+				}
+				html += "</div>";
+				
+				/* List out all the target resources. */
+				if (p.queuedResource.type == 'TYPE' || p.queuedResource.type == 'CAPABILITY')
+				{
+					html += "<div class='dialogreslist'><ul>";
+					for (key in p.queueTarget)
+					{
+						if (key == "resource") t = p.queueTarget;
+						else if (!isNaN(key))  t = p.queueTarget[key];
+						else continue;
+						
+						html += "<li><span class='dialogreslistspan'>";
+						if (!t.viable) html += "<img src='/images/balls/red_small.gif' alt='Not viable' class='dialogreslisticon' />";
+						else if (!t.isFree) html += "<img src='/images/balls/yellow_small.gif' alt='In Use' class='dialogreslisticon' />";
+						else html += "<img src='/images/balls/green_small.gif' alt='Free' class='dialogreslisticon' />";
+						html += t.resource.resourceName.split('_').join(' ') + "</span></li>";
+					}
+					html += "</ul></div>";
+					html += "<div style='clear:both'></div>";
+				}
 			}
 			
-			html += "<div id='queuebuttonpane" + pid + "' class='ui-dialog-buttonpane ui-widget-content' style='margin-right:-25px'>";
+			html += "<div id='queuebuttonpane" + pid + "' class='ui-dialog-buttonpane ui-widget-content'>";
+			
+			if (p.isQueueable && p.viable)
+			{
+			    html += "	<button class='queuebutton ui-button ui-button-text-icon ui-widget ui-state-default ui-corner-all ui-priority-primary'" +
+			        	"		id='queuebutton" + pid +"' type='button'>Queue</button>";			        
+			}
 			
 			if (p.isBookable)
 			{
-				html += "	<button class='queuebutton ui-button ui-button-text-icon ui-widget ui-state-default ui-corner-all ui-priority-primary'" +
-	        			"		id='bookbutton" + pid +"' type='button'>Book</button>";			
+				html += "	<button class='queuebutton ui-button ui-button-text-icon ui-widget ui-state-default ui-corner-all'" +
+	        			"		id='bookbutton" + pid +"' type='button'>Reserve</button>";			
 			}
 			
-			if (p.isQueueable)
+			if (!p.isQueueable && !p.isBookable && p.viable && p.isFree)
 			{
-			    html += "	<button class='queuebutton ui-button ui-button-text-icon ui-widget ui-state-default ui-corner-all ui-priority-primary'" +
-			        	"		id='queuebutton" + pid +"' type='button'>Queue</button>";			        
-			}
-			
-			if (!p.isQueueable && !p.isBookable && p.isFree)
-			{
-			    html += "	<button class='queuebutton ui-button ui-button-text-icon ui-widget ui-state-default ui-corner-all ui-priority-primary'" +
-			        	"		id='queuebutton" + pid +"' type='button'>Queue</button>";			        
+			    html += "	<button class='queuebutton ui-button ui-button-text-icon ui-widget ui-state-default ui-corner-all'" +
+			        	"		id='queuebutton" + pid +"' type='button'>Use</button>";			        
 			}
 			
 			html += "   <button class='queuebutton ui-button ui-button-text-icon ui-widget ui-state-default ui-corner-all'" +
