@@ -789,7 +789,7 @@ Booking.prototype.confirmBookingCallback = function(resp) {
 		html += 	"<li>" +
 						"<a id='windowreload' class='bookingfailedoption ui-corner-all'>" +
 							"<span class='ui-icon ui-icon-arrowthick-1-e bookingfailedicon'> </span>" +
-							"Reload the page as reservations could have been made since the page was loaded." + 
+							"Reload the page as reservations may have been made since the page was loaded." + 
 						"</a>" +
 					"</li>";
 				"</ul>" +
@@ -853,7 +853,7 @@ Booking.prototype.startBooking = function(slot) {
 		/* Arrows. */
 		if (this.isSlotBookable(this.bookingEnd + 1))
 		{
-			for (var i = 1; i <= 4; i++)
+			for (var i = 1; i <= 2; i++)
 			{ 
 				html += "<div class='timedragarrow timedragarrow" + i + "'>";
 				for (var k = 10; k > 0; k--) html += "<div class='tline" + k + "'> </div>";

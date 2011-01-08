@@ -198,7 +198,7 @@
 
 
 #iconlegend {
-	top: 175px;
+	top: 150px;
 	position:absolute;
 	width:10em;
 	
@@ -211,7 +211,7 @@
 
 	
 #iconlegend ul {
-	list-style-type: circle;
+	list-style-type: none;
     padding: 0;
     margin: 0;
     margin-left: 10px;

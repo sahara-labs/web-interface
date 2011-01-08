@@ -41,7 +41,7 @@ switch ($this->userRole)
     case Sahara_Acl::USER:
         $menu = array(
             'Rig Selection' => array('controller' => 'queue', 'action' => 'index'),
-            'Existing Reservations' => array('controller' => 'bookings', 'action' => 'existing')
+            'Reservations' => array('controller' => 'bookings', 'action' => 'existing')
         );
         break;
     case Sahara_Acl::ACADEMIC:

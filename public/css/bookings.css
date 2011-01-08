@@ -459,11 +459,13 @@
 }
 
 .timedragarrow1 {
-	left: 15px;
+	/*left: 15px;*/
+	left: 74px;
 }
 
 .timedragarrow2 {
-    left: 84px;
+    /*left: 84px;*/
+    left: 166px;
 }
 
 .timedragarrow3 {
@@ -694,13 +696,37 @@
 }
 
 
-#statereserved .stateicon {
+#statereserved .stateicon, #statereserved .largestateicon {
 	background-color: #EDEC79;
 }
 
 
-#statenoperm .stateicon {
+#statenoperm .stateicon, #statenoperm .largestateicon {
 	background-color: #FF5454;
+}
+
+.stateitemhover {
+	display: none;
+	position: absolute;
+	width: 250px;
+	margin-left: -25px;
+	margin-top: 15px;
+	background-color: #606060;
+	color: #FEFEFE;
+	order:1px solid #000000;
+	padding: 6px;
+	font-weight:normal;
+	-webkit-box-shadow: 0 0 8px #606060;
+	-moz-box-shadow:0 0 8px #606060;
+    box-shadow: 0 0 8px #606060;
+    opacity: 0.75;
+    filter: alpha(opacity = 75);
+    filter: progid:DXImageTransform.Microsoft.Shadow(color=#606060, Strength=8);
+    z-index: 100;
+}
+
+.largestateicon {
+	
 }
 
 /******************************************************************************

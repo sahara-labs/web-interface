@@ -333,7 +333,7 @@ class BookingsController extends Sahara_Controller_Action_Acl
      */
     public function existingAction()
     {
-        $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Existing Reservations');
+        $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Reservations');
 
         // TODO Cache timezone results
         $this->view->tz = Sahara_Soap::getSchedServerBookingsClient()->getTimezoneProfiles();
