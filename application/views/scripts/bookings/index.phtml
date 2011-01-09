@@ -255,8 +255,8 @@ $(document).ready(function() {
 		<li id="stateown" class="stateitem">
 			<div class="stateicon ui-corner-all"></div>
 			Own reservation
-			<div id="statehoverown" class="stateitemhover">
-				<div class="largestateicon"> </div>
+			<div id="statehoverown" class="stateitemhover ui-corner-all">
+				<div class="largestateicon ui-corner-all"> </div>
 				<div class="statehoverdesc">
 					Time periods where you already have a reservation. You cannot create concurrent
 					reservations.
@@ -266,8 +266,8 @@ $(document).ready(function() {
 		<li id="statenoperm" class="stateitem">
 			<div class="stateicon ui-corner-all"></div>
 			No permission
-			<div id="statehovernoperm" class="stateitemhover">
-				<div class="largestateicon"> </div>
+			<div id="statehovernoperm" class="stateitemhover ui-corner-all">
+				<div class="largestateicon ui-corner-all"> </div>
 				<div class="statehoverdesc">
 					 Time periods where you do not have permission to make a reservation.
 				</div>
@@ -276,8 +276,8 @@ $(document).ready(function() {
 		<li id="statefree" class="stateitem">
 			<div class="stateicon ui-corner-all"></div>
 			Available
-			<div id="statehoverfree" class="stateitemhover">
-				<div class="largestateicon"> </div>
+			<div id="statehoverfree" class="stateitemhover ui-corner-all">
+				<div class="largestateicon ui-corner-all"> </div>
 				<div class="statehoverdesc">
 					 Time periods which are free and you may make a reservation for the resource.
 				</div>
@@ -286,8 +286,8 @@ $(document).ready(function() {
 		<li id="statereserved" class="stateitem">
 			<div class="stateicon ui-corner-all"></div>
 			Not available
-			<div id="statehoverreserved" class="stateitemhover">
-				<div class="largestateicon"> </div>
+			<div id="statehoverreserved" class="stateitemhover ui-corner-all">
+				<div class="largestateicon ui-corner-all"> </div>
 				<div class="statehoverdesc">
 					 Time periods which are already reserved and may not be further reserved.
 				</div>
@@ -295,3 +295,18 @@ $(document).ready(function() {
 		</li>
 	</ul>
 </div>
+
+<script type="text/javascript">
+<!--
+var ttHovers = new Object();
+$(".stateitem").hover(
+	function() {
+		ttHovers[$(this).attr("id")] = true;
+	},
+	function() {
+		ttHovers[$(this).attr("id")] = true;
+
+	}
+);
+//-->
+</script>
