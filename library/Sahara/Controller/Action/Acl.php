@@ -79,6 +79,7 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
     private $_noRedirectPages = array('indexlogout', 'indexfeedback',
     								  'queuecancel', 'queueupdate',
                                       'sessionfinish', 'sessioninfo',
+                                      'bookingscancel',
                                       'sessionprimitivebridge', 'sessionattributebridge',
                                       'primitivejson', 'primitiveecho', 'primitivefile',
                                       'batchtorigclient', 'batchstatus', 'batchabort',

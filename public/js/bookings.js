@@ -1274,6 +1274,35 @@ Existing.prototype.cancelBookingCallback = function(response, id) {
 	}
 };
 
+function Waiting(bid, sec)
+{
+	this.bookingId = bid;
+	this.seconds = sec;
+}
+
+Waiting.prototype.countDown = function() {
+	this.seconds--;
+	
+	var min = Math.floor(this.seconds / 60),
+		sec = this.seconds % 60;
+	
+	$("#bookingmin").text(min);
+	$("#bookingsec").text(zeroPad(sec));
+};
+
+Waiting.prototype.cancel = function() {
+	$.post(
+		"/bookings/cancel",
+		{
+			bid: this.bookingId,
+			reason: "User Cancellation"
+		},
+		function(response) {
+			window.location.replace("/queue/index");
+		}
+	);
+};
+
 /**
  * Converts a date string to a Date object.
  * 

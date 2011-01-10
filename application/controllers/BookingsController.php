@@ -400,7 +400,6 @@ class BookingsController extends Sahara_Controller_Action_Acl
         ));
 
         $this->view->displayName = $booking->displayName;
-
-
+        $this->view->time = Sahara_DateTimeUtil::getTsFromISO8601($booking->startTime) - time();
     }
 }

@@ -915,16 +915,42 @@
 	margin-right: 5px;
 }
 
+/******************************************************************************
+ ** Waiting page.                                                            **
+ ******************************************************************************/
+
 #bookinginfo {
 	color: #BCBCBC;
 	font-weight: lighter;
 	margin: 25px auto;
 	text-align: center;
 	width: 350px;
-	
 }
 
-#booktime span {
+#bookdesc span {
 	font-weight: bold;
 	color: #000000;
 	font-size: 1.15em;
+}
+
+#booktime {
+	margin: 25px 0 15px;
+}
+
+#booktime span {
+    font-size: 3.5em;
+    font-weight: bold;
+    color: black;
+}
+
+#bookingredirectinfo {
+	padding: 6px;
+	margin: 15px auto;
+	text-align: left;
+	width: 312px;
+}
+
+#bookingredirectinfo span {
+	margin-right: 6px;
+	float: left;
+}

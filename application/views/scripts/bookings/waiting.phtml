@@ -39,28 +39,34 @@
 $this->headLink()->appendStylesheet($this->baseUrl('/css/bookings.css'));
 $this->headScript()->appendFile($this->baseUrl('/js/bookings.js'));
 
-$this->time = 1800;
-
 $mins = floor($this->time / 60);
 $secs = $this->time % 60;
+
+$this->headScript()->appendScript('
+vp = new Waiting(' . $this->bid . ', ' . $this->time . ');
+$(document).ready(function() {
+    vp.interval = setInterval("vp.countDown()", 1000);
+});
+');
 ?>
 
 <div class="contentheader">
 	<h2>Reservation Starting Soon...</h2>
 </div>
 
-
-
 <div id="bookinginfo">
-    <div id="booktime">
+    <div id="bookdesc">
     	You have a reservation for '<span><?=$this->stringTransform($this->displayName, '_', ' ')?></span>' that will begin in:<br />
-
-    	<span id="bookingmin"><?=$mins?></span> minutes and <span><?=$secs?></span> seconds.<br />
-    	<img src="<?=$this->baseUrl('images/queuing.gif')?>" alt="Soon" />
+    </div>
+    <div id="booktime">
+        <span id="bookingmin"><?=$mins?></span> minutes and <span id="bookingsec"><?=$secs?></span> seconds.<br />
+    </div>
+    <div id="bookimg">
+        <img src="<?=$this->baseUrl('images/queuing.gif')?>" alt="Soon" />
     </div>
     <div id="bookingredirectinfo" class="ui-state-highlight ui-corner-all">
     	<span class="ui-icon ui-icon-info"></span>
-    	You will be automatically redirected to the rig when your reservation.
+    	You will be automatically redirected to the rig when your reservation starts.
     </div>
 </div>
 
