@@ -59,7 +59,8 @@ $(document).ready(function() {
     	You have a reservation for '<span><?=$this->stringTransform($this->displayName, '_', ' ')?></span>' that will begin in:<br />
     </div>
     <div id="booktime">
-        <span id="bookingmin"><?=$mins?></span> minutes and <span id="bookingsec"><?=$secs?></span> seconds.<br />
+        <span id="bookingmin" class="<?=$mins < 10 ? 'booktimered' : 'booktimeblack'?>"><?=$mins?></span> minutes and
+        <span id="bookingsec" class="<?=$mins < 10 ? 'booktimered' : 'booktimeblack'?>"><?=$secs?></span> seconds.<br />
     </div>
     <div id="bookimg">
         <img src="<?=$this->baseUrl('images/queuing.gif')?>" alt="Soon" />

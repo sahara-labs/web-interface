@@ -1286,8 +1286,11 @@ Waiting.prototype.countDown = function() {
 	var min = Math.floor(this.seconds / 60),
 		sec = this.seconds % 60;
 	
-	$("#bookingmin").text(min);
-	$("#bookingsec").text(zeroPad(sec));
+	var nmin = $("#bookingmin").text(min);
+	var nsec = $("#bookingsec").text(zeroPad(sec));
+	
+	if (min < 10 && nmin.hasClass("booktimeblack")) nmin.switchClass("booktimeblack", "booktimered");
+	if (min < 10 && nsec.hasClass("booktimeblack")) nsec.switchClass("booktimeblack", "booktimered");
 };
 
 Waiting.prototype.cancel = function() {
