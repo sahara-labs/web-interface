@@ -39,7 +39,6 @@
 $this->headLink()->appendStylesheet($this->baseUrl('/css/bookings.css'));
 $this->headScript()->appendFile($this->baseUrl('/js/bookings.js'));
 
-$this->displayName = 'Foo';
 $this->time = 1800;
 
 $mins = floor($this->time / 60);
@@ -54,7 +53,7 @@ $secs = $this->time % 60;
 
 <div id="bookinginfo">
     <div id="booktime">
-    	You have a reservation for '<span><?=$this->displayName?></span>' that will begin in:<br />
+    	You have a reservation for '<span><?=$this->stringTransform($this->displayName, '_', ' ')?></span>' that will begin in:<br />
 
     	<span id="bookingmin"><?=$mins?></span> minutes and <span><?=$secs?></span> seconds.<br />
     	<img src="<?=$this->baseUrl('images/queuing.gif')?>" alt="Soon" />

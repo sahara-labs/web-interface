@@ -381,9 +381,26 @@ class BookingsController extends Sahara_Controller_Action_Acl
         }
     }
 
+    /**
+     * View for a booking that is about to start.
+     */
     public function waitingAction()
     {
         $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Reservation');
+
+        $this->view->bid = $this->_request->getParam('bid');
+        if (!$this->view->bid)
+        {
+            $this->_redirectTo('index', 'queue');
+        }
+
+        $booking = Sahara_Soap::getSchedServerBookingsClient()->getBooking(array(
+            'userID' => array('userQName' => $this->_auth->getIdentity()),
+            'bookingID' => array('bookingID' => $this->view->bid)
+        ));
+
+        $this->view->displayName = $booking->displayName;
+
 
     }
 }
