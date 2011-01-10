@@ -383,6 +383,7 @@ class BookingsController extends Sahara_Controller_Action_Acl
 
     public function waitingAction()
     {
-        echo "Waiting page";
+        $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Reservation');
+
     }
 }

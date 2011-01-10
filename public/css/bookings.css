@@ -914,3 +914,17 @@
 	float: left;
 	margin-right: 5px;
 }
+
+#bookinginfo {
+	color: #BCBCBC;
+	font-weight: lighter;
+	margin: 25px auto;
+	text-align: center;
+	width: 350px;
+	
+}
+
+#booktime span {
+	font-weight: bold;
+	color: #000000;
+	font-size: 1.15em;
