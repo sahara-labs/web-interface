@@ -380,4 +380,9 @@ class BookingsController extends Sahara_Controller_Action_Acl
             echo $this->view->json(array('success' => false));
         }
     }
+
+    public function waitingAction()
+    {
+        echo "Waiting page";
+    }
 }

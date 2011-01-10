@@ -125,6 +125,37 @@ switch ($this->userRole)
                     ))
         );
         break;
+    case Sahara_Controller_Action_Acl::PSEUDO_ROLE_BOOKING:
+        $actionMenu = array(
+            'cancelbooking' => array('title' => 'Cancel Reservation', 'script' => '_cancelBooking.phtml',
+            		'icon' => $this->baseUrl('images/cancel.png'), 'alt' => 'Cancel',
+                    'width' => 400,
+                    'buttons' => array(
+                        'Yes' => 'vp.cancelBooking()',
+                        'No' => '$(this).dialog("close")'
+                    )),
+            'logout' => array('title' => 'Logout', 'script' => '_logout.phtml',
+                    'icon' => $this->baseUrl('images/logout.png'), 'alt' => 'logout',
+                    'width' => 400,
+                    'buttons' => array(
+                    	'Yes' => 'location.href="' . $this->url(array('controller' => 'index', 'action' => 'logout')) . '";',
+                        'No'  => '$(this).dialog("close");'
+                    )),
+            'sessionhelp' => array('title' => 'Help', 'script' => '_sessionhelp.phtml',
+                    'icon' => $this->baseUrl('images/help.png'), 'alt' => 'help',
+                    'width' => 650,
+                    'buttons' => array(
+                        'Close' => '$(this).dialog("close");'
+                    )),
+        	'support' => array('title' => 'Contact Support', 'script' => '_feedback.phtml',
+                    'icon' => $this->baseUrl('images/feedback.png'), 'alt' => 'feedback',
+                    'width' => 600,
+                    'buttons' => array(
+                        'Send' => '$("#feedback_form").submit();',
+                        'Cancel' => '$(this).dialog("close");'
+                    ))
+        );
+        break;
     case Sahara_Acl::ADMIN:
         $actionMenu = array(
             'logout' => array('title' => 'Logout', 'script' => '_logout.phtml',

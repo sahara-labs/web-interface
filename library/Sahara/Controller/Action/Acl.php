@@ -52,6 +52,9 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
     /** Pseudo role for in session users. */
     const PSEUDO_ROLE_SESSION = "INSESSION";
 
+    /** Pseudo role for booking waiting. */
+    const PSEUDO_ROLE_BOOKING = "INBOOKING";
+
     /** @var Sahara_Acl Authorisation. */
     protected $_acl;
 
@@ -126,28 +129,38 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
          * or on a experiment page. */
         if ($this->_acl->getUserRole() != Sahara_Acl::UNAUTH)
         {
-            $session = Sahara_Soap::getSchedServerQueuerClient()->isUserInQueue(array('userQName' => $this->_auth->getIdentity()));
+            $status = Sahara_Soap::getSchedServerQueuerClient()->isUserInQueue(
+                   array(
+                   		'userQName' => $this->_auth->getIdentity()
+                   )
+            );
 
             /* Force a user to be specific places depending on where they are in session. */
-            if ($session->inQueue && $page != 'queuequeuing' &&
-                    !in_array($page, $this->_noRedirectPages))
+            if ($status->inQueue && $page != 'queuequeuing' && !in_array($page, $this->_noRedirectPages))
             {
                 /* User in queue but not on queueing page. */
                 $this->_redirectTo('queuing', 'queue');
             }
-            else if ($session->inQueue)
+            else if ($status->inQueue)
             {
                 $this->view->userRole = self::PSEUDO_ROLE_QUEUE;
             }
-            else if ($session->inSession && $page != 'sessionindex' &&
-                    !in_array($page, $this->_noRedirectPages))
+            else if ($status->inSession && $page != 'sessionindex' && !in_array($page, $this->_noRedirectPages))
             {
                 /* User in session but not on session page. */
                 $this->_redirectTo('index', 'session');
             }
-            else if ($session->inSession)
+            else if ($status->inSession)
             {
                 $this->view->userRole = self::PSEUDO_ROLE_SESSION;
+            }
+            else if ($status->inBooking && $page != 'bookingswaiting' && !in_array($page, $this->_noRedirectPages))
+            {
+                $this->_redirectTo('waiting', 'bookings', array('bid' => $status->bookingID));
+            }
+            else if ($status->inBooking)
+            {
+                $this->view->userRole = self::PSEUDO_ROLE_BOOKING;
             }
             else if ($page == 'queuequeuing' || $page == 'sessionindex' || $page == "indexindex")
             {

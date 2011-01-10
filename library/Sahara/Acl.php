@@ -67,7 +67,7 @@ class Sahara_Acl extends Zend_Acl
     /** @var assoc array Pages a user may access. */
     protected $_userPages = array('queue' => array('index', 'unlock', 'info', 'queue', 'queuing', 'cancel',
                                                    'update'),
-                                  'bookings' => array('index', 'commit', 'times', 'existing', 'cancel'),
+                                  'bookings' => array('index', 'commit', 'times', 'existing', 'cancel', 'waiting'),
                                   'session' => array('index', 'info', 'finish', 'primitivebridge',
                                                      'attributebridge'),
                                   'primitive' => array('json', 'echo', 'file'),
