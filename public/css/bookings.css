@@ -687,6 +687,11 @@
 	margin-bottom: 6px;
 }
 
+.statelabel {
+	float: left;
+	margin-top: 6px;
+}
+
 #stateown .stateicon, #statehoverown .largestateicon {
 	background-color: #7B7B7B;
 }
@@ -701,7 +706,7 @@
 }
 
 
-#statenoperm .stateicon, #staterhovernoperm .largestateicon {
+#statenoperm .stateicon, #statehovernoperm .largestateicon {
 	background-color: #FF5454;
 }
 

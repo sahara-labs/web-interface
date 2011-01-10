@@ -252,10 +252,10 @@ $(document).ready(function() {
 <div id="statelegend">
 	<p>Legend:</p>
 	<ul>
-		<li id="stateown" class="stateitem">
+		<li id="stateown" class="stateitem hoverpoint">
 			<div class="stateicon ui-corner-all"></div>
-			Own reservation
-			<div id="statehoverown" class="stateitemhover ui-corner-all">
+			<div class="statelabel">Own reservation</div>
+			<div id="statehoverown" class="stateitemhover itemhover ui-corner-all">
 				<div class="largestateicon ui-corner-all"> </div>
 				<div class="statehoverdesc">
 					Time periods where you already have a reservation. You cannot create concurrent
@@ -263,30 +263,30 @@ $(document).ready(function() {
 				</div>
 			</div>
 		</li>
-		<li id="statenoperm" class="stateitem">
+		<li id="statenoperm" class="stateitem  hoverpoint">
 			<div class="stateicon ui-corner-all"></div>
-			No permission
-			<div id="statehovernoperm" class="stateitemhover ui-corner-all">
+			<div class="statelabel">No permission</div>
+			<div id="statehovernoperm" class="stateitemhover itemhover ui-corner-all">
 				<div class="largestateicon ui-corner-all"> </div>
 				<div class="statehoverdesc">
 					 Time periods where you do not have permission to make a reservation.
 				</div>
 			</div>
 		</li>
-		<li id="statefree" class="stateitem">
+		<li id="statefree" class="stateitem  hoverpoint">
 			<div class="stateicon ui-corner-all"></div>
-			Available
-			<div id="statehoverfree" class="stateitemhover ui-corner-all">
+			<div class="statelabel">Available</div>
+			<div id="statehoverfree" class="stateitemhover itemhover ui-corner-all">
 				<div class="largestateicon ui-corner-all"> </div>
 				<div class="statehoverdesc">
 					 Time periods which are free and you may make a reservation for the resource.
 				</div>
 			</div>
 		</li>
-		<li id="statereserved" class="stateitem">
+		<li id="statereserved" class="stateitem  hoverpoint">
 			<div class="stateicon ui-corner-all"></div>
-			Not available
-			<div id="statehoverreserved" class="stateitemhover ui-corner-all">
+			<div class="statelabel">Not available</div>
+			<div id="statehoverreserved" class="stateitemhover itemhover ui-corner-all">
 				<div class="largestateicon ui-corner-all"> </div>
 				<div class="statehoverdesc">
 					 Time periods which are already reserved and may not be further reserved.
@@ -299,14 +299,28 @@ $(document).ready(function() {
 <script type="text/javascript">
 <!--
 var ttHovers = new Object();
-$(".stateitem").hover(
+$(".hoverpoint").hover(
 	function() {
-		ttHovers[$(this).attr("id")] = true;
+		var nid = $(this).attr("id");
+		ttHovers[nid] = true;
+		setTimeout("displayTT('" + nid + "')", 1000);
 	},
 	function() {
-		ttHovers[$(this).attr("id")] = true;
-
+		ttHovers[$(this).attr("id")] = false;
+		var node = $(this).children(".itemhover");
+		if (node.css("display") == "block")
+		{
+			node.fadeOut();
+		}
 	}
 );
+
+function displayTT(nid)
+{
+	if (ttHovers[nid])
+	{
+		$("#" + nid).children(".itemhover").fadeIn();
+	}
+}
 //-->
 </script>
