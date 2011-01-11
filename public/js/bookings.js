@@ -662,7 +662,19 @@ Booking.prototype.confirmBookingCallback = function(resp) {
 	this.destroyBooking();
 		
 	if (resp.success) 
-	{	
+	{
+		/* Determine whether the user is in a booking countdown. */
+		$.get(
+			"/queue/inqueue",
+			null,
+			function(response){
+				if (typeof response != "object" || response.inBooking)
+				{
+					window.location.reload();
+				}
+			}
+		);
+		
 		for (var i = bs; i <= be; i++)
 		{
 			$("#slot" + i).removeClass("free").addClass("ownbooking").unbind();

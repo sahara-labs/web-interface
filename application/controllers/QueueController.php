@@ -220,6 +220,18 @@ class QueueController extends Sahara_Controller_Action_Acl
         echo $this->view->json($response);
     }
 
+    public function inqueueAction()
+    {
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();
+
+        $response = Sahara_Soap::getSchedServerQueuerClient()->isUserInQueue(array(
+                'userQName' => $this->_auth->getIdentity()
+        ));
+
+        echo $this->view->json($response);
+    }
+
     /**
      * Action that removes a user from the queue.
      */
