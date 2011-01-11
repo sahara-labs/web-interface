@@ -87,6 +87,8 @@ class QueueController extends Sahara_Controller_Action_Acl
 
             /* Load up resource information. */
             $resource = array(
+                'canBook' => $p->canBook,
+                'canQueue' => $p->canQueue,
                 'resourceClass' => $p->resourceClass,     // The resource class so either 'RIG', 'TYPE' or 'CAPS'
                 'resource' => $p->resource->resourceName, // The resource name
                 'locked' => $perm->isLocked,              // Whether the permission is locked
