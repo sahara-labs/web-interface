@@ -94,9 +94,14 @@ function resizeFooter()
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<?php echo $this->headTitle(); ?>
 	<?php echo $this->headLink(); ?>
+
 	<?php echo $this->headStyle(); ?>
 	<?php echo $this->headScript(); ?>
 	<?php echo $this->headMeta(); ?>
+
+	<!--[if lt IE 9]>
+		<link href="/css/ie-lt9.css" media="screen" rel="stylesheet" type="text/css" >
+	<![endif]-->
 </head>
 <body onload="resizeFooter()">
 	<div id="wrapper">

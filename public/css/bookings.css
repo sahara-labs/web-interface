@@ -725,8 +725,6 @@
 	-moz-box-shadow:0 0 8px #606060;
     box-shadow: 0 0 8px #606060;
     opacity: 0.75;
-    filter: alpha(opacity = 75);
-    filter: progid:DXImageTransform.Microsoft.Shadow(color=#606060, Strength=8);
     z-index: 100;
 }
 

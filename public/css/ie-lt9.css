@@ -1,0 +1,53 @@
+@CHARSET "UTF-8";
+
+/* -- jQuery changes.                                                     -- */
+.ui-dialog { 
+	filter: progid:DXImageTransform.Microsoft.Shadow(color=#969696, Strength=4); 
+}
+
+/* -- Layout changes.                                                     -- */
+.actiondialogbutton {
+    filter: progid:DXImageTransform.Microsoft.Shadow(color=#B5B5B5, Strength=4);
+}
+
+.actiondialogbutton:hover {
+ 	filter: progid:DXImageTransform.Microsoft.Shadow(color=#606060, Strength=4);
+}
+
+/* -- Queue changes.                                                      -- */
+.permissionbutton {
+	filter: progid:DXImageTransform.Microsoft.Shadow(color=#B5B5B5, Strength=4);
+}
+
+.permissionbutton:hover {
+	filter: progid:DXImageTransform.Microsoft.Shadow(color=#606060, Strength=4);
+}
+
+.stateitemhover {
+    filter: alpha(opacity = 75);
+    filter: progid:DXImageTransform.Microsoft.Shadow(color=#606060, Strength=8);
+}
+
+
+.daybutton {
+	filter: progid:DXImageTransform.Microsoft.Shadow(color=#B5B5B5, Strength=4);
+}
+
+.daybutton:hover {
+	filter: progid:DXImageTransform.Microsoft.Shadow(color=#606060, Strength=4);
+}
+
+.disdaybutton {
+	filter: progid:DXImageTransform.Microsoft.Shadow(color=#B5B5B5, Strength=2);
+}
+
+.bhovercontent {
+	filter: progid:DXImageTransform.Microsoft.Shadow(color=#444444, Strength=2);
+}
+
+.bhoverarrow div {
+	filter: progid:DXImageTransform.Microsoft.Shadow(color=#444444, Strength=2);
+}
+
+
+
