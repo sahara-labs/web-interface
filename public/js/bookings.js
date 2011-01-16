@@ -1290,10 +1290,27 @@ function Waiting(bid, sec)
 {
 	this.bookingId = bid;
 	this.seconds = sec;
+	
+	this.statusTimer = null;
 }
 
 Waiting.prototype.countDown = function() {
 	this.seconds--;
+	
+	if (this.seconds < 60 && this.statusTimer == null)
+	{
+		setTimeout(function(){
+			$.get(
+				"/queue/status",
+				null,
+				function(response) {
+					if (typeof response != "object" || response.inSession)
+					{
+						window.location.reload();
+					}
+			});
+		}, this.seconds > 30 ? 30000 : 10000);
+	}
 	
 	var min = Math.floor(this.seconds / 60),
 		sec = this.seconds % 60;
