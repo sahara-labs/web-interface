@@ -1301,15 +1301,26 @@ Waiting.prototype.countDown = function() {
 	{
 		setTimeout(function(){
 			$.get(
-				"/queue/status",
+				"/queue/inqueue",
 				null,
 				function(response) {
-					if (typeof response != "object" || response.inSession)
+					vp.statusTimer = null;
+					if (typeof response != "object")
 					{
+						/* Some unexpected response. */
 						window.location.reload();
 					}
+					else if (response.inSession)
+					{
+						/* Booking redeemed. */
+						window.location.replace("/session/index");
+					}
+					else if (!response.inBooking)
+					{
+						window.location.replace("/queue/index/emessage/Booking%20has%20been%20cancelled.");
+					}
 			});
-		}, this.seconds > 30 ? 30000 : 10000);
+		}, this.seconds > 30 ? 30000 : 15000);
 	}
 	
 	var min = Math.floor(this.seconds / 60),
