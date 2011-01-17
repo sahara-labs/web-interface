@@ -1299,7 +1299,7 @@ Waiting.prototype.countDown = function() {
 	
 	if (this.seconds < 60 && this.statusTimer == null)
 	{
-		setTimeout(function(){
+		this.statusTimer = setTimeout(function(){
 			$.get(
 				"/queue/inqueue",
 				null,
