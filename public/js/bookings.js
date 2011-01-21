@@ -1292,6 +1292,9 @@ function Waiting(bid, sec)
 	this.seconds = sec;
 	
 	this.statusTimer = null;
+	
+	this.startWarning = -120 < sec && sec <= 0;
+	this.offlineWarning = sec <= -120;
 }
 
 Waiting.prototype.countDown = function() {
@@ -1323,14 +1326,45 @@ Waiting.prototype.countDown = function() {
 		}, this.seconds > 30 ? 30000 : 15000);
 	}
 	
-	var min = Math.floor(this.seconds / 60),
-		sec = this.seconds % 60;
-	
-	var nmin = $("#bookingmin").text(min);
-	var nsec = $("#bookingsec").text(zeroPad(sec));
-	
-	if (min < 10 && nmin.hasClass("booktimeblack")) nmin.switchClass("booktimeblack", "booktimered");
-	if (min < 10 && nsec.hasClass("booktimeblack")) nsec.switchClass("booktimeblack", "booktimered");
+	if (this.seconds > 0)
+	{
+		var min = Math.floor(this.seconds / 60),
+			sec = this.seconds % 60;
+		
+		var nmin = $("#bookingmin").text(min);
+		var nsec = $("#bookingsec").text(zeroPad(sec));
+		
+		if (min < 10 && nmin.hasClass("booktimeblack")) nmin.switchClass("booktimeblack", "booktimered");
+		if (min < 10 && nsec.hasClass("booktimeblack")) nsec.switchClass("booktimeblack", "booktimered");
+	}
+	else if (this.seconds > -120 && !this.startWarning)
+	{
+		this.startWarning = true;
+		
+		var res = $("#bookres").text();
+		$("#bookdesc").remove();
+		$("#booktime").remove();
+		$("#bookinginfo").children(":first").before(
+			"<div id='bookdescstart'>" +
+				"Please wait, your reservation for '<span id='bookres'>" + res + "</span>' is about to start." +
+			"</div>"
+		);
+
+	}
+	else if (this.seconds <= -120 && !this.offlineWarning)
+	{
+		this.offlineWarning = true;
+		
+		var res = $("#bookres").text();
+		$("#bookdescstart").remove();
+		$("#bookinginfo").children(":first").before(
+			"<div id='bookdescwarn' class='ui-corner-all ui-state ui-state-error'>" +
+				"<span class='ui-icon ui-icon-alert bookdescwarnicon'></span>" +
+				"It appears your reserved resource '<span id='bookres'>" + res + "</span>' is " +
+				"currently <em>offline</em>. Please wait, if any other rigs are free, these will be provided to you." +
+			"</div>"
+		);
+	}
 };
 
 Waiting.prototype.cancel = function() {

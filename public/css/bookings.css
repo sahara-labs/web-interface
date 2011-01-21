@@ -948,6 +948,36 @@
 	color: red;
 }
 
+#bookdescstart {
+	margin: 25px -25;
+	text-align: center;
+	color: #707070;
+	width: 380px;
+}
+
+#bookdescstart span {
+	font-weight: bold;
+	color: #000000;
+	font-size: 1.05em;
+}
+
+#bookdescwarn {
+	padding: 6px;
+	margin-bottom: 20px;
+	text-align: left;
+	width: 350px;
+}
+
+#bookdescwarn span {
+	font-weight: bold;
+	font-size: 1.05em;
+}
+
+.bookdescwarnicon {
+	float: left;
+	margin-right: 5px;
+}
+
 #bookingredirectinfo {
 	padding: 6px;
 	margin: 15px auto;

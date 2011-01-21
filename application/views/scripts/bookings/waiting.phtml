@@ -55,13 +55,26 @@ $(document).ready(function() {
 </div>
 
 <div id="bookinginfo">
+    <?php if ($this->time > 0): ?>
     <div id="bookdesc">
-    	You have a reservation for '<span><?=$this->stringTransform($this->displayName, '_', ' ')?></span>' that will begin in:<br />
+    	You have a reservation for '<span id="bookres"><?=$this->stringTransform($this->displayName, '_', ' ')?></span>' that will begin in:<br />
     </div>
     <div id="booktime">
         <span id="bookingmin" class="<?=$mins < 10 ? 'booktimered' : 'booktimeblack'?>"><?=$mins?></span> minutes and
-        <span id="bookingsec" class="<?=$mins < 10 ? 'booktimered' : 'booktimeblack'?>"><?=$secs?></span> seconds.<br />
+        <span id="bookingsec" class="<?=$mins < 10 ? 'booktimered' : 'booktimeblack'?>"><?=Sahara_DateTimeUtil::zeroPad($secs)?></span> seconds.<br />
     </div>
+    <?php elseif ($this->time > -120): ?>
+    <div id="bookdescstart">
+    	Please wait, your reservation for '<span id="bookres"><?=$this->stringTransform($this->displayName, '_', ' ')?></span>'
+    	is about to start.
+    </div>
+    <?php else: ?>
+    <div id="bookdescwarn" class="ui-corner-all ui-state ui-state-error">
+    	<span class="ui-icon ui-icon-alert bookdescwarnicon"></span>
+    	It appears your reserved resource '<span id="bookres"><?=$this->stringTransform($this->displayName, '_', ' ')?></span>' is
+    	currently <em>offline</em>. Please wait, if any other rigs are free, these will be provided to you.
+  	</div>
+    <?php endif; ?>
     <div id="bookimg">
         <img src="<?=$this->baseUrl('images/queuing.gif')?>" alt="Soon" />
     </div>
