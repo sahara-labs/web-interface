@@ -37,10 +37,48 @@
  */
 ?>
 
-<div id="unauthhelpdialog" title="Help and Troubleshooting">
-	<div class="ui-state-error ui-corner-all" style="padding:10px">
-		Please edit the following file to populate in unauthenticated help:
-		<br />
-		<strong>&lt;WI installation directory&gt;/appliaction/views/layouts/actionbuttons/_unauthhelp.phtml</strong>
+<div id="unauthhelpdialog" class="helpdialog" title="Help and Troubleshooting">
+	<div class="helpcontents" >
+		<div class="helptitle ui-widget-header ui-corner-all">Help:</div>
+		<p>A username and password is required to access the Remote Labs. A proper
+		username and password are provided by the institution that hosts Remote
+		Labs. Please click on the "<span>Contact Support</span>" button to request
+		a username and password.</p>
+
+		<div class="helptitle ui-widget-header ui-corner-all">Troubleshooting:</div>
+		<div id="helpaccordian">
+			<h3><a href="#">System Requirements</a></h3>
+			<div>
+				Operating System: Windows Server 2003, Windows XP, Windows Vista, Linux,
+			   	and Mac OS 10.5 and above.<br />
+				Browser (tested and supported): Mozilla Firefox 3.0 and above, Chrome,
+					 Internet Explorer 6 and above, Safari<br />
+				Screen Resolution: 1024x768<br />
+			</div>
+			<h3><a href="#">I don't have an account. How do I request/receive a username and password?</a></h3>
+			<div>
+				 Please click on the "Contact Support" button to request a username and password.
+			</div>
+			<h3><a href="#">I have an account, but I can't access and have received an error message.</a></h3>
+			<div>
+				You may need to reactivate your account for the Remote Labs. Please click on the
+				"Contact Support" button and provide specific details of the erroe you are receiving.
+			</div>
+			<h3><a href="#">I forgot my username and/or password.</a></h3>
+			<div>
+				Please click on the "Contact Support" button to request your username and/or password.
+			</div>
+		</div>
 	</div>
 </div>
+
+<script type="text/javascript">
+$(document).ready(function() {
+	$("#helpaccordian").accordion({
+		active: "none",
+		collapsible: true
+	});
+
+	$("#helpaccordian .ui-accordion-header").css("background", "none");
+});
+</script>
