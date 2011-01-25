@@ -268,14 +268,14 @@ $(document).ready(function() {
 				<img src="<?=$this->baseUrl('/images/permission_launch22.png')?>" />Active
 				<div id="lt0" class="legendtext ui-corner-all">
 					<div class="legendimage"><img src="/images/permission_launch.png" alt="Allowed" /></div>
-					<div class="desc" >Active: You may queue for this resource.</div>
+					<div class="desc" >Active: You may use for this resource.</div>
 				</div>
 			</li>
 			<li id="legendlabel1">
 				<img src="<?=$this->baseUrl('/images/permission_expired22.png')?>" />Inactive
 				<div id="lt1" class="legendtext  ui-corner-all">
 					<div class="legendimage"><img src="/images/permission_expired.png" alt="Inactive" /></div>
-					<div class="desc" >Inactive: You do not currently have permission to queue for this resource.
+					<div class="desc" >Inactive: You do not currently have permission to use this resource.
 					Permissions are time based and the current time is out of the assigned usage period.</div>
 				</div>
 			</li>
@@ -299,14 +299,15 @@ $(document).ready(function() {
 				<div id="lt4" class="legendtext ui-corner-all">
 					<div class="legendimage"><img src="/images/balls/yellow-trans.gif" alt="In Use" /></div>
 					<div class="desc">In Use: The resource is online and in use. You will be queued to use the
-					resource after the current user and any preceding queued users.</div>
+					resource after the current user, any preceding queued users and any in-progress reservations.</div>
 				</div>
 			</li>
 			<li id="legendlabel5">
 				<img src="<?=$this->baseUrl('/images/balls/red_small.gif')?>" />Offline
 				<div id="lt5" class="legendtext ui-corner-all">
 					<div class="legendimage"><img src="/images/balls/red-trans.gif" alt="Offline" /></div>
-					<div class="desc" >Offline: The resource is offline and cannot be used.</div>
+					<div class="desc" >Offline: The resource is offline and cannot be used. You may still reserve
+					the rig.</div>
 				</div>
 			</li>
 		</ul>
