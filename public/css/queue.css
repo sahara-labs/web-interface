@@ -309,4 +309,16 @@
     float: left;
     margin-right: 5px;
 }
+
+.cdtimer {
+	margin: -25px 0 10px;
+	text-align: center;
+	font-size: 2.3em;
+	font-weight: bold;
+}
+
+.cdtimer span {
+	color: red;
+}
+
  

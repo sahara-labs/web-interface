@@ -305,21 +305,88 @@ function queueResourceRequest(pid)
 			}
 			else
 			{
+				cdTime = null;
+				var reason = r.failureReason,
+					html = 
+							"<div class='dialogcentercontent'>";
+							;
 				/* Failed requesting resource. */
-				$(conDiv).html(
-						"<div class='dialogcentercontent'>" +
-						"	<div class='dialogheader'>" +
-						"		<img src='/images/alert.png' alt='Failed' style='width:60px;height:60px;'/><br />" +
-						"		<h3 style='display:block;margin-top:20px'>Requesting resource has failed.</h3>" +
-						"   </div>" +
-						"	<div class='ui-state-error ui-corner-all' style='margin-top:-25px'>" +
-						"   	<span class='ui-icon ui-icon-alert alertspan'></span>" +
-						"   	Please use the 'Send Feedback' button to provide information about this failure." +
-						"   </div>" +
-						"</div>"
-				);
-				$(conDiv).dialog({'closeOnEscape': true});
+				if (reason != null && reason.indexOf('Booking:') == 0)
+				{
+					/* The booking failed because the user has a booking which
+					 * starts in less time than it would take to finish the
+					 * current session. */
+					cdTime = parseInt(reason.substr(reason.indexOf(':') + 1, reason.indexOf(' ', reason.indexOf(':')) - 2));
+					if (cdTime <= 1775)
+					{
+						/* We should be in booking waiting page, so reload the 
+						 * page. */
+						window.location.reload();
+					}
+					
+					var	hr  = Math.floor(cdTime / 3600),
+						min = Math.floor(cdTime % 3600 / 60),
+						sec = cdTime % 3600 % 60;
+					
+					html += "	<div class='dialogheader'>" +
+							"		<img src='/images/booking_starting.png' alt='Reservation' /><br />" +
+							"       <h3 style='display:block;margin-top:20px'>You may not queue, because your next" +
+							"		reservation starts in:</h3>" +
+							"   </div>" +
+							"	<div class='cdtimer'>" +
+							"		<span id='cdhr' class='cdfield'>" + zeroPad(hr) + "</span> :" +  
+							"		<span id='cdmin' class='cdfield'>" + zeroPad(min) + "</span> :" +  
+							"		<span id='cdsec' class='cdfield'>" + zeroPad(sec) + "</span>" +  
+							"	</div>" +
+							"	<div style='text-align:left;font-size:0.9em'>" +
+							"		You may queue again after either your reservation is finished or you cancel" +
+							"		your reservation." +
+							"	</div>";
+					
+				}
+				else
+				{
+					/* Failed because of some other reason. */
+					html +=	"	<div class='dialogheader'>" +
+					//		"		<img src='/images/alert.png' alt='Failed' style='width:60px;height:60px;'/><br />" +
+							"		<h3 style='display:block;margin-top:20px'>Requesting resource has failed.</h3>" +
+							"   </div>" +						
+							"	<div style='margin-top:-25px;text-align:left;color:#AAAAAA;font-size:0.85em;'>" +
+							"		Error: " + reason +
+							"	</div>" +
+							"	<div class='ui-state-error ui-corner-all' style='margin:5px 0;float:left;padding:3px;'>" +
+							"   	<span class='ui-icon ui-icon-alert alertspan'></span>" +
+							"   	<div style='text-align:left'>" +
+							"			Please use '<span style='font-weight:bold'>Contact Support</span>' to report " +
+							"			about this failure." +
+							"		</div>" +
+							"   </div>";
+				}
+				html +=     "</div>";
+				
+				$(conDiv).html(html).dialog({ 'closeOnEscape': true });
 				$(diagDiv + " div.ui-dialog-titlebar").css("display", "block");
+				
+				if (cdTime)
+				{
+					cdTimer = setInterval(function() {
+						cdTime--;
+						if (cdTime < 1775) window.location.reload();
+						
+						var	hr  = Math.floor(cdTime / 3600),
+						    min = Math.floor(cdTime % 3600 / 60),
+						    sec = cdTime % 3600 % 60;
+						
+						$("#cdhr").html(zeroPad(hr));
+						$("#cdmin").html(zeroPad(min));
+						$("#cdsec").html(zeroPad(sec));
+						
+					}, 1000);
+					$(conDiv).bind("dialogclose", function(event, ui) {
+						clearInterval(cdTimer);
+						cdTimer = null;
+					});
+				}
 			}
 		}
 	);
@@ -423,4 +490,18 @@ function loadLegendTooltip(ttId, ttStates)
 		$("#legendlabel" + ttId).css("font-weight","bold");
 		$("#lt" + ttId).fadeIn();
 	}
+}
+
+function zeroPad(t)
+{
+	if (typeof t == "string")
+	{
+		if (t.length() == 1) return "0" + t;
+	}
+	else 
+	{
+		if (t < 10) return "0" + t;
+	}
+	
+	return t;
 }
