@@ -80,12 +80,12 @@ $(document).ready(function() {
 <?php if ($this->bookings): ?>
 <div id="tabscontainer">
     <div id="modetabbar">
-    	<div id="listtab" class="modetab ui-corner-top <?=$this->mode == 'list' ? 'selectedtab' : 'notselectedtab'?>">
+    	<!-- <div id="listtab" class="modetab ui-corner-top <?=$this->mode == 'list' ? 'selectedtab' : 'notselectedtab'?>">
     		List
     	</div>
     	<div id='caltab' class="modetab ui-corner-top <?=$this->mode == 'list' ? 'notselectedtab' : 'selectedtab'?>">
     		Calendar
-    	</div>
+    	</div> -->
     </div>
     <div id="modecontents" class="ui-corner-all">
 
@@ -97,14 +97,13 @@ $(document).ready(function() {
 $(document).ready(function() {
 	vp.initPage();
 
-	$("#listtab").click(function() {
-		vp.changeMode("list");
-	});
-
-	$("#caltab").click(function() {
-		vp.changeMode("cal");
-	});
-
+//	$("#listtab").click(function() {
+//		vp.changeMode("list");
+//	});
+//
+//	$("#caltab").click(function() {
+//		vp.changeMode("cal");
+//	});
 });
 //-->
 </script>

@@ -744,7 +744,6 @@
  ******************************************************************************/
 
 #tabscontainer {
-	margin-top: -15px;
 	width: 850px;
 }
 
@@ -826,6 +825,7 @@
 	margin: 0 5px;
 	float: left;
 	overflow: hidden;
+	font-size: 0.93em;
 }
 
 .bookingstable {

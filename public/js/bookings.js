@@ -1113,34 +1113,38 @@ Existing.prototype.addBooking = function(bid, name, start, end, isFinished, isCa
 };
 
 Existing.prototype.initPage = function() {
-	var stateMode = window.location.hash;
-	if (stateMode.substring(6) == "cal")
-	{
-		this.changeMode("cal");
-	}
-	else
-	{
-		this.changeMode("list");	
-	}
+	// FIXME This should init calendar or list view.
+//	var stateMode = window.location.hash;
+//	if (stateMode.substring(6) == "cal")
+//	{
+//
+//		this.changeMode("list");
+//	}
+//	else
+//	{
+//		this.changeMode("list");	
+//	}
+	this.drawList();
 };
 
 Existing.prototype.changeMode = function(mode) {
-
-	this.mode = mode;
-	if (mode == "cal")
-	{
-		window.location.hash = 'dmodecal';
-		$("#listtab").removeClass("selectedtab").addClass("notselectedtab");
-		$("#caltab").removeClass("notselectedtab").addClass("selectedtab");
-		this.drawCalendar();
-	}
-	else
-	{
-		if (window.location.hash.length > 0) window.location.hash = 'dmodelist';
-		$("#listtab").removeClass("notselectedtab").addClass("selectedtab");
-		$("#caltab").removeClass("selectedtab").addClass("notselectedtab");
-		this.drawList();
-	}
+	// FIXME This should change between calendar and list displays.
+//	this.mode = mode;
+//	if (mode == "cal")
+//	{
+//		window.location.hash = 'dmodecal';
+//		$("#listtab").removeClass("selectedtab").addClass("notselectedtab");
+//		$("#caltab").removeClass("notselectedtab").addClass("selectedtab");
+//		this.drawCalendar();
+//	}
+//	else
+//	{
+//		if (window.location.hash.length > 0) window.location.hash = 'dmodelist';
+//		$("#listtab").removeClass("notselectedtab").addClass("selectedtab");
+//		$("#caltab").removeClass("selectedtab").addClass("notselectedtab");
+//		this.drawList();
+//	}
+	this.drawList();
 };
 
 Existing.prototype.drawList = function() {
