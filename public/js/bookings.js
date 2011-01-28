@@ -262,7 +262,7 @@ BookingPage.prototype.isoTimeToSlot = function(iso) {
 	if ((pos = time.indexOf("-")) != -1) time.substr(0, pos);
 	
 	time = time.split(":");	
-	return Math.ceil((parseInt(time[0], 10) * 60 + parseInt(time[1]), 10) / this.MINS_PER_SLOT);
+	return Math.ceil((parseInt(time[0], 10) * 60 + parseInt(time[1], 10)) / this.MINS_PER_SLOT);
 };
 
 BookingPage.prototype.isoToTime = function(iso) {
