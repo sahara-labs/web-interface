@@ -227,7 +227,7 @@ BookingPage.prototype.slotToTime = function(slot) {
 	/* Stript the slot ID prefix. */
 	if ((typeof slot ) == 'string' && slot.indexOf('slot') == 0)
 	{
-		slot = parseInt(slot.substr(4));
+		slot = parseInt(slot.substr(4), 10);
 	}
 	
 	var hr = Math.floor(slot / this.SLOTS_PER_HOUR) + Math.floor(this.inuseOffset / 3600);
@@ -246,7 +246,7 @@ BookingPage.prototype.slotToISOTime = function(slot) {
 	/* Stript the slot ID prefix. */
 	if ((typeof slot ) == 'string' && slot.indexOf('slot') == 0)
 	{
-		slot = parseInt(slot.substr(4));
+		slot = parseInt(slot.substr(4), 10);
 	}
 	
 	var hr = Math.floor(slot / this.SLOTS_PER_HOUR);
@@ -262,7 +262,7 @@ BookingPage.prototype.isoTimeToSlot = function(iso) {
 	if ((pos = time.indexOf("-")) != -1) time.substr(0, pos);
 	
 	time = time.split(":");	
-	return Math.ceil((parseInt(time[0]) * 60 + parseInt(time[1])) / this.MINS_PER_SLOT);
+	return Math.ceil((parseInt(time[0], 10) * 60 + parseInt(time[1]), 10) / this.MINS_PER_SLOT);
 };
 
 BookingPage.prototype.isoToTime = function(iso) {
@@ -272,8 +272,8 @@ BookingPage.prototype.isoToTime = function(iso) {
 	if ((pos = time.indexOf("-")) != -1) time.substr(0, pos);
 	
 	time = time.split(":");
-	var hr = parseInt(time[0]) + Math.floor(this.inuseOffset / 3600);
-	var min = parseInt(time[1]) + Math.floor(this.inuseOffset % 3600 / 60);
+	var hr = parseInt(time[0], 10) + Math.floor(this.inuseOffset / 3600);
+	var min = parseInt(time[1], 10) + Math.floor(this.inuseOffset % 3600 / 60);
 	if (min < 0)
 	{
 		hr--;
@@ -292,8 +292,8 @@ BookingPage.prototype.isoToDate = function(iso) {
 	if ((pos = time.indexOf("-")) != -1) time.substr(0, pos);
 	
 	time = time.split(":");
-	var hr = parseInt(time[0]) + Math.floor(this.inuseOffset / 3600);
-	var min = parseInt(time[1]) + Math.floor(this.inuseOffset % 3600 / 60);
+	var hr = parseInt(time[0], 10) + Math.floor(this.inuseOffset / 3600);
+	var min = parseInt(time[1], 10) + Math.floor(this.inuseOffset % 3600 / 60);
 	if (min < 0)
 	{
 		hr--;
@@ -615,7 +615,7 @@ Booking.prototype.commitBestFit = function(id) {
 		"</div>"
 	);
 	
-	var bf = parseInt(id.substr(7));
+	var bf = parseInt(id.substr(7), 10);
 	if (this.bestFits == null || bf >= this.bestFits.length)
 	{
 		alert("ERROR: Best fit " + bf + " out of range.");
@@ -840,7 +840,7 @@ Booking.prototype.startBooking = function(slot) {
 	/* Clear any other creation overlays. */
 	if (this.booking >= 0) this.destroyBooking();
 	
-	this.booking = parseInt(slot.attr('id').substr(4));
+	this.booking = parseInt(slot.attr('id').substr(4), 10);
 	var mins = this.MINS_PER_SLOT;
 	
 	/* Pre select to half the session duration. */
@@ -1075,7 +1075,7 @@ Booking.prototype.getEnd = function() {
 Booking.prototype.isSlotBookable = function(slot) {
 	if ((typeof slot ) == 'string' && slot.indexOf('slot') == 0)
 	{
-		slot = parseInt(slot.substr(4));
+		slot = parseInt(slot.substr(4), 10);
 	}
 	
 	/* Over the day boundary. */
