@@ -48,7 +48,9 @@ switch ($this->userRole)
         $menu = array();
         break;
     case Sahara_Acl::ADMIN:
-        $menu = array();
+        $menu = array(
+            'Rig Administration' => array('controller' => 'admin', 'action' => 'rig')
+        );
         break;
     case Sahara_Controller_Action_Acl::PSEUDO_ROLE_QUEUE:
         $menu = array(

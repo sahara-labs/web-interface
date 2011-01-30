@@ -53,6 +53,9 @@ class Sahara_Soap
     /** The bundle containing the Session SOAP interface in the Scheduling Server. */
     const SESSION_SERVICE_BUNDLE = 'SchedulingServer-Session';
 
+    /** The bundle containing the Rig Management SOAP interface in the Scheduling Server. */
+    const RIGMANAGEMENT_SERVICE_BUNDLE = 'SchedulingServer-RigManagement';
+
     /** The SOAP client which points to the SOAP service. */
     protected $_client;
 
@@ -195,6 +198,23 @@ class Sahara_Soap
                     self::createSchedServerClient('Session', self::SESSION_SERVICE_BUNDLE));
         }
         return Zend_Registry::get(self::SESSION_SERVICE_BUNDLE);
+    }
+
+	/**
+     * Gets a Sahara_Soap instance which points to the Rig Management
+     * interface of the Scheduling Server.
+     *
+     * @return Sahara_Soap instance
+     * @throws Exception if failed contacting Scheduling Server
+     */
+    public static function getSchedServerRigManagementClient()
+    {
+        if (!Zend_Registry::isRegistered(self::RIGMANAGEMENT_SERVICE_BUNDLE))
+        {
+            Zend_Registry::set(self::RIGMANAGEMENT_SERVICE_BUNDLE,
+                    self::createSchedServerClient('RigManagement', self::RIGMANAGEMENT_SERVICE_BUNDLE));
+        }
+        return Zend_Registry::get(self::RIGMANAGEMENT_SERVICE_BUNDLE);
     }
 
     /**

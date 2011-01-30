@@ -1,0 +1,116 @@
+<?php
+/**
+ * SAHARA Web Interface
+ *
+ * User interface to Sahara Remote Laboratory system.
+ *
+ * @license See LICENSE in the top level directory for complete license terms.
+ *
+ * Copyright (c) 2010, University of Technology, Sydney
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of the University of Technology, Sydney nor the names
+ *    of its contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * @author Michael Diponio (mdiponio)
+ * @date 30th January 2011
+ */
+$this->headLink()->appendStylesheet($this->baseUrl('/css/admin.css'));
+$this->headScript()->appendFile($this->baseUrl('/js/admin.js'))
+?>
+
+<div class="contentheader">
+	<h2>Rig Administration</h2>
+</div>
+
+<?php if (count($this->rigTypes)): ?>
+<div id="typelistcontainer" class="ui-corner-all">
+	<div id="typelistheader" class="ui-widget-header ui-corner-all">
+		Rig Types
+	</div>
+	<ul id="typelist">
+<?php foreach ($this->rigTypes as $type => $status): ?>
+	<li><a id="<?=$this->stringTransform($type, ' ', '')?>type" class="type ui-corner-all
+	            <?=$status->numberRigs > 0 ? 'hasrigs' : 'norigs'?>" title="<?=$type?>">
+	<?php if ($status->numberRigs == 0): ?>
+		<img src="<?=$this->baseUrl('/images/balls/grey.gif')?>" alt="No rigs" />
+	<?php elseif ($status->isAlarmed): ?>
+		<img src="<?=$this->baseUrl('/images/balls/red_anime.gif')?>" alt="Alarm" />
+	<?php elseif ($status->isOnline): ?>
+		<img src="<?=$this->baseUrl('/images/balls/green-trans.gif')?>" alt="Online" />
+	<?php else: ?>
+		<img src="<?=$this->baseUrl('/images/balls/blue.gif')?>" alt="Offline" />
+	<?php endif; ?>
+		<?=$this->stringTransform($type, '_', ' ')?>
+	</a></li>
+<?php endforeach; ?>
+	</ul>
+	<div style="clear:both"> </div>
+</div>
+
+<?php foreach ($this->rigTypes as $type => $status): ?>
+<div id="<?=$this->stringTransform($type, ' ', '')?>typedialog" class="typedialog" title="<?=$this->stringTransform($type, '_', ' ')?>">
+	<?php if ($status->numberRigs == 0): ?>
+	<div class="typedialogcontent">
+    	<img src="<?=$this->baseUrl('images/balls/grey.gif')?>" alt="No rigs" /><br />
+    	<p>This rig type has no rigs.</p>
+    </div>
+	<?php else: ?>
+	<div class="typedialogcontent">
+    	<img src="<?=$this->baseUrl('images/ajax-loading.gif')?>" alt="Loading" /><br />
+    	<p>Loading...</p>
+    </div>
+	<?php endif; ?>
+</div>
+<?php endforeach; ?>
+
+<script type="text/javascript">
+$(document).ready(function() {
+
+	$(".type").click(function() {
+		var id = $(this).attr("id");
+		if ($(this).hasClass("hasrigs")) loadTypeStatus($(this).attr("title"), id);
+
+		$("#" + id + "dialog").dialog({
+			modal: true,
+			width: 400,
+			resizable: false,
+			close: function(event, ui) {
+				$(this).dialog("destroy");
+			}
+		});
+	});
+});
+</script>
+
+<?php else: ?>
+<!-- No rigs -->
+<div class="ui-state-error ui-corner-all alertdiv centercontent" style="width: 350px">
+    <p class="alertp">
+        <span class="ui-icon ui-icon-alert alertspan"></span>
+        No rig types currently exist. Rig types are created when rigs are
+        registered and the specified rig type does not already exist.
+    </p>
+</div>
+<?php endif; ?>
+

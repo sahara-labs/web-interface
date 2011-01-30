@@ -1,4 +1,5 @@
-<?php
+@CHARSET "UTF-8";
+
 /**
  * SAHARA Web Interface
  *
@@ -33,80 +34,89 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 21st February 2010
+ * @date 30th January 2010
  */
+ 
+#typelistcontainer {
+	margin: 0 auto;
+	width: 700px;
+	text-align: left;
+	border: solid 1px #B5B5B5;
+}
 
-/**
- * Administration controller.
- */
-class AdminController extends Sahara_Controller_Action_Acl
-{
-    /**
-     * Admin actions controller.
-     */
-    public function indexAction()
-    {
-        /* TODO Create list of actions. */
-        $this->_redirectTo('rig');
-    }
+#typelistheader {
+	padding: 7px 15px 5px;
+	margin: 3px;
+}
 
-    /**
-     * Rig administration.
-     */
-    public function rigAction()
-    {
-        $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Rig Administration');
+#typelist {
+	list-style: none;
+}
 
-        /* Get a list of rig types. */
-        $service = Sahara_Soap::getSchedServerRigManagementClient();
-        $response = $service->getTypes();
+#typelist li {
+	display: inline;
+}
 
-        $rigTypes = array();
-        if (is_array($response->type))
-        {
-            foreach ($response->type as $type)
-            {
-                $type = $type;
-                $rigTypes[$type->name] = $type;
-            }
-        }
-        else if (is_object($response->type))
-        {
-            $rigTypes[$type->type->name] = $type->type;
-        }
-        else return;
+.type {
+	display: block;
+	height: 100px;
+    width: 100px;
+	float: left;
+	margin: 20px;
+	text-align: center;
+	border: 1px solid #B5B5B5;
+	background-color: #EFEFEF;
+	-moz-box-shadow: 0 0 4px #B5B5B5;
+	-webkit-box-shadow: 0 0 4px #B5B5B5;
+	box-shadow: 0 0 4px #B5B5B5;
+	cursor: pointer;
+}
 
-        $this->view->rigTypes = $rigTypes;
-    }
+.type:hover {
+	-moz-box-shadow: 0 0 4px #606060;
+	-webkit-box-shadow: 0 0 4px #606060;
+	box-shadow: 0 0 4px #606060;
+}
 
-    /**
-     * Provides rig type status.
-     */
-    public function typeAction()
-    {
-        $this->_helper->viewRenderer->setNoRender();
-        $this->_helper->layout()->disableLayout();
+.type img {
+	display: block;
+	margin: 15px 25px 0;
+}
 
-        echo $this->view->json(
-            Sahara_Soap::getSchedServerRigManagementClient()->getTypeStatus(array(
-                'name' => $this->_getParam('name')
-            ))
-        );
-    }
+.typedialog {
+	display: none;
+}
 
-    /**
-     * Rig page action.
-     */
-    public function rigpageAction()
-    {
-        $rig = $this->_getParam('rig');
-        if (!$rig)
-        {
-            $this->_redirectTo('rig', 'admin');
-        }
+.typedialogcontent {
+	padding: 10px;
+	text-align: center;
+}
 
-        $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Rig ' . $this->view->stringTransform($rig, ' ', '_'));
+.riglist {
+	list-style: none;
+	width: 100%;
+}
 
-        echo $rig;
-    }
+.riglist li {
+	display: inline;
+}
+
+.rigbutton {
+	display: block;
+	float: left;
+	width: 75px;
+	height: 75px;
+	text-decoration: none;
+	margin: 10px;
+	text-align: center;
+	border: 1px solid #B5B5B5;
+	background-color: #EFEFEF;
+	-moz-box-shadow: 0 0 4px #B5B5B5;
+	-webkit-box-shadow: 0 0 4px #B5B5B5;
+	box-shadow: 0 0 4px #B5B5B5;
+	cursor: pointer;
+}
+
+.rigbutton img {
+	border: none;
 }
