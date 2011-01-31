@@ -36,4 +36,51 @@
  * @date <day> July 2010
  */
 
+$this->headLink()->appendStylesheet($this->baseUrl('/css/admin.css'));
 ?>
+
+<div class="contentheader">
+	<h2><?=$this->stringTransform($this->rig->name, '_', ' ')?></h2>
+</div>
+
+<!-- Rig status -->
+<div id="rigstatus">
+	<?php if ($this->rig->isAlarmed): ?>
+		<img src="<?=$this->baseUrl('/images/balls/red_anime.gif')?>" alt="Alarm" />
+		<h3>Alarm: <?=$this->rig->offlineReason?></h3>
+	<?php elseif (!$this->rig->isRegistered): ?>
+		<img src="<?=$this->baseUrl('/images/balls/blue.gif')?>" alt="Alarm" />
+		<h3>Not registered</h3>
+	<?php elseif (!$this->rig->isOnline): ?>
+		<img src="<?=$this->baseUrl('/images/balls/red.gif')?>" alt="Alarm" />
+		<h3>Offline: <?=$this->rig->offlineUser?></h3>
+	<?php elseif ($this->rig->isInSession): ?>
+		<img src="<?=$this->baseUrl('/images/balls/yellow.gif')?>" alt="Alarm" />
+		<h3>In use: <?=$this->rig->sessionUser?></h3>
+	<?php else: ?>
+		<img src="<?=$this->baseUrl('/images/balls/green.gif')?>" alt="Alarm" />
+		<h3>Online</h3>
+	<?php endif; ?>
+</div>
+
+<div id="rigpanels">
+
+<!-- Offline times panel. -->
+<div id="offlinepanel" class="panel ui-corner-all">
+    <div class="paneltitle">
+    	<span class="ui-icon ui-icon-wrench"></span>
+    	Offline periods
+    </div>
+</div>
+
+<!-- Rig logs. -->
+<div id="logspanel" class="panel ui-corner-all">
+	 <div class="paneltitle">
+    	<span class="ui-icon ui-icon-script"></span>
+    	Logs
+    </div>
+</div>
+
+<div style="clear:both"> </div>
+</div>
+

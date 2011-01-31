@@ -99,14 +99,18 @@ class AdminController extends Sahara_Controller_Action_Acl
      */
     public function rigpageAction()
     {
-        $rig = $this->_getParam('rig');
-        if (!$rig)
+        $name = $this->_getParam('rig');
+        if (!$name)
         {
             $this->_redirectTo('rig', 'admin');
         }
 
-        $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Rig ' . $this->view->stringTransform($rig, ' ', '_'));
+        $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Rig ' . $this->view->stringTransform($name, '_', ' '));
 
-        echo $rig;
+        $this->view->rig = Sahara_SOAP::getSchedServerRigManagementClient()->getRig(array('name' => $name));
+
+//        echo "<pre>";
+//        var_dump($this->view->rig);
+//        echo "</pre>";
     }
 }
