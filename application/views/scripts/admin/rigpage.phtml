@@ -37,6 +37,7 @@
  */
 
 $this->headLink()->appendStylesheet($this->baseUrl('/css/admin.css'));
+$this->headScript()->appendFile($this->baseUrl('/js/admin.js'));
 ?>
 
 <div class="contentheader">
@@ -72,6 +73,42 @@ $this->headLink()->appendStylesheet($this->baseUrl('/css/admin.css'));
     	Offline periods
     </div>
     <div class="panelcontents">
+	<?php if (is_array($this->rig->offlinePeriods)): ?>
+	<?php foreach ($this->rig->offlinePeriods as $o): ?>
+		<div class="offlineline evenline">
+			<div class="offlinetimes">
+				<div class="offtime"><?=date('d M o H:i', Sahara_DateTimeUtil::getTsFromISO8601($o->start))?></div>
+				<span class="ui-icon ui-icon-arrowthick-1-e offlinearrow"></span>
+				<div class="offtime"><?=date('d M o H:i', Sahara_DateTimeUtil::getTsFromISO8601($o->end))?></div>
+			</div>
+			<div class="offlinereason">
+				<?=$o->reason?>
+			</div>
+			<a id="offline<?=$o->id?>" class="offlinebutton ui-corner-all">
+				<img src="<?=$this->baseUrl("/images/booking_cancel.png")?>" alt="cancel" />
+			</a>
+		</div>
+	<?php endforeach; ?>
+	<?php elseif (is_object($this->rig->offlinePeriods)): ?>
+		<div class="offlineline evenline">
+			<div class="offlinetimes">
+				<div class="offtime"><?=date('d M o H:i', Sahara_DateTimeUtil::getTsFromISO8601($this->rig->offlinePeriods->start))?></div>
+				<span class="ui-icon ui-icon-arrowthick-1-e offlinearrow"></span>
+				<div class="offtime"><?=date('d M o H:i', Sahara_DateTimeUtil::getTsFromISO8601($this->rig->offlinePeriods->end))?></div>
+			</div>
+			<div class="offlinereason">
+				<?=$this->rig->offlinePeriods->reason?>
+			</div>
+			<a id="offline<?=$this->rig->offlinePeriods->id?>" class="offlinebutton ui-corner-all">
+				<img src="<?=$this->baseUrl("/images/booking_cancel.png")?>" alt="cancel" />
+			</a>
+		</div>
+	<?php else: ?>
+		<div class="ui-state ui-state-default ui-corner-all schedinfo">
+    		<span class="ui-icon ui-icon-info panelicon"></span>
+			No offline periods scheduled.
+    	</div>
+	<?php endif; ?>
     </div>
 </div>
 
@@ -84,7 +121,7 @@ $this->headLink()->appendStylesheet($this->baseUrl('/css/admin.css'));
     <div class="panelcontents">
     <?php if (is_array($this->rig->lastLogs)): ?>
     <?php foreach ($this->rig->lastLogs as $r): ?>
-    	<div class="logline evenlogline">
+    	<div class="logline evenline">
 			<div class="logts">
 			    <?=date('d M o H:i:s', Sahara_DateTimeUtil::getTsFromISO8601($r->timestamp))?>:
 			</div>
@@ -111,7 +148,7 @@ $this->headLink()->appendStylesheet($this->baseUrl('/css/admin.css'));
 		</div>
     <?php endforeach; ?>
     <?php elseif (is_object($this->rig->lastLogs)): ?>
-		<div class="logline evenlogline">
+		<div class="logline evenline">
 			<div class="logts">
 			    <?=date('d M o H:i:s', Sahara_DateTimeUtil::getTsFromISO8601($this->rig->lastLogs->timestamp))?>:
 			</div>
@@ -150,9 +187,9 @@ $this->headLink()->appendStylesheet($this->baseUrl('/css/admin.css'));
 
 <script type="text/javascript">
 $(document).ready(function() {
-	$(".logline:odd")
-		.removeClass("evenlogline")
-		.addClass("oddlogline");
+	$(".logline:odd, .offlineline:odd")
+		.removeClass("evenline")
+		.addClass("oddline");
 
 	$(".logline").hover(
 		function() {
@@ -162,5 +199,9 @@ $(document).ready(function() {
 			$(this).removeClass("loghover");
 		}
 	);
+
+	$(".offlinebutton").click(function() {
+		confirmRigOffline($(this).attr("id").substr(7));
+	});
 });
 </script>
