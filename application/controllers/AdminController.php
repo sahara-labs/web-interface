@@ -105,7 +105,7 @@ class AdminController extends Sahara_Controller_Action_Acl
             $this->_redirectTo('rig', 'admin');
         }
 
-        $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Rig ' . $this->view->stringTransform($name, '_', ' '));
+        $this->view->headTitle(self::HEAD_TITLE_PREFIX . $this->view->stringTransform($name, '_', ' '));
 
         $this->view->rig = Sahara_SOAP::getSchedServerRigManagementClient()->getRig(array('name' => $name));
 
