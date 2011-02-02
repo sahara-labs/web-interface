@@ -144,21 +144,21 @@ $(document).ready(function() {
     			</div>
     			<div class="oldstate logstateicon">
     				<?php if ($r->oldState == "ONLINE"): ?>
-                		<img src="<?=$this->baseUrl('/images/balls/green_tiny.gif')?>" alt="Alarm" />
-                	<?php elseif ($r->lastLogs->oldState == "OFFLINE"): ?>
-                		<img src="<?=$this->baseUrl('/images/balls/red_tiny')?>" alt="Alarm" />
+                		<img src="<?=$this->baseUrl('/images/balls/green_tiny.gif')?>" alt="Online" />
+                	<?php elseif ($r->oldState == "OFFLINE"): ?>
+                		<img src="<?=$this->baseUrl('/images/balls/red_tiny')?>" alt="Offline" />
                 	<?php else: ?>
-                		<img src="<?=$this->baseUrl('/images/balls/blue_tiny.gif')?>" alt="Alarm" />
+                		<img src="<?=$this->baseUrl('/images/balls/blue_tiny.gif')?>" alt="Not registered" />
                 	<?php endif; ?>
     			</div>
     			<div class="ui-icon ui-icon-arrowthick-1-e logstateicon"> </div>
     			<div class="newstate logstateicon">
     				<?php if ($r->newState == "ONLINE"): ?>
-                		<img src="<?=$this->baseUrl('/images/balls/green_tiny.gif')?>" alt="Alarm" />
+                		<img src="<?=$this->baseUrl('/images/balls/green_tiny.gif')?>" alt="Online" />
                 	<?php elseif ($r->newState == "OFFLINE"): ?>
-                		<img src="<?=$this->baseUrl('/images/balls/red_tiny')?>" alt="Alarm" />
+                		<img src="<?=$this->baseUrl('/images/balls/red_tiny')?>" alt="Offline" />
                 	<?php else: ?>
-                		<img src="<?=$this->baseUrl('/images/balls/blue_tiny.gif')?>" alt="Alarm" />
+                		<img src="<?=$this->baseUrl('/images/balls/blue_tiny.gif')?>" alt="Not registered" />
                 	<?php endif; ?>
     			</div>
     			<div class="logmessage"><?=$r->reason?></div>
@@ -172,21 +172,21 @@ $(document).ready(function() {
 			</div>
 			<div class="oldstate logstateicon">
 				<?php if ($this->rig->lastLogs->oldState == "ONLINE"): ?>
-            		<img src="<?=$this->baseUrl('/images/balls/green_tiny.gif')?>" alt="Alarm" />
+            		<img src="<?=$this->baseUrl('/images/balls/green_tiny.gif')?>" alt="Online" />
             	<?php elseif ($this->rig->lastLogs->oldState == "OFFLINE"): ?>
-            		<img src="<?=$this->baseUrl('/images/balls/red_tiny')?>" alt="Alarm" />
+            		<img src="<?=$this->baseUrl('/images/balls/red_tiny')?>" alt="Offline" />
             	<?php else: ?>
-            		<img src="<?=$this->baseUrl('/images/balls/blue_tiny.gif')?>" alt="Alarm" />
+            		<img src="<?=$this->baseUrl('/images/balls/blue_tiny.gif')?>" alt="Not registered" />
             	<?php endif; ?>
 			</div>
 			<div class="ui-icon ui-icon-arrowthick-1-e logstateicon"> </div>
 			<div class="newstate logstateicon">
 				<?php if ($this->rig->lastLogs->newState == "ONLINE"): ?>
-            		<img src="<?=$this->baseUrl('/images/balls/green_tiny.gif')?>" alt="Alarm" />
+            		<img src="<?=$this->baseUrl('/images/balls/green_tiny.gif')?>" alt="Online" />
             	<?php elseif ($this->rig->lastLogs->newState == "OFFLINE"): ?>
-            		<img src="<?=$this->baseUrl('/images/balls/red_tiny')?>" alt="Alarm" />
+            		<img src="<?=$this->baseUrl('/images/balls/red_tiny')?>" alt="Offline" />
             	<?php else: ?>
-            		<img src="<?=$this->baseUrl('/images/balls/blue_tiny.gif')?>" alt="Alarm" />
+            		<img src="<?=$this->baseUrl('/images/balls/blue_tiny.gif')?>" alt="Not registered" />
             	<?php endif; ?>
 			</div>
 			<div class="logmessage"><?=$this->rig->lastLogs->reason?></div>
