@@ -134,4 +134,34 @@ class AdminController extends Sahara_Controller_Action_Acl
             'reason' => $reason
         )));
     }
+
+    /**
+     * Action to cancel a rig offline period.
+     */
+    public function cancelofflineAction()
+    {
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();
+
+        $id = $this->_getParam('pid');
+        if (!$id)
+        {
+            echo $this->view->json(array(
+                'successful' => false,
+                'failureCode' => -1,
+                'failureReason' => 'Period ID not supplied.'
+            ));
+        }
+
+        echo $this->view->json(Sahara_Soap::getSchedServerRigManagementClient()->cancelRigOffline(array(
+            'requestorQName' => $this->_auth->getIdentity(),
+            'period' => array(
+                'id' => $id,
+                /* Dummy fields. */
+                'start' => '2010-02-02T00:00:00+00:00',
+                'end' => '2010-02-02T00:00:00+00:00',
+                'reason' => 'dummy'
+            )
+        )));
+    }
 }

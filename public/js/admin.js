@@ -119,14 +119,14 @@ function addRigButton(rig, html)
 	return html;
 }
 
-function confirmRigOffline(id)
+var cancelId = null;
+function confirmOffline(id)
 {
+	cancelId = id;
 	$("body").append(
 		"<div id='confirmcancelrig' title='Cancel Offline Period'>" +
-			"Are you sure you want to cancel the rig offline period?" +
-			"<div class='ui-state ui-state-priority'>" +
-				"This will put the rig online for the period and allow bookings for that time period. If this time " +
-				"period is currently in progress, the maintenance state of the rig will be cancelled." +
+			"<div>" + 
+				"Are you sure you want to cancel the rig offline period?" +
 			"</div>" +
 		"</div>");
 	
@@ -134,8 +134,26 @@ function confirmRigOffline(id)
 	$("#confirmcancelrig").dialog({
 		autoOpen: true,
 		modal: true,
-		resizable: false
+		resizable: false,
+		width: 350,
+		buttons: {
+			'Cancel Offline': function() {
+				cancelOffline();
+			},
+			'Close': function() {
+				$(this).dialog('close');
+			}
+		},
+		close: function() {
+			$(this).dialog('destroy');
+			$(this).remove();
+		}
 	});
+}
+
+function cancelOffline()
+{
+	alert(cancelId);
 }
 
 function confirmKickSession() 
