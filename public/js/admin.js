@@ -124,14 +124,14 @@ function confirmOffline(id)
 {
 	cancelId = id;
 	$("body").append(
-		"<div id='confirmcancelrig' title='Cancel Offline Period'>" +
+		"<div id='confirmcanceloffline' title='Cancel Offline Period'>" +
 			"<div>" + 
 				"Are you sure you want to cancel the rig offline period?" +
 			"</div>" +
 		"</div>");
 	
 
-	$("#confirmcancelrig").dialog({
+	$("#confirmcanceloffline").dialog({
 		autoOpen: true,
 		modal: true,
 		resizable: false,
@@ -153,7 +153,35 @@ function confirmOffline(id)
 
 function cancelOffline()
 {
-	alert(cancelId);
+	var reason = $("#kickreason").val();
+	/* Tear down dialog. */
+	var confirm = $("#confirmcanceloffline");
+	confirm.dialog({closeOnEscape: false});
+	
+	/* Tear down dialog. */
+	var diagsel = "div[aria-labelledby=ui-dialog-title-confirmcanceloffline]";
+	$(diagsel).css('width', 150)
+		.css('text-align', 'center')
+		.css('left', parseInt($(diagsel).css('left')) + 100);
+	$(diagsel + " div.ui-dialog-titlebar").css("display", "none");
+	$(diagsel + " div.ui-dialog-buttonpane").css("display", "none");
+	confirm.html(
+		"<div class='bookingconfirmationloading'>" +
+		"	<img src='/images/ajax-loading.gif' alt='Loading' /><br />" +
+		"	<p>Requesting...</p>" +
+		"</div>"
+	);
+	
+	$.post(
+		"/admin/canceloffline",
+		{
+			pid: cancelId
+		},
+		function(response){
+			// TODO Should be page update not reload
+			window.location.reload();
+		}
+	);
 }
 
 function confirmKickSession() 
