@@ -64,8 +64,24 @@ $this->headScript()->appendFile($this->baseUrl('/js/admin.js'));
 	<?php endif; ?>
 </div>
 
-<div id="rigpanels">
+<?php if ($this->rig->isInSession): ?>
+<div id="kickpanel">
+	<a id="kickbutton" class="ui-corner-all">
+		<img src="/images/terminate.png" alt="cancel" />
+	</a>
+</div>
 
+<script type="text/javascript">
+$(document).ready(function() {
+	$("#kickbutton").click(function() {
+		confirmKickSession();
+	});
+});
+</script>
+
+<?php endif; ?>
+
+<div id="rigpanels">
 <!-- Offline times panel. -->
 <div id="offlinepanel" class="panel ui-corner-all">
     <div class="paneltitle ui-corner-top">
@@ -121,30 +137,32 @@ $this->headScript()->appendFile($this->baseUrl('/js/admin.js'));
     <div class="panelcontents">
     <?php if (is_array($this->rig->lastLogs)): ?>
     <?php foreach ($this->rig->lastLogs as $r): ?>
-    	<div class="logline evenline">
-			<div class="logts">
-			    <?=date('d M o H:i:s', Sahara_DateTimeUtil::getTsFromISO8601($r->timestamp))?>:
-			</div>
-			<div class="oldstate logstateicon">
-				<?php if ($r->oldState == "ONLINE"): ?>
-            		<img src="<?=$this->baseUrl('/images/balls/green_tiny.gif')?>" alt="Alarm" />
-            	<?php elseif ($r->lastLogs->oldState == "OFFLINE"): ?>
-            		<img src="<?=$this->baseUrl('/images/balls/red_tiny')?>" alt="Alarm" />
-            	<?php else: ?>
-            		<img src="<?=$this->baseUrl('/images/balls/blue_tiny.gif')?>" alt="Alarm" />
-            	<?php endif; ?>
-			</div>
-			<div class="ui-icon ui-icon-arrowthick-1-e logstateicon"> </div>
-			<div class="newstate logstateicon">
-				<?php if ($r->newState == "ONLINE"): ?>
-            		<img src="<?=$this->baseUrl('/images/balls/green_tiny.gif')?>" alt="Alarm" />
-            	<?php elseif ($r->newState == "OFFLINE"): ?>
-            		<img src="<?=$this->baseUrl('/images/balls/red_tiny')?>" alt="Alarm" />
-            	<?php else: ?>
-            		<img src="<?=$this->baseUrl('/images/balls/blue_tiny.gif')?>" alt="Alarm" />
-            	<?php endif; ?>
-			</div>
-			<div class="logmessage"><?=$r->reason?></div>
+    	<div class="loglineouter">
+        	<div class="logline evenline">
+    			<div class="logts">
+    			    <?=date('d M o H:i:s', Sahara_DateTimeUtil::getTsFromISO8601($r->timestamp))?>:
+    			</div>
+    			<div class="oldstate logstateicon">
+    				<?php if ($r->oldState == "ONLINE"): ?>
+                		<img src="<?=$this->baseUrl('/images/balls/green_tiny.gif')?>" alt="Alarm" />
+                	<?php elseif ($r->lastLogs->oldState == "OFFLINE"): ?>
+                		<img src="<?=$this->baseUrl('/images/balls/red_tiny')?>" alt="Alarm" />
+                	<?php else: ?>
+                		<img src="<?=$this->baseUrl('/images/balls/blue_tiny.gif')?>" alt="Alarm" />
+                	<?php endif; ?>
+    			</div>
+    			<div class="ui-icon ui-icon-arrowthick-1-e logstateicon"> </div>
+    			<div class="newstate logstateicon">
+    				<?php if ($r->newState == "ONLINE"): ?>
+                		<img src="<?=$this->baseUrl('/images/balls/green_tiny.gif')?>" alt="Alarm" />
+                	<?php elseif ($r->newState == "OFFLINE"): ?>
+                		<img src="<?=$this->baseUrl('/images/balls/red_tiny')?>" alt="Alarm" />
+                	<?php else: ?>
+                		<img src="<?=$this->baseUrl('/images/balls/blue_tiny.gif')?>" alt="Alarm" />
+                	<?php endif; ?>
+    			</div>
+    			<div class="logmessage"><?=$r->reason?></div>
+    		</div>
 		</div>
     <?php endforeach; ?>
     <?php elseif (is_object($this->rig->lastLogs)): ?>
@@ -186,6 +204,7 @@ $this->headScript()->appendFile($this->baseUrl('/js/admin.js'));
 </div>
 
 <script type="text/javascript">
+var rig = '<?=$this->rig->name?>';
 $(document).ready(function() {
 	$(".logline:odd, .offlineline:odd")
 		.removeClass("evenline")

@@ -138,3 +138,74 @@ function confirmRigOffline(id)
 	});
 }
 
+function confirmKickSession() 
+{
+	$("body").append(
+		"<div id='confirmsessionkick' title='Confirm Session Termination'>" +
+			"<div>" +
+				"Are you sure you want to terminate the in-progress session and free the rig?" +
+			"</div>" + 
+			"<div class='reasonline'>" +
+				"<div class='reasonlabel'>Reason:</div>" +
+				"<div class='jqTransformInputWrapper' style='width:300px'>" +
+					"<div class='jqTransformInputInner'><div>" +
+						"<input id='kickreason' class='jqtransformdone jqTranformInput' type='text' />" +
+					"</div></div>" +
+			"</div>" +
+			"<div style='clear:both'> </div>" +
+		"</div>"
+	);
+	
+	$("#confirmsessionkick").dialog({
+		autoOpen: true,
+		modal: true,
+		resizable: false,
+		width: 350,
+		buttons: {
+			'Terminate Session': function(){
+				cancelSession();
+			},
+			'Cancel': function(){
+				$(this).dialog('close');
+			}
+		},
+		close: function() {
+			$(this).dialog('destroy');
+			$(this).remove();
+		}
+	});
+}
+
+function cancelSession()
+{
+	var reason = $("#kickreason").val();
+	/* Tear down dialog. */
+	var confirm = $("#confirmsessionkick");
+	confirm.dialog({closeOnEscape: false});
+	
+	/* Tear down dialog. */
+	var diagsel = "div[aria-labelledby=ui-dialog-title-confirmsessionkick]";
+	$(diagsel).css('width', 150)
+		.css('text-align', 'center')
+		.css('left', parseInt($(diagsel).css('left')) + 100);
+	$(diagsel + " div.ui-dialog-titlebar").css("display", "none");
+	$(diagsel + " div.ui-dialog-buttonpane").css("display", "none");
+	confirm.html(
+		"<div class='bookingconfirmationloading'>" +
+		"	<img src='/images/ajax-loading.gif' alt='Loading' /><br />" +
+		"	<p>Requesting...</p>" +
+		"</div>"
+	);
+	
+	$.post(
+		"/admin/kick",
+		{
+			rig: rig,
+			reason: reason
+		},
+		function(response){
+			// TODO Should be page update not reload
+			window.location.reload();
+		}
+	);
+}

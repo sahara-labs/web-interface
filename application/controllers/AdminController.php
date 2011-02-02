@@ -108,4 +108,30 @@ class AdminController extends Sahara_Controller_Action_Acl
         $this->view->headTitle(self::HEAD_TITLE_PREFIX . $this->view->stringTransform($name, '_', ' '));
         $this->view->rig = Sahara_SOAP::getSchedServerRigManagementClient()->getRig(array('name' => $name));
     }
+
+    /**
+     * Action to kick a user off a rig.
+     */
+    public function kickAction()
+    {
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();
+
+        $name = $this->_getParam('rig');
+        $reason = $this->_getParam('reason', 'None supplied.');
+        if (!$name)
+        {
+            echo $this->view->json(array(
+                'successful' => false,
+                'failureCode' => -1,
+                'failureReason' => 'Rig name not supplied.'
+            ));
+        }
+
+        echo $this->view->json(Sahara_Soap::getSchedServerRigManagementClient()->freeRig(array(
+            'requestorQName' => $this->_auth->getIdentity(),
+            'rig' => array('name' => $name),
+            'reason' => $reason
+        )));
+    }
 }
