@@ -119,6 +119,45 @@ function addRigButton(rig, html)
 	return html;
 }
 
+function createOffline()
+{
+	$("body").append(
+		"<div id='createoffline' title='Add Offline Period'>" +
+			"<div>" +
+				"<div class='timeline'>Start: </div>" + 
+				"<div class='timeline'>End: </div>" + 
+			"</div>" + 
+			"<div class='reasonline'>" +
+				"<div class='reasonlabel'>Reason:</div>" +
+				"<div class='jqTransformInputWrapper' style='width:300px'>" +
+					"<div class='jqTransformInputInner'><div>" +
+						"<input id='offreason' class='jqtransformdone jqTranformInput' type='text' />" +
+					"</div></div>" +
+			"</div>" +
+			"<div style='clear:both'> </div>" +
+		"</div>"
+	);
+	
+	$("#createoffline").dialog({
+		autoOpen: true,
+		modal: true,
+		resizable: false,
+		width: 350,
+		buttons: {
+			'Add Period': function() {
+				cancelOffline();
+			},
+			'Cancel': function() {
+				$(this).dialog('close');
+			}
+		},
+		close: function() {
+			$(this).dialog('destroy');
+			$(this).remove();
+		}
+	});
+}
+
 var cancelId = null;
 function confirmOffline(id)
 {

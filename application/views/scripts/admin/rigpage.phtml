@@ -81,12 +81,18 @@ $(document).ready(function() {
 
 <?php endif; ?>
 
+<a id="createofflinebutton" class="ui-corner-all">
+	<span class="ui-icon ui-icon-circle-plus"></span>
+	Add Offline Period
+</a>
+
+
 <div id="rigpanels">
 <!-- Offline times panel. -->
 <div id="offlinepanel" class="panel ui-corner-all">
     <div class="paneltitle ui-corner-top">
     	<span class="ui-icon ui-icon-wrench"></span>
-    	Offline periods
+    	Offline Periods
     </div>
     <div class="panelcontents">
 	<?php if (is_array($this->rig->offlinePeriods)): ?>
@@ -218,6 +224,10 @@ $(document).ready(function() {
 			$(this).removeClass("loghover");
 		}
 	);
+
+	$("#createofflinebutton").click(function() {
+		createOffline();
+	});
 
 	$(".offlinebutton").click(function() {
 		confirmOffline($(this).attr("id").substr(7));
