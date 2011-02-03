@@ -307,12 +307,8 @@
 	width: 285px;
 }
 
-#createofflinebutton {
+.pagebutton {
 	display: block;
-	position: absolute;
-    padding: 6px;
-    left: 120px;
-	top: 225px;
 	color: #606060;
 	background-color: #EFEFEF;
 	border: 1px solid #B5B5B5;
@@ -322,13 +318,42 @@
 	cursor: pointer;
 }
 
+#createofflinebutton {	
+	position: absolute;
+    padding: 6px;
+    left: 120px;
+	top: 225px;
+}
+
 #createofflinebutton span {
 	float: left;
 	margin-right: 5px;
 }
 
-#createofflinebutton:hover {
+.calopen {
+	float: left;
+	padding: 2px;
+	height: 34px;
+	width: 35px;
+	text-align: center;
+	margin: -4px 7px 0;
+}
+
+#createofflinebutton:hover, .calopen:hover {
 	-moz-box-shadow: 0 0 4px #606060;
 	-webkit-box-shadow: 0 0 4px #606060;
 	box-shadow: 0 0 4px #606060;
+}
+
+.timeline {
+	clear: both;
+	padding: 10px;
+}
+
+.timefield {
+	float: left;
+}
+
+.timelinelabel {
+	margin: 5px 0 0;
 }

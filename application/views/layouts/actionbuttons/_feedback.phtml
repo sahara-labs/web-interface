@@ -39,29 +39,50 @@ $form = new Sahara_Feedback_Form();
 ?>
 
 <div id="supportdialog" title="Contact Support">
-	The request will be sent to the Remote Labs support team:
-	<form id="feedback_form">
+	The request will be sent to the Labs support team:
+	<form id="feedback_form" action="<?=$this->baseUrl('/index/feedback')?>">
 	    <?=$form->getDisplayGroup('feedback_form')->render()?>
 	</form>
 </div>
 
 <script type="text/javascript">
-function feedbackSuccess()
-{
-	$("div[aria-labelledby=ui-dialog-title-supportdialog] .ui-dialog-buttonpane").css("display", "none");
-}
 
+hasConfAdded = false;
 $(document).ready(function () {
-	 $("#feedback_form").jqTransform();
-	 $("#feedback_form").validationEngine({
-    	 ajaxSubmit: true,
-    	 ajaxSubmitFile: "<?= $this->url(array('controller' => 'index', 'action' => 'feedback'))?>",
-    	 ajaxSubmitMessage: "Thank you for your support request submission.",
-       	 success: function() { feedbackSuccess(); },
-       	 failure: function() { }
-	 });
+	var browserInfo =
+		"<input type='hidden' name='useragent' value='" + escape(navigator.userAgent) + "'/>" +
+		"<input type='hidden' name='javaenabled' value='" + (navigator.javaEnabled() ? "true" : "false") + "' />";
+	if (navigator.plugins)
+	{
+		browserInfo += "<input type='hidden' name='navplugins' value='";
+		var i;
+		for (i = 0 ; i < navigator.plugins.length; i++)
+		{
+			browserInfo += escape(navigator.plugins[i].name) + "=" + escape(navigator.plugins[i].filename) + ";";
+		}
+		browserInfo += "' />";
+	}
 
-	 $("#feedback_form div.jqTransformInputWrapper").css("width", "100%");
-	 $("#feedback_form input.jqTransformInput").css("width", "100%");
+    $("#feedback_form")
+    	.append(browserInfo)
+    	.jqTransform()
+    	.validationEngine({
+        	 ajaxFormValidation: true,
+        	 onAjaxFormComplete: function(form, status, errors, options) {
+    		 	$("#supportdialog").empty().append(
+    		 		"<div id='feedback_form_sent'>" +
+    		 			"Thank you, we will respond to your support request as soon as possible." +
+    		 		"</div>"
+    			).dialog("option", "buttons", {
+    				'Close': function() {
+    					$(this).dialog('close');
+    				}
+    			});
+    		 	$("#feedback_form_sent").fadeIn("slow");
+	     	}
+	 	});
+
+	$("#feedback_form div.jqTransformInputWrapper, #feedback_form input.jqTransformInput").css("width", "100%");
 });
+
 </script>

@@ -37,6 +37,7 @@
  */
 
 $this->headLink()->appendStylesheet($this->baseUrl('/css/admin.css'));
+$this->headScript()->appendFile($this->baseUrl('/js/jquery-ui-timepicker-addon.js'));
 $this->headScript()->appendFile($this->baseUrl('/js/admin.js'));
 ?>
 
@@ -81,7 +82,7 @@ $(document).ready(function() {
 
 <?php endif; ?>
 
-<a id="createofflinebutton" class="ui-corner-all">
+<a id="createofflinebutton" class="pagebutton ui-corner-all">
 	<span class="ui-icon ui-icon-circle-plus"></span>
 	Add Offline Period
 </a>

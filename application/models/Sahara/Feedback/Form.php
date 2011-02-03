@@ -46,6 +46,7 @@ class Sahara_Feedback_Form extends Zend_Form
         parent::__construct();
 
         $this->setAttrib('id', 'feedback_form');
+        $this->setAction("/index/feedback");
 
         /* Name. */
         $name = new Zend_Form_Element_Text('name');

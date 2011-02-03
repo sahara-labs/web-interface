@@ -116,12 +116,12 @@ class IndexController extends Sahara_Controller_Action_Acl
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout()->disableLayout();
 
-        $params = $this->_request->getPost();
+        $params = $this->_request->getParams();
         /* Make sure the fields are populated. */
         if (!(isset($params['name']) && isset($params['email']) && isset($params['type']) &&
               isset($params['purpose']) && isset($params['feedback'])))
         {
-            echo 'true';
+            echo $this->view->json(array('success' => 'false'));
             return;
         }
         $this->_logger->info('Received feedback email from ' . $params['name'] . ' (' . $params['email'] . '). ' .
@@ -129,8 +129,8 @@ class IndexController extends Sahara_Controller_Action_Acl
                 $params['feedback'] . '.');
 
         $mail = new Sahara_Mail();
-        $mail->setFrom($this->_config->email->from->address, $this->_config->email->from->name);
-        $mail->setSubject('Sahara feedback from ' . $params['name'] . ' <' . $params['email'] . '>');
+        $mail->setFrom($params['email'], $params['name']);
+        $mail->setSubject('Sahara feedback from ' . $params['name']);
 
         /* Feedback email body. */
         $body  = "#################################################################\n";
@@ -179,7 +179,25 @@ class IndexController extends Sahara_Controller_Action_Acl
         $body .= "Purpose: " . $params['purpose'] . "\n\n";
         $body .= "Feedback:\n ";
         $body .= $params['feedback'] . "\n\n";
-        $body .= "#################################################################\n";
+
+        $body .= "## Diagnostics:\n";
+        $body .= "IP: " . $_SERVER['REMOTE_ADDR'] . "\n";
+        $body .= "User Agent: " . urldecode($params['useragent']) . "\n";
+        $body .= "Java enabled: " . $params['java'] . "\n";
+        $body .= "Plugins:\n";
+        if (array_key_exists('navplugins', $params))
+        {
+            $plugins = explode(';', urldecode($params['navplugins']));
+            foreach ($plugins as $p)
+            {
+                if (strpos($p, '=') === false) continue;
+
+                list($name, $ver) = explode('=', $p, 2);
+                $body .= "  * $name => $ver\n";
+            }
+        }
+
+        $body .= "\n\n#################################################################\n";
 
         $mail->setBody($body);
 
@@ -207,7 +225,7 @@ class IndexController extends Sahara_Controller_Action_Acl
         }
 
         /* Tells validation engine that submission succeeded. */
-        echo 'true';
+        echo $this->view->json(array('success' => 'true'));
     }
 }
 

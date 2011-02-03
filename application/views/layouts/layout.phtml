@@ -43,8 +43,9 @@ $this->headLink()->appendStylesheet($this->baseUrl('css/validationEngine.jquery.
 $this->headScript()->prependFile($this->baseUrl('js/jquery.jqtransform.js'));
 $this->headScript()->prependFile($this->baseUrl('js/jquery.validationEngine-en.js'));
 $this->headScript()->prependFile($this->baseUrl('js/jquery.validationEngine.js'));
+$this->headScript()->prependFile($this->baseUrl('js/jquery-ui.js'));
 $this->headScript()->prependFile($this->baseUrl('js/jquery-min.js'));
-$this->headScript()->appendFile($this->baseUrl('js/jquery-ui.js'));
+
 $this->headScript()->appendFile($this->baseUrl('js/menueffect.js'));
 
 $config = Zend_Registry::get('config');

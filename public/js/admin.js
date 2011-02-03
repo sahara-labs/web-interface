@@ -122,21 +122,56 @@ function addRigButton(rig, html)
 function createOffline()
 {
 	$("body").append(
-		"<div id='createoffline' title='Add Offline Period'>" +
-			"<div>" +
-				"<div class='timeline'>Start: </div>" + 
-				"<div class='timeline'>End: </div>" + 
+		"<div id='createoffline' title='Add Offline Period'><form id='createofflineform' action='#'>" +
+			"<div class='timeline'>" +
+				"<div class='timelinelabel'>Start:</div>" +
+				"<div class='jqTransformInputWrapper' style='width:150px'>" +
+					"<div class='jqTransformInputInner'>" +
+						"<div><input id='startdate' class='validate[required] jqtransformdone jqTranformInput offlinecreatedate' type='text' /></div>" +
+					"</div>" +	
+				"</div>" +
+				"<a id='startcalopen' class='pagebutton calopen ui-corner-all'>" +
+					"<img src='/images/daypicker.png' alt='Open' />" +
+				"</a>" +
 			"</div>" + 
+			"<div class='timeline'>" +
+				"<div class='timelinelabel'>End:</div>" +
+				"<div class='jqTransformInputWrapper' style='width:150px'>" +
+					"<div class='jqTransformInputInner'>" +
+						"<div><input id='enddate' class='validate[required] jqtransformdone jqTranformInput offlinecreatedate' type='text' /></div>" +
+					"</div>" +	
+				"</div>" +
+				"<a id='endcalopen' class='pagebutton calopen ui-corner-all'>" +
+					"<img src='/images/daypicker.png' alt='Open' />" +
+				"</a>" +
+			"</div>" + 
+			"<div style='clear:both'> </div>" +
 			"<div class='reasonline'>" +
 				"<div class='reasonlabel'>Reason:</div>" +
 				"<div class='jqTransformInputWrapper' style='width:300px'>" +
-					"<div class='jqTransformInputInner'><div>" +
-						"<input id='offreason' class='jqtransformdone jqTranformInput' type='text' />" +
-					"</div></div>" +
+					"<div class='jqTransformInputInner'>" +
+						"<div><input id='offreason' class='validate[required] jqtransformdone jqTranformInput ' type='text' /></div>" +
+					"</div>" +
+				"</div>" +
 			"</div>" +
 			"<div style='clear:both'> </div>" +
-		"</div>"
+		"</form></div>"
 	);
+	
+	$(".offlinecreatedate").datetimepicker({
+		dateFormat: "dd/mm/yy",
+		showOn: "focus"
+	});
+	
+	$("#startcalopen").click(function() {
+		$("#startdate").datetimepicker("show");
+	});
+	
+	$("#endcalopen").click(function() {
+		$("#enddate").datetimepicker("show");
+	});
+	
+	$("#createofflineform").validationEngine();
 	
 	$("#createoffline").dialog({
 		autoOpen: true,
@@ -144,14 +179,18 @@ function createOffline()
 		resizable: false,
 		width: 350,
 		buttons: {
-			'Add Period': function() {
-				cancelOffline();
+			'Add Offline Period': function() {
+				if ($("#createofflineform").validationEngine('validate'))
+				{
+					alert("TODO submit");
+				}
 			},
 			'Cancel': function() {
 				$(this).dialog('close');
 			}
 		},
 		close: function() {
+			$("#createofflineform").validationEngine('hide');
 			$(this).dialog('destroy');
 			$(this).remove();
 		}
