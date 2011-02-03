@@ -183,7 +183,7 @@ class IndexController extends Sahara_Controller_Action_Acl
         $body .= "## Diagnostics:\n";
         $body .= "IP: " . $_SERVER['REMOTE_ADDR'] . "\n";
         $body .= "User Agent: " . urldecode($params['useragent']) . "\n";
-        $body .= "Java enabled: " . $params['java'] . "\n";
+        $body .= "Java enabled: " . $params['javaenabled'] . "\n";
 
         if (array_key_exists('navplugins', $params))
         {
@@ -198,7 +198,7 @@ class IndexController extends Sahara_Controller_Action_Acl
             }
         }
 
-        $body .= "\n\n#################################################################\n";
+        $body .= "\n#################################################################\n";
 
         $mail->setBody($body);
 
