@@ -55,7 +55,7 @@ $this->headScript()->appendFile($this->baseUrl('/js/admin.js'));
 		<h3>Not registered</h3>
 	<?php elseif (!$this->rig->isOnline): ?>
 		<img src="<?=$this->baseUrl('/images/balls/red.gif')?>" alt="Alarm" />
-		<h3>Offline: <?=$this->rig->offlineUser?></h3>
+		<h3>Offline: <?=$this->rig->offlineReason?></h3>
 	<?php elseif ($this->rig->isInSession): ?>
 		<img src="<?=$this->baseUrl('/images/balls/yellow.gif')?>" alt="Alarm" />
 		<h3>In use: <?=$this->rig->sessionUser?></h3>
@@ -227,11 +227,11 @@ $(document).ready(function() {
 	);
 
 	$("#createofflinebutton").click(function() {
-		createOffline();
+		confirmCreateOffline();
 	});
 
 	$(".offlinebutton").click(function() {
-		confirmOffline($(this).attr("id").substr(7));
+		confirmCancelOffline($(this).attr("id").substr(7));
 	});
 });
 </script>

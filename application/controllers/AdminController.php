@@ -165,16 +165,16 @@ class AdminController extends Sahara_Controller_Action_Acl
         list($date, $time) = explode(' ', trim($start));
         list($day, $mon, $yr) = explode('/', $date);
         list($hr, $min) = explode(':', $time);
-        $start = trim($yr) . '-' . trim($mon) . '-' . trim($day)  . 'T' . trim($hr) . ':' . trim($min) . $tz;
+        $start = trim($yr) . '-' . trim($mon) . '-' . trim($day)  . 'T' . trim($hr) . ':' . trim($min) . ':00' . $tz;
 
         list($date, $time) = explode(' ', trim($end));
         list($day, $mon, $yr) = explode('/', $date);
         list($hr, $min) = explode(':', $time);
-        $end = trim($yr) . '-' . trim($mon) . '-' . trim($day)  . 'T' . trim($hr) . ':' . trim($min) . $tz;
+        $end = trim($yr) . '-' . trim($mon) . '-' . trim($day)  . 'T' . trim($hr) . ':' . trim($min) . ':00' . $tz;
 
         echo $this->view->json(Sahara_Soap::getSchedServerRigManagementClient()->putRigOffline(array(
             'requestorQName' => $this->_auth->getIdentity(),
-            'rig' => array('name' => $rig),
+            'rig' => array('name' => $name),
             'start' => $start,
             'end' => $end,
             'reason' => $reason

@@ -119,7 +119,7 @@ function addRigButton(rig, html)
 	return html;
 }
 
-function createOffline()
+function confirmCreateOffline()
 {
 	$("body").append(
 		"<div id='createoffline' title='Add Offline Period'><form id='createofflineform' action='#'>" +
@@ -182,18 +182,7 @@ function createOffline()
 			'Add Offline Period': function() {
 				if ($("#createofflineform").validationEngine('validate'))
 				{
-					$.post(
-						"/admin/putoffline",
-						{
-							rig: rig,
-							start: $("#startdate").val(),
-							end: $("#enddate").val(),
-							reason: $("#offreason").val()
-						},
-						function(response) {
-							// TODO Should be page update not reload
-							//window.location.reload();
-					});
+					createOffline();
 				}
 			},
 			'Cancel': function() {
@@ -208,8 +197,47 @@ function createOffline()
 	});
 }
 
+
+function createOffline()
+{
+	/* Tear down dialog. */
+	var reason =  $("#offreason").val(),
+		startTime = $("#startdate").val(),
+		endTime = $("#enddate").val(),
+		confirm = $("#createoffline");
+	
+	confirm.dialog({closeOnEscape: false});
+	
+	/* Tear down dialog. */
+	var diagsel = "div[aria-labelledby=ui-dialog-title-createoffline]";
+	$(diagsel).css('width', 150)
+		.css('text-align', 'center')
+		.css('left', parseInt($(diagsel).css('left')) + 100);
+	$(diagsel + " div.ui-dialog-titlebar").css("display", "none");
+	$(diagsel + " div.ui-dialog-buttonpane").css("display", "none");
+	confirm.html(
+		"<div class='bookingconfirmationloading'>" +
+		"	<img src='/images/ajax-loading.gif' alt='Loading' /><br />" +
+		"	<p>Requesting...</p>" +
+		"</div>"
+	);
+	
+	$.post(
+		"/admin/putoffline",
+		{
+			rig: rig,
+			start: startTime,
+			end: endTime,
+			reason: reason
+		},
+		function(response) {
+			// TODO Should be page update not reload
+			window.location.reload();
+	});
+}
+
 var cancelId = null;
-function confirmOffline(id)
+function confirmCancelOffline(id)
 {
 	cancelId = id;
 	$("body").append(
@@ -242,7 +270,6 @@ function confirmOffline(id)
 
 function cancelOffline()
 {
-	var reason = $("#kickreason").val();
 	/* Tear down dialog. */
 	var confirm = $("#confirmcanceloffline");
 	confirm.dialog({closeOnEscape: false});
