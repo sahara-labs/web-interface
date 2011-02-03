@@ -184,9 +184,10 @@ class IndexController extends Sahara_Controller_Action_Acl
         $body .= "IP: " . $_SERVER['REMOTE_ADDR'] . "\n";
         $body .= "User Agent: " . urldecode($params['useragent']) . "\n";
         $body .= "Java enabled: " . $params['java'] . "\n";
-        $body .= "Plugins:\n";
+
         if (array_key_exists('navplugins', $params))
         {
+            $body .= "Plugins:\n";
             $plugins = explode(';', urldecode($params['navplugins']));
             foreach ($plugins as $p)
             {
