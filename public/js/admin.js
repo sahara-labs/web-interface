@@ -182,7 +182,18 @@ function createOffline()
 			'Add Offline Period': function() {
 				if ($("#createofflineform").validationEngine('validate'))
 				{
-					alert("TODO submit");
+					$.post(
+						"/admin/putoffline",
+						{
+							rig: rig,
+							start: $("#startdate").val(),
+							end: $("#enddate").val(),
+							reason: $("#offreason").val()
+						},
+						function(response) {
+							// TODO Should be page update not reload
+							//window.location.reload();
+					});
 				}
 			},
 			'Cancel': function() {

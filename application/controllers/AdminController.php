@@ -136,6 +136,52 @@ class AdminController extends Sahara_Controller_Action_Acl
     }
 
     /**
+     * Action to put a rig offline for a time period.
+     */
+    public function putofflineAction()
+    {
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();
+
+        $name = $this->_getParam('rig');
+        $start = $this->_getParam('start');
+        $end = $this->_getParam('end');
+        $reason = $this->_getParam('reason');
+
+        if (!$name || !$start || !$end || !$reason)
+        {
+            echo $this->view->json(array(
+                'successful' => false,
+                'failureCode' => -1,
+                'failureReason' => 'Required param not supplied.'
+            ));
+        }
+
+        $tzOff = new DateTimeZone(date_default_timezone_get());
+        $tzOff = $tzOff->getOffset(new DateTime());
+        $tz = $tzOff > 0 ? '+' : '-';
+        $tz .= Sahara_DateTimeUtil::zeroPad(floor(abs($tzOff) / 3600)) . ':' . Sahara_DateTimeUtil::zeroPad(abs($tzOff) % 3600);
+
+        list($date, $time) = explode(' ', trim($start));
+        list($day, $mon, $yr) = explode('/', $date);
+        list($hr, $min) = explode(':', $time);
+        $start = trim($yr) . '-' . trim($mon) . '-' . trim($day)  . 'T' . trim($hr) . ':' . trim($min) . $tz;
+
+        list($date, $time) = explode(' ', trim($end));
+        list($day, $mon, $yr) = explode('/', $date);
+        list($hr, $min) = explode(':', $time);
+        $end = trim($yr) . '-' . trim($mon) . '-' . trim($day)  . 'T' . trim($hr) . ':' . trim($min) . $tz;
+
+        echo $this->view->json(Sahara_Soap::getSchedServerRigManagementClient()->putRigOffline(array(
+            'requestorQName' => $this->_auth->getIdentity(),
+            'rig' => array('name' => $rig),
+            'start' => $start,
+            'end' => $end,
+            'reason' => $reason
+        )));
+    }
+
+    /**
      * Action to cancel a rig offline period.
      */
     public function cancelofflineAction()
