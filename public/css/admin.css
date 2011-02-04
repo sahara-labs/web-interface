@@ -349,6 +349,16 @@
 	box-shadow: 0 0 4px #606060;
 }
 
+.createofflineerror {
+	padding: 5px;
+	text-align: left;
+}
+
+.createofflineerror span {
+	float: left;
+	margin-right: 5px;
+}
+
 .timeline {
 	clear: both;
 	padding: 10px;

@@ -150,7 +150,7 @@ function confirmCreateOffline()
 				"<div class='reasonlabel'>Reason:</div>" +
 				"<div class='jqTransformInputWrapper' style='width:300px'>" +
 					"<div class='jqTransformInputInner'>" +
-						"<div><input id='offreason' class='validate[required] jqtransformdone jqTranformInput ' type='text' /></div>" +
+						"<div><input id='offreason' class='validate[required] jqtransformdone jqTranformInput' style='width:100%' type='text' /></div>" +
 					"</div>" +
 				"</div>" +
 			"</div>" +
@@ -231,9 +231,45 @@ function createOffline()
 			reason: reason
 		},
 		function(response) {
+			if (typeof response != "object") window.location.reload();
+			
 			// TODO Should be page update not reload
-			window.location.reload();
-	});
+			if (response.successful)
+			{
+				window.location.reload();
+				return;
+			}
+			
+			var err;
+			if (response.failureCode == 3)
+			{
+				err = "Offline period start time cannot be after end time.";
+			}
+			else if (response.failureCode == 4)
+			{
+				err = "Offline periods cannot be concurrent. Choose a non-overlapping time period.";
+			}
+			else 
+			{
+				window.location.reload();
+				return;
+			}
+			
+			var diagsel = "div[aria-labelledby=ui-dialog-title-createoffline]";
+			$(diagsel)
+				.css('width', 300)
+				.css('text-align', 'center')
+				.css('left', parseInt($(diagsel).css('left')) - 100);
+			$(diagsel + " div.ui-dialog-titlebar").css("display", "block");
+				
+			$("#createoffline")
+				.html(
+					"<div class='ui-state ui-state-error ui-corner-all createofflineerror'>" +
+						"<span class='ui-icon ui-icon-alert'> </span>" +
+						err + 
+					"</div>"
+				).dialog({closeOnEscape: true});
+		});
 }
 
 var cancelId = null;
