@@ -49,13 +49,13 @@ $this->headScript()->appendFile($this->baseUrl('/js/admin.js'));
 <div id="rigstatus">
 	<?php if ($this->rig->isAlarmed): ?>
 		<img src="<?=$this->baseUrl('/images/balls/red_anime.gif')?>" alt="Alarm" />
-		<h3>Alarm: <?=$this->rig->offlineReason?></h3>
+		<h3>Alarm<?php if ($this->rig->offlineReason) echo ': ' . $this->rig->offlineReason?></h3>
 	<?php elseif (!$this->rig->isRegistered): ?>
 		<img src="<?=$this->baseUrl('/images/balls/blue.gif')?>" alt="Alarm" />
 		<h3>Not registered</h3>
 	<?php elseif (!$this->rig->isOnline): ?>
 		<img src="<?=$this->baseUrl('/images/balls/red.gif')?>" alt="Alarm" />
-		<h3>Offline: <?=$this->rig->offlineReason?></h3>
+		<h3>Offline<?php if ($this->rig->offlineReason) echo ': ' . $this->rig->offlineReason?></h3>
 	<?php elseif ($this->rig->isInSession): ?>
 		<img src="<?=$this->baseUrl('/images/balls/yellow.gif')?>" alt="Alarm" />
 		<h3>In use: <?=$this->rig->sessionUser?></h3>
