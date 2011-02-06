@@ -305,7 +305,7 @@ a.plaina:hover {
 }
 
 .helpcontents p {
-	padding: 0 10px 4px;
+	padding: 0href="#" 10px 4px;
 }
 
 .helpcontents p span {
@@ -318,6 +318,33 @@ a.plaina:hover {
 .helplink span {
 	float: left;
 	margin-right: 5px;
+}
+
+#helplist {
+	list-style: none;
+}
+
+.helpclick {
+	display: block;
+	padding: 3px;
+	cursor: pointer;
+	margin: 2px 5px;
+	border: 1px solid #AAAAAA;
+	color: #444444;
+}
+
+.helpclick:hover {
+	color: #000000;
+}
+
+.helpclick span {
+	float: left;
+	margin-right: 5px;
+}
+
+.helpcontent {
+	display: none;
+	margin: 5px 20px;
 }
 
 #feedback_form_sent {
