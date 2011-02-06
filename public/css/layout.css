@@ -320,17 +320,23 @@ a.plaina:hover {
 	margin-right: 5px;
 }
 
-#helplist {
+.helplist {
 	list-style: none;
 }
 
-.helpclick {
+.helpclick, .helpclickinner {
 	display: block;
 	padding: 3px;
 	cursor: pointer;
 	margin: 2px 5px;
 	border: 1px solid #AAAAAA;
 	color: #444444;
+}
+
+.helpclicka {
+	display: block;
+	display: pointer;
+	width: 100%;
 }
 
 .helpclick:hover {
@@ -342,7 +348,7 @@ a.plaina:hover {
 	margin-right: 5px;
 }
 
-.helpcontent {
+.helpcontent, .helpcontentinner {
 	display: none;
 	margin: 5px 20px;
 }

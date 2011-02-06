@@ -39,6 +39,97 @@
 switch ($this->controller . $this->action)
 {
     case 'queueindex':
+         $help = array(
+            'help' => 'This page is used for selecting a rig type. A dialog will open after
+            	selecting the rig type, enabling you to queue, reserve, or cancel a rig session.
+            	If these options are not available, or the rig seems to be offline, you may need
+            	to check back later.',
+            'troubleshooting' => array(
+                'Queue:' => array(
+                    'How long do I have to wait in the queue?' => 'Queue time depends upon
+                   		 completion of the previous user\'s session.',
+
+                    'Queue time depends upon completion of the previous user\'s session.' =>
+                    	'A high priority user may be attempting to access the rig.',
+
+                    'Can I cancel my queue?' =>
+                    	'Yes, you will be redirected to the "Rig Selection" page after cancelling the queue.',
+
+                    'What happens if I close the browser window or my network fails?' =>
+                    	'Please try to reopen the browser window as soon as possible. However, if this
+                    	happens while waiting in a queue, your position in the queue may be removed and
+                    	you may need to queue again.',
+
+                   'How do I get to "Rig Session" page from here?' => 'The system directs the user to
+                    	the "Rig Session" page automatically after you queue and the rig is available to use.'
+                ),
+
+                'Reserving:' => array(
+                    'How do I reserve a rig session?' => 'Select the rig and click on the "Reserve" button.
+                     	This will direct you to the reservation page.',
+                    'I reserved a rig, but it was unavailable when I tried to access it.' => 'This may
+                     	happen due to rigs that are fully reserved by other users for that time.  However,
+                     	you can still queue to use the rig.'
+                ),
+
+                'Explanation of Legend:' => array(
+                    'Active - The rig is online and the user may queue to use.',
+                    'Inactive - User does not have permission to queue for this rig. Permissions are
+                    time-based and the current time is out of the assigned usage period.',
+                    'Locked - The rig is online, but it is locked. Before a user can queue, a pass
+                    key must be supplied.',
+                    'Free - The rig is online and free to use.',
+                    'In Use - The rig is online, but being accessed by another user.',
+                    'Offline - The rig if offline and cannot be used.'
+                )
+            )
+        );
+        break;
+
+    case 'bookingsindex':
+        $help = array(
+            'help' => 'The \'Reservation\' page allows you to reserve future rig sessions in advance.
+	            Availability and time slots depend on alloted permissions for the rig.',
+            'troubleshooting' => array(
+                'Reservations' => array(
+                    'How do I make a reservation?' => 'You can select a date to reserve the rig by
+                    	clicking the calendar icon that is located next to the date window. You can select
+                    	your desired time slot by clicking on the available times (green sections) and
+                    	selecting the green check button. A reservation confirmation dialog will appear
+                    	to confirm. Click on the "Confirm Reservation" button. Another dialog will appear
+                    	confirming that the reservation is successfully created.',
+                    'Can I make multiple reservations?' => 'You may be able to make multiple reservations
+                    	for a rig depending on the allotted permissions of the rig.',
+                    'Reservation time is shown as \'Available\', but I can\'t reserve the rig.' =>
+                        'This may happen due to reaching the maximum number of reservations allowed for
+                        a single user. This also may be due to rigs that are reserved for
+                        priority users for that time period.  However, the user can stillqueue to use the rig.',
+                    'I tried to reserve for a longer period, but the given option is for a shorter period.' =>
+                        'Alloted session times are predefined by your instructor.'
+                ),
+                'Editing Reservations' => array(
+                    'How can I change/edit a reservation?' => 'You must first cancel the existing reservation
+                    	and then create a new reservation. This can be done through the \'Reservation\' tab.'
+                ),
+                'Cancelling Reservations' => array(
+                    'How do I cancel a reservation?' => 'Click on the \'Existing Reservations\' tab which
+                    	is located next to the \'Rig Selection\' tab. Then select the reservation that you
+                    	wish to cancel. A dialog will appear asking you to confirm.'
+                ),
+                'Reservation Reminder' => array(
+                    'Can I set a reminder for my reservation?' => 'No, you will receive an automatic
+                    	reminder by email from the system one hour before the rig session starts.'
+                ),
+                'Reservation Confirmation' => array(
+                    'I received an error message and cannot confirm my reservation.' => 'Please reload the page.
+                    	It will refresh the \'Reservation\' page. If the reservation confirmation does
+                    	not appear, try reserving again.'
+                ),
+                'Time Zones' => array(
+                    'Time zone is based on your local computer time setting.'
+                ),
+            )
+        );
         break;
 
     case 'indexindex':
@@ -47,7 +138,7 @@ switch ($this->controller . $this->action)
         		username and password are provided by the institution that hosts Remote
         		Labs. Please click on the "<span>Contact Support</span>" button to request
         		a username and password.',
-            'ts' => array(
+            'troubleshooting' => array(
                 'System Requirements' => array(
                     'Operating System: Windows Server 2003, Windows XP, Windows Vista, Linux,
                     and Mac OS 10.5 and above.',
@@ -76,18 +167,29 @@ switch ($this->controller . $this->action)
 		<div class="helptitle ui-widget-header ui-corner-all">Help:</div>
 		<p><?=$help['help']?></p>
 		<div class="helptitle ui-widget-header ui-corner-all">Troubleshooting:</div>
-		<ul id="helplist">
-			<?php foreach ($help['ts'] as $qu => $an):?>
+		<ul class="helplist">
+			<?php foreach ($help['troubleshooting'] as $qu => $an):?>
 			<li>
 				<div class="helpclick ui-corner-all">
-					<span class="ui-icon ui-icon-plus"> </span><?=$qu?>
+					<a class="helpclicka"><span class="ui-icon ui-icon-plus"> </span><?=$qu?></a>
     				<div class="helpcontent">
-    				<?php if (is_array($an)): ?>
+    				<?php if (is_array($an)  && array_key_exists(1, $an)): ?>
     					<ul>
     				    <?php foreach ($an as $a): ?>
-    				    	<li><?=$a?>
+    				    	<li><?=$a?></li>
     				    <?php endforeach; ?>
     				    </ul>
+    				<?php elseif (is_array($an)): ?>
+						<ul class="helplist">
+						<?php foreach ($an as $q => $a): ?>
+							<li>
+								<div class="helpclickinner ui-corner-all">
+            						<span class="ui-icon ui-icon-plus"> </span><?=$q?>
+                					<div class="helpcontentinner"><?=$a?></div>
+                				</div>
+							</li>
+						<?php endforeach; ?>
+						</ul>
     				<?php else: ?>
     					<?=$an?>
     				<?php endif; ?>
@@ -108,8 +210,26 @@ switch ($this->controller . $this->action)
 
 <script type="text/javascript">
 $(document).ready(function() {
-	$(".helpclick").click(function() {
-		var contentdiv = $(this).children(".helpcontent");
+	$(".helpclicka").click(function() {
+		var contentdiv = $(this).siblings(".helpcontent");
+		if (contentdiv.hasClass("helpcontentblock"))
+		{
+			$(this).children("span.ui-icon")
+				   .removeClass("ui-icon-minus")
+				   .addClass("ui-icon-plus");
+			contentdiv.removeClass("helpcontentblock").slideUp();
+		}
+		else
+		{
+			contentdiv.addClass("helpcontentblock").slideDown();
+			$(this).children("span.ui-icon")
+				   .removeClass("ui-icon-plus")
+				   .addClass("ui-icon-minus");
+		}
+	});
+
+	$(".helpclickinner").click(function() {
+		var contentdiv = $(this).children(".helpcontentinner");
 		if (contentdiv.hasClass("helpcontentblock"))
 		{
 			$(this).children("span.ui-icon")

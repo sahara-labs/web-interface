@@ -47,7 +47,7 @@ switch ($this->userRole)
                     	'Yes' => 'location.href="' . $this->url(array('controller' => 'index', 'action' => 'logout')) . '";',
                         'No'  => '$(this).dialog("close");'
                     )),
-            'userhelp' => array('title' => 'Help', 'script' => '_userhelp.phtml',
+            'help' => array('title' => 'Help', 'script' => '_help.phtml',
                     'icon' => $this->baseUrl('images/help.png'), 'alt' => 'help',
                     'width' => 650,
                     'buttons' => array(
