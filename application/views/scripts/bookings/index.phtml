@@ -61,20 +61,20 @@ $this->headScript()->appendScript($initScript);
 	<h2>Reservation for <?=$this->stringTransform($this->name, '_', ' ')?></h2>
 </div>
 
-<div id="timezonebutton">
-        <a id="timezone" class="ui-corner-br">
-            <img src="/images/timezone.png" alt="Tz" />
-        </a>
-</div>
-<script type="text/javascript">
-<!--
-$(document).ready(function() {
-	 $("#timezone").click(function() {
-        vp.displayTzSelector();
-    });
-});
-//-->
-</script>
+<!--<div id="timezonebutton">-->
+<!--        <a id="timezone" class="ui-corner-br">-->
+<!--            <img src="/images/timezone.png" alt="Tz" />-->
+<!--        </a>-->
+<!--</div>-->
+<!--<script type="text/javascript">-->
+<!---->
+<!--$(document).ready(function() {-->
+<!--	 $("#timezone").click(function() {-->
+<!--        vp.displayTzSelector();-->
+<!--    });-->
+<!--});-->
+<!--//-->
+<!--</script>-->
 
 <?php if ($this->horizonPassed): ?>
 <div id="nobookwarning" class="ui-state-error ui-corner-all">
