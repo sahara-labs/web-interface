@@ -36,10 +36,8 @@
  * @date 5th August 2010
  */
 
-switch ($this->controller . $this->action)
-{
-    case 'queueindex':
-         $help = array(
+$helpContents = array(
+    'Rig Selection' => array(
             'help' => 'This page is used for selecting a rig type. A dialog will open after
             	selecting the rig type, enabling you to queue, reserve, or cancel a rig session.
             	If these options are not available, or the rig seems to be offline, you may need
@@ -83,11 +81,9 @@ switch ($this->controller . $this->action)
                     'Offline - The rig if offline and cannot be used.'
                 )
             )
-        );
-        break;
+        ),
 
-    case 'bookingsindex':
-        $help = array(
+   'Reservation' => array(
             'help' => 'The \'Reservation\' page allows you to reserve future rig sessions in advance.
 	            Availability and time slots depend on alloted permissions for the rig.',
             'troubleshooting' => array(
@@ -129,11 +125,122 @@ switch ($this->controller . $this->action)
                     'Time zone is based on your local computer time setting.'
                 ),
             )
-        );
-        break;
+        ),
 
-    case 'indexindex':
-        $help = array(
+    'Reservation Waiting' => array(
+            'help' => 'This is a stand-off page which is shown when your reservation is going to
+            	start with in 30 minutes. It shows how long you have left before your reservation starts
+            	and will automatically redirect to the session page which your session is allocated.',
+            'troubleshooting' => array(
+                'Timer' => array(
+                    'What does it mean - "you have \'X\' minutes and \'X\' seconds before your
+                		reservation starts"?' =>  'This indicates the time left to wait before you can
+                		start your rig session.',
+                    'The timer has counted down to zero, but the rig session does not start/open.' =>
+                        'This may occur due to one of the following reasons:
+                        <ol style="margin-left:20px">
+                        	<li>The rig is resetting itself to prepare for the next user.</li>
+                        	<li>You have not accessed the rig during the given grace period for
+                        	your scheduled reservation, thus your session has timed out.</li>
+                        	<li>The rig has become unavailable and/or under-going maintenance.</li>
+                        </ol>',
+                    'How do I get to \'Rig Session\' page from this page?' => 'The system will
+                    	automatically direct you to the \'Rig Session\' page once the timer has
+                    	counted down'
+                ),
+                'Going Offline' => array(
+                    'What happens if I close the browser or my network fails while I am waiting?' =>
+                        'The system will keep counting down the time. If the session has already
+                        started, you will lose your rig session if the idle time has been maximised',
+                    'What happens if I log out from this page?' => 'Your session will end and you
+                    	may need to queue again to start a new session.'
+                ),
+				'Cancelling Reservations' => array(
+                    'Can I cancel my reservation?' => 'Yes, please click the red \'Cancel Reservation\'
+                     button on the right of the page.'
+                )
+            )
+        ),
+
+    'Existing Reservations' => array(
+            'help' => 'This page lets you review your existing reservations or cancel your reservations.',
+            'troubleshooting' => array(
+                'Reservations' => array(
+                    'I made a reservation, but the system has cancelled it.' => 'In some circumstances,
+	                    the system may cancel a reservation and will provide you with a reason for
+	                    the cancellation',
+                ),
+                'Cancelling Reservations' => array(
+                    'How do I cancel a reservation?' => 'Click on the \'Existing Reservations\' tab which
+                     is located next to the \'Rig Selection\' tab. Then select the reservation that you
+                     wish to cancel. A dialog will appear asking you to confirm.'
+                ),
+                'Reservation Reminder' => array(
+                	'Can I set a reminder for my reservation?' => 'No, you will receive an automatic
+                		reminder by email from the system one hour before the rig session starts.'
+                )
+            )
+        ),
+
+    'Queue' => array(
+        'help' => 'This is a stand-off page which is shown when you are queuing for a rig. It shows your
+        	current queue position and will automatically redirect to the \'Session\' page when your are
+        	allocated to a rig.',
+        'troubleshooting' => array(
+            'How long do I have to wait in the queue?' => 'Queue time depends upon completion of the
+            	previous user\'s session',
+            'Why has my position number increased in the queue?' => 'A high priority user may be
+            	attempting to access the rig.',
+            'Can I cancel my queue?' => 'Yes, you will be redirected to the \'Rig Selection\' page after
+            	cancelling the queue.',
+            'What happens if I close the browser window or my network fails?' => 'Please try to reopen
+            	the browser window as soon as possible. However, if this happens while waiting in a
+            	queue, your position in the queue may be removed and you may need to queue again.',
+            'How do I get to \'Rig Session\' page from here?' => 'The system directs the user to
+            	the \'Rig Session\' page automatically after you queue and the rig is available to use'
+        )
+    ),
+
+    'Session' => array(
+            'help' => 'This is the main control page for set up and accessing/launching the rig. Here
+             	you can, depending on the rig, launch the rig, set your video formats, set your view
+             	positions, and change the interval speed for page refreshing.',
+            'troubleshooting' => array(
+                'Session Time' => array(
+                    'What is \'Session Time\'?' => 'Session Time shows two different times: \'In
+                    	Session\' indicates the overall time of your session usage while \'Remaining
+                    	Time\' indicates the guaranteed time left to use the rig.',
+                    'My session timed out and I cannot access the rig again.' => 'Typically this
+                    	means that another user has queued or reserved the rig. Please reserve
+                    	for another time or check back on the rig later.',
+                    'What does \'Remaining\' mean and what happens when it reaches zero?' =>
+                        'This indicates the guaranteed usage time left on the rig. When this
+                        reaches zero, the user may be removed from the rig session if another
+                        user has reserved the time or queued after the current user. If there
+                        is no reservation or queue, the rig session may be extended for the
+                        current user.'
+                ),
+                'Idle Time' => array(
+                    'What does the warning below the rig name mean?' => 'This warns the
+                    	user about the idle time in which the user needs to launch/use the rig
+                     	in order to remain in the rig session'
+                ),
+                'Ending Session' => array(
+                    'What happens if my browser closes or my network fails while I am using
+                    	the rig session?' => 'If this happens, you may need to log back into
+                    	Remote Labs to resume the rig session. However, if another user has
+                    	queued and accessed the rig during this time, you may need to join
+                    	the queue again to access the rig session.',
+                    'I accidentally clicked on \'Finish Session\' early and cannot access the
+                    	rig again even though my reservation time hasn\'t ended.' => 'You
+                     	may be removed from the rig session if another user has queued after
+                     	you ended your rig session. You may need to join the queue again to
+                     	access the rig session.'
+                )
+            )
+    ),
+
+    'Login' => array(
             'help' => 'A username and password is required to access the Remote Labs. A proper
         		username and password are provided by the institution that hosts Remote
         		Labs. Please click on the "<span>Contact Support</span>" button to request
@@ -157,9 +264,34 @@ switch ($this->controller . $this->action)
                 'I forgot my username and/or password' => 'Please click on the "Contact Support"
                 button to request your username and/or password.'
             )
-        );
+        )
+);
+
+switch ($this->controller . $this->action)
+{
+    case 'indexindex':
+        $help = $helpContents['Login'];
+        break;
+    case 'queueindex':
+        $help = $helpContents['Rig Selection'];
+        break;
+    case 'queuequeuing':
+        $help = $helpContents['Queue'];
+        break;
+    case 'bookingsindex':
+        $help = $helpContents['Reservation'];
+        break;
+    case 'bookingswaiting':
+        $help = $helpContents['Reservation Waiting'];
+        break;
+    case 'bookingsexisting':
+        $help = $helpContents['Existing Reservations'];
+        break;
+    case 'sessionindex':
+        $help = $helpContents['Session'];
         break;
 }
+
 ?>
 
 <div id="helpdialog" class="helpdialog" title="Help and Troubleshooting">
@@ -202,7 +334,7 @@ switch ($this->controller . $this->action)
 		<div class="helplink">
 			<a>
     			<span class="ui-icon ui-icon-arrow-1-e"></span>
-    			More help and troubleshooting.
+    			More help and troubleshooting
 			</a>
 		</div>
 	</div>
