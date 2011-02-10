@@ -72,7 +72,7 @@ class AdminController extends Sahara_Controller_Action_Acl
         }
         else if (is_object($response->type))
         {
-            $rigTypes[$type->type->name] = $type->type;
+            $rigTypes[$response->type->name] = $response->type;
         }
         else return;
 
