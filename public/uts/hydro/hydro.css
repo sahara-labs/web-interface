@@ -1,0 +1,97 @@
+@CHARSET "UTF-8";
+
+#hydroselector {
+	margin: 30px auto;
+	width: 200px;
+}
+
+#hydroselector ul {
+	list-style: none;
+}
+
+#hydroselector ul li {
+	display: inline;
+}
+
+#hydroselector .modesel {
+	display: block;
+	width: 200px;
+	padding: 10px;
+	background-color: #EFEFEF;
+	color: #606060;
+	border: 1px solid #B5B5B5;
+	-moz-box-shadow: 0 0 4px #B5B5B5;
+	cursor: pointer;
+}
+
+#hydroselector .modesel:hover {
+    -moz-box-shadow: 0 0 4px #606060;
+}
+
+#hydroselector ul li:first-of-type .modesel {
+    -moz-border-radius-topleft: 15px;
+    -moz-border-radius-topright: 15px;
+}
+
+#hydroselector ul li:last-of-type .modesel {
+    -moz-border-radius-bottomleft: 15px;
+    -moz-border-radius-bottomright: 15px;
+}
+
+#hydrooverlay {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	background-color: #AAAAAA;
+	opacity: 0.3;
+	z-index: 1000;
+}
+
+#hydrooverlaywarning {
+	position: absolute;
+	left: 45%;
+	width: 10%;
+	background-color: #FFFFFF;
+	text-align: center;
+	opacity: 1;
+	z-index: 1001;
+}
+
+#hydrodebugpanel {
+	display: none;
+	top: -97px;
+	right: -285px;
+}
+
+#hydrodebug div {
+	padding: 4px;
+}
+
+#slidertitle {
+	margin-bottom: 10px;
+}
+
+.slidercont {
+	position: absolute;
+	left: 50px;
+}
+
+#slider {
+	float: left;
+	height: 300px;
+}
+
+.slidertick {
+	height: 29px;
+	width: 80px;
+}
+
+.slidertick span {
+	float: left;
+}
+
+#sliderval {
+	clear: both;
+}
