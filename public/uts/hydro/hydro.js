@@ -7,19 +7,6 @@
 
 function Hydro() {
 	/* -- Constants ------------------------------------ */
-	this.NUM_MODES = 5;
-	this.MODE_LABELS = ['Selector', 
-	                    'Visualisation', 
-	                    'Power',
-	                    'Current & Voltage',
-	                    'Power Redux',
-	                    'Switches'];
-	this.MODE_IMGS =   ['',
-	                    'selvis',
-	                    'selpower',
-	                    'selcurrvolt',
-	                    'selpower2',
-	                    'selswitches'];
 	this.PCONTROLLER = "HydroController";
 	
 	/* -- Variables ------------------------------------ */
@@ -75,12 +62,14 @@ Hydro.prototype.changeMode = function(mode) {
 	this.displayMode(mode.substr(3));
 	
 	if (this.debug) this.updateDebug();
-}
+};
 
 Hydro.prototype.displayMode = function(modenum) {
-	/* Clear the existing display. */
-	var hs = $('#hydro').empty(), i;
+	var i;
 	
+	/* Clear the existing display. */
+	while (this.widgets.length > 0) this.widgets.pop().destroy();
+
 	switch (parseInt(modenum))
 	{
 	case 1:
@@ -88,6 +77,7 @@ Hydro.prototype.displayMode = function(modenum) {
 			if (typeof response != "object") hydro.raiseError("Failed");
 			for (i in response) if (response[i].name == "newload" && !isNaN(parseInt(response[i].value))) hydro.load = parseInt(response[i].value);
 		}).init());
+		this.widgets.push(ledPanel = new LEDPanelWidget().init());
 		break;
 	case 2:
 		break;
@@ -99,33 +89,10 @@ Hydro.prototype.displayMode = function(modenum) {
 		break;
 	case 0: // -- Mode selector ------------------------
 	default:
-		this.displaySelector(hs);
+		this.widgets.push(selectorWidget = new SelectorWidget().init());
 		break;
 	}
 };
-
-Hydro.prototype.displaySelector = function(hs) {
-	var s = 1,
-		html = '<div id="hydroselector"><ul>';
-	    	
-		for ( ; s <= this.NUM_MODES; s++) html +=
-					'<li><a id="exp' + s + '" class="modesel">' +
-						'<img src="/uts/hydro/images/' + this.MODE_IMGS[s] + '.png" alt="img" />' +
-						this.MODE_LABELS[s] +
-					'</a></li>'
-	
-	    html += '</ul></div>';
-
-	hs.append(html);
-	$('.modesel').click(function() {
-		hydro.changeMode($(this).attr('id'));
-	});
-};
-
-/* ============================================================================
- * == Display widgets.                                                       ==
- * ============================================================================ */
-
 
 Hydro.prototype.repaint = function() {
 	var i;
@@ -202,6 +169,7 @@ Hydro.prototype.valuesReceived = function(values) {
 	}
 	
 	if (this.debug) this.updateDebug();
+	this.repaint();
 	
 	setTimeout(function(){
 		hydro.valuesRequest();
@@ -219,12 +187,12 @@ Hydro.prototype.addOverlay = function() {
 			'</div>' +
 		'</div>'
 	);
-}
+};
 
 Hydro.prototype.clearOverlay = function() {
 	$('#hydrooverlay').remove();
 	this.repaint();
-}
+};
 
 Hydro.prototype.raiseError = function(error) {
 	// TODO error
@@ -251,9 +219,56 @@ Hydro.prototype.updateDebug = function() {
 /* ============================================================================
  * == Page widgets.                                                          ==
  * ============================================================================ */
-function HydroWidget() { };
-HydroWidget.prototype.init = function() { };
-HydroWidget.prototype.repaint = function() { };
+function HydroWidget() 
+{
+	this.canvas = $("#hydro");
+}
+HydroWidget.prototype.init = function() { return this; };
+HydroWidget.prototype.repaint = function() { return this; };
+HydroWidget.prototype.destroy = function() { return this; };
+
+/* == Selector widget to choose display mode. ================================= */
+function SelectorWidget()
+{
+	HydroWidget.call(this);
+	
+	this.NUM_MODES = 5;
+	this.MODE_LABELS = ['Selector', 
+	                    'Visualisation', 
+	                    'Power',
+	                    'Current & Voltage',
+	                    'Power Redux',
+	                    'Switches'];
+	this.MODE_IMGS =   ['',
+	                    'selvis',
+	                    'selpower',
+	                    'selcurrvolt',
+	                    'selpower2',
+	                    'selswitches'];
+}
+SelectorWidget.prototype = new HydroWidget;
+SelectorWidget.prototype.init = function() {
+	var s = 1,
+		html = '<div id="hydroselector"><ul>';
+	    	
+		for ( ; s <= this.NUM_MODES; s++) html +=
+					'<li><a id="exp' + s + '" class="modesel">' +
+						'<img src="/uts/hydro/images/' + this.MODE_IMGS[s] + '.png" alt="img" />' +
+						this.MODE_LABELS[s] +
+					'</a></li>';
+	
+	    html += '</ul></div>';
+
+	this.canvas.append(html);
+	$('.modesel').click(function() {
+		hydro.changeMode($(this).attr('id'));
+	});
+	return this;
+};
+SelectorWidget.prototype.destroy = function() {
+	$("#hydroselector").remove();
+	return this;
+};
 
 /* == Slider sets pump pressure using a slider. =============================== */
 function PressureSliderWidget(pa, cb)
@@ -262,10 +277,11 @@ function PressureSliderWidget(pa, cb)
 	this.paction = pa;
 	this.callback = cb;
 }
-PressureSliderWidget.prototype = HydroWidget.prototype;
+PressureSliderWidget.prototype = new HydroWidget;
 PressureSliderWidget.prototype.init = function() {
+	this.val = hydro.pump;
 	var i, html =
-		'<div class="slidercont">' +
+		'<div id="slidercont">' +
 			'<div id=slidertitle>Pump:</div>' +
 			'<div id="slider"> </div>' +
 			'<div id="sliderleg">';
@@ -275,21 +291,21 @@ PressureSliderWidget.prototype.init = function() {
 				'<div class="slidertick">' +
 					'<span class="ui-icon ui-icon-arrowthick-1-w"> </span>' +
 					(i < 10 ? (100 - i * 10) + ' %'  : 'Off') +
-				'</div>'
+				'</div>';
 		}
 		
 	
 		html +=
 			'</div>' +
-			'<div id="sliderval">Value: <span>' + hydro.pump + '</span> %</div>' +
-		'</div>'
-	$("#hydro").append(html);
+			'<div id="sliderval">Value: <span>' + this.val + '</span> %</div>' +
+		'</div>';
+	this.canvas.append(html);
 	
 	$("#slider").slider({
 		orientation: "vertical",
 		min: 0,
 		max: 100,
-		value: hydro.pump,
+		value: this.val,
 		range: "min",
 		slide: function(event, ui) {
 			$("#sliderval span").empty().append(ui.value);
@@ -303,27 +319,82 @@ PressureSliderWidget.prototype.init = function() {
 		}
 	});
 	
-	$("#slider .ui-slider-handle").css('width', 30)
+	this.slider = $("#slider");
+	this.slider.children(".ui-slider-handle").css('width', 30)
 		.css("left", "-11px");
-	$("#slider .ui-slider-range").removeClass("ui-widget-header")
+	this.slider.children(".ui-slider-range").removeClass("ui-widget-header")
 		.css("background-color", "#EFEFEF");
+	this.sliderVal = $("#sliderval span");
 	
 	return this;
 };
 PressureSliderWidget.prototype.repaint = function() {
-	var t = $("#slider");
-	if (t.length > 0 && t.slider("value") != hydro.pump)
+	if (this.val != hydro.pump)
 	{
-		t.slider("value", hydro.pump);
-		$("#sliderval span").empty().append(hydro.pump);
+		this.slider.slider("value", hydro.pump);
+		this.sliderVal.empty().append(hydro.pump);
 	}
+	return this;
+};
+PressureSliderWidget.prototype.destroy = function() {
+	this.slider.slider("destory");
+	$("#slidercont").remove();
+	return this;
 };
 
 /* == LED Panel displays load. ================================================ */
 function LEDPanelWidget()
 {
 	HydroWidget.call(this);
+	
+	this.NUM_LEDS = 4;
+	this.onLeds = hydro.load;
 }
+LEDPanelWidget.prototype = new HydroWidget;
+LEDPanelWidget.prototype.init = function() {
+	var i, s, html = 
+		"<div id='ledpanel' class='ui-corner-all'>" +
+			"<div id='ledpaneltitle'>" +
+				"<p><span class='ui-icon ui-icon-lightbulb'></span> Lights</p>" +
+			"</div>" +
+			"<div id='ledpanelinner'>";
+		for (i = 1; i <= this.NUM_LEDS; i++)
+		{
+			s = (i <= this.onLeds ? "on" : "off");
+			html += 
+				"<div class='led'>" +
+					"<img src='/uts/hydro/images/led" + s + ".png' alt='" + s + "' />" +
+				"</div>";
+		}
+	html += "</div>" +
+		"</div>";
+	this.canvas.append(html);
+	this.panel = $("#ledpanelinner");
+	return this;
+};
+LEDPanelWidget.prototype.repaint = function() {
+	if (this.onLeds != hydro.load)
+	{
+		this.onLeds = hydro.load;
+		var i, html = '';
+		for (i = 1; i <= this.NUM_LEDS; i++)
+		{
+			s = (i <= this.onLeds ? "on" : "off");
+			html += 
+				"<div class='led'>" +
+					"<img src='/uts/hydro/images/led" + s + ".png' alt='" + s + "' />" +
+				"</div>";
+		}
+		this.panel.empty().append(html);
+	}
+	
+	return this;
+};
+LEDPanelWidget.prototype.destroy = function() {
+	$("#ledpanel").remove();
+	return this;
+};
+
 
 function round(num, pts)
 {
