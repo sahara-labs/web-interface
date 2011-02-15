@@ -180,7 +180,7 @@ function updateJpeg(id, url, tm)
 	var tUrl = url + "?" + new Date().getTime();
 	
 	jpegImage.onload = function(){
-			var el = document.getElementById("jpegframe" + id)
+			var el = document.getElementById("jpegframe" + id);
 			for(var i = el.childNodes.length; i > 0 ; i--)
    			{   
       			el.removeChild(el.childNodes[i-1]);

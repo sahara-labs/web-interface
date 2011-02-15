@@ -226,6 +226,14 @@ function HydroWidget()
 HydroWidget.prototype.init = function() { return this; };
 HydroWidget.prototype.repaint = function() { return this; };
 HydroWidget.prototype.destroy = function() { return this; };
+HydroWidget.prototype.draggable = function(selector) {
+	$(selector).addClass('hydrodrag')
+		.draggable({
+			handle: 'p',
+			opacity: 0.6,
+			stack: '.hydrodrag'
+		});
+};
 
 /* == Selector widget to choose display mode. ================================= */
 function SelectorWidget()
@@ -281,10 +289,13 @@ PressureSliderWidget.prototype = new HydroWidget;
 PressureSliderWidget.prototype.init = function() {
 	this.val = hydro.pump;
 	var i, html =
-		'<div id="slidercont">' +
-			'<div id=slidertitle>Pump:</div>' +
-			'<div id="slider"> </div>' +
-			'<div id="sliderleg">';
+		'<div id="slidercont" class="hydropanel">' +
+			'<div class="hydropaneltitle">' +
+				'<p><span class="ui-icon ui-icon-wrench"></span>Pump</p>' +
+			'</div>' +
+			'<div id="sliderinner">' +
+				'<div id="slider"> </div>' +
+				'<div id="sliderleg">';
 		for (i = 0; i <= 10; i++)
 		{
 			html += 
@@ -295,7 +306,7 @@ PressureSliderWidget.prototype.init = function() {
 		}
 		
 	
-		html +=
+		html +=	'</div>' +
 			'</div>' +
 			'<div id="sliderval">Value: <span>' + this.val + '</span> %</div>' +
 		'</div>';
@@ -325,7 +336,7 @@ PressureSliderWidget.prototype.init = function() {
 	this.slider.children(".ui-slider-range").removeClass("ui-widget-header")
 		.css("background-color", "#EFEFEF");
 	this.sliderVal = $("#sliderval span");
-	
+	this.draggable("#slidercont");
 	return this;
 };
 PressureSliderWidget.prototype.repaint = function() {
@@ -353,8 +364,8 @@ function LEDPanelWidget()
 LEDPanelWidget.prototype = new HydroWidget;
 LEDPanelWidget.prototype.init = function() {
 	var i, s, html = 
-		"<div id='ledpanel' class='ui-corner-all'>" +
-			"<div id='ledpaneltitle'>" +
+		"<div id='ledpanel' class='hydropanel ui-corner-all'>" +
+			"<div class='hydropaneltitle'>" +
 				"<p><span class='ui-icon ui-icon-lightbulb'></span> Lights</p>" +
 			"</div>" +
 			"<div id='ledpanelinner'>";
@@ -370,6 +381,7 @@ LEDPanelWidget.prototype.init = function() {
 		"</div>";
 	this.canvas.append(html);
 	this.panel = $("#ledpanelinner");
+	this.draggable("#ledpanel");
 	return this;
 };
 LEDPanelWidget.prototype.repaint = function() {
