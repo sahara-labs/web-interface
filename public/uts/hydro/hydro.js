@@ -72,14 +72,12 @@ Hydro.prototype.displayMode = function(modenum) {
 
 	switch (parseInt(modenum))
 	{
-	case 1:
-		this.widgets.push(pressureSliderWidget = new PressureSliderWidget('pressureLoad', function(response) {
-			if (typeof response != "object") hydro.raiseError("Failed");
-			for (i in response) if (response[i].name == "newload" && !isNaN(parseInt(response[i].value))) hydro.load = parseInt(response[i].value);
-		}).init());
-		this.widgets.push(ledPanel = new LEDPanelWidget().init());
+	case 1: // -- Visualisation ---------------------------
+		this.widgets.push(new LoadPressureSliderWidget(this),
+						  new LEDPanelWidget(this));
 		break;
-	case 2:
+	case 2: // -- Power -----------------------------------
+		this.widgets.push(new PressureSliderWidget(this));
 		break;
 	case 3:
 		break;
@@ -87,22 +85,27 @@ Hydro.prototype.displayMode = function(modenum) {
 		break;
 	case 5:
 		break;
-	case 0: // -- Mode selector ------------------------
+	case 0: // -- Mode selector ---------------------------
 	default:
-		this.widgets.push(selectorWidget = new SelectorWidget().init());
+		this.widgets.push(new SelectorWidget(this));
 		break;
 	}
+	
+	for (i in this.widgets) this.widgets[i].init();
 };
 
 Hydro.prototype.repaint = function() {
 	var i;
 	for (i in this.widgets) this.widgets[i].repaint();
+	
+	if (this.debug) this.updateDebug();
 };
 
 /* ============================================================================
  * == Readings service.                                                      ==
  * ============================================================================ */
 Hydro.prototype.paramsInit= function() {
+	var thiz = this;
 	$.get('/primitive/json/pc/' + this.PCONTROLLER + '/pa/getParams',
 		null,
 		function(response) {
@@ -111,35 +114,36 @@ Hydro.prototype.paramsInit= function() {
 			{
 				switch (response[i].name)
 				{
-				case 'pump': hydro.pump = parseInt(response[i].value, 10); break;
-				case 'load': hydro.load = parseInt(response[i].value, 10); break;
+				case 'pump': thiz.pump = parseInt(response[i].value, 10); break;
+				case 'load': thiz.load = parseInt(response[i].value, 10); break;
 				}
 			}
-		hydro.ready = true;
-		hydro.clearOverlay();
+		thiz.ready = true;
+		thiz.clearOverlay();
 	});
 };
 
 Hydro.prototype.valuesRequest = function() {
+	var thiz = this;
 	$.get('/primitive/json/pc/' + this.PCONTROLLER + '/pa/getValues', 
 		null, 
 		function(response) {
-			hydro.valuesReceived(response);
+			thiz.valuesReceived(response);
 	});
 };
 
 Hydro.prototype.valuesReceived = function(values) {
+	var thiz = this, i, n;
 	if (typeof values != "object")
 	{
 		/* Error occurred. */
 		this.raiseError("Values response errored");
 		setTimeout(function(){
-			hydro.valuesRequest();
+			thiz.valuesRequest();
 		}, 10000);
 		return;
 	}
-	
-	var i, n;
+
 	for (i in values)
 	{
 		switch (values[i].name)
@@ -172,8 +176,8 @@ Hydro.prototype.valuesReceived = function(values) {
 	this.repaint();
 	
 	setTimeout(function(){
-		hydro.valuesRequest();
-	}, 1000);
+		thiz.valuesRequest();
+	}, 5000);
 };
 
 /* ============================================================================
@@ -219,13 +223,14 @@ Hydro.prototype.updateDebug = function() {
 /* ============================================================================
  * == Page widgets.                                                          ==
  * ============================================================================ */
-function HydroWidget() 
+function HydroWidget(hydroinst) 
 {
+	this.hydro = hydroinst;
 	this.canvas = $("#hydro");
 }
-HydroWidget.prototype.init = function() { return this; };
-HydroWidget.prototype.repaint = function() { return this; };
-HydroWidget.prototype.destroy = function() { return this; };
+HydroWidget.prototype.init = function() { };
+HydroWidget.prototype.repaint = function() { };
+HydroWidget.prototype.destroy = function() { };
 HydroWidget.prototype.draggable = function(selector) {
 	$(selector).addClass('hydrodrag')
 		.draggable({
@@ -236,9 +241,9 @@ HydroWidget.prototype.draggable = function(selector) {
 };
 
 /* == Selector widget to choose display mode. ================================= */
-function SelectorWidget()
+function SelectorWidget(hydroinst)
 {
-	HydroWidget.call(this);
+	HydroWidget.call(this, hydroinst);
 	
 	this.NUM_MODES = 5;
 	this.MODE_LABELS = ['Selector', 
@@ -268,30 +273,29 @@ SelectorWidget.prototype.init = function() {
 	    html += '</ul></div>';
 
 	this.canvas.append(html);
+	var hydroinst = this.hydro;
 	$('.modesel').click(function() {
-		hydro.changeMode($(this).attr('id'));
+		hydroinst.changeMode($(this).attr('id'));
 	});
-	return this;
 };
 SelectorWidget.prototype.destroy = function() {
 	$("#hydroselector").remove();
-	return this;
 };
 
 /* == Slider sets pump pressure using a slider. =============================== */
-function PressureSliderWidget(pa, cb)
+function SliderWidget(hydroinst)
 {
-	HydroWidget.call(this);
-	this.paction = pa;
-	this.callback = cb;
+	HydroWidget.call(this, hydroinst);
+	this.paction = 'setPump';
+	this.callback = function (response) { };
 }
-PressureSliderWidget.prototype = new HydroWidget;
-PressureSliderWidget.prototype.init = function() {
+SliderWidget.prototype = new HydroWidget;
+SliderWidget.prototype.init = function() {
 	this.val = hydro.pump;
 	var i, html =
-		'<div id="slidercont" class="hydropanel">' +
+		'<div id="slidercont" class="hydropanel ui-corner-all">' +
 			'<div class="hydropaneltitle">' +
-				'<p><span class="ui-icon ui-icon-wrench"></span>Pump</p>' +
+				'<p><span class="ui-icon ui-icon-gear"></span>Pump</p>' +
 			'</div>' +
 			'<div id="sliderinner">' +
 				'<div id="slider"> </div>' +
@@ -312,6 +316,7 @@ PressureSliderWidget.prototype.init = function() {
 		'</div>';
 	this.canvas.append(html);
 	
+	var thiz = this;
 	$("#slider").slider({
 		orientation: "vertical",
 		min: 0,
@@ -323,9 +328,9 @@ PressureSliderWidget.prototype.init = function() {
 		},
 		stop: function(event, ui) {
 			hydro.pump = ui.value;
-			$.get("/primitive/json/pc/" + hydro.PCONTROLLER + "/pa/" + pressureSliderWidget.paction + "/pressure/" + ui.value,
+			$.get("/primitive/json/pc/" + hydro.PCONTROLLER + "/pa/" + thiz.paction + "/pressure/" + ui.value,
 				   null,
-				   pressureSliderWidget.callback
+				   thiz.callback
 			);
 		}
 	});
@@ -336,10 +341,10 @@ PressureSliderWidget.prototype.init = function() {
 	this.slider.children(".ui-slider-range").removeClass("ui-widget-header")
 		.css("background-color", "#EFEFEF");
 	this.sliderVal = $("#sliderval span");
+	
 	this.draggable("#slidercont");
-	return this;
 };
-PressureSliderWidget.prototype.repaint = function() {
+SliderWidget.prototype.repaint = function() {
 	if (this.val != hydro.pump)
 	{
 		this.slider.slider("value", hydro.pump);
@@ -347,19 +352,62 @@ PressureSliderWidget.prototype.repaint = function() {
 	}
 	return this;
 };
-PressureSliderWidget.prototype.destroy = function() {
+SliderWidget.prototype.destroy = function() {
 	this.slider.slider("destory");
 	$("#slidercont").remove();
-	return this;
+};
+SliderWidget.prototype.response = function(vals) {
+	if (typeof vals != "object")
+	{
+		this.hydro.raiseError("Failed");
+		return false;
+	}
+	
+	// TODO values parse
+	
+	this.hydro.repaint();
+	return true;
 };
 
-/* == LED Panel displays load. ================================================ */
-function LEDPanelWidget()
+/* == Pressure slider which sets pump pressure. =============================== */
+function PressureSliderWidget(hydroinst)
 {
-	HydroWidget.call(this);
+	var thiz = this;
+	SliderWidget.call(this, hydroinst);
+	this.paction = 'setPump';
+	this.callback = function(response) {
+		thiz.response(response);
+	};
+}
+PressureSliderWidget.prototype = new SliderWidget;
+
+/* == Pressure slider which also sets load based on pressure.  ================ */
+function LoadPressureSliderWidget(hydroinst)
+{
+	var thiz = this;
+	SliderWidget.call(this, hydroinst);
+	this.paction = 'pressureLoad';
+	this.callback = function(response) {
+		if (!thiz.response(response)) return;
+		for (i in response)
+		{
+			if (response[i].name == "newload" && !isNaN(parseInt(response[i].value)))
+			{
+				thiz.hydro.load = parseInt(response[i].value);
+				thiz.hydro.repaint();
+			}
+		}
+	};
+}
+LoadPressureSliderWidget.prototype = new SliderWidget;
+
+/* == LED Panel displays load. ================================================ */
+function LEDPanelWidget(hydroinst)
+{
+	HydroWidget.call(this, hydroinst);
 	
 	this.NUM_LEDS = 4;
-	this.onLeds = hydro.load;
+	this.onLeds = this.hydro.load;
 }
 LEDPanelWidget.prototype = new HydroWidget;
 LEDPanelWidget.prototype.init = function() {
@@ -382,12 +430,11 @@ LEDPanelWidget.prototype.init = function() {
 	this.canvas.append(html);
 	this.panel = $("#ledpanelinner");
 	this.draggable("#ledpanel");
-	return this;
 };
 LEDPanelWidget.prototype.repaint = function() {
-	if (this.onLeds != hydro.load)
+	if (this.onLeds != this.hydro.load)
 	{
-		this.onLeds = hydro.load;
+		this.onLeds = this.hydro.load;
 		var i, html = '';
 		for (i = 1; i <= this.NUM_LEDS; i++)
 		{
@@ -399,12 +446,9 @@ LEDPanelWidget.prototype.repaint = function() {
 		}
 		this.panel.empty().append(html);
 	}
-	
-	return this;
 };
 LEDPanelWidget.prototype.destroy = function() {
 	$("#ledpanel").remove();
-	return this;
 };
 
 
