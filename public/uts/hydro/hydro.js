@@ -77,13 +77,19 @@ Hydro.prototype.displayMode = function(modenum) {
 						  new LEDPanelWidget(this));
 		break;
 	case 2: // -- Power -----------------------------------
+		this.widgets.push(new PressureSliderWidget(this),
+						  new PowerGaugeWidget(this));
+		break;
+	case 3: // -- Current & Voltage -----------------------
+		this.widgets.push(new PressureSliderWidget(this),
+						  new CurrentGaugeWidget(this),
+						  new VoltageGaugeWidget(this));
+		break;
+	case 4: // -- Power Redux -----------------------------
 		this.widgets.push(new PressureSliderWidget(this));
 		break;
-	case 3:
-		break;
-	case 4:
-		break;
-	case 5:
+	case 5: // -- Switches --------------------------------
+		this.widgets.push(new PressureSliderWidget(this));
 		break;
 	case 0: // -- Mode selector ---------------------------
 	default:
@@ -144,6 +150,17 @@ Hydro.prototype.valuesReceived = function(values) {
 		return;
 	}
 
+	this.values(values);
+	
+	if (this.debug) this.updateDebug();
+	this.repaint();
+	
+	setTimeout(function(){
+		thiz.valuesRequest();
+	}, 3000);
+};
+
+Hydro.prototype.values = function(values) {
 	for (i in values)
 	{
 		switch (values[i].name)
@@ -171,13 +188,6 @@ Hydro.prototype.valuesReceived = function(values) {
 			break;
 		}
 	}
-	
-	if (this.debug) this.updateDebug();
-	this.repaint();
-	
-	setTimeout(function(){
-		thiz.valuesRequest();
-	}, 5000);
 };
 
 /* ============================================================================
@@ -356,18 +366,6 @@ SliderWidget.prototype.destroy = function() {
 	this.slider.slider("destory");
 	$("#slidercont").remove();
 };
-SliderWidget.prototype.response = function(vals) {
-	if (typeof vals != "object")
-	{
-		this.hydro.raiseError("Failed");
-		return false;
-	}
-	
-	// TODO values parse
-	
-	this.hydro.repaint();
-	return true;
-};
 
 /* == Pressure slider which sets pump pressure. =============================== */
 function PressureSliderWidget(hydroinst)
@@ -376,7 +374,12 @@ function PressureSliderWidget(hydroinst)
 	SliderWidget.call(this, hydroinst);
 	this.paction = 'setPump';
 	this.callback = function(response) {
-		thiz.response(response);
+		if (typeof response == 'object')
+		{
+			thiz.hydro.values(response);
+			thiz.hydro.repaint();
+		}
+		else thiz.hydro.raiseError("Failed response");
 	};
 }
 PressureSliderWidget.prototype = new SliderWidget;
@@ -388,15 +391,20 @@ function LoadPressureSliderWidget(hydroinst)
 	SliderWidget.call(this, hydroinst);
 	this.paction = 'pressureLoad';
 	this.callback = function(response) {
-		if (!thiz.response(response)) return;
-		for (i in response)
+		if (typeof response == 'object')
 		{
-			if (response[i].name == "newload" && !isNaN(parseInt(response[i].value)))
+			thiz.hydro.values(response);
+			for (i in response)
 			{
-				thiz.hydro.load = parseInt(response[i].value);
-				thiz.hydro.repaint();
+				if (response[i].name == "newload" && !isNaN(parseInt(response[i].value)))
+				{
+					thiz.hydro.load = parseInt(response[i].value);
+					thiz.hydro.repaint();
+				}
 			}
+			thiz.hydro.repaint();
 		}
+		else thiz.hydro.raiseError("Failed response");		
 	};
 }
 LoadPressureSliderWidget.prototype = new SliderWidget;
@@ -451,7 +459,83 @@ LEDPanelWidget.prototype.destroy = function() {
 	$("#ledpanel").remove();
 };
 
+/* == Gauge display a value. ================================================== */
+var gac = 0;
+function GaugeWidget(hydroinst)
+{
+	HydroWidget.call(this, hydroinst);
+	
+	this.WIDTH = 147;
+	
+	this.id = "gauge" + gac++;
+}
+GaugeWidget.prototype = new HydroWidget;
+GaugeWidget.prototype.init = function() {
+	if ($("#gaugepanel").length != 1)
+	{
+		this.canvas.append("<div id='gaugecontainer'> </div>");
+	}
+	
+	var gc, html = 
+		"<div id='" + this.id + "' class='gauge hydropanel ui-corner-all'>" +
+			"<div class='hydropaneltitle'><p>" +
+				"<span class='hydroicon " + this.icon + "'> </span>" +
+				this.name +
+			"</p></div>" +
+			"<div class='gaugeinner'>" +
+			"</div>" + 
+		"</div>";
+	this.id = "#" + this.id;
+	
+	gc = $("#gaugecontainer").append(html);
+	gc.css("width", parseInt(gc.css("width")) + this.WIDTH);
+	
+	this.draggable(this.id);
+};
+GaugeWidget.prototype.destroy = function() {
+	$(this.id).remove();
+	var w, gc = $("#gaugecontainer");
+	if ((w = parseInt(gc.css("width"))) == this.WIDTH)
+	{
+		gc.remove();
+		gac = 0;
+	}
+	else (gc.css("width", w - this.WIDTH));
+};
 
+/* == Power gauge. ============================================================ */
+function PowerGaugeWidget(hydroinst)
+{
+	GaugeWidget.call(this, hydroinst);
+	
+	this.name = "Power";
+	this.icon = "hydroiconpower";
+}
+PowerGaugeWidget.prototype = new GaugeWidget;
+
+/* == Current gauge. ========================================================== */
+function CurrentGaugeWidget(hydroinst)
+{
+	GaugeWidget.call(this, hydroinst);
+	
+	this.name = "Current";
+	this.icon = "hydroiconcurrent";
+}
+CurrentGaugeWidget.prototype = new GaugeWidget;
+
+/* == Voltage gauge. ========================================================== */
+function VoltageGaugeWidget(hydroinst)
+{
+	GaugeWidget.call(this, hydroinst);
+	
+	this.name = "Voltage";
+	this.icon = "hydroiconvoltage";
+}
+VoltageGaugeWidget.prototype = new GaugeWidget;
+
+/* ============================================================================
+ * == Utility functions.                                                     ==
+ * ============================================================================  */
 function round(num, pts)
 {
 	return Math.round(num * Math.pow(10, pts)) / Math.pow(10, pts);
