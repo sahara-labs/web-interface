@@ -192,14 +192,25 @@
 }
 
 .gaugeinner {
-	width: 125px;
+	width: 150px;
 	height: 125px;
 }
 
 .gaugetick {
 	position: absolute;
 	top: 50px;
-	left: 50px;
+	left: 60px;
 	-moz-transform-origin: right bottom;
+}
+
+.gaugevalouter {
+	position: absolute;
+	bottom: 5px;
+    left: 50px
+}
+
+.gaugevalouter span {
+	font-weight: bold;
+	font-size: 1.3em;
 }
 	

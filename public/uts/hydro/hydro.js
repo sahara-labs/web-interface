@@ -78,6 +78,7 @@ Hydro.prototype.displayMode = function(modenum) {
 		break;
 	case 2: // -- Power -----------------------------------
 		this.widgets.push(new PressureSliderWidget(this),
+						  new RpmMeterWidget(this),
 						  new PowerGaugeWidget(this));
 		break;
 	case 3: // -- Current & Voltage -----------------------
@@ -465,8 +466,8 @@ function GaugeWidget(hydroinst)
 {
 	HydroWidget.call(this, hydroinst);
 	
-	this.WIDTH = 147;
-	this.STEP_SIZE = 0.75;
+	this.WIDTH = 172;
+	this.STEP_SIZE = 3;
 	this.ANIME_PERIOD = Math.floor(1000 / 30);
 	
 	this.id = "gauge" + gac++;
@@ -507,6 +508,7 @@ GaugeWidget.prototype.init = function() {
 	gc.css("width", parseInt(gc.css("width")) + this.WIDTH);
 	
 	this.tick = $(this.id + " .gaugetick");
+	this.tickVal = $(this.id + " .gaugeval");
 	this.dr = this.cr = this.getValue() / (this.maxVal - this.minVal) * 180 - 90;
 	this.rotate(this.dr);
 	
@@ -519,8 +521,6 @@ GaugeWidget.prototype.repaint = function() {
 		this.currentVal = this.getValue();
 		this.dr = this.currentVal / (this.maxVal - this.minVal) * 180 - 90;
 		this.animate();
-		
-		/* Value display. */
 	}
 };
 GaugeWidget.prototype.destroy = function() {
@@ -539,7 +539,6 @@ GaugeWidget.prototype.animate = function() {
 	if (this.dr == this.cr) return;
 	else if (this.dr > this.cr)
 	{
-		var d = this.dr - this.cr;
 		if (this.dr - this.cr > this.STEP_SIZE)
 		{
 			this.cr += this.STEP_SIZE;
@@ -562,6 +561,10 @@ GaugeWidget.prototype.animate = function() {
 		}
 		else this.cr = this.dr; 
 	}
+	
+	/* Work backwords to find the interpolated value. */
+	var inval = round((this.cr + 90) / 180 * (this.maxVal - this.minVal), 2);
+	this.tickVal.empty().append(inval);
 	this.rotate(this.cr);
 };
 GaugeWidget.prototype.rotate = function(deg) {
@@ -578,7 +581,7 @@ function PowerGaugeWidget(hydroinst)
 	this.units = 'W';
 	
 	this.minVal = 0;
-	this.maxVal = 1;
+	this.maxVal = 2;
 }
 PowerGaugeWidget.prototype = new GaugeWidget;
 PowerGaugeWidget.prototype.getValue = function() {
@@ -595,7 +598,7 @@ function CurrentGaugeWidget(hydroinst)
 	this.units = "A";
 	
 	this.minVal = 0;
-	this.maxVal = 1;
+	this.maxVal = 1.5;
 }
 CurrentGaugeWidget.prototype = new GaugeWidget;
 CurrentGaugeWidget.prototype.getValue = function() {
@@ -612,11 +615,31 @@ function VoltageGaugeWidget(hydroinst)
 	this.units = "V";
 
 	this.minVal = 0;
-	this.maxVal = 1;
+	this.maxVal = 3;
 }
 VoltageGaugeWidget.prototype = new GaugeWidget;
 VoltageGaugeWidget.prototype.getValue = function() {
 	return this.hydro.voltage;
+};
+
+/* == RPM Meter, ============================================================== */
+function RpmMeterWidget(hydroinst)
+{
+	HydroWidget.call(hydroinst);
+	
+	this.HEIGHT = 300;
+	
+	this,minVal = 0;
+	this.maxVal = 750;
+	this.val = 0;
+	this.dval = 0;
+}
+RpmMeterWidget.prototype = new HydroWidget;
+RpmMeterWidget.prototype.init = function() {
+//	this.dval = this.val = this.hydro.rpm / (this.maxVal - this.minVal) * this.HEIGHT;
+};
+RpmMeterWidget.prototype.repaint = function() {
+	
 };
 
 /* ============================================================================
