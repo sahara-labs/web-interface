@@ -120,6 +120,20 @@
 	cursor: move;
 }
 
+.hydroicon {
+	display: block;
+	float: left;
+	overflow: hidden;
+	margin-right: 5px;
+	width: 16px;
+	height: 16px;
+	background-image: url('images/hydrosprite.png');
+}
+
+.hydroiconcurrent { background-position: 0px 0px; }
+.hydroiconvoltage { background-position: 45px 2px; }
+.hydroiconpower { background-position: 45px 0px; }
+
 #slidercont {
 	position: absolute;
 	left: 20px;
@@ -182,17 +196,10 @@
 	height: 125px;
 }
 
-.hydroicon {
-	display: block;
-	float: left;
-	overflow: hidden;
-	margin-right: 5px;
-	width: 16px;
-	height: 16px;
-	background-image: url('images/hydrosprite.png');
+.gaugetick {
+	position: absolute;
+	top: 50px;
+	left: 50px;
+	-moz-transform-origin: right bottom;
 }
-
-.hydroiconcurrent { background-position: 0px 0px; }
-.hydroiconvoltage { background-position: 45px 2px; }
-.hydroiconpower { background-position: 45px 0px; }
 	

@@ -466,8 +466,21 @@ function GaugeWidget(hydroinst)
 	HydroWidget.call(this, hydroinst);
 	
 	this.WIDTH = 147;
+	this.STEP_SIZE = 0.75;
+	this.ANIME_PERIOD = Math.floor(1000 / 30);
 	
 	this.id = "gauge" + gac++;
+
+	/* Ranging values. */
+	this.minVal = 0;
+	this.maxVal = 2;
+	this.currentVal = 0;
+	this.animeVal = 0;
+	
+	/* Animation values. */
+	this.isAnime = false;
+	this.cr = 0.0;
+	this.dr = 0.0;
 }
 GaugeWidget.prototype = new HydroWidget;
 GaugeWidget.prototype.init = function() {
@@ -483,6 +496,9 @@ GaugeWidget.prototype.init = function() {
 				this.name +
 			"</p></div>" +
 			"<div class='gaugeinner'>" +
+				"<div class='gaugetick'><img src='/uts/hydro/images/tick.png' alt='T' /></div>" +
+				"<div class='gaugevalouter'>" +
+					"<span class='gaugeval>" + this.animeVal + "</span> " + this.units +
 			"</div>" + 
 		"</div>";
 	this.id = "#" + this.id;
@@ -490,9 +506,26 @@ GaugeWidget.prototype.init = function() {
 	gc = $("#gaugecontainer").append(html);
 	gc.css("width", parseInt(gc.css("width")) + this.WIDTH);
 	
+	this.tick = $(this.id + " .gaugetick");
+	this.dr = this.cr = this.getValue() / (this.maxVal - this.minVal) * 180 - 90;
+	this.rotate(this.dr);
+	
 	this.draggable(this.id);
 };
+GaugeWidget.prototype.repaint = function() {
+	if (this.currentVal != this.getValue())
+	{
+		/* Gauge display. */
+		this.currentVal = this.getValue();
+		this.dr = this.currentVal / (this.maxVal - this.minVal) * 180 - 90;
+		this.animate();
+		
+		/* Value display. */
+	}
+};
 GaugeWidget.prototype.destroy = function() {
+	if (this.st) clearTimeout(this.st);
+	
 	$(this.id).remove();
 	var w, gc = $("#gaugecontainer");
 	if ((w = parseInt(gc.css("width"))) == this.WIDTH)
@@ -502,6 +535,38 @@ GaugeWidget.prototype.destroy = function() {
 	}
 	else (gc.css("width", w - this.WIDTH));
 };
+GaugeWidget.prototype.animate = function() {
+	if (this.dr == this.cr) return;
+	else if (this.dr > this.cr)
+	{
+		var d = this.dr - this.cr;
+		if (this.dr - this.cr > this.STEP_SIZE)
+		{
+			this.cr += this.STEP_SIZE;
+			var thiz = this;
+			this.st = setTimeout(function(){
+				thiz.animate();
+			}, this.ANIME_PERIOD);
+		}
+		else this.cr = this.dr; 
+	}
+	else
+	{
+		if (this.cr - this.dr > this.STEP_SIZE)
+		{
+			this.cr -= this.STEP_SIZE;
+			var thiz = this;
+			this.st = setTimeout(function(){
+				thiz.animate();
+			}, this.ANIME_PERIOD);
+		}
+		else this.cr = this.dr; 
+	}
+	this.rotate(this.cr);
+};
+GaugeWidget.prototype.rotate = function(deg) {
+	this.tick.css("-moz-transform", "rotate(" + deg + "deg)");
+};
 
 /* == Power gauge. ============================================================ */
 function PowerGaugeWidget(hydroinst)
@@ -510,8 +575,15 @@ function PowerGaugeWidget(hydroinst)
 	
 	this.name = "Power";
 	this.icon = "hydroiconpower";
+	this.units = 'W';
+	
+	this.minVal = 0;
+	this.maxVal = 1;
 }
 PowerGaugeWidget.prototype = new GaugeWidget;
+PowerGaugeWidget.prototype.getValue = function() {
+	return this.hydro.power;
+};
 
 /* == Current gauge. ========================================================== */
 function CurrentGaugeWidget(hydroinst)
@@ -520,8 +592,15 @@ function CurrentGaugeWidget(hydroinst)
 	
 	this.name = "Current";
 	this.icon = "hydroiconcurrent";
+	this.units = "A";
+	
+	this.minVal = 0;
+	this.maxVal = 1;
 }
 CurrentGaugeWidget.prototype = new GaugeWidget;
+CurrentGaugeWidget.prototype.getValue = function() {
+	return this.hydro.current;
+};
 
 /* == Voltage gauge. ========================================================== */
 function VoltageGaugeWidget(hydroinst)
@@ -530,8 +609,15 @@ function VoltageGaugeWidget(hydroinst)
 	
 	this.name = "Voltage";
 	this.icon = "hydroiconvoltage";
+	this.units = "V";
+
+	this.minVal = 0;
+	this.maxVal = 1;
 }
 VoltageGaugeWidget.prototype = new GaugeWidget;
+VoltageGaugeWidget.prototype.getValue = function() {
+	return this.hydro.voltage;
+};
 
 /* ============================================================================
  * == Utility functions.                                                     ==
