@@ -131,8 +131,9 @@
 }
 
 .hydroiconcurrent { background-position: 0px 0px; }
-.hydroiconvoltage { background-position: 45px 2px; }
+.hydroiconvoltage { background-position: 47px 2px; }
 .hydroiconpower { background-position: 45px 0px; }
+.hydroicontacho { background-position: 31px 2px; }
 
 #slidercont {
 	position: absolute;
@@ -213,4 +214,73 @@
 	font-weight: bold;
 	font-size: 1.3em;
 }
+
+#rpmmeter {
+	position: absolute;
+	left: 140px;
+	height: 392px;
+}
+
+.meter {
+	width: 65px;
+}
+
+.meterinner {
+	position: relative;
+}
 	
+.metercol {
+	position: absolute;
+	top: 16px;
+	left: 44px;
+	height: 100px;
+	width: 0.8em;
+	border: 1px solid #AAAAAA;
+	background-color: #FFFFFF;
+	-moz-border-radius: 4px;
+}
+
+.meterleg {
+	position: absolute;
+	top: 17px;
+	left: 0;
+}
+
+.metertick {
+	height: 29px;
+	width: 45px;
+	text-align: right;
+}
+
+.metertick span {
+	float: right
+}
+
+.meterind {
+	position: absolute;
+	bottom: -19px;
+	left: -47px;
+	z-index: 100;
+	opacity: 0.8;
+}
+
+.metershe {
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+	height: 0;
+	border-top: 2px solid #AAAAAA;
+	background-color: #EFEFEF;
+}
+
+.metervalouter {
+	position: absolute;
+	left: 5px;
+	width: 58px;
+	text-align: center;
+}
+
+.meterval {
+	font-weight: bold;
+	font-size: 1.2em;
+}

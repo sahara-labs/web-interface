@@ -83,6 +83,7 @@ Hydro.prototype.displayMode = function(modenum) {
 		break;
 	case 3: // -- Current & Voltage -----------------------
 		this.widgets.push(new PressureSliderWidget(this),
+						  new RpmMeterWidget(this),
 						  new CurrentGaugeWidget(this),
 						  new VoltageGaugeWidget(this));
 		break;
@@ -348,7 +349,9 @@ SliderWidget.prototype.init = function() {
 	
 	this.slider = $("#slider");
 	this.slider.children(".ui-slider-handle").css('width', 30)
-		.css("left", "-11px");
+		.css("left", "-11px")
+		.css("cursor", "row-resize");
+	
 	this.slider.children(".ui-slider-range").removeClass("ui-widget-header")
 		.css("background-color", "#EFEFEF");
 	this.sliderVal = $("#sliderval span");
@@ -468,15 +471,13 @@ function GaugeWidget(hydroinst)
 	
 	this.WIDTH = 172;
 	this.STEP_SIZE = 3;
-	this.ANIME_PERIOD = Math.floor(1000 / 30);
+	this.ANIME_PERIOD = 33;
 	
 	this.id = "gauge" + gac++;
 
-	/* Ranging values. */
-	this.minVal = 0;
-	this.maxVal = 2;
 	this.currentVal = 0;
 	this.animeVal = 0;
+	this.isAnime = false;
 	
 	/* Animation values. */
 	this.isAnime = false;
@@ -520,7 +521,11 @@ GaugeWidget.prototype.repaint = function() {
 		/* Gauge display. */
 		this.currentVal = this.getValue();
 		this.dr = this.currentVal / (this.maxVal - this.minVal) * 180 - 90;
-		this.animate();
+		if (!this.isAnime)
+		{
+			this.isAnime = true;
+			this.animate();
+		}
 	}
 };
 GaugeWidget.prototype.destroy = function() {
@@ -536,7 +541,11 @@ GaugeWidget.prototype.destroy = function() {
 	else (gc.css("width", w - this.WIDTH));
 };
 GaugeWidget.prototype.animate = function() {
-	if (this.dr == this.cr) return;
+	if (this.dr == this.cr)
+	{
+		this.isAnime = false;
+		return;
+	}
 	else if (this.dr > this.cr)
 	{
 		if (this.dr - this.cr > this.STEP_SIZE)
@@ -547,7 +556,11 @@ GaugeWidget.prototype.animate = function() {
 				thiz.animate();
 			}, this.ANIME_PERIOD);
 		}
-		else this.cr = this.dr; 
+		else
+		{
+			this.isAnime = false;
+			this.cr = this.dr; 
+		}
 	}
 	else
 	{
@@ -559,7 +572,11 @@ GaugeWidget.prototype.animate = function() {
 				thiz.animate();
 			}, this.ANIME_PERIOD);
 		}
-		else this.cr = this.dr; 
+		else
+		{
+			this.isAnime = false;
+			this.cr = this.dr; 
+		}
 	}
 	
 	/* Work backwords to find the interpolated value. */
@@ -622,24 +639,147 @@ VoltageGaugeWidget.prototype.getValue = function() {
 	return this.hydro.voltage;
 };
 
-/* == RPM Meter, ============================================================== */
-function RpmMeterWidget(hydroinst)
+/* == Meter. ================================================================== */
+function MeterWidget(hydroinst)
 {
-	HydroWidget.call(hydroinst);
+	HydroWidget.call(this, hydroinst);
 	
 	this.HEIGHT = 300;
-	
-	this,minVal = 0;
-	this.maxVal = 750;
+	this.STEP_SIZE = 5;
+	this.ANIME_PERIOD = 33;
+
 	this.val = 0;
+	this.cval = 0;
 	this.dval = 0;
-}
-RpmMeterWidget.prototype = new HydroWidget;
-RpmMeterWidget.prototype.init = function() {
-//	this.dval = this.val = this.hydro.rpm / (this.maxVal - this.minVal) * this.HEIGHT;
-};
-RpmMeterWidget.prototype.repaint = function() {
 	
+	this.isAnime = false;
+}
+MeterWidget.prototype = new HydroWidget;
+MeterWidget.prototype.init = function() {
+	this.val = this.getValue();
+	this.dval = this.cval = this.val / (this.maxVal - this.minVal) * this.HEIGHT;
+	
+	var html = "<div id='" + this.id + "' class='meter hydropanel ui-corner-all'>" +
+					"<div class='hydropaneltitle'><p>" +
+					"	<span class='hydroicon " + this.icon + "'></span>" +
+						this.name +
+					"</p></div>" +
+					"<div class='meterinner'>" +
+						"<div class='metercol' style='height:" + this.HEIGHT + "px'>" +
+							"<div class='metershe'></div>" +
+							"<div class='meterind'>" +
+								"<img src='/uts/hydro/images/marrow.png' alt='a' />" +
+							"</div>" +
+						"</div>" +
+						"<div class='meterleg'>";
+	
+	for (i = 0; i <= 10; i++)
+	{
+		html += 
+			'<div class="metertick">' +
+				((this.maxVal - this.minVal) - i * (this.maxVal - this.minVal) / 10) +
+				'<span class="ui-icon ui-icon-arrowthick-1-e"> </span>' +
+			'</div>';
+	}
+
+	html +=		"</div>" + // meterleg
+				"<div class='metervalouter' style='top:" + (this.HEIGHT + 20) + "px'>" +
+					"<span class='meterval'>" + this.val + "</span> " + this.units + 
+				"</div>" +
+			"</div>" +
+		"</div>";
+	
+	this.canvas.append(html);
+	
+	this.id = "#" + this.id;
+	this.ind = $(this.id + " .meterind");
+	this.she = $(this.id + " .metershe");
+	this.metv = $(this.id + " .meterval");
+	this.move(this.dval);
+	
+	this.draggable(this.id);
+};
+MeterWidget.prototype.repaint = function() {
+	if (this.val != this.getValue())
+	{
+		this.val = this.getValue();
+		this.dval = this.val / (this.maxVal - this.minVal) * this.HEIGHT;
+		if (!this.isAnime)
+		{
+			this.isAnime = true;
+			this.animate();
+		}
+	}
+};
+MeterWidget.prototype.destroy = function() {
+	$(this.id).remove();
+};
+MeterWidget.prototype.animate = function() {
+	if (this.dval == this.cval)
+	{
+		this.isAnime = false;
+		return;
+	}
+	else if (this.dval > this.cval)
+	{
+		if (this.dval - this.cval > this.STEP_SIZE)
+		{
+			this.cval += this.STEP_SIZE;
+			var thiz = this;
+			this.st = setTimeout(function(){
+				thiz.animate();
+			}, this.ANIME_PERIOD);
+		}
+		else
+		{
+			this.isAnime = false;
+			this.cval = this.dval;
+		}
+	}
+	else
+	{
+		if (this.cval - this.dval > this.STEP_SIZE)
+		{
+			this.cval -= this.STEP_SIZE;
+			var thiz = this;
+			this.st = setTimeout(function(){
+				thiz.animate();
+			}, this.ANIME_PERIOD);
+		}
+		else
+		{
+			this.isAnime = false;
+			this.cval = this.dval;
+		}
+	}
+	
+	this.move(this.cval);
+};
+MeterWidget.prototype.move = function(val) {
+	this.ind.css("bottom", val - 19);
+	this.she.css("height", val);
+	
+	/* Interpolate val back. */
+	var ival = Math.floor(val / this.HEIGHT * (this.maxVal - this.minVal));
+	this.metv.empty().append(ival);
+};
+
+/* == RPM Meter. ============================================================== */
+function RpmMeterWidget(hydroinst)
+{
+	MeterWidget.call(this, hydroinst);
+	
+	this.minVal = 0;
+	this.maxVal = 750;
+	
+	this.id = 'rpmmeter';
+	this.name = "RPM";
+	this.icon = "hydroicontacho";
+	this.units = 'r/min';
+}
+RpmMeterWidget.prototype = new MeterWidget;
+RpmMeterWidget.prototype.getValue = function() {
+	return this.hydro.rpm;
 };
 
 /* ============================================================================
