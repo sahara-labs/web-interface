@@ -199,9 +199,10 @@
 
 .gaugetick {
 	position: absolute;
-	top: 50px;
-	left: 60px;
+	top: 55px;
+	left: 70px;
 	-moz-transform-origin: right bottom;
+	z-index: 100;
 }
 
 .gaugevalouter {
@@ -213,6 +214,43 @@
 .gaugevalouter span {
 	font-weight: bold;
 	font-size: 1.3em;
+}
+
+.gaugegrad {
+	position: absolute;
+	z-index: 99;
+}
+
+.gaugegradmin {
+	left: 20px;
+	bottom: 30px;
+}
+
+.gaugegradmax {
+	right: 20px;
+	bottom: 30px;
+}
+
+.gaugegradmid {
+	left: 71px;
+	top: 65px;
+}
+	
+.gaugegradne {
+	left: 35px;
+	top: 82px;
+}
+
+.gaugegradnw {
+	right: 41px;
+	top: 80px;
+}
+
+.gaugekeystone {
+	position: absolute;
+	left: 48px;
+	top: 95px;
+	z-index: 102;
 }
 
 #rpmmeter {

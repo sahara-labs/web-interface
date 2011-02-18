@@ -499,8 +499,15 @@ GaugeWidget.prototype.init = function() {
 			"</p></div>" +
 			"<div class='gaugeinner'>" +
 				"<div class='gaugetick'><img src='/uts/hydro/images/tick.png' alt='T' /></div>" +
+				"<div class='gaugekeystone'><img src='/uts/hydro/images/keystone.png' alt='k' /></div>" +
+				"<div class='gaugegrad gaugegradmin'><img src='/uts/hydro/images/gradh.png' alt='k' /></div>" +
+				"<div class='gaugegrad gaugegradne'><img src='/uts/hydro/images/gradne.png' alt='k' /></div>" +
+				"<div class='gaugegrad gaugegradmid'><img src='/uts/hydro/images/gradv.png' alt='k' /></div>" +
+				"<div class='gaugegrad gaugegradnw'><img src='/uts/hydro/images/gradnw.png' alt='k' /></div>" +
+				"<div class='gaugegrad gaugegradmax'><img src='/uts/hydro/images/gradh.png' alt='k' /></div>" +
 				"<div class='gaugevalouter'>" +
 					"<span class='gaugeval>" + this.animeVal + "</span> " + this.units +
+				"</div>" +
 			"</div>" + 
 		"</div>";
 	this.id = "#" + this.id;
