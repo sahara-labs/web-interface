@@ -77,18 +77,25 @@ Hydro.prototype.displayMode = function(modenum) {
 						  new LEDPanelWidget(this));
 		break;
 	case 2: // -- Power -----------------------------------
-		this.widgets.push(new PressureSliderWidget(this),
+		this.widgets.push(new LoadSetterWidget(this),
+						  new PressureSliderWidget(this),
 						  new RpmMeterWidget(this),
 						  new PowerGaugeWidget(this));
 		break;
 	case 3: // -- Current & Voltage -----------------------
-		this.widgets.push(new PressureSliderWidget(this),
+		this.widgets.push(new LoadSetterWidget(this),
+						  new PressureSliderWidget(this),
 						  new RpmMeterWidget(this),
 						  new CurrentGaugeWidget(this),
 						  new VoltageGaugeWidget(this));
 		break;
 	case 4: // -- Power Redux -----------------------------
-		this.widgets.push(new PressureSliderWidget(this));
+		this.widgets.push(new LoadSetterWidget(this),
+						  new PressureSliderWidget(this),
+						  new RpmMeterWidget(this),
+						  new FlowGaugeWidget(this),
+						  new PressureGaugeWidget(this),
+						  new PowerGaugeWidget(this));
 		break;
 	case 5: // -- Switches --------------------------------
 		this.widgets.push(new PressureSliderWidget(this));
@@ -257,7 +264,7 @@ function SelectorWidget(hydroinst)
 {
 	HydroWidget.call(this, hydroinst);
 	
-	this.NUM_MODES = 5;
+	this.NUM_MODES = 4;
 	this.MODE_LABELS = ['Selector', 
 	                    'Visualisation', 
 	                    'Power',
@@ -339,8 +346,8 @@ SliderWidget.prototype.init = function() {
 			$("#sliderval span").empty().append(ui.value);
 		},
 		stop: function(event, ui) {
-			hydro.pump = ui.value;
-			$.get("/primitive/json/pc/" + hydro.PCONTROLLER + "/pa/" + thiz.paction + "/pressure/" + ui.value,
+			thiz.hydro.pump = ui.value;
+			$.get("/primitive/json/pc/" + thiz.hydro.PCONTROLLER + "/pa/" + thiz.paction + "/pressure/" + ui.value,
 				   null,
 				   thiz.callback
 			);
@@ -413,6 +420,75 @@ function LoadPressureSliderWidget(hydroinst)
 }
 LoadPressureSliderWidget.prototype = new SliderWidget;
 
+/* Load setter. =============================================================== */
+function LoadSetterWidget(hydroinst)
+{
+	HydroWidget.call(this, hydroinst);
+	
+	this.val = this.hydro.load;
+}
+LoadSetterWidget.prototype = new HydroWidget;
+LoadSetterWidget.prototype.init = function() {
+	var i, html = 
+		"<div id='loadsetterpanel' class='hydropanel ui-corner-all'>" +
+			"<div class='hydropaneltitle'><p>" +
+				"<span class='hydroicon hydroiconload'></span>" +
+				"Load" +
+			"</p></div>" +
+			"<div class='loadsetterinner'>" +
+				"<div id='loadsetter'> </div>" +
+				"<div id='loadticks'>";
+
+	for (i = 0; i <= 4; i++) html += 	
+					"<div class='loadtick'>" +
+						"<span class='ui-icon ui-icon-arrowthick-1-n'> </span>" + i +
+					"</div>";
+
+	html += 	"</div>" +
+			"<div>" +
+		"</div>";
+	
+	this.canvas.append(html);
+	
+	var thiz = this;
+
+	this.ls = $("#loadsetter").slider({
+		orientation: "horizontal",
+		min: 0,
+		max: 4,
+		value: this.val,
+		stop: function(evt, ui) {
+			thiz.hydro.load = ui.value;
+			$.get("/primitive/json/pc/" + thiz.hydro.PCONTROLLER + "/pa/setLoad/load/" + ui.value,
+				null,
+				function(response) {
+					if (typeof response == 'object')
+					{
+						thiz.hydro.values(response);
+						thiz.hydro.repaint();
+					}
+					else thiz.hydro.raiseError("Failed response");
+				}
+			);
+		}
+	});
+	
+	this.ls.children(".ui-slider-handle").css('height', 30)
+		.css("cursor", "col-resize");
+	
+	this.draggable("#loadsetterpanel");
+};
+LoadSetterWidget.prototype.repaint = function() {
+	if (this.val != this.hydro.load)
+	{
+		this.val = this.hydro.load;
+		this.ls.slider("option", "value", this.val);
+	}
+};
+LoadSetterWidget.prototype.destroy = function() {
+	$("#loadsetterpanel").remove();
+};
+
 /* == LED Panel displays load. ================================================ */
 function LEDPanelWidget(hydroinst)
 {
@@ -483,15 +559,24 @@ function GaugeWidget(hydroinst)
 	this.isAnime = false;
 	this.cr = 0.0;
 	this.dr = 0.0;
+	
+	/* Browser detection. */
+	this.browser = "unknown";
+
+	if      ($.browser.mozilla) this.browser = 'moz';
+	else if ($.browser.webkit) this.browser = 'webkit';
+	else if ($.browser.msie) this.browser = 'msie';
+	else if ($.browser.opera && parseInt($.browser.version) >= 11) this.browser = 'opera';
+	
 }
 GaugeWidget.prototype = new HydroWidget;
 GaugeWidget.prototype.init = function() {
-	if ($("#gaugepanel").length != 1)
+	if ($("#gaugecontainer").length != 1)
 	{
 		this.canvas.append("<div id='gaugecontainer'> </div>");
 	}
 	
-	var gc, html = 
+	$("#gaugecontainer").append(
 		"<div id='" + this.id + "' class='gauge hydropanel ui-corner-all'>" +
 			"<div class='hydropaneltitle'><p>" +
 				"<span class='hydroicon " + this.icon + "'> </span>" +
@@ -505,16 +590,17 @@ GaugeWidget.prototype.init = function() {
 				"<div class='gaugegrad gaugegradmid'><img src='/uts/hydro/images/gradv.png' alt='k' /></div>" +
 				"<div class='gaugegrad gaugegradnw'><img src='/uts/hydro/images/gradnw.png' alt='k' /></div>" +
 				"<div class='gaugegrad gaugegradmax'><img src='/uts/hydro/images/gradh.png' alt='k' /></div>" +
+				"<div class='gaugegradlabel gaugegradlabelmin'>" + this.minVal + "</div>" +
+				"<div class='gaugegradlabel gaugegradlabelmid'>" + round((this.maxVal - this.minVal) / 2, 2) + "</div>" +
+				"<div class='gaugegradlabel gaugegradlabelmax'>" + this.maxVal + "</div>" +
 				"<div class='gaugevalouter'>" +
-					"<span class='gaugeval>" + this.animeVal + "</span> " + this.units +
+					"<span class='gaugeval'>" + this.animeVal + "</span> " + this.units +
 				"</div>" +
 			"</div>" + 
-		"</div>";
-	this.id = "#" + this.id;
+		"</div>"
+	);
 	
-	gc = $("#gaugecontainer").append(html);
-	gc.css("width", parseInt(gc.css("width")) + this.WIDTH);
-	
+	this.id = "#" + this.id;	
 	this.tick = $(this.id + " .gaugetick");
 	this.tickVal = $(this.id + " .gaugeval");
 	this.dr = this.cr = this.getValue() / (this.maxVal - this.minVal) * 180 - 90;
@@ -592,7 +678,24 @@ GaugeWidget.prototype.animate = function() {
 	this.rotate(this.cr);
 };
 GaugeWidget.prototype.rotate = function(deg) {
-	this.tick.css("-moz-transform", "rotate(" + deg + "deg)");
+	switch (this.browser)
+	{
+	case "moz":
+		this.tick.css("-moz-transform", "rotate(" + deg + "deg)");
+		break;
+	case "webkit":
+		this.tick.css("-webkit-transform", "rotate(" + deg + "deg)");
+		break;
+	case "opera":
+		this.tick.css("-o-transform", "rotate(" + deg + "deg)");
+		break;
+	case "msie":
+		// TODO
+		break;
+	default:
+		// TODO
+		break;
+	}
 };
 
 /* == Power gauge. ============================================================ */
@@ -646,6 +749,40 @@ VoltageGaugeWidget.prototype.getValue = function() {
 	return this.hydro.voltage;
 };
 
+/* == Flow rate gauge. ======================================================== */
+function FlowGaugeWidget(hydroinst)
+{
+	GaugeWidget.call(this, hydroinst);
+	
+	this.name = "Flow Rate";
+	this.icon = "hydroiconflow";
+	this.units = "L/min";
+	
+	this.minVal = 0;
+	this.maxVal = 150;
+}
+FlowGaugeWidget.prototype = new GaugeWidget;
+FlowGaugeWidget.prototype.getValue = function() {
+	return this.hydro.flowrate;
+};
+
+/* == Pressure gauge. ========================================================= */
+function PressureGaugeWidget(hydroinst)
+{
+	GaugeWidget.call(this, hydroinst);
+	
+	this.name = "Pressure";
+	this.icon = "hydroiconpressure";
+	this.units = "Pa";
+	
+	this.minVal = 0;
+	this.maxVal = 100;
+}
+PressureGaugeWidget.prototype = new GaugeWidget;
+PressureGaugeWidget.prototype.getValue = function() {
+	return this.hydro.pressure;
+};
+
 /* == Meter. ================================================================== */
 function MeterWidget(hydroinst)
 {
@@ -685,7 +822,7 @@ MeterWidget.prototype.init = function() {
 		html += 
 			'<div class="metertick">' +
 				((this.maxVal - this.minVal) - i * (this.maxVal - this.minVal) / 10) +
-				'<span class="ui-icon ui-icon-arrowthick-1-e"> </span>' +
+				'<span class="ui-icon ui-icon-arrowthick-1-w"> </span>' +
 			'</div>';
 	}
 
