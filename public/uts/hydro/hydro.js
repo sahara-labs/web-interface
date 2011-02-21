@@ -29,7 +29,7 @@ function Hydro() {
 }
 
 /* Display debug information. */
-Hydro.prototype.debug = true;
+Hydro.prototype.debug = false;
 
 /* Whether the page is ready for interaction. */
 Hydro.prototype.ready = false;
@@ -759,7 +759,7 @@ function FlowGaugeWidget(hydroinst)
 	this.units = "L/min";
 	
 	this.minVal = 0;
-	this.maxVal = 150;
+	this.maxVal = 40;
 }
 FlowGaugeWidget.prototype = new GaugeWidget;
 FlowGaugeWidget.prototype.getValue = function() {
@@ -773,10 +773,10 @@ function PressureGaugeWidget(hydroinst)
 	
 	this.name = "Pressure";
 	this.icon = "hydroiconpressure";
-	this.units = "Pa";
+	this.units = "kPa";
 	
 	this.minVal = 0;
-	this.maxVal = 100;
+	this.maxVal = 40;
 }
 PressureGaugeWidget.prototype = new GaugeWidget;
 PressureGaugeWidget.prototype.getValue = function() {
