@@ -4,11 +4,9 @@
 	min-height: 500px;
 }
 
-#hydroselectorbutton {
+.hydrobutton {
 	display: block;
 	position: absolute;
-	top: -50px;
-	right: 0px;
 	height: 75px;
 	width: 75px;
 	font-size: 0.8em;
@@ -23,11 +21,21 @@
 	cursor: pointer;
 }
 
-#hydroselectorbutton:hover {
+.hydrobutton:hover {
 	color: #000000;
 	box-shadow: 0 0 4px #606060;
     -moz-box-shadow: 0 0 4px #606060;
     -webkit-box-shadow: 0 0 4px #606060;	
+}
+
+#hydroselectorbutton {
+	top: -50px;
+	right: 99px;
+}
+
+#datadownloadbutton {
+	top: -50px;
+	right: 0px;
 }
 
 #hydroselector {
@@ -150,13 +158,17 @@
 
 .hydroiconcurrent { background-position: 0px 0px; }
 .hydroiconvoltage { background-position: 47px 2px; }
-.hydroiconpower { background-position: 45px 0px; }
+.hydroiconpower { background-position: 16px 0px; }
 .hydroicontacho { background-position: 31px 2px; }
+.hydroiconload { background-position: 64px 50px; }
+.hydroiconpressure { background-position: 48px 48px; }
+.hydroiconflow { background-position: 32px 48px; }
 
 #slidercont {
 	position: absolute;
 	top: 46px;
 	left: 2px;
+	width: 105px;
 }
 
 #sliderinner {
@@ -253,6 +265,7 @@
 	-moz-transform-origin: right bottom;
 	-webkit-transform-origin: right bottom;
 	-o-transform-origin: right bottom;
+	-ms-transform-origin: right bottom;
 	z-index: 100;
 }
 
@@ -275,7 +288,7 @@
 
 .gaugegradmin {
 	left: 20px;
-	bottom: 30px;
+	bottom: 31px;
 }
 
 .gaugegradlabelmin {
@@ -285,7 +298,7 @@
 
 .gaugegradmax {
 	right: 20px;
-	bottom: 30px;
+	bottom: 31px;
 }
 
 .gaugegradlabelmax {
@@ -379,6 +392,7 @@
 	height: 0;
 	border-top: 2px solid #AAAAAA;
 	background-color: #EFEFEF;
+	overflow: hidden;
 }
 
 .metervalouter {

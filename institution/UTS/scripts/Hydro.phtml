@@ -38,26 +38,38 @@
 
 $this->headScript()->appendFile('/uts/hydro/hydro.js');
 $this->headLink()->appendStylesheet('/uts/hydro/hydro.css');
-
+$this->headLink()->appendStylesheet('/uts/hydro/hydro-ie.css', 'screen', 'lt IE 9')
 ?>
 
-<script type="text/javascript">
-hydro = new Hydro();
-$(document).ready(function() {
-	hydro.init();
-});
-</script>
-
 <div id="hydro">
-
+	<!--  Experiment canvas. -->
 </div>
 
-<!-- Experiment selector. -->
-<a id="hydroselectorbutton" onclick="hydro.changeMode('exp0')" class="ui-corner-all">
+<a id="hydroselectorbutton" class="hydrobutton ui-corner-all">
 	<img src="<?=$this->baseUrl('/uts/hydro/images/experiments.png')?>" alt="launch" />
 	Change Experiment
 </a>
 
+<a id="datadownloadbutton" class="hydrobutton ui-corner-all">
+	<img src="<?=$this->baseUrl('/uts/hydro/images/datadownload.png')?>" alt="download" />
+	Download Data
+</a>
+
+<script type="text/javascript">
+var hydro = new Hydro();
+$(document).ready(function() {
+	hydro.init();
+
+	/* Button behaviours. */
+  	$("#hydroselectorbutton").click(function(){
+  	  	hydro.changeMode("exp0");
+  	});
+
+	$("datadownloadbutton").click(function(){
+
+	});
+});
+</script>
 
 <!-- Debug panel. -->
 <div id="hydrodebugpanel" class="sessionpanel ui-corner-all">

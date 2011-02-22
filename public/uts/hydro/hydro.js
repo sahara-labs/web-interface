@@ -200,6 +200,13 @@ Hydro.prototype.values = function(values) {
 };
 
 /* ============================================================================
+ * == Data downloads.                                                        ==
+ * ============================================================================ */
+Hydro.prototype.dataInit = function() {
+	
+};
+
+/* ============================================================================
  * == Utility & debug.                                                       ==
  * ============================================================================ */
 Hydro.prototype.addOverlay = function() {
@@ -360,7 +367,8 @@ SliderWidget.prototype.init = function() {
 		.css("cursor", "row-resize");
 	
 	this.slider.children(".ui-slider-range").removeClass("ui-widget-header")
-		.css("background-color", "#EFEFEF");
+		.css("background-color", "#EFEFEF")
+		.css("overflow", "hidden");
 	this.sliderVal = $("#sliderval span");
 	
 	this.draggable("#slidercont");
@@ -565,9 +573,9 @@ function GaugeWidget(hydroinst)
 
 	if      ($.browser.mozilla) this.browser = 'moz';
 	else if ($.browser.webkit) this.browser = 'webkit';
+	else if ($.browser.msie && parseInt($.browser.version) >= 9) this.browser = 'msie9';
 	else if ($.browser.msie) this.browser = 'msie';
 	else if ($.browser.opera && parseInt($.browser.version) >= 11) this.browser = 'opera';
-	
 }
 GaugeWidget.prototype = new HydroWidget;
 GaugeWidget.prototype.init = function() {
@@ -689,11 +697,83 @@ GaugeWidget.prototype.rotate = function(deg) {
 	case "opera":
 		this.tick.css("-o-transform", "rotate(" + deg + "deg)");
 		break;
+	case "msie9":
+		this.tick[0].style.msTransform = "rotate(" + deg + "deg)";
+		break;
 	case "msie":
-		// TODO
+		var rad = deg * Math.PI / 180,
+			a = parseFloat(parseFloat(Math.cos(rad)).toFixed(8)),
+			b = parseFloat(parseFloat(Math.sin(rad)).toFixed(8)),
+			c = -b, 
+			d = a;
+		
+		this.tick.css("filter", "progid:DXImageTransform.Microsoft.Matrix(" +
+						"M11=" + a + ", M12=" + c + ", " +
+						"M21=" + b + ", M22=" + d + ", " +
+						"SizingMethod='auto expand'" +
+					   ")");
+		
+		var i, j,
+		    m = [
+		         [a, c, 0],
+		         [b, d, 0],
+		         [0, 0, 1]
+		    ],
+			to = [
+			     [4],
+			     [60],
+			     [1]
+			], tc = [],
+			fo = [
+			     [0],
+			     [0],
+			     [1]
+			], fc = [];
+		
+		for (i in m)
+		{
+			var tp = 0, fp = 0;
+			for (j in m[i])
+			{
+				tp += m[i][j] * to[j];
+				fp += m[i][j] * fo[j];
+			}
+			tc.push(tp);
+			fc.push(fp);
+		}
+		
+		if (0 <= deg && deg < 90)
+		{
+			this.tick.css({
+				left: (70 - 60 * b + (fc[0] - fo[0][0] - (tc[0] - to[0]))) + 'px', 
+				top: (45 + fc[1] - fo[1][0] - (tc[1] - to[1][0])) + 'px'
+			});
+		}
+		else if (90 <= deg && deg < 180)
+		{
+			this.tick.css({
+				left: (70 - 60 * b + (fc[0] - fo[0][0] - (tc[0] - to[0]))) + 'px', 
+				top: (45 + 65 * a + fc[1] - fo[1][0] - (tc[1] - to[1][0])) + 'px'
+			});
+		}
+		else if (180 <= deg && deg < 270)
+		{
+			this.tick.css({
+				left: (70 + (fc[0] - fo[0][0] - (tc[0] - to[0]))) + 'px', 
+				top: (45 + 65 * a + fc[1] - fo[1][0] - (tc[1] - to[1][0])) + 'px'
+			});
+		}
+		else
+		{
+			this.tick.css({
+				left: (70 + (fc[0] - fo[0][0] - (tc[0] - to[0]))) + 'px', 
+				top: (45 + fc[1] - fo[1][0] - (tc[1] - to[1][0])) + 'px'
+			});
+		}
+
 		break;
 	default:
-		// TODO
+		this.tick.css("transform", "rotate(" + deg + "deg)");
 		break;
 	}
 };
