@@ -201,6 +201,10 @@
 	font-weight: bold;
 }
 
+#sliderleg {
+	width: 65px;
+}
+
 #loadsetterpanel {
 	position: absolute;
 	width: 105px;

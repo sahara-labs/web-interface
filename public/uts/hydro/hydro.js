@@ -368,7 +368,8 @@ SliderWidget.prototype.init = function() {
 	
 	this.slider.children(".ui-slider-range").removeClass("ui-widget-header")
 		.css("background-color", "#EFEFEF")
-		.css("overflow", "hidden");
+		.css("overflow", "hidden")
+		.css("width", "12px");
 	this.sliderVal = $("#sliderval span");
 	
 	this.draggable("#slidercont");
