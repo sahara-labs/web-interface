@@ -2,6 +2,15 @@
 $cams = new Sahara_Session_Element_Cameras($this->rigClient);
 echo $cams;
 
-$rdpApplet = new Sahara_Session_Element_RdpApplet($this->rigClient);
+$rdpApplet = new Sahara_Session_Element_RdpApplet($this->rigClient, array(
+        'cl1' => 'SP',
+        'cl2' => 'LO'
+));
 echo $rdpApplet;
+
+$files = new Sahara_Session_Element_HomeFile(null);
+echo $files;
+
 ?>
+
+<div style='margin-bottom:50px'> </span>

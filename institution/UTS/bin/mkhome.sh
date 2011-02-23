@@ -50,6 +50,8 @@ fi
 
 # Create the Windows roaming profile directory
 mkdir -m 770 $HOME/.profile
+mkdir -m 770 "$HOME/.profile/My Documents"
+mkdir -m 770 $HOME/.profile/Desktop
 mkdir -m 770 $HOME/Desktop
 
 # Change ownership of the home directory to the user
