@@ -196,6 +196,9 @@ switch ($this->userRole)
         else $actionMenu = array();
         break;
 }
+
+/* The help page is special, as it can be access from any other page. */
+if ($this->controller == 'index' && $this->action == 'help') $actionMenu = array();
 ?>
 
 <?php if (count($actionMenu)):?>

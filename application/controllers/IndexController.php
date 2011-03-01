@@ -228,5 +228,10 @@ class IndexController extends Sahara_Controller_Action_Acl
         /* Tells validation engine that submission succeeded. */
         echo $this->view->json(array('success' => 'true'));
     }
+
+    public function helpAction()
+    {
+        $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Help');
+    }
 }
 
