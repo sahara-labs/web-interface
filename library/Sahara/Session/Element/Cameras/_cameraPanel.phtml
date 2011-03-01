@@ -84,6 +84,9 @@ $(document).ready( function() {
 	/* Camera form styling. */
 	$("#camform<?=$k?>").jqTransform();
 	$("#camformat<?=$k?> .jqTransformSelectWrapper").css("z-index", "<?=count($this->cameras) - $i?>");
+	
+	/* Ugly hack to fix camera format drop downs not showing on first load. */
+	$("#camform<?=$k?> .jqTransformSelectWrapper ul").css("height", 25 * 4);
 
 	/* Camera form click event. */
 	$("#camform<?=$k?> .jqTransformSelectWrapper ul li a").click( function() {
