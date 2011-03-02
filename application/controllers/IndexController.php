@@ -49,11 +49,17 @@ class IndexController extends Sahara_Controller_Action_Acl
         $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Login');
         $this->view->messages = $this->_flashMessenger->getMessages();
 
-        $inst = Zend_Registry::get('config')->institution;
-        $this->view->inst = $inst;
+       $config = Zend_Registry::get('config');
+        $this->view->inst = $inst = $config->institution;
 
         $form = new Sahara_Auth_Form();
         $this->view->form = $form;
+        if ($this->view->shibLayout = $config->auth && $config->auth->useSSO)
+        {
+            $this->view->localAuth = $config->auth->useLocalAuth;
+            $this->view->ssoIcon = $config->auth->ssoIcon;
+            $this->view->instIcon = $config->auth->instIcon;
+        }
 
         if ($this->_request->isPost() && $form->isValid($this->_request->getParams()))
         {
@@ -62,9 +68,24 @@ class IndexController extends Sahara_Controller_Action_Acl
             $username = $form->getValue('username');
             $password = $form->getValue('password');
 
-            /******************************************************************
-             ** TODO Add your authentication.                                **
-             ******************************************************************/
+            if ($config->auth && $config->auth->useSahara)
+            {
+                $saharaAuth = new Sahara_Auth($username, $password);
+                if (!$saharaAuth->authenticate())
+                {
+                    /* Authentication failed. */
+                    $this->view->messages = array('Authentication failure.');
+                    return;
+                }
+
+                $saharaAuth->setupSession();
+            }
+            else
+            {
+                /******************************************************************
+                 ** TODO Add your authentication.                                **
+                 ******************************************************************/
+            }
 
             $user = Sahara_Soap::getSchedServerPermissionsClient()->getUser(array(
             		'userQName' => $inst . ':' . $username

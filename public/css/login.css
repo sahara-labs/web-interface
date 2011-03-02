@@ -1,0 +1,54 @@
+@CHARSET "UTF-8";
+
+#fieldssetdiv {
+	border: 0px;
+	background-color: #EFEFEF;
+	margin-bottom: 5px;
+	position: relative;
+	display: block;
+	overflow: hidden;
+	border: 1px solid #525252;
+	-moz-box-shadow: 0 0 5px #525252;
+	-webkit-box-shadow: 0 0 5px #525252;
+	box-shadow: 0 0 5px #525252;
+}
+
+
+
+#logindiv {
+	width: 310px;
+}
+
+#formid {
+	margin-top: 10px;
+}
+
+/******************************************************************************
+ ** Login Page                                                               **
+ *****************************************************************************/
+#loginbuttons {
+	margin: 40px auto;
+	width: 400px;	
+}
+
+#shibbutton {
+	float: left;
+}
+
+#shibnolocalbutton {
+	margin: 0 auto;
+}
+
+#localbutton {
+	float: right;
+}
+
+.loginbutton {
+	width: 150px;
+	height: 150px;
+}
+ 
+#localloginform {
+	display: none;
+}
+ 

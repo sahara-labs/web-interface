@@ -35,7 +35,7 @@
  * @author Michael Diponio (mdiponio)
  * @date 20th March 2010
  */
-$this->headLink()->appendStylesheet($this->baseUrl('css/form.css'));
+$this->headLink()->appendStylesheet($this->baseUrl('css/login.css'));
 $this->headScript()->appendScript('
 	$(document).ready(function() {
 		 $("#formid").jqTransform();
@@ -48,9 +48,8 @@ $this->headScript()->appendScript('
 	<h2>Welcome to Remote Labs</h2>
 </div>
 
-<div style="width:310px; margin: 0 auto">
-
 <?php if (count($this->messages)):?>
+	<!-- Error messages. -->
 	<div class="ui-state-error ui-corner-all alertdiv">
 	<?php if (count($this->messages) == 1):?>
 		<p class="alertp">
@@ -71,15 +70,39 @@ $this->headScript()->appendScript('
 	</div>
 <?php endif; ?>
 
-<div id="formdiv">
-	<form id="formid" method="POST">
-		<div id="fieldssetdiv" class="ui-corner-all">
-	        <?=$this->form->getDisplayGroup('auth_form')->render()?>
-	    </div>
-		<div class="ui-corner-all" style="float:right">
-			<?=$this->form->getElement('login')->render()?>
+<?php if ($this->shibLayout): ?>
+<div id="loginbuttons">
+	<a id="<?=$this->localAuth ? 'shibbutton' : 'shibnolocalbutton'?>" class="loginbutton commonbutton" href="/sso/login">
+		<img src="<?=$this->ssoIcon ? $this->ssoIcon : $this->baseUrl('/images/sso.png')?>" alt="AAF" />
+		Australian Access Federation
+		<div class="commonhover loginhover">
+			Use this to login through
 		</div>
-	</form>
+	</a>
+
+	<?php if ($this->localAuth): ?>
+	<a id="localbutton" class="loginbutton commonbutton">
+		<img src="<?=$this->instIcon ? $this->instIcon : $this->baseUrl('/images/locallogin.png')?>" alt="AAF" />
+		Institution Login
+	</a>
+	<?php endif; ?>
 </div>
 
+<div id="localloginform">
+<?php endif; ?>
+    <div style="width:310px; margin: 0 auto">
+        <div id="loginform">
+        	<form id="formid" method="POST">
+        		<div id="fieldssetdiv" class="ui-corner-all">
+        	        <?=$this->form->getDisplayGroup('auth_form')->render()?>
+        	    </div>
+        		<div class="ui-corner-all" style="float:right">
+        			<?=$this->form->getElement('login')->render()?>
+        		</div>
+        	</form>
+        </div>
+    </div>
+
+<?php if ($this->shibLayout): ?>
 </div>
+<?php endif; ?>
