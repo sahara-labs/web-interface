@@ -209,7 +209,7 @@ $(document).ready(function() {
 
 		/* Inactive permission script. */
 		width: 420,
-		height: 180,
+		height: 210,
 		buttons: {
 		<?php if ($perm['canBook'] && Sahara_DateTimeUtil::isAfterNow($perm['start'])): ?>
 			'Reserve': function() { window.location.replace("/bookings/index/pid/<?=$perm['permissionId']?>"); },
