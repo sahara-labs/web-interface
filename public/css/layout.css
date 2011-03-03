@@ -88,6 +88,12 @@ legend {
     position: relative;
 }
 
+.commonbutton:hover {
+	-moz-box-shadow: 0 0 4px #606060;
+    -webkit-box-shadow: 0 0 4px #606060;
+    box-shadow: 0 0 4px #606060;
+}
+
 .commonbutton img {
 	border: 0 none;
 }
@@ -96,7 +102,7 @@ legend {
 	display: none;
 	position: absolute;
 	width: 200px;
-	bottom: 15px;
+	bottom: 5px;
 	left: 20px;
 	padding: 8px;
 	background-color: #606060;

@@ -36,12 +36,7 @@
  * @date 20th March 2010
  */
 $this->headLink()->appendStylesheet($this->baseUrl('css/login.css'));
-$this->headScript()->appendScript('
-	$(document).ready(function() {
-		 $("#formid").jqTransform();
-    	 $("#formid").validationEngine();
-	});
-');
+
 ?>
 
 <div class="contentheader">
@@ -50,7 +45,7 @@ $this->headScript()->appendScript('
 
 <?php if (count($this->messages)):?>
 	<!-- Error messages. -->
-	<div class="ui-state-error ui-corner-all alertdiv">
+	<div id="loginerrors" class="ui-state-error ui-corner-all alertdiv">
 	<?php if (count($this->messages) == 1):?>
 		<p class="alertp">
     		<span class="ui-icon ui-icon-alert alertspan"></span>
@@ -70,7 +65,7 @@ $this->headScript()->appendScript('
 	</div>
 <?php endif; ?>
 
-<?php if ($this->shibLayout): ?>
+<?php if ($this->ssoLayout): ?>
 <div id="loginbuttons">
 	<a id="<?=$this->localAuth ? 'shibbutton' : 'shibnolocalbutton'?>" class="loginbutton commonbutton" href="/sso/login">
 		<img src="<?=$this->ssoIcon ? $this->ssoIcon : $this->baseUrl('/images/sso.png')?>" alt="SSO" /><br />
@@ -95,13 +90,40 @@ $this->headScript()->appendScript('
 		</span>
 	</a>
 	<?php endif; ?>
+
+	<div id="localloginform">
+
+<?php endif; ?>
+        <div id="loginform">
+        	<form id="loginformid" method="POST">
+        		<div id="loginformfields" class="ui-corner-all">
+        		<? if ($this->ssoLayout): ?>
+        			<div id="loginformtitle"><?=$this->localLabel ? $this->localLabel : 'Institution Login'?>:</div>
+        		<?php endif; ?>
+        	        <?=$this->form->getDisplayGroup('auth_form')->render()?>
+        	    </div>
+        		<div class="ui-corner-all" style="float:right">
+        			<?=$this->form->getElement('login')->render()?>
+        		</div>
+        	</form>
+        </div>
+
+<?php if ($this->ssoLayout): ?>
+	</div>
 </div>
+<?php endif; ?>
 
 <script type="text/javascript">
 <!--
 var hovTT = new Object();
 $(document).ready(function() {
+<?php if ($this->ssoLayout): ?>
 	$("#localbutton").click(function() {
+		$(this).hide();
+		$("#loginbuttons").css("width", "520");
+		$("#localloginform").show();
+		$("#loginformid").jqTransform()
+					     .validationEngine();
 	});
 
 	$(".loginbutton").hover(function(){
@@ -117,25 +139,10 @@ $(document).ready(function() {
 			if (hoverEle.css('display') == 'block') hoverEle.fadeOut('slow');
 		}
 	);
+<?php else: ?>
+	$("#loginformid").jqTransform()
+					 .validationEngine();
+<?php endif; ?>
 });
 //-->
 </script>
-
-<div id="localloginform">
-<?php endif; ?>
-    <div style="width:310px; margin: 0 auto">
-        <div id="loginform">
-        	<form id="formid" method="POST">
-        		<div id="fieldssetdiv" class="ui-corner-all">
-        	        <?=$this->form->getDisplayGroup('auth_form')->render()?>
-        	    </div>
-        		<div class="ui-corner-all" style="float:right">
-        			<?=$this->form->getElement('login')->render()?>
-        		</div>
-        	</form>
-        </div>
-    </div>
-
-<?php if ($this->shibLayout): ?>
-</div>
-<?php endif; ?>

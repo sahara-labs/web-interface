@@ -54,7 +54,7 @@ class IndexController extends Sahara_Controller_Action_Acl
 
         $form = new Sahara_Auth_Form();
         $this->view->form = $form;
-        if ($this->view->shibLayout = $config->auth && $config->auth->useSSO)
+        if ($this->view->ssoLayout = ($config->auth && $config->auth->useSSO))
         {
             $this->view->localAuth = $config->auth->useLocalAuth;
 
