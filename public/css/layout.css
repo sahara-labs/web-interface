@@ -411,6 +411,10 @@ a.plaina:hover {
 	margin: 5px 20px;
 }
 
+.helplinklink:focus {
+	border: 0 none;
+}
+
 #feedback_form_sent {
 	display: none;
 	padding: 20px;

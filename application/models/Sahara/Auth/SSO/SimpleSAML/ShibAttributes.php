@@ -140,6 +140,20 @@ class Sahara_Auth_SSO_SimpleSAML_ShibAttributes
     }
 
     /**
+     * Gets an imploded version of the attributes.
+     */
+    public function implode()
+    {
+        $str = '';
+        foreach ($this->_attrs as $k => $v)
+        {
+            $str .= $k . '=' . $v . ';';
+        }
+
+        return substr($str, 0, strlen($str) - 1);
+    }
+
+    /**
      * Gets the attribute value or null if it doesn't exist.
      *
      * @param String $attr attribute

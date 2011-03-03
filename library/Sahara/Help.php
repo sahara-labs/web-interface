@@ -42,7 +42,7 @@
 class Sahara_Help
 {
     /* Default help contents. */
-    private static $_help = array(
+    private static $_defHelp = array(
         'Rig Selection' => array(
                 'help' => 'This page is used for selecting a rig type. A dialog will open after
                 	selecting the rig type, enabling you to queue, reserve, or cancel a rig session.
@@ -273,12 +273,18 @@ class Sahara_Help
             )
     );
 
+    /** Help contents which is a merge of the default help and institution
+     *  namespaced help. */
+    private $_help = array();
+
     /** Page providing help on. */
     private $_page;
 
     public function __construct($controller = null, $action = null)
     {
         if ($controller && $action) $this->_page = $controller . $action;
+
+        $this->_help = array_merge($this->_help, self::$_defHelp);
     }
 
     /**
@@ -286,7 +292,7 @@ class Sahara_Help
      */
     public static function getAllHelp()
     {
-        return self::$_help;
+        return $this->_help;
     }
 
     /**
@@ -297,25 +303,25 @@ class Sahara_Help
         switch ($this->_page)
         {
             case 'indexindex':
-                return self::$_help['Login']['help'];
+                return $this->_help['Login']['help'];
 
             case 'queueindex':
-                return self::$_help['Rig Selection']['help'];
+                return $this->_help['Rig Selection']['help'];
 
             case 'queuequeuing':
-                return self::$_help['Queue']['help'];
+                return $this->_help['Queue']['help'];
 
             case 'bookingsindex':
-                return self::$_help['Reservation']['help'];
+                return $this->_help['Reservation']['help'];
 
             case 'bookingswaiting':
-                return self::$_help['Reservation Waiting']['help'];
+                return $this->_help['Reservation Waiting']['help'];
 
             case 'bookingsexisting':
-                return self::$_help['Existing Reservations']['help'];
+                return $this->_help['Existing Reservations']['help'];
 
             case 'sessionindex':
-                return self::$_help['Session']['help'];
+                return $this->_help['Session']['help'];
 
             default:
                 return 'This page current has no help.';
@@ -330,25 +336,25 @@ class Sahara_Help
         switch ($this->_page)
         {
             case 'indexindex':
-                return self::$_help['Login']['troubleshooting'];
+                return $this->_help['Login']['troubleshooting'];
 
             case 'queueindex':
-                return self::$_help['Rig Selection']['troubleshooting'];
+                return $this->_help['Rig Selection']['troubleshooting'];
 
             case 'queuequeuing':
-                return self::$_help['Queue']['troubleshooting'];
+                return $this->_help['Queue']['troubleshooting'];
 
             case 'bookingsindex':
-                return self::$_help['Reservation']['troubleshooting'];
+                return $this->_help['Reservation']['troubleshooting'];
 
             case 'bookingswaiting':
-                return self::$_help['Reservation Waiting']['troubleshooting'];
+                return $this->_help['Reservation Waiting']['troubleshooting'];
 
             case 'bookingsexisting':
-                return self::$_help['Existing Reservations']['troubleshooting'];
+                return $this->_help['Existing Reservations']['troubleshooting'];
 
             case 'sessionindex':
-                return self::$_help['Session']['troubleshooting'];
+                return $this->_help['Session']['troubleshooting'];
 
             default:
                 return array();
