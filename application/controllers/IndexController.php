@@ -57,8 +57,14 @@ class IndexController extends Sahara_Controller_Action_Acl
         if ($this->view->shibLayout = $config->auth && $config->auth->useSSO)
         {
             $this->view->localAuth = $config->auth->useLocalAuth;
+
+            /* Load interface information. */
             $this->view->ssoIcon = $config->auth->ssoIcon;
-            $this->view->instIcon = $config->auth->instIcon;
+            $this->view->ssoLabel = $config->auth->ssoLabel;
+            $this->view->ssoHover = $config->auth->ssoHover;
+            $this->view->localIcon = $config->auth->localIcon;
+            $this->view->localLabel = $config->auth->localLabel;
+            $this->view->localHover = $config->auth->localHover;
         }
 
         if ($this->_request->isPost() && $form->isValid($this->_request->getParams()))

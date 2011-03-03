@@ -73,20 +73,53 @@ $this->headScript()->appendScript('
 <?php if ($this->shibLayout): ?>
 <div id="loginbuttons">
 	<a id="<?=$this->localAuth ? 'shibbutton' : 'shibnolocalbutton'?>" class="loginbutton commonbutton" href="/sso/login">
-		<img src="<?=$this->ssoIcon ? $this->ssoIcon : $this->baseUrl('/images/sso.png')?>" alt="AAF" />
-		Australian Access Federation
-		<div class="commonhover loginhover">
-			Use this to login through
-		</div>
+		<img src="<?=$this->ssoIcon ? $this->ssoIcon : $this->baseUrl('/images/sso.png')?>" alt="SSO" /><br />
+		<?=$this->ssoLabel ? $this->ssoLabel : 'SSO Service'?>
+		<span class="commonhover">
+			<?=$this->ssoHover ? $this->ssoHover :
+			    'Use this to login through a Single Sign On service like Shibboleth. If you do not know which is the
+			     correct authentication method and you are not a member of the hosting institution, this is probably
+			     the correct option.'?>
+		</span>
 	</a>
 
 	<?php if ($this->localAuth): ?>
 	<a id="localbutton" class="loginbutton commonbutton">
-		<img src="<?=$this->instIcon ? $this->instIcon : $this->baseUrl('/images/locallogin.png')?>" alt="AAF" />
-		Institution Login
+		<img src="<?=$this->localIcon ? $this->localIcon : $this->baseUrl('/images/locallogin.png')?>" alt="Local" /><br />
+		<?=$this->localLabel ? $this->localLabel : 'Institution Login'?>
+		<span class="commonhover">
+			<?=$this->localHover ? $this->localHover :
+			    'Use this to login through a local authentication system. If you do not know which is the correct
+			    authentication method and you are a member of the hosting institution, this is propbably the
+			    correct option.'?>
+		</span>
 	</a>
 	<?php endif; ?>
 </div>
+
+<script type="text/javascript">
+<!--
+var hovTT = new Object();
+$(document).ready(function() {
+	$("#localbutton").click(function() {
+	});
+
+	$(".loginbutton").hover(function(){
+			var eId = $(this).attr('id');
+			hovTT[eId] = true;
+			setTimeout(function() {
+				if (hovTT[eId]) $("#" + eId).children('.commonhover').fadeIn('slow');
+			}, 2000);
+		},
+		function() {
+			hovTT[$(this).attr('id')] = false;
+			var hoverEle = $(this).children('.commonhover');
+			if (hoverEle.css('display') == 'block') hoverEle.fadeOut('slow');
+		}
+	);
+});
+//-->
+</script>
 
 <div id="localloginform">
 <?php endif; ?>
