@@ -38,26 +38,20 @@
 
 /**
  * Single sign on integration class.
- * <br />
- * The <tt>signon</tt> method must be implemented by derived classes and if it
- * succeeds, it must populate the <tt>_user</tt> field.
  */
 abstract class Sahara_Auth_SSO
 {
-    /**
-     * @var String username.
-     */
-    private $_user;
+
 
     /**
      * @var Zend_Config Configuration.
      */
-    private $_config;
+    protected $_config;
 
     /**
      * @var Sahara_Logger Logger.
      */
-    private $_logger;
+    protected $_logger;
 
     public function __construct()
     {
@@ -82,13 +76,12 @@ abstract class Sahara_Auth_SSO
 
     /**
      * Gets the user name of the signed on user.
+     *
+     * @return String user name.
      */
-    public function getUsername()
-    {
-        return $this->_user;
-    }
+    public abstract function getUsername();
 
-	/**
+    /**
      * Returns the SSO type.
      *
      * @var String authenticator type
