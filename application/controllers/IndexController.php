@@ -125,6 +125,56 @@ class IndexController extends Sahara_Controller_Action_Acl
     }
 
     /**
+     * SSO login action.
+     */
+    public function ssoAction()
+    {
+
+
+        /* Authenticate. */
+        $saharaAuth = new Sahara_Auth();
+        if (!$saharaAuth->signon())
+        {
+            $this->_flashMessenger->addMessage('Failed single sign on.');
+            $this->_redirectTo('index', 'index');
+        }
+
+        /* Setup session. */
+        $saharaAuth->setupSession();
+
+        /* Validate and store account. */
+        $user = Sahara_Soap::getSchedServerPermissionsClient()->getUser(array(
+            		'userQName' => $inst . ':' . $saharaAuth->getUsername()
+        ));
+
+        /* Store the authentication information if the user is authenticated. */
+        if ($user->persona != Sahara_Acl::UNAUTH)
+        {
+            $storage = $this->_auth->getStorage();
+            $storage->clear();
+            $storage->write($user->userQName);
+        }
+
+        /* Redirect to an appropriate page. */
+        switch ($user->persona)
+        {
+            case Sahara_Acl::USER:
+                $this->_redirectTo('index', 'queue');
+                break;
+            case Sahara_Acl::ACADEMIC:
+                $this->_redirectTo('index', 'academic');
+                break;
+            case Sahara_Acl::ADMIN:
+                $this->_redirectTo('index', 'admin');
+                break;
+            default:
+                $this->_flashMessenger->addMessage("Unknown user '" . $saharaAuth->getUsername() . "'.");
+                $this->_redirectTo('index', 'index');
+                break;
+        }
+    }
+
+    /**
      * Logs out and ends a session.
      */
     public function logoutAction()

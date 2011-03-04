@@ -36,6 +36,9 @@
  * @date 9th July 2010
  */
 
+/**
+ * Main Sahara authenticator which can do local authentication or single sign on.
+ */
 class Sahara_Auth
 {
     /** @var UTS_Auth The successful authentication type. */
@@ -56,7 +59,7 @@ class Sahara_Auth
     /** @var Sahara_Logger Logger. */
     private $_logger;
 
-    public function __construct($username, $password)
+    public function __construct($username = null, $password = null)
     {
         $this->_username = $username;
         $this->_password = $password;
@@ -87,6 +90,16 @@ class Sahara_Auth
             if (!($auth = $this->_loadclass($this->_institution . "_Auth_Type_$type")) &&
                 !($auth = $this->_loadclass("Sahara_Auth_Type_$type"))) continue;
 
+            if (!($auth instanceof Sahara_Auth_Type))
+            {
+                $this->_logger->_error("Auth type $type is not an implementation of Sahara_Auth_Type. Excluding it " .
+                    	'from the authentication chain.');
+                continue;
+            }
+
+            $auth->setUsername($this->_username);
+            $auth->setPassword($this->_password);
+
             if ($auth->authenticate())
             {
                 $this->_successType = $auth;
@@ -97,6 +110,57 @@ class Sahara_Auth
         return !is_null($this->_successType);
     }
 
+    /**
+     * Uses single sign on to attempt to authenticate the user
+     *
+     * @return boolean true if the user can be authenticated
+     * @throws Exception SSO type are not configured correctly.
+     */
+    public function signon()
+    {
+    	/* Make sure SSO is enabled. */
+        if (!$this->_config->auth->useSSO)
+        {
+            $this->_logger->error('Attempted SSO sign on when SSO auth path is not enabled.  Set the \'auth.useSSO\' ' .
+                    'property to true to enable the SSO feature.');
+            return false;
+        }
+
+        /* Load the SSO class. */
+        $ssoType = $this->_config->auth->ssoType;
+        if (!$ssoType)
+        {
+            $this->_logger->error('SSO type is not configured. Set the \'auth.ssoType\' property to a valid SSO type.');
+            throw new Exception('SSO type not configured.');
+        }
+
+        if (!($sso = $this->_loadclass($this->_institution . "_Auth_SSO_$ssoType")) &&
+            !($sso = $this->_loadclass("Sahara_Auth_SSO_$ssoType")))
+        {
+            $this->_logger->error("Unable to load SSO type $ssoType, failing SSO authentication.");
+            throw new Exception("Unable to load SSO type $ssoType.");
+        }
+
+        if (!($sso instanceof Sahara_Auth_SSO))
+        {
+            $this->_logger->_error("SSO type $type is not an implementation of Sahara_SSO_Type. Failing SSO authentication.");
+            throw new Exception("$ssoType is not an instance of Sahara_Auth_SSO");
+        }
+
+        if ($sso->signon())
+        {
+            $this->_successType = $sso;
+            $this->_username = $sso->getUsername();
+            $this->_password = $this->_fakePassword();
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Sets up a session.
+     */
     public function setupSession()
     {
         $sessionTypes = $this->_config->auth->session;
@@ -125,6 +189,14 @@ class Sahara_Auth
     }
 
     /**
+     * Gets the username.
+     */
+    public function getUsername()
+    {
+        return $this->_username;
+    }
+
+    /**
      * Loads an auth class and depending on its type, set appropriate
      * properties.
      *
@@ -137,31 +209,47 @@ class Sahara_Auth
         {
             /* Find the class to load. */
             $file = implode('/', explode('_', $name)) . '.php';
-            $found = false;
             foreach (explode(PATH_SEPARATOR, get_include_path()) as $path)
             {
                 if (file_exists($path . '/' . $file))
                 {
-                    $found = true;
-                    break;
+                    return new $name();
                 }
             }
 
-            if (!$found) return false;
-
-            $cls = new $name();
-            if ($cls instanceof Sahara_Auth_Type)
-            {
-                $cls->setUsername($this->_username);
-                $cls->setPassword($this->_password);
-            }
-
-            return $cls;
+            $this->_logger->info("Unable to find auth class $name in include path.");
+            return false;
         }
         catch (Exception $ex)
         {
-            $this->_logger->fatal("Failed to load authentication type $name, with error: " . $ex->getMessage() . '.');
+            $this->_logger->fatal("Failed to load auth class $name, with error: " . $ex->getMessage() . '.');
             return false;
         }
+    }
+
+    /**
+     * Gets a fake password comprising numbers, lower and upper case letters.
+     *
+     * @return String password
+     */
+    private function _fakePassword()
+    {
+        $pass = '';
+        for ($i = 0; $i < 8; $i++)
+        {
+            switch (rand(0, 2))
+            {
+                case 0: // Numbers
+                    $pass .= chr(rand(48, 57));
+                    break;
+                case 1: // Upper case letters
+                    $pass .= chr(rand(65, 90));
+                    break;
+                case 2: // Lower case letters
+                    $pass .= chr(rand(97, 122));
+                    break;
+            }
+        }
+        return $pass;
     }
 }

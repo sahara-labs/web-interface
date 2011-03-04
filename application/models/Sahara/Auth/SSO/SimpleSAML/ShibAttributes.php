@@ -33,11 +33,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 21st February 2010
+ * @date 3rd March 2011.
  */
 
 /**
- * Provides a friendly interface to determine simpleSaml tokens.
+ * Provides a friendly interface to determine SimpleSAML attributes.
  */
 class Sahara_Auth_SSO_SimpleSAML_ShibAttributes
 {

@@ -33,41 +33,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 3rd March 2011
+ * @date 3rd March 2011.
  */
 
 /**
- * Controller to for Single Sign On support.
+ * Logs in using SimpleSAML.
  */
-class SsoController extends Sahara_Controller_Action_Acl
+class Sahara_Auth_SSO_SimpleSAML extends Sahara_Auth_SSO
 {
-    /** simpleSAMLPHP SSO type. */
-    const SIMPLE_SAML = 'simpleSAMLPHP';
 
-    /**
-     * Login.
-     */
-    public function loginAction()
-    {
-        if (!$this->_config->auth->useSSO)
-        {
-            $this->_logger->error('Attempted SSO sign on when SSO auth path is disabled.  Set the \'auth.useSSO\' ' .
-                    'property to true to enable the SSO feature.');
-            throw new Exception('Attempted SSO sign on when SSO auth path is disabled.');
-        }
-
-        switch ($this->_config->auth->ssoType)
-        {
-            case self::SIMPLE_SAML:
-                $this->_simpleSamlPhp();
-                break;
-            default:
-                $this->_logger->error('Unknown single sign on type \'' + $this->_config->auth->ssoType + '\'.');
-                throw new Exception('Unknown single sign on type.');
-        }
-    }
-
-    private function _simpleSamlPhp()
+    public function signon()
     {
         $this->_bootstrapSimpleSamlPhp();
 
@@ -178,7 +153,7 @@ class SsoController extends Sahara_Controller_Action_Acl
         return $users;
     }
 
-    private function _sanitise($str)
+    public function getAuthInfo($property)
     {
 
     }
@@ -188,8 +163,6 @@ class SsoController extends Sahara_Controller_Action_Acl
      */
     private function _bootstrapSimpleSamlPhp()
     {
-        return;
-
         if (!($path = $this->_config->simpleSaml->location))
         {
             $this->_logger->error('The location of the simpleSAMLPHP directory is not configured. Set the ' .

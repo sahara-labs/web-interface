@@ -54,8 +54,7 @@ class Sahara_Acl extends Zend_Acl
     const ADMIN = 'ADMIN';
 
     /** @var assoc array Pages an unauthenticated user may access. */
-    protected $_unAuthPages = array('index' => array('index', 'logout', 'feedback', 'help'),
-                                    'sso' => array('login', 'logout'),
+    protected $_unAuthPages = array('index' => array('index', 'sso', 'logout', 'feedback', 'help'),
                                     'labinfo' => array('index'),
                                     'info' => array('index', 'faq', 'contact'),
                                     'demo' => array('index'),

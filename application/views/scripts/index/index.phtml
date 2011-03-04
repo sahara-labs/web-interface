@@ -67,7 +67,7 @@ $this->headLink()->appendStylesheet($this->baseUrl('css/login.css'));
 
 <?php if ($this->ssoLayout): ?>
 <div id="loginbuttons">
-	<a id="<?=$this->localAuth ? 'shibbutton' : 'shibnolocalbutton'?>" class="loginbutton commonbutton" href="/sso/login">
+	<a id="<?=$this->localAuth ? 'shibbutton' : 'shibnolocalbutton'?>" class="loginbutton commonbutton" href="index/sso">
 		<img src="<?=$this->ssoIcon ? $this->ssoIcon : $this->baseUrl('/images/sso.png')?>" alt="SSO" /><br />
 		<?=$this->ssoLabel ? $this->ssoLabel : 'SSO Service'?>
 		<span class="commonhover">
