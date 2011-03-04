@@ -64,9 +64,9 @@ class Sahara_Auth_SSO_SimpleSAML_ShibAttributes
      *
      * @return String shared token
      */
-    public function getShartedToken()
+    public function getSharedToken()
     {
-        return $this->_getAttr($attr);
+        return $this->_getAttr(self::SHARED_TOKEN_OID);
     }
 
     /**
@@ -136,7 +136,7 @@ class Sahara_Auth_SSO_SimpleSAML_ShibAttributes
      */
     public function getAffliation()
     {
-        return $this->_getAttr($attr);
+        return $this->_getAttr(self::AFFLIATION_OID);
     }
 
     /**
@@ -160,6 +160,12 @@ class Sahara_Auth_SSO_SimpleSAML_ShibAttributes
      */
     private function _getAttr($attr)
     {
-        return array_key_exists($attr, $this->_attrs) ? $this->_attrs[$attr] : null;
+         if (!array_key_exists($attr, $this->_attrs)) return null;
+
+         if (is_array($this->_attrs[$attr]) && count($this->_attrs) == 1)
+         {
+             return $this->_attrs[$attr][0];
+         }
+         else return $this->_attrs[$attr];
     }
 }
