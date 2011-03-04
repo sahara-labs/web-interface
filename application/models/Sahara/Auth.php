@@ -217,7 +217,7 @@ class Sahara_Auth
                 }
             }
 
-            $this->_logger->info("Unable to find auth class $name in include path.");
+            $this->_logger->debug("Unable to find auth class $name in include path.");
             return false;
         }
         catch (Exception $ex)
