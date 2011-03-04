@@ -143,7 +143,7 @@ class Sahara_Auth_SSO_SimpleSAML extends Sahara_Auth_SSO
         /* ====================================================================
          * 4) Check the users have a mapping and if not, generate it.
          * ==================================================================== */
-        $this->_mapping = $this->_mappingTable->fetchRow($this->_mappingTable->select()->where('tid = ?', $sid));
+        $this->_mapping = $this->_mappingTable->fetchRow($this->_mappingTable->select()->where('sid = ?', $sid));
         if (!$this->_mapping)
         {
             $this->_logger->info("First sign in of SSO user with ID sid so going to generate an account for them.");
@@ -164,15 +164,10 @@ class Sahara_Auth_SSO_SimpleSAML extends Sahara_Auth_SSO
         $useSid = false;
 
         list ($homeOrg, $junk) = explode('.', $this->_attrs->getOrginisation());
-        if ($homeOrg)
-        {
-            /* Only using first three letters of org. */
-            if (strlen($homeOrg) > 3) $homeOrg = substr($homeOrg, 0, 3);
-        }
-        else $this->_logger->info("Home orginisation was not found, so not using is Sahara user name generation.");
+        if (!$homeOrg) $this->_logger->info("Home orginisation was not found, so not using is Sahara user name generation.");
 
         $fname = $this->_attrs->getFirstname();
-        $lname = $this->_attrs->getLastname();
+        $lname = $this->_attrs->getSurname();
         if (!$fname || !$lname)
         {
             $this->_logger->info("First name ($fname) and last name ($lname) combination was not valid for  " .
@@ -192,29 +187,26 @@ class Sahara_Auth_SSO_SimpleSAML extends Sahara_Auth_SSO
         }
         else
         {
-            $name = ($homeOrg ? $homeOrg . '.' : '') . $fname . '.' . $lname;
+            $name = ($homeOrg ? substr($homeOrg, 0, 3) . '.' : '') . substr($fname, 0, 2) . '.' . $lname;
         }
 
         /* Fix max length. */
-        if (strlen($name) > self::NAME_LENGTH)  $name = substr($name, 0, self::NAME_LENGTH);
-
-        /* Sanitise special characters. */
+        if (strlen($name) > self::NAME_LENGTH) $name = substr($name, 0, self::NAME_LENGTH);
+        
+	/* Sanitise special characters. */
         $chrs = str_split($name);
         $name = '';
-        foreach (str_split($name) as $c);
+        foreach ($chrs as $c)
         {
-            $as = ord($c);
-            if (48 <= $as && $as <= 57 || 65 <= $as && $as <= 90 || 97 <= $as && $as <= 122)
-            {
-                $name .= $c;
-            }
+            if (ctype_alnum($c) || $c == '.') $name .= $c;
         }
-
+        
         /* Make sure it is unique. */
         $db = Sahara_Database::getDatabase();
         $ns = $db->quote($this->_config->institution);
 
-        $num = $db->fetchOne("SELECT count() FROM users WHERE namespace=$ns AND name=" . $db->quote($name));
+//        $num = $db->fetchOne("SELECT count() FROM users WHERE namespace=$ns AND name=" . $db->quote($name));
+	$num = 0;
         if ($num > 0)
         {
             $suf = 0;
@@ -240,7 +232,7 @@ class Sahara_Auth_SSO_SimpleSAML extends Sahara_Auth_SSO
 
     public function getUsername()
     {
-        return $this->_mapping ? $this->_mapping : null;
+        return $this->_mapping ? $this->_mapping->user_name : null;
     }
 
     public function getAuthInfo($property)

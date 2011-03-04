@@ -141,10 +141,10 @@ class IndexController extends Sahara_Controller_Action_Acl
 
         /* Setup session. */
         $saharaAuth->setupSession();
-
-        /* Validate and store account. */
+        
+	/* Validate and store account. */
         $user = Sahara_Soap::getSchedServerPermissionsClient()->getUser(array(
-            		'userQName' => $inst . ':' . $saharaAuth->getUsername()
+            		'userQName' => $this->_config->institution . ':' . $saharaAuth->getUsername()
         ));
 
         /* Store the authentication information if the user is authenticated. */

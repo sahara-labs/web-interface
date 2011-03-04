@@ -161,8 +161,7 @@ class Sahara_Auth_SSO_SimpleSAML_ShibAttributes
     private function _getAttr($attr)
     {
          if (!array_key_exists($attr, $this->_attrs)) return null;
-
-         if (is_array($this->_attrs[$attr]) && count($this->_attrs) == 1)
+         if (is_array($this->_attrs[$attr]) && count($this->_attrs[$attr]) == 1)
          {
              return $this->_attrs[$attr][0];
          }

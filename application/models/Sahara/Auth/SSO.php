@@ -86,7 +86,7 @@ abstract class Sahara_Auth_SSO
      *
      * @var String authenticator type
      */
-    public function getSSOType()
+    public function getAuthType()
     {
         $cls = get_class($this);
         $clsParts = explode('_', $cls);
