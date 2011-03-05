@@ -44,16 +44,27 @@ $this->headLink()->appendStylesheet('/css/partials/permkey.css');
 </div>
 
 <div id="permkeydialog" title="Permission Activation:">
-	Enter a permission key to activate it's permission:
-	<div id="permkeyouter">
-		<div id="permkeylabel">Key:</div>
-		<div id="permkeyfield" class="jqTransformInputWrapper">
-			<div class="jqTransformInputInner"><div>
-				<input id="permkey" type="text" name="permkey" id="permkey" class="validate[required] jqTranformInput jqTransformdone" />
-			</div></div>
+	<div id="permkeyform">
+		<div id="permkeyerror" class="ui-state ui-state-error ui-corner-all">
+			<span class="ui-icon ui-icon-alert"> </span>
+			<p> </p>
 		</div>
+    	Enter a permission key to activate it's permission:
+    	<div id="permkeyouter">
+    		<div id="permkeylabel">Key:</div>
+    		<div id="permkeyfield" class="jqTransformInputWrapper">
+    			<div class="jqTransformInputInner"><div>
+    				<input id="permkey" type="text" name="permkey" id="permkey" class="validate[required] jqTranformInput jqTransformdone" />
+    			</div></div>
+    		</div>
+    	</div>
+    	<div id="permkeyclear"></div>
 	</div>
-	<div id="permkeyclear"></div>
+	<div id="permkeyloading">
+		<img src="/images/ajax-loading.gif" alt="Loading" />
+		<br />
+		Please wait...
+	</div>
 </div>
 
 <script type="text/javascript">
@@ -65,9 +76,50 @@ $(document).ready(function() {
 		resizable: false,
 		buttons: {
 			Activate: function() {
-				alert($("#permkey").val());
+				if ($("#permkeyform").validationEngine("validateField", "#permkey")) return;
+
+				/* Tear down the dialog. */
+				$("#permkeyform").hide();
+				$("#permkeyloading").show();
+				$(this).dialog({
+					closeOnEscape: false
+				}).parent().children(".ui-dialog-titlebar, .ui-dialog-buttonpane").hide();
+
+				$.get(
+					'/index/permactivate',
+					{
+						pkey: $("#permkey").val()
+					},
+					function(response) {
+						if (typeof response != "object") window.location.reload();
+
+						/* If it was successful, reload the page to show the new permission. */
+						if (response.success)
+						{
+							$("#permkeydialog").empty().append(
+									"<div id='permkeysuccess'>Success, refreshing...</div>"
+							);
+							window.location.reload();
+							return;
+						}
+
+						/* Restore applet. */
+						$("#permkeyform").show();
+						$("#permkeyloading").hide();
+						$("#permkeydialog").dialog({
+							closeOnEscape: true
+						}).parent().children(".ui-dialog-titlebar, .ui-dialog-buttonpane").show();
+
+						$("#permkeyerror").show()
+							.children("p").text(response.error);
+					}
+				);
 			},
-			Close: function() { $(this).dialog("close"); }
+			Close: function() {
+				$(".permkeyformError").remove();
+				$("#permkeyerror").hide();
+				$(this).dialog("close");
+			}
 		}
 	});
 
@@ -75,12 +127,12 @@ $(document).ready(function() {
 		$("#permkeydialog").dialog("open");
 	});
 
-	$("#permkeyfield").hover(
-		function() { $(this).addClass("jqTransformInputWrapper_hover"); },
-		function() { $(this).removeClass("jqTransformInputWrapper_hover"); }
-	)
-	.focus(function() { $(this).addClass("jqTransformInputWrapper_focus"); })
-	.focusin(function() { $(this).addClass("jqTransformInputWrapper_focus"); })
-	.focusout(function() { $(this).removeClass("jqTransformInputWrapper_focus"); });
+	$("#permkeyfield")
+		.hover(
+			function() { $(this).addClass("jqTransformInputWrapper_hover"); },
+			function() { $(this).removeClass("jqTransformInputWrapper_hover"); })
+		.focus(function() { $(this).addClass("jqTransformInputWrapper_focus"); })
+	 	.focusin(function() { $(this).addClass("jqTransformInputWrapper_focus"); })
+	 	.focusout(function() { $(this).removeClass("jqTransformInputWrapper_focus"); });
 });
 </script>

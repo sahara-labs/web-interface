@@ -319,9 +319,43 @@ class IndexController extends Sahara_Controller_Action_Acl
         echo $this->view->json(array('success' => 'true'));
     }
 
+    /**
+     * Help page.
+     */
     public function helpAction()
     {
         $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Help');
+    }
+
+    /**
+     * Action to activate a permission with a permission key.
+     */
+    public function permactivateAction()
+    {
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout->disableLayout();
+
+        if (!$this->_config->permkey->enable)
+        {
+            $this->_logger->warn('Tried to activate permission when the permission activation feature is disabled.');
+            echo $this->view->json(array(
+            	'success' => false,
+                'error' => 'Permission activation feature is disabled.'
+            ));
+            return;
+        }
+
+        if (!($key = $this->_getParam('pkey')))
+        {
+            $this->_logger->debug("Tried to activate permission without supplied a permission key.");
+            echo $this->view->json(array(
+            	'success' => false,
+                'error' => 'No permission key supplied.'
+            ));
+            return;
+        }
+
+        echo $this->view->json(array('success' => true));
     }
 }
 

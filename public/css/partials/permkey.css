@@ -70,3 +70,25 @@
 #permkeyclear {
 	clear: both;
 }
+
+#permkeyloading {
+	display: none;
+	text-align: center;
+}
+
+#permkeyerror {
+	display: none;
+	margin: 0 auto 10px;
+	width: 300px;
+	padding: 5px;
+}
+
+#permkeysuccess {
+	font-weight: bold;
+	text-align: center;
+}
+
+#permkeyerror span {
+	float: left;
+	margin-right: 5px;
+}

@@ -190,7 +190,7 @@ function confirmCreateOffline()
 			}
 		},
 		close: function() {
-			$("#createofflineform").validationEngine('hide');
+			$(".formError").remove();
 			$(this).dialog('destroy');
 			$(this).remove();
 		}
