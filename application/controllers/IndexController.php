@@ -345,7 +345,7 @@ class IndexController extends Sahara_Controller_Action_Acl
             return;
         }
 
-        if (!($key = $this->_getParam('pkey')))
+        if (!($pkey = $this->_getParam('pkey')))
         {
             $this->_logger->debug("Tried to activate permission without supplied a permission key.");
             echo $this->view->json(array(
@@ -354,6 +354,83 @@ class IndexController extends Sahara_Controller_Action_Acl
             ));
             return;
         }
+
+        $db = Sahara_Database::getDatabase();
+
+        /* Check the key exists, has remaining uses and the redeeming class
+         * is active. */
+        $key = $db->fetchRow($db->select()
+                ->from(array('rk' => 'user_association_redeem_keys'))
+                ->join(array('uc' => 'user_class'), 'rk.user_class_id = uc.id', array('name'))
+                ->where('rk.redeemkey = ?', $pkey)
+                ->where('rk.remaining_uses > 0')
+                ->where('uc.active = 1'));
+
+        if (!$key)
+        {
+            echo $this->view->json(array(
+            	'success' => false,
+                'error' => 'Key not valid.'
+            ));
+            return;
+        }
+
+        /* Load user. */
+        list($ns, $name) = explode(':', $this->_auth->getIdentity(), 2);
+        $sel = $db->select()
+            ->from(array('u' => 'users'))
+            ->where('namespace = ?', $ns)
+            ->where('name = ?', $name);
+
+        /* If the redemption key requires a specific organisation or affliation,
+         * load the users properties. */
+        if ($key['home_org'] || $key['affliation'])
+        {
+            $sel->join(array('s' => 'shib_users_map'), 'u.name = s.user_name', array('home_org', 'affliation'));
+        }
+
+        $user = $db->fetchRow($sel);
+        if (!$user)
+        {
+            echo $this->view->json(array(
+            	'success' => false,
+                'error' => 'Constraints not met.'
+            ));
+            return;
+        }
+
+        /* Check the constraints do indeed match. */
+        if ($key['home_org'] && $key['home_org'] != $user['home_org'] ||
+                $key['affliation'] && $key['affliation'] != $user['affliation'])
+        {
+            echo $this->view->json(array(
+            	'success' => false,
+                'error' => 'Constraints not met.'
+            ));
+            return;
+        }
+
+        /* Check the user doesn't already have the user association. */
+        if ($db->fetchOne($db->select()
+                ->from('user_association', 'count(users_id)')
+                ->where('users_id = ?', $user['id'])
+                ->where('user_class_id = ?', $key['user_class_id'])) != 0)
+        {
+            echo $this->view->json(array(
+            	'success' => false,
+                'error' => 'Already been redeemed.'
+            ));
+            return;
+        }
+
+        /* All constraints are met so we can create the association. */
+        $db->update('user_association_redeem_keys',  array('remaining_uses' => $key['remaining_uses']--),
+        		'redeemkey = ' . $db->quote($key['redeemkey']));
+
+        $db->insert('user_association', array(
+            'users_id' => $user['id'],
+            'user_class_id' => $key['user_class_id']
+        ));
 
         echo $this->view->json(array('success' => true));
     }
