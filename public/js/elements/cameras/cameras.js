@@ -36,52 +36,59 @@
  */
 
 jpegIntervals = new Array();
-jpegImage = new Image();
+jpegImages = new Object();
 
 function changeCameraOption(id, vid, url)
 {
-	undeploy(id);
-	
-	setCameraCookie("CamOption-" + id, vid);
-	
-	/* First make panel visible. */
-	if ($("#camerapanel" + id).css("display") == "none" && vid != 'off')
+	try
 	{
-		$("#camerapanel" + id).slideDown("slow", function() {
-			setTimeout("resizeFooter()", 100);
-		});
+		undeploy(id);
+		
+		setCameraCookie("CamOption-" + id, vid);
+		
+		/* First make panel visible. */
+		if ($("#camerapanel" + id).css("display") == "none" && vid != 'off')
+		{
+			$("#camerapanel" + id).slideDown("slow", function() {
+				setTimeout("resizeFooter()", 100);
+			});
+		}
+		
+		switch (vid)
+		{
+		case 'off':
+			$("#camerapanel" + id).slideUp("slow");
+			break;
+		case 'jpeg':
+			deployJpeg(id, url, 2000);
+			break;
+		case 'mms':
+			deployWinMedia(id, url);
+			break;
+		case 'mmsh':
+			deployVLC(id, url);
+			break;
+		default:
+			/* Fall back to the jQuery media plugin which may be able to detect
+			 * the media type and the correct plugin. */
+			var cameraDiv = "#camera" + id;
+			var html = "<a class='media' href='" + url + "' />";
+			$(cameraDiv).html(html);
+			$(cameraDiv + " .media").media({
+				width: vcameras[id].width,
+				height: vcameras[id].height,
+				src: url,
+				autoplay: true,
+				caption: false,
+				params: { uiMode: 'none' },
+				bgColor: '#606060'
+			});
+			break;
+		}
 	}
-	
-	switch (vid)
+	catch(e)
 	{
-	case 'off':
-		$("#camerapanel" + id).slideUp("slow");
-		break;
-	case 'jpeg':
-		deployJpeg(id, url, 2000);
-		break;
-	case 'mms':
-		deployWinMedia(id, url);
-		break;
-	case 'mmsh':
-		deployVLC(id, url);
-		break;
-	default:
-		/* Fall back to the jQuery media plugin which may be able to detect
-		 * the media type and the correct plugin. */
-		var cameraDiv = "#camera" + id;
-		var html = "<a class='media' href='" + url + "' />";
-		$(cameraDiv).html(html);
-		$(cameraDiv + " .media").media({
-			width: vcameras[id].width,
-			height: vcameras[id].height,
-			src: url,
-			autoplay: true,
-			caption: false,
-			params: { uiMode: 'none' },
-			bgColor: '#606060'
-		});
-		break;
+		/* Just swallowing the error. */
 	}
 }
 
@@ -173,22 +180,24 @@ function deployJpeg(id, url, tm)
 		$("#jpegslider" + id).slider("value", vOpt);
 		jpegIntervals[id] = setTimeout("updateJpeg(" + id + ", '" + url + "' , " + iOpt + ")", iOpt);
 	}
+	
+	jpegImages[id] = new Image();
 }
 
 function updateJpeg(id, url, tm)
 {
 	var tUrl = url + "?" + new Date().getTime();
 	
-	jpegImage.onload = function(){
+	jpegImage[id].onload = function(){
 			var el = document.getElementById("jpegframe" + id);
 			for(var i = el.childNodes.length; i > 0 ; i--)
    			{   
       			el.removeChild(el.childNodes[i-1]);
    			}
-			el.appendChild(jpegImage);
+			el.appendChild(jpegImage[id]);
 			jpegIntervals[id] = setTimeout("updateJpeg(" + id + ", '" + url + "' , " + tm + ")", tm);
 		};
-	jpegImage.src = tUrl;
+	jpegImage[id].src = tUrl;
 }
 
 function deployWinMedia(id, url)
