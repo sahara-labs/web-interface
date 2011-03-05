@@ -189,7 +189,7 @@ class IndexController extends Sahara_Controller_Action_Acl
             $saharaAuth = new Sahara_Auth();
             $saharaAuth->signoff();
 
-            $message = 'You have logged out. To make sure you are logged off, please close your browser.';
+            $message = 'You have logged out. To make sure you are completely logged out, please close your browser.';
         }
         else $message = 'You have logged out.';
 
