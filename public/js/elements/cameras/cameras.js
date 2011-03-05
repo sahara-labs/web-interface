@@ -188,16 +188,16 @@ function updateJpeg(id, url, tm)
 {
 	var tUrl = url + "?" + new Date().getTime();
 	
-	jpegImage[id].onload = function(){
-			var el = document.getElementById("jpegframe" + id);
-			for(var i = el.childNodes.length; i > 0 ; i--)
+	jpegImages[id].onload = function(){
+			var i, el = document.getElementById("jpegframe" + id);
+			for(i = el.childNodes.length; i > 0 ; i--)
    			{   
       			el.removeChild(el.childNodes[i-1]);
    			}
-			el.appendChild(jpegImage[id]);
+			el.appendChild(jpegImages[id]);
 			jpegIntervals[id] = setTimeout("updateJpeg(" + id + ", '" + url + "' , " + tm + ")", tm);
 		};
-	jpegImage[id].src = tUrl;
+	jpegImages[id].src = tUrl;
 }
 
 function deployWinMedia(id, url)
