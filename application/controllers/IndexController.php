@@ -129,8 +129,6 @@ class IndexController extends Sahara_Controller_Action_Acl
      */
     public function ssoAction()
     {
-
-
         /* Authenticate. */
         $saharaAuth = new Sahara_Auth();
         if (!$saharaAuth->signon())
@@ -142,7 +140,7 @@ class IndexController extends Sahara_Controller_Action_Acl
         /* Setup session. */
         $saharaAuth->setupSession();
 
-	/* Validate and store account. */
+		/* Validate and store account. */
         $user = Sahara_Soap::getSchedServerPermissionsClient()->getUser(array(
             		'userQName' => $this->_config->institution . ':' . $saharaAuth->getUsername()
         ));

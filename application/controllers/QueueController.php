@@ -48,6 +48,9 @@ class QueueController extends Sahara_Controller_Action_Acl
     {
         $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Rig Selection');
 
+        /* Whether to enable the permission activation system. */
+        $this->view->renderPermActivation = $this->_config->permkey->enable;
+
         /* Load the permissions of the user. */
         $client = Sahara_Soap::getSchedServerPermissionsClient();
         $perms = $client->getPermissionsForUser(array('userQName' => $this->_auth->getIdentity()));
