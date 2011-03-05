@@ -418,13 +418,13 @@ class IndexController extends Sahara_Controller_Action_Acl
         {
             echo $this->view->json(array(
             	'success' => false,
-                'error' => 'Already been redeemed.'
+                'error' => 'You have already redeemed the key.'
             ));
             return;
         }
 
         /* All constraints are met so we can create the association. */
-        $db->update('user_association_redeem_keys',  array('remaining_uses' => $key['remaining_uses']--),
+        $db->update('user_association_redeem_keys',  array('remaining_uses' => (--$key['remaining_uses'])),
         		'redeemkey = ' . $db->quote($key['redeemkey']));
 
         $db->insert('user_association', array(
