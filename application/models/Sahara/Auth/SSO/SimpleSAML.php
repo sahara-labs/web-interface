@@ -156,7 +156,10 @@ class Sahara_Auth_SSO_SimpleSAML extends Sahara_Auth_SSO
     public function signoff()
     {
         $this->_setup();
-        $this->_simple->logout();
+        if ($this->_simple->isAuthenticated())
+        {
+            $this->_simple->logout();
+        }
     }
 
     /**

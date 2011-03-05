@@ -67,7 +67,7 @@ abstract class Sahara_Auth_SSO
     public abstract function signon();
 
     /**
-     * Sins off using the SSO system.
+     * Signs off using the SSO system.
      *
      * @return boolean true if successful
      */
