@@ -171,13 +171,13 @@ function deployJpeg(id, url, tm)
 	{
 		if (tm > 0)
 		{
-			$("#jpegslider" + id).slider("value", 28);
+			try { $("#jpegslider" + id).slider("value", 28); } catch (e) { /* Swallowing. */ }
 			jpegIntervals[id] = setTimeout("updateJpeg(" + id + ", '" + url + "' , " + tm + ")", tm);
 		}
 	}
 	else
 	{
-		$("#jpegslider" + id).slider("value", vOpt);
+		try { $("#jpegslider" + id).slider("value", vOpt); } catch (e) { /* Swallowing. */ }
 		jpegIntervals[id] = setTimeout("updateJpeg(" + id + ", '" + url + "' , " + iOpt + ")", iOpt);
 	}
 	
