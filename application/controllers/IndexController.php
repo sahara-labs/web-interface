@@ -141,7 +141,7 @@ class IndexController extends Sahara_Controller_Action_Acl
 
         /* Setup session. */
         $saharaAuth->setupSession();
-        
+
 	/* Validate and store account. */
         $user = Sahara_Soap::getSchedServerPermissionsClient()->getUser(array(
             		'userQName' => $this->_config->institution . ':' . $saharaAuth->getUsername()
@@ -179,8 +179,23 @@ class IndexController extends Sahara_Controller_Action_Acl
      */
     public function logoutAction()
     {
+        /* Clear the Sahara session storage. */
         $this->_auth->clearIdentity();
-        $this->_flashMessenger->addMessage('You have logged out.');
+
+        if ($this->_config->auth->useSSO)
+        {
+            /* If we are using SSO authentication, we need to propogate the
+             * logoff to the SSO service. */
+            $saharaAuth = new Sahara_Auth();
+            $saharaAuth->signoff();
+
+            $message = 'You have logged out. To make sure you are logged off, please close your browser.';
+        }
+        else $message = 'You have logged out.';
+
+
+
+        $this->_flashMessenger->addMessage($message);
         $this->_redirectTo('index', 'index');
     }
 

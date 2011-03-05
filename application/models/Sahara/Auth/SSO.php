@@ -42,10 +42,10 @@
 abstract class Sahara_Auth_SSO
 {
 
-
     /**
      * @var Zend_Config Configuration.
      */
+
     protected $_config;
 
     /**
@@ -65,6 +65,13 @@ abstract class Sahara_Auth_SSO
      * @return boolean true if successful
      */
     public abstract function signon();
+
+    /**
+     * Sins off using the SSO system.
+     *
+     * @return boolean true if successful
+     */
+    public abstract function signoff();
 
     /**
      * Returns the properties value from the underlying record class.

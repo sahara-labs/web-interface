@@ -153,6 +153,12 @@ class Sahara_Auth_SSO_SimpleSAML extends Sahara_Auth_SSO
         return (bool) $this->_mapping;
     }
 
+    public function signoff()
+    {
+        $this->_setup();
+        $this->_simple->logout();
+    }
+
     /**
      * Does first time setup of the user.
      *
@@ -192,7 +198,7 @@ class Sahara_Auth_SSO_SimpleSAML extends Sahara_Auth_SSO
 
         /* Fix max length. */
         if (strlen($name) > self::NAME_LENGTH) $name = substr($name, 0, self::NAME_LENGTH);
-        
+
 	/* Sanitise special characters. */
         $chrs = str_split($name);
         $name = '';
@@ -200,7 +206,7 @@ class Sahara_Auth_SSO_SimpleSAML extends Sahara_Auth_SSO
         {
             if (ctype_alnum($c) || $c == '.') $name .= $c;
         }
-        
+
         /* Make sure it is unique. */
         $db = Sahara_Database::getDatabase();
         $ns = $db->quote($this->_config->institution);

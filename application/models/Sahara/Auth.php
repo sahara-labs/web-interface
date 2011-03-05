@@ -121,7 +121,7 @@ class Sahara_Auth
     	/* Make sure SSO is enabled. */
         if (!$this->_config->auth->useSSO)
         {
-            $this->_logger->error('Attempted SSO sign on when SSO auth path is not enabled.  Set the \'auth.useSSO\' ' .
+            $this->_logger->error('Attempted SSO sign on when SSO auth is not enabled.  Set the \'auth.useSSO\' ' .
                     'property to true to enable the SSO feature.');
             return false;
         }
@@ -156,6 +156,40 @@ class Sahara_Auth
         }
 
         return false;
+    }
+
+    /**
+     * Signs off the user from the SSO service.
+     */
+    public function signoff()
+    {
+        if (!$this->_config->auth->useSSO)
+        {
+            $this->_logger->error('Attempted SSO sign off when SSO auth is not enabled.');
+        }
+
+         /* Load the SSO class. */
+        $ssoType = $this->_config->auth->ssoType;
+        if (!$ssoType)
+        {
+            $this->_logger->error('SSO type is not configured. Set the \'auth.ssoType\' property to a valid SSO type.');
+            throw new Exception('SSO type not configured.');
+        }
+
+        if (!($sso = $this->_loadclass($this->_institution . "_Auth_SSO_$ssoType")) &&
+            !($sso = $this->_loadclass("Sahara_Auth_SSO_$ssoType")))
+        {
+            $this->_logger->error("Unable to load SSO type $ssoType, failing SSO sign off.");
+            throw new Exception("Unable to load SSO type $ssoType.");
+        }
+
+        if (!($sso instanceof Sahara_Auth_SSO))
+        {
+            $this->_logger->_error("SSO type $type is not an implementation of Sahara_SSO_Type. Failing SSO sign off..");
+            throw new Exception("$ssoType is not an instance of Sahara_Auth_SSO");
+        }
+
+        $sso->signoff();
     }
 
     /**
