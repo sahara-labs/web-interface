@@ -1,4 +1,5 @@
-<?php
+@CHARSET "UTF-8";
+
 /**
  * SAHARA Web Interface
  *
@@ -32,41 +33,47 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * @author Michael Diponio (mdiponio)
- * @date 21st February 2010
+ * @author Tania Machet (tmachet)
+ * @date 13th December 2010
  */
-?>
+ 
+#daypickerbar {
+	margin: 10px auto 0;
+	width: 600px;
+}
 
-$this->headLink()->appendStylesheet($this->baseUrl('/css/reports.css'));
-$this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
+#leftarrowbox {
+	float: left;
+	width: 100px;
+}
 
+#daypicker {
+	float:left;
+	width: 400px;
+}
 
-$header = $this->permission->displayName;
-if (!$header) $header = $this->permission->resource->resourceName;
+#rightarrowbox {
+	float: left;
+	width: 100px;
+}
 
-?>
+.daybutton {
+	background-color: #EFEFEF;
+	border: 1px solid #B5B5B5;
+	display: block;
+	width: 35px;
+	height: 35px;
+	padding: 5px;
+	text-align: center;
+	cursor: pointer;
+	box-shadow: 0 0 4px #B5B5B5;
+	-moz-box-shadow: 0 0 4px #B5B5B5;
+	-webkit-box-shadow: 0 0 4px #B5B5B5;
+}
 
-<div class="contentheader">
-	<h2>Booking for <?=$this->stringTransform($header, '_', ' ')?></h2>
-</div>
-
-<!-- Day picker bar. -->
-<div id="daypickerbar">
-	<div id="leftarrowbox" class="arrowbox">
-		<a id="leftarrow" class="plaina daybutton ui-corner-all">
-			<img src="<?=$this->baseUrl('/images/left_arrow.png')?>" alt="Previous" />
-		</a>
-	</div>
-
-	<div id="daypickerouter">
-		<div id="daypicker">
-			Day selected:
-		</div>
-	</div>
-
-	<div id="rightarrowbox" class="arrowbox">
-		<a id="rightarrow" class="plaina daybutton ui-corner-all">
-			<img src="<?=$this->baseUrl('/images/right_arrow.png')?>" alt="Next" />
-		</a>
-	</div>
-</div>
+.daybutton:hover {
+	box-shadow: 0 0 4px #606060;
+	-moz-box-shadow: 0 0 4px #606060;
+	-webkit-box-shadow: 0 0 4px #606060;
+}
+ 
