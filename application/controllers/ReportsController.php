@@ -32,14 +32,47 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * @author Michael Diponio (mdiponio)
- * @date 21st February 2010
+ * @author Tania Machet (tmachet)
+ * @date 13th December 2010
  */
 
-class AcademicController extends Sahara_Controller_Action_Acl
+class ReportsController extends Sahara_Controller_Action_Acl
 {
     public function indexAction()
     {
-    	
+        $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Reports');
+        $this->view->noPermissions = true;
+        
+        /* Load the permissions of the user. */
+        $client = Sahara_Soap::getSchedServerPermissionsClient();
+        $perms = $client->getPermissionsForUser(array('userQName' => $this->_auth->getIdentity()));
+
+        if (!isset($perms->permission))
+        {
+            $this->view->noPermissions = true;
+            return;
+        }
+        
+        foreach ($perms->permission as $perm)
+        {
+            $this->view->noPermissions = false;
+            
+             /* This is a hack because PHPSoap / Zend SOAP seems to have some quirks
+             * parsing WSDLs. It generates a different object structure
+             * depending if there is one permission, or multiple permissions. */
+            if ($perm->permission == null)
+            {
+                if (is_bool($perm)) continue;
+                $p = $perm;
+                $perm = $perms;
+                $perm->isLocked = $perm->permission->isLocked;
+            }
+            else
+            {
+                $p = $perm->permission;
+            }
+        }
+        
+        $this->view->permission = $perms;
     }
 }
