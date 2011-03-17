@@ -36,11 +36,42 @@
  * @date 9th March 2011
  *
  */
+$this->headLink()->appendStylesheet($this->baseUrl('/css/session.css'));
 $this->headLink()->appendStylesheet($this->baseUrl('/css/reports.css'));
+$this->headLink()->appendStylesheet($this->baseUrl('/css/jquery.ui.selectmenu.css'));
+$this->headScript()->appendFile($this->baseUrl('/js/jquery.ui.selectmenu.js'));
 ?>
 
 <?php if (!$this->noPermissions): ?>
-Permission to generate reports
+
+<div class="contentheader">
+	<h2>Reports</h2>
+</div>
+
+<div class="reportscontainer ui-corner-all overlayelementhide">
+	<div class="sessionpanelheader">
+		<p><span class="ui-icon ui-icon-note sessionpanelheadericon"></span> Access Reports:</p>
+	</div>
+	<div class="reportdescription">
+		<p>Access details per rig, rig type, class or user over a specified period.</p>
+	</div>
+	<div>
+		<select class="reportdropdown ui-corner-all" name="accessgroup">
+			<option value=rig>Rig Name</option>
+			<option value=type>Rig Type</option>
+			<option value=class>User Class</option>
+			<option value=user>User</option>
+		</select>
+	</div>
+</div>
+
+
+<script type="text/javascript">
+$('select').selectmenu({width:100});
+</script>
+
 <?php else : ?>
 No permission to generate reports
 <?php endif ?>
+
+

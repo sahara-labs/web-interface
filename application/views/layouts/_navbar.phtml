@@ -45,8 +45,12 @@ switch ($this->userRole)
         );
         break;
     case Sahara_Acl::ACADEMIC:
-        $menu = array();
-        break;
+        $menu = array(
+            'Rig Selection' => array('controller' => 'queue', 'action' => 'index'),
+            'Existing Reservations' => array('controller' => 'bookings', 'action' => 'existing'),
+            'Reports' => array('controller' => 'reports', 'action' => 'index')
+        );
+    	break;
     case Sahara_Acl::ADMIN:
         $menu = array(
             'Rig Administration' => array('controller' => 'admin', 'action' => 'rig'),

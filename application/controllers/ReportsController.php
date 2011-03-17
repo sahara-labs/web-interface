@@ -71,6 +71,8 @@ class ReportsController extends Sahara_Controller_Action_Acl
             {
                 $p = $perm->permission;
             }
+            
+            
         }
         
         $this->view->permission = $perms;
