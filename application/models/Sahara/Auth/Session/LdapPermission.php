@@ -105,7 +105,7 @@ class Sahara_Auth_Session_LdapPermission extends Sahara_Auth_Session
             }
         }
 
-        /* Applie the filter results to determine the require user classes. */
+        /* Appies the filter results to determine the required user classes. */
         $requiredPermissions = array();
         $entry = $this->_authType->getLdapEntry();
 
@@ -150,7 +150,7 @@ class Sahara_Auth_Session_LdapPermission extends Sahara_Auth_Session
     }
 
     /**
-     * Adds user associations between the user and the list of classes.
+     * Removes user associations between the user and the list of classes.
      *
      * @param int $uid user identifier
      * @param array $classes list of user class names
