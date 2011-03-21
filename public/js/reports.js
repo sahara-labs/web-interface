@@ -34,3 +34,10 @@
  * @author Tania Machet (tmachet)
  * @date 13th December 2010
  */
+
+function reportTest()
+{
+	//Set value to 3
+	$("#accessvalue").val('class');
+}
+

@@ -40,6 +40,7 @@ $this->headLink()->appendStylesheet($this->baseUrl('/css/session.css'));
 $this->headLink()->appendStylesheet($this->baseUrl('/css/reports.css'));
 $this->headLink()->appendStylesheet($this->baseUrl('/css/jquery.ui.selectmenu.css'));
 $this->headScript()->appendFile($this->baseUrl('/js/jquery.ui.selectmenu.js'));
+$this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 ?>
 
 <?php if (!$this->noPermissions): ?>
@@ -50,25 +51,111 @@ $this->headScript()->appendFile($this->baseUrl('/js/jquery.ui.selectmenu.js'));
 
 <div class="reportscontainer ui-corner-all overlayelementhide">
 	<div class="sessionpanelheader">
-		<p><span class="ui-icon ui-icon-note sessionpanelheadericon"></span> Access Reports:</p>
+		<p><span class="ui-icon ui-icon-suitcase sessionpanelheadericon"></span> Access Reports:</p>
 	</div>
 	<div class="reportdescription">
-		<p>Access details per rig, rig type, class or user over a specified period.</p>
+		<p>This report supplies access details per rig, rig type, class or user over a specified period.
+		The session details such as queue duration and session duration are reported per user for the selection. </p>
 	</div>
-	<div>
-		<select class="reportdropdown ui-corner-all" name="accessgroup">
+	<div class="reportdropdown">
+		<p>Select type: <select name="accessgroup" >
 			<option value=rig>Rig Name</option>
 			<option value=type>Rig Type</option>
 			<option value=class>User Class</option>
 			<option value=user>User</option>
-		</select>
+		</select></p>
 	</div>
+	<div class="valuedropdown">
+		<p>Select value: <select  id="accessvalue" name="accessvalue">
+			<option value=rig>Value 1</option>
+			<option value=type>Value 2 </option>
+			<option value=class>Value 3</option>
+			<option value=user>Value 4</option>
+		</select></p>
+	</div>
+	<div id="accessdatepicker" class="ui-corner-all">
+		<label for="accessfrom">Date from</label>
+		<input type="text" id="accessfrom" name="accessfrom"/>
+		<label for="accessto">to</label>
+		<input type="text" id="accessto" name="accessto"/>
+	</div>
+	<div id="accesssubmit">
+		<a id="accesssubmit" class="actiondialogbutton plaina ui-corner-all" href="#">
+		<img src="<?=$this->baseUrl('images/1rightarrow.png')?>" alt="Submit" 
+		  onclick="reportTest()"/><br />
+	    Get Access Report</a>
+	</div>
+	<div style="clear: both" ></div>
 </div>
+
+
+
+
+<div class="reportscontainer ui-corner-all overlayelementhide">
+	<div class="sessionpanelheader">
+		<p><span class="ui-icon ui-icon-suitcase sessionpanelheadericon"></span> Usage Reports:</p>
+	</div>
+	<div class="reportdescription">
+		<p>Usage statistics per rig, rig type, class or user over a specified period.
+		This includes details on average, median, maximum and minimum usage for the selection.</p>
+	</div>
+	<div class="reportdropdown">
+		<p>Select type: <select name="reportgroup" >
+			<option value=rig>Rig Name</option>
+			<option value=type>Rig Type</option>
+			<option value=class>User Class</option>
+			<option value=user>User</option>
+		</select></p>
+	</div>
+	<div class="valuedropdown">
+		<p>Select value: <select id="reportvalue" name="reportvalue">
+			<option value=rig>Value 1</option>
+			<option value=type>Value 2 </option>
+			<option value=class>Value 3</option>
+			<option value=user>Value 4</option>
+		</select></p>
+	</div>
+	<div id="reportdatepicker" class="ui-corner-all">
+		<label for="reportfrom">Date from</label>
+		<input type="text" id="reportfrom" name="reportfrom"/>
+		<label for="reportto">to</label>
+		<input type="text" id="reportto" name="reportto"/>
+	</div>
+	<div id="reportsubmit">
+		<a id="reportsubmit" class="actiondialogbutton plaina ui-corner-all" href="#">
+		<img src="<?=$this->baseUrl('images/1rightarrow.png')?>" alt="Submit" 
+		  onclick="reportTest()"/><br />
+	    Get Usage Report</a>
+	</div>
+	
+	<div style="clear: both" ></div>
+</div>
+
 
 
 <script type="text/javascript">
 $('select').selectmenu({width:100});
+
+
+$(function() {
+	var dates = $( "#accessfrom, #accessto, #reportfrom, #reportto" ).datepicker({
+		defaultDate: "+1w",
+		changeMonth: true,
+		numberOfMonths: 2,
+		onSelect: function( selectedDate ) {
+			var option = this.id == "from" ? "minDate" : "maxDate",
+				instance = $( this ).data( "datepicker" ),
+				date = $.datepicker.parseDate(
+					instance.settings.dateFormat ||
+					$.datepicker._defaults.dateFormat,
+					selectedDate, instance.settings );
+			dates.not( this ).datepicker( "option", option, date );
+		}
+	});
+});
+
 </script>
+
 
 <?php else : ?>
 No permission to generate reports
