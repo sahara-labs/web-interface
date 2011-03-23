@@ -1,0 +1,75 @@
+<?php
+$cams = new Sahara_Session_Element_Cameras($this->rigClient);
+echo $cams;
+
+$rdpApplet = new Sahara_Session_Element_RdpApplet($this->rigClient, array(
+	'cl2' => 'LO'
+));
+echo $rdpApplet;
+
+$buttons = new Sahara_Session_Element_MultiButtons($this->rigClient, 'omapbuttons',
+    array(
+        array(
+        	'title' => 'Hard Reset',
+            'tooltip' => 'Power cycles the rig.',
+			'icon' => '/uts/fpga/images/hardreset.png',
+            'click' =>
+            	"performPrimitiveJSON(
+            		'IPSPowerController',
+            		'reset',
+            		null,
+            		function() {
+            			return true;
+            		},
+            		'Resetting...',
+            		true
+            	)"
+        ),
+        array(
+        	'title' => 'Program Demo',
+            'tooltip' => 'Program the OMAP board with a demonstration program which exercises the perpherials.',
+            'icon' => '/uts/fpga/images/rundemo.png',
+            'click' => "performPrimitiveJSON(
+            	'OMAPController',
+            	'loadDemo',
+            	null,
+            	function() {
+            		return true;
+            	},
+            	'Loading demo...',
+            	true
+            )"
+        )
+        ,
+        array(
+        	'title' => 'Upload Code',
+            'tooltip' => 'Program the OMAP board with an uploaded program.',
+            'icon' => '/uts/fpga/images/rundemo.png',
+            'click' => "alert('Upload code not yet implemented')"
+        )
+        ,
+        array(
+        	'title' => 'Download Data',
+            'tooltip' => 'Download data from the board.',
+            'icon' => '/uts/fpga/images/rundemo.png',
+            'click' => "alert('Download data not yet implemented')"
+        )
+    ),
+    array(
+        'orientation' => Sahara_Session_Element_MultiButtons::VERTICAL,
+        'top'         => 20,
+        'left'        => 45,
+        'width'       => 70,
+        'height'      => 70
+    )
+);
+
+echo $buttons;
+?>
+
+
+
+
+<div style="height:50px">
+</div>
+
