@@ -67,12 +67,6 @@ class IndexController extends Sahara_Controller_Action_Acl
             $this->view->localHover = $config->auth->localHover;
         }
 
-
-        // Configure database and store to the registry.
-        $db = Zend_Db::factory($this->_config->db);
-        Zend_Db_Table_Abstract::setDefaultAdapter($db);
-        Zend_Registry::set('db', $db);
-        
         if ($this->_request->isPost() && $form->isValid($this->_request->getParams()))
         {
             Zend_Session::regenerateId();
@@ -99,30 +93,6 @@ class IndexController extends Sahara_Controller_Action_Acl
                  ******************************************************************/
             }
 
-            $adapter = new Zend_Auth_Adapter_DbTable(Zend_Registry::get('db'),
-									'users',		// Contact table
-									'name', 		// Column containing identity
-									'password', // Column containing credential
-									'SHA1(?)');
-          
-			$adapter->setIdentity($username);
-			$adapter->setCredential($password);
-			$result = $this->_auth->authenticate($adapter);
-			
-			if ($result->getCode() != Zend_Auth_Result::SUCCESS)
-			{
-				/* Failed authentication, so redisplay form with error message. */
-				array_push($this->view->messages, "Authentication has failed. Please enter user name and password.");
-				$this->view->form->populate($this->_request->getParams());
-				return;				
-			}
-            
-            /* Store the authentication information. */
-            $qName =  $inst . ':' . $username;
-            $storage = $this->_auth->getStorage();
-            $storage->clear();
-            $storage->write($qName);
- 
             $user = Sahara_Soap::getSchedServerPermissionsClient()->getUser(array(
             		'userQName' => $inst . ':' . $username
             ));
@@ -142,7 +112,7 @@ class IndexController extends Sahara_Controller_Action_Acl
                     $this->_redirectTo('index', 'queue');
                     break;
                 case Sahara_Acl::ACADEMIC:
-                    $this->_redirectTo('index', 'reports');
+                    $this->_redirectTo('index', 'academic');
                     break;
                 case Sahara_Acl::ADMIN:
                     $this->_redirectTo('index', 'admin');
