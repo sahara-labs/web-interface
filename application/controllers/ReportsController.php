@@ -38,10 +38,15 @@
 
 class ReportsController extends Sahara_Controller_Action_Acl
 {
+    /** @var operator for queries */
+    private $OPERATOR = "AND";  // Always 'and' for first release
+	
+    /** @var Type for rig query */
+    private $RIG = "RIG";  // Always 'and' for first release
+    
     public function indexAction()
     {
         $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Reports');
-        $this->view->noPermissions = true;
         
         /* Load the permissions of the user. */
         $client = Sahara_Soap::getSchedServerPermissionsClient();
@@ -53,28 +58,15 @@ class ReportsController extends Sahara_Controller_Action_Acl
             return;
         }
         
-        foreach ($perms->permission as $perm)
-        {
-            $this->view->noPermissions = false;
-            
-             /* This is a hack because PHPSoap / Zend SOAP seems to have some quirks
-             * parsing WSDLs. It generates a different object structure
-             * depending if there is one permission, or multiple permissions. */
-            if ($perm->permission == null)
-            {
-                if (is_bool($perm)) continue;
-                $p = $perm;
-                $perm = $perms;
-                $perm->isLocked = $perm->permission->isLocked;
-            }
-            else
-            {
-                $p = $perm->permission;
-            }
-            
-            
-        }
+        
+        /* Load the rig names for the initial screen */
+        $rep = Sahara_Soap::getSchedServerReportsClient();
+        $rigNames = $rep->queryInfo(array(
+            'querySelect' => array('operator' => $this->OPERATOR,
+        							'typeForQuery' => $this->RIG,),
+        	'requestor' => $this->_auth->getIdentity() ));
         
         $this->view->permission = $perms;
+        $this->view->rigNames = $rigNames;
     }
 }

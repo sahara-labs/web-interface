@@ -67,6 +67,7 @@ class IndexController extends Sahara_Controller_Action_Acl
             $this->view->localHover = $config->auth->localHover;
         }
 
+
         // Configure database and store to the registry.
         $db = Zend_Db::factory($this->_config->db);
         Zend_Db_Table_Abstract::setDefaultAdapter($db);
