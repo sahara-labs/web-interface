@@ -57,18 +57,12 @@
  * Using this setup class also requires the following fields to be added
  * to the users table.
  * <ul>
- * 	<li>first_name - varchar - The first name of the user.</li>
- *  <li>last_name - varchar - The last name of the user.</li>
- *  <li>email - varchar - The email address of the user.</li>
  *  <li>ldapou - varchar - The organizational group the user
  *  should be a member of.</li>
  * </ul>
  * The SQL to do this is:
  * <pre>
-    ALTER TABLE `users` ADD `ldapou` VARCHAR( 50 ) NULL ,
-    ADD `first_name` VARCHAR( 50 ) NULL ,
-    ADD `last_name` VARCHAR( 50 ) NULL ,
-    ADD `email` VARCHAR( 100 ) NULL
+    ALTER TABLE `users` ADD `ldapou` VARCHAR( 50 ) NULL
  * </pre>
  */
 class UTS_Auth_Session_LdapAccount extends Sahara_Auth_Session
@@ -240,7 +234,7 @@ class UTS_Auth_Session_LdapAccount extends Sahara_Auth_Session
         $gid = $this->_config->session->ldapaccount->gid;
         if (!$gid) throw new Exception("LDAP account gid not configured.", 104);
 
-        return "$sid-" . ($gid * 2 + 1001);
+        return "$sid" . ($gid * 2 + 1001);
     }
 
     public function __destruct()
