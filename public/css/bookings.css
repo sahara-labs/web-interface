@@ -340,6 +340,7 @@
 	background-color: #EE0101;
 	border-left: 2px solid #DDDDDD;
 	border-right: 2px solid #DDDDDD;
+	padding: 0px;
 	display: block;
 	height: 1px;
 	margin: 0 auto;
@@ -737,6 +738,28 @@
 	-moz-box-shadow: 0 0 4px #B5B5B5;
 	-webkit-box-shadow: 0 0 2px #B5B5B5;
 	box-shadow: 0 0 4px #606060;
+}
+
+.dragindicator {
+	position: absolute;
+	left: -175px;
+	bottom: -44px;
+	cursor: default;
+	width: 215px;
+}
+
+.dragindicator .bhoverarrow {
+	margin-top: -33px;
+	margin-left: 180px;
+	
+}
+
+.dragindicator .bhoverarrow div.bhover10, .dragindicator .bhoverarrow div.bhover9, 
+.dragindicator .bhoverarrow div.bhover8, .dragindicator .bhoverarrow div.bhover7,
+.dragindicator .bhoverarrow div.bhover6 {
+	box-shadow: 0 0 0;
+	-moz-box-shadow: 0 0 0;
+	-webkit-box-shadow: 0 0 0;
 }
 
 /******************************************************************************

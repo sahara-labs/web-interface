@@ -49,5 +49,8 @@
 	filter: progid:DXImageTransform.Microsoft.Shadow(color=#444444, Strength=2);
 }
 
+.dragindicator .bhoverarrow div.bhover10, .dragindicator .bhoverarrow div.bhover9 {
+	filter: none;
+}
 
 

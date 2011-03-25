@@ -845,7 +845,7 @@ Booking.prototype.startBooking = function(slot) {
 	
 	/* Pre select to half the session duration. */
 	this.bookingEnd = this.booking + 1;
-	while (mins < this.duration / 2 && this.isSlotBookable(this.bookingEnd)) 
+	while (mins < this.duration && this.isSlotBookable(this.bookingEnd)) 
 	{
 		mins += this.MINS_PER_SLOT;
 		this.bookingEnd++;
@@ -854,23 +854,34 @@ Booking.prototype.startBooking = function(slot) {
 	/* Roll back to the last booking used slot. */
 	this.bookingEnd--;
 	
-	var height = (this.bookingEnd - this.booking + 1) * 15;
-	var html = 
+	var height = (this.bookingEnd - this.booking + 1) * 15,
+	    html = 
 			"<div class='timeselector ui-corner-all' style='height:" + height + "px'>" +
 				"<div class='timeselectortitle'>" +
 					this.slotToTime(this.booking) + " - " + this.slotToTime(this.bookingEnd + 1) +
-				"</div>";
+				"</div>",
+		i, k;
 	
 	
 		/* Arrows. */
 		if (this.isSlotBookable(this.bookingEnd + 1))
 		{
-			for (var i = 1; i <= 2; i++)
+			for (i = 1; i <= 2; i++)
 			{ 
 				html += "<div class='timedragarrow timedragarrow" + i + "'>";
-				for (var k = 10; k > 0; k--) html += "<div class='tline" + k + "'> </div>";
+				for (k = 10; k > 0; k--) html += "<div class='tline" + k + "'> </div>";
 				html += "</div>";
 			}
+			
+			/* Drag indicator helper. */
+			html += "<div class='dragindicator bhover'>" +
+						"<div class='bhovercontent ui-corner-all'>" +
+							"Drag down to extend reservation." +
+						"</div>" +
+						"<div class='bhoverarrow'>";
+			for (i = 1; i <= 10; i++) html += "<div class='bhover" + i + "'></div>";
+			html += 	"</div>" +
+					"</div>";
 		}
 		
 		html += "<div class='timeselectorbutton timeselectorcommit ui-corner-all'>" +
@@ -891,6 +902,9 @@ Booking.prototype.startBooking = function(slot) {
 	$(".timeselector").resizable({
 		handles: 's',
 		grid: 21,
+		start: function(event, ui) {
+			$(".dragindicator").remove();
+		},
 		stop: function(event, ui) {
 			vp.changeBooking(Math.round((ui.size.height - ui.originalSize.height) / 21));
 		}
@@ -912,6 +926,7 @@ Booking.prototype.changeBooking = function(slots) {
 	
 	/* Any previous invocation cleanup. */
 	$('.diswarn').remove();
+	$('.dragindicator').remove();
 	
 	if (slots > 0)
 	{
