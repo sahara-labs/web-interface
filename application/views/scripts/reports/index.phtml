@@ -67,10 +67,11 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 	</div>
 	<div class="valuedropdown">
 		<p>Select value: <select  id="accessvalue" name="accessvalue">
-			<option value=rig>Value 1</option>
-			<option value=type>Value 2 </option>
-			<option value=class>Value 3</option>
-			<option value=user>Value 4</option>
+		<?php foreach($this->rigNames as $field => $value): ?>
+			<?php if ($field == "selectionResult"): ?>
+				<option value=<?=$value?>> <?=$value?></option>
+			<?php endif; ?>
+		<?php endforeach; ?>
 		</select></p>
 	</div>
 	<div id="accessdatepicker" class="ui-corner-all">
@@ -108,12 +109,12 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 		</select></p>
 	</div>
 	<div class="valuedropdown">
-		<p>Select value: <select id="reportvalue" name="reportvalue">
-			<option value=rig>Value 1</option>
-			<option value=type>Value 2 </option>
-			<option value=class>Value 3</option>
-			<option value=user>Value 4</option>
-		</select></p>
+		<p>Select value: <select id="reportvalue" name="reportvalue" >
+		<?php foreach($this->rigNames as $field => $value): ?>
+			<?php if ($field == "selectionResult"): ?>
+				<option value=<?=$value?>> <?=$value?></option>
+			<?php endif; ?>
+		<?php endforeach; ?>		</select></p>
 	</div>
 	<div id="reportdatepicker" class="ui-corner-all">
 		<label for="reportfrom">Date from</label>
@@ -134,7 +135,7 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 
 
 <script type="text/javascript">
-$('select').selectmenu({width:100});
+$('select').selectmenu({width:200});
 
 
 $(function() {

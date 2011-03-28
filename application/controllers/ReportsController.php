@@ -61,10 +61,14 @@ class ReportsController extends Sahara_Controller_Action_Acl
         
         /* Load the rig names for the initial screen */
         $rep = Sahara_Soap::getSchedServerReportsClient();
+        
+        // ERROR - correct user
         $rigNames = $rep->queryInfo(array(
             'querySelect' => array('operator' => $this->OPERATOR,
-        							'typeForQuery' => $this->RIG,),
-        	'requestor' => $this->_auth->getIdentity() ));
+        							'typeForQuery' => $this->RIG,
+        							'queryLike' => '%'),
+        	'requestor' => array('userID' => '3'),
+            'limit' => '3' ));
         
         $this->view->permission = $perms;
         $this->view->rigNames = $rigNames;
