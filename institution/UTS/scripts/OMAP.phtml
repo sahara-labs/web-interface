@@ -12,11 +12,11 @@ $buttons = new Sahara_Session_Element_MultiButtons($this->rigClient, 'omapbutton
         array(
         	'title' => 'Hard Reset',
             'tooltip' => 'Power cycles the rig.',
-			'icon' => '/uts/fpga/images/hardreset.png',
+			'icon' => '/uts/omap/images/hardreset.png',
             'click' =>
             	"performPrimitiveJSON(
             		'IPSPowerController',
-            		'reset',
+            		'reboot',
             		null,
             		function() {
             			return true;
@@ -28,7 +28,7 @@ $buttons = new Sahara_Session_Element_MultiButtons($this->rigClient, 'omapbutton
         array(
         	'title' => 'Program Demo',
             'tooltip' => 'Program the OMAP board with a demonstration program which exercises the perpherials.',
-            'icon' => '/uts/fpga/images/rundemo.png',
+            'icon' => '/uts/omap/images/rundemo.png',
             'click' => "performPrimitiveJSON(
             	'OMAPController',
             	'loadDemo',
@@ -44,14 +44,14 @@ $buttons = new Sahara_Session_Element_MultiButtons($this->rigClient, 'omapbutton
         array(
         	'title' => 'Upload Code',
             'tooltip' => 'Program the OMAP board with an uploaded program.',
-            'icon' => '/uts/fpga/images/rundemo.png',
+            'icon' => '/uts/omap/images/program.png',
             'click' => "alert('Upload code not yet implemented')"
         )
         ,
         array(
         	'title' => 'Download Data',
             'tooltip' => 'Download data from the board.',
-            'icon' => '/uts/fpga/images/rundemo.png',
+            'icon' => '/uts/omap/images/download.png',
             'click' => "alert('Download data not yet implemented')"
         )
     ),
