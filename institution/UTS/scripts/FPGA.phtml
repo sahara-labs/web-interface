@@ -216,7 +216,13 @@ $(document).ready(function() {
 		modal: true,
 		title: 'Program FPGA',
 		width: 400,
-		resizable: false
+		resizable: false,
+		open: function() {
+			$(".camera object, .camera embed").css("margin-left", "10000");
+		},
+		close: function() {
+			$(".camera object, .camera embed").css("margin-left", "0");
+		}
 	});
 
 	initIO('PPSSSSSS');
