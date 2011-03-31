@@ -37,7 +37,11 @@
 
 function reportTest()
 {
-	//Set value to 3
-	$("#accessvalue").val('class');
+	//Set value to test
+	$("#accessvalue").val('test');
 }
 
+function groupselect()
+{
+	$("#accessvalue").val('test');
+}

@@ -49,6 +49,7 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 	<h2>Reports</h2>
 </div>
 
+<form>
 <div class="reportscontainer ui-corner-all overlayelementhide">
 	<div class="sessionpanelheader">
 		<p><span class="ui-icon ui-icon-suitcase sessionpanelheadericon"></span> Access Reports:</p>
@@ -58,8 +59,9 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 		The session details such as queue duration and session duration are reported per user for the selection. </p>
 	</div>
 	<div class="reportdropdown">
-		<p>Select type: <select name="accessgroup" >
-			<option value=rig>Rig Name</option>
+		<p>Select type:   
+		<select class="group" name="accessgroup" >
+			<option value=rig >Rig Name</option>
 			<option value=type>Rig Type</option>
 			<option value=class>User Class</option>
 			<option value=user>User</option>
@@ -72,6 +74,7 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 				<option value=<?=$value?>> <?=$value?></option>
 			<?php endif; ?>
 		<?php endforeach; ?>
+		<option value="test"> Test</option>
 		</select></p>
 	</div>
 	<div id="accessdatepicker" class="ui-corner-all">
@@ -101,20 +104,18 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 		This includes details on average, median, maximum and minimum usage for the selection.</p>
 	</div>
 	<div class="reportdropdown">
-		<p>Select type: <select name="reportgroup" >
-			<option value=rig>Rig Name</option>
+		<p>Select type: <select class="group" name="reportgroup" >
+			<option value=rig >Rig Name</option>
 			<option value=type>Rig Type</option>
 			<option value=class>User Class</option>
 			<option value=user>User</option>
 		</select></p>
 	</div>
 	<div class="valuedropdown">
-		<p>Select value: <select id="reportvalue" name="reportvalue" >
-		<?php foreach($this->rigNames as $field => $value): ?>
-			<?php if ($field == "selectionResult"): ?>
-				<option value=<?=$value?>> <?=$value?></option>
-			<?php endif; ?>
-		<?php endforeach; ?>		</select></p>
+		<div class="ui-widget">
+			<label for="tags">Select Value: </label>
+			<input id="tags">
+		</div>
 	</div>
 	<div id="reportdatepicker" class="ui-corner-all">
 		<label for="reportfrom">Date from</label>
@@ -131,16 +132,18 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 	
 	<div style="clear: both" ></div>
 </div>
-
+</form>
 
 
 <script type="text/javascript">
 $('select').selectmenu({width:200});
+//$('.group').change(groupselect());
 
-
+//TODO set max and min dates correctly
 $(function() {
-	var dates = $( "#accessfrom, #accessto, #reportfrom, #reportto" ).datepicker({
-		defaultDate: "+1w",
+	var dates = $("#accessfrom, #accessto, #reportfrom, #reportto" ).datepicker({
+		dateFormat: "dd-mm-yy",
+		defaultDate: "+1d",
 		changeMonth: true,
 		numberOfMonths: 2,
 		onSelect: function( selectedDate ) {
@@ -154,6 +157,38 @@ $(function() {
 		}
 	});
 });
+
+
+$(function() {
+	var availableTags = [
+		"ActionScript",
+		"AppleScript",
+		"Asp",
+		"BASIC",
+		"C",
+		"C++",
+		"Clojure",
+		"COBOL",
+		"ColdFusion",
+		"Erlang",
+		"Fortran",
+		"Groovy",
+		"Haskell",
+		"Java",
+		"JavaScript",
+		"Lisp",
+		"Perl",
+		"PHP",
+		"Python",
+		"Ruby",
+		"Scala",
+		"Scheme"
+	];
+	$( "#tags" ).autocomplete({
+		source: availableTags
+	});
+});
+
 
 </script>
 

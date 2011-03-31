@@ -51,7 +51,7 @@ class ReportsController extends Sahara_Controller_Action_Acl
         /* Load the permissions of the user. */
         $client = Sahara_Soap::getSchedServerPermissionsClient();
         $perms = $client->getPermissionsForUser(array('userQName' => $this->_auth->getIdentity()));
-
+        
         if (!isset($perms->permission))
         {
             $this->view->noPermissions = true;
@@ -67,10 +67,98 @@ class ReportsController extends Sahara_Controller_Action_Acl
             'querySelect' => array('operator' => $this->OPERATOR,
         							'typeForQuery' => $this->RIG,
         							'queryLike' => '%'),
-        	'requestor' => array('userID' => '3'),
+        	'requestor' => array('userQName' => $this->_auth->getIdentity()),
             'limit' => '3' ));
         
+
         $this->view->permission = $perms;
         $this->view->rigNames = $rigNames;
     }
+    
+    public function getvalueAction(){
+    	
+        /* Disable view render and layout. */
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();   
+
+        /* Get Parameter */
+        $group = $this->_request->getParam("group","RIG");
+        $like = $this->_request->getParam("querylike");
+        $limit = $this->_request->getParam("limit","3");
+        
+        /* check group value */
+        switch($group)
+        {
+        	case "RIG":
+        	case "RIG_TYPE":
+        	case "USER":
+        	case "USER_CLASS":
+	        	$req = Sahara_Soap::getSchedServerReportsClient();
+	        	$result = $req->queryInfo(array(
+	            	'querySelect' => array('operator' => $this->OPERATOR,
+	        							'typeForQuery' => $group,
+	        							'queryLike' => $like),
+	        		'requestor' => array('userQName' => $this->_auth->getIdentity()),
+	            	'limit' => $limit ));
+	        	break;
+        	default:
+        		$result = "There are no results";
+         };
+        
+        echo $this->view->json($result);
+    }
+    
+    public function getaccessreportAction(){
+    	
+        /* Disable view render and layout. */
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();   
+
+        
+        /* Get Parameter */
+        $params = $this->_request->getParams();
+        var_dump($params);
+        //$to = $this->_request->getParam("to");
+        //var_dump($to);
+        //$pagenum = $this->_request->getParam("page",1);
+        
+        //TODO account for page length
+        
+        /* check group value */
+        switch($params['group'])
+        {
+        	case "RIG":
+        	case "RIG_TYPE":
+        	case "USER":
+        	case "USER_CLASS":
+	        	$req = Sahara_Soap::getSchedServerReportsClient();
+	        	
+	        	$result = $req->querySessionAccess(array(
+	        		'requestor' => array('userQName' => $this->_auth->getIdentity()),
+	        		'querySelect' => array('operator' => $this->OPERATOR,
+	        							'typeForQuery' => $params['group'],
+	        							'queryLike' => $params['value']),
+	            	'startTime' => strtotime($params['from']),
+	        		'endTime' => strtotime($params['to']),
+	        		'pagination' => array('numberOfPages' => 1,
+	        				'pageNumber' => $params['page'],
+	        				'pageLength' => 10 ) ));
+	        	break;
+        	default:
+        		$result = "There are no results";
+         };
+        
+         var_dump(array(
+	        		'requestor' => array('userQName' => $this->_auth->getIdentity()),
+	        		'querySelect' => array('operator' => $this->OPERATOR,
+	        							'typeForQuery' => $params['group'],
+	        							'queryLike' => $params['value']),
+	            	'startTime' => strtotime($params['from']),
+	        		'endTime' => strtotime($params['to']),
+               		'pagination' => array('numberOfPages' => 1,
+	        				'pageNumber' => $params['page'],
+	        				'pageLength' => 10 ) ));
+            echo $this->view->json($result);
+    }
+
 }
