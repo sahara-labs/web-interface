@@ -8,6 +8,7 @@
 function Hydro() {
 	/* -- Constants ------------------------------------ */
 	this.PCONTROLLER = "HydroController";
+	this.STATIC_LOAD = 4.0;
 	
 	/* -- Variables ------------------------------------ */
 	/* Currently displayed mode. */
@@ -33,6 +34,7 @@ Hydro.prototype.debug = false;
 
 /* Whether the page is ready for interaction. */
 Hydro.prototype.ready = false;
+
 Hydro.prototype.init = function() {
 	
 	/* Restore state if stored. */
@@ -72,33 +74,43 @@ Hydro.prototype.displayMode = function(modenum) {
 
 	switch (parseInt(modenum))
 	{
-	case 1: // -- Visualisation ---------------------------
+	case 1: // -- Qualitative -----------------------------
 		this.widgets.push(new LoadPressureSliderWidget(this),
 						  new LEDPanelWidget(this));
 		break;
-	case 2: // -- Power -----------------------------------
-		this.widgets.push(new LoadSetterWidget(this),
-						  new PressureSliderWidget(this),
+	case 2: // -- Quantitative -----------------------------
+		this.widgets.push(new LoadPressureSliderWidget(this),
+						  new RpmMeterWidget(this),
+						  new LEDPanelWidget(this));
+		break;
+	case 3: // -- Electrical Power -------------------------
+		this.widgets.push(new PressureSliderWidget(this),
 						  new RpmMeterWidget(this),
 						  new PowerGaugeWidget(this));
 		break;
-	case 3: // -- Current & Voltage -----------------------
+	case 4: // -- Voltage and Current-----------------------
 		this.widgets.push(new LoadSetterWidget(this),
 						  new PressureSliderWidget(this),
 						  new RpmMeterWidget(this),
-						  new CurrentGaugeWidget(this),
-						  new VoltageGaugeWidget(this));
+						  new VoltageGaugeWidget(this),
+						  new CurrentGaugeWidget(this));
 		break;
-	case 4: // -- Power Redux -----------------------------
-		this.widgets.push(new LoadSetterWidget(this),
-						  new PressureSliderWidget(this),
+	case 5: // -- Flow Rate, Pressure & Rotational Rate ---
+		this.widgets.push(new PressureSliderWidget(this),
 						  new RpmMeterWidget(this),
 						  new FlowGaugeWidget(this),
-						  new PressureGaugeWidget(this),
+						  new PressureGaugeWidget(this));
+		break;
+	case 6: // -- Flow Rate and Power ---------------------
+		this.widgets.push(new PressureSliderWidget(this),
+						  new FlowGaugeWidget(this),
 						  new PowerGaugeWidget(this));
 		break;
-	case 5: // -- Switches --------------------------------
-		this.widgets.push(new PressureSliderWidget(this));
+	case 7: // -- Energy Interconversion ------------------
+		this.widgets.push(new PressureSliderWidget(this),
+						  new RpmMeterWidget(this),
+						  new FlowGaugeWidget(this),
+						  new PowerGaugeWidget(this));
 		break;
 	case 0: // -- Mode selector ---------------------------
 	default:
@@ -200,6 +212,64 @@ Hydro.prototype.values = function(values) {
 };
 
 /* ============================================================================
+ * == Rig control.                                                           ==
+ * ============================================================================ */
+Hydro.prototype.setPressure = function(val) {
+	var thiz = this;
+	this.pump = val;
+	$.get("/primitive/json/pc/" + this.PCONTROLLER + "/pa/setPump/pressure/" + val,
+		   null,
+		   function(response) {
+				if (typeof response == 'object')
+				{
+					thiz.values(response);
+					thiz.repaint();
+				}
+				else thiz.raiseError("Failed response");
+			}
+	);
+};
+
+Hydro.prototype.setLoad = function(val) {
+	this.hydro= ui.value;
+	$.get("/primitive/json/pc/" + this.PCONTROLLER + "/pa/setLoad/load/" + ui.value,
+		null,
+		function(response) {
+			if (typeof response == 'object')
+			{
+				thiz.hydro.values(response);
+				thiz.hydro.repaint();
+			}
+			else thiz.hydro.raiseError("Failed response");
+		}
+	);
+};
+
+Hydro.prototype.setPressureLoad = function(val) {
+	var thiz = this;
+	this.pump = val;
+	$.get("/primitive/json/pc/" + this.PCONTROLLER + "/pa/pressureLoad/pressure/" + val,
+		   null,
+		   function(response) {
+			if (typeof response == 'object')
+			{
+				thiz.values(response);
+				for (i in response)
+				{
+					if (response[i].name == "newload" && !isNaN(parseInt(response[i].value)))
+					{
+						thiz.load = parseInt(response[i].value);
+						thiz.repaint();
+					}
+				}
+				thiz.repaint();
+			}
+			else thiz.raiseError("Failed response");		
+		}
+	);
+};
+
+/* ============================================================================
  * == Data downloads.                                                        ==
  * ============================================================================ */
 Hydro.prototype.dataInit = function() {
@@ -271,19 +341,23 @@ function SelectorWidget(hydroinst)
 {
 	HydroWidget.call(this, hydroinst);
 	
-	this.NUM_MODES = 4;
+	this.NUM_MODES = 7;
 	this.MODE_LABELS = ['Selector', 
-	                    'Visualisation', 
-	                    'Power',
-	                    'Current & Voltage',
-	                    'Power Redux',
-	                    'Switches'];
+	                    'Qualitative Observation',
+	                    'Quantitative Observation',
+	                    'Electrical Power',
+	                    'Voltage and Current',
+	                    'Flow Rate, Pressure & Rotation Rate',
+	                    'Flow Rate & Power',
+	                    'Energy Interconversion'];
 	this.MODE_IMGS =   ['',
+	                    'selvis',
 	                    'selvis',
 	                    'selpower',
 	                    'selcurrvolt',
 	                    'selpower2',
-	                    'selswitches'];
+	                    'selswitches',
+	                    'selvis'];
 }
 SelectorWidget.prototype = new HydroWidget;
 SelectorWidget.prototype.init = function() {
@@ -312,8 +386,7 @@ SelectorWidget.prototype.destroy = function() {
 function SliderWidget(hydroinst)
 {
 	HydroWidget.call(this, hydroinst);
-	this.paction = 'setPump';
-	this.callback = function (response) { };
+	this.setter = function (val) { };
 }
 SliderWidget.prototype = new HydroWidget;
 SliderWidget.prototype.init = function() {
@@ -353,11 +426,7 @@ SliderWidget.prototype.init = function() {
 			$("#sliderval span").empty().append(ui.value);
 		},
 		stop: function(event, ui) {
-			thiz.hydro.pump = ui.value;
-			$.get("/primitive/json/pc/" + thiz.hydro.PCONTROLLER + "/pa/" + thiz.paction + "/pressure/" + ui.value,
-				   null,
-				   thiz.callback
-			);
+			thiz.setter.call(thiz.hydro, ui.value);
 		}
 	});
 	
@@ -390,42 +459,17 @@ SliderWidget.prototype.destroy = function() {
 /* == Pressure slider which sets pump pressure. =============================== */
 function PressureSliderWidget(hydroinst)
 {
-	var thiz = this;
 	SliderWidget.call(this, hydroinst);
-	this.paction = 'setPump';
-	this.callback = function(response) {
-		if (typeof response == 'object')
-		{
-			thiz.hydro.values(response);
-			thiz.hydro.repaint();
-		}
-		else thiz.hydro.raiseError("Failed response");
-	};
+	
+	this.setter = this.hydro.setPressure;
 }
 PressureSliderWidget.prototype = new SliderWidget;
 
 /* == Pressure slider which also sets load based on pressure.  ================ */
 function LoadPressureSliderWidget(hydroinst)
 {
-	var thiz = this;
 	SliderWidget.call(this, hydroinst);
-	this.paction = 'pressureLoad';
-	this.callback = function(response) {
-		if (typeof response == 'object')
-		{
-			thiz.hydro.values(response);
-			for (i in response)
-			{
-				if (response[i].name == "newload" && !isNaN(parseInt(response[i].value)))
-				{
-					thiz.hydro.load = parseInt(response[i].value);
-					thiz.hydro.repaint();
-				}
-			}
-			thiz.hydro.repaint();
-		}
-		else thiz.hydro.raiseError("Failed response");		
-	};
+	this.setter = this.hydro.setPressureLoad;
 }
 LoadPressureSliderWidget.prototype = new SliderWidget;
 
@@ -467,19 +511,7 @@ LoadSetterWidget.prototype.init = function() {
 		max: 4,
 		value: this.val,
 		stop: function(evt, ui) {
-			thiz.hydro.load = ui.value;
-			$.get("/primitive/json/pc/" + thiz.hydro.PCONTROLLER + "/pa/setLoad/load/" + ui.value,
-				null,
-				function(response) {
-					if (typeof response == 'object')
-					{
-						thiz.hydro.values(response);
-						thiz.hydro.repaint();
-					}
-					else thiz.hydro.raiseError("Failed response");
-				}
-			);
-		}
+			
 	});
 	
 	this.ls.children(".ui-slider-handle").css('height', 30)
@@ -845,6 +877,24 @@ function FlowGaugeWidget(hydroinst)
 FlowGaugeWidget.prototype = new GaugeWidget;
 FlowGaugeWidget.prototype.getValue = function() {
 	return this.hydro.flowrate;
+};
+
+/* == Torque gauge. =========================================================== */
+function TorqueGaugeWidget(hydroinst)
+{
+	GaugeWidget.call(this, hydroinst);
+	
+	this.name = "Torque";
+	this.icon = "hydroicontorque";
+	this.units = "N-m (?)";
+	
+	this.minVal = 0;
+	this.maxVal = 5;
+	
+}
+TorqueGaugeWidget.prototype = new GaugeWidget;
+TorqueGaugeWidget.prototype.getValue = function() {
+	return this.hydro.torque;
 };
 
 /* == Pressure gauge. ========================================================= */
