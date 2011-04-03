@@ -8,7 +8,7 @@
 function Hydro() {
 	/* -- Constants ------------------------------------ */
 	this.PCONTROLLER = "HydroController";
-	this.STATIC_LOAD = 4.0;
+	this.STATIC_LOAD = 4;
 	
 	/* -- Variables ------------------------------------ */
 	/* Currently displayed mode. */
@@ -75,20 +75,25 @@ Hydro.prototype.displayMode = function(modenum) {
 	switch (parseInt(modenum))
 	{
 	case 1: // -- Qualitative -----------------------------
+		this.setPressureLoad(0);
 		this.widgets.push(new LoadPressureSliderWidget(this),
 						  new LEDPanelWidget(this));
 		break;
 	case 2: // -- Quantitative -----------------------------
+		this.setPressureLoad(0);
 		this.widgets.push(new LoadPressureSliderWidget(this),
 						  new RpmMeterWidget(this),
+						  new FlowGaugeWidget(this),
 						  new LEDPanelWidget(this));
 		break;
 	case 3: // -- Electrical Power -------------------------
+		this.setLoad(this.STATIC_LOAD);
 		this.widgets.push(new PressureSliderWidget(this),
 						  new RpmMeterWidget(this),
 						  new PowerGaugeWidget(this));
 		break;
 	case 4: // -- Voltage and Current-----------------------
+		this.setLoad(this.STATIC_LOAD);
 		this.widgets.push(new LoadSetterWidget(this),
 						  new PressureSliderWidget(this),
 						  new RpmMeterWidget(this),
@@ -96,21 +101,41 @@ Hydro.prototype.displayMode = function(modenum) {
 						  new CurrentGaugeWidget(this));
 		break;
 	case 5: // -- Flow Rate, Pressure & Rotational Rate ---
+		this.setLoad(this.STATIC_LOAD);
 		this.widgets.push(new PressureSliderWidget(this),
 						  new RpmMeterWidget(this),
 						  new FlowGaugeWidget(this),
 						  new PressureGaugeWidget(this));
 		break;
 	case 6: // -- Flow Rate and Power ---------------------
+		this.setLoad(this.STATIC_LOAD);
 		this.widgets.push(new PressureSliderWidget(this),
 						  new FlowGaugeWidget(this),
 						  new PowerGaugeWidget(this));
 		break;
 	case 7: // -- Energy Interconversion ------------------
+		this.setLoad(this.STATIC_LOAD);
 		this.widgets.push(new PressureSliderWidget(this),
 						  new RpmMeterWidget(this),
 						  new FlowGaugeWidget(this),
 						  new PowerGaugeWidget(this));
+		break;
+	case 8: // -- Torque ----------------------------------
+		this.setLoad(this.STATIC_LOAD);
+		this.widgets.push(new PressureSliderWidget(this),
+						  new RpmMeterWidget(this),
+						  new TorqueGaugeWidget(this),
+						  new VoltageGaugeWidget(this),
+						  new CurrentGaugeWidget(this),
+						  new PowerGaugeWidget(this));
+		break;
+	case 9: // -- Resistance ------------------------------
+		this.widgets.push(new PressureSliderWidget(this),
+				          new LoadSetterWidget(this),
+				          new RpmMeterWidget(this),
+				          new VoltageGaugeWidget(this),
+				          new CurrentGaugeWidget(this),
+				          new PowerGaugeWidget(this));
 		break;
 	case 0: // -- Mode selector ---------------------------
 	default:
@@ -231,16 +256,17 @@ Hydro.prototype.setPressure = function(val) {
 };
 
 Hydro.prototype.setLoad = function(val) {
-	this.hydro= ui.value;
-	$.get("/primitive/json/pc/" + this.PCONTROLLER + "/pa/setLoad/load/" + ui.value,
+	this.load = val;
+	var thiz = this;
+	$.get("/primitive/json/pc/" + this.PCONTROLLER + "/pa/setLoad/load/" + val,
 		null,
 		function(response) {
 			if (typeof response == 'object')
 			{
-				thiz.hydro.values(response);
-				thiz.hydro.repaint();
+				thiz.values(response);
+				thiz.repaint();
 			}
-			else thiz.hydro.raiseError("Failed response");
+			else thiz.raiseError("Failed response");
 		}
 	);
 };
@@ -341,7 +367,7 @@ function SelectorWidget(hydroinst)
 {
 	HydroWidget.call(this, hydroinst);
 	
-	this.NUM_MODES = 7;
+	this.NUM_MODES = 9;
 	this.MODE_LABELS = ['Selector', 
 	                    'Qualitative Observation',
 	                    'Quantitative Observation',
@@ -349,7 +375,9 @@ function SelectorWidget(hydroinst)
 	                    'Voltage and Current',
 	                    'Flow Rate, Pressure & Rotation Rate',
 	                    'Flow Rate & Power',
-	                    'Energy Interconversion'];
+	                    'Energy Interconversion',
+	                    'Torque',
+	                    'Output Resistance'];
 	this.MODE_IMGS =   ['',
 	                    'selvis',
 	                    'selvis',
@@ -357,6 +385,8 @@ function SelectorWidget(hydroinst)
 	                    'selcurrvolt',
 	                    'selpower2',
 	                    'selswitches',
+	                    'selvis',
+	                    'selvis',
 	                    'selvis'];
 }
 SelectorWidget.prototype = new HydroWidget;
@@ -504,14 +534,14 @@ LoadSetterWidget.prototype.init = function() {
 	this.canvas.append(html);
 	
 	var thiz = this;
-
 	this.ls = $("#loadsetter").slider({
 		orientation: "horizontal",
 		min: 0,
 		max: 4,
 		value: this.val,
 		stop: function(evt, ui) {
-			
+			thiz.hydro.setLoad.call(thiz.hydro, ui.value);
+		}
 	});
 	
 	this.ls.children(".ui-slider-handle").css('height', 30)
