@@ -117,10 +117,6 @@ class ReportsController extends Sahara_Controller_Action_Acl
         
         /* Get Parameter */
         $params = $this->_request->getParams();
-        var_dump($params);
-        //$to = $this->_request->getParam("to");
-        //var_dump($to);
-        //$pagenum = $this->_request->getParam("page",1);
         
         //TODO account for page length
         
@@ -148,17 +144,45 @@ class ReportsController extends Sahara_Controller_Action_Acl
         		$result = "There are no results";
          };
         
-         var_dump(array(
+           echo $this->view->json($result);
+    }
+
+    public function getsessionreportAction(){
+    	
+        /* Disable view render and layout. */
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();   
+
+        
+        /* Get Parameter */
+        $params = $this->_request->getParams();
+        
+        //TODO account for page length
+        
+        /* check group value */
+        switch($params['group'])
+        {
+        	case "RIG":
+        	case "RIG_TYPE":
+        	case "USER":
+        	case "USER_CLASS":
+	        	$req = Sahara_Soap::getSchedServerReportsClient();
+	        	
+	        	$result = $req->querySessionReport(array(
 	        		'requestor' => array('userQName' => $this->_auth->getIdentity()),
 	        		'querySelect' => array('operator' => $this->OPERATOR,
 	        							'typeForQuery' => $params['group'],
 	        							'queryLike' => $params['value']),
 	            	'startTime' => strtotime($params['from']),
 	        		'endTime' => strtotime($params['to']),
-               		'pagination' => array('numberOfPages' => 1,
+	        		'pagination' => array('numberOfPages' => 1,
 	        				'pageNumber' => $params['page'],
 	        				'pageLength' => 10 ) ));
-            echo $this->view->json($result);
+	        	break;
+        	default:
+        		$result = "There are no results";
+         };
+        
+           echo $this->view->json($result);
     }
-
 }
