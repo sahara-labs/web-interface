@@ -4,7 +4,7 @@ echo $cams;
 
 $rdpApplet = new Sahara_Session_Element_RdpApplet($this->rigClient, array(
 	'cl2' => 'LO'
-));
+), 'ssaharardpapplet2.jar');
 echo $rdpApplet;
 
 $buttons = new Sahara_Session_Element_MultiButtons($this->rigClient, 'omapbuttons',
