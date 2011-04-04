@@ -45,3 +45,37 @@ function groupselect()
 {
 	$("#accessvalue").val('test');
 }
+
+function getReport(action, params, callback)
+{
+	var queryRequest = "/" + action ;
+	// TODO - check on values that must be confirmed
+	if (params != null && param['group'] != null )
+	{
+		for (k in params)
+		{
+			primRequest += "/" + k + "/" + params[k];
+		}
+	}
+	else
+	{
+		//TODO - error case ???
+	}
+	
+	$.get(
+		queryRequest,
+		{},
+		function (data)
+		{
+			if (overlay != null && clearOverlay)
+			{
+				performPrimitiveClearOverlay();
+			}
+			
+			if (callback != null)
+			{
+				callback(data);
+			}
+		}
+	);
+}
