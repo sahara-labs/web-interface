@@ -41,10 +41,11 @@
  */
 class Sahara_Session_Element_RdpApplet extends Sahara_Session_Element
 {
-    public function __construct($rig, $params = array())
+    public function __construct($rig, $params = array(), $applet = 'ssaharardpapplet.jar')
     {
         parent::__construct($rig);
 
+        $this->_view->applet = $applet;
         $this->_view->params = $params;
     }
 
