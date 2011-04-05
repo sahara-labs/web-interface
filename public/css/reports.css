@@ -86,7 +86,17 @@
  	margin: 0px 10px 20px 0px;
 }
 
+#accesssubmit button{
+ 	height: 100px;
+ 	width: 100px;
+}
+
 #reportsubmit{
  	float: right;
  	margin: 0px 10px 20px 0px;
+}
+
+#reportsubmit button{
+ 	height: 100px;
+ 	width: 100px;
 }

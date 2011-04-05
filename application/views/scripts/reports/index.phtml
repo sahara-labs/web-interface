@@ -49,7 +49,8 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 	<h2>Reports</h2>
 </div>
 
-<form>
+
+<form action="/reports/accessreport/">
 <div class="reportscontainer ui-corner-all overlayelementhide">
 	<div class="sessionpanelheader">
 		<p><span class="ui-icon ui-icon-suitcase sessionpanelheadericon"></span> Access Reports:</p>
@@ -61,10 +62,10 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 	<div class="reportdropdown">
 		<p>Select type:   
 		<select class="group" name="accessgroup" >
-			<option value=rig >Rig Name</option>
-			<option value=type>Rig Type</option>
-			<option value=class>User Class</option>
-			<option value=user>User</option>
+			<option value=RIG >Rig Name</option>
+			<option value=RIG_TYPE>Rig Type</option>
+			<option value=USER_CLASS>User Class</option>
+			<option value=USER>User</option>
 		</select></p>
 	</div>
 	<div class="valuedropdown">
@@ -84,17 +85,17 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 		<input type="text" id="accessto" name="accessto"/>
 	</div>
 	<div id="accesssubmit">
-		<a id="accesssubmit" class="actiondialogbutton plaina ui-corner-all" href="#">
-		<img src="<?=$this->baseUrl('images/1rightarrow.png')?>" alt="Submit" 
-		  onclick="reportTest()"/><br />
-	    Get Access Report</a>
+		<button type="submit" id="accesssubmit" class="actiondialogbutton plaina ui-corner-all"  >
+	    <img src="<?=$this->baseUrl('images/1rightarrow.png')?>" alt="Submit"/><br/>
+		Get Access Report
+	    </button>
 	</div>
 	<div style="clear: both" ></div>
 </div>
+</form>
 
 
-
-
+<form action="/reports/sessionreport/">
 <div class="reportscontainer ui-corner-all overlayelementhide">
 	<div class="sessionpanelheader">
 		<p><span class="ui-icon ui-icon-suitcase sessionpanelheadericon"></span> Usage Reports:</p>
@@ -105,10 +106,10 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 	</div>
 	<div class="reportdropdown">
 		<p>Select type: <select class="group" name="reportgroup" >
-			<option value=rig >Rig Name</option>
-			<option value=type>Rig Type</option>
-			<option value=class>User Class</option>
-			<option value=user>User</option>
+			<option value=RIG >Rig Name</option>
+			<option value=RIG_TYPE>Rig Type</option>
+			<option value=USER_CLASS>User Class</option>
+			<option value=USER>User</option>
 		</select></p>
 	</div>
 	<div class="valuedropdown">
@@ -124,15 +125,16 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 		<input type="text" id="reportto" name="reportto"/>
 	</div>
 	<div id="reportsubmit">
-		<a id="reportsubmit" class="actiondialogbutton plaina ui-corner-all" href="#">
-		<img src="<?=$this->baseUrl('images/1rightarrow.png')?>" alt="Submit" 
-		  onclick="reportTest()"/><br />
-	    Get Usage Report</a>
+		<button type="submit" id="reportsubmit" class="actiondialogbutton plaina ui-corner-all" >
+		<img src="<?=$this->baseUrl('images/1rightarrow.png')?>" alt="Submit"/><br/>
+		Get Usage Report
+	    </button>
 	</div>
 	
 	<div style="clear: both" ></div>
 </div>
 </form>
+
 
 
 <script type="text/javascript">

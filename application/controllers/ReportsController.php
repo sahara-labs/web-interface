@@ -108,12 +108,8 @@ class ReportsController extends Sahara_Controller_Action_Acl
         echo $this->view->json($result);
     }
     
-    public function getaccessreportAction(){
+    public function accessreportAction(){
     	
-        /* Disable view render and layout. */
-        $this->_helper->viewRenderer->setNoRender();
-        $this->_helper->layout()->disableLayout();   
-
         
         /* Get Parameter */
         $params = $this->_request->getParams();
@@ -121,7 +117,7 @@ class ReportsController extends Sahara_Controller_Action_Acl
         //TODO account for page length
         
         /* check group value */
-        switch($params['group'])
+        switch($params['accessgroup'])
         {
         	case "RIG":
         	case "RIG_TYPE":
@@ -132,10 +128,10 @@ class ReportsController extends Sahara_Controller_Action_Acl
 	        	$result = $req->querySessionAccess(array(
 	        		'requestor' => array('userQName' => $this->_auth->getIdentity()),
 	        		'querySelect' => array('operator' => $this->OPERATOR,
-	        							'typeForQuery' => $params['group'],
-	        							'queryLike' => $params['value']),
-	            	'startTime' => strtotime($params['from']),
-	        		'endTime' => strtotime($params['to']),
+	        							'typeForQuery' => $params['accessgroup'],
+	        							'queryLike' => $params['accessvalue']),
+	            	'startTime' => strtotime($params['accessfrom']),
+	        		'endTime' => strtotime($params['accessto']),
 	        		'pagination' => array('numberOfPages' => 1,
 	        				'pageNumber' => $params['page'],
 	        				'pageLength' => 10 ) ));
@@ -144,23 +140,18 @@ class ReportsController extends Sahara_Controller_Action_Acl
         		$result = "There are no results";
          };
         
-           echo $this->view->json($result);
+          var_dump($result);
     }
 
-    public function getsessionreportAction(){
+    public function sessionreportAction(){
     	
-        /* Disable view render and layout. */
-        $this->_helper->viewRenderer->setNoRender();
-        $this->_helper->layout()->disableLayout();   
-
-        
         /* Get Parameter */
         $params = $this->_request->getParams();
         
         //TODO account for page length
         
         /* check group value */
-        switch($params['group'])
+        switch($params['reportgroup'])
         {
         	case "RIG":
         	case "RIG_TYPE":
@@ -171,10 +162,10 @@ class ReportsController extends Sahara_Controller_Action_Acl
 	        	$result = $req->querySessionReport(array(
 	        		'requestor' => array('userQName' => $this->_auth->getIdentity()),
 	        		'querySelect' => array('operator' => $this->OPERATOR,
-	        							'typeForQuery' => $params['group'],
-	        							'queryLike' => $params['value']),
-	            	'startTime' => strtotime($params['from']),
-	        		'endTime' => strtotime($params['to']),
+	        							'typeForQuery' => $params['reportgroup'],
+	        							'queryLike' => $params['reportvalue']),
+	            	'startTime' => strtotime($params['reportfrom']),
+	        		'endTime' => strtotime($params['reportto']),
 	        		'pagination' => array('numberOfPages' => 1,
 	        				'pageNumber' => $params['page'],
 	        				'pageLength' => 10 ) ));
@@ -183,6 +174,6 @@ class ReportsController extends Sahara_Controller_Action_Acl
         		$result = "There are no results";
          };
         
-           echo $this->view->json($result);
-    }
+          var_dump($result);
+     }
 }
