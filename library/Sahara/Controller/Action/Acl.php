@@ -115,7 +115,7 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
         /* Check if the user has permission for the requested resource. */
         if (!$this->_acl->hasPermission($controller, $action))
         {
-            $this->_flashMessenger->addMessage("You session has timed out.");
+            $this->_flashMessenger->addMessage("Your session has timed out.");
             $this->_redirectTo('index', 'index');
         }
 
