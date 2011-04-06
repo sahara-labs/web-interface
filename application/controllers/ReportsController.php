@@ -83,7 +83,7 @@ class ReportsController extends Sahara_Controller_Action_Acl
 
         /* Get Parameter */
         $group = $this->_request->getParam("group","RIG");
-        $like = $this->_request->getParam("querylike");
+        $like = $this->_request->getParam("like");
         $limit = $this->_request->getParam("limit","3");
         
         /* check group value */

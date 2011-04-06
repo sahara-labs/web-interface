@@ -61,7 +61,7 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 	</div>
 	<div class="reportdropdown">
 		<p>Select type:   
-		<select class="group" name="accessgroup" >
+		<select id="accessgroup" name="accessgroup" >
 			<option value=RIG >Rig Name</option>
 			<option value=RIG_TYPE>Rig Type</option>
 			<option value=USER_CLASS>User Class</option>
@@ -105,7 +105,7 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 		This includes details on average, median, maximum and minimum usage for the selection.</p>
 	</div>
 	<div class="reportdropdown">
-		<p>Select type: <select class="group" name="reportgroup" >
+		<p>Select type: <select id="reportgroup" name="reportgroup" >
 			<option value=RIG >Rig Name</option>
 			<option value=RIG_TYPE>Rig Type</option>
 			<option value=USER_CLASS>User Class</option>
@@ -114,8 +114,8 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 	</div>
 	<div class="valuedropdown">
 		<div class="ui-widget">
-			<label for="tags">Select Value: </label>
-			<input id="tags">
+			<label for="reportvalue">Select Value: </label>
+			<input id="reportvalue" type="text" name="reportvalue">
 		</div>
 	</div>
 	<div id="reportdatepicker" class="ui-corner-all">
@@ -139,9 +139,9 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 
 <script type="text/javascript">
 $('select').selectmenu({width:200});
-//$('.group').change(groupselect());
+$('reportdropdown').change(groupselect());
 
-//TODO set max and min dates correctly
+//set max and min dates correctly
 $(function() {
 	var dates = $("#accessfrom, #accessto, #reportfrom, #reportto" ).datepicker({
 		dateFormat: "dd-mm-yy",
@@ -158,38 +158,26 @@ $(function() {
 			dates.not( this ).datepicker( "option", option, date );
 		}
 	});
+
+	$("#reportvalue" ).keyup(
+			function(){
+				var nameval = $(this).val();
+				var namelength = nameval.length;
+				var group = $("#reportgroup").val();
+
+				if( namelength > 0 & namelength%3 == 0 )
+				{
+					getValue(group, nameval); 
+				}
+				
+			
+			}
+	);
+
 });
 
 
-$(function() {
-	var availableTags = [
-		"ActionScript",
-		"AppleScript",
-		"Asp",
-		"BASIC",
-		"C",
-		"C++",
-		"Clojure",
-		"COBOL",
-		"ColdFusion",
-		"Erlang",
-		"Fortran",
-		"Groovy",
-		"Haskell",
-		"Java",
-		"JavaScript",
-		"Lisp",
-		"Perl",
-		"PHP",
-		"Python",
-		"Ruby",
-		"Scala",
-		"Scheme"
-	];
-	$( "#tags" ).autocomplete({
-		source: availableTags
-	});
-});
+
 
 
 </script>

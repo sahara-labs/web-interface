@@ -43,39 +43,38 @@ function reportTest()
 
 function groupselect()
 {
-	$("#accessvalue").val('test');
+	var sessionTags = ["ActionScript",
+	           		"AppleScript" ];
 }
 
-function getReport(action, params, callback)
+function getValue(group, like)
 {
-	var queryRequest = "/" + action ;
-	// TODO - check on values that must be confirmed
-	if (params != null && param['group'] != null )
-	{
-		for (k in params)
+   var queryDest = "/reports/getvalue/group/" + group + "/like/" + like + "/limit/4";	
+   
+   $.get(
+		queryDest, 
+		{}, 
+		function (data) 
 		{
-			primRequest += "/" + k + "/" + params[k];
-		}
-	}
-	else
-	{
-		//TODO - error case ???
-	}
-	
-	$.get(
-		queryRequest,
-		{},
-		function (data)
-		{
-			if (overlay != null && clearOverlay)
+			for (results in data['selectionResult'])
 			{
-				performPrimitiveClearOverlay();
-			}
-			
-			if (callback != null)
-			{
-				callback(data);
+				// There is a result
+				if (!isNaN(results))
+				{
+					if (typeof data['selectionResult'] == 'string') 
+					{
+						// Only one value
+						alert( data['selectionResult']);
+						break;
+					}
+					else
+					{
+						// Array of values
+						alert(data['selectionResult'][results]);
+					}
+				}
 			}
 		}
 	);
+		
 }
