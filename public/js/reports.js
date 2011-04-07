@@ -35,19 +35,7 @@
  * @date 13th December 2010
  */
 
-function reportTest()
-{
-	//Set value to test
-	$("#accessvalue").val('test');
-}
-
-function groupselect()
-{
-	var sessionTags = ["ActionScript",
-	           		"AppleScript" ];
-}
-
-function getValue(group, like)
+function getValue(type, group, like)
 {
    var queryDest = "/reports/getvalue/group/" + group + "/like/" + like + "/limit/4";	
    
@@ -56,6 +44,8 @@ function getValue(group, like)
 		{}, 
 		function (data) 
 		{
+			$("#" + type + "valuelist ul").empty();
+			$("#" + type + "valuelist").hide();
 			for (results in data['selectionResult'])
 			{
 				// There is a result
@@ -64,17 +54,90 @@ function getValue(group, like)
 					if (typeof data['selectionResult'] == 'string') 
 					{
 						// Only one value
-						alert( data['selectionResult']);
+						$("#" + type + "valuelist ul").append("<li  class=\""+ type + "listitem\">" + data['selectionResult'] + "</li>");
+						$("#" + type + "valuelist").show();
 						break;
 					}
 					else
 					{
 						// Array of values
-						alert(data['selectionResult'][results]);
+						$("#" + type + "valuelist ul").append("<li  class=\""+ type + "listitem\">" + data['selectionResult'][results] + "</li>");
+						$("#" + type + "valuelist").show();
 					}
 				}
 			}
+			
+			
+			$	("." +type + "listitem").hover(
+					function(){
+						if($(this).hasClass("ui-state-hover"))
+						{
+							$(this).removeClass("ui-corner-all ui-selectmenu-item-focus ui-state-hover");
+						}
+						else
+						{
+							var selectedname = $(this).html();
+							$("#" + type + "value").val(selectedname);
+							$(this).addClass("ui-corner-all ui-selectmenu-item-focus ui-state-hover");
+						}
+					}
+			);
+
 		}
 	);
 		
 }
+
+function getSessionValue(group, like)
+{
+   var queryDest = "/reports/getvalue/group/" + group + "/like/" + like + "/limit/4";	
+   
+   $.get(
+		queryDest, 
+		{}, 
+		function (data) 
+		{
+			$("#sessionvaluelist ul").empty();
+			$("#sessionvaluelist").hide();
+			for (results in data['selectionResult'])
+			{
+				// There is a result
+				if (!isNaN(results))
+				{
+					if (typeof data['selectionResult'] == 'string') 
+					{
+						// Only one value
+						$("#sessionvaluelist ul").append("<li  class=\"sessionlistitem\">" + data['selectionResult'] + "</li>");
+						$("#sessionvaluelist").show();
+						break;
+					}
+					else
+					{
+						// Array of values
+						$("#sessionvaluelist ul").append("<li  class=\"sessionlistitem\">" + data['selectionResult'][results] + "</li>");
+						$("#sessionvaluelist").show();
+					}
+				}
+			}
+			
+			
+			$(".sessionlistitem").hover(
+					function(){
+						if($(this).hasClass("ui-state-hover"))
+						{
+							$(this).removeClass("ui-corner-all ui-selectmenu-item-focus ui-state-hover");
+						}
+						else
+						{
+							var selectedname = $(this).html();
+							$("#sessionvalue").val(selectedname);
+							$(this).addClass("ui-corner-all ui-selectmenu-item-focus ui-state-hover");
+						}
+					}
+			);
+
+		}
+	);
+		
+}
+
