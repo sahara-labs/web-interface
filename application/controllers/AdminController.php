@@ -210,4 +210,55 @@ class AdminController extends Sahara_Controller_Action_Acl
             )
         )));
     }
+
+    /**
+     * Action create perm keys.
+     */
+    public function permkeyAction()
+    {
+        $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Permission Keys');
+
+        $db = Sahara_Database::getDatabase();
+
+        $this->view->classes = $db->fetchAll($db->select()->from('user_class'));
+
+        if ($this->_request->isPost())
+        {
+            $this->view->keys = array();
+
+            $params = $this->_request->getParams();
+            for ($i = 0; $i < $params['num']; $i++)
+            {
+                /* Generate key. */
+                $key = '';
+                for ($k = 0; $k < 25; $k++)
+                {
+                    switch (rand(0, 3))
+                    {
+                        case 0:
+                            $key .= chr(rand(0, 24) + 97);
+                            break;
+                        case 1:
+                            $key .= chr(rand(0, 24) + 65);
+                            break;
+                        case 2:
+                            $key .= chr(rand(0, 10) + 48);
+                            break;
+                    }
+                }
+                array_push($this->view->keys, $key);
+
+                $row = array(
+                    'redeemkey' => $key,
+                    'user_class_id' => $params['class'],
+                    'remaining_uses' => $params['uses']
+                );
+
+                if ($params['home']) $row['home_org'] = $params['home'];
+                if ($params['aff']) $row['affliation'] = $params['aff'];
+
+                $db->insert('user_association_redeem_keys', $row);
+            }
+        }
+    }
 }

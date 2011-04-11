@@ -371,3 +371,31 @@
 .timelinelabel {
 	margin: 5px 0 0;
 }
+
+#permform {
+	width: 500px;
+	margin: 0 auto;
+}
+
+#permform td {
+	padding: 5px;
+}
+
+#permform input {
+	width: 100%;
+}
+
+#permsubmitbutton {
+	width 100%;
+	text-align: right;	
+}
+
+#permsubmitbutton input {
+	width: 150px;
+}
+
+#permkeylist {
+	width: 400px;
+	margin: 20px auto;
+}
+
