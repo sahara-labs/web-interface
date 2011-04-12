@@ -82,9 +82,10 @@ $this->headLink()->appendStylesheet('/css/admin.css');
     		<td>
     			<select name="num">
     				<option value="1">1</option>
-    				<option value="5">5</option>
-    				<option value="10">10</option>
-    				<option value="25">25</option>
+    				<option value="4">4</option>
+    				<option value="8">8</option>
+    				<option value="16">16</option>
+				<option value="32">32</option>
     			</select>
     		</td>
     	</tr>
@@ -103,10 +104,11 @@ $(document).ready(function() {
 //-->
 </script>
 
+<?php if ($this->keys): ?>
 <div id="permkeylist">
 <table>
 	<tr>
-		<td colspan="2"></td>
+		<th colspan="2">Permission Keys</th>
 	</tr>
 	<?php for ($i = 0; $i < count($this->keys); $i += 2): ?>
 	<tr>
@@ -116,3 +118,5 @@ $(document).ready(function() {
 	<?php endfor; ?>
 </table>
 </div>
+<?php endif; ?>
+

@@ -399,3 +399,10 @@
 	margin: 20px auto;
 }
 
+#permkeylist th {
+	font-size: 1.1em;
+	font-weight: bold;
+	background-color: #EFEFEF;
+	padding: 5px;
+}
+

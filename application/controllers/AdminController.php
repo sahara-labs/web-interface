@@ -216,10 +216,16 @@ class AdminController extends Sahara_Controller_Action_Acl
      */
     public function permkeyAction()
     {
+	/* This should only be enabled if the permission key system is enabled. */
+	if (!$this->_config->permkey->enable)
+        {
+            $this->_logger->warn('Tried to load permission key creation interface when the permission activation feature is disabled.');
+            $this->redirectTo('index');
+        }
+
         $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Permission Keys');
 
         $db = Sahara_Database::getDatabase();
-
         $this->view->classes = $db->fetchAll($db->select()->from('user_class'));
 
         if ($this->_request->isPost())
