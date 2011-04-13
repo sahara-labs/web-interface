@@ -62,6 +62,7 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 	<div class="groupdropdown">
 		<label for="accessgroup">Select type for report: <br></label>
 		<select id="accessgroup" name="accessgroup" class="ui-corner-all">
+			<option value=def >Select a type</option>
 			<option value=RIG >Rig Name</option>
 			<option value=RIG_TYPE>Rig Type</option>
 			<option value=USER_CLASS>User Class</option>
@@ -105,6 +106,7 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 	<div class="groupdropdown">
 		<label for="sessiongroup">Select type for report: <br></label>
 		<select id="sessiongroup" name="sessiongroup" >
+			<option value=def >Select a type</option>
 			<option value=RIG >Rig Name</option>
 			<option value=RIG_TYPE>Rig Type</option>
 			<option value=USER_CLASS>User Class</option>
@@ -141,6 +143,7 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 <script type="text/javascript">
 $('select').selectmenu({width:180});
 
+
 //set max and min dates correctly
 $(function() {
 
@@ -151,15 +154,17 @@ $(function() {
 		dateFormat: "dd-mm-yy",
 		defaultDate: "+1d",
 		changeMonth: true,
-		numberOfMonths: 2,
+		changeYear: true,
+		currentText: 'Now',
+		numberOfMonths: 1,
 		onSelect: function( selectedDate ) {
-			var option = this.id == "from" ? "minDate" : "maxDate",
+			//var option = this.id == "accessfrom" || "reportfrom" ? "minDate" : "maxDate",
 				instance = $( this ).data( "datepicker" ),
 				date = $.datepicker.parseDate(
 					instance.settings.dateFormat ||
 					$.datepicker._defaults.dateFormat,
 					selectedDate, instance.settings );
-			dates.not( this ).datepicker( "option", option, date );
+			//dates.not( this ).datepicker( "option", option, date );
 		}
 	});
 
@@ -172,7 +177,7 @@ $(function() {
 
 				if( namelength > 0 & namelength%3 == 0 )
 				{
-					getValue(type, group, nameval); 
+					getValue(type, group, nameval,5); 
 				}
 			}
 	);
@@ -186,7 +191,7 @@ $(function() {
 
 				if( namelength > 0 & namelength%3 == 0 )
 				{
-					getValue(type, group, nameval); 
+					getValue(type, group, nameval,5); 
 				}
 			}
 	);
@@ -202,6 +207,20 @@ $(function() {
 				$("#accessvaluelist").hide();
 			}
 	);
+
+	$("#accessgroup").change(function()
+			{
+				$("#accessvaluelist").hide();
+				getValue("access",this.value,"%",10);
+			}
+		);
+
+	$("#sessiongroup").change(function()
+			{
+				$("#sessionvaluelist").hide();
+				getValue("session",this.value,"%",10);
+			}
+		);
 
 });
 
