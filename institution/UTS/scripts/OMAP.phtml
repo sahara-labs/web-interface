@@ -24,9 +24,15 @@ $buttons = new Sahara_Session_Element_MultiButtons($this->rigClient, 'omapbutton
 				.attr('style', 'overflow-y: scroll; overflow-x: hidden')
 				.append(document.createElement('pre'));
 			$('body').append(dv);
-			$('#omapdemoresponse pre').append(resp[0].value);
+
+			if (resp[0].value.length == 0)
+			{
+				$('#omapdemoresponse pre').append('OMAP board still booting. Please wait a few seconds then try again.');
+			}
+			else $('#omapdemoresponse pre').append(resp[0].value);
 
 			$('#omapdemoresponse').dialog({
+				modal: true,
 				height: 400,
 				width: 600,
 				resizable: false,
