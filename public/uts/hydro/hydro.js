@@ -647,6 +647,10 @@ GaugeWidget.prototype.init = function() {
 		this.canvas.append("<div id='gaugecontainer'> </div>");
 	}
 	
+	var s = '' + this.animeVal;
+	if (s.indexOf('.') == -1) s += '.00';
+	else while (s.length - s.indexOf('.') < 3) s += '0';
+	
 	$("#gaugecontainer").append(
 		"<div id='" + this.id + "' class='gauge hydropanel ui-corner-all'>" +
 			"<div class='hydropaneltitle'><p>" +
@@ -665,7 +669,7 @@ GaugeWidget.prototype.init = function() {
 				"<div class='gaugegradlabel gaugegradlabelmid'>" + round((this.maxVal - this.minVal) / 2, 2) + "</div>" +
 				"<div class='gaugegradlabel gaugegradlabelmax'>" + this.maxVal + "</div>" +
 				"<div class='gaugevalouter'>" +
-					"<span class='gaugeval'>" + this.animeVal + "</span> " + this.units +
+					"<span class='gaugeval'>" + s + "</span> " + this.units +
 				"</div>" +
 			"</div>" + 
 		"</div>"
@@ -744,8 +748,11 @@ GaugeWidget.prototype.animate = function() {
 	}
 	
 	/* Work backwords to find the interpolated value. */
-	var inval = round((this.cr + 90) / 180 * (this.maxVal - this.minVal), 2);
-	this.tickVal.empty().append(inval);
+	var s = '' + round((this.cr + 90) / 180 * (this.maxVal - this.minVal), 2);
+	if (s.indexOf('.') == -1) s += '.00';
+	else while (s.length - s.indexOf('.') < 3) s += '0';
+	
+	this.tickVal.html(s);
 	this.rotate(this.cr);
 };
 GaugeWidget.prototype.rotate = function(deg) {
