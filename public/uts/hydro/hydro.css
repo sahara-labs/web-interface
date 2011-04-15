@@ -163,6 +163,7 @@
 .hydroiconload { background-position: 64px 50px; }
 .hydroiconpressure { background-position: 48px 48px; }
 .hydroiconflow { background-position: 32px 48px; }
+.hydroicontorque { background-position: 16px 48px; }
 
 #slidercont {
 	position: absolute;
