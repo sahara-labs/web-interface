@@ -39,6 +39,7 @@
 $this->headLink()->appendStylesheet($this->baseUrl('/css/session.css'));
 $this->headLink()->appendStylesheet($this->baseUrl('/css/reports.css'));
 $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
+$this->headScript()->appendFile($this->baseUrl('/js/jquery.dataTables.min.js'));
 ?>
 
 <div class="contentheader">
@@ -84,9 +85,16 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 		    <tbody>
 		        <?php foreach ($tabledata as $rownum => $rowval):?>
 		        <tr>
-		        	<?php foreach($rowval as $n => $v):?>
-		            	<td><?=$v?></td>
-		            <?php endforeach ?>
+	            	<td><?=$rowval["sessionStartTime"]?></td>
+	            	<td><?=$rowval["user"]?></td>
+	            	<td><?=$rowval["userClass"]?></td>
+	            	<td><?=$rowval["rigType"]?></td>
+	            	<td><?=$rowval["rigName"]?></td>
+	            	<td><?=$rowval["queueDuration"]?></td>
+	            	<td><?=$rowval["sessionStartTime"]?></td>
+	            	<td><?=$rowval["sessionEndTime"]?></td>
+	            	<td><?=$rowval["sessionDuration"]?></td>
+	            	<td><?=$rowval["reasonForTuermination"]?></td>
 		        </tr>
                <?php endforeach ?>
 		    </tbody>
@@ -102,5 +110,10 @@ else
 	echo "No results param";
 }
 ?>
+<script>
+	$(document).ready(function() {
+		$('#accesstable').dataTable();
+	} );
+</script>
 
 
