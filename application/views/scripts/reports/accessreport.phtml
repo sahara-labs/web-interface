@@ -41,12 +41,66 @@ $this->headLink()->appendStylesheet($this->baseUrl('/css/reports.css'));
 $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 ?>
 
+<div class="contentheader">
+	<h2>Access Report</h2>
+</div>
+
+
 <?php if($this->results)
 {
-	echo $this->results;
+	if(array_key_exists("accessReportData", $this->results)) 
+	{
+		
+		foreach ($this->results->accessReportData as $row => $data)
+		{
+			foreach($data as $name => $value)
+			{
+       			switch($name)
+        		{
+        			case "user":
+        				$tabledata[$row]["user"] = $value->userNamespace.':'.$value->userName;
+        				break;
+        			default:
+        				$tabledata[$row][$name] = $value;
+        		}
+			}
+		}
+		?>
+		<table id="accesstable">
+		    <thead>
+		        <tr>
+		            <th>Date</th>
+		            <th>User</th>
+		            <th>User Class</th>
+		            <th>Rig Type</th>
+		            <th>Rig Name</th>
+		            <th>Queue Duration</th>
+		            <th>Session Start Time</th>
+		            <th>Session End Time</th>
+		            <th>Session Duration</th>
+		            <th>Reason for Termination</th>
+				</tr>
+		    </thead>
+		    <tbody>
+		        <?php foreach ($tabledata as $rownum => $rowval):?>
+		        <tr>
+		        	<?php foreach($rowval as $n => $v):?>
+		            	<td><?=$v?></td>
+		            <?php endforeach ?>
+		        </tr>
+               <?php endforeach ?>
+		    </tbody>
+		</table>
+<?php }
+	else
+	{
+		echo "There are no results for your search";
+	}
 }
 else
 {
 	echo "No results param";
 }
 ?>
+
+

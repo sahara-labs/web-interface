@@ -110,7 +110,6 @@ class ReportsController extends Sahara_Controller_Action_Acl
     
     public function accessreportAction(){
     	
-        
         /* Get Parameter */
         $params = $this->_request->getParams();
         
@@ -140,7 +139,7 @@ class ReportsController extends Sahara_Controller_Action_Acl
         		$result = "There are no results";
          };
         
-          var_dump($result);
+         $this->view->results = $result;
     }
 
     public function sessionreportAction(){

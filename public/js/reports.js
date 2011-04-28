@@ -35,9 +35,9 @@
  * @date 13th December 2010
  */
 
-function getValue(type, group, like)
+function getValue(type, group, like, limit)
 {
-   var queryDest = "/reports/getvalue/group/" + group + "/like/" + like + "/limit/4";	
+   var queryDest = "/reports/getvalue/group/" + group + "/like/" + like + "/limit/" + limit;	
    
    $.get(
 		queryDest, 
@@ -68,7 +68,7 @@ function getValue(type, group, like)
 			}
 			
 			
-			$	("." +type + "listitem").hover(
+			$("." +type + "listitem").hover(
 					function(){
 						if($(this).hasClass("ui-state-hover"))
 						{
@@ -83,60 +83,16 @@ function getValue(type, group, like)
 					}
 			);
 
-		}
-	);
-		
-}
 
-function getSessionValue(group, like)
-{
-   var queryDest = "/reports/getvalue/group/" + group + "/like/" + like + "/limit/4";	
-   
-   $.get(
-		queryDest, 
-		{}, 
-		function (data) 
-		{
-			$("#sessionvaluelist ul").empty();
-			$("#sessionvaluelist").hide();
-			for (results in data['selectionResult'])
-			{
-				// There is a result
-				if (!isNaN(results))
-				{
-					if (typeof data['selectionResult'] == 'string') 
-					{
-						// Only one value
-						$("#sessionvaluelist ul").append("<li  class=\"sessionlistitem\">" + data['selectionResult'] + "</li>");
-						$("#sessionvaluelist").show();
-						break;
-					}
-					else
-					{
-						// Array of values
-						$("#sessionvaluelist ul").append("<li  class=\"sessionlistitem\">" + data['selectionResult'][results] + "</li>");
-						$("#sessionvaluelist").show();
-					}
-				}
-			}
-			
-			
-			$(".sessionlistitem").hover(
+			$("." + type + "listitem").click(
 					function(){
-						if($(this).hasClass("ui-state-hover"))
-						{
-							$(this).removeClass("ui-corner-all ui-selectmenu-item-focus ui-state-hover");
-						}
-						else
-						{
-							var selectedname = $(this).html();
-							$("#sessionvalue").val(selectedname);
-							$(this).addClass("ui-corner-all ui-selectmenu-item-focus ui-state-hover");
-						}
+						$("#" + type + "valuelist").hide();
 					}
 			);
 
 		}
+
+		
 	);
 		
 }
