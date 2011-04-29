@@ -46,28 +46,17 @@ $this->headScript()->appendFile($this->baseUrl('/js/jquery.dataTables.min.js'));
 	<h2>Access Report</h2>
 </div>
 
+<div class="desc ui-toolbar ui-widget-header ui-corner-tl ui-corner-tr ui-helper-clearfix" >
+	  Searching for "<?=$this->search['accessvalue']?>" from  <?=$this->search['accessfrom']?> to
+	   <?=$this->search['accessto']?> <br>
+</div>
 
 <?php if($this->results)
 {
 	if(array_key_exists("accessReportData", $this->results)) 
 	{
-		
-		foreach ($this->results->accessReportData as $row => $data)
-		{
-			foreach($data as $name => $value)
-			{
-       			switch($name)
-        		{
-        			case "user":
-        				$tabledata[$row]["user"] = $value->userNamespace.':'.$value->userName;
-        				break;
-        			default:
-        				$tabledata[$row][$name] = $value;
-        		}
-			}
-		}
 		?>
-		<table id="accesstable">
+		<table id="accesstable" cellpadding="0" cellspacing="0" border="0" >
 		    <thead>
 		        <tr>
 		            <th>Date</th>
@@ -75,31 +64,33 @@ $this->headScript()->appendFile($this->baseUrl('/js/jquery.dataTables.min.js'));
 		            <th>User Class</th>
 		            <th>Rig Type</th>
 		            <th>Rig Name</th>
-		            <th>Queue Duration</th>
-		            <th>Session Start Time</th>
-		            <th>Session End Time</th>
-		            <th>Session Duration</th>
+		            <th>In Queue</th>
+		            <th>Start</th>
+		            <th>End</th>
+		            <th>In Session</th>
 		            <th>Reason for Termination</th>
 				</tr>
 		    </thead>
 		    <tbody>
-		        <?php foreach ($tabledata as $rownum => $rowval):?>
+			<?php foreach ($this->results->accessReportData as $row => $data): ?> 
 		        <tr>
-	            	<td><?=$rowval["sessionStartTime"]?></td>
-	            	<td><?=$rowval["user"]?></td>
-	            	<td><?=$rowval["userClass"]?></td>
-	            	<td><?=$rowval["rigType"]?></td>
-	            	<td><?=$rowval["rigName"]?></td>
-	            	<td><?=$rowval["queueDuration"]?></td>
-	            	<td><?=$rowval["sessionStartTime"]?></td>
-	            	<td><?=$rowval["sessionEndTime"]?></td>
-	            	<td><?=$rowval["sessionDuration"]?></td>
-	            	<td><?=$rowval["reasonForTuermination"]?></td>
+	            	<td><?=strtok($data->sessionStartTime,'T')?></td>
+	            	<td><?php echo $data->user->userNamespace.':'.$data->user->userName;?></td>
+	            	<td><?=$data->userClass?></td>
+	            	<td><?=$data->rigType?></td>
+	            	<td><?=$data->rigName?></td>
+	            	<td><?=$data->queueDuration?></td>
+	            	<td><?php strtok($data->sessionStartTime,'T'); echo strtok('.');?></td>
+	            	<td><?php strtok($data->sessionEndTime,'T'); echo strtok('.');?></td>
+	            	<td><?=$data->sessionDuration?></td>
+	            	<td><?=$data->reasonForTermination?></td>
 		        </tr>
                <?php endforeach ?>
 		    </tbody>
 		</table>
-<?php }
+	<div class="filler">
+	</div>
+    <?php }
 	else
 	{
 		echo "There are no results for your search";
@@ -112,8 +103,36 @@ else
 ?>
 <script>
 	$(document).ready(function() {
-		$('#accesstable').dataTable();
+		var oTable = $('#accesstable').dataTable({
+			"bJQueryUI": true,
+			"sPaginationType": "full_numbers",
+			"aaSorting": [[ 0, "asc" ]],
+			"bStateSave": true,
+			"sDom": 'lt<"filler"><"F"fip<"filler">>',
+			"aLengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+			"aoColumns": [
+				/* Date */  		{ "sWidth": "80px" },
+				/* User */  		{ "sWidth": "100px" },
+				/* User Class */  	{ "sWidth": "100px" },
+				/* Rig Type */  	{ "sWidth": "100px" },
+				/* Rig Name */  	{ "sWidth": "100px" },
+				/* In Queue */  	{ "sWidth": "50px" },
+				/* Start */  		{ "sWidth": "50px" },
+				/* End */  			{ "sWidth": "50px" },
+				/* In Session */	{ "sWidth": "50px" },
+				/* Termination */	{ "sWidth": "300px" }
+			 ]    			
+		});
+
+	$('td', oTable.fnGetNodes()).hover( function() {
+		var iCol = $('td').index(this) % 10;
+		var nTrs = oTable.fnGetNodes();
+		$('td:nth-child('+(iCol+1)+')', nTrs).addClass( 'highlighted' );
+	}, function() {
+		$('td.highlighted', oTable.fnGetNodes()).removeClass('highlighted');
 	} );
+	
+	} 	);
 </script>
 
 

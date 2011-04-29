@@ -140,6 +140,7 @@ class ReportsController extends Sahara_Controller_Action_Acl
          };
         
          $this->view->results = $result;
+         $this->view->search = $params;
     }
 
     public function sessionreportAction(){
@@ -173,6 +174,7 @@ class ReportsController extends Sahara_Controller_Action_Acl
         		$result = "There are no results";
          };
         
-          var_dump($result);
-     }
+         $this->view->results = $result;
+         $this->view->search = $params;
+              }
 }

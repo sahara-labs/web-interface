@@ -116,4 +116,60 @@
  	width: 100px;
 }
 
+#accesstable td {
+	border-bottom: 1px solid #606060;
+}
 
+#accesstable .odd{
+	background-color: #F0F0F0;
+}
+
+#accesstable .even{
+	background-color: #E8E8E8;
+}
+	
+#accesstable tr:hover{
+	background-color: #D5FFD5;
+}
+.highlighted{
+	background-color: #D5FFD5;
+}
+
+.desc {
+	padding: 5px;
+	text-align: center; 
+}
+
+.filler {
+	height: 10px;
+	clear: both;
+}
+
+#accesstable_paginate{
+	float: right;
+	text-align: right;
+}
+
+.paging_full_numbers {
+    height: 22px;
+    line-height: 22px;
+    width: 400px;
+}
+
+.paging_full_numbers span.fg-button, .paging_full_numbers span.paginate_active {
+    -moz-border-radius: 5px 5px 5px 5px;
+    border: 1px solid #AAAAAA;
+    cursor: pointer;
+    margin: 0 3px;
+    padding: 2px 5px;
+}
+
+.dataTables_info {
+	padding-top:10px;
+	float: left;
+    width: 40%;
+}
+
+.dataTables_length {
+	margin:10px;
+}
