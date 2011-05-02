@@ -46,7 +46,7 @@ $this->headScript()->appendFile($this->baseUrl('/js/jquery.dataTables.min.js'));
 	<h2>Access Report</h2>
 </div>
 
-<div class="desc ui-toolbar ui-widget-header ui-corner-tl ui-corner-tr ui-helper-clearfix" >
+<div class="description ui-toolbar ui-widget-header ui-corner-tl ui-corner-tr ui-helper-clearfix" >
 	  Searching for "<?=$this->search['accessvalue']?>" from  <?=$this->search['accessfrom']?> to
 	   <?=$this->search['accessto']?> <br>
 </div>
@@ -92,14 +92,23 @@ $this->headScript()->appendFile($this->baseUrl('/js/jquery.dataTables.min.js'));
 	</div>
     <?php }
 	else
-	{
-		echo "There are no results for your search";
-	}
+	{ ?>
+		<div class="ui-state-error ui-corner-all noresults">
+			<span class="ui-icon ui-icon-alert"></span>	
+			There are no results for this search.
+		</div>
+	<table  class="hide"  id="accesstable" cellpadding="0" cellspacing="0" border="0" ></table>
+	<?php }
 }
 else
-{
-	echo "No results param";
-}
+{ ?>
+		<div class="ui-state-error ui-corner-all noresults">
+			<span class="ui-icon ui-icon-alert"></span>	
+			The search was invald, please try again.
+		</div>
+	<table  class="hide"  id="accesstable" cellpadding="0" cellspacing="0" border="0" ></table>
+	
+<?php 	}
 ?>
 <script>
 	$(document).ready(function() {

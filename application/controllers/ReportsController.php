@@ -113,8 +113,6 @@ class ReportsController extends Sahara_Controller_Action_Acl
         /* Get Parameter */
         $params = $this->_request->getParams();
         
-        //TODO account for page length
-        
         /* check group value */
         switch($params['accessgroup'])
         {
@@ -124,17 +122,31 @@ class ReportsController extends Sahara_Controller_Action_Acl
         	case "USER_CLASS":
 	        	$req = Sahara_Soap::getSchedServerReportsClient();
 	        	
-	        	$result = $req->querySessionAccess(array(
-	        		'requestor' => array('userQName' => $this->_auth->getIdentity()),
-	        		'querySelect' => array('operator' => $this->OPERATOR,
-	        							'typeForQuery' => $params['accessgroup'],
-	        							'queryLike' => $params['accessvalue']),
-	            	'startTime' => strtotime($params['accessfrom']),
-	        		'endTime' => strtotime($params['accessto']),
-	        		'pagination' => array('numberOfPages' => 1,
-	        				'pageNumber' => $params['page'],
-	        				'pageLength' => 10 ) ));
-	        	break;
+	        	// Supply pagination if valid
+        		if (array_key_exists("pageNumber", $params) &&  array_key_exists("pageLength", $params))
+        		{
+		        	$result = $req->querySessionAccess(array(
+		        		'requestor' => array('userQName' => $this->_auth->getIdentity()),
+		        		'querySelect' => array('operator' => $this->OPERATOR,
+		        							'typeForQuery' => $params['accessgroup'],
+		        							'queryLike' => $params['accessvalue']),
+		            	'startTime' => strtotime($params['accessfrom']),
+		        		'endTime' => strtotime($params['accessto']),
+		        		'pagination' => array('numberOfPages' => 1,
+		        				'pageNumber' => $params['pageNumber'],
+		        				'pageLength' => $params['pageLength'] ) ));
+        		}
+        		else
+        		{
+        			$result = $req->querySessionAccess(array(
+		        		'requestor' => array('userQName' => $this->_auth->getIdentity()),
+		        		'querySelect' => array('operator' => $this->OPERATOR,
+		        							'typeForQuery' => $params['accessgroup'],
+		        							'queryLike' => $params['accessvalue']),
+		            	'startTime' => strtotime($params['accessfrom']),
+		        		'endTime' => strtotime($params['accessto'])));
+        		}
+		        break;
         	default:
         		$result = "There are no results";
          };
@@ -148,10 +160,12 @@ class ReportsController extends Sahara_Controller_Action_Acl
         /* Get Parameter */
         $params = $this->_request->getParams();
         
-        //TODO account for page length
-        
+        //TODO account for pages
+		$pageNum = (array_key_exists("pageNumber", $params) ? $params['pageNumber'] : 1);
+
+		
         /* check group value */
-        switch($params['reportgroup'])
+        switch($params['sessiongroup'])
         {
         	case "RIG":
         	case "RIG_TYPE":
@@ -159,22 +173,37 @@ class ReportsController extends Sahara_Controller_Action_Acl
         	case "USER_CLASS":
 	        	$req = Sahara_Soap::getSchedServerReportsClient();
 	        	
-	        	$result = $req->querySessionReport(array(
-	        		'requestor' => array('userQName' => $this->_auth->getIdentity()),
-	        		'querySelect' => array('operator' => $this->OPERATOR,
-	        							'typeForQuery' => $params['reportgroup'],
-	        							'queryLike' => $params['reportvalue']),
-	            	'startTime' => strtotime($params['reportfrom']),
-	        		'endTime' => strtotime($params['reportto']),
-	        		'pagination' => array('numberOfPages' => 1,
-	        				'pageNumber' => $params['page'],
-	        				'pageLength' => 10 ) ));
+        		if (array_key_exists("pageNumber", $params) &&  array_key_exists("pageLength", $params))
+        		{
+	        		$result = $req->querySessionReport(array(
+		        		'requestor' => array('userQName' => $this->_auth->getIdentity()),
+		        		'querySelect' => array('operator' => $this->OPERATOR,
+		        							'typeForQuery' => $params['sessiongroup'],
+		        							'queryLike' => $params['sessionvalue']),
+		            	'startTime' => strtotime($params['reportfrom']),
+		        		'endTime' => strtotime($params['reportto']),
+		        		'pagination' => array('numberOfPages' => 1,
+		        				'pageNumber' => $params['pageNumber'],
+		        				'pageLength' => $params['pageLength'] ) ));
+        			
+        		}
+        		else
+        		{
+	        		$result = $req->querySessionReport(array(
+		        		'requestor' => array('userQName' => $this->_auth->getIdentity()),
+		        		'querySelect' => array('operator' => $this->OPERATOR,
+		        							'typeForQuery' => $params['sessiongroup'],
+		        							'queryLike' => $params['sessionvalue']),
+		            	'startTime' => strtotime($params['reportfrom']),
+		        		'endTime' => strtotime($params['reportto']) ));
+        		}
 	        	break;
         	default:
-        		$result = "There are no results";
+        	$result = "There are no results";
          };
         
          $this->view->results = $result;
          $this->view->search = $params;
-              }
+   }
+   
 }
