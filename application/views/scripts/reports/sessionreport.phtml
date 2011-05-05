@@ -40,7 +40,10 @@ $this->headLink()->appendStylesheet($this->baseUrl('/css/session.css'));
 $this->headLink()->appendStylesheet($this->baseUrl('/css/reports.css'));
 $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 $this->headScript()->appendFile($this->baseUrl('/js/jquery.dataTables.min.js'));
+$this->headScript()->appendFile($this->baseUrl('/js/TableTools/media/js/TableTools.min.js'));
+$this->headScript()->appendFile($this->baseUrl('/js/TableTools/media/js/ZeroClipboard.js'));
 ?>
+<div class="reportingresults" >
 
 <div class="contentheader">
 	<h2>Session Report</h2>
@@ -141,7 +144,7 @@ $this->headScript()->appendFile($this->baseUrl('/js/jquery.dataTables.min.js'));
 	            	<td><?=$data->maxSessionDuration?></td>
 	            	<td><?=$data->sessionCount?></td>
 	            </tr>
-	            <?php }?>
+	        <?php }?>
 		    </tbody>
 		</table>
     <?php }
@@ -164,6 +167,7 @@ else
 	
 <?php 	}
 ?>
+</div>
 <script>
 	$(document).ready(function() {
 		var oTable = $('#sessiontable').dataTable({
@@ -171,7 +175,7 @@ else
 			"sPaginationType": "full_numbers",
 			"aaSorting": [[ 0, "asc" ]],
 			"bStateSave": true,
-			"sDom": 'lt<"filler"><"F"fip<"filler">>',
+			"sDom": 'Tlt<"filler"><"F"fip<"filler">>',
 			"aLengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
 			"aoColumns": [
 				/* User */  		{ "sWidth": "100px" },
@@ -185,7 +189,10 @@ else
 				/* Sess Min */ 		{ "sWidth": "100px" },
 				/* Sess Max */ 		{ "sWidth": "100px" },
 				/* Session Count */ { "sWidth": "100px" },
-			 ]    			
+			 ],
+			"oTableTools": {"aButtons": [ "csv", "pdf", "copy" ],
+				"sSwfPath": "<?=$this->baseUrl('/js/TableTools/media/swf/copy_cvs_xls_pdf.swf')?>"}
+		     			
 		});
 
 	$('td', oTable.fnGetNodes()).hover( function() {

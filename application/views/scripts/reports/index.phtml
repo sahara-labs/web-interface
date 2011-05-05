@@ -70,7 +70,7 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 		</select>
 	</div>
 	<div class="values">
-		<label for="accessvalue">Select Value: </label>
+		<label for="accessvalue">Select value: </label>
 		<input id="accessvalue" type="text" name="accessvalue" class="valueinput ui-state-default ui-corner-all ui-selectmenu-status">
 		<div id="accessvaluelist"  class="valuelist ui-corner-all" >
 			<ul>
@@ -78,15 +78,15 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 		</div>
 	</div>
 	<div id="accessdatepicker" class="ui-corner-all">
-		<label for="accessfrom">Date from</label>
+		<label for="accessfrom">Date from:</label>
 		<input type="text" id="accessfrom" name="accessfrom"/>
-		<label for="accessto">to</label>
+		<label for="accessto">to:</label>
 		<input type="text" id="accessto" name="accessto"/>
 	</div>
 	<div id="accesssubmit">
 		<button type="submit" id="accesssubmit" class="actiondialogbutton plaina ui-corner-all"  >
 	    <img src="<?=$this->baseUrl('images/1rightarrow.png')?>" alt="Submit"/><br/>
-		Get Access Report
+		Get Report
 	    </button>
 	</div>
 	<div style="clear: both" ></div>
@@ -130,7 +130,7 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 	<div id="sessionsubmit">
 		<button type="submit" id="sessionsubmit" class="actiondialogbutton plaina ui-corner-all" >
 		<img src="<?=$this->baseUrl('images/1rightarrow.png')?>" alt="Submit"/><br/>
-		Get Usage Report
+		Get Report
 	    </button>
 	</div>
 	
@@ -142,7 +142,6 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 
 <script type="text/javascript">
 $('select').selectmenu({width:180});
-
 
 //set max and min dates correctly
 $(function() {
@@ -158,13 +157,16 @@ $(function() {
 		currentText: 'Now',
 		numberOfMonths: 1,
 		onSelect: function( selectedDate ) {
-			//var option = this.id == "accessfrom" || "reportfrom" ? "minDate" : "maxDate",
+			var option = this.id == "accessfrom" || "reportfrom" ? "minDate" : "maxDate",
 				instance = $( this ).data( "datepicker" ),
 				date = $.datepicker.parseDate(
 					instance.settings.dateFormat ||
 					$.datepicker._defaults.dateFormat,
 					selectedDate, instance.settings );
-			//dates.not( this ).datepicker( "option", option, date );
+			if (this.id == "accessfrom")
+				 $("#accessto").datepicker( "option", option, date );
+			if (this.id == "reportfrom")
+				 $("#reportto").datepicker( "option", option, date );
 		}
 	});
 

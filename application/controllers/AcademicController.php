@@ -40,6 +40,6 @@ class AcademicController extends Sahara_Controller_Action_Acl
 {
     public function indexAction()
     {
-    	
     }
+
 }

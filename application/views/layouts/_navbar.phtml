@@ -55,7 +55,8 @@ switch ($this->userRole)
         $menu = array(
             'Rig Administration' => array('controller' => 'admin', 'action' => 'rig'),
             'Rig Selection' => array('controller' => 'queue', 'action' => 'index'),
-            'Existing Reservations' => array('controller' => 'bookings', 'action' => 'existing')
+            'Existing Reservations' => array('controller' => 'bookings', 'action' => 'existing'),
+            'Reports' => array('controller' => 'reports', 'action' => 'index')
         );
         break;
     case Sahara_Controller_Action_Acl::PSEUDO_ROLE_QUEUE:

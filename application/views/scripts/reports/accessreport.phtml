@@ -40,13 +40,17 @@ $this->headLink()->appendStylesheet($this->baseUrl('/css/session.css'));
 $this->headLink()->appendStylesheet($this->baseUrl('/css/reports.css'));
 $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 $this->headScript()->appendFile($this->baseUrl('/js/jquery.dataTables.min.js'));
+$this->headScript()->appendFile($this->baseUrl('/js/TableTools/media/js/TableTools.min.js'));
+$this->headScript()->appendFile($this->baseUrl('/js/TableTools/media/js/ZeroClipboard.js'));
 ?>
+
+<div class="reportingresults" >
 
 <div class="contentheader">
 	<h2>Access Report</h2>
 </div>
 
-<div class="description ui-toolbar ui-widget-header ui-corner-tl ui-corner-tr ui-helper-clearfix" >
+<div class="description ui-toolbar ui-widget-header ui-corner-all ui-helper-clearfix" >
 	  Searching for "<?=$this->search['accessvalue']?>" from  <?=$this->search['accessfrom']?> to
 	   <?=$this->search['accessto']?> <br>
 </div>
@@ -72,20 +76,41 @@ $this->headScript()->appendFile($this->baseUrl('/js/jquery.dataTables.min.js'));
 				</tr>
 		    </thead>
 		    <tbody>
-			<?php foreach ($this->results->accessReportData as $row => $data): ?> 
+	        <?php 
+	        // Take into account single row
+	        if(is_array($this->results->accessReportData))
+	        { ?>
+				<?php foreach ($this->results->accessReportData as $row => $data): ?> 
+			        <tr>
+		            	<td><?=strtok($data->sessionStartTime,'T')?></td>
+		            	<td><?php echo $data->user->userNamespace.':'.$data->user->userName;?></td>
+		            	<td><?=$data->userClass?></td>
+		            	<td><?=$data->rigType?></td>
+		            	<td><?=$data->rigName?></td>
+		            	<td><?=$data->queueDuration?></td>
+		            	<td><?php strtok($data->sessionStartTime,'T'); echo strtok('.');?></td>
+		            	<td><?php strtok($data->sessionEndTime,'T'); echo strtok('.');?></td>
+		            	<td><?=$data->sessionDuration?></td>
+		            	<td><?=$data->reasonForTermination?></td>
+			        </tr>
+               <?php endforeach;
+            }
+            else
+            {
+              $data = $this->results->accessReportData ?>
 		        <tr>
-	            	<td><?=strtok($data->sessionStartTime,'T')?></td>
-	            	<td><?php echo $data->user->userNamespace.':'.$data->user->userName;?></td>
-	            	<td><?=$data->userClass?></td>
-	            	<td><?=$data->rigType?></td>
-	            	<td><?=$data->rigName?></td>
-	            	<td><?=$data->queueDuration?></td>
-	            	<td><?php strtok($data->sessionStartTime,'T'); echo strtok('.');?></td>
-	            	<td><?php strtok($data->sessionEndTime,'T'); echo strtok('.');?></td>
-	            	<td><?=$data->sessionDuration?></td>
-	            	<td><?=$data->reasonForTermination?></td>
-		        </tr>
-               <?php endforeach ?>
+		            	<td><?=strtok($data->sessionStartTime,'T')?></td>
+		            	<td><?php echo $data->user->userNamespace.':'.$data->user->userName;?></td>
+		            	<td><?=$data->userClass?></td>
+		            	<td><?=$data->rigType?></td>
+		            	<td><?=$data->rigName?></td>
+		            	<td><?=$data->queueDuration?></td>
+		            	<td><?php strtok($data->sessionStartTime,'T'); echo strtok('.');?></td>
+		            	<td><?php strtok($data->sessionEndTime,'T'); echo strtok('.');?></td>
+		            	<td><?=$data->sessionDuration?></td>
+		            	<td><?=$data->reasonForTermination?></td>
+			        </tr>
+            <?php }?>
 		    </tbody>
 		</table>
 	<div class="filler">
@@ -110,6 +135,7 @@ else
 	
 <?php 	}
 ?>
+</div>
 <script>
 	$(document).ready(function() {
 		var oTable = $('#accesstable').dataTable({
@@ -117,7 +143,7 @@ else
 			"sPaginationType": "full_numbers",
 			"aaSorting": [[ 0, "asc" ]],
 			"bStateSave": true,
-			"sDom": 'lt<"filler"><"F"fip<"filler">>',
+			"sDom": 'Tlt<"filler"><"F"fip<"filler">>',
 			"aLengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
 			"aoColumns": [
 				/* Date */  		{ "sWidth": "80px" },
@@ -130,7 +156,11 @@ else
 				/* End */  			{ "sWidth": "50px" },
 				/* In Session */	{ "sWidth": "50px" },
 				/* Termination */	{ "sWidth": "300px" }
-			 ]    			
+			 ],
+			"oTableTools": {"aButtons": [ "csv", "pdf", "copy" ],
+					"sSwfPath": "<?=$this->baseUrl('/js/TableTools/media/swf/copy_cvs_xls_pdf.swf')?>"
+			}
+
 		});
 
 	$('td', oTable.fnGetNodes()).hover( function() {
