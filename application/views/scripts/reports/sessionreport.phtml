@@ -1,0 +1,202 @@
+<?php
+/**
+ * SAHARA Web Interface
+ *
+ * User interface to Sahara Remote Laboratory system.
+ *
+ * @license See LICENSE in the top level directory for complete license terms.
+ *
+ * Copyright (c) 2010, University of Technology, Sydney
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of the University of Technology, Sydney nor the names
+ *    of its contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * @author Tania Machet (tmachet)
+ * @date 29th April 2011
+ *
+ */
+$this->headLink()->appendStylesheet($this->baseUrl('/css/session.css'));
+$this->headLink()->appendStylesheet($this->baseUrl('/css/reports.css'));
+$this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
+$this->headScript()->appendFile($this->baseUrl('/js/jquery.dataTables.min.js'));
+?>
+
+<div class="contentheader">
+	<h2>Session Report</h2>
+</div>
+
+<div class="description ui-toolbar ui-widget-header ui-corner-tl ui-corner-tr ui-helper-clearfix" >
+	  Searching for "<?=$this->search['sessionvalue']?>" from  <?=$this->search['reportfrom']?> to
+	   <?=$this->search['reportto']?> <br><br>
+	   
+	   <div class="results">
+	   	Total Number of Sessions: <span class="data"><?=$this->results->sessionCount?> sessions </span><br></br>
+	   	Total Queue Duration: <span class="data"><?=$this->results->totalQueueDuration?> seconds </span><br></br>
+	   	Total Session Duration: <span class="data"><?=$this->results->totalSessionDuration?> seconds </span><br></br>
+		</div>
+</div>
+
+<?php if($this->results)
+{
+	if(array_key_exists("sessionReport", $this->results)) 
+	{
+		?>
+		<table id="sessiontable" cellpadding="0" cellspacing="0" border="0" >
+		    <thead>
+		        <tr>
+		            <th rowspan="2">User</th>
+		            <th rowspan="2"> <?php
+		            // Take into account single row
+		            if(is_array($this->results->sessionReport))
+		            { 
+		            	if(array_key_exists("userClass", $this->results->sessionReport[0])) echo "User Class";
+		            	elseif(array_key_exists("rigName", $this->results->sessionReport[0])) echo "Rig Name";
+		            	elseif(array_key_exists("rigType", $this->results->sessionReport[0])) echo "Rig Type";
+		            	else echo "Rig Type";
+		            }
+		            else
+		            {
+		            	if($this->results->sessionReport->userClass) echo "User Class";
+		            	elseif($this->results->sessionReport->rigName) echo "Rig Name";
+		            	elseif($this->results->sessionReport->rigType) echo "Rig Type";
+		            	else echo "Rig Type";
+		            			            }	
+		             ?></th>
+		            <th colspan="4" class="ui-state-default">Queue Duration</th>
+		            <th colspan="4" class="ui-state-default">Session Duration</th>
+		            <th rowspan="2">Session Count</th>
+				</tr>
+				<tr>
+		            <th>Average</th>
+		            <th>Median</th>
+		            <th>Minimum</th>
+		            <th>Maximum</th>
+		            <th>Average</th>
+		            <th>Median</th>
+		            <th>Minimum</th>
+		            <th>Maximum</th>
+				</tr>
+		    </thead>
+		    <tbody>
+	        <?php 
+	        // Take into account single row
+	        if(is_array($this->results->sessionReport))
+	        { ?>
+				<?php foreach ($this->results->sessionReport as $row => $data): ?> 
+		        <tr>
+	            	<td><?php echo $data->user->userNamespace.':'.$data->user->userName;?></td>
+	            	<td><?php if ($data->userClass != null) echo $data->userClass;
+	            		elseif($data->rigName !== null) echo $data->rigName ;
+	            		elseif($data->rigType !== null) echo $data->rigType ;
+	            		else echo $data->rigType;?></td>
+	            	<td><?=$data->aveQueueDuration?></td>
+	            	<td><?=$data->medQueueDuration?></td>
+	            	<td><?=$data->minQueueDuration?></td>
+	            	<td><?=$data->maxQueueDuration?></td>
+	            	<td><?=$data->aveSessionDuration?></td>
+	            	<td><?=$data->medSessionDuration?></td>
+	            	<td><?=$data->minSessionDuration?></td>
+	            	<td><?=$data->maxSessionDuration?></td>
+	            	<td><?=$data->sessionCount?></td>
+		        </tr>
+               <?php endforeach;
+            }
+            else
+            {
+              $data = $this->results->sessionReport ?>
+		        <tr>
+	            	<td><?php echo $data->user->userNamespace.':'.$data->user->userName;?></td>
+	            	<td><?php if ($data->userClass != null) echo $data->userClass;
+	            		elseif($data->rigName !== null) echo $data->rigName ;
+	            		elseif($data->rigType !== null) echo $data->rigType ;
+	            		else echo $data->rigType;?></td>
+	            	<td><?=$data->aveQueueDuration?></td>
+	            	<td><?=$data->medQueueDuration?></td>
+	            	<td><?=$data->minQueueDuration?></td>
+	            	<td><?=$data->maxQueueDuration?></td>
+	            	<td><?=$data->aveSessionDuration?></td>
+	            	<td><?=$data->medSessionDuration?></td>
+	            	<td><?=$data->minSessionDuration?></td>
+	            	<td><?=$data->maxSessionDuration?></td>
+	            	<td><?=$data->sessionCount?></td>
+	            </tr>
+	            <?php }?>
+		    </tbody>
+		</table>
+    <?php }
+	else
+	{ ?>
+		<div class="ui-state-error ui-corner-all noresults">
+			<span class="ui-icon ui-icon-alert"></span>	
+			There are no results for this search.
+		</div>
+	<table class="hide" id="sessiontable" cellpadding="0" cellspacing="0" border="0" ></table>
+	<?php }
+}
+else
+{ ?>
+		<div class="ui-state-error ui-corner-all noresults">
+			<span class="ui-icon ui-icon-alert"></span>	
+			The search was invald, please try again.
+		</div>
+	<table  class="hide"  id="sessiontable" cellpadding="0" cellspacing="0" border="0" ></table>
+	
+<?php 	}
+?>
+<script>
+	$(document).ready(function() {
+		var oTable = $('#sessiontable').dataTable({
+			"bJQueryUI": true,
+			"sPaginationType": "full_numbers",
+			"aaSorting": [[ 0, "asc" ]],
+			"bStateSave": true,
+			"sDom": 'lt<"filler"><"F"fip<"filler">>',
+			"aLengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+			"aoColumns": [
+				/* User */  		{ "sWidth": "100px" },
+				/* Type */  		{ "sWidth": "100px" },
+				/* Q Ave */	  		{ "sWidth": "100px" },
+				/* Q Med */  		{ "sWidth": "100px" },
+				/* Q Min */  		{ "sWidth": "100px" },
+				/* Q Max */  		{ "sWidth": "100px" },
+				/* Sess Ave */	 	{ "sWidth": "100px" },
+				/* Sess Med */ 		{ "sWidth": "100px" },
+				/* Sess Min */ 		{ "sWidth": "100px" },
+				/* Sess Max */ 		{ "sWidth": "100px" },
+				/* Session Count */ { "sWidth": "100px" },
+			 ]    			
+		});
+
+	$('td', oTable.fnGetNodes()).hover( function() {
+		var iCol = $('td').index(this) % 11;
+		var nTrs = oTable.fnGetNodes();
+		$('td:nth-child('+(iCol+1)+')', nTrs).addClass( 'highlighted' );
+	}, function() {
+		$('td.highlighted', oTable.fnGetNodes()).removeClass('highlighted');
+	} );
+	
+	} 	);
+</script>
+
+
