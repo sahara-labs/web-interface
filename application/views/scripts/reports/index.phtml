@@ -41,6 +41,8 @@ $this->headLink()->appendStylesheet($this->baseUrl('/css/reports.css'));
 $this->headLink()->appendStylesheet($this->baseUrl('/css/jquery.ui.selectmenu.css'));
 $this->headScript()->appendFile($this->baseUrl('/js/jquery.ui.selectmenu.js'));
 $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
+
+
 ?>
 
 <?php if (!$this->noPermissions): ?>
@@ -63,8 +65,8 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 		<label for="accessgroup">Select type for report: <br></label>
 		<select id="accessgroup" name="accessgroup" class="ui-corner-all">
 			<option value=def >Select a type</option>
-			<option value=RIG >Rig Name</option>
-			<option value=RIG_TYPE>Rig Type</option>
+			<?php if($this->persona == "ADMIN") echo "<option value=RIG >Rig Name</option>" ?>
+			<?php if($this->persona == "ADMIN") echo "<option value=RIG_TYPE>Rig Type</option>" ?>
 			<option value=USER_CLASS>User Class</option>
 			<option value=USER>User</option>
 		</select>
@@ -107,8 +109,8 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 		<label for="sessiongroup">Select type for report: <br></label>
 		<select id="sessiongroup" name="sessiongroup" >
 			<option value=def >Select a type</option>
-			<option value=RIG >Rig Name</option>
-			<option value=RIG_TYPE>Rig Type</option>
+			<?php if($this->persona == "ADMIN") echo "<option value=RIG >Rig Name</option>" ?>
+			<?php if($this->persona == "ADMIN") echo "<option value=RIG_TYPE>Rig Type</option>" ?>
 			<option value=USER_CLASS>User Class</option>
 			<option value=USER>User</option>
 		</select>
