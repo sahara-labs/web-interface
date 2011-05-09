@@ -74,62 +74,72 @@ Hydro.prototype.displayMode = function(modenum) {
 
 	switch (parseInt(modenum))
 	{
-	case 1: // -- Qualitative -----------------------------
+	case 1: // -- The Basics 1 -----------------------------
 		this.setPressureLoad(0);
-		this.widgets.push(new LoadPressureSliderWidget(this),
+		this.widgets.push(new ScaledLoadPressureSliderWidget(this),
 						  new LEDPanelWidget(this));
 		break;
-	case 2: // -- Quantitative -----------------------------
+	case 2: // -- The Basics 2 -----------------------------
 		this.setPressureLoad(0);
-		this.widgets.push(new LoadPressureSliderWidget(this),
+		this.widgets.push(new ScaledLoadPressureSliderWidget(this),
 						  new RpmMeterWidget(this),
 						  new FlowGaugeWidget(this),
 						  new LEDPanelWidget(this));
 		break;
-	case 3: // -- Electrical Power -------------------------
+	case 3: // -- Turn On the Lights -----------------------
+		this.setLoad(this.STATIC_LOAD);
+		this.widgets.push(new ScaledLoadPressureSliderWidget(this),
+						  new RpmMeterWidget(this),
+						  new FlowGaugeWidget(this),
+						  new LEDPanelWidget(this));
+		break;
+	case 4: // -- Electrical Power -------------------------
 		this.setLoad(this.STATIC_LOAD);
 		this.widgets.push(new PressureSliderWidget(this),
 						  new RpmMeterWidget(this),
-						  new PowerGaugeWidget(this));
-		break;
-	case 4: // -- Voltage and Current-----------------------
-		this.setLoad(this.STATIC_LOAD);
-		this.widgets.push(new LoadSetterWidget(this),
-						  new PressureSliderWidget(this),
-						  new RpmMeterWidget(this),
+						  new FlowGaugeWidget(this),
 						  new VoltageGaugeWidget(this),
 						  new CurrentGaugeWidget(this));
 		break;
-	case 5: // -- Flow Rate, Pressure & Rotational Rate ---
+	case 5: // -- Electrical Energy ------------------------
 		this.setLoad(this.STATIC_LOAD);
 		this.widgets.push(new PressureSliderWidget(this),
 						  new RpmMeterWidget(this),
 						  new FlowGaugeWidget(this),
-						  new PressureGaugeWidget(this));
+						  new VoltageGaugeWidget(this),
+						  new CurrentGaugeWidget(this));
 		break;
-	case 6: // -- Flow Rate and Power ---------------------
+	case 6: // -- Water Flow and its Effects ---------------
 		this.setLoad(this.STATIC_LOAD);
 		this.widgets.push(new PressureSliderWidget(this),
 						  new FlowGaugeWidget(this),
-						  new PowerGaugeWidget(this));
+						  new VoltageGaugeWidget(this),
+						  new CurrentGaugeWidget(this));
 		break;
 	case 7: // -- Energy Interconversion ------------------
 		this.setLoad(this.STATIC_LOAD);
 		this.widgets.push(new PressureSliderWidget(this),
 						  new RpmMeterWidget(this),
 						  new FlowGaugeWidget(this),
-						  new PowerGaugeWidget(this));
+						  new VoltageGaugeWidget(this),
+						  new CurrentGaugeWidget(this));
 		break;
-	case 8: // -- Torque ----------------------------------
+	case 8: // -- Energy Transformation --------------------
 		this.setLoad(this.STATIC_LOAD);
 		this.widgets.push(new PressureSliderWidget(this),
 						  new RpmMeterWidget(this),
-						  new TorqueGaugeWidget(this),
-						  new VoltageGaugeWidget(this),
-						  new CurrentGaugeWidget(this),
 						  new PowerGaugeWidget(this));
 		break;
-	case 9: // -- Resistance ------------------------------
+	case 9: // -- Torque 9 --------------------------------- 
+		this.widgets.push(new PressureSliderWidget(this),
+				          new LoadSetterWidget(this),
+				          new RpmMeterWidget(this),
+				          new TorqueGaugeWidget(this),
+				          new VoltageGaugeWidget(this),
+				          new CurrentGaugeWidget(this),
+				          new PowerGaugeWidget(this));
+		break;
+	case 10: // -- The Effect of Output Resistance ----------
 		this.widgets.push(new PressureSliderWidget(this),
 				          new LoadSetterWidget(this),
 				          new RpmMeterWidget(this),
@@ -367,17 +377,18 @@ function SelectorWidget(hydroinst)
 {
 	HydroWidget.call(this, hydroinst);
 	
-	this.NUM_MODES = 9;
+	this.NUM_MODES = 10;
 	this.MODE_LABELS = ['Selector', 
-	                    'Qualitative Observation',
-	                    'Quantitative Observation',
+	                    'The Basics 1',
+	                    'The Basics 2',
+	                    'Turn on the Lights',
 	                    'Electrical Power',
-	                    'Voltage and Current',
-	                    'Flow Rate, Pressure & Rotation Rate',
-	                    'Flow Rate & Power',
+	                    'Electrical Energy',
+	                    'Water Flow and its Effects',
 	                    'Energy Interconversion',
+	                    'Energy Transformation',
 	                    'Torque',
-	                    'Output Resistance'];
+	                    'The Effect of Output Resistance'];
 	this.MODE_IMGS =   ['',
 	                    'selvis',
 	                    'selvis',
@@ -385,6 +396,7 @@ function SelectorWidget(hydroinst)
 	                    'selcurrvolt',
 	                    'selpower2',
 	                    'selswitches',
+	                    'selvis',
 	                    'selvis',
 	                    'selvis',
 	                    'selvis'];
@@ -397,7 +409,7 @@ SelectorWidget.prototype.init = function() {
 		for ( ; s <= this.NUM_MODES; s++) html +=
 					'<li><a id="exp' + s + '" class="modesel">' +
 						'<img src="/uts/hydro/images/' + this.MODE_IMGS[s] + '.png" alt="img" />' +
-						this.MODE_LABELS[s] +
+						s + '. ' + this.MODE_LABELS[s] +
 					'</a></li>';
 	
 	    html += '</ul></div>';
@@ -410,6 +422,16 @@ SelectorWidget.prototype.init = function() {
 };
 SelectorWidget.prototype.destroy = function() {
 	$("#hydroselector").remove();
+};
+
+/* == Selector title. ========================================================= */
+function SelectorTitleWidget(hydroinst)
+{
+	HydroWidget.call(this.canvas, hydroinst);
+}
+SelectorTitleWidget.prototype = new HydroWidget;
+SelectorTitleWidget.prototype.init = function() {
+	// TODO Added Selector Title.
 };
 
 /* == Slider sets pump pressure using a slider. =============================== */
@@ -502,6 +524,29 @@ function LoadPressureSliderWidget(hydroinst)
 	this.setter = this.hydro.setPressureLoad;
 }
 LoadPressureSliderWidget.prototype = new SliderWidget;
+
+/* == Pressure Slider which interpolates 0 to 100% PP to mean 55% to 100%. ==== */
+function ScaledLoadPressureSliderWidget(hydroinst)
+{
+	SliderWidget.call(this, hydroinst);
+	
+	this.setter = this.scaledSlide; 
+};
+ScaledLoadPressureSliderWidget.prototype = new SliderWidget;
+ScaledLoadPressureSliderWidget.prototype.scaledSlide = function(val) {
+	if (val < 10)
+	{
+		/* Lower threshold. */
+		this.setPressureLoad(0);
+	}
+	else
+	{
+		this.setPressureLoad(Math.floor(val / 2) + 50);
+	}
+};
+ScaledLoadPressureSliderWidget.prototype.repaint = function() {
+	/* Don't need repainting on this widget. */
+};
 
 /* Load setter. =============================================================== */
 function LoadSetterWidget(hydroinst)
