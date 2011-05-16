@@ -50,15 +50,7 @@ class ReportsController extends Sahara_Controller_Action_Acl
         
         /* Load the permissions of the user. */
         $client = Sahara_Soap::getSchedServerPermissionsClient();
-        $perms = $client->getPermissionsForUser(array('userQName' => $this->_auth->getIdentity()));
         $persona = $client->getUser(array('userQName' => $this->_auth->getIdentity()));
-        
-        if (!isset($perms->permission))
-        {
-            $this->view->noPermissions = true;
-            return;
-        }
-        
         
         /* Load the rig names for the initial screen */
         $rep = Sahara_Soap::getSchedServerReportsClient();
@@ -71,9 +63,7 @@ class ReportsController extends Sahara_Controller_Action_Acl
         	'requestor' => array('userQName' => $this->_auth->getIdentity()),
             'limit' => '3' ));
         
-        $this->view->permission = $perms;
         $this->view->persona = $persona->persona;
-        //$this->view->rigNames = $rigNames;
     }
     
     public function getvalueAction(){
