@@ -45,7 +45,7 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 
 ?>
 
-<?php if (!$this->noPermissions): ?>
+<?php if($this->persona == "ADMIN" || $this->persona == "ACADEMIC"): ?>
 
 <div class="contentheader">
 	<h2>Reports</h2>
@@ -236,7 +236,10 @@ $(function() {
 
 
 <?php else : ?>
-No permission to generate reports
+		<div class="ui-state-error ui-corner-all noresults">
+			<span class="ui-icon ui-icon-alert"></span>	
+			No permissions to generate reports.
+		</div>
 <?php endif ?>
 
 
