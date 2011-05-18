@@ -109,7 +109,7 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 		<label for="sessiongroup">Select type for report: <br></label>
 		<select id="sessiongroup" name="sessiongroup" >
 			<option value=def >Select a type</option>
-			<?php if($this->persona == "ADMIN") echo "<option value=RIG >Rig Name</option>" ?>
+			<?php if($this->persona == "ADMIN") echo "<option value=RIG>Rig Name</option>" ?>
 			<?php if($this->persona == "ADMIN") echo "<option value=RIG_TYPE>Rig Type</option>" ?>
 			<option value=USER_CLASS>User Class</option>
 			<option value=USER>User</option>
@@ -143,11 +143,12 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 
 
 <script type="text/javascript">
-$('select').selectmenu({width:180});
 
-//set max and min dates correctly
 $(function() {
 
+	$('select').selectmenu({width:180});
+
+	
 	$("#sessionvaluelist").hide();
 	$("#accessvaluelist").hide();
 	
@@ -215,14 +216,14 @@ $(function() {
 	$("#accessgroup").change(function()
 			{
 				$("#accessvaluelist").hide();
-				getValue("access",this.value,"%",10);
+				getValue("access",this.value,"%25",10);
 			}
 		);
 
 	$("#sessiongroup").change(function()
 			{
 				$("#sessionvaluelist").hide();
-				getValue("session",this.value,"%",10);
+				getValue("session",this.value,"%25",10);
 			}
 		);
 
