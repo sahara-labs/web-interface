@@ -122,7 +122,10 @@
  	height: 75px;
  	width: 75px;
 }
-
+#accesstable, #sessiontable {
+	width: 100%;
+}
+	
 #accesstable td {
 	border-bottom: 1px solid #606060;
 }
@@ -232,7 +235,7 @@
 }
 
 .reportingresults{
-	width:850px;
+	width:950px;
 }
 
 .DTTT_container{

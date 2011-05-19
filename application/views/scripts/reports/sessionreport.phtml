@@ -42,6 +42,7 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 $this->headScript()->appendFile($this->baseUrl('/js/jquery.dataTables.min.js'));
 $this->headScript()->appendFile($this->baseUrl('/js/TableTools/media/js/TableTools.min.js'));
 $this->headScript()->appendFile($this->baseUrl('/js/TableTools/media/js/ZeroClipboard.js'));
+
 ?>
 <div class="reportingresults" >
 
@@ -49,14 +50,14 @@ $this->headScript()->appendFile($this->baseUrl('/js/TableTools/media/js/ZeroClip
 	<h2>Session Report</h2>
 </div>
 
-<div class="description ui-toolbar ui-widget-header ui-corner-tl ui-corner-tr ui-helper-clearfix" >
+<div class="description ui-widget-header ui-corner-all ui-helper-clearfix" >
 	  Searching for "<?=$this->search['sessionvalue']?>" from  <?=$this->search['reportfrom']?> to
-	   <?=$this->search['reportto']?> <br><br>
+	   <?=$this->search['reportto']?> <br></br>
 	   
-	   <div class="results">
-	   	Total Number of Sessions: <span class="data"><?=$this->results->sessionCount?> sessions </span><br></br>
-	   	Total Queue Duration: <span class="data"><?=$this->results->totalQueueDuration?> seconds </span><br></br>
-	   	Total Session Duration: <span class="data"><?=$this->results->totalSessionDuration?> seconds </span><br></br>
+	   <div class="results ">
+	   	Total Number of Sessions: <span class="data"><?=$this->results->sessionCount?> sessions </span>
+	   	Total Queue Duration: <span class="data"><?=$this->results->totalQueueDuration?> seconds </span>
+	   	Total Session Duration: <span class="data"><?=$this->results->totalSessionDuration?> seconds </span>
 		</div>
 </div>
 
@@ -84,10 +85,10 @@ $this->headScript()->appendFile($this->baseUrl('/js/TableTools/media/js/ZeroClip
 		            	elseif($this->results->sessionReport->rigName) echo "Rig Name";
 		            	elseif($this->results->sessionReport->rigType) echo "Rig Type";
 		            	else echo "Rig Type";
-		            			            }	
+		            }	
 		             ?></th>
-		            <th colspan="4" class="ui-state-default">Queue Duration</th>
-		            <th colspan="4" class="ui-state-default">Session Duration</th>
+		            <th colspan="4" class="ui-state-default">Queue Duration (s)</th>
+		            <th colspan="4" class="ui-state-default">Session Duration (s)</th>
 		            <th rowspan="2">Session Count</th>
 				</tr>
 				<tr>
@@ -169,14 +170,17 @@ else
 ?>
 </div>
 <script>
+	$('#actionbar').hide();
+
 	$(document).ready(function() {
 		var oTable = $('#sessiontable').dataTable({
 			"bJQueryUI": true,
 			"sPaginationType": "full_numbers",
-			"aaSorting": [[ 0, "asc" ]],
 			"bStateSave": true,
+			"aaSorting": [[ 0, "asc" ]],
 			"sDom": 'Tlt<"filler"><"F"fip<"filler">>',
 			"aLengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+	        "bAutoWidth": false,
 			"aoColumns": [
 				/* User */  		{ "sWidth": "100px" },
 				/* Type */  		{ "sWidth": "100px" },
@@ -190,20 +194,23 @@ else
 				/* Sess Max */ 		{ "sWidth": "100px" },
 				/* Session Count */ { "sWidth": "100px" },
 			 ],
-			"oTableTools": {"aButtons": [ "csv", "pdf", "copy" ],
-				"sSwfPath": "<?=$this->baseUrl('/js/TableTools/media/swf/copy_cvs_xls_pdf.swf')?>"}
-		     			
+			 "oTableTools": {"aButtons": [ "csv", "pdf", "copy" ],
+				 "sSwfPath": "<?=$this->baseUrl('/js/TableTools/media/swf/copy_cvs_xls_pdf.swf')?>"
+					 }			
 		});
 
-	$('td', oTable.fnGetNodes()).hover( function() {
-		var iCol = $('td').index(this) % 11;
-		var nTrs = oTable.fnGetNodes();
-		$('td:nth-child('+(iCol+1)+')', nTrs).addClass( 'highlighted' );
-	}, function() {
-		$('td.highlighted', oTable.fnGetNodes()).removeClass('highlighted');
-	} );
+		/*if (!$.browser.msie)
+		{
+			$('td', oTable.fnGetNodes()).hover( function() {
+				var iCol = $('td').index(this) % 11;
+				var nTrs = oTable.fnGetNodes();
+				$('td:nth-child('+(iCol+1)+')', nTrs).addClass( 'highlighted' );
+			}, function() {
+				$('td.highlighted', oTable.fnGetNodes()).removeClass('highlighted');
+			} );
+		}*/
 	
-	} 	);
+	});
 </script>
 
 
