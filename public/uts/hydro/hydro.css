@@ -346,7 +346,7 @@
 }
 
 .meter {
-	width: 65px;
+	width: 80px;
 }
 
 .meterinner {
@@ -374,7 +374,7 @@
 
 .metertick {
 	height: 29px;
-	width: 45px;
+	width: 60px;
 	text-align: left;
 }
 

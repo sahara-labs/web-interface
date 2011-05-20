@@ -903,7 +903,7 @@ function PowerGaugeWidget(hydroinst)
 	this.units = 'W';
 	
 	this.minVal = 0;
-	this.maxVal = 2;
+	this.maxVal = 5;
 }
 PowerGaugeWidget.prototype = new GaugeWidget;
 PowerGaugeWidget.prototype.getValue = function() {
@@ -920,7 +920,7 @@ function CurrentGaugeWidget(hydroinst)
 	this.units = "A";
 	
 	this.minVal = 0;
-	this.maxVal = 1.5;
+	this.maxVal = 3;
 }
 CurrentGaugeWidget.prototype = new GaugeWidget;
 CurrentGaugeWidget.prototype.getValue = function() {
@@ -937,7 +937,7 @@ function VoltageGaugeWidget(hydroinst)
 	this.units = "V";
 
 	this.minVal = 0;
-	this.maxVal = 3;
+	this.maxVal = 5;
 }
 VoltageGaugeWidget.prototype = new GaugeWidget;
 VoltageGaugeWidget.prototype.getValue = function() {
@@ -954,7 +954,7 @@ function FlowGaugeWidget(hydroinst)
 	this.units = "L/min";
 	
 	this.minVal = 0;
-	this.maxVal = 40;
+	this.maxVal = 50;
 }
 FlowGaugeWidget.prototype = new GaugeWidget;
 FlowGaugeWidget.prototype.getValue = function() {
@@ -1127,7 +1127,7 @@ function RpmMeterWidget(hydroinst)
 	MeterWidget.call(this, hydroinst);
 	
 	this.minVal = 0;
-	this.maxVal = 750;
+	this.maxVal = 1100;
 	
 	this.id = 'rpmmeter';
 	this.name = "RPM";
