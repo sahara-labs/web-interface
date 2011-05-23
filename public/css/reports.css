@@ -245,3 +245,5 @@
 .DTTT_button span{
 	margin:5px 15px;
 }
+
+#ui-datepicker-div { display: none; } 
