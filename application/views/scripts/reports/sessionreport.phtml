@@ -43,6 +43,19 @@ $this->headScript()->appendFile($this->baseUrl('/js/jquery.dataTables.min.js'));
 $this->headScript()->appendFile($this->baseUrl('/js/TableTools/media/js/TableTools.min.js'));
 $this->headScript()->appendFile($this->baseUrl('/js/TableTools/media/js/ZeroClipboard.js'));
 
+$queueHr = floor($this->results->totalQueueDuration/3600);
+if($queueHr < 10) $queueHr = '0'.$queueHr; 
+$queueMin = floor($this->results->totalQueueDuration/60 - $queueHr*60);
+if($queueMin < 10) $queueMin = '0'.$queueMin; 
+$queueSec = $this->results->totalQueueDuration%60;
+if($queueSec < 10) $queueSec = '0'.$queueSec; 
+
+$sessionHr = floor($this->results->totalSessionDuration/3600);
+if($sessionHr < 10) $sessionHr = '0'.$sessionHr; 
+$sessionMin = floor($this->results->totalSessionDuration/60 - $sessionHr*60);
+if($sessionMin < 10) $sessionMin = '0'.$sessionMin; 
+$sessionSec = $this->results->totalSessionDuration%60;
+if($sessionSec < 10) $sessionSec = '0'.$sessionSec; 
 ?>
 <div class="reportingresults" >
 
@@ -55,9 +68,9 @@ $this->headScript()->appendFile($this->baseUrl('/js/TableTools/media/js/ZeroClip
 	   <?=$this->search['reportto']?> <br></br>
 	   
 	   <div class="results ">
-	   	Total Number of Sessions: <span class="data"><?=$this->results->sessionCount?> sessions </span>
-	   	Total Queue Duration: <span class="data"><?=$this->results->totalQueueDuration?> seconds </span>
-	   	Total Session Duration: <span class="data"><?=$this->results->totalSessionDuration?> seconds </span>
+	   	Total Number of Sessions: <span class="data"><?=$this->results->sessionCount?> sessions </span><br>
+	   	Total Queue Duration: <span class="data"><?php echo $queueHr.':'.$queueMin.':'.$queueSec?></span><br>
+	   	Total Session Duration: <span class="data"><?php echo $sessionHr.':'.$sessionMin.':'.$sessionSec?></span><br>
 		</div>
 </div>
 
@@ -176,7 +189,6 @@ else
 		var oTable = $('#sessiontable').dataTable({
 			"bJQueryUI": true,
 			"sPaginationType": "full_numbers",
-			"bStateSave": true,
 			"aaSorting": [[ 0, "asc" ]],
 			"sDom": 'Tlt<"filler"><"F"fip<"filler">>',
 			"aLengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
@@ -192,24 +204,13 @@ else
 				/* Sess Med */ 		{ "sWidth": "100px" },
 				/* Sess Min */ 		{ "sWidth": "100px" },
 				/* Sess Max */ 		{ "sWidth": "100px" },
-				/* Session Count */ { "sWidth": "100px" },
+				/* Session Count */ { "sWidth": "100px" }
 			 ],
 			 "oTableTools": {"aButtons": [ "csv", "pdf", "copy" ],
 				 "sSwfPath": "<?=$this->baseUrl('/js/TableTools/media/swf/copy_cvs_xls_pdf.swf')?>"
 					 }			
 		});
 
-		/*if (!$.browser.msie)
-		{
-			$('td', oTable.fnGetNodes()).hover( function() {
-				var iCol = $('td').index(this) % 11;
-				var nTrs = oTable.fnGetNodes();
-				$('td:nth-child('+(iCol+1)+')', nTrs).addClass( 'highlighted' );
-			}, function() {
-				$('td.highlighted', oTable.fnGetNodes()).removeClass('highlighted');
-			} );
-		}*/
-	
 	});
 </script>
 
