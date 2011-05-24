@@ -168,7 +168,7 @@
 #slidercont {
 	position: absolute;
 	top: 46px;
-	left: 2px;
+	left: -2px;
 	width: 105px;
 }
 
@@ -236,7 +236,7 @@
 
 #ledpanel {
 	position: absolute;
-	top: 400px;
+	top: 440px;
 	left: 160px;
 }
 
@@ -341,7 +341,7 @@
 #rpmmeter {
 	position: absolute;
 	top: 46px;
-	right: 158px;
+	left: 438px;
 	height: 392px;
 }
 
@@ -410,4 +410,37 @@
 .meterval {
 	font-weight: bold;
 	font-size: 1.2em;
+}
+
+#hydrocamera {
+	position:absolute;
+	left: 111px;
+	top: 46px;
+}
+
+#hydrocamerastream {
+	background-color: #FCFCFC;
+}
+
+#hydrocamerastream div {
+	position: absolute;
+	left: 127px;
+	top: 117px;
+}
+
+#hydrocamformats {
+	float: left;
+	width: 100px;
+}
+
+#hydrocampositions {
+	float: left;
+	width: 220px;
+}
+
+#hydrocamerabuttons .camerabutton {
+	float: left;
+	background-color: #EFEFEF;
+	padding: 5px;
+	margin: 5px;
 }

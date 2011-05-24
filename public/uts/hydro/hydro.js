@@ -72,6 +72,8 @@ Hydro.prototype.displayMode = function(modenum) {
 	/* Clear the existing display. */
 	while (this.widgets.length > 0) this.widgets.pop().destroy();
 
+	this.widgets.push(new CameraWidget(this));
+	
 	switch (parseInt(modenum))
 	{
 	case 1: // -- The Basics 1 -----------------------------
@@ -149,6 +151,7 @@ Hydro.prototype.displayMode = function(modenum) {
 		break;
 	case 0: // -- Mode selector ---------------------------
 	default:
+		this.widgets.pop();
 		this.widgets.push(new SelectorWidget(this));
 		break;
 	}
@@ -424,14 +427,136 @@ SelectorWidget.prototype.destroy = function() {
 	$("#hydroselector").remove();
 };
 
-/* == Selector title. ========================================================= */
-function SelectorTitleWidget(hydroinst)
+/* == Camera widget. ========================================================= */
+function CameraWidget(hydroinst)
 {
-	HydroWidget.call(this.canvas, hydroinst);
+	HydroWidget.call(this, hydroinst);
+	
+	/* Default camera properties. */
+	this.width = 320;
+	this.height = 240;
+	
+	this.positions = [];
 }
-SelectorTitleWidget.prototype = new HydroWidget;
-SelectorTitleWidget.prototype.init = function() {
-	// TODO Added Selector Title.
+CameraWidget.prototype = new HydroWidget;
+CameraWidget.prototype.init = function() {
+	var thiz = this,
+		html = '<div id="hydrocamera" class="hydropanel ui-corner-all">' +
+			      '<div class="hydropaneltitle" class="hydrodrag">' +
+			         '<p>' +
+			            '<span class="ui-icon ui-icon-video"></span>Camera' +
+			         '</p>' +
+			      '</div>' +
+			      '<div id="hydrocamerastream">' +
+			    	   '<div class="loadinggif">' +
+			      	       '<img src="/uts/hydro/images/cameraloading.gif" alt="L" />' +
+			      	   '</div>' +
+			      '</div>' +
+			      '<div id="hydrocamerabuttons">' +
+			      '</div>' +
+			   '</div>';
+
+	this.canvas.append(html);
+	$("#hydrocamerastream").css({
+		width: this.width,
+		height: this.height
+	});
+	this.draggable("#hydrocamera");
+	
+	$.get('/primitive/json/pc/CameraController/pa/details', 
+		null, 
+		function(response) {
+		thiz.draw(response);
+	});
+};
+CameraWidget.prototype.draw = function(resp) {
+	if (typeof resp != "object") this.hydro.raiseError('Unable to load cameras details.');
+	
+	var i, html, thiz = this;
+	
+	for (i in resp)
+	{
+		switch(resp[i].name)
+		{
+		case 'mpeg':
+			this.video = resp[i].value;
+			break;
+		case 'mjpeg':
+			this.mjpeg = resp[i].value;
+			break;
+		default:
+			this.positions.push(resp[i].value);
+			break;
+		}
+	}
+	
+	/* Deploy buttons. */
+	html = '<div id="hydrocamformats">';
+	
+	if (!$.browser.msie) html += '<div id="imagesbutton" class="camerabutton">JPEG</div>';
+	
+	html +=    '<div id="videobutton"  class="camerabutton">Video</div>' +
+		   '</div>' +
+		   '<div id="hydrocampositions">';
+	
+	for (i in this.positions)
+	{
+		html += '<div class="positionbutton camerabutton">' + this.positions[i] + '</div>';
+	}
+	
+	html + '</div>' +
+		   '<div style="clear:both"></div>';
+	
+	$("#hydrocamerabuttons").append(html);
+	
+	/* Event listeners. */
+	if (!$.browser.msie) $("#imagesbutton").click(function() { thiz.deployImages(); });
+	$("#videobutton").click(function() { thiz.deployVideo(); });
+	$("#hydrocamerabuttons .positionbutton").click(function() { thiz.move($(this).text()); });
+	
+	/* Default deployment. */
+	if ($.browser.msie) this.deployVideo();
+	else this.deployImages();
+};
+CameraWidget.prototype.deployImages = function() {
+	$("#hydrocamerastream").empty().append("<img src='" + this.mjpeg + "' alt='MJPEG'/>");
+};
+CameraWidget.prototype.deployVideo = function() {
+	$("#hydrocamerastream").empty().html(
+			"<object " +
+			"	classid='CLSID:22d6f312-b0f6-11d0-94ab-0080c74c7e95' " +
+			"	codebase='http://activex.microsoft.com/activex/controls/mplayer/en/nsmp2inf.cab' " +
+			"	standby='Loading Microsoft Windows Media Player...' " +
+			"	type='application/x-oleobject' " +
+			"	width='" + this.width + "' " +
+			"	height='" + this.height + "' >" +
+			"		<param name='fileName' value='" + this.video + "'>" +
+			"		<param name='animationatStart' value='1'>" +
+			"		<param name='transparentatStart' value='1'>" +
+			"		<param name='autoStart' value='1'>" +
+			"		<param name='ShowControls' value='0'>" +
+			"		<param name='ShowDisplay' value='0'>" +
+			"		<param name='ShowStatusBar' value='0'>" +
+			"		<param name='loop' value='0'>" +
+			"		<embed type='video/x-ms-asf-plugin' " +
+			"			pluginspage='http://microsoft.com/windows/mediaplayer/en/download/' " +
+			"			showcontrols='0' " +
+			"			showtracker='1' " +
+			"			showdisplay='0' " +
+			"			showstatusbar='0' " +
+			"			videoborder3d='0' " +
+			"			width='" + this.width + "' " +
+			"			height='" + this.height + "' " +
+			"			src='" + this.video + "' " +
+			"			autostart='1' " +
+			"			loop='0' /> " +
+			"</object>");
+};
+CameraWidget.prototype.move = function(pos) {
+	$.get('/primitive/json/pc/CameraController/pa/move/position/' + pos);
+};
+CameraWidget.prototype.destroy = function() {
+	$("#hydrocamera").remove();
 };
 
 /* == Slider sets pump pressure using a slider. =============================== */
