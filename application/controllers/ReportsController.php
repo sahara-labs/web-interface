@@ -101,7 +101,7 @@ class ReportsController extends Sahara_Controller_Action_Acl
     
     public function accessreportAction(){
     	
-        $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Accessreport');
+        $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Access Report');
         
         /* Get Parameter */
         $params = $this->_request->getParams();
@@ -150,7 +150,7 @@ class ReportsController extends Sahara_Controller_Action_Acl
 
     public function sessionreportAction(){
     	
-        $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Sessionreport');
+        $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Session Report');
         
         /* Get Parameter */
         $params = $this->_request->getParams();
