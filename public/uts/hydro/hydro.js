@@ -415,6 +415,7 @@ HydroWidget.prototype.draggable = function(selector) {
 		});
 };
 
+
 /* == Selector widget to choose display mode. ================================= */
 function SelectorWidget(hydroinst)
 {
@@ -928,6 +929,12 @@ GaugeWidget.prototype.init = function() {
 	this.rotate(this.dr);
 	
 	this.draggable(this.id);
+	
+	if ((s = $("#gaugecontainer .gauge").length) > 3)
+	{
+		this.canvas.css("height", 550 + (s - 3) * 160);
+		resizeFooter();
+	}
 };
 GaugeWidget.prototype.repaint = function() {
 	if (this.currentVal != this.getValue())
@@ -953,6 +960,12 @@ GaugeWidget.prototype.destroy = function() {
 		gac = 0;
 	}
 	else (gc.css("width", w - this.WIDTH));
+	
+	if ((s = $("#gaugecontainer .gauge").length) <= 3)
+	{
+		this.canvas.css("height", 550);
+		resizeFooter();
+	}
 };
 GaugeWidget.prototype.animate = function() {
 	if (this.dr == this.cr)
