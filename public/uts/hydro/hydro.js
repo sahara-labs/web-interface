@@ -86,14 +86,14 @@ Hydro.prototype.displayMode = function(modenum) {
 	case 2: // -- The Basics 2 -----------------------------
 		this.widgets.push(new ScaledLoadPressureSliderWidget(this),
 						  new RpmMeterWidget(this),
-						  new FlowGaugeWidget(this));
+						  new FlowGaugeWidget(this),
+						  new LEDPanelWidget(this));
 		break;
 	case 3: // -- Turn On the Lights -----------------------
 		this.setLoad(this.STATIC_LOAD);
 		this.widgets.push(new ScaledLoadPressureSliderWidget(this),
 						  new RpmMeterWidget(this),
-						  new FlowGaugeWidget(this),
-						  new LEDPanelWidget(this));
+						  new FlowGaugeWidget(this));
 		break;
 	case 4: // -- Electrical Power -------------------------
 		this.setLoad(this.STATIC_LOAD);
