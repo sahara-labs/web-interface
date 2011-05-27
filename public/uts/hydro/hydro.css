@@ -430,12 +430,12 @@
 
 #hydrocamformats {
 	float: left;
-	width: 100px;
+	width: 55px;
 }
 
 #hydrocampositions {
 	float: left;
-	width: 220px;
+	width: 264px;
 }
 
 #hydrocamerabuttons .camerabutton {
@@ -443,4 +443,16 @@
 	background-color: #EFEFEF;
 	padding: 5px;
 	margin: 5px;
+	cursor: pointer;
+	-moz-box-shadow: 0 0 4px #B5B5B5;
+	-webkit-box-shadow: 0 0 4px #B5B5B5;
+	box-shadow: 0 0 4px #B5B5B5;
 }
+
+#hydrocamerabuttons .camerabutton:hover {
+        -moz-box-shadow: 0 0 4px #606060;
+        -webkit-box-shadow: 0 0 4px #606060;
+        box-shadow: 0 0 4px #606060;
+}
+
+

@@ -519,7 +519,7 @@ CameraWidget.prototype.draw = function(resp) {
 	else this.deployImages();
 };
 CameraWidget.prototype.deployImages = function() {
-	$("#hydrocamerastream").empty().append("<img src='" + this.mjpeg + "' alt='MJPEG'/>");
+	$("#hydrocamerastream").empty().append("<img src='" + this.mjpeg + "?" + new Date().getTime() + "' alt='MJPEG'/>");
 };
 CameraWidget.prototype.deployVideo = function() {
 	$("#hydrocamerastream").empty().html(
