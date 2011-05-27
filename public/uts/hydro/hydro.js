@@ -54,7 +54,7 @@ Hydro.prototype.init = function() {
 		this.updateDebug();
 	}
 	
-	this.addOverlay();
+	this.addOverlay("Initalising");
 	this.paramsInit();
 	this.valuesRequest();
 };
@@ -71,22 +71,22 @@ Hydro.prototype.displayMode = function(modenum) {
 	
 	/* Clear the existing display. */
 	while (this.widgets.length > 0) this.widgets.pop().destroy();
-
+	
+	/* Cleanup the experiment. */
+	this.cleanup();
+	
 	this.widgets.push(new CameraWidget(this));
 	
 	switch (parseInt(modenum))
 	{
 	case 1: // -- The Basics 1 -----------------------------
-		this.setPressureLoad(0);
 		this.widgets.push(new ScaledLoadPressureSliderWidget(this),
 						  new LEDPanelWidget(this));
 		break;
 	case 2: // -- The Basics 2 -----------------------------
-		this.setPressureLoad(0);
 		this.widgets.push(new ScaledLoadPressureSliderWidget(this),
 						  new RpmMeterWidget(this),
-						  new FlowGaugeWidget(this),
-						  new LEDPanelWidget(this));
+						  new FlowGaugeWidget(this));
 		break;
 	case 3: // -- Turn On the Lights -----------------------
 		this.setLoad(this.STATIC_LOAD);
@@ -97,7 +97,7 @@ Hydro.prototype.displayMode = function(modenum) {
 		break;
 	case 4: // -- Electrical Power -------------------------
 		this.setLoad(this.STATIC_LOAD);
-		this.widgets.push(new PressureSliderWidget(this),
+		this.widgets.push(new ScaledPressureSliderWidget(this),
 						  new RpmMeterWidget(this),
 						  new FlowGaugeWidget(this),
 						  new VoltageGaugeWidget(this),
@@ -105,7 +105,7 @@ Hydro.prototype.displayMode = function(modenum) {
 		break;
 	case 5: // -- Electrical Energy ------------------------
 		this.setLoad(this.STATIC_LOAD);
-		this.widgets.push(new PressureSliderWidget(this),
+		this.widgets.push(new ScaledPressureSliderWidget(this),
 						  new RpmMeterWidget(this),
 						  new FlowGaugeWidget(this),
 						  new VoltageGaugeWidget(this),
@@ -113,14 +113,14 @@ Hydro.prototype.displayMode = function(modenum) {
 		break;
 	case 6: // -- Water Flow and its Effects ---------------
 		this.setLoad(this.STATIC_LOAD);
-		this.widgets.push(new PressureSliderWidget(this),
+		this.widgets.push(new ScaledPressureSliderWidget(this),
 						  new FlowGaugeWidget(this),
 						  new VoltageGaugeWidget(this),
 						  new CurrentGaugeWidget(this));
 		break;
 	case 7: // -- Energy Interconversion ------------------
 		this.setLoad(this.STATIC_LOAD);
-		this.widgets.push(new PressureSliderWidget(this),
+		this.widgets.push(new ScaledPressureSliderWidget(this),
 						  new RpmMeterWidget(this),
 						  new FlowGaugeWidget(this),
 						  new VoltageGaugeWidget(this),
@@ -128,12 +128,12 @@ Hydro.prototype.displayMode = function(modenum) {
 		break;
 	case 8: // -- Energy Transformation --------------------
 		this.setLoad(this.STATIC_LOAD);
-		this.widgets.push(new PressureSliderWidget(this),
+		this.widgets.push(new ScaledPressureSliderWidget(this),
 						  new RpmMeterWidget(this),
 						  new PowerGaugeWidget(this));
 		break;
 	case 9: // -- Torque 9 --------------------------------- 
-		this.widgets.push(new PressureSliderWidget(this),
+		this.widgets.push(new ScaledPressureSliderWidget(this),
 				          new LoadSetterWidget(this),
 				          new RpmMeterWidget(this),
 				          new TorqueGaugeWidget(this),
@@ -142,7 +142,7 @@ Hydro.prototype.displayMode = function(modenum) {
 				          new PowerGaugeWidget(this));
 		break;
 	case 10: // -- The Effect of Output Resistance ----------
-		this.widgets.push(new PressureSliderWidget(this),
+		this.widgets.push(new ScaledPressureSliderWidget(this),
 				          new LoadSetterWidget(this),
 				          new RpmMeterWidget(this),
 				          new VoltageGaugeWidget(this),
@@ -318,24 +318,54 @@ Hydro.prototype.dataInit = function() {
 /* ============================================================================
  * == Utility & debug.                                                       ==
  * ============================================================================ */
-Hydro.prototype.addOverlay = function() {
+Hydro.prototype.addOverlay = function(message) {
+	this.isOverlayDeployed = true;
+	
 	$('body').append(
-		'<div id="hydrooverlay">' +
+		'<div id="hydrooverlaycontainer">' +
+			'<div id="hydrooverlay"> </div>' +
 			'<div id="hydrooverlaywarning">' +
-				'Please wait...' +
+				'<img src="/uts/hydro/images/resetting.gif" alt=" " /><br />' +
+				(message ? message : 'Please wait...') +
 			'</div>' +
 		'</div>'
 	);
+	
+	$("#hydrooverlaywarning").css({
+		top: $("body").height() / 2 - 25,
+		left: $("body").width() / 2 - 120
+	});
 };
 
 Hydro.prototype.clearOverlay = function() {
-	$('#hydrooverlay').remove();
+	this.isOverlayDeployed = false;
+	$('#hydrooverlaycontainer').remove();
 	this.repaint();
 };
 
 Hydro.prototype.raiseError = function(error) {
 	// TODO error
 //	alert(error);
+};
+
+Hydro.prototype.cleanup = function() {
+	if (this.pump == 0)
+	{
+		if (this.isOverlayDeployed) this.clearOverlay();
+		return;
+	}
+	
+	if (!this.isOverlayDeployed)
+	{
+		this.addOverlay("Resetting...");
+		this.setPressure(0);
+		this.setLoad(0);
+	}
+	
+	var thiz = this;
+	setTimeout(function() {
+		thiz.cleanup();
+	}, 1000);
 };
 
 Hydro.prototype.updateDebug = function() {
@@ -449,7 +479,7 @@ CameraWidget.prototype.init = function() {
 			      '</div>' +
 			      '<div id="hydrocamerastream">' +
 			    	   '<div class="loadinggif">' +
-			      	       '<img src="/uts/hydro/images/cameraloading.gif" alt="L" />' +
+			      	       '<img src="/uts/hydro/images/loading.gif" alt="L" />' +
 			      	   '</div>' +
 			      '</div>' +
 			      '<div id="hydrocamerabuttons">' +
@@ -655,6 +685,29 @@ function PressureSliderWidget(hydroinst)
 }
 PressureSliderWidget.prototype = new SliderWidget;
 
+/* == Pressure Slider which interpolates 0 to 100% PP to mean 55% to 100%. ==== */
+function ScaledPressureSliderWidget(hydroinst)
+{
+	SliderWidget.call(this, hydroinst);
+	
+	this.setter = this.scaledSlide; 
+};
+ScaledPressureSliderWidget.prototype = new SliderWidget;
+ScaledPressureSliderWidget.prototype.scaledSlide = function(val) {
+	if (val < 5)
+	{
+		/* Lower threshold. */
+		this.setPressureLoad(0);
+	}
+	else
+	{
+		this.setPressureLoad(Math.floor(val / 2) + 50);
+	}
+};
+ScaledPressureSliderWidget.prototype.repaint = function() {
+	/* Don't need repainting on this widget. */
+};
+
 /* == Pressure slider which also sets load based on pressure.  ================ */
 function LoadPressureSliderWidget(hydroinst)
 {
@@ -672,7 +725,7 @@ function ScaledLoadPressureSliderWidget(hydroinst)
 };
 ScaledLoadPressureSliderWidget.prototype = new SliderWidget;
 ScaledLoadPressureSliderWidget.prototype.scaledSlide = function(val) {
-	if (val < 10)
+	if (val < 5)
 	{
 		/* Lower threshold. */
 		this.setPressureLoad(0);
