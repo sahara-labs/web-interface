@@ -1,7 +1,11 @@
+#hydro {
+	height: 675px;
+} 
+
 .hydrobutton, #hydrocamerabuttons .camerabutton {
-	 filter: progid:DXImageTransform.Microsoft.Shadow(color=#B5B5B5, Strength=4);
+	filter: progid:DXImageTransform.Microsoft.Shadow(color=#B5B5B5, Strength=4);
 }
 
 .hydrobutton:hover, #hydrocamerabuttons .camerabutton:hover {
-		filter: progid:DXImageTransform.Microsoft.Shadow(color=#606060, Strength=4);
+	filter: progid:DXImageTransform.Microsoft.Shadow(color=#606060, Strength=4);
 }

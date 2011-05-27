@@ -349,7 +349,7 @@ Hydro.prototype.raiseError = function(error) {
 };
 
 Hydro.prototype.cleanup = function() {
-	if (this.pump == 0)
+	if (this.pump == 0 && this.flowrate < 0.1)
 	{
 		if (this.isOverlayDeployed) this.clearOverlay();
 		return;
