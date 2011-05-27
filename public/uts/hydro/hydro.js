@@ -491,13 +491,16 @@ CameraWidget.prototype.draw = function(resp) {
 	}
 	
 	/* Deploy buttons. */
-	html = '<div id="hydrocamformats">';
+	html = '<div id="hydrocamformats">' +
+               '<div class="camheader">Formats</div>';
 	
-	if (!$.browser.msie) html += '<div id="imagesbutton" class="camerabutton">JPEG</div>';
+	if (!$.browser.msie) html += '<div id="imagesbutton" class="camerabutton">MJPEG</div>';
 	
-	html +=    '<div id="videobutton"  class="camerabutton">Video</div>' +
+	html +=    '<div id="videobutton"  class="camerabutton">ASF</div>' +
 		   '</div>' +
-		   '<div id="hydrocampositions">';
+		   
+		   '<div id="hydrocampositions">' +
+               '<div class="camheader">Positions</div>';;
 	
 	for (i in this.positions)
 	{
@@ -512,16 +515,26 @@ CameraWidget.prototype.draw = function(resp) {
 	/* Event listeners. */
 	if (!$.browser.msie) $("#imagesbutton").click(function() { thiz.deployImages(); });
 	$("#videobutton").click(function() { thiz.deployVideo(); });
-	$("#hydrocamerabuttons .positionbutton").click(function() { thiz.move($(this).text()); });
+	$("#hydrocamerabuttons .positionbutton").click(function() {
+		$("#hydrocampositions .selectedbutton").removeClass("selectedbutton");
+		$(this).addClass("selectedbutton");
+		thiz.move($(this).text()); 
+	});
 	
 	/* Default deployment. */
 	if ($.browser.msie) this.deployVideo();
 	else this.deployImages();
 };
 CameraWidget.prototype.deployImages = function() {
-	$("#hydrocamerastream").empty().append("<img src='" + this.mjpeg + "?" + new Date().getTime() + "' alt='MJPEG'/>");
+	$("#hydrocamformats .selectedbutton").removeClass("selectedbutton");
+	$("#imagesbutton").addClass("selectedbutton");
+	$("#hydrocamerastream")
+		.empty()
+		.append("<img src='" + this.mjpeg + "?" + new Date().getTime() + "' alt='&nbsp;'/>");
 };
 CameraWidget.prototype.deployVideo = function() {
+	$("#hydrocamformats .selectedbutton").removeClass("selectedbutton");
+	$("#videobutton").addClass("selectedbutton");
 	$("#hydrocamerastream").empty().html(
 			"<object " +
 			"	classid='CLSID:22d6f312-b0f6-11d0-94ab-0080c74c7e95' " +

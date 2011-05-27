@@ -419,7 +419,7 @@
 }
 
 #hydrocamerastream {
-	background-color: #FCFCFC;
+	background-color: #000;
 }
 
 #hydrocamerastream div {
@@ -428,14 +428,29 @@
 	top: 117px;
 }
 
+#hydrocamerabuttons {
+	border-top: 8px solid #000;
+}
+
 #hydrocamformats {
 	float: left;
-	width: 55px;
+	width: 70px;
 }
 
 #hydrocampositions {
 	float: left;
-	width: 264px;
+	width: 250px;
+}
+
+#hydrocamerabuttons .camheader {
+	background-color: #EFEFEF;
+	padding: 5px;
+	color: #606060;
+	border-top: 1px solid #
+}
+
+#hydrocamformats .camheader {
+	border-right: 2px solid #FFF;
 }
 
 #hydrocamerabuttons .camerabutton {
@@ -447,12 +462,20 @@
 	-moz-box-shadow: 0 0 4px #B5B5B5;
 	-webkit-box-shadow: 0 0 4px #B5B5B5;
 	box-shadow: 0 0 4px #B5B5B5;
+	color: #606060;
 }
 
 #hydrocamerabuttons .camerabutton:hover {
-        -moz-box-shadow: 0 0 4px #606060;
-        -webkit-box-shadow: 0 0 4px #606060;
-        box-shadow: 0 0 4px #606060;
+	color: #000;
+    -moz-box-shadow: 0 0 4px #606060;
+    -webkit-box-shadow: 0 0 4px #606060;
+    box-shadow: 0 0 4px #606060;
 }
 
-
+#hydrocamerabuttons .selectedbutton {
+	color: #000;
+	background-color: #F5F7E2;
+	-moz-box-shadow: 0 0 4px #D3D65D;
+    -webkit-box-shadow: 0 0 4px #D3D65D;
+    box-shadow: 0 0 4px #D3D65D;
+}
