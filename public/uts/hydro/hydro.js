@@ -80,10 +80,12 @@ Hydro.prototype.displayMode = function(modenum) {
 	switch (parseInt(modenum))
 	{
 	case 1: // -- The Basics 1 -----------------------------
+		this.setLoad(0);
 		this.widgets.push(new ScaledLoadPressureSliderWidget(this),
 						  new LEDPanelWidget(this));
 		break;
 	case 2: // -- The Basics 2 -----------------------------
+		this.setLoad(0);
 		this.widgets.push(new ScaledLoadPressureSliderWidget(this),
 						  new RpmMeterWidget(this),
 						  new FlowGaugeWidget(this),
@@ -331,9 +333,18 @@ Hydro.prototype.addOverlay = function(message) {
 		'</div>'
 	);
 	
+	var body = $("body"),
+	    height = body.height(),
+	    width = body.width();
+	
+	$("#hydrooverlay").css({
+		width: width,
+		height: height
+	});
+	
 	$("#hydrooverlaywarning").css({
-		top: $("body").height() / 2 - 25,
-		left: $("body").width() / 2 - 120
+		top: height / 2 - 25,
+		left: width / 2 - 120
 	});
 };
 
@@ -345,7 +356,6 @@ Hydro.prototype.clearOverlay = function() {
 
 Hydro.prototype.raiseError = function(error) {
 	// TODO error
-//	alert(error);
 };
 
 Hydro.prototype.cleanup = function() {
