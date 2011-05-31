@@ -99,10 +99,10 @@
 
 #hydrooverlaywarning {
 	position: absolute;
-	width: 240px;
+	width: 150px;
 	height: 50px;
 	background-color: #FFFFFF;
-	color: #606060606060606060606060606060606060;
+	font-weight: bold;
 	text-align: center;
 	opacity: 1;
 	z-index: 1001;
@@ -483,4 +483,18 @@
 	-moz-box-shadow: 0 0 4px #D3D65D;
     -webkit-box-shadow: 0 0 4px #D3D65D;
     box-shadow: 0 0 4px #D3D65D;
+}
+
+#changeexperiment .ui-state-highlight {
+	padding: 5px;
+	margin: 10px auto 0;
+}
+
+#changeexperiment span {
+	float: left;
+}
+
+#rigresetting {
+	text-align: center;
+	font-weight: bold;
 }

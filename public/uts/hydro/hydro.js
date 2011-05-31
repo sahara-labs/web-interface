@@ -41,7 +41,7 @@ Hydro.prototype.init = function() {
 	var stateMode = window.location.hash;
 	if (stateMode && stateMode.indexOf("exp") == 1)
 	{
-		this.changeMode(stateMode.substr(1));
+		this.displayMode(stateMode.substr(4));
 	}
 	else
 	{
@@ -59,22 +59,74 @@ Hydro.prototype.init = function() {
 	this.valuesRequest();
 };
 
-Hydro.prototype.changeMode = function(mode) {
-	window.location.hash = mode;
-	this.displayMode(mode.substr(3));
+Hydro.prototype.changeExperiment = function() {
+	$("body").append(
+		"<div id='changeexperiment' title='Change Experiment'>" +
+			"<div class='ui-state-primary'>Are you sure you want to change experiment?</div>" +
+			"<div class='ui-state-highlight ui-corner-all'>" +
+				"<span class='ui-icon ui-icon-info'></span>" +
+				"This will reset the rig but you will not be removed from the rig." +
+			"</div>" +
+		"<div>"
+	);
 	
-	if (this.debug) this.updateDebug();
+	var thiz  = this;
+	$("#changeexperiment").dialog({
+		modal: true,
+		resizable: false,
+		width: 400,
+		buttons: {
+			Yes: function() {
+				if (thiz.pump == 0 && thiz.flowrate < 0.1)
+				{
+					thiz.displayMode(0);
+					$(this).dialog("close").remove();
+				}
+				
+				var func, diag = $('div[aria-labelledby="ui-dialog-title-changeexperiment"]')
+					.css("width", 150);
+				diag.css("left", parseInt(diag.css("left")) + 125);
+				diag.children(".ui-dialog-titlebar").hide();
+				diag.children(".ui-dialog-buttonpane").hide();
+				$(this).html(
+						"<div id='rigresetting'>" +
+							"<img src='/images/ajax-loading.gif' alt=' ' /><br />" +
+							"Resetting..." +
+						"</div>"
+				);
+				
+				
+				thiz.setPressure(0);
+				thiz.setLoad(0);
+
+				var func;
+				setTimeout(func = function() {
+					if (thiz.pump == 0 && thiz.flowrate < 0.1)
+					{
+						thiz.displayMode(0);
+						$("#changeexperiment").dialog("close").remove();
+					}
+					else setTimeout(func, 500);
+				}, 500);
+
+			},
+			No: function() {
+				$(this).dialog("close").remove();
+			}
+		}
+	});
 };
 
 Hydro.prototype.displayMode = function(modenum) {
 	var i;
 	
+	/* Set hash location for state persistance. */
+	window.location.hash = "exp" + modenum;
+	
 	/* Clear the existing display. */
 	while (this.widgets.length > 0) this.widgets.pop().destroy();
 	
-	/* Cleanup the experiment. */
-	this.cleanup();
-	
+	/* Most views have the camera. */
 	this.widgets.push(new CameraWidget(this));
 	
 	switch (parseInt(modenum))
@@ -311,13 +363,6 @@ Hydro.prototype.setPressureLoad = function(val) {
 };
 
 /* ============================================================================
- * == Data downloads.                                                        ==
- * ============================================================================ */
-Hydro.prototype.dataInit = function() {
-	
-};
-
-/* ============================================================================
  * == Utility & debug.                                                       ==
  * ============================================================================ */
 Hydro.prototype.addOverlay = function(message) {
@@ -327,7 +372,7 @@ Hydro.prototype.addOverlay = function(message) {
 		'<div id="hydrooverlaycontainer">' +
 			'<div id="hydrooverlay"> </div>' +
 			'<div id="hydrooverlaywarning">' +
-				'<img src="/uts/hydro/images/resetting.gif" alt=" " /><br />' +
+				'<img src="/images/ajax-loading.gif" alt=" " /><br />' +
 				(message ? message : 'Please wait...') +
 			'</div>' +
 		'</div>'
@@ -343,8 +388,8 @@ Hydro.prototype.addOverlay = function(message) {
 	});
 	
 	$("#hydrooverlaywarning").css({
-		top: height / 2 - 25,
-		left: width / 2 - 120
+		top: height / 2 - 125,
+		left: width / 2 - 75
 	});
 };
 
@@ -356,26 +401,6 @@ Hydro.prototype.clearOverlay = function() {
 
 Hydro.prototype.raiseError = function(error) {
 	// TODO error
-};
-
-Hydro.prototype.cleanup = function() {
-	if (this.pump == 0 && this.flowrate < 0.1)
-	{
-		if (this.isOverlayDeployed) this.clearOverlay();
-		return;
-	}
-	
-	if (!this.isOverlayDeployed)
-	{
-		this.addOverlay("Resetting...");
-		this.setPressure(0);
-		this.setLoad(0);
-	}
-	
-	var thiz = this;
-	setTimeout(function() {
-		thiz.cleanup();
-	}, 1000);
 };
 
 Hydro.prototype.updateDebug = function() {
@@ -461,7 +486,7 @@ SelectorWidget.prototype.init = function() {
 	this.canvas.append(html);
 	var hydroinst = this.hydro;
 	$('.modesel').click(function() {
-		hydroinst.changeMode($(this).attr('id'));
+		hydroinst.displayMode($(this).attr('id').substr(3));
 	});
 };
 SelectorWidget.prototype.destroy = function() {
@@ -708,11 +733,11 @@ ScaledPressureSliderWidget.prototype.scaledSlide = function(val) {
 	if (val < 5)
 	{
 		/* Lower threshold. */
-		this.setPressureLoad(0);
+		this.setPressure(0);
 	}
 	else
 	{
-		this.setPressureLoad(Math.floor(val / 2) + 50);
+		this.setPressure(Math.floor(val / 2) + 50);
 	}
 };
 ScaledPressureSliderWidget.prototype.repaint = function() {
@@ -933,8 +958,7 @@ GaugeWidget.prototype.init = function() {
 	if ((s = $("#gaugecontainer .gauge").length) > 3)
 	{
 		this.canvas.css("height", 550 + (s - 3) * 160);
-		resizeFooter();
-	}
+		resizeFooter();	}
 };
 GaugeWidget.prototype.repaint = function() {
 	if (this.currentVal != this.getValue())
