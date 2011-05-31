@@ -126,8 +126,13 @@ Hydro.prototype.displayMode = function(modenum) {
 	/* Clear the existing display. */
 	while (this.widgets.length > 0) this.widgets.pop().destroy();
 	
-	/* Most views have the camera. */
-	this.widgets.push(new CameraWidget(this));
+	if (modenum != 0)
+	{
+		/* Most views have the camera. */
+		this.widgets.push(new CameraWidget(this));
+		
+		$(".hydrobutton").show();
+	}
 	
 	switch (parseInt(modenum))
 	{
@@ -205,6 +210,7 @@ Hydro.prototype.displayMode = function(modenum) {
 		break;
 	case 0: // -- Mode selector ---------------------------
 	default:
+		$(".hydrobutton").hide();
 		this.widgets.pop();
 		this.widgets.push(new SelectorWidget(this));
 		break;
