@@ -77,8 +77,8 @@ class Sahara_Acl extends Zend_Acl
                             );
 
     /** @var assoc array Pages an academic user may access. */
-    protected $_academicPages = array('academic' => array('index'),
-   	                              'reports' => array('index','getvalue','accessreport','sessionreport'));
+    protected $_academicPages = array('reports' => array('index','getvalue','accessreport',
+    													'sessionreport'));
 
     /** @var assoc array Pages an administrator user may access. */
     protected $_adminPages = array('admin' => array('index', 'rig', 'type', 'rigpage', 'kick',
