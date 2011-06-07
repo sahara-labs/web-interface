@@ -26,7 +26,6 @@ function Hydro() {
 	this.pressure = 0.0;
 	
 	this.widgets = [];
-	
 }
 
 /* Display debug information. */
@@ -374,35 +373,35 @@ Hydro.prototype.setPressureLoad = function(val) {
 Hydro.prototype.addOverlay = function(message) {
 	this.isOverlayDeployed = true;
 	
-	$('body').append(
-		'<div id="hydrooverlaycontainer">' +
-			'<div id="hydrooverlay"> </div>' +
-			'<div id="hydrooverlaywarning">' +
-				'<img src="/images/ajax-loading.gif" alt=" " /><br />' +
-				(message ? message : 'Please wait...') +
-			'</div>' +
-		'</div>'
-	);
-	
-	var body = $("body"),
-	    height = body.height(),
-	    width = body.width();
-	
-	$("#hydrooverlay").css({
-		width: width,
-		height: height
-	});
-	
-	$("#hydrooverlaywarning").css({
-		top: height / 2 - 125,
-		left: width / 2 - 75
-	});
+//	$('body').append(
+//		'<div id="hydrooverlaycontainer">' +
+//			'<div id="hydrooverlay"> </div>' +
+//			'<div id="hydrooverlaywarning">' +
+//				'<img src="/images/ajax-loading.gif" alt=" " /><br />' +
+//				(message ? message : 'Please wait...') +
+//			'</div>' +
+//		'</div>'
+//	);
+//	
+//	var body = $("body"),
+//	    height = body.height(),
+//	    width = body.width();
+//	
+//	$("#hydrooverlay").css({
+//		width: width,
+//		height: height
+//	});
+//	
+//	$("#hydrooverlaywarning").css({
+//		top: height / 2 - 125,
+//		left: width / 2 - 75
+//	});
 };
 
 Hydro.prototype.clearOverlay = function() {
 	this.isOverlayDeployed = false;
-	$('#hydrooverlaycontainer').remove();
-	this.repaint();
+//	$('#hydrooverlaycontainer').remove();
+//	this.repaint();
 };
 
 Hydro.prototype.raiseError = function(error) {
@@ -509,6 +508,8 @@ function CameraWidget(hydroinst)
 	this.height = 240;
 	
 	this.positions = [];
+	
+	this.deployed = '';
 }
 CameraWidget.prototype = new HydroWidget;
 CameraWidget.prototype.init = function() {
@@ -534,6 +535,18 @@ CameraWidget.prototype.init = function() {
 		height: this.height
 	});
 	this.draggable("#hydrocamera");
+	
+	$("#hydrocamera").resizable({
+		minHeight: 386,
+		maxHeight: 626,
+		minWidth: 320,
+		maxWidth: 640,
+		ghost: true,
+		aspectRatio: true,
+		stop: function(event, ui) {
+			thiz.resize(ui.size.width, ui.size.height);
+		}
+	});
 	
 	$.get('/primitive/json/pc/CameraController/pa/details', 
 		null, 
@@ -579,8 +592,9 @@ CameraWidget.prototype.draw = function(resp) {
 		html += '<div class="positionbutton camerabutton">' + this.positions[i] + '</div>';
 	}
 	
-	html + '</div>' +
+	html += '</div>' +
 		   '<div style="clear:both"></div>';
+		   
 	
 	$("#hydrocamerabuttons").append(html);
 	
@@ -598,13 +612,18 @@ CameraWidget.prototype.draw = function(resp) {
 	else this.deployImages();
 };
 CameraWidget.prototype.deployImages = function() {
+	this.deployed = 'mjpeg';
+	
 	$("#hydrocamformats .selectedbutton").removeClass("selectedbutton");
 	$("#imagesbutton").addClass("selectedbutton");
 	$("#hydrocamerastream")
 		.empty()
-		.append("<img src='" + this.mjpeg + "?" + new Date().getTime() + "' alt='&nbsp;'/>");
+		.append("<img style='width:" + this.width + "px;height:" + this.height + "px' " +
+						"src='" + this.mjpeg + "?" + new Date().getTime() + "' alt='&nbsp;'/>");
 };
 CameraWidget.prototype.deployVideo = function() {
+	this.deployed = 'asf';
+	
 	$("#hydrocamformats .selectedbutton").removeClass("selectedbutton");
 	$("#videobutton").addClass("selectedbutton");
 	$("#hydrocamerastream").empty().html(
@@ -639,6 +658,20 @@ CameraWidget.prototype.deployVideo = function() {
 };
 CameraWidget.prototype.move = function(pos) {
 	$.get('/primitive/json/pc/CameraController/pa/move/position/' + pos);
+};
+CameraWidget.prototype.resize = function(width, height) {
+	this.width = width;
+	this.height = height - 146 ;
+	
+	switch(this.deployed) 
+	{
+	case 'mjpeg':
+		this.deployImages();
+		break;
+	case 'asf':
+		this.deployVideo();
+		break;
+	}
 };
 CameraWidget.prototype.destroy = function() {
 	$("#hydrocamera").remove();
