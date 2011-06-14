@@ -184,7 +184,6 @@ function setState(stateID)
 
 function setCamera(stateID)
 {
-	// TODO - clean up so more 'intelligent'
 	if(models[stateID].camera == 1)
 	{
 		//Enable Camera 1
