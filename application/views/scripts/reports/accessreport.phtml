@@ -141,31 +141,66 @@ else
 $('#actionbar').hide();
 
 $(document).ready(function() {
-		var oTable = $('#accesstable').dataTable({
-			"bJQueryUI": true,
-			"sPaginationType": "full_numbers",
-			"bStateSave": true,
-			"aaSorting": [[ 0, "asc" ]],
-			"sDom": 'Tlt<"filler"><"F"fip<"filler">>',
-			"aLengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
-	        "bAutoWidth": false,
-			"aoColumns": [
-				/* Date */  		{ "sWidth": "80px" },
-				/* User */  		{ "sWidth": "100px" },
-				/* User Class */  	{ "sWidth": "100px" },
-				/* Rig Type */  	{ "sWidth": "100px" },
-				/* Rig Name */  	{ "sWidth": "100px" },
-				/* In Queue */  	{ "sWidth": "50px" },
-				/* Start */  		{ "sWidth": "50px" },
-				/* End */  			{ "sWidth": "50px" },
-				/* In Session */	{ "sWidth": "50px" },
-				/* Termination */	{ "sWidth": "200px" }
-			 ],
-			"oTableTools": {"aButtons": [ "csv", "pdf", "copy" ],
-				"sSwfPath": "<?=$this->baseUrl('/js/TableTools/media/swf/copy_cvs_xls_pdf.swf')?>"
-			}	 
-		});
+	if (!(/Opera[\/\s](\d+\.\d+)/.test(navigator.userAgent)))
+		{ //test for Opera/x.x or Opera x.x (ignoring remaining decimal places);
+			var oTable = $('#accesstable').dataTable({
+				"bJQueryUI": true,
+				"sPaginationType": "full_numbers",
+				"bStateSave": true,
+				"aaSorting": [[ 0, "asc" ]],
+				"sDom": 'Tlt<"filler"><"F"fip<"filler">>',
+				"aLengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+		        "bAutoWidth": false,
+				"aoColumns": [
+					/* Date */  		{ "sWidth": "80px" },
+					/* User */  		{ "sWidth": "100px" },
+					/* User Class */  	{ "sWidth": "100px" },
+					/* Rig Type */  	{ "sWidth": "100px" },
+					/* Rig Name */  	{ "sWidth": "100px" },
+					/* In Queue */  	{ "sWidth": "50px" },
+					/* Start */  		{ "sWidth": "50px" },
+					/* End */  			{ "sWidth": "50px" },
+					/* In Session */	{ "sWidth": "50px" },
+					/* Termination */	{ "sWidth": "200px" }
+				 ],
+				"oTableTools": {"aButtons": [ "csv", "pdf", "copy" ],
+					"sSwfPath": "<?=$this->baseUrl('/js/TableTools/media/swf/copy_cvs_xls_pdf.swf')?>"
+				}	 
+			});
+		}
+		else
+		{ 
+			//No COPY option for OPERA
+			var oTable = $('#accesstable').dataTable({
+				"bJQueryUI": true,
+				"sPaginationType": "full_numbers",
+				"bStateSave": true,
+				"aaSorting": [[ 0, "asc" ]],
+				"sDom": 'Tlt<"filler"><"F"fip<"filler">>',
+				"aLengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+		        "bAutoWidth": false,
+				"aoColumns": [
+					/* Date */  		{ "sWidth": "80px" },
+					/* User */  		{ "sWidth": "100px" },
+					/* User Class */  	{ "sWidth": "100px" },
+					/* Rig Type */  	{ "sWidth": "100px" },
+					/* Rig Name */  	{ "sWidth": "100px" },
+					/* In Queue */  	{ "sWidth": "50px" },
+					/* Start */  		{ "sWidth": "50px" },
+					/* End */  			{ "sWidth": "50px" },
+					/* In Session */	{ "sWidth": "50px" },
+					/* Termination */	{ "sWidth": "200px" }
+				 ],
+				"oTableTools": {"aButtons": [ "csv", "pdf" ],
+					"sSwfPath": "<?=$this->baseUrl('/js/TableTools/media/swf/copy_cvs_xls_pdf.swf')?>"
+				}	 
+			});
+		}
+			
+	
 
+
+		
 		/*if (!$.browser.msie)
 		{
 			$('td', oTable.fnGetNodes()).hover( function() {

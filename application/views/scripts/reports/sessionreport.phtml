@@ -186,30 +186,62 @@ else
 	$('#actionbar').hide();
 
 	$(document).ready(function() {
-		var oTable = $('#sessiontable').dataTable({
-			"bJQueryUI": true,
-			"sPaginationType": "full_numbers",
-			"aaSorting": [[ 0, "asc" ]],
-			"sDom": 'Tlt<"filler"><"F"fip<"filler">>',
-			"aLengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
-	        "bAutoWidth": false,
-			"aoColumns": [
-				/* User */  		{ "sWidth": "100px" },
-				/* Type */  		{ "sWidth": "100px" },
-				/* Q Ave */	  		{ "sWidth": "100px" },
-				/* Q Med */  		{ "sWidth": "100px" },
-				/* Q Min */  		{ "sWidth": "100px" },
-				/* Q Max */  		{ "sWidth": "100px" },
-				/* Sess Ave */	 	{ "sWidth": "100px" },
-				/* Sess Med */ 		{ "sWidth": "100px" },
-				/* Sess Min */ 		{ "sWidth": "100px" },
-				/* Sess Max */ 		{ "sWidth": "100px" },
-				/* Session Count */ { "sWidth": "100px" }
-			 ],
-			 "oTableTools": {"aButtons": [ "csv", "pdf", "copy" ],
-				 "sSwfPath": "<?=$this->baseUrl('/js/TableTools/media/swf/copy_cvs_xls_pdf.swf')?>"
-					 }			
-		});
+		if (!(/Opera[\/\s](\d+\.\d+)/.test(navigator.userAgent)))
+		{ //test for Opera/x.x or Opera x.x (ignoring remaining decimal places);
+			var oTable = $('#sessiontable').dataTable({
+				"bJQueryUI": true,
+				"sPaginationType": "full_numbers",
+				"aaSorting": [[ 0, "asc" ]],
+				"sDom": 'Tlt<"filler"><"F"fip<"filler">>',
+				"aLengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+		        "bAutoWidth": false,
+				"aoColumns": [
+					/* User */  		{ "sWidth": "100px" },
+					/* Type */  		{ "sWidth": "100px" },
+					/* Q Ave */	  		{ "sWidth": "100px" },
+					/* Q Med */  		{ "sWidth": "100px" },
+					/* Q Min */  		{ "sWidth": "100px" },
+					/* Q Max */  		{ "sWidth": "100px" },
+					/* Sess Ave */	 	{ "sWidth": "100px" },
+					/* Sess Med */ 		{ "sWidth": "100px" },
+					/* Sess Min */ 		{ "sWidth": "100px" },
+					/* Sess Max */ 		{ "sWidth": "100px" },
+					/* Session Count */ { "sWidth": "100px" }
+				 ],
+				 "oTableTools": {"aButtons": [ "csv", "pdf", "copy" ],
+					 "sSwfPath": "<?=$this->baseUrl('/js/TableTools/media/swf/copy_cvs_xls_pdf.swf')?>"
+						 }			
+			});
+		}
+		else
+		{
+			//No COPY option for OPERA
+			var oTable = $('#sessiontable').dataTable({
+				"bJQueryUI": true,
+				"sPaginationType": "full_numbers",
+				"aaSorting": [[ 0, "asc" ]],
+				"sDom": 'Tlt<"filler"><"F"fip<"filler">>',
+				"aLengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+		        "bAutoWidth": false,
+				"aoColumns": [
+					/* User */  		{ "sWidth": "100px" },
+					/* Type */  		{ "sWidth": "100px" },
+					/* Q Ave */	  		{ "sWidth": "100px" },
+					/* Q Med */  		{ "sWidth": "100px" },
+					/* Q Min */  		{ "sWidth": "100px" },
+					/* Q Max */  		{ "sWidth": "100px" },
+					/* Sess Ave */	 	{ "sWidth": "100px" },
+					/* Sess Med */ 		{ "sWidth": "100px" },
+					/* Sess Min */ 		{ "sWidth": "100px" },
+					/* Sess Max */ 		{ "sWidth": "100px" },
+					/* Session Count */ { "sWidth": "100px" }
+				 ],
+				 "oTableTools": {"aButtons": [ "csv", "pdf" ],
+					 "sSwfPath": "<?=$this->baseUrl('/js/TableTools/media/swf/copy_cvs_xls_pdf.swf')?>"
+						 }			
+			});
+		}
+			
 
 	});
 </script>
