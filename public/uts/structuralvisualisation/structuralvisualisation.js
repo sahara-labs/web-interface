@@ -1,5 +1,6 @@
 /**
  * SAHARA Web Interface
+
  *
  * User interface to Sahara Remote Laboratory system.
  *
@@ -37,8 +38,8 @@
 
 var modelState = 1;
 var maxModel = 4;
-var verticalState = new Array(1,1,1,1,0,0,0,0,0);
-var horizontalState = new Array(0,0,0,0,1,1,1,1,1);
+var verticalState = new Array(0,0,0,0,0,0,0,0,0);
+var horizontalState = new Array(0,0,0,0,0,0,0,0);
 var HORIZONTAL_DEFAULT = "No horizontal force applied (0 Newtons)";
 var VERTICAL_DEFAULT = "No vertical force applied (0 Newtons)";
 
@@ -70,6 +71,7 @@ function initConfig(param)
 	// Get the data from the param 
 	for (var i in param)
 	{
+		if (param[i].name == "state") this.modelState = param[i].value;
 		var modelData = param[i].name.split("_");
 		var forceData = param[i].value.split(",");
 
@@ -84,6 +86,7 @@ function initConfig(param)
 				var fdata = forceData[force].split("=");
 				if (fdata[0].indexOf("LABEL") != -1) 		models[modelData[0]].HForceLabel = fdata[1];
 				if (fdata[0].indexOf("DESCRIPTION") != -1) 	models[modelData[0]].HForceDescription = fdata[1];
+				if (fdata[0].indexOf("PORT") != -1) 		models[modelData[0]].HForcePort = fdata[1];
 			}
 		}
 		if (modelData[1] == "VERTICAL")
@@ -94,6 +97,7 @@ function initConfig(param)
 				var fdata = forceData[force].split("=");
 				if (fdata[0].indexOf("LABEL") != -1) 		models[modelData[0]].VForceLabel = fdata[1];
 				if (fdata[0].indexOf("DESCRIPTION") != -1) 	models[modelData[0]].VForceDescription = fdata[1];
+				if (fdata[0].indexOf("PORT") != -1) 		models[modelData[0]].VForcePort = fdata[1];
 			}
 		}
 	};
@@ -102,7 +106,6 @@ function initConfig(param)
 	for (var mod in models)
 	{
 		//Set up Models to Select
-		//Dodgy - just see if model configured
 		if (models[mod].label != "INACTIVE")
 		{
 			//TODO - Change from 'in-line' onClick to jQuery
@@ -116,7 +119,7 @@ function initConfig(param)
 	// Have to set up Radio buttons first before the correct one can be checked, error for model 1 otherwise
 	for (var mod in models)
 	{
-		if (mod == modelState)
+		if (mod == this.modelState)
 		{
 			setState(mod);
 			document.modelForm.modelRadio[mod-1].checked=true;
@@ -130,18 +133,18 @@ function setState(stateID)
 {
 	//Set Model Description for this state
 	$("#modelcontent").empty().append(models[stateID].description); 
-	//TODO - see if this can be made to work with jquery  
+	
 	document.getElementById("vforce0").lastChild.replaceWholeText(models[stateID].VForceLabel);
 	document.getElementById("hforce0").lastChild.replaceWholeText(models[stateID].HForceLabel);
 	
 	//Set click functions for forces
 	$("#vforce0").unbind('click');
 	$("#vforce0").click( function() {
-		setVertical(models[stateID].VForce - 1);
+		setVertical(models[stateID].VForcePort);
 		});
 	$("#hforce0").unbind('click');
 	$("#hforce0").click( function() {
-		setHorizontal(models[stateID].HForce - 1);
+		setHorizontal(models[stateID].HForcePort);
 		});
 
 	//Set force description and click values for the state if force is applied
@@ -173,7 +176,7 @@ function setState(stateID)
 
 	setCamera(stateID);
 
-	modelState = stateID;
+	this.modelState = stateID;
 	
 	var params = new Object;
 	params.state = stateID;
@@ -217,9 +220,6 @@ function setVertical(i)
 {
 	if (verticalState[i] == 0)
 	{
-		// TODO - change this to message on screen
-		alert("Vertical Force " + i + " turned on.");
-		
 		verticalState[i] = 1;
 		$("#vforce0").css('background-color', '#62E877');
 		$("#vforce0 img").attr('src', '/uts/fpga/images/' + 'switchdown.png');
@@ -228,8 +228,6 @@ function setVertical(i)
 	}
 	else
 	{
-		alert("Vertical Force " +  i + " turned off.");
-		
 		verticalState[i] = 0;
 		$("#vforce0").css('background-color', '#ED8686');
 		$("#vforce0 img").attr('src', '/uts/fpga/images/' + 'switchup.png');
@@ -238,7 +236,7 @@ function setVertical(i)
 	}
 	
 	var params = new Object;
-	params.force = "Vertical_" + i;
+	params.force = i;
 	params.value = verticalState[i];
 	performPrimitiveJSON('StructuralVisualisationController', 'toggleForce', params);
 	
@@ -248,29 +246,24 @@ function setHorizontal(i)
 {
 	if (horizontalState[i] == 0)
 	{
-		// TODO - change this to message on screen
-		alert("Horizontal Force " + i + " turned on.");
-		
 		horizontalState[i] = 1;
 		$("#hforce0").css('background-color', '#62E877');
 		$("#hforce0 img").attr('src', '/uts/fpga/images/' + 'switchdown.png');
 
 		$("#hforcecontent").empty().append(models[modelState].HForceDescription);
-}
+	}
 	else
 	{
-		alert("Horizontal Force " +  i + " turned off.");
-		
 		horizontalState[i] = 0;
 		$("#hforce0").css('background-color', '#ED8686');
 		$("#hforce0 img").attr('src', '/uts/fpga/images/' + 'switchup.png');
 
 		$("#hforcecontent").empty().append(HORIZONTAL_DEFAULT);
-}
+	}
 
 	var params = new Object;
-	params.force = "Horizontal_" + i;
-	params.value = verticalState[i];
+	params.force = i;
+	params.value = horizontalState[i];
 	performPrimitiveJSON('StructuralVisualisationController', 'toggleForce', params);
 	
 }
