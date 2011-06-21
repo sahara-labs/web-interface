@@ -152,7 +152,7 @@ function setState(stateID)
 	{
 		$("#vforcecontent").empty().append(models[stateID].VForceDescription);
 		$("#vforce0").css('background-color', '#62E877');
-		$("#vforce0 img").attr('src', '/uts/fpga/images/' + 'switchdown.png');
+		$("#vforce0 img").attr('src', '/uts/images/' + 'button_4b.gif');
 	}
 	else
 	{	
@@ -165,13 +165,13 @@ function setState(stateID)
 	{
 		$("#hforcecontent").empty().append(models[stateID].HForceDescription);
 		$("#hforce0").css('background-color', '#62E877');
-		$("#hforce0 img").attr('src', '/uts/fpga/images/' + 'switchdown.png');
+		$("#hforce0 img").attr('src', '/uts/images/' + 'button_2c.gif');
 	}
 	else
 	{
 		$("#hforcecontent").empty().append(HORIZONTAL_DEFAULT);
 		$("#hforce0").css('background-color', '#ED8686');
-		$("#hforce0 img").attr('src', '/uts/fpga/images/' + 'switchup.png');
+		$("#hforce0 img").attr('src', '/uts/images/' + 'button_4b.gif');
 	}
 
 	setCamera(stateID);
@@ -222,7 +222,7 @@ function setVertical(i)
 	{
 		verticalState[i] = 1;
 		$("#vforce0").css('background-color', '#62E877');
-		$("#vforce0 img").attr('src', '/uts/fpga/images/' + 'switchdown.png');
+		$("#vforce0 img").attr('src', '/uts/images/' + 'button_2c.gif');
 		
 		$("#vforcecontent").empty().append(models[modelState].VForceDescription);
 	}
@@ -230,7 +230,7 @@ function setVertical(i)
 	{
 		verticalState[i] = 0;
 		$("#vforce0").css('background-color', '#ED8686');
-		$("#vforce0 img").attr('src', '/uts/fpga/images/' + 'switchup.png');
+		$("#vforce0 img").attr('src', '/uts/images/' + 'button_4b.gif');
 		
 		$("#vforcecontent").empty().append(VERTICAL_DEFAULT);
 	}
@@ -248,7 +248,7 @@ function setHorizontal(i)
 	{
 		horizontalState[i] = 1;
 		$("#hforce0").css('background-color', '#62E877');
-		$("#hforce0 img").attr('src', '/uts/fpga/images/' + 'switchdown.png');
+		$("#hforce0 img").attr('src', '/uts/images/' + 'button_4b.gif');
 
 		$("#hforcecontent").empty().append(models[modelState].HForceDescription);
 	}
@@ -256,7 +256,7 @@ function setHorizontal(i)
 	{
 		horizontalState[i] = 0;
 		$("#hforce0").css('background-color', '#ED8686');
-		$("#hforce0 img").attr('src', '/uts/fpga/images/' + 'switchup.png');
+		$("#hforce0 img").attr('src', '/uts/images/' + 'button_4b.gif');
 
 		$("#hforcecontent").empty().append(HORIZONTAL_DEFAULT);
 	}

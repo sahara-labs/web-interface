@@ -47,15 +47,15 @@ $vertforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'vforce',
     array(
         array(
         	'title'      => "Vertical Force",
-        	'icon'       => '/uts/fpga/images/switchup.png',
+        	'icon'       => '/uts/images/button_2c.gif',
             ),
     ),
     array(
         'orientation' => Sahara_Session_Element_MultiButtons::VERTICAL,
-        'top'         => 50,
-        'left'        => 550,
-        'width'       => 65,
-        'height'      => 100
+        'top'         => 100,
+        'left'        => 525,
+        'width'       => 120,
+        'height'      => 75
     )
 );
     
@@ -63,20 +63,19 @@ $horizforce = new Sahara_Session_Element_MultiButtons($this->rigClient, 'hforce'
     array(
     	array(
         	'title'      => 'Horizontal Force',
-        	'icon'       => '/uts/fpga/images/switchup.png',
+        	'icon'       => '/uts/images/button_2c.gif',
              ),
     ),
     array(
         'orientation' => Sahara_Session_Element_MultiButtons::VERTICAL,
         'top'         => 200,
-        'left'        => 550,
-        'width'       => 65,
-        'height'      => 100
+        'left'        => 525,
+        'width'       => 120,
+        'height'      => 75
     )
 );
 
 echo $cams;
-echo $horizforce;
 echo $vertforce;
 ?>
 
