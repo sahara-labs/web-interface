@@ -135,7 +135,7 @@ function setState(stateID)
 	$("#modelcontent").empty().append(models[stateID].description); 
 	
 	document.getElementById("vforce0").lastChild.replaceWholeText(models[stateID].VForceLabel);
-	document.getElementById("hforce0").lastChild.replaceWholeText(models[stateID].HForceLabel);
+	//document.getElementById("hforce0").lastChild.replaceWholeText(models[stateID].HForceLabel);
 	
 	//Set click functions for forces
 	$("#vforce0").unbind('click');
@@ -158,10 +158,10 @@ function setState(stateID)
 	{	
 		$("#vforcecontent").empty().append(VERTICAL_DEFAULT);
 		$("#vforce0").css('background-color', '#ED8686');
-		$("#vforce0 img").attr('src', '/uts/fpga/images/' + 'switchup.png');
+		$("#vforce0 img").attr('src', '/uts/images/' + 'button_2c.gif');
 	}
 	
-	if (horizontalState[models[stateID].HForce - 1] != 0)
+/*	if (horizontalState[models[stateID].HForce - 1] != 0)
 	{
 		$("#hforcecontent").empty().append(models[stateID].HForceDescription);
 		$("#hforce0").css('background-color', '#62E877');
@@ -172,7 +172,7 @@ function setState(stateID)
 		$("#hforcecontent").empty().append(HORIZONTAL_DEFAULT);
 		$("#hforce0").css('background-color', '#ED8686');
 		$("#hforce0 img").attr('src', '/uts/images/' + 'button_4b.gif');
-	}
+	}*/
 
 	setCamera(stateID);
 
@@ -221,7 +221,7 @@ function setVertical(i)
 	if (verticalState[i] == 0)
 	{
 		verticalState[i] = 1;
-		$("#vforce0").css('background-color', '#62E877');
+		$("#vforce0").css('background-color', '#ED8686');
 		$("#vforce0 img").attr('src', '/uts/images/' + 'button_2c.gif');
 		
 		$("#vforcecontent").empty().append(models[modelState].VForceDescription);
@@ -229,7 +229,7 @@ function setVertical(i)
 	else
 	{
 		verticalState[i] = 0;
-		$("#vforce0").css('background-color', '#ED8686');
+		$("#vforce0").css('background-color', '#62E877');
 		$("#vforce0 img").attr('src', '/uts/images/' + 'button_4b.gif');
 		
 		$("#vforcecontent").empty().append(VERTICAL_DEFAULT);
@@ -247,7 +247,7 @@ function setHorizontal(i)
 	if (horizontalState[i] == 0)
 	{
 		horizontalState[i] = 1;
-		$("#hforce0").css('background-color', '#62E877');
+		$("#hforce0").css('background-color', '#ED8686');
 		$("#hforce0 img").attr('src', '/uts/images/' + 'button_4b.gif');
 
 		$("#hforcecontent").empty().append(models[modelState].HForceDescription);
@@ -255,7 +255,7 @@ function setHorizontal(i)
 	else
 	{
 		horizontalState[i] = 0;
-		$("#hforce0").css('background-color', '#ED8686');
+		$("#hforce0").css('background-color', '#62E877');
 		$("#hforce0 img").attr('src', '/uts/images/' + 'button_4b.gif');
 
 		$("#hforcecontent").empty().append(HORIZONTAL_DEFAULT);
