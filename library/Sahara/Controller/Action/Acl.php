@@ -191,10 +191,10 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
      * can optionally be supplied.
      *
      * @param String $action action to redirect to
-     * @param String $controller controller containing the action
+     * @param String $controller controller containing the action (optional)
      * @param array $params request parameters (optional)
      */
-    protected function _redirectTo($action, $controller, $params = array())
+    protected function _redirectTo($action, $controller = null, $params = array())
     {
         $this->_redirector->goto($action, $controller, null, $params);
     }
