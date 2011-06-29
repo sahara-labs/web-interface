@@ -275,7 +275,7 @@ Hydro.prototype.valuesReceived = function(values) {
 	
 	setTimeout(function(){
 		thiz.valuesRequest();
-	}, 3000);
+	}, 1500);
 };
 
 Hydro.prototype.values = function(values) {
