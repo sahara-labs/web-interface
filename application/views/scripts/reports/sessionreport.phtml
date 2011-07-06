@@ -44,18 +44,18 @@ $this->headScript()->appendFile($this->baseUrl('/js/TableTools/media/js/TableToo
 $this->headScript()->appendFile($this->baseUrl('/js/TableTools/media/js/ZeroClipboard.js'));
 
 $queueHr = floor($this->results->totalQueueDuration/3600);
-if($queueHr < 10) $queueHr = '0'.$queueHr; 
+if($queueHr < 10) $queueHr = '0'.$queueHr;
 $queueMin = floor($this->results->totalQueueDuration/60 - $queueHr*60);
-if($queueMin < 10) $queueMin = '0'.$queueMin; 
+if($queueMin < 10) $queueMin = '0'.$queueMin;
 $queueSec = $this->results->totalQueueDuration%60;
-if($queueSec < 10) $queueSec = '0'.$queueSec; 
+if($queueSec < 10) $queueSec = '0'.$queueSec;
 
 $sessionHr = floor($this->results->totalSessionDuration/3600);
-if($sessionHr < 10) $sessionHr = '0'.$sessionHr; 
+if($sessionHr < 10) $sessionHr = '0'.$sessionHr;
 $sessionMin = floor($this->results->totalSessionDuration/60 - $sessionHr*60);
-if($sessionMin < 10) $sessionMin = '0'.$sessionMin; 
+if($sessionMin < 10) $sessionMin = '0'.$sessionMin;
 $sessionSec = $this->results->totalSessionDuration%60;
-if($sessionSec < 10) $sessionSec = '0'.$sessionSec; 
+if($sessionSec < 10) $sessionSec = '0'.$sessionSec;
 ?>
 <div class="reportingresults" >
 
@@ -63,10 +63,10 @@ if($sessionSec < 10) $sessionSec = '0'.$sessionSec;
 	<h2>Session Report</h2>
 </div>
 
-<div class="description ui-widget-header ui-corner-all ui-helper-clearfix" >
-	  Searching for "<?=$this->search['sessionvalue']?>" from  <?=$this->search['reportfrom']?> to
-	   <?=$this->search['reportto']?> <br></br>
-	   
+<div id="description" class="ui-widget-header ui-corner-top ui-helper-clearfix" >
+	  Searching for '<span><?=$this->search['sessionvalue']?></span>'
+
+
 	   <div class="results ">
 	   	Total Number of Sessions: <span class="data"><?=$this->results->sessionCount?> sessions </span><br>
 	   	Total Queue Duration: <span class="data"><?php echo $queueHr.':'.$queueMin.':'.$queueSec?></span><br>
@@ -76,17 +76,17 @@ if($sessionSec < 10) $sessionSec = '0'.$sessionSec;
 
 <?php if($this->results)
 {
-	if(array_key_exists("sessionReport", $this->results)) 
+	if(array_key_exists("sessionReport", $this->results))
 	{
 		?>
-		<table id="sessiontable" cellpadding="0" cellspacing="0" border="0" >
+		<table id="sessiontable">
 		    <thead>
 		        <tr>
 		            <th rowspan="2">User</th>
 		            <th rowspan="2"> <?php
 		            // Take into account single row
 		            if(is_array($this->results->sessionReport))
-		            { 
+		            {
 		            	if(array_key_exists("userClass", $this->results->sessionReport[0])) echo "User Class";
 		            	elseif(array_key_exists("rigName", $this->results->sessionReport[0])) echo "Rig Name";
 		            	elseif(array_key_exists("rigType", $this->results->sessionReport[0])) echo "Rig Type";
@@ -98,7 +98,7 @@ if($sessionSec < 10) $sessionSec = '0'.$sessionSec;
 		            	elseif($this->results->sessionReport->rigName) echo "Rig Name";
 		            	elseif($this->results->sessionReport->rigType) echo "Rig Type";
 		            	else echo "Rig Type";
-		            }	
+		            }
 		             ?></th>
 		            <th colspan="4" class="ui-state-default">Queue Duration (s)</th>
 		            <th colspan="4" class="ui-state-default">Session Duration (s)</th>
@@ -116,11 +116,11 @@ if($sessionSec < 10) $sessionSec = '0'.$sessionSec;
 				</tr>
 		    </thead>
 		    <tbody>
-	        <?php 
+	        <?php
 	        // Take into account single row
 	        if(is_array($this->results->sessionReport))
 	        { ?>
-				<?php foreach ($this->results->sessionReport as $row => $data): ?> 
+				<?php foreach ($this->results->sessionReport as $row => $data): ?>
 		        <tr>
 	            	<td><?php echo $data->user->userNamespace.':'.$data->user->userName;?></td>
 	            	<td><?php if ($data->userClass != null) echo $data->userClass;
@@ -165,20 +165,20 @@ if($sessionSec < 10) $sessionSec = '0'.$sessionSec;
 	else
 	{ ?>
 		<div class="ui-state-error ui-corner-all noresults">
-			<span class="ui-icon ui-icon-alert"></span>	
+			<span class="ui-icon ui-icon-alert"></span>
 			There are no results for this search.
 		</div>
-	<table class="hide" id="sessiontable" cellpadding="0" cellspacing="0" border="0" ></table>
+	<table class="hide" id="sessiontable"></table>
 	<?php }
 }
 else
 { ?>
 		<div class="ui-state-error ui-corner-all noresults">
-			<span class="ui-icon ui-icon-alert"></span>	
+			<span class="ui-icon ui-icon-alert"></span>
 			The search was invald, please try again.
 		</div>
-	<table  class="hide"  id="sessiontable" cellpadding="0" cellspacing="0" border="0" ></table>
-	
+	<table  class="hide"  id="sessiontable"></table>
+
 <?php 	}
 ?>
 </div>
@@ -210,7 +210,7 @@ else
 				 ],
 				 "oTableTools": {"aButtons": [ "csv", "pdf", "copy" ],
 					 "sSwfPath": "<?=$this->baseUrl('/js/TableTools/media/swf/copy_cvs_xls_pdf.swf')?>"
-						 }			
+						 }
 			});
 		}
 		else
@@ -238,10 +238,10 @@ else
 				 ],
 				 "oTableTools": {"aButtons": [ "csv", "pdf" ],
 					 "sSwfPath": "<?=$this->baseUrl('/js/TableTools/media/swf/copy_cvs_xls_pdf.swf')?>"
-						 }			
+						 }
 			});
 		}
-			
+
 
 	});
 </script>

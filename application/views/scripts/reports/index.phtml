@@ -63,10 +63,10 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 	</div>
 	<div class="groupdropdown">
 		<label for="accessgroup">Select type for report: <br></label>
-		<select id="accessgroup" name="accessgroup" class="ui-corner-all validate[required]">
+		<select id="accessgroup" name="accessgroup" class="ui-corner-bottom validate[required]">
 			<option value="">Select a type</option>
-			<?php if($this->persona == "ADMIN") echo "<option value=\"RIG\" >Rig Name</option>" ?>
-			<?php if($this->persona == "ADMIN") echo "<option value=\"RIG_TYPE\">Rig Type</option>" ?>
+			<?php if ($this->persona == "ADMIN") echo "<option value=\"RIG\" >Rig Name</option>" ?>
+			<?php if ($this->persona == "ADMIN") echo "<option value=\"RIG_TYPE\">Rig Type</option>" ?>
 			<option value="USER_CLASS">User Class</option>
 			<option value="USER">User</option>
 		</select>
@@ -74,18 +74,18 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 	<div class="values">
 		<label for="accessvalue">Select value: </label>
 		<input id="accessvalue" type="text" name="accessvalue" class="valueinput ui-state-default ui-corner-all ui-selectmenu-status validate[required]">
-		<div id="accessvaluelist"  class="valuelist ui-corner-all" >
+		<div id="accessvaluelist"  class="valuelist ui-corner-bottom" >
 			<ul>
-			</ul> 
+			</ul>
 		</div>
 	</div>
 	<div id="accessdatepicker" class="ui-corner-all">
 		<label for="accessfrom">Date from:</label>
-		<input type="text" id="accessfrom" name="accessfrom" readonly="true" />
+		<input type="text" id="accessfrom" name="accessfrom" />
 		<label for="accessto">to:</label>
-		<input type="text" id="accessto" name="accessto" readonly="true" />
+		<input type="text" id="accessto" name="accessto" />
 	</div>
-	<div id="accesssubmit">
+	<div>
 		<button type="submit" id="accesssubmit" class="actiondialogbutton plaina ui-corner-all"  >
 	    <img src="<?=$this->baseUrl('images/1rightarrow.png')?>" alt="Submit"><br/>
 		Get Report
@@ -118,24 +118,24 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 	<div class="values">
 		<label for="sessionvalue">Select Value: </label>
 		<input id="sessionvalue" type="text" name="sessionvalue" class="valueinput ui-state-default ui-corner-all ui-selectmenu-status validate[required]">
-		<div id="sessionvaluelist" class="valuelist ui-corner-all">
+		<div id="sessionvaluelist" class="valuelist ui-corner-bottom">
 			<ul>
-			</ul> 
+			</ul>
 		</div>
 	</div>
 	<div id="reportdatepicker" class="ui-corner-all">
 		<label for="reportfrom">Date from</label>
-		<input type="text" id="reportfrom" name="reportfrom" readonly="true"/>
+		<input type="text" id="reportfrom" name="reportfrom" />
 		<label for="reportto">to</label>
-		<input type="text" id="reportto" name="reportto" readonly="true"/>
+		<input type="text" id="reportto" name="reportto" />
 	</div>
-	<div id="sessionsubmit">
+	<div>
 		<button type="submit" id="sessionsubmit" class="actiondialogbutton plaina ui-corner-all" >
 		<img src="<?=$this->baseUrl('images/1rightarrow.png')?>" alt="Submit"/><br/>
 		Get Report
 	    </button>
 	</div>
-	
+
 	<div style="clear: both" ></div>
 </div>
 </form>
@@ -150,8 +150,8 @@ $(function() {
 
 	$("#sessionvaluelist").hide();
 	$("#accessvaluelist").hide();
-	
-	var dates = $("#accessfrom, #accessto, #reportfrom, #reportto" ).datepicker({
+
+	$("#accessfrom, #accessto, #reportfrom, #reportto" ).datepicker({
 		dateFormat: "dd-mm-yy",
 		defaultDate: "+1d",
 		changeMonth: true,
@@ -183,7 +183,7 @@ $(function() {
 
 				if( namelength > 0 & namelength%3 == 0 )
 				{
-					getValue(type, group, nameval,5); 
+					getValue(type, group, nameval,5);
 				}
 			}
 	);
@@ -197,7 +197,7 @@ $(function() {
 
 				if( namelength > 0 & namelength%3 == 0 )
 				{
-					getValue(type, group, nameval,5); 
+					getValue(type, group, nameval,5);
 				}
 			}
 	);
@@ -244,7 +244,7 @@ $("#sessionform").validationEngine();
 
 <?php else : ?>
 		<div class="ui-state-error ui-corner-all noresults">
-			<span class="ui-icon ui-icon-alert"></span>	
+			<span class="ui-icon ui-icon-alert"></span>
 			No permissions to generate reports.
 		</div>
 <?php endif ?>

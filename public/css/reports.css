@@ -42,9 +42,9 @@
     border: 1px solid #B5B5B5;
     margin-bottom: 10px;
     margin-right: 100px;
-    box-shadow: 0 0 4px #606060;
-    -webkit-box-shadow: 0 0 4px #606060;
-    -moz-box-shadow: 0 0 4px #606060;
+    box-shadow: 0 0 4px #B5B5B5;
+    -webkit-box-shadow: 0 0 4px #B5B5B5;
+    -moz-box-shadow: 0 0 4px #B5B5B5;
 }
 
 .reportdescription {
@@ -61,6 +61,10 @@
     margin: 10px 10px;
 }
 
+#accessgroup-menu, #sessiongroup-menu {
+	box-shadow: 0 0 5px #B5B5B5;	
+}
+
 
 .values {
 	width: 200px;
@@ -74,9 +78,10 @@
     margin-right: 8px;
     position: absolute;
     background: white;
-/*    width: 190px;*/
-    -webkit-box-shadow: 0 0 7px #606060;
-    -moz-box-shadow: 0 0 7px #606060;
+    width: 220px;
+    -webkit-box-shadow: 0 0 5px #B5B5B5;
+    -moz-box-shadow: 0 0 5px #B5B5B5;
+    box-shadow: 0 0 5px #B5B5B5;
 }
 	
 .valuelist ul{
@@ -90,7 +95,7 @@
    height: 1.5em;
 }
 
-#accessdatepicker{
+#datepicker{
 	margin: 30px 10px;
 	float: left;
 }
@@ -124,10 +129,11 @@
 }
 #accesstable, #sessiontable {
 	width: 100%;
+	border-collapse: collapse;
 }
 	
 #accesstable td {
-	border-bottom: 1px solid #606060;
+	border-bottom: 1px solid #CCCCCC;
 }
 
 #accesstable .odd{
@@ -145,10 +151,14 @@
 	background-color: #D5FFD5;
 }
 
-.description {
+#description {
 	padding: 5px;
-	margin: 10px;
-	text-align: center; 
+	text-align: center;
+	font-weight: normal; 
+}
+
+#description span {
+	font-weight: bold;
 }
 
 .results{
@@ -196,7 +206,7 @@
 }
 
 .noresults {
-	margin: 0 auto;
+	margin: 15px auto;
 	width: 325px;
 	padding: 5px;
 }

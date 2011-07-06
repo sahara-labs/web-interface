@@ -45,174 +45,163 @@ $this->headScript()->appendFile($this->baseUrl('/js/TableTools/media/js/ZeroClip
 
 ?>
 
-<div class="reportingresults" >
+<div class="reportingresults">
 
 <div class="contentheader">
 	<h2>Access Report</h2>
 </div>
 
-<div class="description ui-toolbar ui-widget-header ui-corner-all ui-helper-clearfix" >
-	  Searching for "<?=$this->search['accessvalue']?>" from  <?=$this->search['accessfrom']?> to
-	   <?=$this->search['accessto']?> <br>
+<div id="description" class="ui-toolbar ui-widget-header ui-corner-top ui-helper-clearfix" >
+	  Searching for '<span><?=$this->search['accessvalue']?></span>'
+
+	<?php if ($this->search['accessfrom'] && $this->search['accessto']):?>
+    	(<?=$this->search['accessfrom']?> to <?=$this->search['accessto']?>)
+   	<?php elseif ($this->search['accessfrom']): ?>
+   		(from <?=$this->search['accessfrom']?>)
+   	<?php elseif ($this->search['accessto']): ?>
+   		(till <?=$this->search['accessto']?>)
+   	<?php endif?>
 </div>
 
-<?php if($this->results)
-{
-	if(array_key_exists("accessReportData", $this->results)) 
-	{
-	    ?>
-		<table id="accesstable" cellpadding="0" cellspacing="0" border="0" >
-		    <thead>
-		        <tr>
-		            <th>Date</th>
-		            <th>User</th>
-		            <th>User Class</th>
-		            <th>Rig Type</th>
-		            <th>Rig Name</th>
-		            <th>In Queue (s)</th>
-		            <th>Start</th>
-		            <th>End</th>
-		            <th>In Session (s)</th>
-		            <th>Reason for Termination</th>
-				</tr>
-		    </thead>
-		    <tbody>
-	        <?php 
-	        // Take into account single row
-	        if(is_array($this->results->accessReportData))
-	        { ?>
-				<?php foreach ($this->results->accessReportData as $row => $data): 	?> 
-			        <tr>
-		            	<td><?=strtok($data->queueStartTime,'T')?></td>
-		            	<td><?php echo $data->user->userNamespace.':'.$data->user->userName;?></td>
-		            	<td><?=$data->userClass?></td>
-		            	<td><?=$data->rigType?></td>
-		            	<td><?=$data->rigName?></td>
-		            	<td><?=$data->queueDuration?></td>
-		            	<td><?php strtok($data->sessionStartTime,'T'); echo strtok('.');?></td>
-		            	<td><?php strtok($data->sessionEndTime,'T'); echo strtok('.');?></td>
-		            	<td><?=$data->sessionDuration?></td>
-		            	<td><?=$data->reasonForTermination?></td>
-			        </tr>
-               <?php endforeach;
-            }
-            else
-            {
-              $data = $this->results->accessReportData ?>
-		        <tr>
-		            	<td><?=strtok($data->queueStartTime,'T')?></td>
-		            	<td><?php echo $data->user->userNamespace.':'.$data->user->userName;?></td>
-		            	<td><?=$data->userClass?></td>
-		            	<td><?=$data->rigType?></td>
-		            	<td><?=$data->rigName?></td>
-		            	<td><?=$data->queueDuration?></td>
-		            	<td><?php strtok($data->sessionStartTime,'T'); echo strtok('.');?></td>
-		            	<td><?php strtok($data->sessionEndTime,'T'); echo strtok('.');?></td>
-		            	<td><?=$data->sessionDuration?></td>
-		            	<td><?=$data->reasonForTermination?></td>
-			        </tr>
-            <?php }?>
-		    </tbody>
-		</table>
-	<div class="filler">
+<?php
+if (array_key_exists("accessReportData", $this->results)): ?>
+	<table id="accesstable">
+	    <thead>
+	        <tr>
+	            <th>Date</th>
+	            <th>User</th>
+	            <th>User Class</th>
+	            <th>Rig Type</th>
+	            <th>Rig Name</th>
+	            <th>In Queue (s)</th>
+	            <th>Start</th>
+	            <th>End</th>
+	            <th>In Session (s)</th>
+	            <th>Reason for Termination</th>
+			</tr>
+	    </thead>
+	    <tbody>
+	    <?php if(is_array($this->results->accessReportData)):
+			     foreach ($this->results->accessReportData as $row => $data): ?>
+		    <tr>
+		       	<td><?=strtok($data->queueStartTime,'T')?></td>
+		      	<td><?php echo $data->user->userNamespace.':'.$data->user->userName;?></td>
+		       	<td><?=$data->userClass?></td>
+		       	<td><?=$data->rigType?></td>
+		       	<td><?=$data->rigName?></td>
+		       	<td><?=$data->queueDuration?></td>
+		       	<td><?php strtok($data->sessionStartTime,'T'); echo strtok('.');?></td>
+		       	<td><?php strtok($data->sessionEndTime,'T'); echo strtok('.');?></td>
+		       	<td><?=$data->sessionDuration?></td>
+		       	<td><?=$data->reasonForTermination?></td>
+	        </tr>
+          <?php  endforeach;
+             else:
+                 $data = $this->results->accessReportData ?>
+		    <tr>
+		       	<td><?=strtok($data->queueStartTime,'T')?></td>
+		       	<td><?php echo $data->user->userNamespace.':'.$data->user->userName;?></td>
+		       	<td><?=$data->userClass?></td>
+		       	<td><?=$data->rigType?></td>
+		      	<td><?=$data->rigName?></td>
+		       	<td><?=$data->queueDuration?></td>
+		       	<td><?php strtok($data->sessionStartTime,'T'); echo strtok('.');?></td>
+		       	<td><?php strtok($data->sessionEndTime,'T'); echo strtok('.');?></td>
+		       	<td><?=$data->sessionDuration?></td>
+		       	<td><?=$data->reasonForTermination?></td>
+			</tr>
+            <?php endif; ?>
+		</tbody>
+	</table>
+	<div class="filler"> </div>
+
+    <script>
+    $(document).ready(function() {
+		$("#actionbar").hide();
+
+    	if (!(/Opera[\/\s](\d+\.\d+)/.test(navigator.userAgent)))
+    		{ //test for Opera/x.x or Opera x.x (ignoring remaining decimal places);
+    			$('#accesstable').dataTable({
+    				"bJQueryUI": true,
+    				"sPaginationType": "full_numbers",
+    				"bStateSave": true,
+    				"aaSorting": [[ 0, "asc" ]],
+    				"sDom": 'Tlt<"filler"><"F"fip<"filler">>',
+    				"aLengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+    		        "bAutoWidth": false,
+    				"aoColumns": [
+    					/* Date */  		{ "sWidth": "80px" },
+    					/* User */  		{ "sWidth": "100px" },
+    					/* User Class */  	{ "sWidth": "100px" },
+    					/* Rig Type */  	{ "sWidth": "100px" },
+    					/* Rig Name */  	{ "sWidth": "100px" },
+    					/* In Queue */  	{ "sWidth": "50px" },
+    					/* Start */  		{ "sWidth": "50px" },
+    					/* End */  			{ "sWidth": "50px" },
+    					/* In Session */	{ "sWidth": "50px" },
+    					/* Termination */	{ "sWidth": "200px" }
+    				 ],
+    				"oTableTools": {"aButtons": [ "csv", "pdf", "copy" ],
+    					"sSwfPath": "<?=$this->baseUrl('/js/TableTools/media/swf/copy_cvs_xls_pdf.swf')?>"
+    				}
+    			});
+    		}
+    		else
+    		{
+    			//No COPY option for OPERA
+    			$('#accesstable').dataTable({
+    				"bJQueryUI": true,
+    				"sPaginationType": "full_numbers",
+    				"bStateSave": true,
+    				"aaSorting": [[ 0, "asc" ]],
+    				"sDom": 'Tlt<"filler"><"F"fip<"filler">>',
+    				"aLengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+    		        "bAutoWidth": false,
+    				"aoColumns": [
+    					/* Date */  		{ "sWidth": "80px" },
+    					/* User */  		{ "sWidth": "100px" },
+    					/* User Class */  	{ "sWidth": "100px" },
+    					/* Rig Type */  	{ "sWidth": "100px" },
+    					/* Rig Name */  	{ "sWidth": "100px" },
+    					/* In Queue */  	{ "sWidth": "50px" },
+    					/* Start */  		{ "sWidth": "50px" },
+    					/* End */  			{ "sWidth": "50px" },
+    					/* In Session */	{ "sWidth": "50px" },
+    					/* Termination */	{ "sWidth": "200px" }
+    				 ],
+    				"oTableTools": {"aButtons": [ "csv", "pdf" ],
+    					"sSwfPath": "<?=$this->baseUrl('/js/TableTools/media/swf/copy_cvs_xls_pdf.swf')?>"
+    				}
+    			});
+    		}
+
+    		/*if (!$.browser.msie)
+    		{
+    			$('td', oTable.fnGetNodes()).hover( function() {
+    			var iCol = $('td').index(this) % 10;
+    			var nTrs = oTable.fnGetNodes();
+    			$('td:nth-child('+(iCol+1)+')', nTrs).addClass( 'highlighted' );
+    			}, function() {
+    				$('td.highlighted', oTable.fnGetNodes()).removeClass('highlighted');
+    			});
+    		}*/
+
+    	});
+    </script>
+
+    <?php else: ?>
+	<div class="ui-state-error ui-corner-all noresults">
+		<span class="ui-icon ui-icon-alert"></span>
+		There are no results for this search.
 	</div>
-    <?php }
-	else
-	{ ?>
-		<div class="ui-state-error ui-corner-all noresults">
-			<span class="ui-icon ui-icon-alert"></span>	
-			There are no results for this search.
-		</div>
-	<table  class="hide"  id="accesstable" cellpadding="0" cellspacing="0" border="0" ></table>
-	<?php }
-}
-else
-{ ?>
-		<div class="ui-state-error ui-corner-all noresults">
-			<span class="ui-icon ui-icon-alert"></span>	
-			The search was invald, please try again.
-		</div>
-	<table  class="hide"  id="accesstable" cellpadding="0" cellspacing="0" border="0" ></table>
-	
-<?php 	}
-?>
-</div>
-<script>
-$('#actionbar').hide();
 
-$(document).ready(function() {
-	if (!(/Opera[\/\s](\d+\.\d+)/.test(navigator.userAgent)))
-		{ //test for Opera/x.x or Opera x.x (ignoring remaining decimal places);
-			var oTable = $('#accesstable').dataTable({
-				"bJQueryUI": true,
-				"sPaginationType": "full_numbers",
-				"bStateSave": true,
-				"aaSorting": [[ 0, "asc" ]],
-				"sDom": 'Tlt<"filler"><"F"fip<"filler">>',
-				"aLengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
-		        "bAutoWidth": false,
-				"aoColumns": [
-					/* Date */  		{ "sWidth": "80px" },
-					/* User */  		{ "sWidth": "100px" },
-					/* User Class */  	{ "sWidth": "100px" },
-					/* Rig Type */  	{ "sWidth": "100px" },
-					/* Rig Name */  	{ "sWidth": "100px" },
-					/* In Queue */  	{ "sWidth": "50px" },
-					/* Start */  		{ "sWidth": "50px" },
-					/* End */  			{ "sWidth": "50px" },
-					/* In Session */	{ "sWidth": "50px" },
-					/* Termination */	{ "sWidth": "200px" }
-				 ],
-				"oTableTools": {"aButtons": [ "csv", "pdf", "copy" ],
-					"sSwfPath": "<?=$this->baseUrl('/js/TableTools/media/swf/copy_cvs_xls_pdf.swf')?>"
-				}	 
-			});
-		}
-		else
-		{ 
-			//No COPY option for OPERA
-			var oTable = $('#accesstable').dataTable({
-				"bJQueryUI": true,
-				"sPaginationType": "full_numbers",
-				"bStateSave": true,
-				"aaSorting": [[ 0, "asc" ]],
-				"sDom": 'Tlt<"filler"><"F"fip<"filler">>',
-				"aLengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
-		        "bAutoWidth": false,
-				"aoColumns": [
-					/* Date */  		{ "sWidth": "80px" },
-					/* User */  		{ "sWidth": "100px" },
-					/* User Class */  	{ "sWidth": "100px" },
-					/* Rig Type */  	{ "sWidth": "100px" },
-					/* Rig Name */  	{ "sWidth": "100px" },
-					/* In Queue */  	{ "sWidth": "50px" },
-					/* Start */  		{ "sWidth": "50px" },
-					/* End */  			{ "sWidth": "50px" },
-					/* In Session */	{ "sWidth": "50px" },
-					/* Termination */	{ "sWidth": "200px" }
-				 ],
-				"oTableTools": {"aButtons": [ "csv", "pdf" ],
-					"sSwfPath": "<?=$this->baseUrl('/js/TableTools/media/swf/copy_cvs_xls_pdf.swf')?>"
-				}	 
-			});
-		}
-			
-	
-
-
-		
-		/*if (!$.browser.msie)
-		{
-			$('td', oTable.fnGetNodes()).hover( function() {
-			var iCol = $('td').index(this) % 10;
-			var nTrs = oTable.fnGetNodes();
-			$('td:nth-child('+(iCol+1)+')', nTrs).addClass( 'highlighted' );
-			}, function() {
-				$('td.highlighted', oTable.fnGetNodes()).removeClass('highlighted');
-			});
-		}*/
-
+	<script type="text/javascript">
+	$(document).ready(function() {
+		$("#actionbar").hide();
 	});
-</script>
+	</script>
+	<?php endif; ?>
+</div>
+
 
 
