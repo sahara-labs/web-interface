@@ -36,12 +36,12 @@
  * @date 29th April 2011
  *
  */
-$this->headLink()->appendStylesheet($this->baseUrl('/css/session.css'));
+
+//$this->headLink()->appendStylesheet($this->baseUrl('/css/session.css'));
 $this->headLink()->appendStylesheet($this->baseUrl('/css/reports.css'));
 $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 $this->headScript()->appendFile($this->baseUrl('/js/jquery.dataTables.min.js'));
-$this->headScript()->appendFile($this->baseUrl('/js/TableTools/media/js/TableTools.min.js'));
-$this->headScript()->appendFile($this->baseUrl('/js/TableTools/media/js/ZeroClipboard.js'));
+$this->headScript()->appendFile($this->baseUrl('/js/jquery.tableTools.min.js'));
 
 $queueHr = floor($this->results->totalQueueDuration/3600);
 if($queueHr < 10) $queueHr = '0'.$queueHr;
@@ -209,7 +209,7 @@ else
 					/* Session Count */ { "sWidth": "100px" }
 				 ],
 				 "oTableTools": {"aButtons": [ "csv", "pdf", "copy" ],
-					 "sSwfPath": "<?=$this->baseUrl('/js/TableTools/media/swf/copy_cvs_xls_pdf.swf')?>"
+					 "sSwfPath": "<?=$this->baseUrl('/swf/copy_cvs_xls_pdf.swf')?>"
 						 }
 			});
 		}
@@ -237,7 +237,7 @@ else
 					/* Session Count */ { "sWidth": "100px" }
 				 ],
 				 "oTableTools": {"aButtons": [ "csv", "pdf" ],
-					 "sSwfPath": "<?=$this->baseUrl('/js/TableTools/media/swf/copy_cvs_xls_pdf.swf')?>"
+					 "sSwfPath": "<?=$this->baseUrl('/swf/copy_cvs_xls_pdf.swf')?>"
 						 }
 			});
 		}

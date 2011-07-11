@@ -40,9 +40,7 @@ $this->headLink()->appendStylesheet($this->baseUrl('/css/session.css'));
 $this->headLink()->appendStylesheet($this->baseUrl('/css/reports.css'));
 $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 $this->headScript()->appendFile($this->baseUrl('/js/jquery.dataTables.min.js'));
-$this->headScript()->appendFile($this->baseUrl('/js/TableTools/media/js/TableTools.min.js'));
-$this->headScript()->appendFile($this->baseUrl('/js/TableTools/media/js/ZeroClipboard.js'));
-
+$this->headScript()->appendFile($this->baseUrl('/js/jquery.tableTools.min.js'));
 ?>
 
 <div class="reportingresults">
@@ -142,7 +140,7 @@ if (array_key_exists("accessReportData", $this->results)): ?>
     					/* Termination */	{ "sWidth": "200px" }
     				 ],
     				"oTableTools": {"aButtons": [ "csv", "pdf", "copy" ],
-    					"sSwfPath": "<?=$this->baseUrl('/js/TableTools/media/swf/copy_cvs_xls_pdf.swf')?>"
+    					"sSwfPath": "<?=$this->baseUrl('/swf/copy_cvs_xls_pdf.swf')?>"
     				}
     			});
     		}
@@ -170,7 +168,7 @@ if (array_key_exists("accessReportData", $this->results)): ?>
     					/* Termination */	{ "sWidth": "200px" }
     				 ],
     				"oTableTools": {"aButtons": [ "csv", "pdf" ],
-    					"sSwfPath": "<?=$this->baseUrl('/js/TableTools/media/swf/copy_cvs_xls_pdf.swf')?>"
+    					"sSwfPath": "<?=$this->baseUrl('/swf/copy_cvs_xls_pdf.swf')?>"
     				}
     			});
     		}
