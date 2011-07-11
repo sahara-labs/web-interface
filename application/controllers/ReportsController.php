@@ -40,43 +40,38 @@ class ReportsController extends Sahara_Controller_Action_Acl
 {
     /** @var operator for queries */
     private $OPERATOR = "AND";  // Always 'and' for first release
-	
+
     /** @var Type for rig query */
     private $RIG = "RIG";  // Always 'and' for first release
-    
+
     public function indexAction()
     {
         $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Reports');
-        
-        /* Load the permissions of the user. */
-        //$client = Sahara_Soap::getSchedServerPermissionsClient();
-        //$persona = $client->getUser(array('userQName' => $this->_auth->getIdentity()));
-        
+
         /* Load the rig names for the initial screen */
         $rep = Sahara_Soap::getSchedServerReportsClient();
-        
-        // ERROR - correct user
+
         $rigNames = $rep->queryInfo(array(
             'querySelect' => array('operator' => $this->OPERATOR,
         							'typeForQuery' => $this->RIG,
         							'queryLike' => '%'),
         	'requestor' => array('userQName' => $this->_auth->getIdentity()),
             'limit' => '3' ));
-        
+
         $this->view->persona = $this->_acl->getUserRole();
     }
-    
+
     public function getvalueAction(){
-    	
+
         /* Disable view render and layout. */
         $this->_helper->viewRenderer->setNoRender();
-        $this->_helper->layout()->disableLayout();   
+        $this->_helper->layout()->disableLayout();
 
         /* Get Parameter */
         $group = $this->_request->getParam("group","RIG");
         $like = $this->_request->getParam("like");
         $limit = $this->_request->getParam("limit","3");
-        
+
         /* check group value */
         switch($group)
         {
@@ -95,17 +90,17 @@ class ReportsController extends Sahara_Controller_Action_Acl
         	default:
         		$result = "There are no results";
          };
-        
+
         echo $this->view->json($result);
     }
-    
+
     public function accessreportAction(){
-    	
+
         $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Access Report');
-        
+
         /* Get Parameter */
         $params = $this->_request->getParams();
-        
+
         /* check group value */
         switch($params['accessgroup'])
         {
@@ -114,7 +109,7 @@ class ReportsController extends Sahara_Controller_Action_Acl
         	case "USER":
         	case "USER_CLASS":
 	        	$req = Sahara_Soap::getSchedServerReportsClient();
-	        	
+
 	        	// Supply pagination if valid
         		if (array_key_exists("pageNumber", $params) &&  array_key_exists("pageLength", $params))
         		{
@@ -143,22 +138,23 @@ class ReportsController extends Sahara_Controller_Action_Acl
         	default:
         		$result = "There are no results";
          };
-        
+
          $this->view->results = $result;
          $this->view->search = $params;
     }
 
     public function sessionreportAction(){
-    	
+
         $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Session Report');
-        
+
+
         /* Get Parameter */
         $params = $this->_request->getParams();
-        
+
         //TODO account for pages
 		$pageNum = (array_key_exists("pageNumber", $params) ? $params['pageNumber'] : 1);
 
-		
+
         /* check group value */
         switch($params['sessiongroup'])
         {
@@ -167,7 +163,7 @@ class ReportsController extends Sahara_Controller_Action_Acl
         	case "USER":
         	case "USER_CLASS":
 	        	$req = Sahara_Soap::getSchedServerReportsClient();
-	        	
+
         		if (array_key_exists("pageNumber", $params) &&  array_key_exists("pageLength", $params))
         		{
 	        		$result = $req->querySessionReport(array(
@@ -180,7 +176,7 @@ class ReportsController extends Sahara_Controller_Action_Acl
 		        		'pagination' => array('numberOfPages' => 1,
 		        				'pageNumber' => $params['pageNumber'],
 		        				'pageLength' => $params['pageLength'] ) ));
-        			
+
         		}
         		else
         		{
@@ -196,9 +192,9 @@ class ReportsController extends Sahara_Controller_Action_Acl
         	default:
         	$result = "There are no results";
          };
-        
+
          $this->view->results = $result;
          $this->view->search = $params;
    }
-   
+
 }

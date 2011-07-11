@@ -165,6 +165,12 @@ switch ($this->userRole)
                     	'Yes' => 'location.href="' . $this->url(array('controller' => 'index', 'action' => 'logout')) . '";',
                         'No'  => '$(this).dialog("close");'
                     )),
+            'help' => array('title' => 'Help', 'script' => '_help.phtml',
+                    'icon' => $this->baseUrl('images/help.png'), 'alt' => 'help',
+                    'width' => 650,
+                    'buttons' => array(
+                       'Close' => '$(this).dialog("close");'
+                    )),
         	'support' => array('title' => 'Contact Support', 'script' => '_feedback.phtml',
                     'icon' => $this->baseUrl('images/feedback.png'), 'alt' => 'feedback',
                     'width' => 600,
@@ -182,6 +188,12 @@ switch ($this->userRole)
                     'buttons' => array(
                     	'Yes' => 'location.href="' . $this->url(array('controller' => 'index', 'action' => 'logout')) . '";',
                         'No'  => '$(this).dialog("close");'
+                    )),
+            'help' => array('title' => 'Help', 'script' => '_help.phtml',
+                    'icon' => $this->baseUrl('images/help.png'), 'alt' => 'help',
+                    'width' => 650,
+                    'buttons' => array(
+                       'Close' => '$(this).dialog("close");'
                     )),
         	'support' => array('title' => 'Contact Support', 'script' => '_feedback.phtml',
                     'icon' => $this->baseUrl('images/feedback.png'), 'alt' => 'feedback',

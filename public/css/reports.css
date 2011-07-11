@@ -76,7 +76,7 @@
     margin-right: 8px;
     position: absolute;
     background: white;
-    width: 214px;
+    width: 221px;
     -webkit-box-shadow: 0 0 5px #B5B5B5;
     -moz-box-shadow: 0 0 5px #B5B5B5;
     box-shadow: 0 0 5px #B5B5B5;
@@ -134,7 +134,7 @@
 	border-collapse: collapse;
 }
 	
-#accesstable td {
+#accesstable td, #sessiontable td {
 	border-bottom: 1px solid #CCCCCC;
 }
 
@@ -221,10 +221,6 @@
 #sessiontable_paginate{
 	float: right;
 	text-align: right;
-}
-
-#sessiontable td {
-	border-bottom: 1px solid #606060;
 }
 
 #sessiontable .odd{
