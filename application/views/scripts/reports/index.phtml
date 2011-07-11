@@ -145,7 +145,6 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 <script type="text/javascript">
 
 $(function() {
-
 	$('select').selectmenu({width:180});
 
 	$("#sessionvaluelist").hide();
@@ -194,7 +193,7 @@ $(function() {
 				var namelength = nameval.length;
 				var type = "access";
 				var group = $("#accessgroup").val();
-
+				selectmenu
 				if( namelength > 0 & namelength%3 == 0 )
 				{
 					getValue(type, group, nameval,5);
@@ -202,41 +201,38 @@ $(function() {
 			}
 	);
 
-	$("#sessionvalue").focusout(
-			function(){
-				$("#sessionvaluelist").hide();
-				$("#accessvaluelist").hide();
-			}
-	);
+	$("#sessionvalue, #accessvalue").focusin(function() {
+		$(this).addClass("ui-state-active");
 
-	$("#accessvalue").focusout(
-			function(){
-				$("#accessvaluelist").hide();
-				$("#sessionvaluelist").hide();
-			}
-	);
+	})
+	.focusout(function() {
+		$(this).removeClass("ui-state-active");
+		$("#accessvaluelist").hide();
+		$("#sessionvaluelist").hide();
+	})
+	.hover(function() {
+			$(this).addClass("ui-state-hover");
+		}, function() {
+			$(this).removeClass("ui-state-hover");
+	});
 
-	$("#accessgroup").change(function()
-			{
-				$("#accessvaluelist").hide();
-				$("#sessionvaluelist").hide();
-				getValue("access",this.value,"%25",10);
-			}
-		);
+	$("#accessgroup").change(function() {
+		$("#accessvaluelist").hide();
+		$("#sessionvaluelist").hide();
+		getValue("access",this.value,"%25",10);
+	});
 
-	$("#sessiongroup").change(function()
-			{
-				$("#sessionvaluelist").hide();
-				$("#accessvaluelist").hide();
-				getValue("session",this.value,"%25",10);
-			}
-		);
+	$("#sessiongroup").change(function() {
+		$("#sessionvaluelist").hide();
+		$("#accessvaluelist").hide();
+		getValue("session",this.value,"%25",10);
+	});
 
+	$("#accessform").validationEngine();
+	$("#sessionform").validationEngine();
 });
 
 
-$("#accessform").validationEngine();
-$("#sessionform").validationEngine();
 
 
 </script>

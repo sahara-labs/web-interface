@@ -78,7 +78,7 @@
     margin-right: 8px;
     position: absolute;
     background: white;
-    width: 220px;
+    width: 214px;
     -webkit-box-shadow: 0 0 5px #B5B5B5;
     -moz-box-shadow: 0 0 5px #B5B5B5;
     box-shadow: 0 0 5px #B5B5B5;
@@ -178,7 +178,7 @@
 
 #accesstable_paginate{
 	float: right;
-	text-align: right;
+	text-align: right;access
 }
 
 .paging_full_numbers {

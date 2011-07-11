@@ -72,13 +72,13 @@ function getValue(type, group, like, limit)
 					function(){
 						if($(this).hasClass("ui-state-hover"))
 						{
-							$(this).removeClass("ui-corner-all ui-selectmenu-item-focus ui-state-hover");
+							$(this).removeClass("ui-selectmenu-item-focus ui-state-hover");
 						}
 						else
 						{
 							var selectedname = $(this).html();
 							$("#" + type + "value").val(selectedname);
-							$(this).addClass("ui-corner-all ui-selectmenu-item-focus ui-state-hover");
+							$(this).addClass("ui-selectmenu-item-focus ui-state-hover");
 						}
 					}
 			);
