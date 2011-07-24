@@ -43,6 +43,7 @@ $help = new Sahara_Help($this->controller, $this->action);
 	<div class="helpcontents" >
 		<div class="helptitle ui-widget-header ui-corner-all">Help:</div>
 		<p><?=$help->getPageHelp()?></p>
+		<?php if ($help->getPageTS()): ?>
 		<div class="helptitle ui-widget-header ui-corner-all">Troubleshooting:</div>
 		<ul class="helplist">
 			<?php foreach ($help->getPageTS() as $qu => $an):?>
@@ -75,6 +76,7 @@ $help = new Sahara_Help($this->controller, $this->action);
 			</li>
 			<?php endforeach; ?>
 		</ul>
+		<?php endif; ?>
 	</div>
 </div>
 

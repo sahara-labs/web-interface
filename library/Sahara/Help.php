@@ -324,7 +324,7 @@ class Sahara_Help
                 return $this->_help['Session']['help'];
 
             default:
-                return 'This page current has no help.';
+                return 'This page has no help.';
         }
     }
 
