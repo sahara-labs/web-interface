@@ -89,10 +89,10 @@ class Sahara_Auth_Type_Database extends Sahara_Auth_Type
         /* 1) User must exist. */
         if ($this->_record == null) return false;
 
-        $allowed = $this->_record->auth_allowed;
+        $allowed = (int)$this->_record->auth_allowed;
         if (is_string($allowed)) // Occurs when 'bit(1)' type is used
         {
-            $allowed = ord($allowed);
+            $allowed = (int)$allowed && true;
         }
 
         /* 2) Authorisation must be enabled. */
