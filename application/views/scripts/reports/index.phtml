@@ -52,7 +52,7 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 </div>
 
 
-<form id="accessform"  action="/reports/accessreport/">
+<form id="accessform"  action="/reports/accessreport/" autocomplete="off" >
 <div class="reportscontainer ui-corner-all overlayelementhide">
 	<div class="sessionpanelheader">
 		<p><span class="ui-icon ui-icon-suitcase sessionpanelheadericon"></span> Access Reports:</p>
@@ -73,7 +73,7 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 	</div>
 	<div class="values">
 		<label for="accessvalue">Select value: </label>
-		<input id="accessvalue" type="text" name="accessvalue" class="valueinput ui-state-default ui-corner-all ui-selectmenu-status validate[required]">
+		<input id="accessvalue" type="text" autocomplete="off" name="accessvalue" class="valueinput ui-state-default ui-corner-all ui-selectmenu-status validate[required]">
 		<div id="accessvaluelist"  class="valuelist ui-corner-bottom" >
 			<ul>
 			</ul>
@@ -96,7 +96,7 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 </form>
 
 
-<form id="sessionform" action="/reports/sessionreport/">
+<form id="sessionform" action="/reports/sessionreport/" autocomplete="off" >
 <div class="reportscontainer ui-corner-all overlayelementhide">
 	<div class="sessionpanelheader">
 		<p><span class="ui-icon ui-icon-suitcase sessionpanelheadericon"></span> Session Reports:</p>
@@ -117,7 +117,7 @@ $this->headScript()->appendFile($this->baseUrl('/js/reports.js'));
 	</div>
 	<div class="values">
 		<label for="sessionvalue">Select Value: </label>
-		<input id="sessionvalue" type="text" name="sessionvalue" class="valueinput ui-state-default ui-corner-all ui-selectmenu-status validate[required]">
+		<input id="sessionvalue" type="text" name="sessionvalue" autocomplete="off" class="valueinput ui-state-default ui-corner-all ui-selectmenu-status validate[required]">
 		<div id="sessionvaluelist" class="valuelist ui-corner-bottom">
 			<ul>
 			</ul>
@@ -193,7 +193,7 @@ $(function() {
 				var namelength = nameval.length;
 				var type = "access";
 				var group = $("#accessgroup").val();
-				selectmenu
+
 				if( namelength > 0 & namelength%3 == 0 )
 				{
 					getValue(type, group, nameval,5);
