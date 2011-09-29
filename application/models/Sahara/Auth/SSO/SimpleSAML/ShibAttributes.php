@@ -47,6 +47,7 @@ class Sahara_Auth_SSO_SimpleSAML_ShibAttributes
     const SN_OID = 'urn:oid:2.5.4.4';
     const GIVEN_NAME_OID = 'urn:oid:2.5.4.42';
     const DISPLAY_NAME_OID = 'urn:oid:2.16.840.1.113730.3.1.241';
+    const COMMON_NAME_OID = 'urn:oid:2.5.4.3';
     const EMAIL_OID = 'urn:oid:0.9.2342.19200300.100.1.3';
     const HOME_ORG_OID = 'urn:oid:1.3.6.1.4.1.25178.1.2.9';
     const AFFLIATION_OID = 'urn:oid:1.3.6.1.4.1.5923.1.1.1.1';
@@ -97,6 +98,16 @@ class Sahara_Auth_SSO_SimpleSAML_ShibAttributes
     public function getSurname()
     {
         return $this->_getAttr(self::SN_OID);
+    }
+
+    /**
+     * Gets the common name or null if not provided.
+     *
+     * @return String comman name
+     */
+    public function getCommonName()
+    {
+        return $this->_getAttr(self::COMMON_NAME_OID);
     }
 
     /**

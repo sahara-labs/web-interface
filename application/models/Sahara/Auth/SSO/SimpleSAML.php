@@ -180,13 +180,24 @@ class Sahara_Auth_SSO_SimpleSAML extends Sahara_Auth_SSO
         if (!$fname || !$lname)
         {
             $this->_logger->info("First name ($fname) and last name ($lname) combination was not valid for  " .
-                	'Sahara user name generation. Falling back to display name.');
-            list($fname, $lname) = explode(' ', $this->_attrs->getDisplayName(), 2);
+                	'Sahara user name generation. Falling back to common name.');
+            list ($fname, $lname) = explode(' ', $this->_attrs->getCommonName());
+
             if (!$fname || !$lname)
             {
-                $this->logger->info('Display name (' . $this->_attrs->getDisplayName() . ') was not valid for ' .
-                		"Sahara user name generation. Falling back to token ($sid).");
-                $useSid = true;
+                $this->_logger->info("First name ($fname) and last name ($lname) determination from 'Common Name' was " .
+                	'not valid for Sahara user name generation. Falling back to common name.');
+
+                if ($this->_attrs->getDisplayName())
+                {
+                    list($fname, $lname) = explode(' ', $this->_attrs->getDisplayName(), 2);
+                }
+                if (!$fname || !$lname)
+                {
+                    $this->logger->info('Display name (' . $this->_attrs->getDisplayName() . ') was not valid for ' .
+                    		"Sahara user name generation. Falling back to token ($sid).");
+                    $useSid = true;
+                }
             }
         }
 
@@ -202,7 +213,7 @@ class Sahara_Auth_SSO_SimpleSAML extends Sahara_Auth_SSO
         /* Fix max length. */
         if (strlen($name) > self::NAME_LENGTH) $name = substr($name, 0, self::NAME_LENGTH);
 
-	/* Sanitise special characters. */
+		/* Sanitise special characters. */
         $chrs = str_split($name);
         $name = '';
         foreach ($chrs as $c)
@@ -214,14 +225,14 @@ class Sahara_Auth_SSO_SimpleSAML extends Sahara_Auth_SSO
         $db = Sahara_Database::getDatabase();
         $ns = $db->quote($this->_config->institution);
 
-//        $num = $db->fetchOne("SELECT count() FROM users WHERE namespace=$ns AND name=" . $db->quote($name));
-	$num = 0;
+        $num = $db->fetchOne("SELECT count(id) FROM users WHERE namespace=$ns AND name=" . $db->quote($name));
+	    $num = 0;
         if ($num > 0)
         {
             $suf = 0;
             while ($num > 0)
             {
-                $num = $db->fetchOne("SELECT count() FROM users WHERE namespace=$ns AND name=" .
+                $num = $db->fetchOne("SELECT count(id) FROM users WHERE namespace=$ns AND name=" .
                         $db->quote($name . $suf++));
             }
             $name .= $suf;
