@@ -274,6 +274,7 @@ class IndexController extends Sahara_Controller_Action_Acl
         $body .= "IP: " . $_SERVER['REMOTE_ADDR'] . "\n";
         $body .= "User Agent: " . urldecode($params['useragent']) . "\n";
         $body .= "Java enabled: " . $params['javaenabled'] . "\n";
+        $body .= "UTC Offset: " . $params['utcoffset'] . "\n";
 
         if (array_key_exists('navplugins', $params))
         {

@@ -51,7 +51,8 @@ hasConfAdded = false;
 $(document).ready(function () {
 	var browserInfo =
 		"<input type='hidden' name='useragent' value='" + escape(navigator.userAgent) + "'/>" +
-		"<input type='hidden' name='javaenabled' value='" + (navigator.javaEnabled() ? "true" : "false") + "' />";
+		"<input type='hidden' name='javaenabled' value='" + (navigator.javaEnabled() ? "true" : "false") + "' />" +
+		"<input type='hidden' name='utcoffset' value='" + (new Date().getTimezoneOffset() * 60) + "' />";
 	if (navigator.plugins)
 	{
 		browserInfo += "<input type='hidden' name='navplugins' value='";
