@@ -97,7 +97,7 @@ class Sahara_Auth_SSO_SimpleSAML extends Sahara_Auth_SSO
          *    simpleSAMLPHP will direct the user to the authentication source.
          * ==================================================================== */
         $this->_simple->requireAuth(array(
-            'ReturnTo' =>  $this->_generateReturnTo('index/sso')
+            'ReturnTo' =>  $this->_generateReturnTo('/index/sso')
         ));
 
         /* 2) Load attributes. ================================================ */
@@ -207,7 +207,7 @@ class Sahara_Auth_SSO_SimpleSAML extends Sahara_Auth_SSO
         }
         else
         {
-            $name = ($homeOrg ? substr($homeOrg, 0, 3) . '.' : '') . substr($fname, 0, 2) . '.' . $lname;
+            $name = ($homeOrg ? substr($homeOrg, 0, 3) . '.' : '') . substr(strtolower($fname), 0, 2) . '.' . substr(strtolower($lname), 0, 8);
         }
 
         /* Fix max length. */
@@ -290,9 +290,18 @@ class Sahara_Auth_SSO_SimpleSAML extends Sahara_Auth_SSO
         $addr = ($isHttps ? 'https://' : 'http') . $_SERVER['SERVER_NAME'];
         $addr = 'http://' . $_SERVER['SERVER_NAME'];
 
-        if ($isHttps && $_SERVER['SERVER_PORT'] != 443 || !$isHttps && $_SERVER['SERVER_PORT'] != 80)
+	/* Using HTTP_HOST header seems not to drop correct port number when using
+         * mod_redirect. */
+	if (array_key_exists('HTTP_HOST', $_SERVER))
+	{
+	    list($junk, $port) = explode(':', $_SERVER['HTTP_HOST']);
+	}
+	/* Otherwise fall back to SERVER_PORT which is actually broken. */
+	if (!$port) $port = $_SERVER['SERVER_PORT'];
+
+        if ($isHttps && $port != 443 || !$isHttps && $port != 80)
         {
-            $addr .= ':' . $_SERVER['SERVER_PORT'];
+            $addr .= ':' . $port;
         }
 
         return $addr . $suffix;
