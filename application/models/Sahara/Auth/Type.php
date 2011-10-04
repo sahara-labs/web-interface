@@ -70,7 +70,13 @@ abstract class Sahara_Auth_Type
     public abstract function authenticate();
 
     /**
-     * Returns the properties value from the underlying record class.
+     * Returns the properties value from the underlying record class. This
+     * class is expected to atleast provide:
+     * <ul>
+     * 	<li>first_name - Users first name</li>
+     * 	<li>last_name - Users last name</li>
+     *  <li>email - Users email address.</li>
+     * </ul>
      *
      * @param $property proerty to obtain value of
      * @return mixed String | array | null

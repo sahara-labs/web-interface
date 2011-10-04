@@ -165,6 +165,34 @@ class Sahara_Auth_SSO_SimpleSAML_ShibAttributes
     }
 
     /**
+     * Opportunistically obtain the first name of the user. This looks at the
+     * given name, common name and display name attributes (in that order) to
+     * determine whether the first name is provided.
+     */
+    public function opportunisticFirstname()
+    {
+        if ($this->getFirstname()) return $this->getFirstname();
+        if ($this->getCommonName()) return substr($this->getCommonName(), 0, strstr($this->getCommonName(), ' '));
+        if ($this->getDisplayName()) return substr($this->getDisplayName(), 0, strstr($this->getDisplayName(), ' '));
+
+        return null;
+    }
+
+   /**
+    * Opportunistically obtain the last name of the user. This looks at the
+    * surname, common name and display name attributes (in that order) to
+    * determine whether the last name is provided.
+    */
+    public function opportunisticSurname()
+    {
+        if ($this->getSurname()) return $this->getSurname();
+        if ($this->getCommonName()) return substr($this->getCommonName(), strstr($this->getCommonName(), ' '));
+        if ($this->getDisplayName()) return substr($this->getDisplayName(), strstr($this->getDisplayName(), ' '));
+
+        return null;
+    }
+
+    /**
      * Gets the attribute value or null if it doesn't exist.
      *
      * @param String $attr attribute

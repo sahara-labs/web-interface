@@ -97,7 +97,7 @@ class Sahara_Auth_SSO_SimpleSAML extends Sahara_Auth_SSO
          *    simpleSAMLPHP will direct the user to the authentication source.
          * ==================================================================== */
         $this->_simple->requireAuth(array(
-            'ReturnTo' => 'http://apollo.eng.uts.edu.au:7070/index/sso' // TODO
+            'ReturnTo' =>  $this->_generateReturnTo('index/sso')
         ));
 
         /* 2) Load attributes. ================================================ */
@@ -158,7 +158,7 @@ class Sahara_Auth_SSO_SimpleSAML extends Sahara_Auth_SSO
         $this->_setup();
         if ($this->_simple->isAuthenticated())
         {
-            $this->_simple->logout();
+            $this->_simple->logout($this->_generateReturnTo('/index/logout'));
         }
     }
 
@@ -257,6 +257,44 @@ class Sahara_Auth_SSO_SimpleSAML extends Sahara_Auth_SSO
 
     public function getAuthInfo($property)
     {
-            // TODO
+        switch ($property)
+        {
+            case 'first_name':
+                return $this->_attrs->opportunisticFirstname();
+                break;
+
+            case 'last_name':
+                return $this->_attrs->opportunisticSurname();
+                break;
+
+            case 'email':
+                return $this->_attrs->getEmail();
+                break;
+
+            default:
+                return null;
+        }
+    }
+
+   /**
+    * Generates server addresses.
+    *
+    * @param string $suffix request suffix
+    * @return string address
+    */
+    private function _generateReturnTo($suffix)
+    {
+        $isHttps = (array_key_exists('HTTPS', $_SERVER) && $_SERVER['HTTPS'] ||
+               $this->_config->simpleSaml->forceHttps);
+
+        $addr = ($isHttps ? 'https://' : 'http') . $_SERVER['SERVER_NAME'];
+        $addr = 'http://' . $_SERVER['SERVER_NAME'];
+
+        if ($isHttps && $_SERVER['SERVER_PORT'] != 443 || !$isHttps && $_SERVER['SERVER_PORT'] != 80)
+        {
+            $addr .= ':' . $_SERVER['SERVER_PORT'];
+        }
+
+        return $addr . $suffix;
     }
 }
