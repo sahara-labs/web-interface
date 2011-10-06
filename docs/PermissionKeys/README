@@ -1,0 +1,43 @@
+Permission Keys
+===============
+
+Permissions keys allow a logged in user to persent a 'key' that allows them to
+be authorised as a member of a user class. This accomodates for the inability
+of Single Sign On systems to properly authorise users.
+
+Permission keys are composed of:
+
+   * actual key (64 characters) - the actual key strings that the user is 
+       to provide when redeeming the key
+   * user class - the class that the user is assigned to when the permission
+       key is redeemed.
+   * remaining_uses - the number of uses the permission key is active for
+   * home_org (optional) - a possible home organisation as supplied by
+       Shibboleth
+   * affliation (optional) - a possible affliation (such as staff) as provided
+       by Shibboleth
+       
+To enabling permission keys:
+
+  1. Apply the SQL patch called 'Permission_Keys.sql' located in this
+     folder. One way to do this is using:
+      
+     mysql -u <username> -p <database> < Permission_Keys.sql
+     
+  2. Open the SAHARA Labs WI configuration file (config.ini) and modify the 
+     following properties to have:
+     
+   * permkey.enable = true ; Enable permission keys.
+   * database.adapter = Pdo_Mysql ; Database driver.
+   * database.params.host = 127.0.0.1 ; Database address.
+   * database.params.dbname = sahara ; Database name.
+   * database.params.username = sahara ; The database connection user name.
+                                     ; This user only requires 'SELECT, INSERT, UPDATE'
+                                     ; privileges.
+   * database.params.password = saharapasswd ; The database connection 
+                                     ; password.
+ 
+  3. Test the permission keys. If after the permission key has been entered and 
+     the page appears to be hung on 'Please wait...', it may mean the database 
+     is incorrectly configured.
+ 

@@ -1,0 +1,112 @@
+Authentication
+==============
+This document gives a quick steps to setup some authentication methods
+that SAHARA Labs supports.
+
+=== Database Authentication ===
+Database authentication uses the normal SAHARA Labs database to authenticate
+users, thus is a stand-alone, self contained authentication option. To
+implement it:
+
+  1. Apply the SQL patch called 'Database_Authentication.sql' located in this
+     folder. One way to do this is using:
+      
+     mysql -u <username> -p <database> < Database_Authentication.sql
+     
+  2. Open the SAHARA Labs WI configuration file (config.ini) and modify the 
+     following properties to have:
+  
+     * auth.useSahara = true ; This enable the Sahara_Auth system with which
+                             ; Database Authentication is a type.
+     * auth.useLocalAuth = true ; Enable local authentication.
+     * auth.type[] = Database ; Enable Database authentication (note multiple
+                              ; of these can be set for multiple authentication
+                              ; types.
+     * database.adapter = Pdo_Mysql ; Database driver.
+     * database.params.host = 127.0.0.1 ; Database address.
+     * database.params.dbname = sahara ; Database name.
+     * database.params.username = sahara ; The database connection user name.
+                                         ; This user only requires 'SELECT'
+                                         ; privileges.
+     * database.params.password = saharapasswd ; The database connection 
+                                               ; password.
+                                               
+  3. Add a user record to the database. Which the following columns set:
+  
+     * auth_allowed = 1 - The enables to user to be able to authenticate 
+                          with the database.
+      * password = <password> - SHA1 encoded password. 
+   
+  4. Test authentication.
+  
+=== LDAP Authentication ===
+LDAP authentication uses an LDAP server as the authentication source. This 
+allows users to login without being existing system users. On first login, 
+the system account is generated. To implement it:
+     
+  1. Open the SAHARA Labs WI configuration file (config.ini) and modify the 
+     following properties to have:
+  
+     * auth.useSahara = true ; This enable the Sahara_Auth system with which
+                             ; LDAP Authentication is a type.
+     * auth.useLocalAuth = true ; Enable local authentication.
+     * auth.type[] = LDAP ; Enable LDAP authentication (note multiple
+                              ; of these can be set for multiple authentication
+                              ; types.
+     * ldap.params.host = <host name> ; The address of the LDAP server.
+     * ldap.params.username = <user DN> ; Distingused name of bind account.
+     * ldap.params.password = <String> ; Password of bind account.
+     * ldap.params.baseDn = <String> ; Base distingused name of users tree
+     * auth.ldap.<attribute> = <value> ; Required attributes and values of login
+                              ; users.
+     * auth.session[] = "SaharaAccount{LDAP} ; Generates user accounts
+                              ; on first sign in of a user.                                             
+  
+  4. Test authentication.
+  
+=== Single Sign On ===
+This authentication type allows the use of a SSO service. Currently this 
+delegates the actual authentication to SimpleSAMLphp 
+(http://simplesamlphp.org/) which may then be configured to authenticate
+against a vast variety of authentication sources, including Shibboleth.
+
+Single Sign On allows users to sign on without previously being system
+users. On first login, the user account is automatically generated.
+
+To implement it:
+
+  1. Install SimpleSAMLphp and configure an authentication source.
+     Instructions can be found on http://simplesamlphp.org/docs/1.8/.
+   
+  2. Apply the SQL patch called 'SimpleSAMLphp.sql' located in this 
+     directory. One way to do this is using:
+      
+     mysql -u <username> -p <database> < SimpleSAMLphp.sql
+     
+  3. Open the SAHARA Labs WI configuration file (config.ini) and modify the 
+     following properties to have:
+  
+     * auth.useSahara = true ; This enable the Sahara_Auth system with which
+                             ; SSO is part of.
+     * auth.useSSO = true ; Enable SSO authentication.
+     * auth.ssoType = SimpleSAML ; Specify SimpleSAML to be used as SSO type.
+     * auth.ssoIcon = <path to image> ; Interface icon.
+     * auth.ssoLabel = <string> ; Interface label.
+     * auth.ssoHover = <string> ; Interface tooltip hover.
+     * simpleSaml.location = <path> ; path to the installation location
+     * simpleSaml.authSource = <string> ; SimpleSAMLphp authentication source,
+                                        ; the default is 'default-sp'
+     * simpleSaml.shib.forceSharedToken = <boolean> ; Whether to force shared 
+                                        ; token attribute for identification.
+     * simpleSaml.shib.forceTargetedID = <boolean> ; Whether to force targeted
+                                        ; ID attribute for identification
+     * simpleSaml.forceHttps = <boolean> ; Whether to force HTTPS URLs for all
+                                        ; generated addresses. This is needed
+                                        ; if the server is behind a reverse 
+                                        ; proxy which performs HTTPS.
+     * auth.session[] = "SaharaAccount{SimpleSAML} ; Generates user accounts
+                                        ; on first sign in of a user.
+     
+  4. Test authentication.
+  
+

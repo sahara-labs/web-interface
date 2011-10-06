@@ -4,25 +4,20 @@ README
 Problems
 ========
 If there are any problems, quirks in browsers or any features you want 
-implemented, feel free to email:
+implemented, feel free to post of the SAHARA Labs Sourceforge forum or
+email the developer:
 
-  * Michael Diponio (lead developer) <mdiponio@eng.uts.edu.au>
-  * Tania Machet (software engineer) <tmachet@eng.uts.edu.au>
+  * Michael Diponio (developer) <Michael.Diponio@uts.edu.au>
 
-TODO
-=====
- * Implement authentication. ('indexAction' in 'application/controllers/IndexController.php').
- * Cameras, the position is a little off and deploying streaming options is a little flaky across
-   different browsers in different operating systems. ('library/Sahara/Session/Elements/Cameras.php').
 
 Requirements
 ============
 
-The Sahara Web Interface requires:
+The SAHARA Labs Web Interface requires:
   - Apache 2.2+ with mod_rewrite enabled.
-  - PHP 5.2.4+
+  - PHP 5.3+ (requires later 
   - Zend Framework 1.10 or later (See http://framework.zend.com/manual/en/requirements.introduction.html)
-  - Sahara Scheduling Server
+  - SAHARA Labs Scheduling Server
   
 
 Setting Up Your VHOST
@@ -48,41 +43,12 @@ this with the location of the extracted source.
 </VirtualHost>
 
 Adding Authentication
-=====================
-Be default no authentication is provided for the Sahara WI as identity management 
-is different across institutions. The UTS install is using LDAP authentication. 
-Please email tmachet@eng.uts.edu.au or mdiponio@eng.uts.edu.au for details about
-the UTS setup if you require it.
+================================
+Please consult the README in the Authentication folder.
 
-Authentication should be added to 'application/controllers/IndexController', inside
-the indexAction method. Position is shown by a 'TODO' task marker. 
-See http://framework.zend.com/manual/en/zend.auth.html for possible options to add 
-authentication.
-
-Pseudo code of authentication:
-
-/* Set up adapter. */
-$adapter = Zend_Auth_Adapter_<Some adapter>;
-set up adapter;
-
-/* Add user name (identity) and password (credential). */
-$adapter->setIdentity($username);
-$adapter->setCredential($password);
-
-/* Run authentication. */
-$result = $this->_auth->authenticate($adapter);
-if ($result->getCode() != Zend_Auth_Result::SUCCESS)
-{
-	/* Failed authentication, so redisplay form with error message. */
-	array_push($this->view->messages, "Authentication has failed.");
-	$this->view->form->populate($this->_request->getParams());
-	return;
-}
-
-NOTE: The above is only pseudo code so will need to be modified. Also note
-a Zend Auth Adapter need not be used as the identity credential is
-manually added to contain the <Institution>:<Username>, not just the 
-identity credential.
+Permission Keys
+=================================
+Please consult the README in the PermissionKeys folder.
 
 Setting Up Custom Rig Type Pages
 ================================
@@ -141,3 +107,4 @@ is used.
 NOTE: There are example scripts in docs/InfoExamples.  
 Additional documentation has been written with details of how to develop
 these pages, in collaboration with developing rig clients.
+
