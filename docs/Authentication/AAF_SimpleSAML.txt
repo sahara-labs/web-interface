@@ -1,0 +1,75 @@
+===========================================================
+Setting SimpleSAMLphp with the Australian Access Federation
+===========================================================
+
+This guide gives basic instructions on how to setup 
+SimpleSAMLphp with the Australian Access Federation (AAF).
+
+  * Details about the AAF can be found at
+    http://www.aaf.edu.au/
+  * More in depth documentation of SimpleSAMLphp can be found
+    at http://simplesamlphp.org/docs/1.8/
+    
+The requirements for SimpleSAMLphp are PHP 5.2+, with modules:
+ 
+  * date
+  * dom
+  * hash
+  * libxml
+  * openssl
+  * pcre
+  * SPL
+  * zlib
+  * mcrypt
+
+It is expected the web server SimpleSAMLphp is installed to is the same as the
+SAHARA Labs WI server. Using a different server has not been tested and may
+not work. Further this assumes the installation is on a UNIX like operating
+system and may not work
+
+  1. Download SimpleSAMLphp from http://simplesamlphp.org/download
+
+  2. Set up a virtual directory for hosting SimpleSAMLphp with the directory 
+     '/simplesaml'. Sample configuration to do this is:
+     
+Alias /simplesaml /var/simplesamlphp/www
+<Directory /var/simplesamlphp/www >
+    order deny,allow
+    allow from all 
+</Directory>
+
+  3. Restart the Apache server.
+  
+  4. Unpack the dowloaded SimpleSAMLphp package to '/var/'.
+  
+  5. Rename the extracted folder from simplesamlphp-<version> to
+     simplesamlphp.
+  
+  6. Open 'http://<address>/simplesaml'. This should display the SimpleSAML 
+     installation page.
+   
+  7. Open '/var/simplesamlphp/config/config.php' and edit the properties:
+  
+     * auth.adminpassword => Administrator password
+     * secretsalt => A salt for generated hashes
+     * technicalcontact_name => Name of the administrator
+     * technicalcontact_email => Email address of the administrator
+     * timezone => Timezone of the server
+      
+  8. Copy the file '/var/simplesamlphp/modules/sanitycheck/config-templates/config-sanitycheck.php'
+     to '/var/simplesamlphp/config'.
+   
+  9. On the SimpleSAMLphp installation page, select the 'Configuration'
+     tab and perform all the listed diagnostics. Once logged in the page
+     will display whether all the required PHP modules are installed.
+     
+ 10. Enable the 'consent' and 'metarefresh' modules by:
+      
+       => touch /var/simplesamlphp/modules/consent/enable
+       => touch /var/simplesamlphp/modules/metarefresh/enable
+       
+ 11. Generate a self signed certificate which is used to encypt messages within
+     the AAF. The following sub-steps walk through certificate generation.
+     
+     11.1 
+  
