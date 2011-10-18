@@ -46,7 +46,7 @@ Alias /simplesaml /var/simplesamlphp/www
 
   3. Restart the Apache server.
   
-  4. Unpack the dowloaded SimpleSAMLphp package to '/var/'.
+  4. Unpack the downloaded SimpleSAMLphp package to '/var/'.
   
   5. Rename the extracted folder from simplesamlphp-<version> to
      simplesamlphp.
@@ -91,7 +91,7 @@ Alias /simplesaml /var/simplesamlphp/www
      In all further steps, entity ID refers to the entity ID generated using
      the external server address.
        
- 12. Generate a self signed certificate which is used to encypt messages which
+ 12. Generate a self signed certificate which is used to encrypt messages which
      is a requirement of the AAF. A self signed certificate can generated with
      the included script 'keygen-self-signed.sh', using the command:
      
