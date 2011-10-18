@@ -1,0 +1,173 @@
+===========================================================
+Setting SimpleSAMLphp with the Australian Access Federation
+===========================================================
+
+This guide gives basic instructions on how to setup 
+SimpleSAMLphp with the Australian Access Federation (AAF).
+
+  * Details about the AAF can be found at
+    http://www.aaf.edu.au/
+
+  * More in depth documentation of SimpleSAMLphp can be found
+    at http://simplesamlphp.org/docs/1.8/
+
+
+###############################################################################
+## Stage 1: SimpleSAMLphp installation.                                      ##
+###############################################################################
+
+The requirements for SimpleSAMLphp are PHP 5.2+, with modules:
+ 
+  * date
+  * dom
+  * hash
+  * libxml
+  * openssl
+  * pcre
+  * SPL
+  * zlib
+  * mcrypt
+
+It is expected the web server SimpleSAMLphp is installed to is the same as the
+SAHARA Labs WI server. Using a different server has not been tested and may
+not work. Further this assumes the installation is on a UNIX like operating
+system and may not work
+
+  1. Download SimpleSAMLphp from http://simplesamlphp.org/download
+
+  2. Set up a virtual directory for hosting SimpleSAMLphp with the directory 
+     '/simplesaml'. Sample configuration to do this is:
+     
+Alias /simplesaml /var/simplesamlphp/www
+<Directory /var/simplesamlphp/www >
+    order deny,allow
+    allow from all 
+</Directory>
+
+  3. Restart the Apache server.
+  
+  4. Unpack the dowloaded SimpleSAMLphp package to '/var/'.
+  
+  5. Rename the extracted folder from simplesamlphp-<version> to
+     simplesamlphp.
+  
+  6. Open 'http://<address>/simplesaml'. This should display the SimpleSAML 
+     installation page.
+   
+  7. Open '/var/simplesamlphp/config/config.php' and edit the properties:
+  
+     * auth.adminpassword => Administrator password
+     * secretsalt => A salt for generated hashes
+     * technicalcontact_name => Name of the administrator
+     * technicalcontact_email => Email address of the administrator
+     * timezone => Timezone of the server
+      
+  8. Copy the file '/var/simplesamlphp/modules/sanitycheck/config-templates/config-sanitycheck.php'
+     to '/var/simplesamlphp/config'.
+   
+  9. On the SimpleSAMLphp installation page, select the 'Configuration'
+     tab and perform all the listed diagnostics. Once logged in the page
+     will display whether all the required PHP modules are installed.
+     
+ 10. Enable the 'consent' and 'metarefresh' modules by:
+      
+       => touch /var/simplesamlphp/modules/consent/enable
+       => touch /var/simplesamlphp/modules/metarefresh/enable
+       
+###############################################################################
+## Stage 2: Federation registry.                                             ##
+###############################################################################
+       
+ 11. Go the page 'http://<address>/simplesaml/' and click the 'Federation' tab.
+     This should show the entity ID of the service. Note that the entity ID 
+     changes based on the address used to access the page so: 
+     
+      * http://localhost/simplesaml generates an entity ID as 
+        'http://localhost/simplesaml/module.php/saml/sp/metadata
+        
+      * https://remotelabs.eng.uts.edu.au/simplesaml' generates an entity ID as
+        'https://remotelabs.eng.uts.edu.au/simplesaml/module.php/saml/sp/metadata.php/default-sp'
+        
+     In all further steps, entity ID refers to the entity ID generated using
+     the external server address.
+       
+ 12. Generate a self signed certificate which is used to encypt messages which
+     is a requirement of the AAF. A self signed certificate can generated with
+     the included script 'keygen-self-signed.sh', using the command:
+     
+       => ./keygen-self-signed.sh -y 3 -h <host> -e <entity id>
+       
+ 13. Login to 'https://manager.aaf.edu.au/federationregistry/', go to 
+     'Subscribers > Service Providers' and click 'Create'.
+     
+ 14. Run through the registration wizard. The required endpoints can be obtained
+     from the SimpleSAMLphp installation page 'Federation' tab and clicking the
+     'Show metadata' link. Only required attribute is 'targettedID' (used to 
+     auto generate SAHARA Labs user names. It is recommended to request the
+     following attributes:
+     
+      * Affiliation - Used as an optional discrimination for permission key 
+        redemption.
+      
+      * Common Name - Used in the auto-generation of SAHARA Labs user names
+        to create friendlier names.
+        
+      * Email - Used to send reservation emails.
+      
+      * Given Name - Used in the auto-generation of SAHARA Labs user names
+        to create friendlier names.
+        
+      * Surname - Used in the auto-generation of SAHARA Labs user names
+        to create friendlier names.
+        
+      * Home Organization - Used as an optional discrimination for permission 
+        key redemption.
+        
+      * Shared Token - As Labshare is an organization with multiple providers,
+        this allows Labshare to uniquely identify privileged users to Labshare
+        across its multiple service providers.
+  
+###############################################################################
+## Stage 3: Metadata configuration.                                          ##
+###############################################################################
+      
+ 15. Create a directory to store AAF metadata which is web server writable
+     using:
+     
+      => mkdir /var/simplesamlphp/metadata/metadata-aaf-consuming
+      => chmod 755 /var/simplesamlphp/metadata/metadata-aaf-consuming
+      => chown apache /var/simplesamlphp/metadata/metadata-aaf-consuming
+      (assuming apache is the web server user name, other common names are
+      www-data, httpd).
+      
+ 16. Edit the file /var/simplesamlphp/config/config-metarefresh.php so it has
+     the same content as the supplied config-metarefresh.php.
+
+ 17. Edit the SimpleSAMLphp configuration file (/var/simplesamlphp/config/config.php)
+     and edit the property 'metadata.sources' to be:
+
+      'metadata.sources' => array(
+          array('type' => 'flatfile'),
+          array('type' => 'flatfile', 'directory' => 'metadata/metadata-aaf-consuming'),
+      ),
+   
+ 18. Edit the file /var/simplesamlphp/config/authsources.php and edit the 
+     'default-sp' section to have the properties:
+
+     'discoURL' => 'https://ds.aaf.edu.au/discovery/WAYF',
+     'privatekey' => 'sp-key.pem',
+     'certificate' => 'sp-cert.pem',
+
+ 19.  Go the page 'http://<address>/simplesaml/', click the 'Federation' tab 
+      and click the link 'Metarefresh: fetch metadata'. This should download
+      the AAF metadata.
+
+ 20. Go the page 'http://<address>/simplesaml/', click the 'Authentication' 
+     tab and click the 'Test configured authentication sources' link. Click
+     the 'default-sp' link and ensure you can login through the AAF WAYF. If
+     authentication succeeds you should see by directed back to SimpleSAMLphp
+     and see a list of your account attribtues.
+
+ 21. You have now setup to authenticate with the AAF through SimpleSAMLphp
+     so follow the Authentication/README instructions to configure SAHARA Labs
+     to use SimpleSAMLphp as an authentication source.
