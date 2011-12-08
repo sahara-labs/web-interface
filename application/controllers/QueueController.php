@@ -46,7 +46,7 @@ class QueueController extends Sahara_Controller_Action_Acl
      */
     public function indexAction()
     {
-        $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Rig Selection');
+        $this->view->headTitle($this->_headPrefix . 'Rig Selection');
 
         /* Whether to enable the permission activation system. */
         $this->view->renderPermActivation = $this->_config->permkey->enable;
@@ -140,7 +140,7 @@ class QueueController extends Sahara_Controller_Action_Acl
      */
     public function queuingAction()
     {
-        $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Queue');
+        $this->view->headTitle($this->_headPrefix . 'Queue');
 
         $queueInfo = Sahara_Soap::getSchedServerQueuerClient()->getUserQueuePosition(array(
         		'userQName' => $this->_auth->getIdentity()

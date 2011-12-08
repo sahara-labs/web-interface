@@ -51,7 +51,7 @@ class SessionController extends Sahara_Controller_Action_Acl
         ));
 
         $this->view->rig = $this->view->stringTransform($response->resource->resourceName, '_', ' ');
-        $this->view->headTitle(self::HEAD_TITLE_PREFIX . $this->view->rig);
+        $this->view->headTitle($this->_headPrefix . $this->view->rig);
 
         $this->view->time = array(
             'hours' => floor($response->time / 3600),

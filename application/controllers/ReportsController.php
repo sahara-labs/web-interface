@@ -46,7 +46,7 @@ class ReportsController extends Sahara_Controller_Action_Acl
 
     public function indexAction()
     {
-        $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Reports');
+        $this->view->headTitle($this->_headPrefix . 'Reports');
 
         /* Load the rig names for the initial screen */
         $rep = Sahara_Soap::getSchedServerReportsClient();
@@ -61,8 +61,8 @@ class ReportsController extends Sahara_Controller_Action_Acl
         $this->view->persona = $this->_acl->getUserRole();
     }
 
-    public function getvalueAction(){
-
+    public function getvalueAction()
+    {
         /* Disable view render and layout. */
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout()->disableLayout();
@@ -94,9 +94,9 @@ class ReportsController extends Sahara_Controller_Action_Acl
         echo $this->view->json($result);
     }
 
-    public function accessreportAction(){
-
-        $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Access Report');
+    public function accessreportAction()
+    {
+        $this->view->headTitle($this->_headPrefix . 'Access Report');
 
         /* Get Parameter */
         $params = $this->_request->getParams();
@@ -145,7 +145,7 @@ class ReportsController extends Sahara_Controller_Action_Acl
 
     public function sessionreportAction(){
 
-        $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Session Report');
+        $this->view->headTitle($this->_headPrefix . 'Session Report');
 
 
         /* Get Parameter */

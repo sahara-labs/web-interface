@@ -40,7 +40,7 @@ class HomeController extends Sahara_Controller_Action_Acl
 {
     public function indexAction()
     {
-        $this->view->headTitle("Remote Labs - Home Directory");
+        $this->view->headTitle($this->_headPrefix . "Home Directory");
 
         $home = new Sahara_Home(Sahara_Home::getHomeDirectoryLocation());
         if (!$home->isValid())

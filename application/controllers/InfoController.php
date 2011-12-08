@@ -46,7 +46,7 @@ class InfoController extends Sahara_Controller_Action_Acl
      */
     public function indexAction()
     {
-        $this->view->headTitle('Remote Labs - News');
+        $this->view->headTitle($this->_headPrefix . 'News');
         $this->view->messages = $this->_flashMessenger->getMessages();
 
         $inst = Zend_Registry::get('config')->institution;
@@ -70,7 +70,7 @@ class InfoController extends Sahara_Controller_Action_Acl
      */
     public function faqAction()
     {
-        $this->view->headTitle('Remote Labs - Frequently Asked Questions');
+        $this->view->headTitle($this->_headPrefix . 'Frequently Asked Questions');
         $this->view->messages = $this->_flashMessenger->getMessages();
 
         $inst = Zend_Registry::get('config')->institution;
@@ -93,7 +93,7 @@ class InfoController extends Sahara_Controller_Action_Acl
      */
     public function contactAction()
     {
-        $this->view->headTitle('Remote Labs - Contact Us');
+        $this->view->headTitle($this->_headPrefix . 'Contact Us');
         $this->view->messages = $this->_flashMessenger->getMessages();
 
         $inst = Zend_Registry::get('config')->institution;

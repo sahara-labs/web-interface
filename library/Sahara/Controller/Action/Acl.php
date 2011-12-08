@@ -43,8 +43,7 @@
  */
 class Sahara_Controller_Action_Acl extends Zend_Controller_Action
 {
-    /** The branding prefix for head titles. */
-    const HEAD_TITLE_PREFIX = 'SAHARA Labs - ';
+    const DEFAULT_HEAD_PREFIX = 'Remote Labs';
 
     /** Pseudo role for in queue users. */
     const PSEUDO_ROLE_QUEUE = "INQUEUE";
@@ -68,6 +67,9 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
     /** @var Zend_Controller_Action_Helper_Redirector Redirector to redirect
      *  to other action controller. */
     protected $_redirector;
+
+    /** @var String Head prefix. */
+    protected $_headPrefix;
 
     /** @var Sahara_Logger Logger. */
     protected $_logger;
@@ -96,6 +98,8 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
 
         $this->_logger = Sahara_Logger::getInstance();
         $this->_config = Zend_Registry::get('config');
+
+        $this->_headPrefix = ($this->_config->page->title ? $this->_config->page->title : self::DEFAULT_HEAD_PREFIX) . ' - ';
 
         $this->_flashMessenger = $this->getHelper('FlashMessenger');
         $this->_redirector = $this->getHelper('Redirector');

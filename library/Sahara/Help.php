@@ -44,17 +44,22 @@ class Sahara_Help
     /* Default help contents. */
     private static $_defHelp = array(
         'Rig Selection' => array(
-                'help' => 'This page is used for selecting a rig type. A dialog will open after
-                	selecting the rig type, enabling you to queue, reserve, or cancel a rig session.
-                	If these options are not available, or the rig seems to be offline, you may need
-                	to check back later.',
+                'help' => 'This page is used to select a rig type. A dialog will open after selecting the
+                           rig type, enabling you to queue, reserve, or cancel a rig session. If these
+                           opetions are not available, or the rig seems to be offline, you may need to
+                           check back later.',
                 'troubleshooting' => array(
                     'Queue:' => array(
-                        'How long do I have to wait in the queue?' => 'Queue time depends upon
-                       		 completion of the previous user\'s session.',
+                        'I\'ve been waiting a long time even though I am the 1st in the queue. How
+						 	long do I have to wait in the queue to access the rig?' => 'Queue time depends upon
+						 	completion of the previous user\'s session. Also, if the queueing time is longer than the
+						 	leftover remaining rig session (typically less than ~15-20 mins) the user will not be
+						 	allocated to a rig session. Queue time also may be long due to backlog of existing
+						 	reservations. Please check the \'Reservation Calendar\' before queuing.',
 
-                        'Queue time depends upon completion of the previous user\'s session.' =>
-                        	'A high priority user may be attempting to access the rig.',
+                        'My queue position is getting pushed back, why?' =>
+                        	'A higher priority user may be attempting to access the rig - most likely a
+							technical officer is dealing with a rig issue.',
 
                         'Can I cancel my queue?' =>
                         	'Yes, you will be redirected to the "Rig Selection" page after cancelling the queue.',
@@ -62,21 +67,22 @@ class Sahara_Help
                         'What happens if I close the browser window or my network fails?' =>
                         	'Please try to reopen the browser window as soon as possible. However, if this
                         	happens while waiting in a queue, your position in the queue may be removed and
-                        	you may need to queue again.',
-
-                       'How do I get to "Rig Session" page from here?' => 'The system directs the user to
-                        	the "Rig Session" page automatically after you queue and the rig is available to use.'
+                        	you may need to queue again.'
                     ),
 
                     'Reserving:' => array(
                         'How do I reserve a rig session?' => 'Select the rig and click on the "Reserve" button.
-                         	This will direct you to the reservation page.',
-                        'I reserved a rig, but it was unavailable when I tried to access it.' => 'This may
-                         	happen due to rigs that are fully reserved by other users for that time.  However,
-                         	you can still queue to use the rig.'
+                        	This will direct you to the \'Reservation Calendar\' page.',
+
+                        'I reserved a rig, but it was unavailable when I tried to access it.' => 'The system may be
+                        resetting the rig prior to starting your session. Please give it a minute or two to reset
+                        and then refresh your browser if it does not automatically redirect you to the session page.
+                        You must log-in within 10 minutes of your reservation period, otherwise the system will drop
+                        your reservation once the timer has expired to allow queuing users to access the rig.
+						You will not be able to return to the rig without either queuing or making another reservation.'
                     ),
 
-                    'Explanation of Legend:' => array(
+                    'Legend:' => array(
                         'Active - The rig is online and the user may queue to use.',
                         'Inactive - User does not have permission to queue for this rig. Permissions are
                         time-based and the current time is out of the assigned usage period.',
@@ -90,45 +96,56 @@ class Sahara_Help
             ),
 
        'Reservation' => array(
-                'help' => 'The \'Reservation\' page allows you to reserve future rig sessions in advance.
-    	            Availability and time slots depend on alloted permissions for the rig.',
+                'help' => 'This page allows you to reserve rig sessions in advance. Availability and time slots depend
+                on your allotted permission for the rig.',
+
                 'troubleshooting' => array(
-                    'Reservations' => array(
-                        'How do I make a reservation?' => 'You can select a date to reserve the rig by
-                        	clicking the calendar icon that is located next to the date window. You can select
-                        	your desired time slot by clicking on the available times (green sections) and
-                        	selecting the green check button. A reservation confirmation dialog will appear
-                        	to confirm. Click on the "Confirm Reservation" button. Another dialog will appear
-                        	confirming that the reservation is successfully created.',
+                    'Create, Edit and/or Cancel' => array(
+                        'How do I make a reservation?' => 'You can select a date to reserve the rig by clicking the
+                        	calendar icon that is located next to the date window. You can select your desired time
+                        	slot by clicking on the available times (green sections) and selecting the green check
+                        	button. A reservation confimation dialog will appear to confirm. Click on the "Confirm
+                        	Reservation" button. Another dialog will appear confirming that the reservation is
+                        	sucessfully created.',
+
                         'Can I make multiple reservations?' => 'You may be able to make multiple reservations
                         	for a rig depending on the allotted permissions of the rig.',
+
                         'Reservation time is shown as \'Available\', but I can\'t reserve the rig.' =>
-                            'This may happen due to reaching the maximum number of reservations allowed for
-                            a single user. This also may be due to rigs that are reserved for
-                            priority users for that time period.  However, the user can stillqueue to use the rig.',
+                            'This may happend due to reaching the maximum number of reservations allowed for a single
+                            user. This also may be due to rigs that are reserved for priority users for that time
+                            period. However, the user can still queue to use the rig.',
+
                         'I tried to reserve for a longer period, but the given option is for a shorter period.' =>
-                            'Alloted session times are predefined by your instructor.'
-                    ),
-                    'Editing Reservations' => array(
-                        'How can I change/edit a reservation?' => 'You must first cancel the existing reservation
-                        	and then create a new reservation. This can be done through the \'Reservation\' tab.'
-                    ),
-                    'Cancelling Reservations' => array(
-                        'How do I cancel a reservation?' => 'Click on the \'Existing Reservations\' tab which
-                        	is located next to the \'Rig Selection\' tab. Then select the reservation that you
-                        	wish to cancel. A dialog will appear asking you to confirm.'
-                    ),
-                    'Reservation Reminder' => array(
-                        'Can I set a reminder for my reservation?' => 'No, you will receive an automatic
-                        	reminder by email from the system one hour before the rig session starts.'
-                    ),
-                    'Reservation Confirmation' => array(
+                            'Alloted session times are predefined by your instructor.',
+
+                        'I reserved a rig, but it was unavailable when I tried to access it.' => 'The system may be
+                        	resetting the rig prior to starting your session. Please give it a minute or two to reset
+                        	and then refresh your browser if it does not automatically redirect you to the session page.
+                        	You must log-in within 10 minutes of your reservation period, otherwise the system will
+                        	drop your reservation once the timer has expired to allow queuing users to access the rig.
+                        	You will not be able to return to the rig without either queuing or making another
+                        	reservation.',
+
+                        'How can I change/edit an existing reservation?' => 'You must first cancel the existing
+                        	reservation and then create a new reservation. This can be done through the \'Existing
+                        	Reservations\' tab.',
+
+                        'How do I cancel a reservation?' => 'Click on the \'Existing Reservations\' tab. Then select
+                        	the reservation that you wish to cancel. A dialog will appear asking you to confirm.',
+
+                        'Can I set a reminder for my reservation?' => 'No, you will receive an automatic reminder via
+                        	email from the system one hour before the rig session starts.',
+
                         'I received an error message and cannot confirm my reservation.' => 'Please reload the page.
-                        	It will refresh the \'Reservation\' page. If the reservation confirmation does
-                        	not appear, try reserving again.'
+                        	It will refresh the \'Reservation\' page. If the reservation confirmation does not apprear,
+                        	try reserving again.'
                     ),
+
                     'Time Zones' => array(
-                        'Time zone is based on your local computer time setting.'
+                        'Time zone is based on your local computer time setting.' => 'The Remote Labs reservation calendar
+                        is programmed to always set to the user\'s local computer time. Please check your computer
+                        time setting and make sure it is set to your correct local time.'
                     ),
                 )
             ),
@@ -208,40 +225,52 @@ class Sahara_Help
         ),
 
         'Session' => array(
-                'help' => 'This is the main control page for set up and accessing/launching the rig. Here
-                 	you can, depending on the rig, launch the rig, set your video formats, set your view
-                 	positions, and change the interval speed for page refreshing.',
+                'help' => 'This is the main control page for setting up and accessing/launching the rig. Here users
+                	can (depending on the rig) control or launch the rig, set video formats and view positions, and
+                	change the interval speed for page refreshing.',
+
                 'troubleshooting' => array(
                     'Session Time' => array(
-                        'What is \'Session Time\'?' => 'Session Time shows two different times: \'In
-                        	Session\' indicates the overall time of your session usage while \'Remaining
-                        	Time\' indicates the guaranteed time left to use the rig.',
-                        'My session timed out and I cannot access the rig again.' => 'Typically this
-                        	means that another user has queued or reserved the rig. Please reserve
-                        	for another time or check back on the rig later.',
+                        'What is "Session Time"?' => '"Session Time" shows two different times: \'In Session\'
+                        	indicates the overall time of your session usage while \'Remaining Time\' indicates the
+                        	guaranteed time left to use the rig. This time duration is set by the course academic.
+                        	A user can queue/reserve to use the rig to repeat experiments.',
+
+                        'My session timed out and I cannot access the rig again.' => 'Typically this means that another
+                        	user has queued or reserved the rig. Please reserve for another time or check back on the
+                        	rig later.',
+
                         'What does \'Remaining\' mean and what happens when it reaches zero?' =>
-                            'This indicates the guaranteed usage time left on the rig. When this
-                            reaches zero, the user may be removed from the rig session if another
-                            user has reserved the time or queued after the current user. If there
-                            is no reservation or queue, the rig session may be extended for the
-                            current user.'
+                            'This indicates the guaranteed usage time left on the rig. When this reaches zero,
+                            the user may be removed form the rig session if another user has reserved the time or
+                            queued after the current user. If there is no reservation or queue, the rig session may be
+                            extended for the current user.',
+
+                        'I accidentally clicked on \'Finished Session\' button early and cannot access the rig again
+                        	even though my reservation time hasn\'t ended.' => 'Another user may have queued and been
+                        	allocated the session after you ended your rig session. You may need to join the queue
+                        	again to acess the rig session.'
                     ),
+
                     'Idle Time' => array(
-                        'What does the warning below the rig name mean?' => 'This warns the
-                        	user about the idle time in which the user needs to launch/use the rig
-                         	in order to remain in the rig session'
+                        'What does the warning below the rig name mean?' => 'This warns the user about the idle
+                        	time in which the user needs to launch/use the rig in order to remaing in the rig session.'
                     ),
-                    'Ending Session' => array(
-                        'What happens if my browser closes or my network fails while I am using
-                        	the rig session?' => 'If this happens, you may need to log back into
-                        	Remote Labs to resume the rig session. However, if another user has
-                        	queued and accessed the rig during this time, you may need to join
-                        	the queue again to access the rig session.',
-                        'I accidentally clicked on \'Finish Session\' early and cannot access the
-                        	rig again even though my reservation time hasn\'t ended.' => 'You
-                         	may be removed from the rig session if another user has queued after
-                         	you ended your rig session. You may need to join the queue again to
-                         	access the rig session.'
+
+                    'Video Formats' => array(
+                        'I am unable to view WMP or VLC on the video box after selecting one of video formats.' =>
+                        	'Depending on the selected video format, an appropriate plugin must be loaded by the
+                           	browser to display the video. If the plugin is not installed or if the browser security
+                           	policy prohibits loading the plugin, the video will not be displayed. Ensure Windows Media
+                           	Plugin (or equivalent) or VLC plugins are installed to view the WMP or VLC video streams
+                           	respectively.',
+
+                        'I am unable to detach the video box(es) from the browser tab.' => 'Click the "Reset Positions"
+                        	 button to detach and return to its original position.',
+
+                        'For JPEG, what does the rate mean and why is it slow?' => 'It means a "refresh interval speed"
+                        	of 2 seconds. You can also move the slider to change the refresh interval. It may seem slow
+                        	due to the internet connection at the user\'s current location.'
                     )
                 )
         ),

@@ -52,7 +52,7 @@ class BookingsController extends Sahara_Controller_Action_Acl
      */
     public function indexAction()
     {
-        $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Create Reservations');
+        $this->view->headTitle($this->_headPrefix . 'Create Reservations');
 
         if (($pid = $this->_getParam('pid', 0)) == 0)
         {
@@ -333,7 +333,7 @@ class BookingsController extends Sahara_Controller_Action_Acl
      */
     public function existingAction()
     {
-        $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Reservations');
+        $this->view->headTitle($this->_headPrefix . 'Reservations');
 
         // TODO Cache timezone results
         $this->view->tz = Sahara_Soap::getSchedServerBookingsClient()->getTimezoneProfiles();
@@ -386,7 +386,7 @@ class BookingsController extends Sahara_Controller_Action_Acl
      */
     public function waitingAction()
     {
-        $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Reservation');
+        $this->view->headTitle($this->_headPrefix . 'Reservation');
 
         $this->view->bid = $this->_request->getParam('bid');
         if (!$this->view->bid)

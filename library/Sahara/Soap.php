@@ -78,27 +78,35 @@ class Sahara_Soap
 
         $opts = array();
 
-        /* Whether to cache WSDLs. */
-        $cache = Zend_Registry::get('config')->SOAP->get('cacheWSDL', TRUE);
-        if ($cache == FALSE || strcasecmp($cache, 'false')  === 0)
-        {
-            ini_set('soap.wsdl_cache_enabled', WSDL_CACHE_NONE);
-        }
+        $soapConfig = Zend_Registry::get('config')->SOAP;
 
-        /* SOAP timeout. */
-        $tm = Zend_Registry::get('config')->SOAP->get('requestTimeout', 0);
-        if ($tm && is_int($tm))
+        if ($soapConfig)
         {
-            ini_set('default_socket_timeout', $tm);
+            /* Whether to cache WSDLs. */
+            $cache = $soapConfig->get('cacheWSDL', TRUE);
+            if ($cache == FALSE || strcasecmp($cache, 'false')  === 0)
+            {
+                ini_set('soap.wsdl_cache_enabled', WSDL_CACHE_NONE);
+            }
+
+            /* SOAP timeout. */
+            $tm = $soapConfig->get('requestTimeout', 0);
+            if ($tm && is_int($tm))
+            {
+                ini_set('default_socket_timeout', $tm);
+            }
         }
 
         $this->_client = new Zend_Soap_Client($this->_wsdl, $opts);
 
-        /* Whether to use the WSDL location. */
-        if(!Zend_Registry::get('config')->SOAP->get('useWSDLLocation', FALSE))
+        if ($soapConfig)
         {
-            list($loc, $junk) = explode('?wsdl', $uri, 2);
-            $this->_client->setLocation($loc);
+            /* Whether to use the WSDL location. */
+            if(!$soapConfig->get('useWSDLLocation', FALSE))
+            {
+                list($loc, $junk) = explode('?wsdl', $uri, 2);
+                $this->_client->setLocation($loc);
+            }
         }
     }
 
@@ -236,7 +244,7 @@ class Sahara_Soap
         }
         return Zend_Registry::get(self::REPORTS_SERVICE_BUNDLE);
     }
-    
+
     /**
      * Calls a SOAP operation on the SOAP client.
      *

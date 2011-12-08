@@ -46,7 +46,7 @@ class IndexController extends Sahara_Controller_Action_Acl
 	 */
     public function indexAction()
     {
-        $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Login');
+        $this->view->headTitle($this->_headPrefix . 'Login');
         $this->view->messages = $this->_flashMessenger->getMessages();
 
        $config = Zend_Registry::get('config');

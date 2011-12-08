@@ -49,7 +49,10 @@ class ErrorController extends Zend_Controller_Action
      */
     public function errorAction()
     {
-        $this->view->headTitle(Sahara_Controller_Action_Acl::HEAD_TITLE_PREFIX . 'Error Occurred',
+        $config = Zend_Registry::get('config');
+
+        $this->view->headTitle(($config->page->title ? $config->page->title :
+                Sahara_Controller_Action_Acl::DEFAULT_HEAD_PREFIX) . ' - ' . 'Error Occurred',
                 Zend_View_Helper_Placeholder_Container_Abstract::SET);
 
         /* Information that should have been populated by the action
