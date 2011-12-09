@@ -45,6 +45,7 @@ $this->headScript()->prependFile($this->baseUrl('js/jquery.validationEngine-en.j
 $this->headScript()->prependFile($this->baseUrl('js/jquery.validationEngine.js'));
 $this->headScript()->prependFile($this->baseUrl('js/jquery-ui.js'));
 $this->headScript()->prependFile($this->baseUrl('js/jquery-min.js'));
+$this->headScript()->appendFile($this->baseUrl('/js/layout.js'));
 
 $this->headScript()->appendFile($this->baseUrl('js/menueffect.js'));
 
@@ -69,22 +70,6 @@ $(document).ready( function() {
 		menuSlider.init("menu","slide");
 	}
 });
-
-function resizeFooter()
-{
-	$("#wrapper").css("min-height", "0");
-
-	if (/msie|MSIE 8/.test(navigator.userAgent))
-	{
-		/* For some reason IE 8 in "standards mode" finds an extra four pixels
-		 * height that no other browser has. */
-		$("#wrapper").css("min-height", $(document).height() - 4);
-	}
-	else
-	{
-		$("#wrapper").css("min-height", $(document).height() );
-	}
-}
 ')
 ?>
 
