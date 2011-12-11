@@ -327,7 +327,7 @@ a.plaina:hover {
 }
 
 #footer img {
-	margin-bottom: -11px;
+	margin: 0 5px -11px;
 	border: none;
 }
 
@@ -440,3 +440,13 @@ a.plaina:hover {
 	margin: 4px;
 }
 
+#feedback_form input, #feedback_form textarea {
+	width: 470px;
+}
+
+.saharaform input, .saharaform textarea, .saharaform select {
+	border: 1px solid #AAAAAA;
+	border-radius: 3px;
+	padding: 4px;
+	background: url("../images/forms/linear_grad.png") repeat-x scroll 0 0 #FDFDFD;
+}

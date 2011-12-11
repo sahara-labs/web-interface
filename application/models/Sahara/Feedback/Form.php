@@ -96,6 +96,7 @@ class Sahara_Feedback_Form extends Zend_Form
                  ->setAttrib('class', 'validate[required]')
                  ->setErrorMessages(array('You must supply some feedback!'))
                  ->setAttrib('rows', '10')
+                 ->setAttrib('cols', '55')
                  ->setDecorators(Sahara_Decorator_Table::$ELEMENT);
         $this->addElement($feedback);
 
