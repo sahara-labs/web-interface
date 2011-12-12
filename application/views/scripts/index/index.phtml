@@ -1,4 +1,4 @@
-<?php
+ <?php
 /**
  * SAHARA Web Interface
  *
@@ -35,7 +35,6 @@
  * @author Michael Diponio (mdiponio)
  * @date 20th March 2010
  */
-$this->headLink()->appendStylesheet($this->baseUrl('css/login.css'));
 
 ?>
 
@@ -95,7 +94,7 @@ $this->headLink()->appendStylesheet($this->baseUrl('css/login.css'));
 
 <?php endif; ?>
         <div id="loginform">
-        	<form id="loginformid" method="POST">
+        	<form id="loginformid" class="saharaform" method="POST">
         		<div id="loginformfields" class="ui-corner-all">
         		<? if ($this->ssoLayout): ?>
         			<div id="loginformtitle"><?=$this->localLabel ? $this->localLabel : 'Institution Login'?>:</div>
@@ -103,7 +102,7 @@ $this->headLink()->appendStylesheet($this->baseUrl('css/login.css'));
         	        <?=$this->form->getDisplayGroup('auth_form')->render()?>
         	    </div>
         		<div class="ui-corner-all" style="float:right">
-        			<?=$this->form->getElement('login')->render()?>
+        			<button type="submit">Login</button>
         		</div>
         	</form>
         </div>
@@ -114,7 +113,6 @@ $this->headLink()->appendStylesheet($this->baseUrl('css/login.css'));
 <?php endif; ?>
 
 <script type="text/javascript">
-<!--
 var hovTT = new Object();
 $(document).ready(function() {
 <?php if ($this->ssoLayout): ?>
@@ -122,8 +120,7 @@ $(document).ready(function() {
 		$(this).hide();
 		$("#loginbuttons").css("width", "520");
 		$("#localloginform").show();
-		$("#loginformid").jqTransform()
-					     .validationEngine();
+		$("#loginformid").validationEngine();
 	});
 
 	$(".loginbutton").hover(function(){
@@ -140,9 +137,11 @@ $(document).ready(function() {
 		}
 	);
 <?php else: ?>
-	$("#loginformid").jqTransform()
-					 .validationEngine();
+	$("#loginformid").validationEngine();
+
+	$("#loginformid input")
+			.focusin(formFocusIn)
+	 		.focusout(formFocusOut);
 <?php endif; ?>
 });
-//-->
 </script>

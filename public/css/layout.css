@@ -1,3 +1,4 @@
+
 @CHARSET "UTF-8";
 
 /**
@@ -444,9 +445,87 @@ a.plaina:hover {
 	width: 470px;
 }
 
+/******************************************************************************
+ ** Form styling.                                                            **
+ ******************************************************************************/
+
 .saharaform input, .saharaform textarea, .saharaform select {
 	border: 1px solid #AAAAAA;
 	border-radius: 3px;
 	padding: 4px;
 	background: url("../images/forms/linear_grad.png") repeat-x scroll 0 0 #FDFDFD;
+}
+
+/******************************************************************************
+ ** Login form                                                               **
+ ******************************************************************************/
+@CHARSET "UTF-8";
+
+#loginform {
+	width: 310px;
+	margin: 10px auto;
+}
+
+#loginformfields {
+	border: 0px;
+	background-color: #EFEFEF;
+	margin-bottom: 5px;
+	position: relative;
+	display: block;
+	overflow: hidden;
+	border: 1px solid #888888;
+	-moz-box-shadow: 0 0 5px #AAAAAA;
+	-webkit-box-shadow: 0 0 5px #AAAAAA;
+	box-shadow: 0 0 5px #AAAAAA;
+	color: #606060;
+}
+
+#loginformfields input {
+	width: 200px;
+}
+
+#loginformtitle {
+	font-weight: bold;
+	text-size: 1.1em;
+	padding: 5px;
+}
+
+#logindiv {
+	width: 310px;
+}
+
+#formid {
+	margin-top: 10px;
+}
+
+#loginbuttons {
+	margin: 40px auto;
+	width: 400px;	
+}
+
+#shibbutton {
+	float: left;
+}
+
+#shibnolocalbutton {
+	margin: 0 auto;
+}
+
+#localbutton {
+	float: right;
+}
+
+.loginbutton {
+	width: 150px;
+	height: 150px;
+}
+ 
+#localloginform {
+	display: none;
+	float: right;
+	margin: 20px 20px 0;
+}
+
+#loginerrors {
+	margin: 10px auto 0;
 }

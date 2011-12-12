@@ -47,8 +47,6 @@ $this->headScript()->prependFile($this->baseUrl('js/jquery-ui.js'));
 $this->headScript()->prependFile($this->baseUrl('js/jquery-min.js'));
 $this->headScript()->appendFile($this->baseUrl('/js/layout.js'));
 
-$this->headScript()->appendFile($this->baseUrl('js/menueffect.js'));
-
 $config = Zend_Registry::get('config');
 $headerBack = $config->header->background;
 

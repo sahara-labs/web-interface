@@ -82,7 +82,9 @@ $(document).ready(function () {
 	     	}
 	 	});
 
-	$("#feedback_form div.jqTransformInputWrapper, #feedback_form input.jqTransformInput").css("width", "100%");
+    $("#feedback_form input, #feedback_form select, #feedback_form textarea")
+	 		.focusin(formFocusIn)
+	 		.focusout(formFocusOut);
 });
 
 </script>
