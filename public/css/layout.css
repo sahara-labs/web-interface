@@ -452,7 +452,7 @@ a.plaina:hover {
 .saharaform input, .saharaform textarea, .saharaform select {
 	border: 1px solid #AAAAAA;
 	border-radius: 3px;
-	padding: 4px;
+	padding: 5px;
 	background: url("../images/forms/linear_grad.png") repeat-x scroll 0 0 #FDFDFD;
 }
 

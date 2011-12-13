@@ -102,7 +102,7 @@
         	        <?=$this->form->getDisplayGroup('auth_form')->render()?>
         	    </div>
         		<div class="ui-corner-all" style="float:right">
-        			<button type="submit">Login</button>
+        			<button  id='loginformsubmit' type="submit" class='ui-button'>Login</button>
         		</div>
         	</form>
         </div>
@@ -142,6 +142,8 @@ $(document).ready(function() {
 	$("#loginformid input")
 			.focusin(formFocusIn)
 	 		.focusout(formFocusOut);
+
+	$("#loginformsubmit").button();
 <?php endif; ?>
 });
 </script>
