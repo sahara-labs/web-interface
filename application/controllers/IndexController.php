@@ -49,11 +49,13 @@ class IndexController extends Sahara_Controller_Action_Acl
         $this->view->headTitle($this->_headPrefix . 'Login');
         $this->view->messages = $this->_flashMessenger->getMessages();
 
-       $config = Zend_Registry::get('config');
+        $config = Zend_Registry::get('config');
         $this->view->inst = $inst = $config->institution;
 
         $form = new Sahara_Auth_Form();
         $this->view->form = $form;
+
+        $this->view->localLabel = $config->auth->localLabel;
         if ($this->view->ssoLayout = ($config->auth && $config->auth->useSSO))
         {
             $this->view->localAuth = $config->auth->useLocalAuth;
@@ -63,7 +65,6 @@ class IndexController extends Sahara_Controller_Action_Acl
             $this->view->ssoLabel = $config->auth->ssoLabel;
             $this->view->ssoHover = $config->auth->ssoHover;
             $this->view->localIcon = $config->auth->localIcon;
-            $this->view->localLabel = $config->auth->localLabel;
             $this->view->localHover = $config->auth->localHover;
         }
 

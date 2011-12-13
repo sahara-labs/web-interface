@@ -89,26 +89,41 @@
 		</span>
 	</a>
 	<?php endif; ?>
+</div>
 
-	<div id="localloginform">
-
+<div id="localloginform">
 <?php endif; ?>
-        <div id="loginform">
-        	<form id="loginformid" class="saharaform" method="POST">
-        		<div id="loginformfields" class="ui-corner-all">
-        		<? if ($this->ssoLayout): ?>
-        			<div id="loginformtitle"><?=$this->localLabel ? $this->localLabel : 'Institution Login'?>:</div>
-        		<?php endif; ?>
-        	        <?=$this->form->getDisplayGroup('auth_form')->render()?>
-        	    </div>
-        		<div class="ui-corner-all" style="float:right">
-        			<button  id='loginformsubmit' type="submit" class='ui-button'>Login</button>
-        		</div>
-        	</form>
-        </div>
+
+	<div id="loginformpanel">
+		<form id="loginform" method="POST">
+			<div class="commonpanel ui-corner-all">
+				<div class='commonpanelheader'>
+					<span class="ui-icon ui-icon-key"> </span>
+					<?=($this->localLabel ? $this->localLabel : 'Login') . ':'?>
+				</div>
+				<div class="commonpanelcontents saharaform">
+					<div>
+						<label for="usernamefield">Username:</label>
+						<input id='usernamefield' class='validate[required]' type='text' name='username' />
+					</div>
+					<div>
+						<label for="passwordfield">Password:</label>
+						<input id='passwordfield' class='validate[required]' type='password' name='password' />
+					</div>
+				</div>
+			</div>
+			<div id='loginsubmit'>
+				<button type='submit'>Login</button>
+			</div>
+<?php if ($this->ssoLayout): ?>
+			<div id='loginback'>
+				<button type='button'>Back</button>
+			</div>
+<?php endif; ?>
+		</form>
+	</div>
 
 <?php if ($this->ssoLayout): ?>
-	</div>
 </div>
 <?php endif; ?>
 
@@ -116,12 +131,25 @@
 var hovTT = new Object();
 $(document).ready(function() {
 <?php if ($this->ssoLayout): ?>
+
+	$("#loginform").validationEngine();
+	$("#loginform input")
+		.focusin(formFocusIn)
+		.focusout(formFocusOut);
+
+	$("#loginform button").button();
+
 	$("#localbutton").click(function() {
-		$(this).hide();
-		$("#loginbuttons").css("width", "520");
+		$(this).parent().hide();
 		$("#localloginform").show();
-		$("#loginformid").validationEngine();
 	});
+
+	$("#loginback button").click(function() {
+		$("#loginbuttons").show();
+		$("#localloginform").hide();
+		$("#loginform").validationEngine("hideAll");
+	});
+
 
 	$(".loginbutton").hover(function(){
 			var eId = $(this).attr('id');
@@ -137,13 +165,13 @@ $(document).ready(function() {
 		}
 	);
 <?php else: ?>
-	$("#loginformid").validationEngine();
+	$("#loginform").validationEngine();
 
-	$("#loginformid input")
+	$("#loginform input")
 			.focusin(formFocusIn)
 	 		.focusout(formFocusOut);
 
-	$("#loginformsubmit").button();
+	$("#loginsubmit button").button();
 <?php endif; ?>
 });
 </script>

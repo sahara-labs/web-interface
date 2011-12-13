@@ -48,9 +48,23 @@ defined('APPLICATION_ENV')
 set_include_path(implode(PATH_SEPARATOR, array(
     realpath(APPLICATION_PATH . '/../library'),     // Library code, Zend & Sahara_*
     realpath(APPLICATION_PATH . '/models'),         // Model code
-    realpath(APPLICATION_PATH . '/../institution'), // Institution code 
+    realpath(APPLICATION_PATH . '/../institution'), // Institution code
     get_include_path()
 )));
+
+/* Enable short open tags if disabled. Only settable in PHP > 5.3.0 */
+if (ini_get('short_open_tag')) ini_set('short_open_tag', 1);
+if (!ini_get('short_open_tag'))
+{
+    echo "PHP configuration must be changed, please set 'short_open_tag' to 'On' in php.ini ('" . php_ini_loaded_file() . ").";
+    return;
+}
+
+/* Disable useless notice warnings. */
+if (ini_get('error_reporting') & E_NOTICE)
+{
+      ini_set('error_reporting', ini_get('error_reporting') & ~E_NOTICE);
+}
 
 require_once 'Zend/Application.php';
 

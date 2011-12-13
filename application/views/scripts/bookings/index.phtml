@@ -61,20 +61,18 @@ $this->headScript()->appendScript($initScript);
 	<h2>Reservation for <?=$this->stringTransform($this->name, '_', ' ')?></h2>
 </div>
 
-<!--<div id="timezonebutton">-->
-<!--        <a id="timezone" class="ui-corner-br">-->
-<!--            <img src="/images/timezone.png" alt="Tz" />-->
-<!--        </a>-->
-<!--</div>-->
-<!--<script type="text/javascript">-->
-<!---->
-<!--$(document).ready(function() {-->
-<!--	 $("#timezone").click(function() {-->
-<!--        vp.displayTzSelector();-->
-<!--    });-->
-<!--});-->
-<!--//-->
-<!--</script>-->
+<div id="timezonebutton">
+       <a id="timezone" class="ui-corner-br">
+           <img src="/images/timezone.png" alt="Tz" />
+       </a>
+</div>
+<script type="text/javascript">
+$(document).ready(function() {
+	$("#timezone").click(function() {
+    	vp.displayTzSelector();
+    });
+});
+</script>
 
 <?php if ($this->horizonPassed): ?>
 <div id="nobookwarning" class="ui-state-error ui-corner-all">
@@ -110,15 +108,11 @@ $(document).ready(function() {
 		</a>
 		<div id="daybuttonlabelleft" class="daybuttonlabel">Previous Day</div>
 	</div>
+
 	<div id="daypickercontainer">
 		<div id="daypickerinner">
-			<div id="daypickerleft">&nbsp;</div>
-    		<div id="daypickerinput" class="jqTransformInputWrapper">
-    			<div class="jqTransformInputInner">
-    				<div>
-    					<input id="daypicker" class="jqTransformInput jqtranformdone" type="text" value="<?=$sDate?>"/>
-					</div>
-    			</div>
+    		<div id="daypickerinput" class="saharaform">
+    			<input id="daypicker" type="text" value="<?=$sDate?>"/>
     		</div>
 
     		<div id="daypickericonbox" class="arrowbox">

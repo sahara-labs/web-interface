@@ -57,13 +57,13 @@
  
 #daypickerbar {
 	margin: 10px auto 0;
-	width: 600px;
+	width: 400px;
+	position: relative;
 }
 
 #leftarrowbox {
-	float: left;
-	margin-left: 50px;
-	width: 100px;
+	position: absolute;
+	left: 0px;
 }
 
 #daypickercontainer {
@@ -92,15 +92,12 @@
 }
 
 #daypickericonbox {
-	float: left;
-	width: 100px;
-	margin-left: 15px;
+	
 }
 
 #rightarrowbox {
-	float: left;
-	margin-right: 50px;
-	width: 100px;
+	position: absolute;
+	right: 0px;
 }
 
 .daybutton {

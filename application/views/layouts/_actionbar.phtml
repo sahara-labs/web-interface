@@ -236,7 +236,7 @@ if ($this->controller == 'index' && $this->action == 'help') $actionMenu = array
 	<ul id="actionbarlist">
 	<?php foreach ($actionMenu as $id => $action): ?>
 		<li>
-			<a id="<?=$id?>" class="actiondialogbutton plaina ui-corner-all" href="#">
+			<a id="<?=$id?>" class="commonbutton actiondialogbutton plaina ui-corner-all" href="#">
 					<img src="<?=$action['icon']?>" alt="<?=$action['alt']?>"
 					style="margin-bottom:<?=strlen($action['title']) < 10 ? '10' : '0'?>px" /><br />
 			        <?=$action['title']?></a>

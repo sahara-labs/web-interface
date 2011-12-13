@@ -101,7 +101,7 @@ if (!$this->noPermissions)
 		<ul class="permissionlistbar">
 			<?php foreach ($typePerm as $perm): ?>
 			<li>
-				<a id="<?=$perm['id']?>_link" class="permissionbutton plaina ui-corner-all" href="#">
+				<a id="<?=$perm['id']?>_link" class="permissionbutton commonbutton plaina" href="#">
 				<?php if (!$perm['active']): ?>
 					<img class="permissionicon" src="<?=$this->baseUrl('images/permission_expired.png')?>" alt="Expired" />
 				<?php elseif ($perm['locked']):?>
@@ -129,7 +129,7 @@ if (!$this->noPermissions)
 <?php foreach ($this->userPermissions as $class => $classPerms): ?>
 	<?php foreach ($classPerms as $type => $typePerms): ?>
 		<?php foreach ($typePerms as $perm):?>
-<div id="<?=$perm['id']?>" class="permissiondialog" title="<?=$this->stringTransform($perm['display'], '_', ' ')?>">
+<div id="<?=$perm['id']?>" class="permissiondialog" style="display:none" title="<?=$this->stringTransform($perm['display'], '_', ' ')?>">
 <?php if (!$perm['active']): ?>
 
 <!-- Inactive permission dialog -->
