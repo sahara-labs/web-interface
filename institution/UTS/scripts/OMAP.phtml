@@ -27,7 +27,9 @@ $buttons = new Sahara_Session_Element_MultiButtons($this->rigClient, 'omapbutton
 
 			if (resp[0].value.length == 0)
 			{
-				$('#omapdemoresponse pre').append('OMAP board still booting. Please wait a few seconds then try again.');
+				$('#omapdemoresponse pre')
+					//.append('OMAP board still booting. Please wait a few seconds then try again.');
+					.append('Demonstration program in development!');
 			}
 			else $('#omapdemoresponse pre').append(resp[0].value);
 
