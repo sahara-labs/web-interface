@@ -46,7 +46,7 @@ $this->headLink()->appendStylesheet('/css/admin.css');
 </div>
 
 <div id="permform" >
-<form id="permissionform" method="POST">
+<form id="permissionform" class="saharaform" method="POST">
     <table>
     	<tr>
     		<td>User Class:</td>
@@ -91,7 +91,7 @@ $this->headLink()->appendStylesheet('/css/admin.css');
     	</tr>
     </table>
     <div id="permsubmitbutton">
-    	<input type="submit" value="Generate Keys" />
+    	<button type="submit">Generate Keys</button>
     </div>
 </form>
 </div>
@@ -99,7 +99,7 @@ $this->headLink()->appendStylesheet('/css/admin.css');
 <script type="text/javascript">
 <!--
 $(document).ready(function() {
-	$("#permissionform").jqTransform();
+	$("#permsubmitbutton button").button();
 });
 //-->
 </script>
