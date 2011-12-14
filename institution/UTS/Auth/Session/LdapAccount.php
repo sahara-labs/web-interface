@@ -132,7 +132,7 @@ class UTS_Auth_Session_LdapAccount extends Sahara_Auth_Session
         if (!$config) throw new Exception('LDAP account information not configured.'. 104);
 
         $ou = $this->_authType->getAuthInfo('ldapou');
-        if (!$ou) = $config->defaultou;
+        if (!$ou) $ou = $config->defaultou;
         if (!$ou) throw new Exception('LDAP account default OU not configured.', 104);
 
         if (!$basedn = $this->_config->ldap->params->baseDn) throw new Exception('LDAP options not configured.', 102);
