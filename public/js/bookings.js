@@ -147,6 +147,7 @@ BookingPage.prototype.displayTzSelector = function() {
 	}
 	
 	html += "</ul>" +
+			"<div style='clear:both'></div>" +
 		"</div>";
 	
 	$("body").append(html);
@@ -156,7 +157,6 @@ BookingPage.prototype.displayTzSelector = function() {
 		modal: true,
 		resizable: false,
 		width: 400,
-		height: 494,
 		buttons: {
 			'Close': function() { $(this).dialog('close'); }
 		},

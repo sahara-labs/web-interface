@@ -187,6 +187,8 @@ class BookingsController extends Sahara_Controller_Action_Acl
                 Sahara_DateTimeUtil::zeroPad(floor(abs($this->view->tz->offsetFromUTC) / 3600)) . ':' .
                 Sahara_DateTimeUtil::zeroPad(floor(abs($this->view->tz->offsetFromUTC) % 3600 / 60));
 
+        $this->view->showTzButton = $this->_config->bookings->addTzButton;
+
         $freeTimes = Sahara_Soap::getSchedServerBookingsClient()->findFreeBookings(array(
             'userID' => array('userQName' => $this->_auth->getIdentity()),
             'permissionID' => array('permissionID' => $perm->permissionID),

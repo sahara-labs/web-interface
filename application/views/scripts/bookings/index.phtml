@@ -61,6 +61,7 @@ $this->headScript()->appendScript($initScript);
 	<h2>Reservation for <?=$this->stringTransform($this->name, '_', ' ')?></h2>
 </div>
 
+<?php if ($this->showTzButton): ?>
 <div id="timezonebutton">
        <a id="timezone" class="ui-corner-br">
            <img src="/images/timezone.png" alt="Tz" />
@@ -73,6 +74,7 @@ $(document).ready(function() {
     });
 });
 </script>
+<?php endif; ?>
 
 <?php if ($this->horizonPassed): ?>
 <div id="nobookwarning" class="ui-state-error ui-corner-all">
@@ -106,20 +108,19 @@ $(document).ready(function() {
 		<a id="leftarrow" class="plaina disdaybutton ui-corner-all">
 			<img src="<?=$this->baseUrl('/images/dis_leftarrow.png')?>" alt="Previous" />
 		</a>
-		<div id="daybuttonlabelleft" class="daybuttonlabel">Previous Day</div>
+		<div class="daybuttonlabel">Previous Day</div>
 	</div>
 
 	<div id="daypickercontainer">
-		<div id="daypickerinner">
-    		<div id="daypickerinput" class="saharaform">
-    			<input id="daypicker" type="text" value="<?=$sDate?>"/>
-    		</div>
+		<div id="daypickerinput" class="saharaform">
+			<input id="daypicker" type="text" value="<?=$sDate?>" />
+		</div>
 
-    		<div id="daypickericonbox" class="arrowbox">
-    			<a id="daypickericon" class="plaina daybutton ui-corner-all">
-    				<img src="<?=$this->baseUrl('/images/daypicker.png')?>" alt="Pick" />
-    			</a>
-    		</div>
+		<div id="daypickericonbox" class="arrowbox">
+			<a id="daypickericon" class="plaina daybutton ui-corner-all"> <img
+				src="<?=$this->baseUrl('/images/daypicker.png')?>" alt="Pick" />
+			</a>
+			<div class='daybuttonlabel'>Open</div>
 		</div>
 	</div>
 
@@ -133,7 +134,7 @@ $(document).ready(function() {
 			<img src="<?=$this->baseUrl('/images/rightarrow.png')?>" alt="Next" />
 		</a>
 		<?php endif; ?>
-		<div id="daybuttonlabelright" class="daybuttonlabel">Next Day</div>
+		<div class="daybuttonlabel">Next Day</div>
 	</div>
 </div>
 
@@ -154,14 +155,7 @@ $(document).ready(function() {
 	.datepicker('hide')
 	.datepicker('option', 'showAnim', 'show');
 
-	$("#daypickerinput").hover(
-		function() {
-			$(this).addClass("jqTransformInputWrapper_hover");
-		},
-		function() {
-			$(this).removeClass("jqTransformInputWrapper_hover");
-		}
-	 );
+
 
 	 $("#daypickericon").click(function() { $("#daypicker").datepicker("show"); });
 	 $("#leftarrow").click(function() { vp.previousDay(); });

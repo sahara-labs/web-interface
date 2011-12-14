@@ -59,6 +59,7 @@
 	margin: 10px auto 0;
 	width: 400px;
 	position: relative;
+	height: 60px;
 }
 
 #leftarrowbox {
@@ -67,32 +68,24 @@
 }
 
 #daypickercontainer {
-	float: left;
-	width: 300px;
-}
-
-#daypickerinner {
-	margin: 0 auto;
+	position: absolute;
+	left: 120px;
 }
 
 #daypickerinput {
 	float: left;
-	width: 140px;
 	margin-top: 5px;
 }
 
-#daypickerleft {
-	float: left;
-	width: 20px;
-}
-
 #daypicker {
+	width: 80px;
 	font-size: 0.95em;
 	font-weight: bold;
+	margin: 3px 10px 0 0;
 }
 
 #daypickericonbox {
-	
+	float: left;
 }
 
 #rightarrowbox {
@@ -139,12 +132,16 @@
 	font-size: 0.8em;
 }
 
-#daybuttonlabelleft {
+#leftarrowbox .daybuttonlabel {
 	margin: 5px -10px 0;
 }
 
-#daybuttonlabelright {
+#rightarrowbox .daybuttonlabel {
 	margin: 5px -1px 0;
+}
+
+#daypickericonbox .daybuttonlabel {
+	margin: 5px 0 0 8px;
 }
 
 #bookingstimecontainer {
@@ -605,6 +602,10 @@
 	font-weight: bold;
 }
 
+#tzlist {
+	position: relative;
+}
+
 #tzlist, #innertzlist {
 	list-style: none;
 	margin-left: 10px;
@@ -640,11 +641,12 @@
 	display: none;
 	position: absolute;
 	font-weight: normal;
-	top: 70px;
-	left: 150px;
+	left: 120px;
 	width: 255px;
-	height: 375px;
-	overflow-y: scroll;
+	overflow-y: auto;
+	overflow-x: hidden;
+	top: 0px;
+	height: 100%;
 }
 
 .timezoneregion {
