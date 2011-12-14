@@ -155,18 +155,18 @@ $(document).ready(function() {
 	.datepicker('hide')
 	.datepicker('option', 'showAnim', 'show');
 
+	vp.initDate();
 
+	$("#daypickericon").click(function() { $("#daypicker").datepicker("show"); });
+	$("#leftarrow").click(function() { vp.previousDay(); });
+	$("#rightarrow").click(function() { vp.nextDay(); } );
+<?php if ($this->currentDay == $this->endDay): ?>
+	vp.nextEnabled = false;
+<?php endif; ?>
 
-	 $("#daypickericon").click(function() { $("#daypicker").datepicker("show"); });
-	 $("#leftarrow").click(function() { vp.previousDay(); });
-	 $("#rightarrow").click(function() { vp.nextDay(); } );
-	 <?php if ($this->currentDay == $this->endDay): ?>
-	 vp.nextEnabled = false;
-	 <?php endif; ?>
-
-	 <?php if ($this->numBookings >= $this->permission->maxBookings): ?>
-	 vp.setMaximumBookings();
-	 <?php endif; ?>
+<?php if ($this->numBookings >= $this->permission->maxBookings): ?>
+	vp.setMaximumBookings();
+<?php endif; ?>
 });
 //-->
 </script>

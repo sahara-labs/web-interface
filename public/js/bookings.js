@@ -112,7 +112,7 @@ BookingPage.prototype.displayTzSelector = function() {
 	var utcOff = (this.inuseOffset + this.systemOffset),
 	    offHr = Math.floor(utcOff / 3600),
 	    offMin = Math.floor(utcOff % 3600 / 60),
-	    reg, tz;
+	    reg, tz, thiz = this;
 	if (offMin < 0)
 	{
 		offHr--;
@@ -172,7 +172,7 @@ BookingPage.prototype.displayTzSelector = function() {
 				$(this).children(".tzregioncontainer").show()
 					.children()
 					.children(".timezoneregion").click(function () {
-						vp.changeTimezone($(this).attr('tz'), true);
+						thiz.changeTimezone($(this).attr('tz'), true);
 				});
 			}
 		},
@@ -375,8 +375,16 @@ function Booking(pid, start, end, dur, ext, extdur, name, num, max, tz, sysoff)
 }
 Booking.prototype = BookingPage.prototype;
 
+Booking.prototype.initDate = function () {
+	var date = window.location.hash;
+	if (date && date.match(/^#\d{4}\-\d{2}\-\d{2}/))
+	{
+		
+		this.changeDate(new Date(date.substring(1)));
+	}
+};
+
 Booking.prototype.changeDate = function(newDate) {
-	
 	if ((typeof newDate) == "string") newDate = strToDate(newDate);
 	
 	/* Range check. */
@@ -416,12 +424,15 @@ Booking.prototype.changeDate = function(newDate) {
     	.removeClass('ownbooking')
     	.addClass('slotloading');
     
+    var thiz = this, day = this.date.getFullYear() + "-" + zeroPad(this.date.getMonth() + 1) + "-" + zeroPad(this.date.getDate());
+    window.location.hash = "#" + day;
+    
     /* Get the free times. */
     $.post(
     	"/bookings/times",
     	{
     		pid: this.pid,
-    		day: this.date.getFullYear() + "-" + zeroPad(this.date.getMonth() + 1) + "-" + zeroPad(this.date.getDate()),
+    		day: day,
     		tz: ((this.systemOffset >= 0) ? "+" : "-") + zeroPad(Math.floor(Math.abs(this.systemOffset) / 3600)) + ":" + 
     				zeroPad(Math.abs(this.systemOffset) % 3600 / 60)
     	},
@@ -433,12 +444,12 @@ Booking.prototype.changeDate = function(newDate) {
     			var s = resp[i].toLowerCase();
     			$("#slot" + i).removeClass('slotloading').addClass(s);
     			
-    			if (s == 'free') vp.restoreFreeSlot(i);
+    			if (s == 'free') thiz.restoreFreeSlot(i);
     		}
     		
-    		if (vp.numBookings >= vp.maxBookings)
+    		if (thiz.numBookings >= thiz.maxBookings)
     		{
-    			vp.setMaximumBookings();
+    			thiz.setMaximumBookings();
     		}
     	}
     );
@@ -535,6 +546,7 @@ Booking.prototype.confirmBooking = function() {
 
 	$("body").append(html);
 	
+	var thiz = this;
 	$('#bookingconfirmation').dialog({
 		autoOpen: true,
 		modal: true,
@@ -542,11 +554,11 @@ Booking.prototype.confirmBooking = function() {
 		width: 400,
 		buttons: {
 			'Confirm Reservation': function () {
-				vp.commitBooking();
+				thiz.commitBooking();
 			},
 			'Cancel': function() {
 				$(this).dialog('close');
-				vp.destroyBooking();
+				thiz.destroyBooking();
 			}
 		},
 		close: function(event, ui) {
@@ -581,7 +593,7 @@ Booking.prototype.commitBooking = function() {
 	
 	/* Add timezone info. */
 	var tzOff = ((this.systemOffset >= 0) ? "+" : "-") + zeroPad(this.systemOffset / 3600) + ":" + 
-			zeroPad(this.systemOffset % 3600 / 60);
+			zeroPad(this.systemOffset % 3600 / 60), thiz = this;
 	bkStart += tzOff;
 	bkEnd += tzOff;
 	
@@ -595,7 +607,7 @@ Booking.prototype.commitBooking = function() {
 			tz: this.inuseTimezone
 		},
 		function(resp) {
-			vp.confirmBookingCallback(resp);
+			thiz.confirmBookingCallback(resp);
 		}
 	);
 };
@@ -626,6 +638,7 @@ Booking.prototype.commitBestFit = function(id) {
 	this.booking = this.isoTimeToSlot(this.bestFits[bf].startTime);
 	this.bookingEnd = this.isoTimeToSlot(this.bestFits[bf].endTime) - 1;
 
+	var thiz = this;
 	$.post(
 		"/bookings/commit",
 		{
@@ -636,7 +649,7 @@ Booking.prototype.commitBestFit = function(id) {
 			tz:    this.inuseTimezone
 		},
 		function(resp) {
-			vp.confirmBookingCallback(resp);
+			thiz.confirmBookingCallback(resp);
 		}
 	);
 };
@@ -708,6 +721,7 @@ Booking.prototype.confirmBookingCallback = function(resp) {
 			"</div>";
 		$("body").append(html);
 		
+		var thiz = this;
 		$('#bookingsuccess').dialog({
 			autoOpen: true,
 			modal: true,
@@ -720,7 +734,7 @@ Booking.prototype.confirmBookingCallback = function(resp) {
 			},
 			close: function(event, ui) {
 					$(this).dialog('destroy').remove();
-					vp.destroyBooking();
+					thiz.destroyBooking();
 			}
 		});
 		
@@ -808,6 +822,7 @@ Booking.prototype.confirmBookingCallback = function(resp) {
 			"</div>";
 		$("body").append(html);
 		
+		var thiz = this;
 		$('#bookingfailed').dialog({
 			autoOpen: true,
 			modal: true,
@@ -820,13 +835,13 @@ Booking.prototype.confirmBookingCallback = function(resp) {
 			},
 			close: function(event, ui) {
 					$(this).dialog('destroy').remove();
-					vp.destroyBooking();
+					thiz.destroyBooking();
 			}
 		});
 		
 		if (this.bestFits != null)
 		{
-			$(".bestfit").click(function () { vp.commitBestFit($(this).attr('id')); });
+			$(".bestfit").click(function () { thiz.commitBestFit($(this).attr('id')); });
 		}
 		$("#windowreload").click(function() { window.location.reload(); });
 	}
@@ -893,12 +908,14 @@ Booking.prototype.startBooking = function(slot) {
 			"</div>";
 		
 	slot.append(html);
-	
-	for (var i = this.booking; i <= this.bookingEnd; i++)
+
+	var i, thiz = this;
+	for (i = this.booking; i <= this.bookingEnd; i++)
 	{
 		$("#slot" + i).removeClass('free').addClass('createbooking').unbind();
 	}
 	
+
 	$(".timeselector").resizable({
 		handles: 's',
 		grid: 21,
@@ -906,17 +923,18 @@ Booking.prototype.startBooking = function(slot) {
 			$(".dragindicator").remove();
 		},
 		stop: function(event, ui) {
-			vp.changeBooking(Math.round((ui.size.height - ui.originalSize.height) / 21));
+			thiz.changeBooking(Math.round((ui.size.height - ui.originalSize.height) / 21));
 		}
 	});
 	
 	/* Events. */
+	var thiz = this;
 	$(".timeselectorcommit").click(function() {
-		setTimeout("vp.confirmBooking()", 10);
+		setTimeout(function() { thiz.confirmBooking(); }, 10);
 	});
 	
 	$(".timeselectorcancel").click(function() {
-		setTimeout("vp.destroyBooking()", 10);
+		setTimeout(function() { thiz.destroyBooking(); }, 10);
 	});
 	
 	$(".timeselector .ui-resizable-handle").css("height", '15px');
@@ -934,7 +952,7 @@ Booking.prototype.changeBooking = function(slots) {
 	
 		/* The user can only get the amount of slots that the permission allows. */
 		var disallowed = 0;
-		var message;
+		var message = '';
 		if (this.bookingEnd + slots - this.booking + 1 > this.maxSlots)
 		{
 			slots -= disallowed = this.bookingEnd + slots - this.booking + 1 - this.maxSlots;
@@ -1014,17 +1032,21 @@ Booking.prototype.destroyBooking = function() {
 };
 
 Booking.prototype.restoreFreeSlot = function(id) {
+	var thiz = this;
+	
 	$("#slot" + id).removeClass('createbooking').addClass('free')
 	.click(function(){
-		vp.startBooking($(this));
+		thiz.startBooking($(this));
 	})
 	.hover(
 		function() {
 			var id = $(this).attr('id');
-			if (vp.initHover(id)) setTimeout("vp.drawHover('" + id + "')", 1000);
+			if (thiz.initHover(id)) setTimeout(function() {
+				thiz.drawHover(id);
+			}, 1000);
 		},
 		function() {
-			vp.clearHover($(this));
+			thiz.clearHover($(this));
 		}
 	);
 };
@@ -1227,8 +1249,9 @@ Existing.prototype.drawList = function() {
 		else $(".bcancelled").show();
 	});
 	
+	var thiz = this;
 	$(".bactive").click(function() {
-		vp.confirmCancel($(this).attr('id'));
+		thiz.confirmCancel($(this).attr('id'));
 	});
 };
 
@@ -1239,7 +1262,7 @@ Existing.prototype.drawCalendar = function() {
 };
 
 Existing.prototype.confirmCancel = function(id) {
-	var b = this.bookings[id.substr(7)];
+	var b = this.bookings[id.substr(7)], thiz = this;
 	var html = 
 		"<div id='confirmcancel' title='Cancel Reservation'>" +
 			"<p>Are you sure you want to cancel the reservation for '<span>" + b.displayName.split('_').join(' ') +
@@ -1255,7 +1278,7 @@ Existing.prototype.confirmCancel = function(id) {
 		resizable: false,
 		buttons: {
 			'Cancel Reservation': function() {
-				vp.cancelBooking(b.bookingID);
+				thiz.cancelBooking(b.bookingID);
 			},
 			'Close': function() {
 				$(this).dialog('close');
@@ -1269,7 +1292,7 @@ Existing.prototype.confirmCancel = function(id) {
 
 Existing.prototype.cancelBooking = function(id) {
 	/* Tear down dialog. */
-	var diagsel = "div[aria-labelledby=ui-dialog-title-confirmcancel]";
+	var thiz = this, diagsel = "div[aria-labelledby=ui-dialog-title-confirmcancel]";
 	$(diagsel + " div.ui-dialog-titlebar").css("display", "none");
 	$(diagsel + " div.ui-dialog-buttonpane").css("display", "none");
 	$("#confirmcancel").html(
@@ -1284,7 +1307,7 @@ Existing.prototype.cancelBooking = function(id) {
 			bid: id,
 			reason: "User cancellation."
 		},
-		function(response) { vp.cancelBookingCallback(response, id); }
+		function(response) { thiz.cancelBookingCallback(response, id); }
 	);
 };
 
@@ -1319,6 +1342,7 @@ function Waiting(bid, sec)
 Waiting.prototype.countDown = function() {
 	this.seconds--;
 	
+	var thiz = this;
 	if (this.seconds < 60 && this.statusTimer == null)
 	{
 		this.statusTimer = setTimeout(function(){
@@ -1326,7 +1350,7 @@ Waiting.prototype.countDown = function() {
 				"/queue/inqueue",
 				null,
 				function(response) {
-					vp.statusTimer = null;
+					thiz.statusTimer = null;
 					if (typeof response != "object")
 					{
 						/* Some unexpected response. */
