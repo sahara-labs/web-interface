@@ -98,11 +98,41 @@ class UTS_Auth_Session_LdapAccount extends Sahara_Auth_Session
      */
     public function setup()
     {
+        $firstName = $this->_authType->getAuthInfo('first_name');
+        if (!$firstName) $firstName = ' ';
+
+        $lastName = $this->_authType->getAuthInfo('last_name');
+        if (!$lastName) $lastName = ' ';
+
+        $email = $this->_authType->getAuthInfo('email');
+        if (!$email) $email = ' ';
+
+
+        if ($this->_authType instanceof Sahara_Auth_Session)
+        {
+            /* Local authentication has a password. */
+            $password = $this->_authType->getPassword();
+        }
+        else
+        {
+            /* SSO does not so it must be generated. */
+            $password = '';
+            for ($i = 0; $i < 8; $i++)
+            {
+                switch (rand(0, 2))
+                {
+                    case 0: $password .= chr(rand(48, 58)); break; /* Numeric characters. */
+                    case 1: $password .= chr(rand(65, 90)); break; /* Upper case characters. */
+                    case 2: $password .= chr(rand(97, 122)); break; /* Lower case characters. */
+                }
+            }
+        }
+
         $config = $this->_config->session->ldapaccount;
         if (!$config) throw new Exception('LDAP account information not configured.'. 104);
 
         $ou = $this->_authType->getAuthInfo('ldapou');
-        if (!$ou) $ou = $config->defaultou;
+        if (!$ou) = $config->defaultou;
         if (!$ou) throw new Exception('LDAP account default OU not configured.', 104);
 
         if (!$basedn = $this->_config->ldap->params->baseDn) throw new Exception('LDAP options not configured.', 102);
@@ -120,12 +150,11 @@ class UTS_Auth_Session_LdapAccount extends Sahara_Auth_Session
         $entry = array(
             /* Normal account details. */
             'uid'                  => $uid,
-            'cn'                   => $this->_authType->getAuthInfo('first_name') . ' ' .
-                                      $this->_authType->getAuthInfo('last_name'),
-            'givenname'            => $this->_authType->getAuthInfo('first_name'),
-            'sn'                   => $this->_authType->getAuthInfo('last_name'),
-            'userpassword'         => $this->_authType->getPassword(),
-            'mail'                => $this->_authType->getAuthInfo('email'),
+            'cn'                   => $firstName . ' ' . $lastName,
+            'givenname'            => $firstName,
+            'sn'                   => $lastName,
+            'userpassword'         => $password,
+            'mail'                => $email,
 
             /* Object classes. */
             'objectclass'          => array(
@@ -142,15 +171,14 @@ class UTS_Auth_Session_LdapAccount extends Sahara_Auth_Session
             'gidnumber'            => $config->gid,
             'homedirectory'        => $this->_getHomeDirectory($ou),
             'loginshell'           => $config->loginshell,
-            'gecos'                => $this->_authType->getAuthInfo('first_name') . ' ' .
-                                      $this->_authType->getAuthInfo('last_name'),
+            'gecos'                => $firstName . ' ' . $lastName,
 
             /* Samba account details. */
             'sambaacctflags'       => '[UX  ]',
             'sambasid'             => $this->_getSambaSid($uidNumber),
             'sambaprimarygroupsid' => $this->_getSambaGroupSid(),
-            'sambalmpassword'      => $this->_smbHash->lmhash($this->_authType->getPassword()),
-            'sambantpassword'      => $this->_smbHash->nthash($this->_authType->getPassword()),
+            'sambalmpassword'      => $this->_smbHash->lmhash($password),
+            'sambantpassword'      => $this->_smbHash->nthash($password),
             'sambapwdlastset'      => time()
         );
 
