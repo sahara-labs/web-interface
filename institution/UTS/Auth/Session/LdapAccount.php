@@ -175,7 +175,7 @@ class UTS_Auth_Session_LdapAccount extends Sahara_Auth_Session
         $uid = exec("getent passwd | tail -n 1 | cut -d ':' -f3", $out, $ret);
         if ($ret) throw new Exception("Response from determining UID was non-zero ($ret)", 107);
 
-        for ($i = 0; $i < 100; $i++)
+        for ($i = 0; $i < 200; $i++)
         {
             $out = array();
             $ret = 0;
@@ -183,7 +183,7 @@ class UTS_Auth_Session_LdapAccount extends Sahara_Auth_Session
             if ($ret == 2) return $uid + $i;
         }
 
-        throw new Exception("Unable to find a free UID in 100 attempts.");
+        throw new Exception("Unable to find a free UID in 200 attempts.");
     }
 
     /**
