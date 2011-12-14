@@ -35,6 +35,8 @@
  * @author Michael Diponio (mdiponio)
  * @date 12th February 2010
  */
+$this->headLink()->appendStylesheet($this->baseUrl('/css/jquery.ui.selectmenu.css'));
+$this->headScript()->appendFile($this->baseUrl('/js/jquery.ui.selectmenu.js'));
 ?>
 
 <div id="cameracontrolpanel" style="left:-185px" class="sessionpanel ui-corner-all leftpush overlayelementhide">
@@ -46,7 +48,7 @@
     	<div id="camformat<?=$k?>" class="cameraformat">
             <span class="camformatlabel"><?=$this->stringTransform($this->cameras[$i]['TITLE'], '_', ' ')?></span>
     		<form id="camform<?=$k?>">
-            	<select id="camselect<?=$k?>">
+            	<select id="camselect<?=$k?>" class='cameraselect'>
         		<?php foreach ($this->cameras[$i]['formats'] as $form => $desc): ?>
         			<option value="<?=$form?>" <?php if ($form == $this->cameras[$i]['default']) echo 'selected="yes"'?>><?=$desc?></option>
         		<?php endforeach; ?>
@@ -81,27 +83,20 @@ $(document).ready( function() {
 		cameraUrlTable["#camera<?=$k?>"]["<?=$f?>"] = "<?=$url?>";
 	<?php endforeach;?>
 
-	/* Camera form styling. */
-	$("#camform<?=$k?>").jqTransform();
-	$("#camformat<?=$k?> .jqTransformSelectWrapper").css("z-index", "<?=count($this->cameras) - $i?>");
-	
-	/* Ugly hack to fix camera format drop downs not showing on first load. */
-	$("#camform<?=$k?> .jqTransformSelectWrapper ul").css("height", 25 * 4);
-
-	/* Camera form click event. */
-	$("#camform<?=$k?> .jqTransformSelectWrapper ul li a").click( function() {
-		var formatOption = cameraFormatTable[$("#camform<?=$k?> .jqTransformSelectWrapper span").text()];
+	$("#camselect<?=$k?>").change( function() {
+		var formatOption = $(this).val();
 		changeCameraOption(<?=$k?>, formatOption, cameraUrlTable["#camera<?=$k?>"][formatOption]);
 	});
+
 <?php endfor; ?>
 
-	/* Styling fix for overflowing selects. */
-	$(".cameraformat .jqTransformSelectWrapper").css("width", "160px");
-	$(".cameraformat .jqTransformSelectWrapper span").css("width", "160px");
-	$(".cameraformat .jqTransformSelectWrapper").css("margin-bottom", "10px");
-	$(".cameraformat ul").css("width", "158px");
+	$("#camerapanelcontent select").selectmenu({
+		width: 155,
+		transferClasses: true
+	});
 
-<?php if($this->draggable): ?>
+
+<?php if ($this->draggable): ?>
 	/* Reset position button. */
 	$("#camreset").button();
 	$("#camreset").click( function(){

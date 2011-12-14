@@ -56,8 +56,8 @@ class Sahara_Session_Element_Cameras extends Sahara_Session_Element
     private $_formats = array(
         'off'  => 'Camera Off',
         'jpeg' => 'JPEG Images',
-        'mms'  => 'Windows Media Player',
-        'mmsh' => 'VLC Media Player'
+        'mms'  => 'WMP Plugin',
+        'mmsh' => 'VLC Plugin'
     );
 
     public function __construct($rig, $options = array())
