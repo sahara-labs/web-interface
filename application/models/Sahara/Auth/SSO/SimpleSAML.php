@@ -173,7 +173,7 @@ class Sahara_Auth_SSO_SimpleSAML extends Sahara_Auth_SSO
         $useSid = false;
 
         list ($homeOrg, $junk) = explode('.', $this->_attrs->getOrginisation());
-        if (!$homeOrg) $this->_logger->info("Home orginisation was not found, so not using is Sahara user name generation.");
+        if (!$homeOrg) $this->_logger->info("Home orginisation was not found, so not using it in Sahara user name generation.");
 
         $fname = $this->_attrs->getFirstname();
         $lname = $this->_attrs->getSurname();
@@ -186,7 +186,7 @@ class Sahara_Auth_SSO_SimpleSAML extends Sahara_Auth_SSO
             if (!$fname || !$lname)
             {
                 $this->_logger->info("First name ($fname) and last name ($lname) determination from 'Common Name' was " .
-                	'not valid for Sahara user name generation. Falling back to common name.');
+                	'not valid for Sahara user name generation. Falling back to display name.');
 
                 if ($this->_attrs->getDisplayName())
                 {
@@ -225,15 +225,14 @@ class Sahara_Auth_SSO_SimpleSAML extends Sahara_Auth_SSO
         $db = Sahara_Database::getDatabase();
         $ns = $db->quote($this->_config->institution);
 
-        $num = $db->fetchOne("SELECT count(id) FROM users WHERE namespace=$ns AND name=" . $db->quote($name));
-	    $num = 0;
+        $num = (int) $db->fetchOne("SELECT count(id) FROM users WHERE namespace=$ns AND name=" . $db->quote($name));
         if ($num > 0)
         {
             $suf = 0;
             while ($num > 0)
             {
-                $num = $db->fetchOne("SELECT count(id) FROM users WHERE namespace=$ns AND name=" .
-                        $db->quote($name . $suf++));
+                $num = (int) $db->fetchOne("SELECT count(id) FROM users WHERE namespace=$ns AND name=" .
+                        $db->quote($name . ++$suf));
             }
             $name .= $suf;
         }
