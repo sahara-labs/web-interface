@@ -485,6 +485,11 @@ a.plaina:hover {
 	margin: 20px auto 0;
 }
 
+#loginform input {
+	width: 185px;
+	margin-left: 5px;
+}
+
 #loginerrors {
 	margin: 20px auto;
 }
