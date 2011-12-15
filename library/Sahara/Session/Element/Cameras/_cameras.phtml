@@ -98,18 +98,16 @@ $(document).ready( function () {
 				 	changeCameraOption(<?=$k?>, pOpt, cameraUrlTable["#camera<?=$k?>"][pOpt]);
 			 	}
 
-				$("#camform<?=$k?> div div span").text(name);
 
-				$("#camform<?=$k?> li").each( function(index) {
-					if ($(this).text() == name)
-					{
-						$(this).children().addClass('selected');
-					}
-					else
-					{
-						$(this).children().removeClass('selected');
-					}
-				});
+				$("#camselect<?=$k?>").selectmenu("destroy")
+					.val(pOpt)
+					.selectmenu({
+						width: 155,
+						transferClasses: true,
+						style: 'popup'
+					});
+
+
 				optKnown = true;
 
 				break;
