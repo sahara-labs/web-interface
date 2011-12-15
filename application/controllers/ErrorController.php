@@ -100,9 +100,11 @@ class ErrorController extends Zend_Controller_Action
 
     private function sendErrorEmail($errors)
     {
+        $config = Zend_Registry::get('config');
+        if ($config->error->disableMessages) return;
+
         $request = $errors->request;
         $exception = $errors->exception;
-        $config = Zend_Registry::get('config');
 
         $mail = new Sahara_Mail();
         $mail->setFrom($config->email->from->address, $config->email->from->name);
@@ -184,7 +186,7 @@ class ErrorController extends Zend_Controller_Action
 
         $mail->setBody($body);
 
-        $addresses = $config->feedback->address;
+        $addresses = $config->error->address;
         if ($addresses instanceof Zend_Config)
         {
             foreach ($addresses as $addr)
