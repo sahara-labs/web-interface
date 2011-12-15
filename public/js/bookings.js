@@ -592,8 +592,9 @@ Booking.prototype.commitBooking = function() {
 	else bkEnd += this.slotToISOTime(this.bookingEnd + 1);	
 	
 	/* Add timezone info. */
-	var tzOff = ((this.systemOffset >= 0) ? "+" : "-") + zeroPad(this.systemOffset / 3600) + ":" + 
+	var tzOff = ((this.systemOffset >= 0) ? "+" : "-") + zeroPad(Math.abs(this.systemOffset / 3600)) + ":" + 
 			zeroPad(this.systemOffset % 3600 / 60), thiz = this;
+
 	bkStart += tzOff;
 	bkEnd += tzOff;
 	

@@ -183,7 +183,7 @@ class BookingsController extends Sahara_Controller_Action_Acl
         /* Timezone information. */
         // TODO Cache timezone results
         $this->view->tz = Sahara_Soap::getSchedServerBookingsClient()->getTimezoneProfiles();
-        $tzOff = ($this->view->tz->offsetFromUTC ? '+' : '-') .
+        $tzOff = ($this->view->tz->offsetFromUTC >= 0 ? '+' : '-') .
                 Sahara_DateTimeUtil::zeroPad(floor(abs($this->view->tz->offsetFromUTC) / 3600)) . ':' .
                 Sahara_DateTimeUtil::zeroPad(floor(abs($this->view->tz->offsetFromUTC) % 3600 / 60));
 
