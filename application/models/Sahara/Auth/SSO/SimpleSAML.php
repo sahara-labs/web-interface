@@ -88,7 +88,7 @@ class Sahara_Auth_SSO_SimpleSAML extends Sahara_Auth_SSO
         $this->_mappingTable = new Zend_Db_Table('shib_users_map');
     }
 
-    public function signon()
+    public function signon($params = array())
     {
         $this->_setup();
 
@@ -97,7 +97,7 @@ class Sahara_Auth_SSO_SimpleSAML extends Sahara_Auth_SSO
          *    simpleSAMLPHP will direct the user to the authentication source.
          * ==================================================================== */
         $this->_simple->requireAuth(array(
-            'ReturnTo' =>  $this->_generateReturnTo('/index/sso')
+            'ReturnTo' =>  $this->_generateReturnTo('/index/sso', $params)
         ));
 
         /* 2) Load attributes. ================================================ */
@@ -279,9 +279,10 @@ class Sahara_Auth_SSO_SimpleSAML extends Sahara_Auth_SSO
     * Generates server addresses.
     *
     * @param string $suffix request suffix
+    * @param array $params list of parameters to include in the return path
     * @return string address
     */
-    private function _generateReturnTo($suffix)
+    private function _generateReturnTo($suffix, $params = array())
     {
         $isHttps = (array_key_exists('HTTPS', $_SERVER) && $_SERVER['HTTPS'] ||
                $this->_config->simpleSaml->forceHttps);
@@ -303,6 +304,14 @@ class Sahara_Auth_SSO_SimpleSAML extends Sahara_Auth_SSO
             $addr .= ':' . $port;
         }
 
-        return $addr . $suffix;
+        $addr .= $suffix;
+
+        if (count($params))
+        {
+            foreach ($params as $k => $v)
+            {
+                $addr .= '/' . $k . '/' . urlencode($v);
+            }
+        }
     }
 }

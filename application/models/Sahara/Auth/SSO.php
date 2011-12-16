@@ -62,9 +62,10 @@ abstract class Sahara_Auth_SSO
     /**
      * Signs on using the SSO system.
      *
+     * @param array $params Parameters to passthrough on the return path (optional)
      * @return boolean true if successful
      */
-    public abstract function signon();
+    public abstract function signon($params = array());
 
     /**
      * Signs off using the SSO system.

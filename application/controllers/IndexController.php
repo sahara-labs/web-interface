@@ -132,6 +132,11 @@ class IndexController extends Sahara_Controller_Action_Acl
     {
         /* Authenticate. */
         $saharaAuth = new Sahara_Auth();
+
+        /* We may need to pass auth token through. */
+        $params = array();
+        if ($this->_getParam('pkey')) $params['pkey'] = $this->_getParam('pkey');
+
         if (!$saharaAuth->signon())
         {
             $this->_flashMessenger->addMessage('Failed single sign on.');
@@ -152,6 +157,16 @@ class IndexController extends Sahara_Controller_Action_Acl
             $storage = $this->_auth->getStorage();
             $storage->clear();
             $storage->write($user->userQName);
+        }
+
+        if ($this->_getParam('pkey'))
+        {
+            /* Authorisation key has been specified, so redeem it. */
+            $res = $this->_pkeyActivate(urldecode($this->_getParam('pkey')));
+            if (!$res['success'])
+            {
+                $this->_flashMessenger->addMessage('Failed permission redemption: ' . $res['error']);
+            }
         }
 
         /* Redirect to an appropriate page. */
@@ -337,24 +352,27 @@ class IndexController extends Sahara_Controller_Action_Acl
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout->disableLayout();
 
+        echo $this->view->json($this->_pkeyActivate($this->_getParam('pkey')));
+    }
+
+    private function _pkeyActivate($pkey)
+    {
         if (!$this->_config->permkey->enable)
         {
             $this->_logger->warn('Tried to activate permission when the permission activation feature is disabled.');
-            echo $this->view->json(array(
-            	'success' => false,
-                'error' => 'Permission activation feature is disabled.'
-            ));
-            return;
+             return array(
+                    	'success' => false,
+                        'error' => 'Permission activation feature is disabled.'
+            );
         }
 
-        if (!($pkey = $this->_getParam('pkey')))
+        if (!$pkey)
         {
             $this->_logger->debug("Tried to activate permission without supplied a permission key.");
-            echo $this->view->json(array(
-            	'success' => false,
-                'error' => 'No permission key supplied.'
-            ));
-            return;
+            return array(
+                  'success' => false,
+                  'error' => 'No permission key supplied.'
+            );
         }
 
         $db = Sahara_Database::getDatabase();
@@ -362,20 +380,16 @@ class IndexController extends Sahara_Controller_Action_Acl
         /* Check the key exists, has remaining uses and the redeeming class
          * is active. */
         $key = $db->fetchRow($db->select()
-                ->from(array('rk' => 'user_association_redeem_keys'))
-                ->join(array('uc' => 'user_class'), 'rk.user_class_id = uc.id', array('name'))
-                ->where('rk.redeemkey = ?', $pkey)
-                ->where('rk.remaining_uses > 0')
-                ->where('uc.active = 1'));
+            ->from(array('rk' => 'user_association_redeem_keys'))
+            ->join(array('uc' => 'user_class'), 'rk.user_class_id = uc.id', array('name'))
+            ->where('rk.redeemkey = ?', $pkey)
+            ->where('rk.remaining_uses > 0')
+            ->where('uc.active = 1'));
 
-        if (!$key)
-        {
-            echo $this->view->json(array(
-            	'success' => false,
-                'error' => 'Key not valid.'
-            ));
-            return;
-        }
+        if (!$key) return array(
+              	'success' => false,
+                'error' => 'Key not valid.');
+
 
         /* Load user. */
         list($ns, $name) = explode(':', $this->_auth->getIdentity(), 2);
@@ -392,24 +406,17 @@ class IndexController extends Sahara_Controller_Action_Acl
         }
 
         $user = $db->fetchRow($sel);
-        if (!$user)
-        {
-            echo $this->view->json(array(
-            	'success' => false,
-                'error' => 'Constraints not met.'
-            ));
-            return;
-        }
+        if (!$user) return array(
+                 'success' => false,
+                 'error' => 'Constraints not met.');
 
         /* Check the constraints do indeed match. */
         if ($key['home_org'] && $key['home_org'] != $user['home_org'] ||
                 $key['affliation'] && $key['affliation'] != $user['affliation'])
         {
-            echo $this->view->json(array(
-            	'success' => false,
-                'error' => 'Constraints not met.'
-            ));
-            return;
+            return array(
+                    	'success' => false,
+                        'error' => 'Constraints not met.');
         }
 
         /* Check the user doesn't already have the user association. */
@@ -418,23 +425,22 @@ class IndexController extends Sahara_Controller_Action_Acl
                 ->where('users_id = ?', $user['id'])
                 ->where('user_class_id = ?', $key['user_class_id'])) != 0)
         {
-            echo $this->view->json(array(
-            	'success' => false,
-                'error' => 'You have already redeemed the key.'
-            ));
-            return;
+            return array(
+                    	'success' => false,
+                        'error' => 'You have already redeemed the key.'
+            );
         }
 
         /* All constraints are met so we can create the association. */
         $db->update('user_association_redeem_keys',  array('remaining_uses' => (--$key['remaining_uses'])),
-        		'redeemkey = ' . $db->quote($key['redeemkey']));
+                		'redeemkey = ' . $db->quote($key['redeemkey']));
 
         $db->insert('user_association', array(
-            'users_id' => $user['id'],
-            'user_class_id' => $key['user_class_id']
+                    'users_id' => $user['id'],
+                    'user_class_id' => $key['user_class_id']
         ));
 
-        echo $this->view->json(array('success' => true));
+        return array('success' => true);
     }
 }
 
