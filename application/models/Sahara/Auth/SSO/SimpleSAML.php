@@ -313,5 +313,7 @@ class Sahara_Auth_SSO_SimpleSAML extends Sahara_Auth_SSO
                 $addr .= '/' . $k . '/' . urlencode($v);
             }
         }
+
+	return $addr;
     }
 }
