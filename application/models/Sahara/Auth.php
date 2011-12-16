@@ -113,10 +113,11 @@ class Sahara_Auth
     /**
      * Uses single sign on to attempt to authenticate the user
      *
+     * @param array $params parameters to use for SSO return addresses
      * @return boolean true if the user can be authenticated
      * @throws Exception SSO type are not configured correctly.
      */
-    public function signon()
+    public function signon($params = array())
     {
     	/* Make sure SSO is enabled. */
         if (!$this->_config->auth->useSSO)
@@ -147,7 +148,7 @@ class Sahara_Auth
             throw new Exception("$ssoType is not an instance of Sahara_Auth_SSO");
         }
 
-        if ($sso->signon())
+        if ($sso->signon($params))
         {
             $this->_successType = $sso;
             $this->_username = $sso->getUsername();

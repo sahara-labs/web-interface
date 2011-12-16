@@ -137,7 +137,7 @@ class IndexController extends Sahara_Controller_Action_Acl
         $params = array();
         if ($this->_getParam('pkey')) $params['pkey'] = $this->_getParam('pkey');
 
-        if (!$saharaAuth->signon())
+        if (!$saharaAuth->signon($params))
         {
             $this->_flashMessenger->addMessage('Failed single sign on.');
             $this->_redirectTo('index', 'index');

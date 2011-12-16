@@ -314,6 +314,6 @@ class Sahara_Auth_SSO_SimpleSAML extends Sahara_Auth_SSO
             }
         }
 
-	return $addr;
+	    return $addr;
     }
 }
