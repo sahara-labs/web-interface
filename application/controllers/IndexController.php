@@ -176,10 +176,10 @@ class IndexController extends Sahara_Controller_Action_Acl
                 $this->_redirectTo('index', 'queue');
                 break;
             case Sahara_Acl::ACADEMIC:
-                $this->_redirectTo('index', 'academic');
+                $this->_redirectTo('index', 'queue');
                 break;
             case Sahara_Acl::ADMIN:
-                $this->_redirectTo('index', 'admin');
+                $this->_redirectTo('index', 'queue');
                 break;
             default:
                 $this->_flashMessenger->addMessage("Unknown user '" . $saharaAuth->getUsername() . "'.");
