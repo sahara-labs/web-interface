@@ -417,11 +417,14 @@ function Booking(pid, start, end, dur, ext, extdur, name, num, max, tz, sysoff)
 Booking.prototype = new BookingPage;
 
 Booking.prototype.initDate = function () {
-	var date = window.location.hash;
-	if (date && date.match(/^#\d{4}\-\d{2}\-\d{2}/))
+	var dateStr = window.location.hash;
+
+	if (dateStr && dateStr.match(/^#\d{4}\-\d{2}\-\d{2}/))
 	{
+		var date = new Date(), dateParts = dateStr.substring(1).split("-");
 		
-		this.changeDate(new Date(date.substring(1)));
+		date.setFullYear(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
+		this.changeDate(date);
 	}
 };
 
