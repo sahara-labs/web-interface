@@ -62,20 +62,20 @@ $this->headScript()->appendScript($initScript);
 	<h2>Existing Reservations</h2>
 </div>
 
-<!--<div id="timezonebutton">-->
-<!--        <a id="timezone" class="ui-corner-br">-->
-<!--            <img src="/images/timezone.png" alt="Tz" />-->
-<!--        </a>-->
-<!--</div>-->
-<!--<script type="text/javascript">-->
-<!---->
-<!--$(document).ready(function() {-->
-<!--	 $("#timezone").click(function() {-->
-<!--        vp.displayTzSelector();-->
-<!--    });-->
-<!--});-->
-<!--//-->
-<!--</script>-->
+<?php if ($this->showTzButton): ?>
+<div id="timezonebutton">
+       <a id="timezone" class="ui-corner-br">
+           <img src="/images/timezone.png" alt="Tz" />
+       </a>
+</div>
+<script type="text/javascript">
+$(document).ready(function() {
+	$("#timezone").click(function() {
+    	vp.displayTzSelector();
+    });
+});
+</script>
+<?php endif; ?>
 
 <?php if ($this->bookings): ?>
 <div id="tabscontainer">

@@ -219,6 +219,12 @@
 	padding-right: 10px;
 }
 
+.timelabeldate {
+	margin-left: 3px;
+	font-size: 0.75em;
+	font-weight: bold;
+}
+
 .timeslothour {
 	float: left;
 	width: 268px;

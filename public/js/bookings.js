@@ -184,9 +184,9 @@ BookingPage.prototype.changeTimezone = function(tz, userSelected) {
 	this.inuseTimezone = tz;
 	this.inuseOffset = this.timezones[tz];
 	
-	var utcOff = (this.inuseOffset + this.systemOffset);
-	var offHr = Math.floor(utcOff / 3600);
-	var offMin = Math.floor(utcOff % 3600 / 60);
+	var utcOff = (this.inuseOffset + this.systemOffset),
+		offHr = Math.floor(utcOff / 3600),
+		offMin = Math.floor(utcOff % 3600 / 60);
 	if (offMin < 0)
 	{
 		offHr--;
@@ -194,12 +194,45 @@ BookingPage.prototype.changeTimezone = function(tz, userSelected) {
 	}
 	$("#inusetz").empty().append("GMT " + (utcOff >= 0 ? "+" : "&ndash;") + Math.abs(offHr) + ':' + zeroPad(offMin)); 
 	
-	var hrOff = Math.floor(this.timezones[tz] / 3600);
-	var minOff = Math.floor(this.timezones[tz] % 3600 / 60);
+	var hrOff = Math.floor(this.timezones[tz] / 3600),
+	    minOff = Math.floor(this.timezones[tz] % 3600 / 60),
+	    newHr, newMin, displayTime;
 	
 	for (var i = 0; i < 24; i++)
 	{
-		$("#timelabel" + i).empty().append(this.displayHour(i + hrOff));
+		newHr = i + hrOff;
+		
+		displayTime = this.displayHour(i + hrOff);
+		
+		
+		if (this.date) // Only applies to the Booking creation day
+		{
+			/* If at a day boundary, the date should be appended. */
+			
+			if (newHr != 0 && i == 0 && hrOff < 0) // Previous day
+			{
+				displayTime += 
+					"<div class='timelabeldate'>" + 
+						dateToStr(new Date(this.date.getTime() - this.DAY_MILLISECONDS)) + 
+					"</div>";
+			}
+			else if (newHr == 0 && i != 0 || newHr != 0 && i == 0 && hrOff > 0) // Current day start
+			{
+				displayTime += 
+					"<div class='timelabeldate'>" + 
+						dateToStr(new Date(this.date.getTime())) + 
+					"</div>";
+			}
+			else if (newHr == 24) // Next day
+			{
+				displayTime += 
+					"<div class='timelabeldate'>" + 
+						dateToStr(new Date(this.date.getTime() + this.DAY_MILLISECONDS)) + 
+					"</div>";
+			}
+		}
+		
+		$("#timelabel" + i).empty().append(displayTime);
 	}
 	
 	if (typeof this.changeMode == "function")
@@ -427,6 +460,9 @@ Booking.prototype.changeDate = function(newDate) {
     var thiz = this, day = this.date.getFullYear() + "-" + zeroPad(this.date.getMonth() + 1) + "-" + zeroPad(this.date.getDate());
     window.location.hash = "#" + day;
     
+    /* Update the label dates if the timezone is different. */
+    if (this.inuseOffset != 0) this.changeTimezone(this.inuseTimezone, false);
+    
     /* Get the free times. */
     $.post(
     	"/bookings/times",
@@ -518,35 +554,22 @@ Booking.prototype.disableDayButton = function(prev) {
  * ---------------------------------------------------------------------------- */
 
 Booking.prototype.confirmBooking = function() {
-	var html = 
-		"<div id='bookingconfirmation' title='Reservation Confirmation'>";
 	
+	var bkStart = this.slotToTime(this.booking),
+	    bkEnd = this.slotToTime(this.bookingEnd + 1),
+		tzDate = new Date(strToDate(this.getCurrent()).getTime() + 
+				this.inuseOffset * 1000 +  
+				this.booking * this.MINS_PER_SLOT * 60 * 1000),
+		thiz = this; 
+
+	$("body").append(
+		"<div id='bookingconfirmation' title='Reservation Confirmation'>" +
+			"<p>You have requested to reserve '<span>" + this.name.split('_').join(' ') + "</span>' on <span>" + 
+				dateToStr(tzDate) + "</span> from <span>" + bkStart + "</span> to <span>" + 
+				bkEnd + "</span>.</p>" +
+		"</div>"
+	);
 	
-	var bkStart = this.slotToTime(this.booking);
-	var bkEnd = this.slotToTime(this.bookingEnd + 1);
-
-	if (bkStart.substr(bkStart.length - 2) == 'pm' && bkEnd.substr(bkEnd.length - 2) == 'am')
-	{
-		var bkStartDate = dateToStr(this.date);
-		var bkEndDate = bkStartDate;
-		if (this.inuseOffset < 0) bkStartDate = dateToStr(new Date(this.date.getTime() - this.DAY_MILLISECONDS));
-		else bkEndDate = dateToStr(new Date(this.date.getTime() + this.DAY_MILLISECONDS));
-
-		html += "<p>You have requested to reserve '<span>" + this.name.split('_').join(' ') + "</span>' from <span>" + 
-				bkStart + "</span> on <span>" + bkStartDate + "</span> to <span>" + bkEnd + "</span> on <span>" + 
-				bkEndDate + "</span>.</p>";
-	}
-	else
-	{
-		html += "<p>You have requested to reserve '<span>" + this.name.split('_').join(' ') + "</span>' on <span>" + 
-				dateToStr(this.date) + "</span> from <span>" + bkStart + "</span> to <span>" + 
-				bkEnd + "</span>.</p>";
-	}
-	html += '</div>';
-
-	$("body").append(html);
-	
-	var thiz = this;
 	$('#bookingconfirmation').dialog({
 		autoOpen: true,
 		modal: true,
