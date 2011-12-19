@@ -187,8 +187,6 @@ class BookingsController extends Sahara_Controller_Action_Acl
                 Sahara_DateTimeUtil::zeroPad(floor(abs($this->view->tz->offsetFromUTC) / 3600)) . ':' .
                 Sahara_DateTimeUtil::zeroPad(floor(abs($this->view->tz->offsetFromUTC) % 3600 / 60));
 
-        $this->view->showTzButton = $this->_config->bookings->addTzButton;
-
         $freeTimes = Sahara_Soap::getSchedServerBookingsClient()->findFreeBookings(array(
             'userID' => array('userQName' => $this->_auth->getIdentity()),
             'permissionID' => array('permissionID' => $perm->permissionID),
@@ -218,6 +216,10 @@ class BookingsController extends Sahara_Controller_Action_Acl
              * range. */
             $this->view->slots[0] = 'NOPERMISSION';
         }
+
+        /* Presentation configuration. */
+        $this->view->showTzButton = $this->_config->bookings->addTzButton;
+        $this->view->dateFormat = $this->_config->bookings->dateFormat;
     }
 
     /**
@@ -358,6 +360,10 @@ class BookingsController extends Sahara_Controller_Action_Acl
         {
             $this->view->bookings = false;
         }
+
+        /* Presentation configuration. */
+        $this->view->showTzButton = $this->_config->bookings->addTzButton;
+        $this->view->dateFormat = $this->_config->bookings->dateFormat;
     }
 
     /**

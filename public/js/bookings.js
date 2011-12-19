@@ -196,7 +196,16 @@ BookingPage.prototype.changeTimezone = function(tz, userSelected) {
 	
 	var hrOff = Math.floor(this.timezones[tz] / 3600),
 	    minOff = Math.floor(this.timezones[tz] % 3600 / 60),
-	    newHr, newMin, displayTime;
+	    newHr;
+	
+	if (this instanceof Booking)
+	{
+		if (minOff < 0)
+		{	
+			$("#timecols .timelabel").css("margin-top", Math.abs(60 / minOff * 20) + "px");
+		}
+		else $("#timecols .timelabel").css("margin-top", "0px");
+	}
 	
 	for (var i = 0; i < 24; i++)
 	{
@@ -204,8 +213,7 @@ BookingPage.prototype.changeTimezone = function(tz, userSelected) {
 		
 		displayTime = this.displayHour(i + hrOff);
 		
-		
-		if (this.date) // Only applies to the Booking creation day
+		if (this instanceof Booking) // Only applies to the Booking creation day
 		{
 			/* If at a day boundary, the date should be appended. */
 			
@@ -334,16 +342,16 @@ BookingPage.prototype.isoToDate = function(iso) {
 	}
 	
 	var date = iso.substr(0, iso.indexOf("T")).split("-");
-	date = date[2] + "/" + date[1] + "/" + date[0];
+	date = formattedDate(date[0], date[1], date[2]);
 	if (hr < 0)
 	{
 		var dt = new Date(strToDate(date).getTime() - this.DAY_MILLISECONDS);
-		return zeroPad(dt.getDate()) + "/" + zeroPad(dt.getMonth() + 1) + "/" + zeroPad(dt.getFullYear());
+		return formattedDate(dt.getFullYear(), dt.getMonth() + 1, dt.getDate());
 	}
 	else if (hr > 23)
 	{
 		var dt = new Date(strToDate(date).getTime() + this.DAY_MILLISECONDS);
-		return zeroPad(dt.getDate()) + "/" + zeroPad(dt.getMonth() + 1) + "/" + zeroPad(dt.getFullYear());
+		return formattedDate(dt.getFullYear(), dt.getMonth() + 1, dt.getDate());
 	}
 	else
 	{
@@ -406,7 +414,7 @@ function Booking(pid, start, end, dur, ext, extdur, name, num, max, tz, sysoff)
 	this.numBookings = num;
 	this.maxBookings = max;
 }
-Booking.prototype = BookingPage.prototype;
+Booking.prototype = new BookingPage;
 
 Booking.prototype.initDate = function () {
 	var date = window.location.hash;
@@ -800,37 +808,13 @@ Booking.prototype.confirmBookingCallback = function(resp) {
 
 			for (var i in this.bestFits)
 			{
-				var startTime = this.bestFits[i].startTime;
-				var bfStart = this.isoToTime(startTime);
-				var bfEnd = this.isoToTime(this.bestFits[i].endTime);
-				var bfDate = startTime.substr(0, startTime.indexOf("T")).split("-");
-				
 				html += 
 					"<li>" +
 						"<a id='bestfit" + i + "' class='bookingfailedoption bestfit ui-icon-all'>" +
-							"<span class='ui-icon ui-icon-arrowthick-1-e bookingfailedicon'> </span>";
-				
-				if (bfStart.substr(bfStart.length - 2) == 'pm' && bfEnd.substr(bfEnd.length - 2) == 'am')
-				{
-					var bfStartDate = bfDate[2] + "/" + bfDate[1] + "/" + bfDate[0];
-					var bfEndDate = bfStartDate;
-					
-					bfDate = strToDate(bfStartDate);
-					if (this.inuseOffset < 0) bfStartDate = dateToStr(new Date(bfDate.getTime() - this.DAY_MILLISECONDS));
-					else bfEndDate = dateToStr(new Date(bfDate.getTime() + this.DAY_MILLISECONDS));
-
-					html += 
-						"Accept a reservation from <span>" + bfStart + "</span> on <span>" + bfStartDate + 
-						"</span> to <span>" + bfEnd + "</span> on <span>" + bfEndDate + "</span>.";
-				}
-				else
-				{
-					html += 
-						"Accept a reservation on <span>" + bfDate[2] + "/" + bfDate[1] + "/" + bfDate[0] + 
-						"</span> from <span>" + bfStart + "</span> to <span>" + bfEnd + "</span>.";
-				}
-				
-				html += 	
+							"<span class='ui-icon ui-icon-arrowthick-1-e bookingfailedicon'> </span>" +
+							"Accept a reservation on <span>" + this.isoToDate(this.bestFits[i].startTime)  + 
+							"</span> from <span>" + this.isoToTime(this.bestFits[i].startTime) + "</span> to <span>" + 
+							this.isoToTime(this.bestFits[i].endTime) + "</span>.";
 						"</a>" +
 					"</li>";
 			}
@@ -1159,7 +1143,7 @@ function Existing(mode, tz, sysoff)
 	
 	this.mode == mode;
 }
-Existing.prototype = BookingPage.prototype;
+Existing.prototype = new BookingPage;
 
 Existing.prototype.addBooking = function(bid, name, start, end, isFinished, isCancelled, reason){
 	var bObj = new Object();
@@ -1174,7 +1158,7 @@ Existing.prototype.addBooking = function(bid, name, start, end, isFinished, isCa
 };
 
 Existing.prototype.initPage = function() {
-	// FIXME This should init calendar or list view.
+// TODO This should init calendar or list view.
 //	var stateMode = window.location.hash;
 //	if (stateMode.substring(6) == "cal")
 //	{
@@ -1189,7 +1173,7 @@ Existing.prototype.initPage = function() {
 };
 
 Existing.prototype.changeMode = function(mode) {
-	// FIXME This should change between calendar and list displays.
+// TODO This should change between calendar and list displays.
 //	this.mode = mode;
 //	if (mode == "cal")
 //	{
@@ -1447,6 +1431,8 @@ Waiting.prototype.cancel = function() {
 	);
 };
 
+var dateFormat = 'L';
+
 /**
  * Converts a date string to a Date object.
  * 
@@ -1458,7 +1444,23 @@ function strToDate(str)
 	var dts = str.split('/', 3);
 	
 	var dobj = new Date();
-	dobj.setFullYear(dts[2], dts[1] - 1, dts[0]);
+	
+	switch (dateFormat)
+	{
+	case 'B': // Big-endian
+		dobj.setFullYear(dts[0], dts[1] - 1, dts[2]);
+		break;
+	
+	case 'M': // Middle-endian
+		dobj.setFullYear(dts[2], dts[0] - 1, dts[1]);
+		break;
+	
+	case 'L': // Little-endian is default.
+	default:
+		dobj.setFullYear(dts[2], dts[1] - 1, dts[0]);
+		break;
+	}
+	
 	dobj.setHours(0, 0, 0, 0);
 	return dobj;
 }
@@ -1471,7 +1473,39 @@ function strToDate(str)
  */
 function dateToStr(date)
 {
-	return zeroPad(date.getDate()) + "/" + zeroPad((date.getMonth() + 1)) + "/" + zeroPad(date.getFullYear());
+	return formattedDate(date.getFullYear(), (date.getMonth() + 1), date.getDate());
+}
+
+/**
+ * Formats a date depending on the configured date format. Which may be 
+ * 'B' - big-endian, 'M' - middle-endian or 'L' - little-endian 
+ * (the default).
+ * 
+ * @param year year  
+ * @param month month
+ * @param day day
+ * @return formatted day 
+ */
+function formattedDate(year, month, day)
+{
+	day = zeroPad(day);
+	month = zeroPad(month);
+	
+	switch (dateFormat)
+	{
+	case 'B': // Big-endian
+		return year + "/" + month + "/" + day;
+		break;
+	
+	case 'M': // Middle-endian
+		return month + "/" +day + "/" + year;
+		break;
+	
+	case 'L': // Little-endian is default.
+	default:
+		return day + "/" + month + "/" + year;
+		break;
+	}
 }
 
 /**
@@ -1484,7 +1518,7 @@ function zeroPad(t)
 {
 	if (typeof t == "string")
 	{
-		if (t.length() == 1) return "0" + t;
+		if (t.length == 1) return "0" + t;
 	}
 	else 
 	{

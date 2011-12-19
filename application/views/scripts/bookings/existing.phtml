@@ -55,6 +55,7 @@ if ($this->bookings)
     }
 }
 $initScript .= '$(document).ready(function() { vp.initTimezone() });';
+$initScript .= "\ndateFormat = '" . $this->dateFormat . "';\n";
 $this->headScript()->appendScript($initScript);
 ?>
 

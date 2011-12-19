@@ -40,10 +40,26 @@ $this->headLink()->appendStylesheet($this->baseUrl('/css/bookings.css'));
 $this->headScript()->appendFile($this->baseUrl('/js/bookings.js'));
 
 list($year, $mon, $day) = explode('-', $this->currentDay, 3);
-$sDate = "$day/$mon/$year";
+$displayStart = $sDate = "$day/$mon/$year";
+
+switch ($this->dateFormat)
+{
+    case 'B':
+        $displayStart = "$year/$mon/$day";
+        break;
+    case 'M':
+        $displayStart = "$mon/$day/$year";
+        break;
+    case 'L':
+    default:
+        $displayStart = "$day/$mon/$year";
+        break;
+}
+
 list($year, $mon, $day) = explode('-', $this->endDay, 3);
 $eDate = "$day/$mon/$year";
 
+/* Write in timezone information. */
 $initScript = "var vp = new Booking(" . $this->permission->permissionID .
         ", '$sDate', '$eDate', " . $this->permission->sessionDuration . ", " .
 		$this->permission->allowedExtensions . ", " . $this->permission->extensionDuration . ", '" .
@@ -51,9 +67,12 @@ $initScript = "var vp = new Booking(" . $this->permission->permissionID .
 		$this->tz->systemTimezone . "', " . $this->tz->offsetFromUTC . ");\n";
 foreach ($this->tz->supportedTimezones as $t)
 {
-    $initScript .= "vp.addTimezone('" . $t->timezone . "', " . $t->offsetFromSystem . ");\n";
+    $initScript .= "vp.addTimezone('" . $t->timezone . "', " . $t->offsetFromSystem . ");";
 }
-$initScript .= '$(document).ready(function() { vp.initTimezone() });';
+$initScript .= "\n$(document).ready(function() { vp.initTimezone() });\n";
+
+/* Presentation format. */
+$initScript .= "\ndateFormat = '" . $this->dateFormat . "';\n";
 $this->headScript()->appendScript($initScript);
 ?>
 
@@ -113,7 +132,7 @@ $(document).ready(function() {
 
 	<div id="daypickercontainer">
 		<div id="daypickerinput" class="saharaform">
-			<input id="daypicker" type="text" value="<?=$sDate?>" />
+			<input id="daypicker" type="text" value="<?=$displayStart?>" />
 		</div>
 
 		<div id="daypickericonbox" class="arrowbox">
@@ -141,11 +160,28 @@ $(document).ready(function() {
 <script type="text/javascript">
 //<!--
 $(document).ready(function() {
+
+	var df;
+	switch (dateFormat)
+	{
+	case 'B':
+		df = 'yy/mm/dd';
+		break;
+	case 'M':
+		df = 'mm/dd/yy';
+		break;
+	case 'L':
+	default:
+		df = 'dd/mm/yy';
+		break;
+	}
+
+
 	$('#daypicker').datepicker({
 		defaultDate: vp.getCurrent(),
 		minDate: vp.getStart(),
 		maxDate: vp.getEnd(),
-		dateFormat: 'dd/mm/yy',
+		dateFormat: df,
 		showAnim: '',
 		onSelect: function(dateText, inst) {
 			vp.changeDate(dateText);
@@ -174,7 +210,7 @@ $(document).ready(function() {
 <div style="clear:both"></div>
 
 <div id="bookingstimecontainer" class="ui-corner-all">
-	<div id="bookingstimetitle" class="ui-corner-all"><?=$sDate?></div>
+	<div id="bookingstimetitle" class="ui-corner-all"><?=$displayStart?></div>
 
 	<div id="timecols">
     	<!-- Left time column. -->
