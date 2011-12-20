@@ -339,9 +339,9 @@ class IndexController extends Sahara_Controller_Action_Acl
     /**
      * Help page.
      */
-    public function helpAction()
+    public function requirementsAction()
     {
-        $this->view->headTitle(self::HEAD_TITLE_PREFIX . 'Help');
+        $this->view->headTitle($this->_headPrefix . 'Help');
     }
 
     /**
