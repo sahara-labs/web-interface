@@ -110,25 +110,30 @@ class QueueController extends Sahara_Controller_Action_Acl
         /* Sort each of the user class permissions by resource name. */
         foreach ($userClasses as $class => $permList)
         {
-            $typePerms = array();
-            $rigPerms = array();
-            $capsPerms = array();
+            $buckets = array();
+
             foreach ($permList as $perm)
             {
-                if      ($perm['resourceClass'] == 'TYPE') $typePerms[$perm['resource']] = $perm;
-                else if ($perm['resourceClass'] == 'RIG') $rigPerms[$perm['resource']] = $perm;
-                else if ($perm['resourceClass'] == 'CAPABILITY') $capsPerms[$perm['resource']] = $perm;
+                if (!array_key_exists($perm['resourceClass'], $buckets)) $buckets[$perm['resourceClass']] = array();
+
+                $bucket = &$buckets[$perm['resourceClass']];
+
+                if (array_key_exists($perm['display'], $bucket))
+                {
+                    /* If the existing and/or new have display names, use the
+                     * display name. */
+
+                    var_dump($perm);
+                }
+                else $bucket[$perm['display']] = $perm;
             }
 
-            ksort($typePerms);
-            ksort($rigPerms);
-            ksort($capsPerms);
+            foreach ($buckets as $bucket) ksort($bucket);
 
-            // FIXME Do not make a perceptible distinction between type and caps
             $userClasses[$class] = array(
-                'Rig Types:' => array_values($typePerms),
-                'Specific Rigs:'  => array_values($rigPerms),
-                'Other:' => array_values($capsPerms)
+                'Rig Types:' => array_key_exists('TYPE', $buckets) ? $buckets['TYPE'] : array(),
+                'Specific Rigs:' => array_key_exists('RIG', $buckets) ? $buckets['RIG'] : array(),
+                'Other:' => array_key_exists('CAPABILITY', $buckets) ? $buckets['CAPABILITY'] : array()
             );
         }
 
