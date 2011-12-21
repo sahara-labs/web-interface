@@ -122,38 +122,30 @@ function addRigButton(rig, html)
 function confirmCreateOffline()
 {
 	$("body").append(
-		"<div id='createoffline' title='Add Offline Period'><form id='createofflineform' action='#'>" +
+		"<div id='createoffline' title='Add Offline Period'><form id='createofflineform' action='#' class='saharaform'>" +
+			
 			"<div class='timeline'>" +
-				"<div class='timelinelabel'>Start:</div>" +
-				"<div class='jqTransformInputWrapper' style='width:150px'>" +
-					"<div class='jqTransformInputInner'>" +
-						"<div><input id='startdate' class='validate[required] jqtransformdone jqTranformInput offlinecreatedate' type='text' /></div>" +
-					"</div>" +	
-				"</div>" +
+				"<label for='startdate' class='timelinelabel'>Start:</label>" +
+				"<div><input id='startdate' class='validate[required] jqtransformdone jqTranformInput offlinecreatedate' type='text' /></div>" +
 				"<a id='startcalopen' class='pagebutton calopen ui-corner-all'>" +
 					"<img src='/images/daypicker.png' alt='Open' />" +
 				"</a>" +
 			"</div>" + 
+			
 			"<div class='timeline'>" +
-				"<div class='timelinelabel'>End:</div>" +
-				"<div class='jqTransformInputWrapper' style='width:150px'>" +
-					"<div class='jqTransformInputInner'>" +
-						"<div><input id='enddate' class='validate[required] jqtransformdone jqTranformInput offlinecreatedate' type='text' /></div>" +
-					"</div>" +	
-				"</div>" +
+				"<label for='enddate' class='timelinelabel'>End:</label>" +
+				"<div><input id='enddate' class='validate[required] jqtransformdone jqTranformInput offlinecreatedate' type='text' /></div>" +
 				"<a id='endcalopen' class='pagebutton calopen ui-corner-all'>" +
 					"<img src='/images/daypicker.png' alt='Open' />" +
 				"</a>" +
-			"</div>" + 
+			"</div>" +
+			
 			"<div style='clear:both'> </div>" +
 			"<div class='reasonline'>" +
-				"<div class='reasonlabel'>Reason:</div>" +
-				"<div class='jqTransformInputWrapper' style='width:300px'>" +
-					"<div class='jqTransformInputInner'>" +
-						"<div><input id='offreason' class='validate[required] jqtransformdone jqTranformInput' style='width:100%' type='text' /></div>" +
-					"</div>" +
-				"</div>" +
+				"<label for='offreason' class='reasonlabel'>Reason:</label>" +
+				"<input id='offreason' class='validate[required] jqtransformdone jqTranformInput' style='width:100%' type='text' />" +
 			"</div>" +
+			
 			"<div style='clear:both'> </div>" +
 		"</form></div>"
 	);
@@ -343,16 +335,15 @@ function confirmKickSession()
 			"<div>" +
 				"Are you sure you want to terminate the in-progress session and free the rig?" +
 			"</div>" + 
-			"<div class='reasonline'>" +
-				"<div class='reasonlabel'>Reason:</div>" +
-				"<div class='jqTransformInputWrapper' style='width:300px'>" +
-					"<div class='jqTransformInputInner'><div>" +
-						"<input id='kickreason' class='jqtransformdone jqTranformInput' type='text' />" +
-					"</div></div>" +
+			"<div class='reasonline saharaform'>" +
+				"<label class='reasonlabel' for='kickreason'>Reason:</label>" +
+				"<input id='kickreason' type='text' />" +
 			"</div>" +
 			"<div style='clear:both'> </div>" +
 		"</div>"
 	);
+	
+	$("#kickreason").focusin(formFocusIn).focusout(formFocusOut);
 	
 	$("#confirmsessionkick").dialog({
 		autoOpen: true,
