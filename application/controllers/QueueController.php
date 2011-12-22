@@ -125,7 +125,7 @@ class QueueController extends Sahara_Controller_Action_Acl
                 else $bucket[$perm['display']] = $perm;
             }
 
-            foreach ($buckets as $bucket) ksort($bucket);
+            foreach ($buckets as &$bucket) ksort($bucket);
 
             $userClasses[$class] = array(
                 'Rig Types:' => array_key_exists('TYPE', $buckets) ? $buckets['TYPE'] : array(),
