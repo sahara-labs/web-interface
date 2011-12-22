@@ -119,6 +119,8 @@ Hydro.prototype.changeExperiment = function() {
 Hydro.prototype.displayMode = function(modenum) {
 	var i;
 	
+	this.mode = modenum;
+	
 	/* Set hash location for state persistance. */
 	window.location.hash = "exp" + modenum;
 	
@@ -223,6 +225,10 @@ Hydro.prototype.repaint = function() {
 	for (i in this.widgets) this.widgets[i].repaint();
 	
 	if (this.debug) this.updateDebug();
+};
+
+Hydro.prototype.resetPosition = function() {
+	for (i in this.widgets) this.widgets[i].posReset();
 };
 
 /* ============================================================================
@@ -368,6 +374,13 @@ Hydro.prototype.setPressureLoad = function(val) {
 };
 
 /* ============================================================================
+ * == Accessors and Setters.                                                 ==
+ * ============================================================================ */
+Hydro.prototype.getMode = function() {
+	return this.mode;
+};
+
+/* ============================================================================
  * == Utility & debug.                                                       ==
  * ============================================================================ */
 Hydro.prototype.addOverlay = function(message) {
@@ -404,8 +417,28 @@ Hydro.prototype.clearOverlay = function() {
 //	this.repaint();
 };
 
-Hydro.prototype.raiseError = function(error) {
-	// TODO error
+Hydro.prototype.raiseError = function(error, level) {
+	
+	if (!console) return;
+	
+	switch (level)
+	{
+	case 'DEBUG':
+		console.debug("Hydro debug: " + error);
+		break;
+	
+	case 'INFO':
+		console.info("Hydro Info: " + error);
+		break;
+	
+	case 'WARN':
+		console.warn("Hydro Warn: " + error);
+		break;
+		
+	case 'ERR':
+	default:
+		console.error("Hydro Err: " + error);		
+	}
 };
 
 Hydro.prototype.updateDebug = function() {
@@ -432,19 +465,57 @@ function HydroWidget(hydroinst)
 {
 	this.hydro = hydroinst;
 	this.canvas = $("#hydro");
+	
+	this.jqEle;
+	
+	this.defaultCoords = "0x0";
 }
 HydroWidget.prototype.init = function() { };
+HydroWidget.prototype.postInit = function() {
+	this.draggable();
+	this.defaultCoords = parseInt(this.jqEle.css("left")) + "x" + parseInt(this.jqEle.css("top"));
+	this.setPos(getHydroCookie(this.jqEle.attr("id") + "_M" + this.hydro.getMode()));
+};
 HydroWidget.prototype.repaint = function() { };
-HydroWidget.prototype.destroy = function() { };
-HydroWidget.prototype.draggable = function(selector) {
-	$(selector).addClass('hydrodrag')
+HydroWidget.prototype.draggable = function() {
+	var thiz = this;
+	this.jqEle.addClass('hydrodrag')
 		.draggable({
 			handle: 'p',
 			opacity: 0.6,
-			stack: '.hydrodrag'
+			stack: '.hydrodrag',
+			stop:function() { thiz.posMoved(); }
 		});
 };
-
+HydroWidget.prototype.posMoved = function() {
+	setHydroCookie(this.jqEle.attr("id") + "_M" + this.hydro.getMode(), 
+			parseInt(this.jqEle.css("left")) + "x" + parseInt(this.jqEle.css("top")));
+	
+	resizeFooter();
+};
+HydroWidget.prototype.posReset = function() {
+	this.setPos(this.defaultCoords);
+	setHydroCookie(this.jqEle.attr("id") + "_M" + this.hydro.getMode(), this.defaultCoords);
+};
+HydroWidget.prototype.setPos = function(pos) {
+	if (!pos || pos == "") return;
+	
+	var coords = pos.split("x");
+	
+	if (coords.length == 2)
+	{
+		this.jqEle.css({
+			"left": parseInt(coords[0]) + "px",
+			"top": parseInt(coords[1]) + "px"
+		});
+	}
+	else this.hydro.raiseError("Provided position for widget " + this.jqEle.attr("id") + " has incorrect format.", "WARN");
+	
+	resizeFooter();
+};
+HydroWidget.prototype.destroy = function() {
+	this.jqEle.remove();
+};
 
 /* == Selector widget to choose display mode. ================================= */
 function SelectorWidget(hydroinst)
@@ -493,9 +564,8 @@ SelectorWidget.prototype.init = function() {
 	$('.modesel').click(function() {
 		hydroinst.displayMode($(this).attr('id').substr(3));
 	});
-};
-SelectorWidget.prototype.destroy = function() {
-	$("#hydroselector").remove();
+	
+	this.jqEle = $("#hydroselector");
 };
 
 /* == Camera widget. ========================================================= */
@@ -534,9 +604,10 @@ CameraWidget.prototype.init = function() {
 		width: this.width,
 		height: this.height
 	});
-	this.draggable("#hydrocamera");
 	
-	$("#hydrocamera").resizable({
+	this.jqEle = $("#hydrocamera");
+	
+	this.jqEle.resizable({
 		minHeight: 386,
 		maxHeight: 626,
 		minWidth: 320,
@@ -548,14 +619,22 @@ CameraWidget.prototype.init = function() {
 		}
 	});
 	
+	this.postInit();
+	
 	$.get('/primitive/json/pc/CameraController/pa/details', 
 		null, 
 		function(response) {
 		thiz.draw(response);
 	});
+	
+	
 };
 CameraWidget.prototype.draw = function(resp) {
-	if (typeof resp != "object") this.hydro.raiseError('Unable to load cameras details.');
+	if (typeof resp != "object") 
+	{
+		this.hydro.raiseError('Unable to load cameras details.');
+		return;
+	}
 	
 	var i, html, thiz = this;
 	
@@ -673,9 +752,6 @@ CameraWidget.prototype.resize = function(width, height) {
 		break;
 	}
 };
-CameraWidget.prototype.destroy = function() {
-	$("#hydrocamera").remove();
-};
 
 /* == Slider sets pump pressure using a slider. =============================== */
 function SliderWidget(hydroinst)
@@ -710,6 +786,8 @@ SliderWidget.prototype.init = function() {
 		'</div>';
 	this.canvas.append(html);
 	
+	this.jqEle = $("#slidercont");
+	
 	var thiz = this;
 	$("#slider").slider({
 		orientation: "vertical",
@@ -736,7 +814,7 @@ SliderWidget.prototype.init = function() {
 		.css("width", "10px");
 	this.sliderVal = $("#sliderval span");
 	
-	this.draggable("#slidercont");
+	this.postInit();
 };
 SliderWidget.prototype.repaint = function() {
 	if (this.val != hydro.pump)
@@ -844,6 +922,8 @@ LoadSetterWidget.prototype.init = function() {
 	
 	this.canvas.append(html);
 	
+	this.jqEle = $("#loadsetterpanel");
+	
 	var thiz = this;
 	this.ls = $("#loadsetter").slider({
 		orientation: "horizontal",
@@ -858,7 +938,7 @@ LoadSetterWidget.prototype.init = function() {
 	this.ls.children(".ui-slider-handle").css('height', 30)
 		.css("cursor", "col-resize");
 	
-	this.draggable("#loadsetterpanel");
+	this.postInit();
 };
 LoadSetterWidget.prototype.repaint = function() {
 	if (this.val != this.hydro.load)
@@ -899,7 +979,9 @@ LEDPanelWidget.prototype.init = function() {
 		"</div>";
 	this.canvas.append(html);
 	this.panel = $("#ledpanelinner");
-	this.draggable("#ledpanel");
+	
+	this.jqEle = $("#ledpanel");
+	this.postInit();
 };
 LEDPanelWidget.prototype.repaint = function() {
 	if (this.onLeds != this.hydro.load)
@@ -916,9 +998,6 @@ LEDPanelWidget.prototype.repaint = function() {
 		}
 		this.panel.empty().append(html);
 	}
-};
-LEDPanelWidget.prototype.destroy = function() {
-	$("#ledpanel").remove();
 };
 
 /* == Gauge display a value. ================================================== */
@@ -992,12 +1071,15 @@ GaugeWidget.prototype.init = function() {
 	this.dr = this.cr = this.getValue() / (this.maxVal - this.minVal) * 180 - 90;
 	this.rotate(this.dr);
 	
-	this.draggable(this.id);
+	this.jqEle = $(this.id);
 	
 	if ((s = $("#gaugecontainer .gauge").length) > 3)
 	{
 		this.canvas.css("height", 550 + (s - 3) * 160);
-		resizeFooter();	}
+		resizeFooter();	
+	}
+	
+	this.postInit();
 };
 GaugeWidget.prototype.repaint = function() {
 	if (this.currentVal != this.getValue())
@@ -1022,7 +1104,11 @@ GaugeWidget.prototype.destroy = function() {
 		gc.remove();
 		gac = 0;
 	}
-	else (gc.css("width", w - this.WIDTH));
+	else 
+	{
+		gc.css("width", w - this.WIDTH);
+		gac--;
+	}
 	
 	if ((s = $("#gaugecontainer .gauge").length) <= 3)
 	{
@@ -1326,12 +1412,13 @@ MeterWidget.prototype.init = function() {
 	this.canvas.append(html);
 	
 	this.id = "#" + this.id;
+	this.jqEle = $(this.id);
 	this.ind = $(this.id + " .meterind");
 	this.she = $(this.id + " .metershe");
 	this.metv = $(this.id + " .meterval");
 	this.move(this.dval);
 	
-	this.draggable(this.id);
+	this.postInit();
 };
 MeterWidget.prototype.repaint = function() {
 	if (this.val != this.getValue())
@@ -1419,6 +1506,31 @@ RpmMeterWidget.prototype.getValue = function() {
 /* ============================================================================
  * == Utility functions.                                                     ==
  * ============================================================================  */
+function setHydroCookie(key, value)
+{
+	var expiry = new Date();
+	expiry.setDate(expiry.getDate() + 365);
+	var cookie = 'Hydro_' + key + '=' + value + ';path=/;expires=' + expiry.toUTCString();
+
+	document.cookie = cookie;
+}
+
+function getHydroCookie(key)
+{
+	var cookies = document.cookie.split('; ');
+	var fqKey = 'Hydro_' + key;
+	for (i in cookies)
+	{
+		var c = cookies[i].split('=', 2);
+		if (c[0] == fqKey)
+		{
+			return c[1];
+		}
+	}
+	return "";
+
+}
+
 function round(num, pts)
 {
 	return Math.round(num * Math.pow(10, pts)) / Math.pow(10, pts);
