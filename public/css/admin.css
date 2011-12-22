@@ -340,7 +340,7 @@
 	height: 34px;
 	width: 35px;
 	text-align: center;
-	margin: -4px 7px 0;
+	margin: 0px 7px 0;
 }
 
 #createofflinebutton:hover, .calopen:hover {
@@ -368,8 +368,17 @@
 	float: left;
 }
 
-.timelinelabel {
-	margin: 5px 0 0;
+#createofflineform .timelinelabel {
+	margin: 15px 0 0;
+	width: 35px;
+}
+
+#createofflineform .timeline div {
+	float: left;
+}
+
+#startdate, #enddate {
+	width: 140px;
 }
 
 #permform {

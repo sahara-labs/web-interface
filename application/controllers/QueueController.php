@@ -120,10 +120,7 @@ class QueueController extends Sahara_Controller_Action_Acl
 
                 if (array_key_exists($perm['display'], $bucket))
                 {
-                    /* If the existing and/or new have display names, use the
-                     * display name. */
-
-                    var_dump($perm);
+                    $bucket[$perm['display'] . $perm['permissionId']] = $perm;
                 }
                 else $bucket[$perm['display']] = $perm;
             }

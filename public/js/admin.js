@@ -164,6 +164,7 @@ function confirmCreateOffline()
 	});
 	
 	$("#createofflineform").validationEngine();
+	$("#createofflineform input").focusin(formFocusIn).focusout(formFocusOut);
 	
 	$("#createoffline").dialog({
 		autoOpen: true,
