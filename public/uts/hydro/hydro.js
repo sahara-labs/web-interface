@@ -418,8 +418,7 @@ Hydro.prototype.clearOverlay = function() {
 };
 
 Hydro.prototype.raiseError = function(error, level) {
-	
-	if (!console) return;
+	if (typeof console == "undefined") return;
 	
 	switch (level)
 	{
