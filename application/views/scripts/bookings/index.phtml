@@ -191,9 +191,22 @@ $(document).ready(function() {
 	.datepicker('hide')
 	.datepicker('option', 'showAnim', 'show');
 
+	if ($.browser.msie && $.browser.version == '6.0')
+	{
+		/* Hack for IE6 making the datepicker height 14px. */
+    	$("#daypicker").focusin(function() {
+    		$("#ui-datepicker-div").css("height", "185px");
+    	});
+    	$("#ui-datepicker-div").css("height", "185px");
+	}
+
 	vp.initDate();
 
-	$("#daypickericon").click(function() { $("#daypicker").datepicker("show"); });
+	$("#daypickericon").click(function() {
+		$("#daypicker").datepicker("show");
+
+		if ($.browser.msie && $.browser.version == '6.0') $("#ui-datepicker-div").css("height", "185px");
+	});
 	$("#leftarrow").click(function() { vp.previousDay(); });
 	$("#rightarrow").click(function() { vp.nextDay(); } );
 <?php if ($this->currentDay == $this->endDay): ?>

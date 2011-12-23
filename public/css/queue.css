@@ -84,6 +84,11 @@
     overflow: visible;
 }
 
+.permissiondialog .ui-state-error {
+	text-align: left;
+	padding: 3px;
+}
+
 .permbuttonpaneshift {
 	margin-right: -20px;
 }

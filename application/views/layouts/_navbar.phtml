@@ -108,7 +108,7 @@ if (!$nbTitle) $nbTitle = key($menu);
 	<ol id="menu">
 	<?php foreach ($menu as $title => $url): ?>
 		<li <?php if ($nbTitle == $title) echo 'value="1"'; ?>>
-			<a class="plaina apad" href="<?=$this->url($url, null, true)?>"><?=$title?></a>
+			<a class="plaina apad <?php if ($nbTitle == $title) echo 'navselected'; ?>" href="<?=$this->url($url, null, true)?>"><?=$title?></a>
 		</li>
 	<?php endforeach; ?>
 	</ol>

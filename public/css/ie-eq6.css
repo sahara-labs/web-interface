@@ -1,0 +1,43 @@
+#footer {
+	display: none;
+}
+
+#wrapper .menu {
+	margin-top: -20px;
+}
+
+#wrapper .menu .navselected {
+	font-weight: bold;
+}
+
+/** Bookings pages. */
+#bookingstimetitle {
+	position: absolute;
+}
+
+#leftarrowbox .daybuttonlabel {
+	width: 75px;
+}
+
+#timecols {
+	margin-top: 10px;
+}
+
+#ui-datepicker-div {
+	hieght: 200px;
+	z-index: 1000;
+}
+
+#timecols .timeselector {
+	position: absolute;
+	margin: 4px 0 0 2px;
+}
+
+.dragindicator {
+	overflow-x: hidden;
+}
+
+.timedragarrow, .bhoverarrow {
+	display: none;
+	left: 10000px;
+}
