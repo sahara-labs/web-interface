@@ -43,17 +43,21 @@
 	<?php if ($this->code == 404):?>
         <img style="padding:20px;" src="<?=$this->baseUrl('images/file_broken.png')?>" alt="Page Not Found"></img>
 		<div class="ui-priority-secondary ui-corner-all">
-			<h3>The page you are trying to find doesn't exist.<br>
+			<h3>The page you are trying to find doesn't exist.<br />
 			If you used a bookmark to get here, please update it.</h3>
 		</div>
 	<?php else: ?>
-        <img style="padding:20px;" src="<?=$this->baseUrl('images/no.png')?>" alt="Page Not Found"></img>
-		<div class="ui-state-error ui-corner-all" style="width:45%">
-          <h3>Please use the "Send Feedback" button to let us know.</h3>
-		   <h3>We will get back to you shortly.</h3>
+        <img style="padding:20px;" src="<?=$this->baseUrl('images/error.png')?>" alt="Page Not Found"></img>
+		<div class="ui-state-error ui-corner-all" style="width:550px;padding:5px;text-align:left">
+			<span class="ui-icon ui-icon-alert" style="float:left;margin-right:5px"></span>
+			Support staff have been contact about this error. If you have more information to provide about how this
+			occurred, please use the '<a id='contactsupportbutton' class='plaina' href='#'>Contact Support</a>' button.
 		</div>
+
+		<script type="text/javascript">
+		$(document).ready(function() { $("#contactsupportbutton").click(function() { $("#supportdialog").dialog("open") } ) } );
+		</script>
 	<?php endif ?>
-</div>
 <?php else: ?>
 	<?php if (isset($this->exception)): ?>
        <h3>Exception information:</h3>
