@@ -320,7 +320,7 @@
 	position: absolute;
 	top: 140px;
 	right: 170px;
-	width: 160px
+	padding: 0 5px;
 }
 
 #permkeybutton span {
@@ -337,7 +337,7 @@
 }
 
 #permkey {
-	width: 250px;
+	width: 285px;
 }
 
 #permkeyloading {

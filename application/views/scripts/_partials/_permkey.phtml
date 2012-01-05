@@ -39,16 +39,16 @@
 
 <div id="permkeybutton" class="commonbutton">
 	<span class="ui-icon ui-icon-key"></span>
-	Activate Permission
+	Activate Access
 </div>
 
-<div id="permkeydialog" title="Permission Activation:" style="display:none">
+<div id="permkeydialog" title="Access Activation:" style="display:none">
 	<div id="permkeyform">
 		<div id="permkeyerror" class="ui-state ui-state-error ui-corner-all">
 			<span class="ui-icon ui-icon-alert"> </span>
 			<p> </p>
 		</div>
-    	Enter a permission key to activate it's permission:
+    	Enter an access key to redeem your rig access:
     	<div id="permkeyouter" class='saharaform'>
     		<label>Key:</label>
     		<input id="permkey" type="text" name="permkey" class="validate[required]" />
@@ -66,7 +66,7 @@ $(document).ready(function() {
 	$("#permkeydialog").dialog({
 		autoOpen: false,
 		modal: true,
-		width: 350,
+		width: 375,
 		resizable: false,
 		buttons: {
 			Activate: function() {
@@ -79,7 +79,7 @@ $(document).ready(function() {
 					closeOnEscape: false
 				}).parent().children(".ui-dialog-titlebar, .ui-dialog-buttonpane").hide();
 
-				$.get(
+				$.post(
 					'/index/permactivate',
 					{
 						pkey: $("#permkey").val()
@@ -110,6 +110,7 @@ $(document).ready(function() {
 				);
 			},
 			Close: function() {
+				$("#permkey").val("");
 				$(".permkeyformError").remove();
 				$("#permkeyerror").hide();
 				$(this).dialog("close");

@@ -162,7 +162,8 @@ class IndexController extends Sahara_Controller_Action_Acl
         if ($this->_getParam('pkey'))
         {
             /* Authorisation key has been specified, so redeem it. */
-            $res = $this->_pkeyActivate(urldecode($this->_getParam('pkey')));
+            $ac = Sahara_AccessKey();
+            $res = $ac->keyActivate(urldecode($this->_getParam('pkey')));
             if (!$res['success'])
             {
                 $this->_flashMessenger->addMessage('Failed permission redemption: ' . $res['error']);
@@ -352,95 +353,10 @@ class IndexController extends Sahara_Controller_Action_Acl
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout->disableLayout();
 
-        echo $this->view->json($this->_pkeyActivate($this->_getParam('pkey')));
+        $ac = new Sahara_AccessKey();
+        echo $this->view->json($ac->keyActivate($this->_getParam('pkey')));
     }
 
-    private function _pkeyActivate($pkey)
-    {
-        if (!$this->_config->permkey->enable)
-        {
-            $this->_logger->warn('Tried to activate permission when the permission activation feature is disabled.');
-             return array(
-                    	'success' => false,
-                        'error' => 'Permission activation feature is disabled.'
-            );
-        }
 
-        if (!$pkey)
-        {
-            $this->_logger->debug("Tried to activate permission without supplied a permission key.");
-            return array(
-                  'success' => false,
-                  'error' => 'No permission key supplied.'
-            );
-        }
-
-        $db = Sahara_Database::getDatabase();
-
-        /* Check the key exists, has remaining uses and the redeeming class
-         * is active. */
-        $key = $db->fetchRow($db->select()
-            ->from(array('rk' => 'user_association_redeem_keys'))
-            ->join(array('uc' => 'user_class'), 'rk.user_class_id = uc.id', array('name'))
-            ->where('rk.redeemkey = ?', $pkey)
-            ->where('rk.remaining_uses > 0')
-            ->where('uc.active = 1'));
-
-        if (!$key) return array(
-              	'success' => false,
-                'error' => 'Key not valid.');
-
-
-        /* Load user. */
-        list($ns, $name) = explode(':', $this->_auth->getIdentity(), 2);
-        $sel = $db->select()
-            ->from(array('u' => 'users'))
-            ->where('namespace = ?', $ns)
-            ->where('name = ?', $name);
-
-        /* If the redemption key requires a specific organisation or affliation,
-         * load the users properties. */
-        if ($key['home_org'] || $key['affliation'])
-        {
-            $sel->join(array('s' => 'shib_users_map'), 'u.name = s.user_name', array('home_org', 'affliation'));
-        }
-
-        $user = $db->fetchRow($sel);
-        if (!$user) return array(
-                 'success' => false,
-                 'error' => 'Constraints not met.');
-
-        /* Check the constraints do indeed match. */
-        if ($key['home_org'] && $key['home_org'] != $user['home_org'] ||
-                $key['affliation'] && $key['affliation'] != $user['affliation'])
-        {
-            return array(
-                    	'success' => false,
-                        'error' => 'Constraints not met.');
-        }
-
-        /* Check the user doesn't already have the user association. */
-        if ($db->fetchOne($db->select()
-                ->from('user_association', 'count(users_id)')
-                ->where('users_id = ?', $user['id'])
-                ->where('user_class_id = ?', $key['user_class_id'])) != 0)
-        {
-            return array(
-                    	'success' => false,
-                        'error' => 'You have already redeemed the key.'
-            );
-        }
-
-        /* All constraints are met so we can create the association. */
-        $db->update('user_association_redeem_keys',  array('remaining_uses' => (--$key['remaining_uses'])),
-                		'redeemkey = ' . $db->quote($key['redeemkey']));
-
-        $db->insert('user_association', array(
-                    'users_id' => $user['id'],
-                    'user_class_id' => $key['user_class_id']
-        ));
-
-        return array('success' => true);
-    }
 }
 
