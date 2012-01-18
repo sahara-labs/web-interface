@@ -145,14 +145,6 @@ class Sahara_AccessKey
             }
         }
 
-        if ($key['home_org'] && $key['home_org'] != $user['home_org'] ||
-                $key['affliation'] && $key['affliation'] != $user['affliation'])
-        {
-            return array(
-                        	'success' => false,
-                            'error' => 'Constraints not met.');
-        }
-
         /* Check the user doesn't already have the user association. */
         if ($this->_db->fetchOne($this->_db->select()
                 ->from('user_association', 'count(users_id)')
