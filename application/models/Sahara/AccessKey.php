@@ -124,14 +124,34 @@ class Sahara_AccessKey
                 ->where('namespace = ?', $ns)
                 ->where('name = ?', $name);
 
+
+        $sel->join(array('s' => 'shib_users_map'), 'u.name = s.user_name', array('home_org', 'affliation'));
+
         $user = $this->_db->fetchRow($sel);
         if (!$user) return array(
         		'success' => false,
-                'error' => 'Constraints not met.'
+                'error' => 'User not found.'
         );
 
         /* Check the constraints do indeed match. */
-         // TODO constraints
+        $rowSet = $this->_db->fetchAll($this->_db->select()
+                ->from('user_class_key_constraint')
+                ->where('user_class_key_id = ?', $key['id']));
+        if (count($rowSet))
+        {
+            foreach ($rowSet as $row)
+            {
+
+            }
+        }
+
+        if ($key['home_org'] && $key['home_org'] != $user['home_org'] ||
+                $key['affliation'] && $key['affliation'] != $user['affliation'])
+        {
+            return array(
+                        	'success' => false,
+                            'error' => 'Constraints not met.');
+        }
 
         /* Check the user doesn't already have the user association. */
         if ($this->_db->fetchOne($this->_db->select()
@@ -212,7 +232,7 @@ class Sahara_AccessKey
 
         /* Check the constraints do indeed match. */
         if ($key['home_org'] && $key['home_org'] != $user['home_org'] ||
-        $key['affliation'] && $key['affliation'] != $user['affliation'])
+                $key['affliation'] && $key['affliation'] != $user['affliation'])
         {
             return array(
                         	'success' => false,
