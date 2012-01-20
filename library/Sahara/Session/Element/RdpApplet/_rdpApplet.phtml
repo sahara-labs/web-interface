@@ -44,7 +44,7 @@
 	<div id="rdppanelcontent" style="overflow:hidden">
 		<applet id="rdpapplet" name="Control Applet" style="margin-left:5px;margin-top:5px"
 				code="au.edu.uts.eng.remotelabs.rdp.SaharaRdpApplet.class" archive="<?=$this->baseUrl('/applets/' . $this->applet)?>"
-				width="165" height="95">
+				width="165" height="<?=$this->height?>">
 		<?php foreach ($this->params as $p => $v): ?>
 			<param name="<?=$p?>" value="<?=$v?>" />
 		<?php endforeach; ?>
