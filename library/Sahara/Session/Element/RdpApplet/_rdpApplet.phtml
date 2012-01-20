@@ -37,7 +37,7 @@
  */
 ?>
 
-<div id="rdpcontrolpanel" class="sessionpanel ui-corner-all leftpush overlayelementhide" style="left:-185px;top:208px">
+<div id="rdpcontrolpanel" class="sessionpanel ui-corner-all leftpush overlayelementhide" style="left:-185px;top:208px;display:none">
 	<div class="sessionpanelheader">
 		<p><span class="ui-icon ui-icon-wrench sessionpanelheadericon"></span>Rig Control</p>
 	</div>
@@ -69,6 +69,8 @@ $(document).ready(function(){
 	$("#rdpcontrolpanel").css("top", top);
 
 	provideSessionInfoApplet();
+
+	if ($("#readyoverlay").length == 0) $("#rdpcontrolpanel").css("display", "block");
 });
 
 function provideSessionInfoApplet()
