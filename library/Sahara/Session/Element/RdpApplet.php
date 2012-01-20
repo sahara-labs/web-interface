@@ -47,8 +47,47 @@ class Sahara_Session_Element_RdpApplet extends Sahara_Session_Element
 
         $this->_view->applet = $applet;
         $this->_view->params = $params;
+
+        $this->_view->height = 95;
     }
 
+    /**
+     * Sets whether to enable the resolution selector on the applet. The default
+     * is this is disabled.
+     *
+     * @param boolean $enable whether to show the resolution selector
+     */
+    public function setResolutionSelector($enable)
+    {
+        if ($enable)
+        {
+            $this->_view->height = 120;
+            $this->_view->params['resolution_selector'] = 'true';
+        }
+        else
+        {
+            $this->_view->height = 95;
+            unset($this->_view->params['resolution_selector']);
+        }
+    }
+
+    /**
+     * Sets whether to enable the 8 bit fallback mode on the applet. The
+     * default is this is disabled.
+     *
+     * @param bool $enable whether to enable or disable 8 bit fallback
+     */
+    public function setEightBitFallback($enable)
+    {
+        if ($enable)
+        {
+            $this->_view->params['fallback_8bit'] = 'true';
+        }
+        else
+        {
+            unset($this->_view->params['fallback_8bit']);
+        }
+    }
 
     public function render()
     {
