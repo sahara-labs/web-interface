@@ -686,18 +686,37 @@ CameraWidget.prototype.draw = function(resp) {
 	});
 	
 	/* Default deployment. */
-	if ($.browser.msie) this.deployVideo();
-	else this.deployImages();
+	this.deployImages();
 };
 CameraWidget.prototype.deployImages = function() {
 	this.deployed = 'mjpeg';
 	
 	$("#hydrocamformats .selectedbutton").removeClass("selectedbutton");
 	$("#imagesbutton").addClass("selectedbutton");
-	$("#hydrocamerastream")
-		.empty()
-		.append("<img style='width:" + this.width + "px;height:" + this.height + "px' " +
-						"src='" + this.mjpeg + "?" + new Date().getTime() + "' alt='&nbsp;'/>");
+	
+	var $hydroCam = $("#hydrocamerastream");
+	$hydroCam.empty();
+	
+	if ($.browser.msie)
+	{
+		/* Internet explorer does not display motion JPEG a Java applet is 
+		 * deployed to stream it. */
+		$hydroCam.append(
+				'<applet code="com.charliemouse.cambozola.Viewer" archive="/applets/cambozola.jar" ' + 
+						'width="' + this.width + '" height="' + this.height + '">' +
+					'<param name="url" value="' + url + '"/>' +
+					'<param name="accessories" value="none"/>' +
+				'</applet>'
+		);
+	}
+	else
+	{
+		/* Other browsers can play motion JPEG natively. */
+		$hydroCam.append(
+				"<img style='width:" + this.width + "px;height:" + this.height + "px' " +
+						"src='" + this.mjpeg + "?" + new Date().getTime() + "' alt='&nbsp;'/>"
+		);
+	}
 };
 CameraWidget.prototype.deployVideo = function() {
 	this.deployed = 'asf';
