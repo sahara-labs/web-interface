@@ -37,6 +37,7 @@
 
 jpegIntervals = new Array();
 jpegImages = new Object();
+swfTimeout = null;
 
 function changeCameraOption(id, vid, url)
 {
@@ -56,17 +57,26 @@ function changeCameraOption(id, vid, url)
 		
 		switch (vid)
 		{
-		case 'off':
+		case 'off':   // Camera panel is removed from the page:
 			$("#camerapanel" + id).slideUp("slow");
 			break;
-		case 'jpeg':
+		case 'jpeg':  // JPEG frames with a user selectable automatic refresh
 			deployJpeg(id, url, 2000);
 			break;
-		case 'mms':
+		case 'mjpeg': // Motion JPEG, Java plugin for IE, native others
+			deployMJpeg(id, url);
+			break;
+		case 'mms':   // ASF over MMS, WMP or equivalent 
 			deployWinMedia(id, url);
 			break;
-		case 'mmsh':
+		case 'mmsh':  // ASF over MMSH, VLC forced
 			deployVLC(id, url);
+			break;
+		case 'flv':   // FLV video using FlowPlayer
+			deployFLV(id, url);
+			break;
+		case 'swf':   // Flash movie
+			deploySWF(id, url);
 			break;
 		default:
 			/* Fall back to the jQuery media plugin which may be able to detect
@@ -94,13 +104,12 @@ function changeCameraOption(id, vid, url)
 
 function deployJpeg(id, url, tm)
 {
-	var cameraDiv = "#camera" + id;
-	
-	var html = "<div id='jpegframe" + id + "' style='height:" + (vcameras[id].height + 20) + "px'>" +
+	var cameraDiv = "#camera" + id,
+		html = "<div id='jpegframe" + id + "' style='height:" + (vcameras[id].height + 20) + "px'>" +
 				"	<img src='" + url + "?" + new Date().getTime() + "'/>" +
 				"</div>" +
 				"<div class='jpegsliderholder'>" +
-				"	<div id='jpegslider" + id + "' class='jpegslider'></div>";
+				"	<div id='jpegslider" + id + "' class='jpegslider'></div>", i;
 	
 	for (i = 0; i < 5; i++)
 	{
@@ -200,6 +209,32 @@ function updateJpeg(id, url, tm)
 	jpegImages[id].src = tUrl;
 }
 
+function deployMJpeg(id, url)
+{
+	var cameraDiv = "#camera" + id;
+
+	if ($.browser.msie)
+	{
+		/* Internet Explorer does not support MJPEG streaming so a Java applet 
+		 * is streaming. */
+		$(cameraDiv).html(
+				'<applet code="com.charliemouse.cambozola.Viewer" archive="/applets/cambozola.jar" ' + 
+						'width="' + vcameras[id].width + '" height="' + vcameras[id].height + '">' +
+					'<param name="url" value="' + url + '"/>' +
+					'<param name="accessories" value="none"/>' +
+				'</applet>'
+		);
+	}
+	else
+	{
+		$(cameraDiv).html(
+				"<div id='jpegframe" + id + "' style='height:" + (vcameras[id].height + 20) + "px'>" +
+				"	<img src='" + url + "?" + new Date().getTime() + "'/>" +
+				"</div>"
+		);
+	}
+}
+
 function deployWinMedia(id, url)
 {
 	var cameraDiv = "#camera" + id;
@@ -271,6 +306,80 @@ function deployVLC(id, url)
 	}
 }
 
+function deployFLV(id, url)
+{
+	var player = flowplayer("camera" + id, {
+			src: "/swf/flowplayer.swf",
+			wmode: 'direct'
+		}, 
+		{
+			autoPlay: true,
+			buffering: true,
+			playlist: [ 
+			    url
+			],
+			clip: {
+				bufferLength: 1
+			},
+			plugins: {
+				controls: null // Disable the control bar
+			}
+	});
+
+	player.load();
+}
+
+function deploySWF(id, url, refresh) 
+{
+	if (!refresh)
+	{	
+		$("#camera" + id)
+		.css("background-image", "")
+		.css("background-color", "#777");
+		
+		setTimeout(function() {
+			deploySWF(id, url, true);
+		}, 100);
+		return;
+	}
+	
+	if ($.browser.msie)
+	{
+		$("#camera" + id).html(
+				'<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" ' +
+						'width="' + vcameras[id].width + '" height="' + vcameras[id].height + '" ' +
+						' id="camera' + id + 'movie" align="middle">' +
+					'<param name="movie" value="' + url + '" />' +
+					'<a href="http://www.adobe.com/go/getflash">' +
+						'<img src="http://www.adobe.com/images/shared/download_buttons/get_flash_player.gif" ' +
+								'alt="Get Adobe Flash player"/>' +
+					'</a>' +
+				'</object>'
+		);
+	}
+	else
+	{
+		$("#camera" + id).html(
+				 '<object type="application/x-shockwave-flash" data="' + url + '" ' +
+				 		'width="' +  vcameras[id].width  + '" height="' + vcameras[id].height + '">' +
+			        '<param name="movie" value="' + url + '"/>' +
+			        '<a href="http://www.adobe.com/go/getflash">' +
+		            	'<img src="http://www.adobe.com/images/shared/download_buttons/get_flash_player.gif" ' +
+		            			'alt="Get Adobe Flash player"/>' +
+		            '</a>' +
+		        '</object>'
+		);
+	}
+	
+	/* Flash movies have a 16000 frame limit, so after 7 minutes, the movie
+	 * is reloaded so it never hits the limit. */
+	swfTimeout = setTimeout(function() {
+		swfTimeout = null;
+		undeploy(id);
+		deploySWF(id, url, true);
+	}, 7 * 60 * 1000);
+}
+
 function undeploy(id)
 {
 	if (jpegIntervals[id] !== undefined)
@@ -279,17 +388,22 @@ function undeploy(id)
 		clearInterval(jpegIntervals[id]);
 		jpegIntervals[id] = undefined;
 	}
-
-	var cameraDiv = "#camera" + id;
-	$(cameraDiv).css("background-image", "");
-	$(cameraDiv).css("background-color", "#FFFFFF");
-	$(cameraDiv).html("<p>Camera off.</p>");
-	$(cameraDiv).css("height", vcameras[id].height);
-	$(cameraDiv).parent().parent().css("height", vcameras[id].height + 30); // Outer camera div
 	
-	var cameraInfo = "#cameraInfo" + id;
-	$(cameraInfo).html("");
-	$(cameraInfo).css("display", "none");
+	if (swfTimeout) 
+	{
+		clearTimeout(swfTimeout);
+	}
+
+	$("#camera" + id)
+		.css("background-image", "")
+		.css("background-color", "#FFFFFF")
+		.html("<p>Camera off.</p>")
+		.css("height", vcameras[id].height)
+		.parent().parent().css("height", vcameras[id].height + 30); // Outer camera div
+	
+	$("#cameraInfo" + id)
+		.html("")
+		.css("display", "none");
 	
 	
 	resizeFooter();

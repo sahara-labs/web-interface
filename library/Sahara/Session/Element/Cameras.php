@@ -54,10 +54,13 @@ class Sahara_Session_Element_Cameras extends Sahara_Session_Element
 
     /** @var array Name of Format types. */
     private $_formats = array(
-        'off'  => 'Camera Off',
-        'jpeg' => 'JPEG Images',
-        'mms'  => 'WMP Plugin',
-        'mmsh' => 'VLC Plugin'
+        'off'  =>  'Camera Off',
+        'jpeg' =>  'JPEG Images',
+        'mjpeg' => 'Motion JPEG',
+        'mms'  =>  'WMP Plugin',
+        'mmsh' =>  'VLC Plugin',
+        'flv' =>   'Flash Video',
+        'swf' =>   'Flash'
     );
 
     public function __construct($rig, $options = array())
@@ -190,9 +193,13 @@ class Sahara_Session_Element_Cameras extends Sahara_Session_Element
         $this->_view->formats = $this->_formats;
         $this->_view->draggable = $this->_draggable;
 
+        /* CSS resources. */
         $this->_view->headLink()->appendStylesheet($this->_view->baseUrl('css/elements/cameras.css'));
+
+        /* Javascript resources. */
         $this->_view->headScript()->appendFile($this->_view->baseUrl('js/elements/cameras/jquery.media.js'));
         $this->_view->headScript()->appendFile($this->_view->baseUrl('js/elements/cameras/cameras.js'));
+        $this->_view->headScript()->appendFile($this->_view->baseUrl('js/elements/cameras/flowplayer.min.js'));
 
         $html = $this->_view->render('Cameras/_cameraPanel.phtml');
         $html .= $this->_view->render('Cameras/_cameras.phtml');
