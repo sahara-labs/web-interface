@@ -623,7 +623,7 @@ CameraWidget.prototype.init = function() {
 	$.get('/primitive/json/pc/CameraController/pa/details', 
 		null, 
 		function(response) {
-		thiz.draw(response);
+			thiz.draw(response);
 	});
 	
 	
@@ -655,11 +655,14 @@ CameraWidget.prototype.draw = function(resp) {
 	
 	/* Deploy buttons. */
 	html = '<div id="hydrocamformats">' +
-               '<div class="camheader">Formats</div>';
+               '<div class="camheader">Formats</div>' +
+               		'<div id="imagesbutton" class="camerabutton">MJPEG</div>';
 	
-	if (!$.browser.msie) html += '<div id="imagesbutton" class="camerabutton">MJPEG</div>';
+	/* MS WMP does not play mpeg files until they are complete so there is no point
+	 * giving the option. */
+	if (!$.browser.msie) html +=  '<div id="videobutton"  class="camerabutton">ASF</div>'; 
 	
-	html +=    '<div id="videobutton"  class="camerabutton">ASF</div>' +
+	html +=   
 		   '</div>' +
 		   
 		   '<div id="hydrocampositions">' +
