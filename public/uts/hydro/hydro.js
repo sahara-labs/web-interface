@@ -704,7 +704,7 @@ CameraWidget.prototype.deployImages = function() {
 		$hydroCam.append(
 				'<applet code="com.charliemouse.cambozola.Viewer" archive="/applets/cambozola.jar" ' + 
 						'width="' + this.width + '" height="' + this.height + '">' +
-					'<param name="url" value="' + url + '"/>' +
+					'<param name="url" value="' + this.mjpeg + '"/>' +
 					'<param name="accessories" value="none"/>' +
 				'</applet>'
 		);
