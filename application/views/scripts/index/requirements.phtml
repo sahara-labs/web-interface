@@ -37,104 +37,200 @@
  */
 ?>
 
-<div class="contentheader">
-	<h2>User and System Requirements</h2>
-</div>
+<?php $this->headStyle()->captureStart() ?>
 
-<div id="helppage">
-	<p>The following sections outline the general procedure for accessing this remote laboratory. Most
-	importantly, the software that runs the Remote Labs and provides access to the rigs through a web browser is
-	called <a class="plaina" href="http://sourceforge.net/projects/labshare-sahara/" target="_blank"
-	style="font-weight:bold">SAHARA Labs</a>.</p>
+#content {
+	width: 800px;
+	margin: 0 auto;
+}
 
-	<h2>Compatibility Matrix</h2>
-	<table border="1">
-		<tr>
-			<th>
-				Operating system
-			</th>
-			<th>
-				Browser (tested and supported)
-			</th>
-			<th>
-				Plugins
-			</th>
-			<th>
-				Screen Resolution
-			</th>
-		</tr>
-		<tr>
-			<td>
-				Windows XP SP2<br />
-				Windows Server 2003<br />
-				Windows Vista<br />
-				Windowx 7<br />
-			</td>
-			<td>
-				<ul>
-					<li>Internet Explorer 7</li>
-					<li>Internet Explorer 8</li>
-					<li>Internet Explorer 9 (preferred)</li>
-					<li>Mozilla Firefox 3.6 and above</li>
-					<li>Google Chrome (latest)</li>
-					<li>Opera 11.50</li>
-				</ul>
-				<strong>NOTE: </strong> Internet Explorer 6 works in a functionally limited mode. It is strongly
-				recommended to upgrade to the latest version of Internet Explorer.
-			</td>
-			<td>
+h1 {
+	margin-top:10px;
+	font-size: 1.6em;
+}
 
-			</td>
-			<td>
+h3 {
+	margin: 20px 0 5px;
+}
 
-			</td>
-		</tr>
-		<tr>
-			<td>
-				Mac OS X Snow Leopard<br />
-				Mac OS X Lion<br />
-			</td>
-			<td>
+ol {
+	list-style: none;
+}
 
-			</td>
-			<td>
+table {
+	border: none;
+	margin: 10px 0 0;
+}
 
-			</td>
-			<td>
+th {
+	font-weight: bold;
+}
 
-			</td>
-		</tr>
-		<tr>
-			<td>
-				Linux (any recent distrubution)
-			</td>
-			<td>
+th, td {
+	border: 1px solid #000;
+	padding: 4px;
+	text-align: left;
+}
 
-			</td>
-			<td>
+p, ul {
+	margin-top: 10px;
+}
 
-			</td>
-			<td>
+ul {
+	margin-left: 40px;
+}
 
-			</td>
-		</tr>
-	</table>
+p.note-p {
+	margin: 10px 40px 10px;
+}
 
-	<h2>Network</h2>
-	<p>For the purpose of using the Remote Labs rigs, it is assumed that users have access to a workstation with
-	properly working operating system. The current workstation must also have Internet connectivity, preferably
-	with a bandwidth of at least 512kbps downstream.</p>
+#last-para {
+	margin-bottom: 20px;
+}
 
-	<h2>Web Browsers</h2>
+<?php $this->headStyle()->captureEnd() ?>
 
-	<h2>Java Runtime Engine</h2>
+<h1>User and System Requirements</h1>
 
-	<h2>Video Plugins</h2>
+<p>The following sections outline the client requirements for accessing the UTS Remote Labs.</p>
+<table>
+	<tr>
+		<th>Operating system</th>
+		<th>Browser (tested and supported)</th>
+		<th>Plugins</th>
+		<th>Screen Resolution</th>
+	</tr>
 
-	<h2></h2>
-</div>
+	<tr>
+		<td>
+			<ol>
+				<li>Windows XP, Vista and 7</li>
+				<li>Mac OS 10.6 and above</li>
+				<li>Linux</li>
+			</ol>
+		</td>
+
+		<td>
+			<ol>
+				<li>Mozilla Firefox 3.6 and above</li>
+				<li>Chrome (latest version)</li>
+				<li>Internet Explorer 7 and above</li>
+				<li>Apple Safari</li>
+			</ol>
+		</td>
+		<td>
+			<ol>
+				<li>Java 6 (latest update)</li>
+				<li>Adobe Flash 10+</li>
+			</ol>
+		</td>
+		<td>
+			1024x768 and above
+		</td>
+	</tr>
+</table>
+
+<p>For the purpose of using the Remote Labs Rigs, it is assumed that users have access to a
+workstation with properly working operating system. The current workstation must also have Internet
+connectivity, preferably with a bandwidth of at least 512kbps downstream.</p>
+
+<h3>Operating System:</h3>
+<ul>
+	<li>Windows XP, Vista, 7</li>
+	<li>Mac OS 10.6</li>
+	<li>Linux</li>
+</ul>
+
+<h3>Web Browser</h3>
+<p>Remote Labs have been tested with a number of current web browsers. Labshare recommends
+Firefox. The user is responsible for ensuring that the current browser version is up to date.</p>
+<ul>
+	<li>Mozilla Firefox 3.6 and above</li>
+	<li>Google Chrome</li>
+	<li>Internet Explorer 7 and above</li>
+	<li>Apple Safari</li>
+</ul>
+
+<p class='note-p'><strong>NOTE:</strong> Internet Explorer 6 is not recommended for use and Remote Labs functions
+in a functionality-limited mode with this browser. Users are recommended to update to the latest
+version of Internet Explorer for your operating system.</p>
+
+<h3>Java Runtime Engine</h3>
+<p>A Java Runtime Engine (JRE) plugin is required to access the Remote Labs through a web browser.
+Java 6.0 is highly recommended with the latest updates applied. If a user is accessing the rig from his/her
+home PC and does not have a JRE installed, the user will be automatically asked to install it.
+Otherwise, the JRE can be found at: <a href='http://www.java.com/en/' target='_blank'>http://www.java.com/en/</a></p>
+
+<p class='note-p'><strong>NOTE: </strong>The rig control Java applet first loads when the user is directed to the
+rig and the user is asked to accept a security warning. If the user does not accept this warning,
+the rig control applet will not function correctly and the rig cannot be used.</p>
+
+<p class='note-p'><strong>NOTE: </strong>In many recent Linux distrubtions, OpenJDK is packaged as the Java version
+supported by the distrubtion package manager. OpenJDK may be successfully used as a Remote Labs
+compatible JRE.</p>
+
+<h3>Video Plugins</h3>
+<p>The following refers to Windows plugins, we will add equivalent information for MAC and
+Linux as time permits. We are in the process of upgrading the vision system used within UTS
+remotelabs to improve reliability and reduce latency, we will update this document to reflect
+these changes once the changes have been rolled out. This is expected to happen in early
+2012.</p>
+
+<p>The software supports two different web browser video plugins, VLC or Windows Media Player
+(WMP). While the software also allows the user to view the experiment through self-refreshing JPEG
+images (adjustable refresh interval: every 0.25–2 seconds), it is recommended that at least one of the
+two plugins should be installed for a chosen browser. The plugins can be downloaded free of charge
+from these links:</p>
+
+<ul>
+	<li><a target="_blank" href="http://www.videolan.org/vlc/">VLC Media Player</a></li>
+	<li><a href="http://www.microsoft.com/windows/windowsmedia/player/versions.aspx">Windows Media Player</a></li>
+</ul>
+
+<p>If the user is unsure whether any of these plugins are already installed, check the browser settings. On Internet
+Explorer, go to 'Tools' -> 'Manage Add-ons' and on Mozilla Firefox or Google Chrome type 'about:plugins' in the address
+bar and press the 'Enter' key.</p>
+
+<p class='note-p'><strong>NOTE:</strong> Depending on the current browser settings, a user may need to specifically allow these
+players to run automatically. A user should watch for confirmation dialogs (Firefox) or a
+yellow bar at the top of the browser window (Internet Explorer). If not, check the current
+plugin settings under ‘Tools’ in the browser menu. A user may have to manually enable the
+plugin for Windows or VLC Media Player.
 
 
+<h3>Firewall Issues</h3>
+<p>Often, private networks (such as companies, universities and even home networks) operate through
+firewalls or proxies. Sahara requires the following ports to be open:</p>
+<ul>
+	<li>3389 (outbound): Remote Desktop Connection</li>
+	<li>7070 (outbound): Video Feed</li>
+</ul>
+<p>If very restrictively configured, these may occasionally disallow data coming from the Remote Labs
+servers to a current browser. If the user is sure that Java and the current plugins are working OK and
+suspects a firewall issue, Labshare support needs to be contacted by clicking on the “Contact
+Support” button after logging into the Remote Labs.</p>
+
+<h3>When to Queue</h3>
+<p>Please check the reservation calendar for availability before queuing. Also, please note that “queuing”
+for a rig session may result in long wait times due to the high volume of reservations made by other
+students, academics and Remote Labs technical officers.</p>
+
+<p>As a general note, it is recommended that users utilise the “Queue” option rather than the
+“Reservation” option as this results in higher efficiency for usage and allocation of rigs to more users.</p>
+
+<h3>When to Reserve</h3>
+<p>Reserving a rig session may be helpful for users who do not have time to queue and wait to use a rig.</p>
+
+<p>Reservation can be made through the reservation calendar. Please be aware that the user must log-in
+within 10 minutes of your reservation period, otherwise the system will drop the user’s reservation
+once the timer has expired to allow queuing users to access the rig. The user will not be able to return
+to the rig without either queuing or making another reservation.</p>
+
+<p>Please be aware of the notification in red located on top of the session screen that states, “Your
+session will be terminated if you do not use this rig within XXX seconds”.</p>
+
+<p id="last-para">Also, for users that have created a reservation and do not intend to be use the reservation, please be
+courteous to others and cancel the reservation so they may use the rig in that time period.</p>
 
 <script>
 $(document).ready(function() {
