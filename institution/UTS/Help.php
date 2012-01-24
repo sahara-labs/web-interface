@@ -57,9 +57,9 @@ class UTS_Help
                         'Screen Resolution: 1024x768'
                     ),
 
-    				'UTS FEIT users' => 'Log in using your normal UTS username. If you are a student this is your student
+    				'UTS FEIT users' => 'Log in using your normal UTS FEIT username. If you are a student this is your student
                         	number and UTS email password and if you are a staff member this is your Engineering username
-                        	which is composed of your first name and last name. Before you may login you must have
+                        	which is composed of your first name and last name. Before you may login, you must have
                         	"Remote Labs access". Generally if you are a student who is enrolled in a subject that
                         	has a remote laboratory component or if you are a staff member who has requested access
                         	you have "Remote Labs access". Also, before your first login, all UTS FEIT users must reset
