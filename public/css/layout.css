@@ -216,6 +216,15 @@ legend {
     float: right;
     margin-top: -7px;
     margin-right:10px;
+    position: relative;
+}
+
+#labshareimg div {
+	position: absolute;
+	top: 0px;
+	left: -15px;
+	font-weight: normal;
+	font-size: 0.88em;
 }
 
 #labshareimg img {
@@ -536,4 +545,10 @@ a.plaina:hover {
 
 #localloginform {
 	display: none;
+}
+
+#loginbuttons .commonhover {
+	opacity: 0.8;
+	bottom: -60px;
+	right: -20px;
 }
