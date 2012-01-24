@@ -314,6 +314,14 @@ class Sahara_Help
         if ($controller && $action) $this->_page = $controller . $action;
 
         $this->_help = array_merge($this->_help, self::$_defHelp);
+
+        $inst = Zend_Registry::get('config')->institution;
+        if (is_file(Bootstrap::$rootDirectory . '/../institution/' . $inst  . '/Help.php'))
+        {
+            $helpClass = $inst . '_Help';
+            $help = new $helpClass;
+            $this->_help = array_merge($this->_help, $help->help);
+        }
     }
 
     /**
