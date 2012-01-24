@@ -49,13 +49,10 @@ class UTS_Help
                 	you correct login method.',
 
                 'troubleshooting' => array(
-                    'System Requirements' => array(
-                        'Operating System: Windows Server 2003, Windows XP, Windows Vista, Linux,
-                        and Mac OS 10.5 and above.',
-                        'Browser (tested and supported): Mozilla Firefox 3.0 and above, Chrome,
-                        Internet Explorer 6 and above, Safari',
-                        'Screen Resolution: 1024x768'
-                    ),
+                    'System Requirements' => 'Please refer
+                     <a href="http://remotelabs.eng.uts.edu.au/index/requirements" target="_blank">
+                     http://remotelabs.eng.uts.edu.au/index/requirements</a>
+                     for user settings and system requirements before using the UTS Remote Labs.',
 
     				'UTS FEIT users' => 'Log in using your normal UTS FEIT username. If you are a student this is your student
                         	number and UTS email password and if you are a staff member this is your Engineering username
