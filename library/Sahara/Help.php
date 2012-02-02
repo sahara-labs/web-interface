@@ -250,7 +250,7 @@ class Sahara_Help
                         'What happens if my browser closes or my network fails while I am using the rig session?' =>
                             'If this happens, you may need to log back into Remote Labs to resume the rig session. 
                             However, if another user has queued and accessed the rig during this time, you may 
-                            need to join the queue again '
+                            need to join the queue again.',
 
                         'I accidentally clicked on \'Finished Session\' button early and cannot access the rig again
                             even though my reservation time hasn\'t ended.' => 'Another user may have queued and been
