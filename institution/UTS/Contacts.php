@@ -45,16 +45,21 @@ class UTS_Contacts
      * contact information. This array can contain any key => values as desired.
      */
 
-	private	$allContacts = array("Labshare" => array(
-										"Postal Address:" => "Labshare<br />
+	private	$allContacts = array("The UTS remote lab" => array(
+										"Postal Address:" => "The UTS remote lab<br />
 										                      Faculty of Engineering and IT<br />
 									 	                      University of Technology, Sydney<br />
 	                                                          P.O. Box 123<br />
 	                                                          Broadway, NSW 2007<br />
 	                                                          Australia",
 	                                ),
-	                              "Labshare Help Desk" => array(
-	                                    "Email:"       => "<a href='mailto:helpdesk@labshare.edu.au'>helpdesk@labshare.edu.au</a>"
+	                              "Help Desk" => array(
+	                                    "Email:"       => "<a href='mailto:helpdesk@labshare.edu.au'>helpdesk@labshare.edu.au</a><br />
+							You must have a valid login account to use the UTS remotelab. If you 
+							are a UTS FEIT student who is enrolled in a subject that has a remote 
+							laboratory component or if you are a staff member who has requested 
+							access you have remote lab access. Otherwise, to request access please 
+							refer to the <a class='plaina' href='http://www.labshare.edu.au' target='_blank'>Labshare Institute</a>."
 	                                ));
 
 	public function getContacts()
