@@ -41,16 +41,14 @@ switch ($this->userRole)
     case Sahara_Acl::USER:
         $menu = array(
             'Rig Selection' => array('controller' => 'queue', 'action' => 'index'),
-            'Existing Reservations' => array('controller' => 'bookings', 'action' => 'existing'),
-            'Data Files' => array('controller' => 'home', 'action' => 'index')
+            'Existing Reservations' => array('controller' => 'bookings', 'action' => 'existing')
         );
         break;
     case Sahara_Acl::ACADEMIC:
         $menu = array(
             'Rig Selection' => array('controller' => 'queue', 'action' => 'index'),
             'Existing Reservations' => array('controller' => 'bookings', 'action' => 'existing'),
-            'Reports' => array('controller' => 'reports', 'action' => 'index'),
-            'Data Files' => array('controller' => 'home', 'action' => 'index')
+            'Reports' => array('controller' => 'reports', 'action' => 'index')
         );
     	break;
     case Sahara_Acl::ADMIN:
@@ -58,8 +56,7 @@ switch ($this->userRole)
             'Rig Administration' => array('controller' => 'admin', 'action' => 'rig'),
             'Rig Selection' => array('controller' => 'queue', 'action' => 'index'),
             'Existing Reservations' => array('controller' => 'bookings', 'action' => 'existing'),
-            'Reports' => array('controller' => 'reports', 'action' => 'index'),
-            'Data Files' => array('controller' => 'home', 'action' => 'index')
+            'Reports' => array('controller' => 'reports', 'action' => 'index')
         );
         break;
     case Sahara_Controller_Action_Acl::PSEUDO_ROLE_QUEUE:
