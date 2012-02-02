@@ -272,7 +272,7 @@ class Sahara_Help
                             respectively.',
 
                         'I am unable to detach the video box(es) from the browser window.' => 'You cannot detach video
-                            box(es) but you can usually drag them to convinent locations in the browser window.',
+                            box(es) but you can usually drag them to convenient locations in the browser window.',
 
                         'For JPEG, what does the rate mean and why is it slow?' => 'It means a "refresh interval speed"
                             of 2 seconds. You can also move the slider to change the refresh interval. It may seem slow
