@@ -66,11 +66,11 @@ $headerName = $this->baseUrl($headerName);
 </div>
 
 <div class="headerimg" >
-	<img src="<?=$headerName?>" alt="Lab Name" />
+	<img style="margin-top:-20px" src="<?=$headerName?>" alt="Lab Name" />
 </div>
 
 <?php if ($config->header->useLabshare): ?>
-<div id="labshareimg">
+<div id="labshareimg" style='margin-right:-15px'>
 	<div>Partnered with:</div>
 	<a target="_blank" href="http://www.labshare.edu.au/">
 		<img src="<?=$this->baseUrl('images/labshare.png')?>" alt="LabShare" />

@@ -162,7 +162,7 @@ class IndexController extends Sahara_Controller_Action_Acl
         if ($this->_getParam('pkey'))
         {
             /* Authorisation key has been specified, so redeem it. */
-            $ac = Sahara_AccessKey();
+            $ac = new Sahara_AccessKey();
             $res = $ac->keyActivate(urldecode($this->_getParam('pkey')));
             if (!$res['success'])
             {

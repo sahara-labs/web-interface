@@ -48,7 +48,7 @@ class UTS_Help
             origin you must use the correct login method. Use the following troubleshooting to determine
             your correct login method. If you are a non UTS student or academic you must have a valid
             login account to use the UTS remote labs. If you would like to request access please refer to
-            the <a href="http://www.labshare.edu.au" target="_blank" class="plaina">Labshare Institute</a>',
+            the <a href="http://www.labshare.edu.au" target="_blank" class="plaina">Labshare Institute</a>.',
 
         'troubleshooting' => array(
             'System Requirements' => 'Please refer
