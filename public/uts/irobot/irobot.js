@@ -311,9 +311,9 @@ DPad.prototype.actionOccurred = function() {
 	this.speed = 0.0;
 	this.yaw = 0.0;
 	if (this.pressed["north"]) this.speed += this.vel;
-	if (this.pressed["east"]) this.yaw += this.vel;
+	if (this.pressed["east"]) this.yaw += -this.vel;
 	if (this.pressed["south"]) this.speed += -this.vel;
-	if (this.pressed["west"]) this.yaw += -this.vel;
+	if (this.pressed["west"]) this.yaw += this.vel;
 
 	/* Clear any existing pinging. */
 	if (this.ping) clearTimeout(this.ping);
