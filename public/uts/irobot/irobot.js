@@ -6,7 +6,7 @@
  */
 
 /* ----------------------------------------------------------------------------
- * -- Page Canvas                                                            --
+ * -- Page Control                                                           --
  * ---------------------------------------------------------------------------- */
 
 /**
@@ -29,6 +29,8 @@ function IRobot(id)
 }
 
 /* IRobot constants. */
+IRobot.MANUAL_CONTROLLER = "TestRobotController";
+
 IRobot.LOGOFF = 4;
 IRobot.ERROR  = 3;
 IRobot.WARN   = 2;
@@ -66,7 +68,7 @@ IRobot.prototype.displayMode = function(mode) {
 	switch (mode)
 	{
 	case 1: // Manual mode
-		this.log("Manual mode not implemented", IRobot.ERROR);
+		this.widgets.push(new DPad(this));
 		break;
 		
 	case 2: // Logging mode
@@ -85,6 +87,25 @@ IRobot.prototype.displayMode = function(mode) {
 	window.location.hash = "m" + this.mode;
 	this.modeSelector.setSelected(mode);
 	for (i in this.widgets) this.widgets[i].init();
+};
+
+IRobot.prototype.setSpeed = function(speed, yaw, cb) {
+	$.post(
+		"/primitive/json/pc/" + IRobot.MANUAL_CONTROLLER + "/pa/control",
+		{
+			speed: speed,
+			yaw: yaw
+		},
+		function(resp) {
+			if (typeof resp != "object")
+			{
+				this.log("Set speed response error: " + resp, IRobot.ERROR);
+				return;
+			}
+
+			if (cb) cb.call(resp);
+		}
+	);
 };
 
 
@@ -152,7 +173,7 @@ IWidget.prototype.destroy = function () {
  */
 IWidget.prototype.pageAppend = function(contents) {
 	this.control.$canvas.append(
-			"<div id='" + this.wid + "'>" + contents + "</div>"
+			"<div id='" + this.wid + "' class='widget-box'>" + contents + "</div>"
 	);
 	
 	this.$w = this.control.$canvas.find("#" + this.wid);
@@ -193,5 +214,166 @@ ModeSelector.prototype.setSelected = function(mode) {
 	// FIXME Change selected mode
 };
 
+/* ----------------------------------------------------------------------------
+ * -- D-Pad widget to move the robot around.                                 --
+ * ---------------------------------------------------------------------------- */
+function DPad(pc)
+{
+	IWidget.call(this, pc);	
+	this.wid = "dpad";
 
+	this.pressed = [];
+	
+	this.speed = 0.0;
+	this.yaw = 0.0;
+	
+	this.vel = 0.5;
+	
+	this.ping;
+	this.setTs = 0;
+}
+DPad.prototype = new IWidget;
 
+DPad.prototype.init = function() {
+	this.pageAppend(
+		"<div id='north-finger' class='dpad-finger'><span></span></div>" + 
+		"<div id='east-finger' class='dpad-finger'><span></span></div>" + 
+		"<div id='south-finger' class='dpad-finger'><span></span></div>" + 
+		"<div id='west-finger' class='dpad-finger'><span></span></div>" + 
+		"<div id='pad-center'><span></span></div>"
+	);
+	
+	var thiz = this;
+	this.$w.children(".dpad-finger")
+		.mousedown(function() {
+			var id = $(this).attr("id");
+			thiz.fingerPress(id.substring(0, id.indexOf("-")), this);
+		})
+		.bind("mouseup mouseleave", function() {
+			var id = $(this).attr("id");
+			thiz.fingerRelease(id.substring(0, id.indexOf("-")), this);
+		});
+	
+	$(document).bind("keydown.dpad", function(evt) {
+		switch (evt.which)
+		{
+		case 87:  // W
+		case 119: // w
+			thiz.fingerPress("north");
+			break;
+			
+		case 68:  // D
+		case 100: // d
+			thiz.fingerPress("east");
+			break;
+			
+		case 83:  // S
+		case 115: //s
+			thiz.fingerPress("south");
+			break;
+			
+		case 65:
+		case 97:
+			thiz.fingerPress("west");
+			break;
+		}
+	});
+	
+	$(document).bind("keyup.dpad", function(evt) {
+		switch (evt.which)
+		{
+		case 87:  // W
+		case 119: // w
+			thiz.fingerRelease("north");
+			break;
+			
+		case 68:  // D
+		case 100: // d
+			thiz.fingerRelease("east");
+			break;
+			
+		case 83:  // S
+		case 115: // s
+			thiz.fingerRelease("south");
+			break;
+			
+		case 65:  // A
+		case 97:  // a
+			thiz.fingerRelease("west");
+			break;
+		}
+	});
+};
+
+DPad.prototype.actionOccurred = function() {
+	
+	/* Calculate new speed. */
+	this.speed = 0.0;
+	this.yaw = 0.0;
+	if (this.pressed["north"]) this.speed += this.vel;
+	if (this.pressed["east"]) this.yaw += this.vel;
+	if (this.pressed["south"]) this.speed += -this.vel;
+	if (this.pressed["west"]) this.yaw += -this.vel;
+
+	/* Clear any existing pinging. */
+	if (this.ping) clearTimeout(this.ping);
+	
+	this.setSpeed();
+};
+
+DPad.prototype.setSpeed = function() {
+	var thiz = this;
+	this.setTs = new Date().getTime();
+	this.control.setSpeed(this.speed, this.yaw, function(r) { thiz.movePing(r); });
+};
+
+DPad.prototype.movePing = function(resp) {
+	/* Nothing to do here. */
+	if (this.speed == 0.0 && this.yaw == 0.0) return;
+	
+	var ts = new Date().getTime();
+	if ((ts - this.setTs) > 200)
+	{
+		/* Send another update. */
+		this.setSpeed();
+	}
+	else 
+	{
+		var thiz = this;
+		this.ping = setTimeout(function() {
+			thiz.movePing();
+		}, 205 - (ts - this.setTs));
+	}
+};
+
+DPad.prototype.fingerPress = function(dir, e) {
+	/* This event can be doubly called from holding down keydown keys. */
+	if (this.pressed[dir]) return;
+	
+	this.control.log("DPad press on dir: " + dir);
+	this.pressed[dir] = true;
+	
+	/* Change display to pressed mode. */
+	if (!e) e = $("#" + dir + "-finger");
+	$(e).addClass("pressed");
+	
+	this.actionOccurred();
+};
+
+DPad.prototype.fingerRelease = function(dir, e) {
+	/* This event can be doubly called from mouseup/mouseleave events. */
+	if (!this.pressed[dir]) return;
+	
+	this.control.log("DPad release on dir: " + dir);
+	this.pressed[dir] = false;
+	
+	if (!e) e = $("#" + dir + "-finger");
+	$(e).removeClass("pressed");
+	
+	this.actionOccurred();
+};
+
+DPad.prototype.destroy = function () {
+	$(document).unbind("keydown.dpad keyup.dpad");
+	this.$w.remove();
+};
