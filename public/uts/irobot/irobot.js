@@ -70,14 +70,15 @@ IRobot.prototype.displayMode = function(mode) {
 	case 1: // Manual mode
 		this.widgets.push(new DPad(this));
 		this.widgets.push(new Ranger(this));
+		this.widgets.push(new OnboardCamera(this));
 		break;
 		
 	case 2: // Logging mode
-		this.log("Logging mode not implemented", IRobot.ERROR);
+		this.log("Logging mode not implemented", IRobot.WARN);
 		break;
 		
 	case 3: // Code upload mode
-		this.log("Code mode not implemented", IRobot.ERROR);
+		this.log("Code mode not implemented", IRobot.WARN);
 		break;
 
 	default:
@@ -173,13 +174,14 @@ IWidget.prototype.destroy = function () {
  * @param contents page contents
  */
 IWidget.prototype.pageAppend = function(contents) {
-	var html = "<div id='" + this.wid + "' class='widget-box'>";
+	var html = "<div id='" + this.wid + "' class='widget-box'>" +
+				contents;
 	
 	if (this.title)
 	{
-		//html += "<div id='robot-widget-title>" + this.title + "</div>";
+		html += "<div class='widget-title'>" + this.title + "</div>";
 	}
-	html += contents + "</div>";
+	html += "</div>";
 	
 	this.control.$canvas.append(html);
 	this.$w = this.control.$canvas.find("#" + this.wid);
@@ -208,7 +210,14 @@ ModeSelector.prototype.init = function() {
 	{
 		html += "<a id='mode" + (parseInt(i) + 1) + "'>" + this.modes[i] + "</a>";
 	}
-	this.pageAppend(html + "<div class='float-clear'></div>");
+	
+	html += "<div class='float-clear'></div>";
+	
+	/* Border boxes. */
+	html +=	"<div id='mode-border-center' class='mode-border'></div>" +
+			"<div id='mode-border-center-clear' class='mode-border-clear'></div>";
+		   
+	this.pageAppend(html);
 	
 	var thiz = this;
 	this.$w.children("a").click(function() {
@@ -400,7 +409,7 @@ function Ranger(pc)
 	IWidget.call(this, pc);
 	this.wid = "ranger-panel";
 	
-	this.title = "Ranging Laser";
+	this.title = "Scanning Laser Range Finder";
 	
 	/* Ranger configuration. */
 	this.minRange = 0;
@@ -410,23 +419,93 @@ function Ranger(pc)
 	this.maxAngle = 0;
 	this.angularRes = 0;
 	
+	/* Ranger data. */
+	this.scan = [];
+	
 	/* Canvas context. */
 	this.ctx;
 	this.width = this.height = 300;
 	this.xo = this.width / 2;
 	this.yo = this.height / 2;
 	this.pxPerM = this.width / 12;
+	this.rotation = Math.PI / 2;
 }
 Ranger.prototype = new IWidget;
 
-Ranger.prototype.init = function() {	
-	this.pageAppend(
-		"<canvas id='ranger' width='" + this.width + "' height='" + this.height + "'></canvas>"
-	);
+Ranger.prototype.init = function() {
+	
+	var html = "<canvas id='ranger' width='" + this.width + "' height='" + this.height + "'></canvas>",
+	    i = 0;
+	
+	/* Top zoom bar0 */
+	html += "<div id='zoom-bar' class='bar'>" +	
+				"<div id='zoom-post-l' class='zoom-post'></div>" +
+				"<div id='zoom-arr-left'></div>" +
+				"<div id='zoom-bar-containment'>" +
+					"<div id='zoom-bar-indicator' class='bar-indicator'>";
+	for (i = 15; i >= 0; i--)
+	{
+		html += 	"<span id='zoom-bar-ind" + i + "' class='zoom-bar-ind bar-ind' " +
+						" style='width:" + (i * 5/4) + "px'></span>";
+	}
+	
+				
+	html += 		"</div>" +
+				"</div>" + 
+				"<div id='zoom-post-r' class='zoom-post'></div>" +
+				"<div id='zoom-arr-line'></div>" +
+				"<div id='zoom-arr-right'></div>" +
+				"<div id='zoom-label'>1m</div>" +
+			"</div>";
+	
+	/* Right rotation bar. */
+	// TODO rotation bar
+	
+	this.pageAppend(html);
+	
+	var thiz = this;
+	$("#zoom-bar-indicator").
+		draggable({
+			axis: 'x',
+			containment: 'parent',
+			handle: '.zoom-bar-ind',
+			drag: function(evt, ui) {
+				var left = ui.position.left;
+				if (left < 5) left = 5; // Don't allow the size to drop too far
+				
+				/* Change the indicator displays. */
+				$(this).parent()  // Containment
+					/* Post right */
+					.next().css("left", left + 149)
+					/* Arrow line. */
+					.next().css("width", left - 10)
+					/* Arrow right. */
+					.next().css("left", left + 139)
+					/* Label. */
+					.next().css({
+						"left": left / 2 + 150,
+						"top": -(left > 60 ? 10 : 20)
+					});
+				
+				/* The zoom is a function of pixel per metre. */
+				thiz.pxPerM = left;
+				thiz.drawScan();
+			}
+		})
+		.hover(function() {
+				$(this).children(".bar-ind").addClass("bar-ind-hover");
+			},
+			function() {
+				$(this).children(".bar-ind").removeClass("bar-ind-hover");
+			}
+		);
 	
 	this.ctx = ($("#ranger")[0]).getContext("2d");
 	if (this.ctx)
 	{
+		this.ctx.font = "12px sans-serif";
+		this.ctx.fillText("Connecting...", this.xo - 40, this.yo);
+		
 		this.getConf();
 	}
 	else
@@ -484,7 +563,7 @@ Ranger.prototype.parseConf = function(conf) {
 		var thiz = this;
 		setTimeout(function() {
 			thiz.getConf();
-		}, 1000);
+		}, 5000);
 	}
 	else
 	{
@@ -494,10 +573,9 @@ Ranger.prototype.parseConf = function(conf) {
 
 Ranger.prototype.mainLoop = function() {
 	var thiz = this;
-	$.get(
-		"/primitive/json/pc/" + IRobot.MANUAL_CONTROLLER + "/pa/ranger",
-		null,
-		function (resp) {
+	$.ajax({
+		url: "/primitive/json/pc/" + IRobot.MANUAL_CONTROLLER + "/pa/ranger",
+		success: function (resp) {
 			if (typeof resp != "object")
 			{
 				window.location.reload();
@@ -509,8 +587,15 @@ Ranger.prototype.mainLoop = function() {
 			setTimeout(function() {
 				thiz.mainLoop();
 			}, 100);
+		},
+		error: function(xhr, status, err) {
+			thiz.control.log("Failed to obtain ranger scan, with status: " + status + ". Trying again in 1 second.",
+					IRobot.WARN);
+			setTimeout(function() {
+				thiz.mainLoop();
+			}, 1000);
 		}
-	);
+	});
 };
 
 Ranger.prototype.drawFrame = function(scan) {
@@ -519,12 +604,12 @@ Ranger.prototype.drawFrame = function(scan) {
 	
 	/* Grid lines and such. */
 	this.drawSkeleton();
+		
+	/* Draw garnished details. */
+	this.drawDetails();
 	
 	/* Ranger data. */
 	this.drawScan(scan);
-	
-	/* Draw puck. */
-//	this.drawPuck();
 };
 
 Ranger.prototype.drawSkeleton = function() {
@@ -532,7 +617,7 @@ Ranger.prototype.drawSkeleton = function() {
 	
 	/* Grid lines. */
 	this.ctx.strokeStyle = "#DDDDDD";
-	this.ctx.lineWidth = 1.5;
+	this.ctx.lineWidth = 2;
 	this.ctx.moveTo(this.xo, 0);
 	this.ctx.lineTo(this.xo, this.height);
 	this.ctx.moveTo(0, this.yo);
@@ -540,58 +625,58 @@ Ranger.prototype.drawSkeleton = function() {
 	this.ctx.stroke();
 	
 	this.ctx.lineWidth = 0.75;
-	for (i = this.pxPerM; i < this.width; i += this.pxPerM)
+	for (i = this.pxPerM; i < this.width / 2; i += this.pxPerM)
 	{
 		/* Vertical. */
-		this.ctx.moveTo(i, 0);
-		this.ctx.lineTo(i, this.height);
+		this.ctx.moveTo(this.xo + i, 0);
+		this.ctx.lineTo(this.xo + i, this.height);
+		this.ctx.moveTo(this.xo - i, 0);
+		this.ctx.lineTo(this.xo - i, this.height);
 		
 		/* Horizontal. */
-		this.ctx.moveTo(0, i);
-		this.ctx.lineTo(this.width, i);
+		this.ctx.moveTo(0, this.yo + i);
+		this.ctx.lineTo(this.width, this.yo + i);
+		this.ctx.moveTo(0, this.yo - i);
+		this.ctx.lineTo(this.width, this.yo - i);
 	}
 	this.ctx.stroke();
-	
-	/* Draw blind region. */
-//	this.ctx.fillStyle = "rgba(200, 200, 200, 0.1)";
-//	this.ctx.beginPath();
-//	this.ctx.moveTo(this.xo, this.yo);
-//	this.ctx.lineTo(0, this.xo + this.width / 2 * Math.tan(Math.PI - this.minAngle));
-//	this.ctx.lineTo(0, this.xo - this.width / 2 * Math.tan(Math.PI - this.maxAngle));
-//	this.ctx.lineTo(this.xo, this.yo);
-//	this.ctx.closePath();
-//	this.ctx.fill();
 };
 
-Ranger.prototype.drawPuck = function() {
-	/* Robot puck at center. */
-	this.ctx.fillStyle = "#FFFFFF";
+Ranger.prototype.drawDetails = function() {
+	/* Direction arrows. */
+	var xoff = this.width / 2, yoff = this.height / 2, size = 25;
+	this.ctx.save();
+	this.ctx.translate(this.xo, this.yo);
+	this.ctx.rotate(-this.rotation);
+	
+	
 	this.ctx.beginPath();
-	this.ctx.arc(150, 150, 9, 0, Math.PI * 2, true);
+	this.ctx.moveTo(this.xo - 2 * size - xoff, this.yo - size / 4 - yoff);
+	this.ctx.lineTo(this.xo - 2 * size - xoff, this.yo + size / 4 - yoff);
+	this.ctx.lineTo(this.xo + size - xoff, this.yo + size / 4 - yoff);
+	this.ctx.lineTo(this.xo + size - xoff, this.yo + size / 1.5 - yoff);
+	this.ctx.lineTo(this.xo + 3 * size - xoff, this.yo - yoff);
+	this.ctx.lineTo(this.xo + size - xoff, this.yo - size / 1.5 - yoff);
+	this.ctx.lineTo(this.xo + size - xoff, this.yo - size / 4 - yoff);
+	this.ctx.lineTo(this.xo - 2 * size - xoff, this.yo - size / 4 - yoff);
 	this.ctx.closePath();
+	
+
+	this.ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
 	this.ctx.fill();
 	
-	this.ctx.lineWidth = 2;
-	this.ctx.strokeStyle = "red";
-	this.ctx.beginPath();
-	this.ctx.arc(150, 150, 10, 0, Math.PI * 2, true);
-	this.ctx.closePath();
-	this.ctx.stroke();
-
-	this.ctx.fillStyle = "red";
-	this.ctx.beginPath();
-	this.ctx.moveTo(149, 150);
-	this.ctx.arc(150, 150, 10, Math.PI / 4, - Math.PI / 4, true);
-	this.ctx.moveTo(149, 150);
-	this.ctx.closePath();
-	this.ctx.fill();
+	this.ctx.restore();
+	
 };
 
 Ranger.prototype.drawScan = function(scan){
 	var i = 0, s,
-		r = this.minAngle, 
+		r = this.minAngle - this.rotation, 
 		radius = this.maxRange * this.pxPerM,
 		xd, yd;
+	
+	if (scan) this.scan = scan; // Drawing new frame because of new data.
+	else scan = this.scan;      // Drawing a frame some other reason so use last scan
 	
 	this.ctx.strokeStyle = "#BA0000";
 	this.ctx.lineWidth = 0.5;
@@ -602,8 +687,8 @@ Ranger.prototype.drawScan = function(scan){
 	if (scan[0] == 0.0)
 	{
 		/* The range is infinite so a line is drawn to the start of the arc. */
-		this.ctx.lineTo(this.xo - radius * Math.sin(this.minAngle - Math.PI / 2), 
-						this.yo + radius * Math.cos(this.minAngle - Math.PI / 2));
+		this.ctx.lineTo(this.xo - radius * Math.sin(this.minAngle - Math.PI / 2 - this.rotation), 
+						this.yo + radius * Math.cos(this.minAngle - Math.PI / 2 - this.rotation));
 	}
 	
 	for (i = 0; i < scan.length; i++)
@@ -654,5 +739,22 @@ Ranger.prototype.drawScan = function(scan){
 	this.ctx.closePath();
 	this.ctx.stroke();
 	this.ctx.fill();
+};
+
+/* ----------------------------------------------------------------------------
+ * -- On board camera                                                        --
+ * ---------------------------------------------------------------------------- */
+function OnboardCamera(pc)
+{
+	IWidget.call(this, pc);
+	
+	this.wid = "obcamera-panel";
+	this.title = "Onboard camera";
+}
+OnboardCamera.prototype = new IWidget;
+
+OnboardCamera.prototype.init = function() {
+	
+	this.pageAppend("Loading...");
 };
 

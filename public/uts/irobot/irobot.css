@@ -8,8 +8,20 @@
  ** Widgets                                                                  **
  ******************************************************************************/
 
-#widget-box {
+.widget-box {
 	position: relative;	
+}
+
+.widget-box .widget-title {
+	position: absolute;
+	bottom: -30px;
+	padding: 5px;
+	margin: -4px 0 0 15px;
+	background-color: #EFEFEF;
+	border: 1px solid #B5B5B5;
+	box-shadow: 0 2px 4px #B5B5B5;
+	border-radius: 0 0 4px 4px;
+	color: #606060;
 }
 
 /*******************************************************************************
@@ -17,7 +29,6 @@
  *******************************************************************************/
 #mode-sel {
 	margin-top: -45px;
-	border-bottom: 2px solid #B5B5B5;
 }
 
 #mode-sel a {
@@ -29,13 +40,45 @@
 	border: 1px solid #B5B5B5;
 }
 
+#mode-sel #mode-border-center {
+	left: 3px;
+	top: -2px;
+	width: 672px;
+	height: 25px;
+	border-radius: 4px 4px 0 0;
+	background-color: #FFFFFF;
+	z-index: -2;
+}
+
+#mode-sel #mode-border-center-clear {
+	top: -1px;
+	left: -1px;
+	width: 681px;
+	height: 30px;
+	z-index: -1;
+}
+
+#mode-sel .mode-border {
+	position: absolute;
+	border: 1px solid #B5B5B5;
+	box-shadow: 0 0 4px #B5B5B5;
+	z-index: -2;
+}
+
+#mode-sel .mode-border-clear {
+	position: absolute;
+	border: none;
+	background-color: #FFFFFF;
+	z-index: -1;
+}
+
 /******************************************************************************
  ** D-Pad                                                                    **
  ******************************************************************************/
  
 #dpad {
 	position: absolute;
-	top: 120px;
+	top: 150px;
 	left: -165px;
 }
 
@@ -87,7 +130,7 @@
 }
 
 #dpad #north-finger span {
-	background-position: -2px -2px;
+	background-position: -2px -1px;
 }
 
 #dpad #north-finger.pressed {
@@ -96,7 +139,7 @@
 }
 
 #dpad #north-finger.pressed span {
-	background-position: -2px -35px;
+	background-position: -2px -36px;
 }
 
 #dpad #east-finger {
@@ -182,10 +225,133 @@
  ******************************************************************************/
 #ranger-panel {
     position: absolute;
-    left: 150px;
-    top: 100px;
+    right: 5px;
+    top: 50px;
     border: 1px solid #B5B5B5;
     box-shadow: 0 0 4px #B5B5B5;
     height: 300px;
     width: 300px;	
+}
+
+#ranger-panel .widget-title {
+	width: 200px;
+}
+
+#ranger-panel .bar {
+	position: absolute;
+}
+
+#ranger-panel #zoom-bar {
+	width: 100%;
+	height: 25px;
+	top: -26px;
+	left: 0;
+}
+
+#ranger-panel .bar-indicator {
+	position: absolute;
+}
+
+#ranger-panel #zoom-bar-containment {
+	position: absolute;
+	left: 140px;
+	bottom: 1px;
+	width: 170px;
+	height: 30px;
+}
+
+#ranger-panel #zoom-bar-indicator {
+	left: 25px;
+	bottom: 5px;
+	z-index: 100;
+}
+
+#ranger-panel .bar-ind {
+	background: none repeat scroll 0 0 #808080;
+	border: 1px solid #808080;
+	cursor: pointer;
+	margin: 0 auto;
+	height: 0;
+	width: 0;
+	box-shadow: 0 2px 3px #B5B5B5;
+}
+
+#ranger-panel .bar-ind-hover {
+	background: none repeat scroll 0 0 #606060;
+    border: 1px solid #606060;
+    box-shadow: 0 2px 3px #606060;
+}
+
+#ranger-panel #zoom-bar-indicator .zoom-bar-ind {
+	display: block;
+	border-top-width: 0;
+}
+
+#ranger-panel #rot-bar-indicator .rot-bar-ind {
+    display: inline-block;
+    border-left-width: 0;
+}
+
+#ranger-panel .zoom-post {
+	position: absolute;
+    bottom: 0;
+	height: 30px;
+	width: 2px;
+	background-color: #DDDDDD;
+}
+
+#ranger-panel #zoom-post-l {
+	left: 149px;
+}
+
+#ranger-panel #zoom-post-r {
+	left: 174px;
+}
+
+#ranger-panel #zoom-arr-left {
+	position: absolute;
+	left:151px;
+	bottom: 13px;
+	background-image: url(images/arrow.png);
+	width: 15px;
+	height: 8px;
+}
+
+#ranger-panel #zoom-arr-line {
+	position: absolute;
+	left:158px;
+	bottom: 13px;
+	background-color: #DDDDDD;
+	width: 15px;
+	height: 2px;
+}
+
+#ranger-panel #zoom-arr-right {
+	position: absolute;
+	left:160px;
+	bottom: 13px;
+	background-image: url(images/arrow.png);
+	width: 15px;
+	height: 8px;
+	background-position: 15px 0;
+}
+
+#ranger-panel #zoom-label {
+	position: absolute;
+	left: 152px;
+	top: -20px;
+	color: #606060;
+}
+
+/******************************************************************************
+ ** Onboard canera                                                         **
+ ******************************************************************************/
+#obcamera-panel {
+	position: absolute;
+	left: 5px;
+	top: 80px;
+	border: 1px solid #B5B5B5;
+    box-shadow: 0 0 4px #B5B5B5;
+	width: 320px;
+	height: 240px;
 }
