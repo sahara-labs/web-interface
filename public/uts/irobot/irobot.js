@@ -58,13 +58,14 @@ IRobot.prototype.init = function() {
  * @param mode mode number
  */
 IRobot.prototype.displayMode = function(mode) {
-	var i = 0;
+	if (this.mode == mode) return;
 	
 	this.log("Changing display mode to " + mode);
 	
-	/* Destroy the existing widgets. */
-	for (i in this.widgets) this.widgets[i].destroy();
-	
+	/* Tear down old mode. */
+	this.modeSelector.clearSelected();
+	while (this.widgets.length > 0) this.widgets.pop().destroy();
+		
 	switch (mode)
 	{
 	case 1: // Manual mode
@@ -88,8 +89,10 @@ IRobot.prototype.displayMode = function(mode) {
 	
 	this.mode = mode;
 	window.location.hash = "m" + this.mode;
-	this.modeSelector.setSelected(mode);
+	
+	var i = 0;
 	for (i in this.widgets) this.widgets[i].init();
+	this.modeSelector.setSelected(mode);
 };
 
 IRobot.prototype.setSpeed = function(speed, yaw, cb) {
@@ -215,8 +218,8 @@ ModeSelector.prototype.init = function() {
 	html += "<div class='float-clear'></div>";
 	
 	/* Border boxes. */
-	html +=	"<div id='mode-border-center' class='mode-border'></div>" +
-			"<div id='mode-border-center-clear' class='mode-border-clear'></div>";
+	html +=	"<div id='mode-sel-border'></div>" +
+			"<div id='mode-sel-border-clear'></div>";
 		   
 	this.pageAppend(html);
 	
@@ -227,7 +230,11 @@ ModeSelector.prototype.init = function() {
 };
 
 ModeSelector.prototype.setSelected = function(mode) {
-	// FIXME Change selected mode
+	this.$w.children("#mode" + mode).addClass("active");
+};
+
+ModeSelector.prototype.clearSelected = function() {
+	this.$w.children("a.active").removeClass("active");
 };
 
 /* ----------------------------------------------------------------------------
@@ -435,6 +442,9 @@ function Ranger(pc)
 	this.mouseDown = false;
 	this.movX = 0;
 	this.movY = 0;
+	
+	/* Stop signal for the main loop. */
+	this.mainLoopEnd = false;
 }
 Ranger.prototype = new IWidget;
 
@@ -622,7 +632,7 @@ Ranger.prototype.parseConf = function(conf) {
 		}
 	}
 	
-	if (this.minRange == 0)
+	if (this.minRange == 0 && !this.mainLoopEnd)
 	{
 		/* Invalid data. */
 		var thiz = this;
@@ -630,13 +640,15 @@ Ranger.prototype.parseConf = function(conf) {
 			thiz.getConf();
 		}, 5000);
 	}
-	else
+	else if (!this.mainLoopEnd)
 	{
 		this.mainLoop();
 	}
 };
 
 Ranger.prototype.mainLoop = function() {
+	if (this.mainLoopEnd) return;
+	
 	var thiz = this;
 	$.ajax({
 		url: "/primitive/json/pc/" + IRobot.MANUAL_CONTROLLER + "/pa/ranger",
@@ -823,6 +835,7 @@ Ranger.prototype.drawDetails = function() {
 };
 
 Ranger.prototype.destroy = function() {
+	this.mainLoopEnd = true;
 	$(document).unbind("mousemove.ranger mouseup.ranger");
 	this.$w.remove();
 };
