@@ -71,6 +71,7 @@ IRobot.prototype.displayMode = function(mode) {
 		this.widgets.push(new DPad(this));
 		this.widgets.push(new Ranger(this));
 		this.widgets.push(new OnboardCamera(this));
+		this.widgets.push(new OverheadCamera(this));
 		break;
 		
 	case 2: // Logging mode
@@ -429,6 +430,11 @@ function Ranger(pc)
 	this.yo = this.height / 2;
 	this.pxPerM = this.width / 12;
 	this.rotation = Math.PI / 2;
+	
+	/* Translation. */
+	this.mouseDown = false;
+	this.movX = 0;
+	this.movY = 0;
 }
 Ranger.prototype = new IWidget;
 
@@ -459,11 +465,50 @@ Ranger.prototype.init = function() {
 			"</div>";
 	
 	/* Right rotation bar. */
-	// TODO rotation bar
+	html += "<div id='rot-bar' class='bar'>" +	
+				"<div id='rot-bar-containment'>" +
+					"<div id='rot-bar-indicator' class='bar-indicator'>";
+	for (i = 15; i >= 0; i--)
+	{
+		html += 	"<span id='rot-bar-ind" + i + "' class='rot-bar-ind bar-ind' " +
+						" style='height:" + (i * 5/4) + "px;margin-top:" + ((15 - (i * 5/4)) / 2) + "px'></span>";
+	}
+					
+	html += 		"</div>";
+
+	for (i = 0; i < 5; i++)
+	{
+		html += "<div class='rot-label-post' style='top:" + (i * 46 + 7) + "px'>" + (i* 90) + "&deg;</div>";
+	}
+	
+	html += 	"</div>" +
+			"</div>";
 	
 	this.pageAppend(html);
 	
 	var thiz = this;
+	
+	/* Translation moves the origin, moving the displayed region. */
+	$("#ranger")
+		.mousedown(function(evt) { 
+			thiz.mouseDown = true;
+			thiz.movX = evt.pageX;
+			thiz.movY = evt.pageY;
+		});
+	
+	$(document)
+		.bind('mousemove.ranger', function(evt) {
+			if (!thiz.mouseDown) return;
+			thiz.xo -= thiz.movX - evt.pageX;
+			thiz.movX = evt.pageX;
+			thiz.yo -= thiz.movY - evt.pageY;
+			thiz.movY = evt.pageY;
+			
+			thiz.drawFrame();
+		})
+		.bind('mouseup.ranger', function() { thiz.mouseDown = false; });
+	
+	/* Zoom bar increases the pixels per metre, zooming in. */
 	$("#zoom-bar-indicator").
 		draggable({
 			axis: 'x',
@@ -490,6 +535,26 @@ Ranger.prototype.init = function() {
 				/* The zoom is a function of pixel per metre. */
 				thiz.pxPerM = left;
 				thiz.drawScan();
+			}
+		})
+		.hover(function() {
+				$(this).children(".bar-ind").addClass("bar-ind-hover");
+			},
+			function() {
+				$(this).children(".bar-ind").removeClass("bar-ind-hover");
+			}
+		);
+	
+	/* Rotation bar changes the angle of the display with respect to the page. */
+	$("#rot-bar-indicator").draggable({
+			axis: 'y',
+			containment: 'parent',
+			handle: '.zoom-bar-ind',
+			drag: function(evt, ui) {
+				var height = ui.position.top;
+				
+				thiz.rotation = (height / 181 * 360 * Math.PI / 180) + Math.PI / 2;
+				thiz.drawFrame();
 			}
 		})
 		.hover(function() {
@@ -616,7 +681,7 @@ Ranger.prototype.drawSkeleton = function() {
 	var i;
 	
 	/* Grid lines. */
-	this.ctx.strokeStyle = "#DDDDDD";
+	this.ctx.strokeStyle = "#AAAAAA";
 	this.ctx.lineWidth = 2;
 	this.ctx.moveTo(this.xo, 0);
 	this.ctx.lineTo(this.xo, this.height);
@@ -624,49 +689,38 @@ Ranger.prototype.drawSkeleton = function() {
 	this.ctx.lineTo(this.width, this.yo);
 	this.ctx.stroke();
 	
+	this.ctx.strokeStyle = "#DDDDDD";
 	this.ctx.lineWidth = 0.75;
-	for (i = this.pxPerM; i < this.width / 2; i += this.pxPerM)
+	
+	for (i = this.xo; i > 0; i -= this.pxPerM)
 	{
-		/* Vertical. */
-		this.ctx.moveTo(this.xo + i, 0);
-		this.ctx.lineTo(this.xo + i, this.height);
+		/* Horizontal left of the origin. */
 		this.ctx.moveTo(this.xo - i, 0);
 		this.ctx.lineTo(this.xo - i, this.height);
-		
-		/* Horizontal. */
-		this.ctx.moveTo(0, this.yo + i);
-		this.ctx.lineTo(this.width, this.yo + i);
+	}
+	
+	for (i = this.pxPerM; i < this.width - this.xo; i += this.pxPerM)
+	{
+		/* Horizontal right of the origin. */
+		this.ctx.moveTo(this.xo + i, 0);
+		this.ctx.lineTo(this.xo + i, this.height);
+	}
+	
+	for (i = this.yo; i > 0; i -= this.pxPerM)
+	{
+		/* Vertical above the origin. */
 		this.ctx.moveTo(0, this.yo - i);
 		this.ctx.lineTo(this.width, this.yo - i);
 	}
+
+	for (i = this.pxPerM; i < this.height - this.yo; i += this.pxPerM)
+	{
+		/* Vertical below the origin. */
+		this.ctx.moveTo(0, this.yo + i);
+		this.ctx.lineTo(this.width, this.yo + i);
+	}
+	
 	this.ctx.stroke();
-};
-
-Ranger.prototype.drawDetails = function() {
-	/* Direction arrows. */
-	var xoff = this.width / 2, yoff = this.height / 2, size = 25;
-	this.ctx.save();
-	this.ctx.translate(this.xo, this.yo);
-	this.ctx.rotate(-this.rotation);
-	
-	
-	this.ctx.beginPath();
-	this.ctx.moveTo(this.xo - 2 * size - xoff, this.yo - size / 4 - yoff);
-	this.ctx.lineTo(this.xo - 2 * size - xoff, this.yo + size / 4 - yoff);
-	this.ctx.lineTo(this.xo + size - xoff, this.yo + size / 4 - yoff);
-	this.ctx.lineTo(this.xo + size - xoff, this.yo + size / 1.5 - yoff);
-	this.ctx.lineTo(this.xo + 3 * size - xoff, this.yo - yoff);
-	this.ctx.lineTo(this.xo + size - xoff, this.yo - size / 1.5 - yoff);
-	this.ctx.lineTo(this.xo + size - xoff, this.yo - size / 4 - yoff);
-	this.ctx.lineTo(this.xo - 2 * size - xoff, this.yo - size / 4 - yoff);
-	this.ctx.closePath();
-	
-
-	this.ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
-	this.ctx.fill();
-	
-	this.ctx.restore();
-	
 };
 
 Ranger.prototype.drawScan = function(scan){
@@ -741,6 +795,38 @@ Ranger.prototype.drawScan = function(scan){
 	this.ctx.fill();
 };
 
+Ranger.prototype.drawDetails = function() {
+	/* Direction arrows. */
+	var size = 20;
+	this.ctx.save();
+	this.ctx.translate(this.xo, this.yo);
+	this.ctx.rotate(-this.rotation);
+	
+	
+	this.ctx.beginPath();
+	this.ctx.moveTo(this.xo - 2 * size - this.xo, this.yo - size / 4 - this.yo);
+	this.ctx.lineTo(this.xo - 2 * size - this.xo, this.yo + size / 4 - this.yo);
+	this.ctx.lineTo(this.xo + size - this.xo, this.yo + size / 4 - this.yo);
+	this.ctx.lineTo(this.xo + size - this.xo, this.yo + size / 1.5 - this.yo);
+	this.ctx.lineTo(this.xo + 3 * size - this.xo, this.yo - this.yo);
+	this.ctx.lineTo(this.xo + size - this.xo, this.yo - size / 1.5 - this.yo);
+	this.ctx.lineTo(this.xo + size - this.xo, this.yo - size / 4 - this.yo);
+	this.ctx.lineTo(this.xo - 2 * size - this.xo, this.yo - size / 4 - this.yo);
+	this.ctx.closePath();
+	
+
+	this.ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+	this.ctx.fill();
+	
+	this.ctx.restore();
+	
+};
+
+Ranger.prototype.destroy = function() {
+	$(document).unbind("mousemove.ranger mouseup.ranger");
+	this.$w.remove();
+};
+
 /* ----------------------------------------------------------------------------
  * -- On board camera                                                        --
  * ---------------------------------------------------------------------------- */
@@ -749,12 +835,25 @@ function OnboardCamera(pc)
 	IWidget.call(this, pc);
 	
 	this.wid = "obcamera-panel";
-	this.title = "Onboard camera";
+	this.title = "Onboard Camera";
 }
 OnboardCamera.prototype = new IWidget;
 
 OnboardCamera.prototype.init = function() {
 	
-	this.pageAppend("Loading...");
+	this.pageAppend("Onboard Loading...");
+};
+
+function OverheadCamera(pc)
+{
+	IWidget.call(this, pc);
+	
+	this.wid = "ovcamera-panel";
+	this.title = "Overhead Camera";
+}
+OverheadCamera.prototype = new IWidget;
+
+OverheadCamera.prototype.init = function() {
+	this.pageAppend("Overhead Loading...");
 };
 
