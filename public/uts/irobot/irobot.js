@@ -29,7 +29,7 @@ function IRobot(id)
 }
 
 /* IRobot constants. */
-IRobot.MANUAL_CONTROLLER = "TestRobotController";
+IRobot.MANUAL_CONTROLLER = "DrivingRobotController";
 
 IRobot.LOGOFF = 4;
 IRobot.ERROR  = 3;
