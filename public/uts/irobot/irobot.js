@@ -29,6 +29,7 @@ function IRobot(id)
 }
 
 /* IRobot constants. */
+IRobot.MODE_CONTROLLER = "OpModeController";
 IRobot.MANUAL_CONTROLLER = "DrivingRobotController";
 
 IRobot.LOGOFF = 4;
@@ -44,12 +45,25 @@ IRobot.DEBUG  = 0;
 IRobot.prototype.init = function() {
 	this.modeSelector.init();
 	
-	var hashMode = window.location.hash;
-	if (hashMode && hashMode.length == 3)
-	{
-		var mode = parseInt(hashMode.substr(2));
-		this.displayMode(0 < mode && mode <= 3 ? mode : 0);
-	}
+	this.determineMode();
+};
+
+IRobot.prototype.determineMode = function() {
+	var thiz = this;
+	$.get(
+		"/primitive/json/pc/" + IRobot.MODE_CONTROLLER + "/pa/getMode",
+		null,
+		function (resp) {
+			if (typeof resp != "object")
+			{
+				/* Probably logged out. */
+//				window.location.reload();
+				return;
+			}
+				
+			thiz.displayMode(parseInt(resp.value));
+		}
+	);
 };
 
 /**
@@ -58,6 +72,14 @@ IRobot.prototype.init = function() {
  * @param mode mode number
  */
 IRobot.prototype.displayMode = function(mode) {
+	if (mode == 4)
+	{
+		/* If in mode transition, keep polling to determine whether the mode
+		 * is ready to be used. */
+		var thiz = this;
+		setTimeout(function() { thiz.determineMode(); }, 500);
+	}
+		
 	if (this.mode == mode) return;
 	
 	this.log("Changing display mode to " + mode);
@@ -68,6 +90,9 @@ IRobot.prototype.displayMode = function(mode) {
 		
 	switch (mode)
 	{
+	case 0: // No mode set.
+		break;
+	
 	case 1: // Manual mode
 		this.widgets.push(new DPad(this));
 		this.widgets.push(new Ranger(this));
@@ -76,11 +101,17 @@ IRobot.prototype.displayMode = function(mode) {
 		break;
 		
 	case 2: // Logging mode
-		this.log("Logging mode not implemented", IRobot.WARN);
+		this.widgets.push(new Nav(this));
+		this.widgets.push(new OverheadCamera(this));
 		break;
 		
 	case 3: // Code upload mode
 		this.log("Code mode not implemented", IRobot.WARN);
+		break;
+		
+	case 4: // Mode transition mode.
+		this.log("Waiting for mode transition to complete.", IRobot.DEBUG);
+		// FIXME mode transition overlay
 		break;
 
 	default:
@@ -88,11 +119,35 @@ IRobot.prototype.displayMode = function(mode) {
 	}
 	
 	this.mode = mode;
-	window.location.hash = "m" + this.mode;
 	
 	var i = 0;
 	for (i in this.widgets) this.widgets[i].init();
 	this.modeSelector.setSelected(mode);
+};
+
+IRobot.prototype.changeMode = function(mode) {
+	this.displayMode(4); // Mode transition mode.
+	
+	$.post(
+			"/primitive/json/pc/" + IRobot.MODE_CONTROLLER + "/pa/setMode",
+			{
+				mode: mode
+			},
+			function (resp) {
+				if (typeof resp != "object")
+				{
+					/* Probably logged out. */
+					window.location.reload();
+					return;
+				}
+					
+				var i = 0;
+				for (i in resp)
+				{
+					if (i.name == "mode") thiz.displayMode(parseInt(i.value));
+				}
+			}
+		);
 };
 
 IRobot.prototype.setSpeed = function(speed, yaw, cb) {
@@ -178,7 +233,7 @@ IWidget.prototype.destroy = function () {
  * @param contents page contents
  */
 IWidget.prototype.pageAppend = function(contents) {
-	var html = "<div id='" + this.wid + "' class='widget-box'>" +
+	var html = "<div id='" + this.wid + "' class='widget-box mode-" + this.control.mode + "'>" +
 				contents;
 	
 	if (this.title)
@@ -225,7 +280,7 @@ ModeSelector.prototype.init = function() {
 	
 	var thiz = this;
 	this.$w.children("a").click(function() {
-		thiz.control.displayMode(parseInt($(this).attr("id").substr(4)));
+		thiz.control.changeMode(parseInt($(this).attr("id").substr(4)));
 	});
 };
 
@@ -575,9 +630,10 @@ Ranger.prototype.init = function() {
 			}
 		);
 	
-	this.ctx = ($("#ranger")[0]).getContext("2d");
-	if (this.ctx)
+	var canvas = $("#ranger")[0];
+	if (canvas.getContext)
 	{
+		this.ctx = canvas.getContext("2d");
 		this.ctx.font = "12px sans-serif";
 		this.ctx.fillText("Connecting...", this.xo - 40, this.yo);
 		
@@ -841,32 +897,191 @@ Ranger.prototype.destroy = function() {
 };
 
 /* ----------------------------------------------------------------------------
+ * -- Navigation map and paths                                               --                       
+ * ---------------------------------------------------------------------------- */
+function Nav(pc)
+{
+	IWidget.call(this, pc);
+	
+	this.wid = "nav-panel";
+	this.title = "Navigation";
+	
+	this.width = 644;
+	this.height = 333;
+	
+	this.ctx = null;
+	this.map = null;
+	
+	this.pxPerM = 100; // From the player mapfile driver configuration
+	this.xo = this.width / 2;
+	this.yo = this.height / 2;
+	
+	this.xr = -2;
+	this.yr = -1;
+	this.ya = Math.PI / 2;
+}
+Nav.prototype = new IWidget;
+
+Nav.prototype.init = function() {
+	this.pageAppend("<canvas id='nav' width='" + this.width + "' height='" + this.height + "'></canvas>");
+	
+	var canvas = $("#nav")[0];
+	if (canvas.getContext)
+	{
+		this.ctx = canvas.getContext("2d");
+		
+		this.map = document.createElement("img");
+		this.map.setAttribute("src", "/uts/irobot/images/maze.png");
+		this.draw();
+	}
+	else
+	{
+		alert("Using this interface requires a modern browser.");
+	}
+};
+
+Nav.prototype.draw = function() {
+	this.drawFrame();
+	this.drawRobot();
+};
+
+Nav.prototype.drawFrame = function() {	
+	var i;
+	
+	/* Grid lines. */
+	this.ctx.beginPath();
+	for (i = this.xo; i > 0; i -= this.pxPerM) // East horizontal lines
+	{
+		this.ctx.moveTo(i, 0);
+		this.ctx.lineTo(i, this.height);
+	}
+	
+	for (i = this.xo + this.pxPerM; i < this.width; i += this.pxPerM) // West horizontal lines
+	{
+		this.ctx.moveTo(i, 0);
+		this.ctx.lineTo(i, this.height);
+	}
+	
+	for (i = this.yo; i > 0; i -= this.pxPerM) // North vertical lines
+	{
+		this.ctx.moveTo(0, i);
+		this.ctx.lineTo(this.width, i);
+	}
+	
+	for (i = this.yo + this.pxPerM; i < this.height; i += this.pxPerM) 	// South vertical lines
+	{
+		this.ctx.moveTo(0, i);
+		this.ctx.lineTo(this.width, i);
+	}
+	
+	this.ctx.strokeStyle = "#DDDDDD";
+	this.ctx.lineWidth = 0.75;
+	this.ctx.stroke();
+	this.ctx.closePath();
+	
+	/* Origin marker. */
+	this.ctx.beginPath();
+	this.ctx.moveTo(this.xo - 6, this.yo - 6);
+	this.ctx.lineTo(this.xo + 6, this.yo + 6);
+	
+	this.ctx.moveTo(this.xo + 6, this.yo - 6);
+	this.ctx.lineTo(this.xo - 6, this.yo + 6);
+	
+	this.ctx.moveTo(this.xo, 0);
+	this.ctx.lineTo(this.xo, this.height);
+	
+	this.ctx.moveTo(0, this.yo);
+	this.ctx.lineTo(this.width, this.yo);
+	
+	this.ctx.strokeStyle = "#AAAAAA";
+	this.ctx.lineWidth = 1;
+	this.ctx.stroke();
+	this.ctx.closePath();
+	
+	/* Maze walls. */
+	this.ctx.beginPath();
+	this.ctx.moveTo(0, 0);
+	this.ctx.lineTo(this.width, 0);
+	this.ctx.lineTo(this.width, this.height);
+	this.ctx.lineTo(0, this.height);
+	this.ctx.lineTo(0, 0);
+	
+	this.ctx.moveTo(146, 0);
+	this.ctx.lineTo(146, 61);
+	
+	this.ctx.moveTo(347, 0);
+	this.ctx.lineTo(347, 120);
+	
+	this.ctx.moveTo(145, this.height);
+	this.ctx.lineTo(145, 232);
+	this.ctx.lineTo(246, 232);
+	this.ctx.lineTo(246, 182);
+	
+	this.ctx.moveTo(495, this.height);
+	this.ctx.lineTo(495, 182);
+	
+	this.ctx.strokeStyle = "#000000";
+	this.ctx.lineWidth = 4;
+	this.ctx.lineCap = "round";
+	this.ctx.stroke();
+	this.ctx.closePath();
+};
+
+Nav.prototype.drawRobot = function() {
+	
+	this.ctx.beginPath();
+	
+	/* Robot coords are relative to the orgin in the centre of diagram. */
+	var x = this.xo - this.xr * this.pxPerM,
+		y = this.yo - this.yr * this.pxPerM;
+	
+	this.ctx.arc(x, y, 0.25 * this.pxPerM, 0, Math.PI * 2);
+	
+	this.ctx.closePath();
+	
+	this.ctx.strokeStyle = "red";
+	this.ctx.lineWidth = 1;
+	this.ctx.fillStyle = "blue";
+	
+	this.ctx.stroke();
+	this.ctx.fill();
+};
+
+/* ----------------------------------------------------------------------------
+ * -- Camera widget base                                                     --
+ * ---------------------------------------------------------------------------- */
+function CameraWidget(pc)
+{
+	IWidget.call(this, pc);
+}
+CameraWidget.prototype = new IWidget;
+
+CameraWidget.prototype.init = function() {
+	// FIXME Implement camera behaviour
+	this.pageAppend(this.title + " loading...");
+};
+
+/* ----------------------------------------------------------------------------
  * -- On board camera                                                        --
  * ---------------------------------------------------------------------------- */
 function OnboardCamera(pc)
 {
-	IWidget.call(this, pc);
+	CameraWidget.call(this, pc);
 	
 	this.wid = "obcamera-panel";
 	this.title = "Onboard Camera";
 }
-OnboardCamera.prototype = new IWidget;
+OnboardCamera.prototype = new CameraWidget;
 
-OnboardCamera.prototype.init = function() {
-	
-	this.pageAppend("Onboard Loading...");
-};
-
+/* ----------------------------------------------------------------------------
+ * -- Over head camera                                                       --
+ * ---------------------------------------------------------------------------- */
 function OverheadCamera(pc)
 {
-	IWidget.call(this, pc);
+	CameraWidget.call(this, pc);
 	
 	this.wid = "ovcamera-panel";
 	this.title = "Overhead Camera";
 }
-OverheadCamera.prototype = new IWidget;
-
-OverheadCamera.prototype.init = function() {
-	this.pageAppend("Overhead Loading...");
-};
+OverheadCamera.prototype = new CameraWidget;
 
