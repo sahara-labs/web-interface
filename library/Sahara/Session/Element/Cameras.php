@@ -160,12 +160,13 @@ class Sahara_Session_Element_Cameras extends Sahara_Session_Element
                 }
                 $camera['url'][$f] = $url;
 
-                /* Order the camera formats with 'off' first, then 'jpeg', then
+                /* Order the camera formats with 'off' first, then 'swf', 'jpeg', then
                  * rest of the formats in their natural order. */
                 $formats = array('off' => $this->_formats['off']);
                 $formKeys = array_keys($camera['url']);
 
                 sort($formKeys);
+		if (array_search('swf', $formKeys) !== false) $formats['swf'] = $this->_formats['swf'];
                 if (array_search('jpeg', $formKeys) !== false) $formats['jpeg'] = $this->_formats['jpeg'];
 
                 foreach ($formKeys as $k)
