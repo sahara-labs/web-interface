@@ -29,8 +29,9 @@ function IRobot(id)
 }
 
 /* IRobot constants. */
-IRobot.MODE_CONTROLLER = "OpModeController";
+IRobot.MODE_CONTROLLER   = "OpModeController";
 IRobot.MANUAL_CONTROLLER = "DrivingRobotController";
+IRobot.NAV_CONTROLLER    = "NavigationRobotController";
 
 IRobot.LOGOFF = 4;
 IRobot.ERROR  = 3;
@@ -57,6 +58,7 @@ IRobot.prototype.determineMode = function() {
 			if (typeof resp != "object")
 			{
 				/* Probably logged out. */
+				// FIXME 
 //				window.location.reload();
 				return;
 			}
@@ -77,7 +79,7 @@ IRobot.prototype.displayMode = function(mode) {
 		/* If in mode transition, keep polling to determine whether the mode
 		 * is ready to be used. */
 		var thiz = this;
-		setTimeout(function() { thiz.determineMode(); }, 500);
+		setTimeout(function() { thiz.determineMode(); }, 2000);
 	}
 		
 	if (this.mode == mode) return;
@@ -101,7 +103,9 @@ IRobot.prototype.displayMode = function(mode) {
 		break;
 		
 	case 2: // Logging mode
-		this.widgets.push(new Nav(this));
+		var nav = new Nav(this);
+		this.widgets.push(nav);
+		this.widgets.push(new NavControl(this, nav));
 		this.widgets.push(new OverheadCamera(this));
 		break;
 		
@@ -169,7 +173,6 @@ IRobot.prototype.setSpeed = function(speed, yaw, cb) {
 	);
 };
 
-
 IRobot.prototype.log = function(message, lvl) {
 	if (typeof console == "undefined") return;
 	
@@ -232,8 +235,9 @@ IWidget.prototype.destroy = function () {
  * 
  * @param contents page contents
  */
-IWidget.prototype.pageAppend = function(contents) {
-	var html = "<div id='" + this.wid + "' class='widget-box mode-" + this.control.mode + "'>" +
+IWidget.prototype.pageAppend = function(contents, classes) {
+	if (!classes) classes = "";
+	var html = "<div id='" + this.wid + "' class='widget-box mode-" + this.control.mode + " " + classes + "'>" +
 				contents;
 	
 	if (this.title)
@@ -897,6 +901,204 @@ Ranger.prototype.destroy = function() {
 };
 
 /* ----------------------------------------------------------------------------
+ * -- Navigiation control                                                    --
+ * ---------------------------------------------------------------------------- */
+function NavControl(pc, nav)
+{
+	IWidget.call(this, pc);
+	this.wid = "nav-control-container";
+	
+	this.nav = nav;
+	
+	this.hasStatus = false;
+	this.settingStatus = false;
+	this.stopMainLoop = false;
+	
+	this.isRunning = false;
+	this.isLocalized = false;
+}
+NavControl.prototype = new IWidget;
+
+NavControl.prototype.init = function() {
+	this.pageAppend(
+			"<div id='nav-control-button' class='commonbutton'>" +
+				"<img src='/uts/irobot/images/spinner.gif' alt='s' /><br />" + 
+				"Please wait..." +
+			"</div>" +
+			"<div id='nav-led-bar'>" +
+				"<div id='running-led' class='led red-led'></div>" +
+				"<div class='nav-led-label'>Running</div>" +
+				"<div id='loc-led' class='led red-led'></div>" +
+				"<div class='nav-led-label'>Localised</div>" +
+			"</div>",
+			"leftpush"
+	);
+	
+	var thiz = this;
+	$(("#nav-control-button")).click(function() { thiz.clicked(); });
+	
+	this.mainLoop();
+};
+
+NavControl.prototype.destroy = function() {
+	this.stopMainLoop = true;
+	this.$w.remove();
+};
+
+NavControl.prototype.clicked = function() {
+	if (!this.hasStatus || this.settingStatus)
+	{
+		/* Still waiting for status to determine what we need to do. */
+		return;
+	}
+	
+	this.settingStatus = true;
+	
+	var thiz = this, html;
+	
+	if (this.isRunning)
+	{
+		html = "<img src='/uts/irobot/images/spinner.gif' alt='s' /><br />" + 
+				"Stopping...";
+	}
+	else
+	{
+		html = "<img src='/uts/irobot/images/spinner.gif' alt='s' /><br />" + 
+			   "Starting...";
+	}
+	
+	$("#nav-control-button").html(html);
+
+	$.post(
+		"/primitive/json/pc/" + IRobot.NAV_CONTROLLER + "/pa/" + (this.isRunning ? "stop" : "start"),
+		null,
+		function(resp) {
+			if (resp.value == "true")
+			{
+				thiz.settingStatus = false;
+				thiz.setRunning(!this.isRunning);
+			}
+		}
+	);
+};
+
+NavControl.prototype.mainLoop = function() {
+	var thiz = this;
+	
+	$.ajax({
+		url: "/primitive/json/pc/" + IRobot.NAV_CONTROLLER + "/pa/packet",
+		success: function(resp) {
+			if (typeof resp != "object")
+			{
+				/* Probably session timeout. */
+				window.location.reload();
+				return;
+			}
+			
+			/* Check we haven't shutdown. */
+			if (thiz.stopMainLoop) return;
+			
+			thiz.nav.path = [];
+			
+			/* Parse response values. */
+			var i = 0, running = false, localized = false;
+			for (i in resp)
+			{
+				switch (resp[i].name)
+				{
+				case 'running':
+					running = thiz.nav.isRunning = "true" == resp[i].value;
+					break;
+					
+				case 'localized':
+					localized = thiz.nav.isLocalized = "true" == resp[i].value;
+					break;
+					
+				case 'pose':
+					thiz.nav.pose = thiz.parseTuple(resp[i].value);
+					break;
+				
+				case 'goal':
+					thiz.nav.goal = thiz.parseTuple(resp[i].value);
+					break;
+					
+				default:
+					if (resp[i].name.indexOf("wp-") === 0)
+					{
+						thiz.nav.path[parseInt(resp[i].name.substr(3))] = thiz.parseTuple(resp[i].value);
+					}
+					else
+					{
+						thiz.control.log("Unknown navigation field: " + resp[i].name);
+					}
+				}
+			}
+			
+			/* Update nav control status. */
+			if (!thiz.hasStatus || thiz.isRunning != running)
+			{
+				thiz.hasStatus = true;
+				thiz.setRunning(running);
+			}
+			
+			if (thiz.isLocalized != localized) thiz.setLocalized(localized);
+			
+			/* Draw new nav map frame. */
+			thiz.nav.draw();
+			
+			/* Next packet update in 250. */
+			setTimeout(function() { thiz.mainLoop(); }, 1000);
+		},
+		error: function(xhr, err) {
+			thiz.control.log("Failed making navigiatin data packet request with error: " + err, IRobot.WARN);
+			
+			if (!thiz.stopMainLoop) setTimeout(function() { thiz.mainLoop(); }, 2000);
+		}
+	});
+};
+
+NavControl.prototype.parseTuple = function(t) {
+	var p = t.split(",");
+	
+	return {
+		x: parseFloat(p[0]),
+		y: parseFloat(p[1]),
+		a: parseFloat(p[2])
+	};
+};
+
+NavControl.prototype.setRunning = function(running) {
+	this.isRunning = running;
+	
+	if (this.isRunning)
+	{
+		html = "<img src='/uts/irobot/images/stop.png' alt='s' /><br />" + 
+				"Stop";
+		$("#running-led").removeClass("red-led").addClass("green-led");
+	}
+	else
+	{
+		html = "<img src='/uts/irobot/images/start.png' alt='s' /><br />" + 
+			   "Start";
+		$("#running-led").removeClass("green-led").addClass("red-led");
+	}
+	
+	$("#nav-control-button").html(html);
+};
+
+NavControl.prototype.setLocalized = function(localized) {
+	this.isLocalized = localized;
+	if (this.isLocalized)
+	{
+		$("#loc-led").removeClass("red-led").addClass("green-led");
+	}
+	else
+	{
+		$("#loc-led").removeClass("green-led").addClass("red-led");
+	}
+};
+
+/* ----------------------------------------------------------------------------
  * -- Navigation map and paths                                               --                       
  * ---------------------------------------------------------------------------- */
 function Nav(pc)
@@ -916,9 +1118,20 @@ function Nav(pc)
 	this.xo = this.width / 2;
 	this.yo = this.height / 2;
 	
-	this.xr = -2;
-	this.yr = -1;
-	this.ya = Math.PI / 2;
+	this.isRunning = false;
+	this.isLocalized = false;
+	this.pose = {
+		x: 0,
+		y: 0,
+		a: 0
+	};
+	
+	this.goal = {
+		x: 0,
+		y: 0,
+		a: 0
+	};
+	this.path = [ ];
 }
 Nav.prototype = new IWidget;
 
@@ -929,9 +1142,6 @@ Nav.prototype.init = function() {
 	if (canvas.getContext)
 	{
 		this.ctx = canvas.getContext("2d");
-		
-		this.map = document.createElement("img");
-		this.map.setAttribute("src", "/uts/irobot/images/maze.png");
 		this.draw();
 	}
 	else
@@ -941,14 +1151,19 @@ Nav.prototype.init = function() {
 };
 
 Nav.prototype.draw = function() {
+	this.ctx.clearRect(0, 0, this.width, this.height);
 	this.drawFrame();
+	this.drawGoal();
+	this.drawPath();
 	this.drawRobot();
+	
 };
 
 Nav.prototype.drawFrame = function() {	
 	var i;
 	
 	/* Grid lines. */
+	this.ctx.save();
 	this.ctx.beginPath();
 	for (i = this.xo; i > 0; i -= this.pxPerM) // East horizontal lines
 	{
@@ -973,13 +1188,15 @@ Nav.prototype.drawFrame = function() {
 		this.ctx.moveTo(0, i);
 		this.ctx.lineTo(this.width, i);
 	}
+	this.ctx.closePath();
 	
 	this.ctx.strokeStyle = "#DDDDDD";
 	this.ctx.lineWidth = 0.75;
 	this.ctx.stroke();
-	this.ctx.closePath();
+	this.ctx.restore();
 	
 	/* Origin marker. */
+	this.ctx.save();
 	this.ctx.beginPath();
 	this.ctx.moveTo(this.xo - 6, this.yo - 6);
 	this.ctx.lineTo(this.xo + 6, this.yo + 6);
@@ -992,13 +1209,15 @@ Nav.prototype.drawFrame = function() {
 	
 	this.ctx.moveTo(0, this.yo);
 	this.ctx.lineTo(this.width, this.yo);
+	this.ctx.closePath();
 	
 	this.ctx.strokeStyle = "#AAAAAA";
 	this.ctx.lineWidth = 1;
 	this.ctx.stroke();
-	this.ctx.closePath();
+	this.ctx.restore();
 	
 	/* Maze walls. */
+	this.ctx.save();
 	this.ctx.beginPath();
 	this.ctx.moveTo(0, 0);
 	this.ctx.lineTo(this.width, 0);
@@ -1019,32 +1238,109 @@ Nav.prototype.drawFrame = function() {
 	
 	this.ctx.moveTo(495, this.height);
 	this.ctx.lineTo(495, 182);
+	this.ctx.closePath();
 	
-	this.ctx.strokeStyle = "#000000";
-	this.ctx.lineWidth = 4;
+	this.ctx.strokeStyle = "#AAAAAA";
+	this.ctx.shadowColor = "#606060";
+	this.ctx.shadowBlur = 1;
+	this.ctx.lineWidth = 2;
 	this.ctx.lineCap = "round";
 	this.ctx.stroke();
-	this.ctx.closePath();
+	this.ctx.restore();
 };
 
 Nav.prototype.drawRobot = function() {
-	
-	this.ctx.beginPath();
+	if (!(this.isRunning && this.isLocalized)) return;
 	
 	/* Robot coords are relative to the orgin in the centre of diagram. */
-	var x = this.xo - this.xr * this.pxPerM,
-		y = this.yo - this.yr * this.pxPerM;
+	var x = this.xo + this.pose.x * this.pxPerM,
+		y = this.yo - this.pose.y * this.pxPerM,
+		r = 0.25 * this.pxPerM,
+		a = this.pose.a - Math.PI / 2;
+
+	this.ctx.save();
+	this.ctx.beginPath();
 	
-	this.ctx.arc(x, y, 0.25 * this.pxPerM, 0, Math.PI * 2);
+	this.ctx.arc(x, y, r, 0, Math.PI * 2);
+	this.ctx.moveTo(x, y);
+	this.ctx.lineTo(x + r * Math.sin(a + Math.PI / 6), y + r * Math.cos(a + Math.PI / 6));
+	this.ctx.moveTo(x, y);
+	this.ctx.lineTo(x + r * Math.sin(a - Math.PI / 6), y + r * Math.cos(a - Math.PI / 6));
+		
+	this.ctx.closePath();
+	
+	this.ctx.globalAlpha = 0.7;
+	this.ctx.strokeStyle = "#333333";
+	this.ctx.lineWidth = 2;
+	this.ctx.fillStyle = "#EA3D3D";
+	this.ctx.shadowColor = "#AAAAAA";
+	this.ctx.shadowBlur = 3;
+
+	this.ctx.fill();
+	this.ctx.stroke();
+
+	this.ctx.restore();
+};
+
+Nav.prototype.drawGoal = function() {
+	if (!(this.isRunning && this.isLocalized)) return;
+	this.drawWayPoint(this.xo + this.goal.x * this.pxPerM, this.yo - this.goal.y * this.pxPerM, 25);
+};
+
+Nav.prototype.drawPath = function() {
+	if (!this.isRunning || this.path.length == 0) return;
+	
+	var num = this.path.length, x, y, i, wp, pts = {};
+	
+	this.ctx.save();
+	this.ctx.beginPath();
+	
+	for (i = 0; i < num; i++)
+	{
+		wp = this.path[i];
+		
+		x = this.xo + wp.x * this.pxPerM;
+		y = this.yo - wp.y * this.pxPerM;
+		
+		pts[x] = y;
+		
+		if (i == 0) this.ctx.moveTo(x, y);
+		else        this.ctx.lineTo(x, y);
+	}
+	
+	this.ctx.strokeStyle = "#EA3D3D";
+	this.ctx.lineWidth = 3;
+	this.ctx.stroke();
+	this.ctx.restore();
+	
+	for (i in pts) this.drawWayPoint(i, pts[i]);
+};
+
+Nav.prototype.drawWayPoint = function(x, y, sz) {
+	if (!sz) sz = 15;
+	
+	this.ctx.save();
+	this.ctx.beginPath();
+	
+	x = parseInt(x);
+	y = parseInt(y);
+	
+	this.ctx.moveTo(x - sz, y - sz);
+	this.ctx.lineTo(x + sz, y - sz);
+	this.ctx.lineTo(x, y + sz);
+	this.ctx.lineTo(x - sz, y - sz);
 	
 	this.ctx.closePath();
 	
-	this.ctx.strokeStyle = "red";
-	this.ctx.lineWidth = 1;
-	this.ctx.fillStyle = "blue";
-	
-	this.ctx.stroke();
+	this.ctx.globalAlpha = 0.7;
+	this.ctx.strokeStyle = "#333333";
+	this.ctx.lineWidth = 2;
+	this.ctx.fillStyle = "#EA3D3D";
+
 	this.ctx.fill();
+	this.ctx.stroke();
+	
+	this.ctx.restore();
 };
 
 /* ----------------------------------------------------------------------------

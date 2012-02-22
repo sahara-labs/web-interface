@@ -383,12 +383,63 @@
 }
 
 /******************************************************************************
+ ** Navigation Control                                                       **
+ ******************************************************************************/
+#nav-control-container {
+	position: absolute;
+	top: 100px;
+	left: -184px;
+	
+}
+
+#nav-control-button {
+	float: left;
+	width: 75px;
+    height: 75px;
+    margin: 15px 20px 0 0;
+}
+
+#nav-led-bar {
+	float: left;
+	color: #606060;
+	text-align: center;
+}
+
+#nav-control-button img {
+	margin-top: 12px;
+}
+
+.led {
+	margin: 5px auto;
+	width: 30px;
+	height: 30px;
+	border: #B5B5B5;
+	box-shadow: 0 0 4px #B5B5B5;
+	border-radius: 15px;
+}
+
+.green-led {
+	background: #d2ff52;
+	background: radial-gradient(center, ellipse cover, #d2ff52 0%, #91e842 100%);
+    background: -moz-radial-gradient(center, ellipse cover, #d2ff52 0%, #91e842 100%);
+    background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%,#d2ff52), color-stop(100%,#91e842));
+    background: -webkit-radial-gradient(center, ellipse cover, #d2ff52 0%,#91e842 100%);
+}
+
+.red-led {
+	background: #F88B8B; /* Old browsers */
+	background: radial-gradient(center, ellipse cover, #F88B8B 0%, #F93E3E 100%);
+    background: -moz-radial-gradient(center, ellipse cover, #F88B8B 0%, #F93E3E 100%);
+    background: -webkit-radial-gradient(center, ellipse cover, #F88B8B 0%,#F93E3E 100%);
+}
+
+/******************************************************************************
  ** Navigation                                                               **
  ******************************************************************************/
 #nav-panel {
     position: absolute;
     left: 15px;
-    top: 50px;
+    top: 15px;
     border: 1px solid #B5B5B5;
     box-shadow: 0 0 4px #B5B5B5;
     width: 644px;
@@ -426,5 +477,5 @@
  
 #ovcamera-panel.mode-2 {
 	left: 15px;
-	top: 450px;
+	top: 420px;
 }
