@@ -447,6 +447,91 @@
 }
 
 /******************************************************************************
+ ** Datasets                                                                 **
+ ******************************************************************************/
+#log-ds-container {
+	position: absolute;
+    left: -184px;
+    top: 238px;
+}
+#log-ds {
+	border: 1px solid #B5B5B5;
+    box-shadow: 0 0 4px #B5B5B5;
+    width: 176px; 
+    min-height: 111px;
+    overflow-x: hidden;
+}
+
+#log-ds-enable {
+	margin: 10px 0;
+	width: 110px;
+}
+
+#log-led.led {
+	width: 16px;
+	height: 16px;
+    border-radius: 8px;
+    float: left;
+    margin: 1px 4px 0;
+}
+ 
+#log-ds .no-ds {
+	padding: 10px;
+	font-size: 0.8em;
+	color: #888;
+}
+
+#log-ds-files {
+	list-style: none;
+	color: #606060;
+}
+
+#log-ds-files li {
+	border-bottom: 1px solid #EFEFEF;
+}
+
+#log-ds-files .ui-icon {
+	float: left;
+	margin-right: 5px;
+}
+#log-ds-files .ds-not-ready {
+	padding: 5px;
+	opacity: 0.8;
+    color: #AAAAAA;
+}
+
+#log-ds-files .not-ready {
+	font-size: 0.8em;
+}
+
+#log-ds-files .ds-ready {
+	display: block;
+	float: left;
+	height: 100%;
+	width: 139px;
+	overflow-x: hidden;
+	padding: 5px;
+}
+
+#log-ds-files .ds-ready:hover {
+	background-color: #EFEFEF;
+}
+
+#log-ds-files .ds-delete {
+	float: left;
+	cursor: pointer;
+}
+
+#log-ds-files .ds-delete:hover {
+	background-color: #F88B8B;
+	height: 100%;
+}
+
+#log-ds-files .ds-delete .ui-icon {
+	margin: 4px 5px 7px 6px;
+}
+
+/******************************************************************************
  ** Onboard camera                                                         **
  ******************************************************************************/
 #obcamera-panel {

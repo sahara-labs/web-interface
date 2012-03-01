@@ -103,9 +103,12 @@ IRobot.prototype.displayMode = function(mode) {
 		break;
 		
 	case 2: // Logging mode
-		var nav = new Nav(this);
+		var nav = new Nav(this),
+			ds = new LogDataSets(this);
+		
 		this.widgets.push(nav);
-		this.widgets.push(new NavControl(this, nav));
+		this.widgets.push(new NavControl(this, nav, ds));
+		this.widgets.push(ds);
 		this.widgets.push(new OverheadCamera(this));
 		break;
 		
@@ -692,7 +695,7 @@ Ranger.prototype.parseConf = function(conf) {
 		}
 	}
 	
-	if (this.minRange == 0 && !this.mainLoopEnd)
+	if (this.angularRes == 0 && !this.mainLoopEnd)
 	{
 		/* Invalid data. */
 		var thiz = this;
@@ -903,12 +906,13 @@ Ranger.prototype.destroy = function() {
 /* ----------------------------------------------------------------------------
  * -- Navigiation control                                                    --
  * ---------------------------------------------------------------------------- */
-function NavControl(pc, nav)
+function NavControl(pc, nav, ds)
 {
 	IWidget.call(this, pc);
 	this.wid = "nav-control-container";
 	
 	this.nav = nav;
+	this.ds = ds;
 	
 	this.hasStatus = false;
 	this.settingStatus = false;
@@ -973,11 +977,8 @@ NavControl.prototype.clicked = function() {
 		"/primitive/json/pc/" + IRobot.NAV_CONTROLLER + "/pa/" + (this.isRunning ? "stop" : "start"),
 		null,
 		function(resp) {
-			if (resp.value == "true")
-			{
-				thiz.settingStatus = false;
-				thiz.setRunning(!this.isRunning);
-			}
+			thiz.setRunning(typeof resp == "object" && resp.value == "true");
+			thiz.settingStatus = false;
 		}
 	);
 };
@@ -1001,7 +1002,7 @@ NavControl.prototype.mainLoop = function() {
 			thiz.nav.path = [];
 			
 			/* Parse response values. */
-			var i = 0, running = false, localized = false;
+			var i = 0, running = false, localized = false, files = [], tmp;
 			for (i in resp)
 			{
 				switch (resp[i].name)
@@ -1022,10 +1023,22 @@ NavControl.prototype.mainLoop = function() {
 					thiz.nav.goal = thiz.parseTuple(resp[i].value);
 					break;
 					
+				case 'logging':
+					thiz.ds.setLogging("true" == resp[i].value);
+					break;
+					
 				default:
 					if (resp[i].name.indexOf("wp-") === 0)
 					{
 						thiz.nav.path[parseInt(resp[i].name.substr(3))] = thiz.parseTuple(resp[i].value);
+					}
+					else if (resp[i].name.indexOf("lf-") === 0)
+					{
+						tmp = resp[i].value.split("=", 2);
+						files[parseInt(resp[i].name.substr(3))] = {
+							name: tmp[0],
+							ready: tmp.length > 0 ? tmp[1] == "true" : false
+						};
 					}
 					else
 					{
@@ -1045,6 +1058,8 @@ NavControl.prototype.mainLoop = function() {
 			
 			/* Draw new nav map frame. */
 			thiz.nav.draw();
+			
+			thiz.ds.setFiles(files);
 			
 			/* Next packet update in 250. */
 			setTimeout(function() { thiz.mainLoop(); }, 1000);
@@ -1250,13 +1265,13 @@ Nav.prototype.drawFrame = function() {
 };
 
 Nav.prototype.drawRobot = function() {
-	if (!(this.isRunning && this.isLocalized)) return;
+	if (!this.isRunning) return;
 	
 	/* Robot coords are relative to the orgin in the centre of diagram. */
 	var x = this.xo + this.pose.x * this.pxPerM,
 		y = this.yo - this.pose.y * this.pxPerM,
 		r = 0.25 * this.pxPerM,
-		a = this.pose.a - Math.PI / 2;
+		a = this.pose.a + Math.PI / 2;
 
 	this.ctx.save();
 	this.ctx.beginPath();
@@ -1341,6 +1356,150 @@ Nav.prototype.drawWayPoint = function(x, y, sz) {
 	this.ctx.stroke();
 	
 	this.ctx.restore();
+};
+
+/* ----------------------------------------------------------------------------
+ * -- Log data list                                                          --
+ * ---------------------------------------------------------------------------- */
+function LogDataSets(pc)
+{
+	IWidget.call(this, pc);
+	
+	this.wid = "log-ds-container";
+	this.title = "Data Sets";
+	
+	this.files = { };
+	this.hasFiles = false;
+	this.fileOp = false;
+	
+	this.logging = false;
+	this.settingStatus = false;
+}
+LogDataSets.prototype = new IWidget;
+
+LogDataSets.prototype.BASE_PATH = "robot";
+
+LogDataSets.prototype.init = function() {
+	this.pageAppend(
+			"<div id='log-ds-enable' class='commonbutton'>" +
+				"<div id='log-led' class='led red-led'></div>" +
+				"<span>Not Logging</span>" +
+			"</div>" +
+			"<div id='log-ds'>" +
+
+			"</div>",
+			"leftpush"
+	);
+
+	var thiz = this;
+	$("#log-ds-enable").click(function() { thiz.clicked(); });
+};
+
+LogDataSets.prototype.clicked = function() {
+	if (this.settingStatus) return;
+	
+	this.setLogging(!this.logging);
+	this.settingStatus = true;
+	
+	var thiz = this;
+	$.post(
+		"/primitive/json/pc/" + IRobot.NAV_CONTROLLER + "/pa/setLogging",
+		{ log: this.logging },
+		function(resp) {
+			if (typeof resp != "object")
+			{
+				window.location.reload();
+				return;
+			}
+			
+			thiz.settingStatus = false;
+		}
+	);
+};
+
+LogDataSets.prototype.setLogging = function(logging) {
+	/* We don't want to LED to flicker when setting status. */
+	if (this.settingStatus) return;
+	
+	this.logging = logging;
+	$("#log-led")
+		.removeClass((this.logging ? "red" : "green") + "-led")
+		.addClass((this.logging ? "green" : "red") + "-led");
+	$("#log-ds-enable span").text(this.logging ? "Logging" : "Not Logging");
+};
+
+LogDataSets.prototype.setFiles = function(files) {
+	/* We may get an inconsistent state when files are being delete so block
+	 * updates until the op is complete. */
+	if (this.fileOp) return;
+	
+	files.reverse();
+	if (files.length > 0)
+	{
+		var html = "<ul id='log-ds-files'>", i = 0 , f, thiz = this;
+		for (i in files)
+		{
+			f = files[i];
+			
+			html += "<li>";
+			
+			if (f.ready)
+			{
+				html += 
+					"<a class='ds-ready plaina' href='/home/download/file/" + f.name + ".zip'>" +
+						"<span class='ui-icon ui-icon-circle-arrow-s'></span>" +
+						f.name +
+					"</a>" +
+					"<div class='ds-delete' title='" + f.name + "'>" +
+						"<span class='ui-icon ui-icon-trash'></span>" +
+					"</div>" +
+					"<div style='clear:left'></div>";				
+			}
+			else
+			{
+				html +=
+					"<div class='ds-not-ready'>" +
+						"<span class='not-ready ui-icon ui-icon-clock'></span>" + f.name + 
+					"</div>";
+			}
+			
+			html += "</li>";
+		}
+		
+		html += "</ul>";
+
+		$("#log-ds").empty().append(html);
+		$("#log-ds .ds-delete").click(function() {
+			thiz.deleteFile($(this).attr("title"), this);
+		});
+	}
+	else if (files.length != this.files.length || !this.hasFiles)
+	{
+		$("#log-ds").empty().append(
+				"<div class='no-ds'>" +
+					"Generate datasets by first enabling logging then starting navigation." +
+				"</div>"
+		);
+	}
+	
+	this.files = files;
+	this.hasFiles = true;
+};
+
+LogDataSets.prototype.deleteFile = function (file, node) {
+	this.fileOp = true;
+	
+	$(node).parent().remove();
+	
+	$.post(
+		"/primitive/json/pc/" + IRobot.NAV_CONTROLLER + "/pa/deleteDataset",
+		{
+			file: file
+		},
+		function () {
+			this.fileOp = false;
+		}
+	);
 };
 
 /* ----------------------------------------------------------------------------
