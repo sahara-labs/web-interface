@@ -1508,12 +1508,139 @@ LogDataSets.prototype.deleteFile = function (file, node) {
 function CameraWidget(pc)
 {
 	IWidget.call(this, pc);
+	
+	this.urls = {};
+	this.width = 320,
+	this.height = 240;
 }
 CameraWidget.prototype = new IWidget;
 
 CameraWidget.prototype.init = function() {
-	// FIXME Implement camera behaviour
-	this.pageAppend(this.title + " loading...");
+	this.pageAppend(
+			"<div id='" + this.cameraBox + "' class='camera-box'>" +
+				"<div class='camera-text'>Loading...</div>" +
+			"</div>"
+	);
+	
+//	$.get(
+//		"/session/attributebridge",
+//		{
+//			attribute: this.prop
+//		},
+//		function (resp) {
+//			if (typeof resp != "object")
+//			{
+//				window.location.reload();
+//				return;
+//			}
+//			
+//			var ps = resp.value.split(";"), i = 0, p;
+//			for (i in ps)
+//			{
+//				p = ps[i].indexOf(":");
+//				
+//				
+//			}
+//		}
+//	);
+	
+	// FIXME
+	if (this.urls.swf)
+	{
+		this.deploySWF();
+	}
+};
+
+CameraWidget.prototype.deployMJpeg = function() {
+	if (!this.urls.mjpeg)
+	{
+		this.control.log("Unable to deploy MJPEG stream because it is no MJPEG URL is set.", IRobot.ERROR);
+		return;
+	}
+	
+	if ($.browser.msie)
+	{
+		/* Internet Explorer does not support MJPEG streaming so a Java applet 
+		 * is streaming. */
+		$("#" + this.cameraBox).html(
+				'<applet code="com.charliemouse.cambozola.Viewer" archive="/applets/cambozola.jar" ' + 
+						'width="' + this.width + '" height="' + this.height + '">' +
+					'<param name="url" value="' + this.urls.mjpeg + '"/>' +
+					'<param name="accessories" value="none"/>' +
+				'</applet>'
+		);
+	}
+	else
+	{
+		$("#" + this.cameraBox).html(
+				"<div height:" + (vcameras[id].height + 20) + "px'>" +
+				"	<img src='" + this.urls.mjpeg + "?" + new Date().getTime() + "' alt='stream'/>" +
+				"</div>"
+		);
+	}
+};
+
+CameraWidget.prototype.deploySWF = function() {
+	if ($.browser.msie)
+	{
+		$("#" + this.cameraBox).html(
+				'<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" ' +
+						'width="' + this.width + '" height="' + this.height + '" ' +
+						' id="' + this.cameraBox + 'movie" align="middle">' +
+					'<param name="movie" value="' + this.urls.swf + '" />' +
+					'<a href="http://www.adobe.com/go/getflash">' +
+						'<img src="http://www.adobe.com/images/shared/download_buttons/get_flash_player.gif" ' +
+								'alt="Get Adobe Flash player"/>' +
+					'</a>' +
+				'</object>'
+		);
+	}
+	else
+	{
+		$("#" + this.cameraBox).html(
+				 '<object type="application/x-shockwave-flash" data="' + this.urls.swf + '" ' +
+				 		'width="' +  this.width  + '" height="' + this.height + '">' +
+			        '<param name="movie" value="' + this.urls.swf + '"/>' +
+			        '<a href="http://www.adobe.com/go/getflash">' +
+		            	'<img src="http://www.adobe.com/images/shared/download_buttons/get_flash_player.gif" ' +
+		            			'alt="Get Adobe Flash player"/>' +
+		            '</a>' +
+		        '</object>'
+		);
+	}
+	
+	/* Flash movies have a 16000 frame limit, so after 7 minutes, the movie
+	 * is reloaded so it never hits the limit. */
+	var thiz = this;
+	this.swfTimeout = setTimeout(function() {
+		thiz.freshenSWF();
+	}, 7 * 60 * 1000);
+};
+
+CameraWidget.prototype.freshenSWF = function() {
+	this.deploySWF();
+};
+
+CameraWidget.prototype.deployFLV = function() {
+		var player = flowplayer(this.cameraBox, {
+			src: "/swf/flowplayer.swf",
+			wmode: 'direct'
+		}, 
+		{
+			autoPlay: true,
+			buffering: true,
+			playlist: [ 
+			    this.urls.flv
+			],
+			clip: {
+				bufferLength: 1
+			},
+			plugins: {
+				controls: null // Disable the control bar
+			}
+	});
+
+	player.load();
 };
 
 /* ----------------------------------------------------------------------------
@@ -1525,6 +1652,10 @@ function OnboardCamera(pc)
 	
 	this.wid = "obcamera-panel";
 	this.title = "Onboard Camera";
+	
+	this.cameraBox = "obcamera";
+	
+	this,prop = "iRobot_Onboard_Camera";
 }
 OnboardCamera.prototype = new CameraWidget;
 
@@ -1537,6 +1668,18 @@ function OverheadCamera(pc)
 	
 	this.wid = "ovcamera-panel";
 	this.title = "Overhead Camera";
+	
+	this.cameraBox = "ovcamera";
+	this.width = 640;
+	this.height = 480;
+	
+	this,prop = "iRobot_Overhead_Camera";
+	
+	this.urls = {
+		MJPEG: "http://robotmonitor1.eng.uts.edu.au:7070/camera1.mjpg",
+		swf:   "http://robotmonitor1.eng.uts.edu.au:7070/camera1.swf",
+		flv:   "http://robotmonitor1.eng.uts.edu.au:7070/camera1.flv"
+	};
 }
 OverheadCamera.prototype = new CameraWidget;
 
