@@ -92,7 +92,7 @@ p.note-p {
 	display: block;
 	position: absolute;
 	right: 10px;
-	top: 153px;	
+	top: 153px;
 }
 
 <?php $this->headStyle()->captureEnd() ?>
@@ -179,33 +179,22 @@ supported by the distribution package manager. OpenJDK may be successfully used 
 compatible JRE.</p>
 
 <h3>Video Plugins</h3>
-<p>The following refers to Windows plugins, we will add equivalent information for Mac OS X and
-Linux as time permits. We are in the process of upgrading the vision system used within UTS
-remotelabs to improve reliability and reduce latency, we will update this document to reflect
-these changes once the changes have been rolled out. This is expected to happen in early
-2012.</p>
-
-<p>The software supports two different web browser video plugins, VLC or Windows Media Player
-(WMP). While the software also allows the user to view the experiment through self-refreshing JPEG
-images (adjustable refresh interval: every 0.25–2 seconds), it is recommended that at least one of the
-two plugins should be installed for a chosen browser. The plugins can be downloaded free of charge
-from these links:</p>
-
+<p>Depending on the rig type used you may encounter one or more of the following video formats:</p>
 <ul>
-	<li><a target="_blank" href="http://www.videolan.org/vlc/">VLC Media Player</a></li>
-	<li><a href="http://www.microsoft.com/windows/windowsmedia/player/versions.aspx">Windows Media Player</a></li>
+	<li>Flash - This requires the Adobe Flash plugin to be installed.</li>
+	<li>Motion JPEG - Depending on the browser this may either play within the browser using no
+	plugins (Firefox, Chrome, Safari) or using a Java applet deployed when selecting this format
+	(Internet Explorer).</li>
+	<li>JPEG Refresh - This uses JPEG images that are automatically refreshed at a user selected
+	period between 0.25 seconds and 2 seconds and requires no plugins.</li>
+	<li>WMP Plugin - This requires the Windows Media Player plugin or equivalent (Totem on Linux
+	or Flip4Mac on Mac OS X) to play the video.</li>
+	<li>VLC Plugin - This requires the VLC plugin to play the video.</li>
 </ul>
 
 <p>If the user is unsure whether any of these plugins are already installed, check the browser settings. On Internet
 Explorer, go to 'Tools' -> 'Manage Add-ons' and on Mozilla Firefox or Google Chrome type 'about:plugins' in the address
 bar and press the 'Enter' key.</p>
-
-<p class='note-p'><strong>NOTE:</strong> Depending on the current browser settings, a user may need to specifically allow these
-players to run automatically. A user should watch for confirmation dialogs (Firefox) or a
-yellow bar at the top of the browser window (Internet Explorer). If not, check the current
-plugin settings under ‘Tools’ in the browser menu. A user may have to manually enable the
-plugin for Windows or VLC Media Player.</p>
-
 
 <h3>Firewall Issues</h3>
 <p>Often, private networks (such as companies, universities and even home networks) operate through
