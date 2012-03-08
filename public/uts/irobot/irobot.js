@@ -1061,7 +1061,7 @@ NavControl.prototype.mainLoop = function() {
 			
 			thiz.ds.setFiles(files);
 			
-			/* Next packet update in 250. */
+			/* Next packet update in 1000. */
 			setTimeout(function() { thiz.mainLoop(); }, 1000);
 		},
 		error: function(xhr, err) {
@@ -1123,8 +1123,11 @@ function Nav(pc)
 	this.wid = "nav-panel";
 	this.title = "Navigation";
 	
+	this.canavs = null;
 	this.width = 644;
 	this.height = 333;
+	this.offX = 0;
+	this.offY = 0;
 	
 	this.ctx = null;
 	this.map = null;
@@ -1132,6 +1135,7 @@ function Nav(pc)
 	this.pxPerM = 100; // From the player mapfile driver configuration
 	this.xo = this.width / 2;
 	this.yo = this.height / 2;
+	this.r = 0.25 * this.pxPerM;
 	
 	this.isRunning = false;
 	this.isLocalized = false;
@@ -1147,31 +1151,54 @@ function Nav(pc)
 		a: 0
 	};
 	this.path = [ ];
+	
+	this.movePose = this.pose;
+	this.doDragMove = true;
+	this.isDragging = false;
+	this.dragX = 0;
+	this.dragY = 0;
+	this.isYawSetting = false;
+	this.isSettingPose = false;
 }
 Nav.prototype = new IWidget;
 
 Nav.prototype.init = function() {
 	this.pageAppend("<canvas id='nav' width='" + this.width + "' height='" + this.height + "'></canvas>");
 	
-	var canvas = $("#nav")[0];
-	if (canvas.getContext)
+	this.canvas = $("#nav")[0];
+	if (this.canvas.getContext)
 	{
-		this.ctx = canvas.getContext("2d");
+		this.ctx = this.canvas.getContext("2d");
 		this.draw();
 	}
 	else
 	{
 		alert("Using this interface requires a modern browser.");
 	}
+	
+	if (this.doDragMove)
+	{
+		var thiz = this,
+			$c = $(this.canvas)
+				.mousedown(function(evt) { thiz.moveStart(evt); })
+				.bind('mouseleave mouseup', function (evt)  { thiz.moveStop(evt); });
+		
+		this.offX = $c.offset().left;
+		this.offY = $c.offset().top;
+	}
+		
 };
 
-Nav.prototype.draw = function() {
+Nav.prototype.draw = function(moving) {
+	/* If we are dragging the robot we don't want the actual
+	 * pose to overwrite the drag pose 	 */
+	if ((this.isDragging || this.isYawSetting || this.isSettingPose) && !moving) return;
+	
 	this.ctx.clearRect(0, 0, this.width, this.height);
 	this.drawFrame();
 	this.drawGoal();
 	this.drawPath();
-	this.drawRobot();
-	
+	this.drawRobot(moving);
 };
 
 Nav.prototype.drawFrame = function() {	
@@ -1264,32 +1291,41 @@ Nav.prototype.drawFrame = function() {
 	this.ctx.restore();
 };
 
-Nav.prototype.drawRobot = function() {
+Nav.prototype.drawRobot = function(moving) {
 	if (!this.isRunning) return;
 	
 	/* Robot coords are relative to the orgin in the centre of diagram. */
-	var x = this.xo + this.pose.x * this.pxPerM,
-		y = this.yo - this.pose.y * this.pxPerM,
-		r = 0.25 * this.pxPerM,
-		a = this.pose.a + Math.PI / 2;
+	var x = this.xo + (moving ? this.movePose.x : this.pose.x) * this.pxPerM,
+		y = this.yo - (moving ? this.movePose.y : this.pose.y) * this.pxPerM,
+		a = (moving ? this.movePose.a : this.pose.a) + Math.PI / 2;
 
 	this.ctx.save();
 	this.ctx.beginPath();
 	
-	this.ctx.arc(x, y, r, 0, Math.PI * 2);
+	this.ctx.arc(x, y, this.r, 0, Math.PI * 2);
 	this.ctx.moveTo(x, y);
-	this.ctx.lineTo(x + r * Math.sin(a + Math.PI / 6), y + r * Math.cos(a + Math.PI / 6));
+	this.ctx.lineTo(x + this.r * Math.sin(a + Math.PI / 6), y + this.r * Math.cos(a + Math.PI / 6));
 	this.ctx.moveTo(x, y);
-	this.ctx.lineTo(x + r * Math.sin(a - Math.PI / 6), y + r * Math.cos(a - Math.PI / 6));
+	this.ctx.lineTo(x + this.r * Math.sin(a - Math.PI / 6), y + this.r * Math.cos(a - Math.PI / 6));
 		
 	this.ctx.closePath();
 	
-	this.ctx.globalAlpha = 0.7;
+	if (this.isDragging || this.isYawSetting|| this.isSettingPose)
+	{
+		this.ctx.shadowBlur = 10;
+		this.ctx.shadowColor = "#666666";
+	}
+	else
+	{
+		this.ctx.shadowBlur = 3;
+		this.ctx.shadowColor = "#AAAAAA";
+	}
+	
 	this.ctx.strokeStyle = "#333333";
+	this.ctx.globalAlpha = 0.7;
 	this.ctx.lineWidth = 2;
 	this.ctx.fillStyle = "#EA3D3D";
-	this.ctx.shadowColor = "#AAAAAA";
-	this.ctx.shadowBlur = 3;
+
 
 	this.ctx.fill();
 	this.ctx.stroke();
@@ -1357,6 +1393,108 @@ Nav.prototype.drawWayPoint = function(x, y, sz) {
 	
 	this.ctx.restore();
 };
+
+Nav.prototype.moveStart = function(e) {
+	if (!this.isRunning) return;
+	
+	/* If we are not running or already moving, don't allow it again. */
+	if (this.isDragging || this.isYawSetting || this.isSettingPose) return;
+	
+	/* Determine whether we are in the robot radius. */
+	if (Math.abs(e.pageX - this.offX - this.xo - this.pose.x * this.pxPerM) > this.r || 
+		Math.abs(e.pageY - this.offY - this.yo + this.pose.y * this.pxPerM) > this.r) return;
+
+	this.isDragging = true;
+	
+	var thiz = this;
+	$(this.canvas).bind("mousemove", function (evt) {
+		thiz.move(evt);
+	});
+	
+	this.movePose = this.pose;
+	this.dragX = e.pageX;
+	this.dragY = e.pageY;
+};
+
+Nav.prototype.move = function(e) {
+	if (this.isDragging)
+	{
+		this.movePose.x -= (this.dragX - e.pageX) / this.pxPerM;
+		this.dragX = e.pageX;
+		this.movePose.y += (this.dragY - e.pageY) / this.pxPerM;
+		this.dragY = e.pageY;
+		
+		this.draw(true);
+	}
+	else if (this.isYawSetting)
+	{
+		var x0 = this.xo + this.movePose.x * this.pxPerM,
+			y0 = this.yo - this.movePose.y * this.pxPerM,
+			x1 = e.pageX - this.offX,
+			y1 = e.pageY - this.offY;
+		
+		/* We want to robot rotation to follow the mouse. */
+		this.movePose.a = Math.atan2(x1 - x0, y1 - y0) - Math.PI / 2;
+		
+		this.draw(true);
+		
+		this.ctx.save();
+		this.ctx.beginPath();
+		this.ctx.moveTo(x0, y0);
+		this.ctx.lineTo(x1, y1);
+		
+		this.ctx.strokeStyle = "#333333";
+		this.ctx.lineWidth = 2;
+		this.ctx.globalAlpha = 0.7;
+		this.ctx.shadowBlur = 10;
+		this.ctx.shadowColor = "#666666";
+		
+		this.ctx.stroke();
+		this.ctx.closePath();
+		this.ctx.restore();
+	}
+};
+
+Nav.prototype.moveStop = function(e) {
+	var thiz = this;
+	
+	if (this.isDragging)
+	{
+		/* Drag complete, next is setting yaw. */
+		this.isDragging = false;
+		this.isYawSetting = true;
+		
+		$(this.canvas).bind("mouseup.yaw", function(evt) { thiz.moveStop(evt); });
+	}
+	else if (this.isYawSetting)
+	{
+		/* Move and yaw set complete. */
+		this.isYawSetting = false;
+		$(this.canvas).unbind('mousemove mouseup.yaw');
+		
+		/* Move and yaw set complete, send pose. */
+		this.isSettingPose = true;
+		
+		$.post(
+			"/primitive/json/pc/" + IRobot.NAV_CONTROLLER + "/pa/setPose",
+			this.movePose,
+			function(resp) {
+				setTimeout(function() {
+					thiz.finishMove();
+				}, 500);
+			}
+		);
+	}
+};
+
+Nav.prototype.finishMove = function() {
+	this.isSettingPose = false;
+};
+
+Nav.prototype.destroy = function() {
+	this.$w.remove();
+};
+
 
 /* ----------------------------------------------------------------------------
  * -- Log data list                                                          --
@@ -1498,6 +1636,7 @@ LogDataSets.prototype.deleteFile = function (file, node) {
 		},
 		function () {
 			this.fileOp = false;
+			this.hasFiles = false;
 		}
 	);
 };
