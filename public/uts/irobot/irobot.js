@@ -74,12 +74,18 @@ IRobot.prototype.determineMode = function() {
  * @param mode mode number
  */
 IRobot.prototype.displayMode = function(mode) {
+	var thiz = this;
 	if (mode == 4)
 	{
 		/* If in mode transition, keep polling to determine whether the mode
 		 * is ready to be used. */
-		var thiz = this;
 		setTimeout(function() { thiz.determineMode(); }, 2000);
+	}
+	else
+	{
+		/* This is to tickle the server so we are not timed out because of no
+		 * activity. */
+		setTimeout(function() { thiz.determineMode();}, 30000);
 	}
 		
 	if (this.mode == mode) return;
@@ -297,6 +303,21 @@ ModeSelector.prototype.setSelected = function(mode) {
 
 ModeSelector.prototype.clearSelected = function() {
 	this.$w.children("a.active").removeClass("active");
+};
+
+function TransitionOverlay(pc)
+{
+	IWidget.call(this, pc);
+	
+	this.wid = "t-overlay";
+}
+TransitionOverlay.prototype = new IWidget;
+
+TransitionOverlay.prototype.init = function() {
+	this.pageAppend(
+		"<img src='/uts/irobot/images/large_spinner.gif' alt='loading' />" +
+		"Loading..."
+	);
 };
 
 /* ----------------------------------------------------------------------------
