@@ -62,8 +62,12 @@ IRobot.prototype.determineMode = function() {
 //				window.location.reload();
 				return;
 			}
-				
-			thiz.displayMode(parseInt(resp.value));
+			var m = parseInt(resp.value);
+			if (m == 0)
+			{
+				thiz.changeMode(1);
+			}		
+			else thiz.displayMode(m);
 		}
 	);
 };
@@ -99,7 +103,6 @@ IRobot.prototype.displayMode = function(mode) {
 	switch (mode)
 	{
 	case 0: // No mode set.
-		this.displayMode(1);
 		break;
 	
 	case 1: // Manual mode
