@@ -99,6 +99,7 @@ IRobot.prototype.displayMode = function(mode) {
 	switch (mode)
 	{
 	case 0: // No mode set.
+		this.displayMode(1);
 		break;
 	
 	case 1: // Manual mode
