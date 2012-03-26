@@ -58,8 +58,6 @@ IRobot.prototype.determineMode = function() {
 			if (typeof resp != "object")
 			{
 				/* Probably logged out. */
-				// FIXME 
-//				window.location.reload();
 				return;
 			}
 			var m = parseInt(resp.value);
@@ -1073,7 +1071,7 @@ NavControl.prototype.mainLoop = function() {
 			}
 			
 			/* Update nav control status. */
-			if (!thiz.hasStatus || thiz.isRunning != running)
+			if (!thiz.hasStatus || (!thiz.settingStatus && thiz.isRunning != running))
 			{
 				thiz.hasStatus = true;
 				thiz.setRunning(running);
@@ -1148,47 +1146,72 @@ function Nav(pc)
 	this.wid = "nav-panel";
 	this.title = "Navigation";
 	
-	this.canavs = null;
+	/* Interface custimisation. */
+	this.doDragMove = true;
+	this.doCovSet = true;
+	
+	/* DOM objects. */
+	this.canvas = null;
+	this.map = null;
+	
+	/* Canvas context. */
+	this.ctx = null;
+	
+	/* Canvas dimensions. */
 	this.width = 644;
 	this.height = 333;
+	
+	/* Offset from page. */
 	this.offX = 0;
 	this.offY = 0;
 	
-	this.ctx = null;
-	this.map = null;
-	
-	this.pxPerM = 100; // From the player mapfile driver configuration
-	this.xo = this.width / 2;
+	/* Current mouse position. */
+	this.mouse = { x: 0, y: 0 };
+		
+	/* Scalaing factors between player coords and canvas coords. */
+	this.pxPerM = 100; 			 // From the player mapfile driver configuration
+	this.xo = this.width / 2;    // Player uses the center as origin
 	this.yo = this.height / 2;
-	this.r = 0.25 * this.pxPerM;
+	this.r = 0.25 * this.pxPerM; // Robot radius
+	this.startPose = { x: 1.3, y: 0.8, a: Math.PI * 5 / 4 };
 	
+	/* Interface states. */
 	this.isRunning = false;
 	this.isLocalized = false;
-	this.pose = {
-		x: 0,
-		y: 0,
-		a: 0
-	};
 	
-	this.goal = {
-		x: 0,
-		y: 0,
-		a: 0
-	};
+	/* Move states: 
+	 * 	0 -> No moving, 
+	 * 	1 -> moving pose, 
+	 * 	2 -> setting pose covariance,
+	 * 	3 -> setting yaw, 
+	 * 	4 -> setting yaw covaraince, 
+	 * 	5 -> setting covariance. */
+	this.moveState = 0;      
+	
+	/* Player provided positions. */
+	this.pose = { x: 0, y: 0, a: 0 };
+	this.goal = { x: 0, y: 0, a: 0 };
 	this.path = [ ];
 	
-	this.movePose = this.pose;
-	this.doDragMove = true;
-	this.isDragging = false;
+	/* Moved position. */
+	this.movePose = { x: 0, y: 0, a: 0, cx: Nav.DEFAULT_COV, cy: Nav.DEFAULT_COV, ca: Nav.DEFAULT_ACOV };
+	
+	/* Absolute drag positions. */
 	this.dragX = 0;
 	this.dragY = 0;
-	this.isYawSetting = false;
-	this.isSettingPose = false;
+	
+	/* Drag handles. */
+	this.dragHandles = [ ];
+	this.isDragHandling = false;
 }
 Nav.prototype = new IWidget;
 
+Nav.DEFAULT_COV = 1;
+Nav.DEFAULT_ACOV = Math.PI / 6;
+
 Nav.prototype.init = function() {
-	this.pageAppend("<canvas id='nav' width='" + this.width + "' height='" + this.height + "'></canvas>");
+	this.pageAppend("<canvas id='nav' width='" + this.width + "' height='" + this.height + "'></canvas>" +
+					"<div id='nav-status'> </div>");
 	
 	this.canvas = $("#nav")[0];
 	if (this.canvas.getContext)
@@ -1206,51 +1229,51 @@ Nav.prototype.init = function() {
 		var thiz = this,
 			$c = $(this.canvas)
 				.mousedown(function(evt) { thiz.moveStart(evt); })
-				.bind('mouseleave mouseup', function (evt)  { thiz.moveStop(evt); });
+				.bind('mouseup', function (evt)  { thiz.moveStop(evt); });
 		
 		this.offX = $c.offset().left;
 		this.offY = $c.offset().top;
 	}
-		
 };
 
-Nav.prototype.draw = function(moving) {
+Nav.prototype.draw = function(moveFrame) {
 	/* If we are dragging the robot we don't want the actual
 	 * pose to overwrite the drag pose 	 */
-	if ((this.isDragging || this.isYawSetting || this.isSettingPose) && !moving) return;
+	if (this.moveState > 0 && !moveFrame) return;
 	
 	this.ctx.clearRect(0, 0, this.width, this.height);
-	this.drawFrame();
+	this.drawSkeleton();
+	this.drawStartPoseRobot();
 	this.drawGoal();
 	this.drawPath();
-	this.drawRobot(moving);
+	this.drawRobot(moveFrame);
 };
 
-Nav.prototype.drawFrame = function() {	
+Nav.prototype.drawSkeleton = function() {	
 	var i;
 	
 	/* Grid lines. */
 	this.ctx.save();
 	this.ctx.beginPath();
-	for (i = this.xo; i > 0; i -= this.pxPerM) // East horizontal lines
+	for (i = this.xo; i > 0; i -= this.pxPerM)                         // East horizontal lines
 	{
 		this.ctx.moveTo(i, 0);
 		this.ctx.lineTo(i, this.height);
 	}
 	
-	for (i = this.xo + this.pxPerM; i < this.width; i += this.pxPerM) // West horizontal lines
+	for (i = this.xo + this.pxPerM; i < this.width; i += this.pxPerM)  // West horizontal lines
 	{
 		this.ctx.moveTo(i, 0);
 		this.ctx.lineTo(i, this.height);
 	}
 	
-	for (i = this.yo; i > 0; i -= this.pxPerM) // North vertical lines
+	for (i = this.yo; i > 0; i -= this.pxPerM)                         // North vertical lines
 	{
 		this.ctx.moveTo(0, i);
 		this.ctx.lineTo(this.width, i);
 	}
 	
-	for (i = this.yo + this.pxPerM; i < this.height; i += this.pxPerM) 	// South vertical lines
+	for (i = this.yo + this.pxPerM; i < this.height; i += this.pxPerM) // South vertical lines
 	{
 		this.ctx.moveTo(0, i);
 		this.ctx.lineTo(this.width, i);
@@ -1314,6 +1337,44 @@ Nav.prototype.drawFrame = function() {
 	this.ctx.lineCap = "round";
 	this.ctx.stroke();
 	this.ctx.restore();
+	
+	/* Start marker. */
+	
+};
+
+Nav.prototype.drawStartPoseRobot = function() {
+	if (this.isRunning) return;
+	
+	/* Robot coords are relative to the orgin in the centre of diagram. */
+	var x = this.xo + this.startPose.x * this.pxPerM,
+		y = this.yo - this.startPose.y * this.pxPerM,
+		a = this.startPose.a + Math.PI / 2;
+
+	this.ctx.save();
+	this.ctx.beginPath();
+	
+	this.ctx.arc(x, y, this.r, 0, Math.PI * 2);
+	this.ctx.moveTo(x, y);
+	this.ctx.lineTo(x + this.r * Math.sin(a + Math.PI / 6), y + this.r * Math.cos(a + Math.PI / 6));
+	this.ctx.moveTo(x, y);
+	this.ctx.lineTo(x + this.r * Math.sin(a - Math.PI / 6), y + this.r * Math.cos(a - Math.PI / 6));
+		
+	this.ctx.closePath();
+	
+	this.ctx.strokeStyle = "#888888";
+	this.ctx.globalAlpha = 0.5;
+	this.ctx.lineWidth = 2;
+	this.ctx.fillStyle = "#EEEEEE";
+
+
+	this.ctx.fill();
+	this.ctx.stroke();
+	
+	this.ctx.lineWidth = 0.5;
+	this.ctx.font = "10pt sans-serif";
+	this.ctx.strokeText("Start here", x - 25, y + 40);
+	
+	this.ctx.restore();
 };
 
 Nav.prototype.drawRobot = function(moving) {
@@ -1335,7 +1396,7 @@ Nav.prototype.drawRobot = function(moving) {
 		
 	this.ctx.closePath();
 	
-	if (this.isDragging || this.isYawSetting|| this.isSettingPose)
+	if (this.moveState > 0)
 	{
 		this.ctx.shadowBlur = 10;
 		this.ctx.shadowColor = "#666666";
@@ -1356,6 +1417,101 @@ Nav.prototype.drawRobot = function(moving) {
 	this.ctx.stroke();
 
 	this.ctx.restore();
+};
+
+Nav.prototype.drawCovBox = function() {
+	var bw = this.movePose.cx * this.pxPerM,
+		bh = this.movePose.cy * this.pxPerM,
+		bx = this.xo + this.movePose.x * this.pxPerM - bw / 2,
+		by = this.yo - this.movePose.y * this.pxPerM - bh / 2;
+
+	this.ctx.save();
+	this.ctx.beginPath();
+	this.ctx.rect(bx, by, bw, bh);
+	this.ctx.closePath();
+
+	this.ctx.globalAlpha = 0.25;
+	this.ctx.globalCompositeOperation = "destination-over";
+	this.ctx.fillStyle = "#D8E2EA";
+	this.ctx.strokeStyle = "#BBBBBB";
+	this.ctx.fill();
+	this.ctx.stroke();
+	this.ctx.restore();
+	
+	/* Resize handles. */
+	this.dragHandles.length = 0;
+	this.drawDragHandle(bx, by);
+	this.drawDragHandle(bx + bw, by);
+	this.drawDragHandle(bx + bw, by + bh);	
+	this.drawDragHandle(bx, by + bh);
+	
+	this.drawMeasurement(bx, by, bh, false);
+	this.drawMeasurement(bx, by + bh, bw, true);
+};
+
+Nav.prototype.drawRotationSelector = function(x, y) {
+	this.ctx.save();
+	this.ctx.beginPath();
+	this.ctx.moveTo(x, y);
+	this.ctx.lineTo(this.mouse.x, this.mouse.y);
+	
+	this.ctx.strokeStyle = "#333333";
+	this.ctx.lineWidth = 2;
+	this.ctx.globalAlpha = 0.7;
+	this.ctx.shadowBlur = 10;
+	this.ctx.shadowColor = "#666666";
+	
+	this.ctx.stroke();
+	this.ctx.closePath();
+	this.ctx.restore();
+};
+
+Nav.ACOV_CONE_RADIUS = 100;
+Nav.prototype.drawCovCone = function() {
+	var x0 = this.xo + this.movePose.x * this.pxPerM,
+		y0 = this.yo - this.movePose.y * this.pxPerM,
+		cx0 = x0 + Nav.ACOV_CONE_RADIUS * Math.sin(Math.PI / 2 + this.movePose.a - this.movePose.ca / 2),
+		cy0 = y0 + Nav.ACOV_CONE_RADIUS * Math.cos(Math.PI / 2 + this.movePose.a - this.movePose.ca / 2),
+		cx1 = x0 + Nav.ACOV_CONE_RADIUS * Math.sin(Math.PI / 2 + this.movePose.a + this.movePose.ca / 2),
+		cy1 = y0 + Nav.ACOV_CONE_RADIUS * Math.cos(Math.PI / 2 + this.movePose.a + this.movePose.ca / 2),
+		i = 0;
+	
+	this.ctx.save();
+	this.ctx.beginPath();
+	this.ctx.moveTo(x0, y0);
+	this.ctx.lineTo(cx0, cy0);
+	
+	for (i = 0; i < 100; i++)
+	{
+		this.ctx.lineTo(
+				x0 + Nav.ACOV_CONE_RADIUS * Math.sin(Math.PI / 2 + this.movePose.a - this.movePose.ca / 2 + this.movePose.ca * i / 100),
+				y0 + Nav.ACOV_CONE_RADIUS * Math.cos(Math.PI / 2 + this.movePose.a - this.movePose.ca / 2 + this.movePose.ca * i / 100));
+	}
+	
+	this.ctx.lineTo(x0, y0);
+	this.ctx.closePath();
+	
+	this.ctx.globalAlpha = 0.25;
+	this.ctx.globalCompositeOperation = "destination-over";
+	this.ctx.lineWidth = 2;
+	this.ctx.fillStyle = "#D8E2EA";
+	this.ctx.strokeStyle = "#BBBBBB";
+	this.ctx.fill();
+	this.ctx.stroke();
+	
+	this.ctx.globalAlpha = 0.7;
+	this.ctx.globalCompositeOperation = "source-over";
+	this.ctx.strokeStyle = "#606060";
+	this.ctx.lineWidth = 0.5;
+	this.ctx.strokeText(mathRound(this.movePose.ca * 180 / Math.PI, 2) + " degrees",
+			x0 + Nav.ACOV_CONE_RADIUS / 2 * Math.sin(Math.PI / 2 + this.movePose.a),
+			y0 + Nav.ACOV_CONE_RADIUS / 2 * Math.cos(Math.PI / 2 + this.movePose.a));
+	
+	this.ctx.restore();
+	
+	this.dragHandles.length = 0;
+	this.drawDragHandle(cx0, cy0);
+	this.drawDragHandle(cx1, cy1);
 };
 
 Nav.prototype.drawGoal = function() {
@@ -1419,107 +1575,298 @@ Nav.prototype.drawWayPoint = function(x, y, sz) {
 	this.ctx.restore();
 };
 
+Nav.HANDLE_SIZE = 8;
+Nav.prototype.drawDragHandle = function(x, y) {
+	this.dragHandles.push({x: x, y: y});
+	
+	this.ctx.save();
+	this.ctx.beginPath();
+	this.ctx.rect(x - Nav.HANDLE_SIZE / 2, y - Nav.HANDLE_SIZE / 2, Nav.HANDLE_SIZE, Nav.HANDLE_SIZE);
+	this.ctx.closePath();
+	
+	if (this.ctx.isPointInPath(this.mouse.x, this.mouse.y))
+	{
+		/* Mouse hover. */
+		this.ctx.fillStyle = "#606060";
+		this.ctx.shadowBlur = 7;
+		this.ctx.shadowColor = "#606060";
+	}
+	else
+	{
+		this.ctx.fillStyle = "#DDDDDD";
+		this.ctx.shadowBlur = 5;
+		this.ctx.shadowColor = "#AAAAAA";
+	}
+	
+	this.ctx.strokeStyle = "#606060";
+	this.ctx.strokeWidth = 1.5;
+	
+	this.ctx.stroke();
+	this.ctx.fill();
+	this.ctx.restore();
+};
+
+Nav.prototype.isInDragHandles = function() {
+	var i = 0;
+	for (i in this.dragHandles) 
+	{
+		if (this.isInDragHandle(this.dragHandles[i].x, this.dragHandles[i].y)) return true;
+	}
+};
+
+Nav.prototype.isInDragHandle = function(x, y) {
+	return (this.mouse.x > x - Nav.HANDLE_SIZE / 2 && this.mouse.x <= x + Nav.HANDLE_SIZE / 2 && 
+			this.mouse.y > y - Nav.HANDLE_SIZE / 2 && this.mouse.y <= x + Nav.HANDLE_SIZE / 2);
+};
+
+Nav.prototype.drawMeasurement = function(x, y, d, horiz) {
+	var len = 20, line = 10, lw = 1, arrowri = 8, arrowrun = 20;
+	
+	this.ctx.save();
+	this.ctx.beginPath();
+	
+	if (horiz)
+	{
+		this.ctx.moveTo(x + lw, y);
+		this.ctx.lineTo(x + lw, y + len);
+		this.ctx.moveTo(x + lw, y + line);
+		this.ctx.lineTo(x + d - lw, y + line);
+		this.ctx.moveTo(x + d - lw, y);
+		this.ctx.lineTo(x + d - lw, y + len);
+		
+		/* Arrow heads. */
+		this.ctx.moveTo(x + lw, y + line);
+		this.ctx.lineTo(x + lw + arrowrun, y + line + arrowri);
+		this.ctx.moveTo(x + d - lw, y + line);
+		this.ctx.lineTo(x + d - lw - arrowrun, y + line + arrowri);
+	}
+	else
+	{
+		this.ctx.moveTo(x, y + lw);
+		this.ctx.lineTo(x - len, y + lw);
+		this.ctx.moveTo(x - line, y + lw);
+		this.ctx.lineTo(x - line, y + d - lw);
+		this.ctx.moveTo(x, y + d - lw);
+		this.ctx.lineTo(x - len, y + d - lw);
+		
+		/* Arrow heads. */
+		this.ctx.moveTo(x - line, y + lw);
+		this.ctx.lineTo(x - line - arrowri, y + lw + arrowrun);
+		this.ctx.moveTo(x - line, y + d - lw);
+		this.ctx.lineTo(x - line - arrowri, y + d - lw - arrowrun);
+	}
+	
+	this.ctx.closePath();
+	
+	this.ctx.globalAlpha = 0.7;
+	this.ctx.globalCompositeOperation = "destination-over";
+	this.ctx.strokeStyle = "#BBBBBB";
+	this.ctx.lineWidth = lw;
+	this.ctx.stroke();
+	
+	if (horiz)
+	{
+		this.ctx.strokeText(mathRound(this.movePose.cx, 2) + " m", x + d / 2 - 8, y + line * 2 + 5);
+	}
+	else
+	{
+		this.ctx.strokeText(mathRound(this.movePose.cy, 2) + " m", x - line * 2 - 15, y + d / 2);
+	}
+	
+	this.ctx.restore();
+};
+
 Nav.prototype.moveStart = function(e) {
-	if (!this.isRunning) return;
+	/* Check whether we are doing a draging move. */
+	this.mouse.down = true;
+	if (this.isInDragHandles())
+	{
+		this.isDragHandling = true;;
+	}
 	
 	/* If we are not running or already moving, don't allow it again. */
-	if (this.isDragging || this.isYawSetting || this.isSettingPose) return;
+	if (!this.isRunning || this.moveState > 0) return;
 	
 	/* Determine whether we are in the robot radius. */
 	if (Math.abs(e.pageX - this.offX - this.xo - this.pose.x * this.pxPerM) > this.r || 
 		Math.abs(e.pageY - this.offY - this.yo + this.pose.y * this.pxPerM) > this.r) return;
-
-	this.isDragging = true;
 	
 	var thiz = this;
 	$(this.canvas).bind("mousemove", function (evt) {
 		thiz.move(evt);
 	});
 	
-	this.movePose = this.pose;
+	this.moveState = 1;
+	
+	this.movePose.x = this.pose.x;
+	this.movePose.y = this.pose.y;
+	this.movePose.a = this.pose.a;
+	this.movePose.cx = this.movePose.cy = Nav.DEFAULT_COV;
+	this.movePose.ca = Nav.DEFAULT_ACOV;
+	
 	this.dragX = e.pageX;
 	this.dragY = e.pageY;
+	
+	this.updateStatus("setting position");
 };
 
 Nav.prototype.move = function(e) {
-	if (this.isDragging)
+	this.mouse.x = e.pageX - this.offX;
+	this.mouse.y = e.pageY - this.offY;
+	
+	switch (this.moveState)
 	{
+	case 1: // Setting position
 		this.movePose.x -= (this.dragX - e.pageX) / this.pxPerM;
-		this.dragX = e.pageX;
 		this.movePose.y += (this.dragY - e.pageY) / this.pxPerM;
+		this.dragX = e.pageX;
 		this.dragY = e.pageY;
+		this.draw(true);
+		break;
+		
+	case 2: // Setting position covariance
+		if (this.isDragHandling)
+		{
+			this.movePose.cx = Math.abs(this.xo + this.movePose.x * this.pxPerM - this.mouse.x) / this.pxPerM * 2;
+			this.movePose.cy = Math.abs(this.yo - this.movePose.y * this.pxPerM - this.mouse.y) / this.pxPerM * 2;
+		}
 		
 		this.draw(true);
-	}
-	else if (this.isYawSetting)
-	{
+		this.drawCovBox();
+		break;
+
+	case 3: // Setting yaw
 		var x0 = this.xo + this.movePose.x * this.pxPerM,
-			y0 = this.yo - this.movePose.y * this.pxPerM,
-			x1 = e.pageX - this.offX,
-			y1 = e.pageY - this.offY;
+			y0 = this.yo - this.movePose.y * this.pxPerM;
 		
 		/* We want to robot rotation to follow the mouse. */
-		this.movePose.a = Math.atan2(x1 - x0, y1 - y0) - Math.PI / 2;
+		this.movePose.a = Math.atan2(x0 - this.mouse.x, y0 - this.mouse.y) + Math.PI / 2;
+		if (this.movePose.a < 0) this.movePose.a += Math.PI * 2;
 		
 		this.draw(true);
+		this.drawRotationSelector(x0, y0);
+		break;
+	
+	case 4: // Setting yaw covariance
+		if (this.isDragHandling)
+		{
+			this.movePose.ca = Math.abs(
+					(Math.atan2(
+						this.xo + this.movePose.x * this.pxPerM - this.mouse.x, 
+						this.yo - this.movePose.y * this.pxPerM - this.mouse.y) + Math.PI / 2 - this.movePose.a	) * 2);
+			if (this.movePose.ca > Math.PI) this.movePose.ca = Math.PI;
+		}
 		
-		this.ctx.save();
-		this.ctx.beginPath();
-		this.ctx.moveTo(x0, y0);
-		this.ctx.lineTo(x1, y1);
-		
-		this.ctx.strokeStyle = "#333333";
-		this.ctx.lineWidth = 2;
-		this.ctx.globalAlpha = 0.7;
-		this.ctx.shadowBlur = 10;
-		this.ctx.shadowColor = "#666666";
-		
-		this.ctx.stroke();
-		this.ctx.closePath();
-		this.ctx.restore();
+		this.draw(true);
+		this.drawCovCone();
+		break;
 	}
 };
 
 Nav.prototype.moveStop = function(e) {
+	this.mouse.down = false;
+	
 	var thiz = this;
 	
-	if (this.isDragging)
+	switch (this.moveState)
 	{
-		/* Drag complete, next is setting yaw. */
-		this.isDragging = false;
-		this.isYawSetting = true;
+	case 1: // Setting position complete
+		if (this.doCovSet)
+		{
+			this.draw(true);
+			this.drawCovBox();
+			this.moveState++;
+			this.updateStatus("setting position covariance");
+		}
+		else
+		{
+			/* Jumping over the covariance step. */
+			this.moveState += 2;
+			this.updateStatus("setting yaw");
+		}
+		break;
 		
-		$(this.canvas).bind("mouseup.yaw", function(evt) { thiz.moveStop(evt); });
+	case 2: // Setting position covariance complete or dragging size
+		if (!(this.isDragHandling || this.isInDragHandles()))
+		{
+			this.moveState++;
+			
+			var x0 = this.xo + this.movePose.x * this.pxPerM,
+				y0 = this.yo - this.movePose.y * this.pxPerM;
+
+			this.movePose.a = Math.atan2(x0 - this.mouse.x, y0 - this.mouse.y) + Math.PI / 2;
+			if (this.movePose.a < 0) this.movePose.a += Math.PI * 2;
+
+			this.draw(true);
+			this.drawRotationSelector(x0, y0);
+			this.updateStatus("setting yaw");
+		}
+		else 
+		{
+			/* Completed covariance box dragging. */
+			this.isDragHandling = false;
+		}
+		break;
+
+	case 3: // Setting yaw complete
+		if (this.doCovSet)
+		{
+			this.moveState++;
+			
+			this.draw(true);
+			this.drawCovCone();
+			this.updateStatus("setting yaw covariance");
+			break;
+		}
+		else
+		{
+			this.moveState += 2;
+			/* Falls through to next case. */
+			this.updateStatus("transmitting pose");
+		}
+		
+	case 4: // Setting yaw covariance complete
+		if (!(this.isDragHandling || this.isInDragHandles()))
+		{
+			$(this.canvas).unbind('mousemove');
+			$.post(
+				"/primitive/json/pc/" + IRobot.NAV_CONTROLLER + "/pa/setPose",
+				this.movePose,
+				function(resp) {
+					setTimeout(function() {
+						thiz.moveState = 0;
+						thiz.updateStatus("");
+					}, 500);
+				}
+			);
+			
+			this.moveState++;
+			this.updateStatus("transmitting pose");
+		}
+		else 
+		{
+			this.isDragHandling = false;
+		}
+		break;
+		
+	default:
+		break;
 	}
-	else if (this.isYawSetting)
-	{
-		/* Move and yaw set complete. */
-		this.isYawSetting = false;
-		$(this.canvas).unbind('mousemove mouseup.yaw');
-		
-		/* Move and yaw set complete, send pose. */
-		this.isSettingPose = true;
-		
-		$.post(
-			"/primitive/json/pc/" + IRobot.NAV_CONTROLLER + "/pa/setPose",
-			this.movePose,
-			function(resp) {
-				setTimeout(function() {
-					thiz.finishMove();
-				}, 500);
-			}
-		);
-	}
+
 };
 
-Nav.prototype.finishMove = function() {
-	this.isSettingPose = false;
+Nav.prototype.updateStatus = function(message) {
+	var $ns = $("#nav-status").empty();
+	
+	if (message != "")
+	{
+		$ns.append("(" + message + ")");
+	}
 };
 
 Nav.prototype.destroy = function() {
 	this.$w.remove();
 };
-
 
 /* ----------------------------------------------------------------------------
  * -- Log data list                                                          --
@@ -1841,9 +2188,19 @@ function OverheadCamera(pc)
 	
 	this.urls = {
 		MJPEG: "http://robotmonitor1.eng.uts.edu.au:7070/camera1.mjpg",
-		swf:   "http://robotmonitor1.eng.uts.edu.au:7070/camera1.swf",
+	//	swf:   "http://robotmonitor1.eng.uts.edu.au:7070/camera1.swf",
 		flv:   "http://robotmonitor1.eng.uts.edu.au:7070/camera1.flv"
 	};
 }
 OverheadCamera.prototype = new CameraWidget;
+
+
+
+/* ----------------------------------------------------------------------------
+ * -- Utility functions                                                      --
+ * ---------------------------------------------------------------------------- */
+function mathRound(num, places) 
+{
+	return Math.round(num * Math.pow(10, places)) / Math.pow(10, places);
+}
 
