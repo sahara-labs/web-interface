@@ -745,16 +745,16 @@ Ranger.prototype.mainLoop = function() {
 				return;
 			}
 				
-			var s = [], a = 0, i = '';
+			var s = [], a = 0, i = 0;
 			for (i in resp)
 			{
-				switch (i)
+				switch (resp[i].name)
 				{
 				case 'ranger':
 					s = eval(resp[i].value);
 					break;
 				case 'direction':
-					a= parseNumber(resp[i].value);
+					a= parseFloat(resp[i].value);
 					break;
 				}
 			}
@@ -776,6 +776,7 @@ Ranger.prototype.mainLoop = function() {
 };
 
 Ranger.prototype.drawFrame = function(scan, alpha) {
+	this.rotation = alpha;
 	
 	this.ctx.clearRect(0, 0, this.width, this.height);
 	
@@ -2180,7 +2181,14 @@ function OnboardCamera(pc)
 	
 	this.cameraBox = "obcamera";
 	
-	this,prop = "iRobot_Onboard_Camera";
+	this.prop = "iRobot_Onboard_Camera";
+
+	this.urls = {
+                MJPEG: "http://robotmonitor1.eng.uts.edu.au:7070/camera2.mjpg",
+                swf:   "http://robotmonitor1.eng.uts.edu.au:7070/camera2.swf",
+                flv:   "http://robotmonitor1.eng.uts.edu.au:7070/camera2.flv"
+        };
+
 }
 OnboardCamera.prototype = new CameraWidget;
 
@@ -2198,11 +2206,11 @@ function OverheadCamera(pc)
 	this.width = 640;
 	this.height = 480;
 	
-	this,prop = "iRobot_Overhead_Camera";
+	this.prop = "iRobot_Overhead_Camera";
 	
 	this.urls = {
 		MJPEG: "http://robotmonitor1.eng.uts.edu.au:7070/camera1.mjpg",
-	//	swf:   "http://robotmonitor1.eng.uts.edu.au:7070/camera1.swf",
+	swf:   "http://robotmonitor1.eng.uts.edu.au:7070/camera1.swf",
 		flv:   "http://robotmonitor1.eng.uts.edu.au:7070/camera1.flv"
 	};
 }
