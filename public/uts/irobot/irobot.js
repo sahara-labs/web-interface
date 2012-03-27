@@ -745,7 +745,21 @@ Ranger.prototype.mainLoop = function() {
 				return;
 			}
 				
-			thiz.drawFrame(eval(resp.value));
+			var s = [], a = 0, i = '';
+			for (i in resp)
+			{
+				switch (i)
+				{
+				case 'ranger':
+					s = eval(resp[i].value);
+					break;
+				case 'direction':
+					a= parseNumber(resp[i].value);
+					break;
+				}
+			}
+			
+			thiz.drawFrame(s, a);
 			
 			setTimeout(function() {
 				thiz.mainLoop();
@@ -761,7 +775,7 @@ Ranger.prototype.mainLoop = function() {
 	});
 };
 
-Ranger.prototype.drawFrame = function(scan) {
+Ranger.prototype.drawFrame = function(scan, alpha) {
 	
 	this.ctx.clearRect(0, 0, this.width, this.height);
 	
