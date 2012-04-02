@@ -44,6 +44,9 @@ class Sahara_AccessKey
     /** @var Zend_Db_Adapter_Abstract Sahara Database. */
     private $_db;
 
+    /** @var array Database tables. */
+    private $_dbTables;
+
     /** @var Zend_Config Configuration. */
     private $_config;
 
@@ -78,15 +81,24 @@ class Sahara_AccessKey
             );
         }
 
-        $tables = $this->_db->listTables();
-        if (in_array('user_class_key', $tables))
+        $this->_dbTables = $this->_db->listTables();
+        if (count($this->_dbTables) == 0)
+        {
+            $this->_logger->error("Failed to list tables, check database configuration.");
+            return array (
+                    'success' => false,
+                    'error'   => 'Database error (check configuration)e',
+            );
+        }
+
+        if (in_array('user_class_key', $this->_dbTables))
         {
             $resp = $this->_newKeyActivate($pkey);
 
             /* If the key redemption was not successful because it was not found,
              * the key may be from the fallback system. */
             if (($resp['success'] === false && $resp['error'] == 'Key not valid.') &&
-            in_array('user_association_redeem_keys', $tables))
+            in_array('user_association_redeem_keys', $this->_dbTables))
             {
                 $resp = $this->_legacyKeyActivate($pkey);
             }
@@ -109,6 +121,7 @@ class Sahara_AccessKey
                 ->join(array('uc' => 'user_class'), 'uck.user_class_id = uc.id', array('name'))
                 ->where('uck.redeem_key = ?', $pkey)
                 ->where('uck.remaining > 0')
+                ->where('uck.expiry IS NULL OR uck.expiry > NOW()')
                 ->where('uck.active = 1')
                 ->where('uc.active = 1'));
 
@@ -118,14 +131,19 @@ class Sahara_AccessKey
 
         $auth = Zend_Auth::getInstance();
         list($ns, $name) = explode(':', $auth->getIdentity(), 2);
+        if (!($ns && $name)) return array (
+                'success' => false,
+                'error'   => 'Key not valid');
 
         $sel = $this->_db->select()
                 ->from(array('u' => 'users'))
                 ->where('namespace = ?', $ns)
                 ->where('name = ?', $name);
 
-
-        $sel->join(array('s' => 'shib_users_map'), 'u.name = s.user_name', array('home_org', 'affliation'));
+        if (in_array('shib_users_map', $this->_dbTables))
+        {
+            $sel->join(array('s' => 'shib_users_map'), 'u.name = s.user_name', array('home_org', 'affliation'));
+        }
 
         $user = $this->_db->fetchRow($sel);
         if (!$user) return array(
