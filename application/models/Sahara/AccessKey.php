@@ -140,10 +140,10 @@ class Sahara_AccessKey
                 ->where('namespace = ?', $ns)
                 ->where('name = ?', $name);
 
-        if (in_array('shib_users_map', $this->_dbTables))
-        {
-            $sel->join(array('s' => 'shib_users_map'), 'u.name = s.user_name', array('home_org', 'affliation'));
-        }
+//         if (in_array('shib_users_map', $this->_dbTables))
+//         {
+//             $sel->join(array('s' => 'shib_users_map'), 'u.name = s.user_name', array('home_org', 'affliation'));
+//         }
 
         $user = $this->_db->fetchRow($sel);
         if (!$user) return array(
