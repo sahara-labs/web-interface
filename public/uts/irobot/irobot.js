@@ -108,6 +108,7 @@ IRobot.prototype.displayMode = function(mode) {
 		this.widgets.push(new Ranger(this));
 		this.widgets.push(new OnboardCamera(this));
 		this.widgets.push(new OverheadCamera(this));
+		this.widgets.push(new OverheadCameraControl(this));
 		break;
 		
 	case 2: // Logging mode
@@ -118,6 +119,7 @@ IRobot.prototype.displayMode = function(mode) {
 		this.widgets.push(new NavControl(this, nav, ds));
 		this.widgets.push(ds);
 		this.widgets.push(new OverheadCamera(this));
+		this.widgets.push(new OverheadCameraControl(this));
 		break;
 		
 	case 3: // Code upload mode
@@ -763,14 +765,14 @@ Ranger.prototype.mainLoop = function() {
 			
 			setTimeout(function() {
 				thiz.mainLoop();
-			}, 100);
+			}, 500);
 		},
 		error: function(xhr, status, err) {
 			thiz.control.log("Failed to obtain ranger scan, with status: " + status + ". Trying again in 1 second.",
 					IRobot.WARN);
 			setTimeout(function() {
 				thiz.mainLoop();
-			}, 1000);
+			}, 2000);
 		}
 	});
 };
@@ -1152,7 +1154,7 @@ NavControl.prototype.setLocalized = function(localized) {
 };
 
 /* ----------------------------------------------------------------------------
- * -- Navigation map and paths                                               --                       
+ v* -- Navigation map and paths                                               --                       
  * ---------------------------------------------------------------------------- */
 function Nav(pc)
 {
@@ -1216,7 +1218,7 @@ function Nav(pc)
 	this.dragY = 0;
 	
 	/* Drag handles. */
-	this.dragHandles = [ ];
+	this.dragHandles = new Array;
 	this.isDragHandling = false;
 }
 Nav.prototype = new IWidget;
@@ -1330,31 +1332,28 @@ Nav.prototype.drawSkeleton = function() {
 	this.ctx.lineTo(0, this.height);
 	this.ctx.lineTo(0, 0);
 	
-	this.ctx.moveTo(146, 0);
-	this.ctx.lineTo(146, 61);
+	this.ctx.moveTo(1.46 * this.pxPerM, 0);
+	this.ctx.lineTo(1.46 * this.pxPerM, 0.61 * this.pxPerM);
 	
-	this.ctx.moveTo(347, 0);
-	this.ctx.lineTo(347, 120);
+	this.ctx.moveTo(3.47 * this.pxPerM, 0);
+	this.ctx.lineTo(3.47 * this.pxPerM, 1.20 * this.pxPerM);
 	
-	this.ctx.moveTo(145, this.height);
-	this.ctx.lineTo(145, 232);
-	this.ctx.lineTo(246, 232);
-	this.ctx.lineTo(246, 182);
+	this.ctx.moveTo(1.45 * this.pxPerM, this.height);
+	this.ctx.lineTo(1.45 * this.pxPerM, 2.32 * this.pxPerM);
+	this.ctx.lineTo(2.46 * this.pxPerM, 2.32 * this.pxPerM);
+	this.ctx.lineTo(2.46 * this.pxPerM, 1.82 * this.pxPerM);
 	
-	this.ctx.moveTo(495, this.height);
-	this.ctx.lineTo(495, 182);
+	this.ctx.moveTo(4.95 * this.pxPerM, this.height);
+	this.ctx.lineTo(4.95 * this.pxPerM, 1.82 * this.pxPerM);
 	this.ctx.closePath();
 	
 	this.ctx.strokeStyle = "#AAAAAA";
 	this.ctx.shadowColor = "#606060";
 	this.ctx.shadowBlur = 1;
-	this.ctx.lineWidth = 2;
+	this.ctx.lineWidth = Math.ceil(2 * this.pxPerM / 100) + 0.1;
 	this.ctx.lineCap = "round";
 	this.ctx.stroke();
 	this.ctx.restore();
-	
-	/* Start marker. */
-	
 };
 
 Nav.prototype.drawStartPoseRobot = function() {
@@ -1380,7 +1379,6 @@ Nav.prototype.drawStartPoseRobot = function() {
 	this.ctx.globalAlpha = 0.5;
 	this.ctx.lineWidth = 2;
 	this.ctx.fillStyle = "#EEEEEE";
-
 
 	this.ctx.fill();
 	this.ctx.stroke();
@@ -2043,8 +2041,8 @@ CameraWidget.prototype = new IWidget;
 
 CameraWidget.prototype.init = function() {
 	this.pageAppend(
-			"<div id='" + this.cameraBox + "' class='camera-box'>" +
-				"<div class='camera-text'>Loading...</div>" +
+			"<div id='" + this.cameraBox + "' class='camera-box' style='width:640px;height:480px;' >" +
+		//		"<div class='camera-text'>Loading...</div>" +
 			"</div>"
 	);
 	
@@ -2071,9 +2069,9 @@ CameraWidget.prototype.init = function() {
 //	);
 	
 	// FIXME
-	if (this.urls.swf)
+	if (this.urls.flv)
 	{
-		this.deploySWF();
+		this.deployFLV();
 	}
 };
 
@@ -2148,7 +2146,8 @@ CameraWidget.prototype.freshenSWF = function() {
 };
 
 CameraWidget.prototype.deployFLV = function() {
-		var player = flowplayer(this.cameraBox, {
+	var player = flowplayer(this.cameraBox, 
+		{
 			src: "/swf/flowplayer.swf",
 			wmode: 'direct'
 		}, 
@@ -2186,7 +2185,7 @@ function OnboardCamera(pc)
 	this.urls = {
                 MJPEG: "http://robotmonitor1.eng.uts.edu.au:7070/camera2.mjpg",
                 swf:   "http://robotmonitor1.eng.uts.edu.au:7070/camera2.swf",
-                flv:   "http://robotmonitor1.eng.uts.edu.au:7070/camera2.flv"
+               // flv:   "http://robotmonitor1.eng.uts.edu.au:7070/camera2.flv"
         };
 
 }
@@ -2209,13 +2208,167 @@ function OverheadCamera(pc)
 	this.prop = "iRobot_Overhead_Camera";
 	
 	this.urls = {
-		MJPEG: "http://robotmonitor1.eng.uts.edu.au:7070/camera1.mjpg",
-	swf:   "http://robotmonitor1.eng.uts.edu.au:7070/camera1.swf",
-		flv:   "http://robotmonitor1.eng.uts.edu.au:7070/camera1.flv"
+//		MJPEG: "http://robotmonitor1.eng.uts.edu.au:7070/camera1.mjpg",
+//		swf:   "http://robotmonitor1.eng.uts.edu.au:7070/camera1.swf",
+//		flv:   "http://robotmonitor1.eng.uts.edu.au:7070/camera1.flv"
 	};
 }
 OverheadCamera.prototype = new CameraWidget;
 
+/* ----------------------------------------------------------------------------
+ * -- Over head camera control                                               --
+ * ---------------------------------------------------------------------------- */
+function OverheadCameraControl(pc)
+{
+	Nav.call(this, pc);
+	
+	this.wid = "ov-control-box";
+	this.title = "Camera Control";
+		
+	this.scale= this.width / 166;
+	this.width = Math.ceil(this.width / this.scale);
+	this.height = Math.ceil(this.height / this.scale);
+	this.pxPerM /= this.scale;
+	
+	this.pos  = { x: 0, y: 0 };
+	this.boxVert = 2.2;
+	
+	this.xo = this.width / 2;
+	this.yo = this.height / 2;
+	
+	this.isMoving = false;
+}
+OverheadCameraControl.prototype = new Nav;
+
+OverheadCameraControl.prototype.init = function() {
+	this.pageAppend(
+		"<div id='ov-control-buttons'>" +
+			"<div id='ov-control-man' class='ov-control-button'>Manual</div>" +  
+			"<div id='ov-control-auto' class='ov-control-button'>Auto</div>" +  
+			"<div style='clear:left;'></div>" +
+		"</div>" +
+		"<canvas id='ov-control-canvas' width='" + this.width + "' height='" + this.height + "'></canvas>"
+	);
+
+	this.canvas = $("#ov-control-canvas")[0];
+	if (this.canvas.getContext)
+	{
+		this.ctx = this.canvas.getContext("2d");
+		this.draw();
+		
+		var thiz = this,
+			$c = $(this.canvas)
+					.mousedown(function(evt) { thiz.moveStart(evt); })
+					.bind('mouseup mouseleave', function(evt) { thiz.moveStop(evt); });
+		
+		this.offX = $c.offset().left;
+		this.offY = $c.offset().top;
+	}
+	else
+	{
+		alert("Using this interface requires a modern browser.");
+	}
+};
+
+OverheadCameraControl.prototype.draw = function() {
+	this.ctx.clearRect(0, 0, this.width, this.height);
+	this.drawSkeleton();
+	this.drawCameraFOV();
+};
+
+OverheadCameraControl.prototype.drawCameraFOV = function() {
+	this.ctx.save();
+	
+	this.ctx.beginPath();
+	
+	this.ctx.rect(this.xo + (this.pos.x - this.boxVert / 2) * this.pxPerM, 
+				  this.yo + (this.pos.y - this.boxVert / 2) * this.pxPerM, 
+				  this.boxVert * this.pxPerM, this.boxVert * this.pxPerM);
+	
+	this.ctx.closePath();
+	
+	if (this.isMoving)
+	{
+		this.ctx.shadowBlur = 10;
+		this.ctx.shadowColor = "#666666";
+		this.ctx.globalAlpha = 0.7;
+	}
+	else
+	{
+		this.ctx.shadowBlur = 3;
+		this.ctx.shadowColor = "#AAAAAA";
+		this.ctx.globalAlpha = 0.5;
+	}
+	
+	this.ctx.strokeStyle = "#666666";
+	this.ctx.lineWidth = 1;
+	this.ctx.fillStyle = "#EA3D3D";
+
+	this.ctx.fill();
+	this.ctx.stroke();
+	
+	this.ctx.restore();
+};
+
+OverheadCameraControl.prototype.moveStart = function(e) {
+	if (this.isMoving) return;
+	
+	/* We need to make sure the mouse is clicking on the camera FOV. */
+	this.ctx.beginPath();
+	this.ctx.rect(this.xo + (this.pos.x - this.boxVert / 2) * this.pxPerM, 
+				  this.yo + (this.pos.y - this.boxVert / 2) * this.pxPerM, 
+				  this.boxVert * this.pxPerM, this.boxVert * this.pxPerM);
+	this.ctx.closePath();
+	if (!this.ctx.isPointInPath(e.pageX - this.offX, e.pageY - this.offY)) return;
+	
+	this.isMoving = true;
+	
+	var thiz = this;
+	$(this.canvas).bind("mousemove", function(evt) { thiz.move(evt); });
+	
+	this.dragX = e.pageX;
+	this.dragY = e.pageY;
+	this.draw();
+};
+
+OverheadCameraControl.prototype.move = function(e) {
+	if (!this.isMoving) return;
+	
+	this.pos.x += (e.pageX - this.dragX) / this.pxPerM;
+	this.pos.y += (e.pageY - this.dragY) / this.pxPerM;
+	this.dragX = e.pageX;
+	this.dragY = e.pageY;
+	
+	/* Constrain the FOV to the mase perimeter. */
+	if (this.pos.x - this.boxVert / 2 < -this.width / 2 / this.pxPerM)
+	{
+		this.pos.x = -this.width / 2 / this.pxPerM + this.boxVert / 2;
+	}
+	else if (this.pos.x + this.boxVert / 2 > this.width / 2 / this.pxPerM)
+	{
+		this.pos.x = this.width / 2 / this.pxPerM - this.boxVert / 2;
+	}
+	
+	if (this.pos.y - this.boxVert / 2 < -this.height / 2 / this.pxPerM)
+	{
+		this.pos.y = -this.height / 2 / this.pxPerM + this.boxVert / 2;
+	}
+	else if (this.pos.y + this.boxVert / 2 > this.height / 2 / this.pxPerM)
+	{
+		this.pos.y = this.height / 2 / this.pxPerM - this.boxVert / 2;
+	}
+	
+	this.draw();
+};
+
+OverheadCameraControl.prototype.moveStop = function(e) {
+	if (!this.isMoving) return;
+	
+	this.isMoving = false;
+	$(this.canvas).unbind("mousemove");
+	
+	this.draw();
+};
 
 
 /* ----------------------------------------------------------------------------
