@@ -175,13 +175,10 @@ IRobot.prototype.setSpeed = function(speed, yaw, cb) {
 			yaw: yaw
 		},
 		function(resp) {
-			if (typeof resp != "object")
+			if (typeof resp == "object" && cb)
 			{
-				this.log("Set speed response error: " + resp, IRobot.ERROR);
-				return;
+				cb.call(resp);
 			}
-
-			if (cb) cb.call(resp);
 		}
 	);
 };
@@ -540,7 +537,7 @@ Ranger.prototype.init = function() {
 	var html = "<canvas id='ranger' width='" + this.width + "' height='" + this.height + "'></canvas>",
 	    i = 0;
 	
-	/* Top zoom bar0 */
+	/* Top zoom bar. */
 	html += "<div id='zoom-bar' class='bar'>" +	
 				"<div id='zoom-post-l' class='zoom-post'></div>" +
 				"<div id='zoom-arr-left'></div>" +
@@ -606,61 +603,58 @@ Ranger.prototype.init = function() {
 		.bind('mouseup.ranger', function() { thiz.mouseDown = false; });
 	
 	/* Zoom bar increases the pixels per metre, zooming in. */
-	$("#zoom-bar-indicator").
-		draggable({
-			axis: 'x',
-			containment: 'parent',
-			handle: '.zoom-bar-ind',
-			drag: function(evt, ui) {
-				var left = ui.position.left;
-				if (left < 5) left = 5; // Don't allow the size to drop too far
-				
-				/* Change the indicator displays. */
-				$(this).parent()  // Containment
-					/* Post right */
-					.next().css("left", left + 149)
-					/* Arrow line. */
-					.next().css("width", left - 10)
-					/* Arrow right. */
-					.next().css("left", left + 139)
-					/* Label. */
-					.next().css({
-						"left": left / 2 + 150,
-						"top": -(left > 60 ? 10 : 20)
-					});
-				
-				/* The zoom is a function of pixel per metre. */
-				thiz.pxPerM = left;
-				thiz.drawScan();
-			}
-		})
-		.hover(function() {
-				$(this).children(".bar-ind").addClass("bar-ind-hover");
-			},
-			function() {
-				$(this).children(".bar-ind").removeClass("bar-ind-hover");
-			}
-		);
-	
+	$("#zoom-bar-indicator").draggable({
+		axis: 'x',
+		containment: 'parent',
+		handle: '.zoom-bar-ind',
+		drag: function(evt, ui) {
+			var left = ui.position.left;
+			if (left < 5) left = 5; // Don't allow the size to drop too far
+			
+			/* Change the indicator displays. */
+			$(this).parent()  // Containment
+				/* Post right */
+				.next().css("left", left + 149)
+				/* Arrow line. */
+				.next().css("width", left - 10)
+				/* Arrow right. */
+				.next().css("left", left + 139)
+				/* Label. */
+				.next().css({
+					"left": left / 2 + 150,
+					"top": -(left > 60 ? 10 : 20)
+				});
+			
+			/* The zoom is a function of pixel per metre. */
+			thiz.pxPerM = left;
+			thiz.drawScan();
+		}
+	}).hover(function() {
+			$(this).children(".bar-ind").addClass("bar-ind-hover");
+		},
+		function() {
+			$(this).children(".bar-ind").removeClass("bar-ind-hover");
+		}
+	);
+
 	/* Rotation bar changes the angle of the display with respect to the page. */
 	$("#rot-bar-indicator").draggable({
-			axis: 'y',
-			containment: 'parent',
-			handle: '.zoom-bar-ind',
-			drag: function(evt, ui) {
-				var height = ui.position.top;
-				
-				thiz.rotation = (height / 181 * 360 * Math.PI / 180) + Math.PI / 2;
-				thiz.drawFrame();
-			}
-		})
-		.hover(function() {
-				$(this).children(".bar-ind").addClass("bar-ind-hover");
-			},
-			function() {
-				$(this).children(".bar-ind").removeClass("bar-ind-hover");
-			}
-		);
+		axis: 'y',
+		containment: 'parent',
+		handle: '.zoom-bar-ind',
+		drag: function(evt, ui) {
+			var height = ui.position.top;
+			
+			thiz.rotation = (height / 181 * 360 * Math.PI / 180) + Math.PI / 2;
+			thiz.drawFrame();
+		}
+	}).hover(function() {
+			$(this).children(".bar-ind").addClass("bar-ind-hover");
+		},
+		function() {
+			$(this).children(".bar-ind").removeClass("bar-ind-hover");
+		}
+	);
 	
 	var canvas = $("#ranger")[0];
 	if (canvas.getContext)
@@ -683,13 +677,10 @@ Ranger.prototype.getConf = function() {
 		"/primitive/json/pc/" + IRobot.MANUAL_CONTROLLER + "/pa/rangerConf",
 		null,
 		function (resp) {
-			if (typeof resp != "object")
+			if (typeof resp == "object")
 			{
-				window.location.reload();
-				return;
+				thiz.parseConf(resp);
 			}
-				
-			thiz.parseConf(resp);
 		}
 	);
 };
@@ -778,7 +769,7 @@ Ranger.prototype.mainLoop = function() {
 };
 
 Ranger.prototype.drawFrame = function(scan, alpha) {
-	this.rotation = alpha;
+//	this.rotation = alpha;
 	
 	this.ctx.clearRect(0, 0, this.width, this.height);
 	
@@ -2042,7 +2033,7 @@ CameraWidget.prototype = new IWidget;
 CameraWidget.prototype.init = function() {
 	this.pageAppend(
 			"<div id='" + this.cameraBox + "' class='camera-box' style='width:640px;height:480px;' >" +
-		//		"<div class='camera-text'>Loading...</div>" +
+			//	"<div class='camera-text'>Loading...</div>" +
 			"</div>"
 	);
 	
@@ -2072,6 +2063,10 @@ CameraWidget.prototype.init = function() {
 	if (this.urls.flv)
 	{
 		this.deployFLV();
+	}
+	else if (this.urls.swf)
+	{
+		this.deploySWF();
 	}
 };
 
@@ -2185,7 +2180,7 @@ function OnboardCamera(pc)
 	this.urls = {
                 MJPEG: "http://robotmonitor1.eng.uts.edu.au:7070/camera2.mjpg",
                 swf:   "http://robotmonitor1.eng.uts.edu.au:7070/camera2.swf",
-               // flv:   "http://robotmonitor1.eng.uts.edu.au:7070/camera2.flv"
+                //flv:   "http://robotmonitor1.eng.uts.edu.au:7070/camera2.flv"
         };
 
 }
@@ -2210,7 +2205,7 @@ function OverheadCamera(pc)
 	this.urls = {
 //		MJPEG: "http://robotmonitor1.eng.uts.edu.au:7070/camera1.mjpg",
 //		swf:   "http://robotmonitor1.eng.uts.edu.au:7070/camera1.swf",
-//		flv:   "http://robotmonitor1.eng.uts.edu.au:7070/camera1.flv"
+		flv:   "http://robotmonitor1.eng.uts.edu.au:7070/camera1.flv"
 	};
 }
 OverheadCamera.prototype = new CameraWidget;
@@ -2242,11 +2237,11 @@ OverheadCameraControl.prototype = new Nav;
 
 OverheadCameraControl.prototype.init = function() {
 	this.pageAppend(
-		"<div id='ov-control-buttons'>" +
-			"<div id='ov-control-man' class='ov-control-button'>Manual</div>" +  
-			"<div id='ov-control-auto' class='ov-control-button'>Auto</div>" +  
-			"<div style='clear:left;'></div>" +
-		"</div>" +
+//		"<div id='ov-control-buttons'>" +
+//			"<div id='ov-control-man' class='ov-control-button'>Manual</div>" +  
+//			"<div id='ov-control-auto' class='ov-control-button'>Auto</div>" +  
+//			"<div style='clear:left;'></div>" +
+//		"</div>" +
 		"<canvas id='ov-control-canvas' width='" + this.width + "' height='" + this.height + "'></canvas>"
 	);
 
@@ -2368,6 +2363,14 @@ OverheadCameraControl.prototype.moveStop = function(e) {
 	$(this.canvas).unbind("mousemove");
 	
 	this.draw();
+	
+	$.get(
+		"/primitive/json/pc/OverheadCameraController/pa/setPosition",
+		{
+			x: this.pos.x,
+			y: -this.pos.y
+		}
+	);
 };
 
 
