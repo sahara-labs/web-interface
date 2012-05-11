@@ -794,7 +794,7 @@ Ranger.prototype.drawFrame = function(scan, alpha) {
 		/* If in global frame, adjust the position of the rotation
 		 * indicator otherwise ignored global frame. */
 		this.rotation = alpha;
-		$("#rot-bar-indicator").css("top", ((this.rotation - Math.PI / 2) * 181 / (2 * Math.PI)) + "px");
+		$("#rot-bar-indicator").css("top", Math.abs((this.rotation - Math.PI / 2) * 181 / (2 * Math.PI)) + "px");
 	}
 	
 	this.ctx.clearRect(0, 0, this.width, this.height);
