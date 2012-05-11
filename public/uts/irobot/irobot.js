@@ -521,6 +521,7 @@ function Ranger(pc)
 	this.yo = this.height / 2;
 	this.pxPerM = this.width / 12;
 	this.rotation = Math.PI / 2;
+	this.globalFrame = false;
 	
 	/* Translation. */
 	this.mouseDown = false;
@@ -536,6 +537,11 @@ Ranger.prototype.init = function() {
 	
 	var html = "<canvas id='ranger' width='" + this.width + "' height='" + this.height + "'></canvas>",
 	    i = 0;
+	
+	/* Global frame enable / disable. */
+	html += "<div id='global-frame-enable'>" +
+				"<span class='ui-icon ui-icon-refresh disabled'></span>" +
+			"</div>";
 	
 	/* Top zoom bar. */
 	html += "<div id='zoom-bar' class='bar'>" +	
@@ -641,11 +647,18 @@ Ranger.prototype.init = function() {
 	$("#rot-bar-indicator").draggable({
 		axis: 'y',
 		containment: 'parent',
-		handle: '.zoom-bar-ind',
+		handle: '.rot-bar-ind',
 		drag: function(evt, ui) {
 			var height = ui.position.top;
 			
-			thiz.rotation = (height / 181 * 360 * Math.PI / 180) + Math.PI / 2;
+			if (thiz.globalFrame)
+			{
+				/* Manually rotating ranger will drop global frame rotation. */
+				thiz.globalFrame = false;
+				$("#global-frame-enable span").addClass("disabled");
+			}
+			
+			thiz.rotation = (height / 181 * 2 * Math.PI) + Math.PI / 2;
 			thiz.drawFrame();
 		}
 	}).hover(function() {
@@ -655,6 +668,13 @@ Ranger.prototype.init = function() {
 			$(this).children(".bar-ind").removeClass("bar-ind-hover");
 		}
 	);
+	
+	/* Toggle ranger global frame. */	
+	$("#global-frame-enable").click(function () {
+		thiz.globalFrame = !thiz.globalFrame;
+		if (thiz.globalFrame) $(this).children("span").removeClass("disabled"); 
+		else $(this).children("span").addClass("disabled");
+	});
 	
 	var canvas = $("#ranger")[0];
 	if (canvas.getContext)
@@ -769,7 +789,13 @@ Ranger.prototype.mainLoop = function() {
 };
 
 Ranger.prototype.drawFrame = function(scan, alpha) {
-//	this.rotation = alpha;
+	if (this.globalFrame) 
+	{
+		/* If in global frame, adjust the position of the rotation
+		 * indicator otherwise ignored global frame. */
+		this.rotation = alpha;
+		$("#rot-bar-indicator").css("top", ((this.rotation - Math.PI / 2) * 181 / (2 * Math.PI)) + "px");
+	}
 	
 	this.ctx.clearRect(0, 0, this.width, this.height);
 	
@@ -2027,53 +2053,104 @@ function CameraWidget(pc)
 	this.urls = {};
 	this.width = 320,
 	this.height = 240;
+	
+	this.displayFormat = null;
 }
 CameraWidget.prototype = new IWidget;
 
 CameraWidget.prototype.init = function() {
 	this.pageAppend(
-			"<div id='" + this.cameraBox + "' class='camera-box' style='width:640px;height:480px;' >" +
-			//	"<div class='camera-text'>Loading...</div>" +
-			"</div>"
+			"<div id='" + this.cameraBox + "' class='camera-box'>" +
+			"</div>" +
+			"<div class='format-finger flash-finger'>F</div>" +
+			"<div class='format-finger mjpeg-finger'>J</div>"
 	);
 	
-//	$.get(
-//		"/session/attributebridge",
-//		{
-//			attribute: this.prop
-//		},
-//		function (resp) {
-//			if (typeof resp != "object")
-//			{
-//				window.location.reload();
-//				return;
-//			}
-//			
-//			var ps = resp.value.split(";"), i = 0, p;
-//			for (i in ps)
-//			{
-//				p = ps[i].indexOf(":");
-//				
-//				
-//			}
-//		}
-//	);
+	var thiz = this;
 	
-	// FIXME
-	if (this.urls.flv)
+	$.get(
+		"/session/attributebridge",
+		{
+			attribute: this.prop
+		},
+		function (resp) {
+			if (typeof resp != "object")
+			{
+				window.location.reload();
+				return;
+			}
+			
+			var pts = resp.value.split(","), i = 0, p;			
+			for (i in pts)
+			{
+				p = pts[i].indexOf("=");
+				thiz.urls[$.trim(pts[i].substring(0, p))] = $.trim(pts[i].substring(p + 1));
+			}
+			
+			thiz.deployDefault();
+		}
+	);
+	
+	this.$w.children(".format-finger").click(function() {		
+		var t = $(this).text();
+		if (t == 'F' && typeof thiz.urls.swf != "undefined")
+		{
+			document.cookie = thiz.wid + "=swf";
+			thiz.deploy("swf");
+		}
+		else if (t == 'J' && typeof thiz.urls.mjpeg != "undefined")
+		{
+			document.cookie = thiz.wid + "=mjpeg";
+			thiz.deploy("mjpeg");
+		}
+	});
+};
+
+CameraWidget.prototype.deployDefault = function() {
+	var format = this.getStoredFormat();
+	
+	if (format == "")
 	{
-		this.deployFLV();
+		/* Choose based on browser. */
+		format = /Mobile|mobi/i.test(navigator.userAgent) ? 'mjpeg' : 'swf';
 	}
-	else if (this.urls.swf)
+	
+	this.deploy(format);
+};
+
+CameraWidget.prototype.deploy = function(format) {
+	/* Remove the current format. */
+	this.$w.children(".camera-box").empty();
+	
+	this.$w.children(".selected").removeClass("selected");
+	switch (this.displayFormat = format)
 	{
+	case 'swf':
 		this.deploySWF();
+		this.$w.children(".flash-finger").addClass("selected");
+		break;
+		
+	case 'flv':
+		this.deployFLV();
+		this.$w.children(".flash-finger").addClass("selected");
+		break;
+		
+	case 'mjpeg':
+		this.deployMJpeg();
+		this.$w.children(".mjpeg-finger").addClass("selected");
+		break;
+		
+	default:
+		document.cookie = this.wid + "=;";
+		this.control.log("Unknown format '" + format + "', choosing default.", IRobot.ERROR);
+		break;
 	}
 };
 
 CameraWidget.prototype.deployMJpeg = function() {
 	if (!this.urls.mjpeg)
 	{
-		this.control.log("Unable to deploy MJPEG stream because it is no MJPEG URL is set.", IRobot.ERROR);
+		this.control.log("Unable to deploy MJPEG stream because no MJPEG URL is set.", IRobot.ERROR);
 		return;
 	}
 	
@@ -2092,14 +2169,21 @@ CameraWidget.prototype.deployMJpeg = function() {
 	else
 	{
 		$("#" + this.cameraBox).html(
-				"<div height:" + (vcameras[id].height + 20) + "px'>" +
-				"	<img src='" + this.urls.mjpeg + "?" + new Date().getTime() + "' alt='stream'/>" +
+				"<div height:" + (this.height + 20) + "px'>" +
+				"	<img src='" + this.urls.mjpeg + "?" + new Date().getTime() + "' alt=''/>" +
 				"</div>"
 		);
 	}
 };
 
 CameraWidget.prototype.deploySWF = function() {
+	if (!this.urls.swf)
+	{
+		this.control.log("Unable to deploy SWF stream because no SWF URL is set.", IRobot.ERROR);
+		return;
+	}
+	
+	
 	if ($.browser.msie)
 	{
 		$("#" + this.cameraBox).html(
@@ -2141,6 +2225,12 @@ CameraWidget.prototype.freshenSWF = function() {
 };
 
 CameraWidget.prototype.deployFLV = function() {
+	if (!this.urls.flv)
+	{
+		this.control.log("Unable to deploy FLV stream because no FLV URL is set.", IRobot.ERROR);
+		return;
+	}
+	
 	var player = flowplayer(this.cameraBox, 
 		{
 			src: "/swf/flowplayer.swf",
@@ -2163,6 +2253,19 @@ CameraWidget.prototype.deployFLV = function() {
 	player.load();
 };
 
+CameraWidget.prototype.getStoredFormat = function() {
+	var cookies = document.cookie.split('; ');
+	for (i in cookies)
+	{
+		var c = cookies[i].split('=', 2);
+		if (c[0] == this.wid)
+		{
+			return c[1];
+		}
+	}
+	return "";
+};
+
 /* ----------------------------------------------------------------------------
  * -- On board camera                                                        --
  * ---------------------------------------------------------------------------- */
@@ -2176,13 +2279,6 @@ function OnboardCamera(pc)
 	this.cameraBox = "obcamera";
 	
 	this.prop = "iRobot_Onboard_Camera";
-
-	this.urls = {
-                MJPEG: "http://robotmonitor1.eng.uts.edu.au:7070/camera2.mjpg",
-                swf:   "http://robotmonitor1.eng.uts.edu.au:7070/camera2.swf",
-                //flv:   "http://robotmonitor1.eng.uts.edu.au:7070/camera2.flv"
-        };
-
 }
 OnboardCamera.prototype = new CameraWidget;
 
@@ -2201,12 +2297,6 @@ function OverheadCamera(pc)
 	this.height = 480;
 	
 	this.prop = "iRobot_Overhead_Camera";
-	
-	this.urls = {
-//		MJPEG: "http://robotmonitor1.eng.uts.edu.au:7070/camera1.mjpg",
-//		swf:   "http://robotmonitor1.eng.uts.edu.au:7070/camera1.swf",
-		flv:   "http://robotmonitor1.eng.uts.edu.au:7070/camera1.flv"
-	};
 }
 OverheadCamera.prototype = new CameraWidget;
 
@@ -2237,11 +2327,11 @@ OverheadCameraControl.prototype = new Nav;
 
 OverheadCameraControl.prototype.init = function() {
 	this.pageAppend(
-//		"<div id='ov-control-buttons'>" +
-//			"<div id='ov-control-man' class='ov-control-button'>Manual</div>" +  
-//			"<div id='ov-control-auto' class='ov-control-button'>Auto</div>" +  
-//			"<div style='clear:left;'></div>" +
-//		"</div>" +
+		"<div id='ov-control-buttons'>" +
+			"<div id='ov-control-man' class='ov-control-button'>Manual</div>" +  
+			"<div id='ov-control-auto' class='ov-control-button'>Auto</div>" +  
+			"<div style='clear:left;'></div>" +
+		"</div>" +
 		"<canvas id='ov-control-canvas' width='" + this.width + "' height='" + this.height + "'></canvas>"
 	);
 
