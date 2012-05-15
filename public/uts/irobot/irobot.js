@@ -352,11 +352,11 @@ DPad.prototype.init = function() {
 	
 	var thiz = this;
 	this.$w.children(".dpad-finger")
-		.mousedown(function() {
+		.bind("mousedown touchstart", function() {
 			var id = $(this).attr("id");
 			thiz.fingerPress(id.substring(0, id.indexOf("-")), this);
 		})
-		.bind("mouseup mouseleave", function() {
+		.bind("mouseup touchend mouseleave touchleave", function() {
 			var id = $(this).attr("id");
 			thiz.fingerRelease(id.substring(0, id.indexOf("-")), this);
 		});
@@ -554,7 +554,6 @@ Ranger.prototype.init = function() {
 		html += 	"<span id='zoom-bar-ind" + i + "' class='zoom-bar-ind bar-ind' " +
 						" style='width:" + (i * 5/4) + "px'></span>";
 	}
-	
 				
 	html += 		"</div>" +
 				"</div>" + 
@@ -2055,6 +2054,8 @@ function CameraWidget(pc)
 	this.height = 240;
 	
 	this.displayFormat = null;
+	
+	this.lastHeartBeat = 0;
 }
 CameraWidget.prototype = new IWidget;
 
@@ -2154,6 +2155,9 @@ CameraWidget.prototype.deployMJpeg = function() {
 		return;
 	}
 	
+	/* Remove the current format. */
+	this.$w.children(".camera-box").empty();
+	
 	if ($.browser.msie)
 	{
 		/* Internet Explorer does not support MJPEG streaming so a Java applet 
@@ -2166,13 +2170,42 @@ CameraWidget.prototype.deployMJpeg = function() {
 				'</applet>'
 		);
 	}
+	else if ($.browser.mozilla)
+	{
+		var img = new Image(), thiz = this;
+		img.alt = " ";
+		img.style.height = this.height;
+		img.style.width = this.width;
+		img.onload = function() {
+			thiz.lastHeartBeat = new Date().getTime();
+		};
+		img.src = this.urls.mjpeg;
+		
+		$("#" + this.cameraBox).append(img);
+		
+		this.lastHeartBeat = new Date().getTime();
+		this.mozMJpegCOP();
+	}
 	else
 	{
-		$("#" + this.cameraBox).html(
-				"<div height:" + (this.height + 20) + "px'>" +
-				"	<img src='" + this.urls.mjpeg + "?" + new Date().getTime() + "' alt=''/>" +
-				"</div>"
+		$("#" + this.cameraBox).append(
+			"<img src='" + this.urls.mjpeg + "' alt='video' style='height:" + this.height + "px;width:" + this.width + "px;'/>"
 		);
+	}
+};
+
+CameraWidget.prototype.mozMJpegCOP = function() {
+	if (this.displayFormat == 'mjpeg' && new Date().getTime() - this.lastHeartBeat > 2000)
+	{
+		/* Need to redeploy. */
+		this.deployMJpeg();
+	}
+	else if (this.displayFormat == 'mjpeg')
+	{		
+		var thiz = this;
+		setTimeout(function() {
+			thiz.mozMJpegCOP();
+		}, 2000);
 	}
 };
 
@@ -2183,6 +2216,7 @@ CameraWidget.prototype.deploySWF = function() {
 		return;
 	}
 	
+	this.$w.children(".camera-box").empty();
 	
 	if ($.browser.msie)
 	{
@@ -2315,6 +2349,7 @@ function OverheadCameraControl(pc)
 	this.height = Math.ceil(this.height / this.scale);
 	this.pxPerM /= this.scale;
 	
+	this.mode = -1;
 	this.pos  = { x: 0, y: 0 };
 	this.boxVert = 2.2;
 	
@@ -2324,6 +2359,10 @@ function OverheadCameraControl(pc)
 	this.isMoving = false;
 }
 OverheadCameraControl.prototype = new Nav;
+
+OverheadCameraControl.UNKNOWN_MODE = 0;
+OverheadCameraControl.AUTO_MODE = 1;
+OverheadCameraControl.MAN_MODE = 2;
 
 OverheadCameraControl.prototype.init = function() {
 	this.pageAppend(
