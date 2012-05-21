@@ -83,6 +83,33 @@
 }
 
 /******************************************************************************
+ ** Warning message and overlay                                              **
+ ******************************************************************************/
+
+#warning-message {
+	width: 300px;
+	margin: 30px auto;
+}
+
+#t-overlay {
+	width: 150px;
+	margin: 60px auto 0;
+}
+
+#warning-message .ui-state-error, #t-overlay .ui-state-secondary {
+	padding: 10px;
+}
+
+#t-overlay .ui-state-secondary {
+	opacity: 0.7;
+}
+
+#warning-message .ui-icon, #t-overlay .ui-icon {
+	float: left;
+	margin-right: 5px;
+}
+
+/******************************************************************************
  ** D-Pad                                                                    **
  ******************************************************************************/
  

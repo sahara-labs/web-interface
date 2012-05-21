@@ -124,11 +124,13 @@ IRobot.prototype.displayMode = function(mode) {
 		
 	case 3: // Code upload mode
 		this.log("Code mode not implemented", IRobot.WARN);
+		this.widgets.push(new WarningMessage(this));
+		
 		break;
 		
 	case 4: // Mode transition mode.
 		this.log("Waiting for mode transition to complete.", IRobot.DEBUG);
-		// FIXME mode transition overlay
+		this.widgets.push(new TransitionOverlay(this));
 		break;
 
 	default:
@@ -140,6 +142,8 @@ IRobot.prototype.displayMode = function(mode) {
 	var i = 0;
 	for (i in this.widgets) this.widgets[i].init();
 	this.modeSelector.setSelected(mode);
+	
+	resizeFooter();
 };
 
 IRobot.prototype.changeMode = function(mode) {
@@ -306,18 +310,72 @@ ModeSelector.prototype.clearSelected = function() {
 	this.$w.children("a.active").removeClass("active");
 };
 
+/* ----------------------------------------------------------------------------
+ * -- Widget to provide a spinner when changing modes.                       --
+ * ---------------------------------------------------------------------------- */
+
 function TransitionOverlay(pc)
 {
 	IWidget.call(this, pc);
 	
 	this.wid = "t-overlay";
+	this.dots = 0;
+	
+	this.isDestroyed = false;
 }
 TransitionOverlay.prototype = new IWidget;
 
 TransitionOverlay.prototype.init = function() {
 	this.pageAppend(
-		"<img src='/uts/irobot/images/large_spinner.gif' alt='loading' />" +
-		"Loading..."
+		"<div class='ui-state-secondary ui-corner-all'>" +
+			"<span class='ui-icon ui-icon-clock'></span>" +
+			"Please wait <span id='load-dots'>. </span>" + 
+		"</div>"
+	);
+	
+	this.updateDots();
+};
+
+TransitionOverlay.prototype.updateDots = function() {
+	var thiz = this, i, dt = "";
+	
+	for (i = 0; i < this.dots; i++)
+	{
+		dt += ". ";
+	}
+	
+	$("#load-dots").empty().append(dt);
+	
+	if (this.dots == 3) this.dots = 0;
+	else this.dots++;
+
+	if (!this.isDestroyed) setTimeout(function() {
+		thiz.updateDots();
+	}, 750);
+};
+
+TransitionOverlay.prototype.destroy = function() {
+	this.isDestroyed = true;
+	this.$w.remove();
+};
+
+/* ----------------------------------------------------------------------------
+ * -- Widget that displays a warning message.                                --
+ * ---------------------------------------------------------------------------- */
+function WarningMessage(pc)
+{
+	IWidget.call(this, pc);
+	
+	this.wid = "warning-message";
+}
+WarningMessage.prototype = new IWidget;
+
+WarningMessage.prototype.init = function() {
+	this.pageAppend(
+		"<div class='ui-state-error ui-corner-all'>" +
+			"<span class='ui-icon ui-icon-alert'></span>" +
+			"Code upload is not yet implemented." +
+		"</div>"
 	);
 };
 
@@ -338,6 +396,10 @@ function DPad(pc)
 	
 	this.ping;
 	this.setTs = 0;
+	
+	this.loadAlpha = undefined;
+	this.loadBeta = undefined;
+	this.loadGamma = undefined;
 }
 DPad.prototype = new IWidget;
 
@@ -418,6 +480,47 @@ DPad.prototype.init = function() {
 			break;
 		}
 	});
+	
+	
+	/* For browsers that support device orientation. */
+//	window.addEventListener("deviceorientation", function(event) {
+//		if (!thiz.loadAlpha) thiz.loadAlpha = event.alpha;
+//		if (!thiz.loadBeta) thiz.loadBeta = event.beta;
+//		if (!thiz.loadGamma) thiz.loadGamma = event.gamma;
+//		
+//		/* Speed is a tilt forward or back. */
+//		if (event.beta > thiz.loadBeta + 15 && thiz.speed != -thiz.vel)
+//		{
+//			if (thiz.speed != 0) thiz.fingerRelease("south");
+//			thiz.fingerPress("north");
+//		}
+//		else if (event.beta < thiz.loadBeta - 15 && thiz.speed != thiz.vel)
+//		{
+//			if (thiz.speed != 0) thiz.fingerRelease("north");
+//			thiz.fingerPress("south");
+//		}
+//		else
+//		{
+//			if (thiz.speed != 0) thiz.fingerRelease(thiz.speed > 0 ? "north" : "south");
+//		}
+//		
+//		/* Rotations is turn. */
+//		if (event.alpha > thiz.loadAlpha + 15 && thiz.yaw != thiz.vel)
+//		{
+//			if (thiz.yaw != 0) thiz.fingerRelease("east");
+//			thiz.fingerPress("west");
+//		}
+//		else if (event.alpha  < thiz.loadAlpha - 15 && thiz.yaw != -thiz.vel)
+//		{
+//			if (thiz.yaw != 0) thiz.fingerRelease("west");
+//			thiz.fingerPress("east");
+//		}
+//		else
+//		{
+//			if (thiz.yaw != 0) thiz.fingerRelease(thiz.yaw> 0 ? "east" : "west");
+//		}
+//		
+//	}, true);
 };
 
 DPad.prototype.actionOccurred = function() {
@@ -2349,7 +2452,7 @@ function OverheadCameraControl(pc)
 	this.height = Math.ceil(this.height / this.scale);
 	this.pxPerM /= this.scale;
 	
-	this.mode = -1;
+	this.mode = OverheadCamera.UNKNOWN_MODE;
 	this.pos  = { x: 0, y: 0 };
 	this.boxVert = 2.2;
 	
@@ -2360,6 +2463,7 @@ function OverheadCameraControl(pc)
 }
 OverheadCameraControl.prototype = new Nav;
 
+OverheadCameraControl.CONTROLLER = "OverheadCameraController";
 OverheadCameraControl.UNKNOWN_MODE = 0;
 OverheadCameraControl.AUTO_MODE = 1;
 OverheadCameraControl.MAN_MODE = 2;
@@ -2391,6 +2495,96 @@ OverheadCameraControl.prototype.init = function() {
 	else
 	{
 		alert("Using this interface requires a modern browser.");
+	}
+	
+	var thiz = this;
+	$.get(
+		"/primitive/json/pc/" + OverheadCameraControl.CONTROLLER + "/pa/status",
+		null,
+		function(resp) {
+			thiz.parseStatus(resp);
+			/* Now we have determined the current mode, we can set up the event
+			 * handler for the mode switch buttons */
+			thiz.$w.find(".ov-control-button").click(function() {
+				thiz.setMode($(this).attr("id") == "ov-control-auto" ? 
+								OverheadCameraControl.AUTO_MODE : 
+								OverheadCameraControl.MAN_MODE);
+			});
+		}
+	);
+};
+
+OverheadCameraControl.prototype.setMode = function(mode) {
+	/* No need to do anything if we are already at the correct mode. */
+	if (this.mode == mode) return;
+	
+	$.post(
+		"/primitive/json/pc/" + OverheadCameraControl.CONTROLLER + "/pa/setMode",
+		{ mode: mode }
+	);
+	
+	this.displayMode(mode);
+};
+
+OverheadCameraControl.prototype.displayMode = function(mode) {
+	/* No need to do anything if we are already at the correct mode. */
+	if (this.mode == mode) return;
+	
+	this.$w.find(".active").removeClass("active");
+	switch (this.mode = mode)
+	{
+	case OverheadCameraControl.AUTO_MODE:
+		$("#ov-control-auto").addClass("active");
+		this.requestStatus();
+		break;
+		
+	case OverheadCameraControl.MAN_MODE:
+		$("#ov-control-man").addClass("active");
+		break;
+	}
+};
+
+OverheadCameraControl.prototype.requestStatus = function() {
+	var thiz = this;
+	$.ajax({
+		url: "/primitive/json/pc/" + OverheadCameraControl.CONTROLLER + "/pa/status",
+		success: function(resp) {
+			
+		},
+		error: function() { setTimeout(function() { thiz.requestStatus(); }, 20000); }
+	});
+};
+
+OverheadCameraControl.prototype.parseStatus = function(status) {
+	if (typeof status == "object") 
+	{
+		var i = 0;
+		for (i in status)
+		{
+			switch (status[i].name)
+			{
+			case 'mode':
+				this.displayMode(parseInt(status[i].value));
+				break;
+				
+			case 'x':
+				this.pos.x = -parseFloat(status[i].value);
+				break;
+				
+			case 'y':
+				this.pos.y = -parseFloat(status[i].value);
+				break;
+			}
+		}
+		this.draw();
+	}
+	
+	if (this.mode == OverheadCameraControl.AUTO_MODE)
+	{
+		var thiz = this;
+		setTimeout(function() {
+			thiz.requestStatus();
+		}, 5000);
 	}
 };
 
@@ -2436,6 +2630,13 @@ OverheadCameraControl.prototype.drawCameraFOV = function() {
 
 OverheadCameraControl.prototype.moveStart = function(e) {
 	if (this.isMoving) return;
+	
+	if (this.mode == OverheadCameraControl.AUTO_MODE)
+	{
+		/* If we are in auto mode and there has been an explicit move, than 
+		 * the mode is automatically changed to manual. */
+		this.setMode(OverheadCameraControl.MAN_MODE);
+	}
 	
 	/* We need to make sure the mouse is clicking on the camera FOV. */
 	this.ctx.beginPath();
@@ -2494,7 +2695,7 @@ OverheadCameraControl.prototype.moveStop = function(e) {
 	this.draw();
 	
 	$.get(
-		"/primitive/json/pc/OverheadCameraController/pa/setPosition",
+		"/primitive/json/pc/" + OverheadCameraControl.CONTROLLER + "/pa/setPosition",
 		{
 			x: this.pos.x,
 			y: -this.pos.y
