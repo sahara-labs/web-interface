@@ -1136,8 +1136,10 @@ NavControl.prototype.clicked = function() {
 		"/primitive/json/pc/" + IRobot.NAV_CONTROLLER + "/pa/" + (this.isRunning ? "stop" : "start"),
 		null,
 		function(resp) {
-			thiz.setRunning(typeof resp == "object" && resp.value == "true");
-			thiz.settingStatus = false;
+			setTimeout(function() {
+				thiz.setRunning(typeof resp == "object" && resp.value == "true");
+				thiz.settingStatus = false;
+			}, 2000);
 		}
 	);
 };
