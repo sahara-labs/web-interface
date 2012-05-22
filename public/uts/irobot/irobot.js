@@ -2551,7 +2551,7 @@ OverheadCameraControl.prototype.requestStatus = function() {
 	$.ajax({
 		url: "/primitive/json/pc/" + OverheadCameraControl.CONTROLLER + "/pa/status",
 		success: function(resp) {
-			
+			thiz.parseStatus(resp);
 		},
 		error: function() { setTimeout(function() { thiz.requestStatus(); }, 20000); }
 	});
