@@ -430,11 +430,11 @@
 	position: relative;
 }
 
-#hydrocamerastream div {
+/* #hydrocamerastream div {
 	position: absolute;
 	left: 127px;
 	top: 117px;
-}
+} */
 
 #hydrocamerabuttons {
 	position: absolute;
@@ -521,8 +521,8 @@
 #photo-open {
 	display: block;
 	position: absolute;
-	top: 93px;
-	left: -185px;
+	top: -40px;
+	left: 374px;
 	width: 60px;
 	height: 16px;
 	padding-top: 7px;
@@ -560,49 +560,72 @@
     height: 38px;
 }
 
-#pressuregrad {
+#hydrocamerastream #pressuregrad {
 	position: absolute;
-	left: 120px;
-	top: 130px;
+	left: 82px;
+	top: 120px;
 	z-index: 50;
+	width: 150px;
+	height: 115px;
+}
+
+#pressuregrad .gaugegradlabel {
+	font-weight: bold;
+	font-size: 12pt;
+	text-shadow: 2px 2px 5px #CCCCCC;
+	padding: 4px;
+	background-color: #DDDDDD;
+	border-radius: 4px;
+	box-shadow: 0 0 4px #444444;
+	border: 1px solid #444444;
 }
 
 #pressuregrad .gaugegradmin {
-	left: 20px;
-	bottom: 31px;
+	left: 42px;
+	bottom: 52px;
 }
 
 #pressuregrad .gaugegradlabelmin {
-	left: 10px;
-	bottom: 40px;
+	left: 3px;
+	bottom: 2px;
 }
 
 #pressuregrad .gaugegradmax {
-	right: 20px;
-	bottom: 31px;
+	right: 35px;
+	bottom: 52px;
 }
 
 #pressuregrad .gaugegradlabelmax {
-	right: 10px;
-	bottom: 40px;
+	right: -14px;
+	bottom: 2px;
 }
   
 #pressuregrad .gaugegradmid {
-	left: 71px;
-	top: 55px;
+	left: 79px;
+	top: 25px;
 }
 
 #pressuregrad .gaugegradlabelmid {
-	left: 62px;
-	top: 33px;
+	left: 52px;
+	top: -16px;
 }
 	
-#pressuregrad .gaugegradne {
-	left: 35px;
-	top: 72px;
+#pressuregrad .gaugegradse {
+	left: 92px;
+	top: 70px;
 }
 
 #pressuregrad .gaugegradnw {
-	right: 41px;
+	left: 93px;
+	top: 33px;
+}
+
+#pressuregrad .gaugegradsw {
+	right: 85px;
 	top: 70px;
+}
+
+#pressuregrad .gaugegradne {
+	left: 55px;
+	top: 30px;
 }

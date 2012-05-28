@@ -734,16 +734,18 @@ CameraWidget.prototype.move = function(pos) {
 	if (pos == "Pressure Gauge")
 	{
 		/* Add guage dials. */
-		$("#hydrocamerastream").empty().append(
+		$("#hydrocamerastream").append(
 			"<div id='pressuregrad'>" +
 				"<div class='gaugegrad gaugegradmin'><img src='/uts/hydro/images/gradh.png' alt='k' /></div>" +
-				"<div class='gaugegrad gaugegradne'><img src='/uts/hydro/images/gradne.png' alt='k' /></div>" +
 				"<div class='gaugegrad gaugegradmid'><img src='/uts/hydro/images/gradv.png' alt='k' /></div>" +
-				"<div class='gaugegrad gaugegradnw'><img src='/uts/hydro/images/gradnw.png' alt='k' /></div>" +
 				"<div class='gaugegrad gaugegradmax'><img src='/uts/hydro/images/gradh.png' alt='k' /></div>" +
-				"<div class='gaugegradlabel gaugegradlabelmin'>0</div>" +
-				"<div class='gaugegradlabel gaugegradlabelmid'>1/div>" +
-				"<div class='gaugegradlabel gaugegradlabelmax'>3</div>" +
+				"<div class='gaugegrad gaugegradnw'><img src='/uts/hydro/images/gradnw.png' alt='k' /></div>" +
+				"<div class='gaugegrad gaugegradsw'><img src='/uts/hydro/images/gradnw.png' alt='k' /></div>" +
+				"<div class='gaugegrad gaugegradne'><img src='/uts/hydro/images/gradne.png' alt='k' /></div>" +
+				"<div class='gaugegrad gaugegradse'><img src='/uts/hydro/images/gradne.png' alt='k' /></div>" +
+				"<div class='gaugegradlabel gaugegradlabelmin'>0&nbsp;kPa</div>" +
+				"<div class='gaugegradlabel gaugegradlabelmid'>30&nbsp;kPa</div>" +
+				"<div class='gaugegradlabel gaugegradlabelmax'>60&nbsp;kPa</div>" +
 			"</div>"
 		);
 	}
@@ -791,6 +793,7 @@ PhotosWidget.prototype.init = function() {
 	var thiz = this;
 	$("#photo-open").click(function() { thiz.show(); });
 };
+PhotosWidget.prototype.repaint = function() { };
 PhotosWidget.prototype.show = function() {
 	var ph, thiz = this, i = 0, html = 
 		"<div id='photos-dialog'>" + 
