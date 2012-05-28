@@ -36,17 +36,8 @@ Hydro.prototype.ready = false;
 
 Hydro.prototype.init = function() {
 	
-	/* Restore state if stored. */
-	var stateMode = window.location.hash;
-	if (stateMode && stateMode.indexOf("exp") == 1)
-	{
-		this.displayMode(stateMode.substr(4));
-	}
-	else
-	{
-		this.displayMode(0);
-	}
-	
+	/* We only want to show one mode now. */
+	this.displayMode(0);
 	if (this.debug)
 	{
 		$('#hydrodebugpanel').show();
@@ -82,8 +73,9 @@ Hydro.prototype.changeExperiment = function() {
 					$(this).dialog("close").remove();
 				}
 				
-				var func, diag = $('div[aria-labelledby="ui-dialog-title-changeexperiment"]')
+				var func = '', diag = $('div[aria-labelledby="ui-dialog-title-changeexperiment"]')
 					.css("width", 150);
+				
 				diag.css("left", parseInt(diag.css("left")) + 125);
 				diag.children(".ui-dialog-titlebar").hide();
 				diag.children(".ui-dialog-buttonpane").hide();
@@ -94,11 +86,9 @@ Hydro.prototype.changeExperiment = function() {
 						"</div>"
 				);
 				
-				
 				thiz.setPressure(0);
 				thiz.setLoad(0);
 
-				var func;
 				setTimeout(func = function() {
 					if (thiz.pump == 0 && thiz.flowrate < 0.1)
 					{
@@ -117,24 +107,17 @@ Hydro.prototype.changeExperiment = function() {
 };
 
 Hydro.prototype.displayMode = function(modenum) {
-	var i;
+	var i = 0;
 	
 	this.mode = modenum;
-	
-	/* Set hash location for state persistance. */
-	window.location.hash = "exp" + modenum;
-	
+
 	/* Clear the existing display. */
 	while (this.widgets.length > 0) this.widgets.pop().destroy();
 	
-	if (modenum != 0)
-	{
-		/* Most views have the camera. */
-		this.widgets.push(new CameraWidget(this));
-		
-		$(".hydrobutton").show();
-	}
-	
+	this.widgets.push(new CameraWidget(this));
+	this.widgets.push(new PhotosWidget(this));
+
+	/* Mode switching is now legacy. */
 	switch (parseInt(modenum))
 	{
 	case 1: // -- The Basics 1 -----------------------------
@@ -211,9 +194,15 @@ Hydro.prototype.displayMode = function(modenum) {
 		break;
 	case 0: // -- Mode selector ---------------------------
 	default:
-		$(".hydrobutton").hide();
-		this.widgets.pop();
-		this.widgets.push(new SelectorWidget(this));
+		/* Instead of a mode selector we are only going to have the one view 
+		 * which is all gauges and displays. */
+		this.widgets.push(new ScaledPressureSliderWidget(this),
+				          new LoadSetterWidget(this),
+				          new RpmMeterWidget(this),
+				          new FlowGaugeWidget(this),
+				          new VoltageGaugeWidget(this),
+				          new CurrentGaugeWidget(this),
+				          new PowerGaugeWidget(this));
 		break;
 	}
 	
@@ -221,7 +210,7 @@ Hydro.prototype.displayMode = function(modenum) {
 };
 
 Hydro.prototype.repaint = function() {
-	var i;
+	var i = 0;
 	for (i in this.widgets) this.widgets[i].repaint();
 	
 	if (this.debug) this.updateDebug();
@@ -239,7 +228,7 @@ Hydro.prototype.paramsInit= function() {
 	$.get('/primitive/json/pc/' + this.PCONTROLLER + '/pa/getParams',
 		null,
 		function(response) {
-			var i;
+			var i = 0;
 			for (i in response)
 			{
 				switch (response[i].name)
@@ -263,7 +252,7 @@ Hydro.prototype.valuesRequest = function() {
 };
 
 Hydro.prototype.valuesReceived = function(values) {
-	var thiz = this, i, n;
+	var thiz = this;
 	if (typeof values != "object")
 	{
 		/* Error occurred. */
@@ -292,21 +281,27 @@ Hydro.prototype.values = function(values) {
 		case "power":
 			this.power = round(parseFloat(values[i].value, 10), 2);
 			break;
+			
 		case "voltage":
 			this.voltage = round(parseFloat(values[i].value, 10), 2);
 			break;
+			
 		case "current":
 			this.current = round(parseFloat(values[i].value, 10), 2);
 			break;
+			
 		case "torque":
 			this.torque = round(parseFloat(values[i].value, 10), 2);
 			break;
+			
 		case "rpm":
 			this.rpm = round(parseFloat(values[i].value, 10), 2);
 			break;
+			
 		case "pressure":
 			this.pressure = round(parseFloat(values[i].value, 10), 2);
 			break;
+			
 		case "rate":
 			this.flowrate = round(parseFloat(values[i].value, 10), 2);
 			break;
@@ -385,36 +380,10 @@ Hydro.prototype.getMode = function() {
  * ============================================================================ */
 Hydro.prototype.addOverlay = function(message) {
 	this.isOverlayDeployed = true;
-	
-//	$('body').append(
-//		'<div id="hydrooverlaycontainer">' +
-//			'<div id="hydrooverlay"> </div>' +
-//			'<div id="hydrooverlaywarning">' +
-//				'<img src="/images/ajax-loading.gif" alt=" " /><br />' +
-//				(message ? message : 'Please wait...') +
-//			'</div>' +
-//		'</div>'
-//	);
-//	
-//	var body = $("body"),
-//	    height = body.height(),
-//	    width = body.width();
-//	
-//	$("#hydrooverlay").css({
-//		width: width,
-//		height: height
-//	});
-//	
-//	$("#hydrooverlaywarning").css({
-//		top: height / 2 - 125,
-//		left: width / 2 - 75
-//	});
 };
 
 Hydro.prototype.clearOverlay = function() {
 	this.isOverlayDeployed = false;
-//	$('#hydrooverlaycontainer').remove();
-//	this.repaint();
 };
 
 Hydro.prototype.raiseError = function(error, level) {
@@ -579,6 +548,7 @@ function CameraWidget(hydroinst)
 	this.positions = [];
 	
 	this.deployed = '';
+	this.currentPosition = '';
 }
 CameraWidget.prototype = new HydroWidget;
 CameraWidget.prototype.init = function() {
@@ -624,9 +594,8 @@ CameraWidget.prototype.init = function() {
 		null, 
 		function(response) {
 			thiz.draw(response);
+			thiz.move("House");
 	});
-	
-	
 };
 CameraWidget.prototype.draw = function(resp) {
 	if (typeof resp != "object") 
@@ -635,7 +604,7 @@ CameraWidget.prototype.draw = function(resp) {
 		return;
 	}
 	
-	var i, html, thiz = this;
+	var i = 0, html, thiz = this;
 	
 	for (i in resp)
 	{
@@ -757,7 +726,31 @@ CameraWidget.prototype.deployVideo = function() {
 			"</object>");
 };
 CameraWidget.prototype.move = function(pos) {
+	if (pos == this.currentPosition) return;
+	
+	this.currentPosition = pos;
 	$.get('/primitive/json/pc/CameraController/pa/move/position/' + pos);
+	
+	if (pos == "Pressure Gauge")
+	{
+		/* Add guage dials. */
+		$("#hydrocamerastream").empty().append(
+			"<div id='pressuregrad'>" +
+				"<div class='gaugegrad gaugegradmin'><img src='/uts/hydro/images/gradh.png' alt='k' /></div>" +
+				"<div class='gaugegrad gaugegradne'><img src='/uts/hydro/images/gradne.png' alt='k' /></div>" +
+				"<div class='gaugegrad gaugegradmid'><img src='/uts/hydro/images/gradv.png' alt='k' /></div>" +
+				"<div class='gaugegrad gaugegradnw'><img src='/uts/hydro/images/gradnw.png' alt='k' /></div>" +
+				"<div class='gaugegrad gaugegradmax'><img src='/uts/hydro/images/gradh.png' alt='k' /></div>" +
+				"<div class='gaugegradlabel gaugegradlabelmin'>0</div>" +
+				"<div class='gaugegradlabel gaugegradlabelmid'>1/div>" +
+				"<div class='gaugegradlabel gaugegradlabelmax'>3</div>" +
+			"</div>"
+		);
+	}
+	else
+	{
+		$("#pressuregrad").remove();
+	}
 };
 CameraWidget.prototype.resize = function(width, height) {
 	this.width = width;
@@ -773,6 +766,82 @@ CameraWidget.prototype.resize = function(width, height) {
 		break;
 	}
 };
+
+/* == Photos widget. ========================================================== */
+function PhotosWidget(hydroinst) 
+{
+	HydroWidget.call(this, hydroinst);
+	
+	this.photos = [];
+}
+PhotosWidget.prototype = new PhotosWidget;
+PhotosWidget.prototype.init = function() {
+	this.canvas.append(
+		"<div id='photo-open' class='hydrobutton ui-corner-all'>" +
+			"<span class='ui-icon ui-icon-image'></span>" +
+			"Photos" +
+		"</div>"
+	);
+	
+	this.addPhoto("frontview.jpg", "Front", 640, 445);
+	this.addPhoto("perspective.jpg", "Side", 640, 522);
+	this.addPhoto("pressuregauge.jpg", "Close up", 640, 424);
+	this.addPhoto("pelton.jpg", "Pelton", 640, 424);
+	
+	var thiz = this;
+	$("#photo-open").click(function() { thiz.show(); });
+};
+PhotosWidget.prototype.show = function() {
+	var ph, thiz = this, i = 0, html = 
+		"<div id='photos-dialog'>" + 
+			"<div id='photo-displayed'> </div>" +
+			"<div id='photo-bar' style='width:" + 80 * (this.photos.length) + "px'>";
+	
+	for (i in this.photos)
+	{
+		ph = this.photos[i];
+		html += "<div id='photo-" + i + "' class='photo-option'>" +
+					"<img src='" + ph.path + "' alt='" + ph.name + "' />" +
+				"</div>";
+	}
+	
+	html += "</div>";
+	
+	$("body").append(html).find(".photo-option").click(function() {
+		thiz.displayPhoto(parseInt($(this).attr("id").substring($(this).attr("id").indexOf("-") + 1)));
+	});
+	this.displayPhoto(0);
+	
+	$("#photos-dialog").dialog({
+		autoOpen: true,
+		closeOnEscape: true,
+		modal: true,
+		resizable: false,
+		width: 700,
+		title: "Hydroelectric Rig",
+		close: function() { $(this).dialog("destroy").remove(); },
+	});
+};
+PhotosWidget.prototype.addPhoto = function(file, name, width, height) {
+	this.photos.push({
+		path: "/uts/hydro/images/photos/" + file,
+		name: name,
+		width: width,
+		height: height
+	});
+};
+PhotosWidget.prototype.displayPhoto = function(i) {
+	var ph = this.photos[i];
+	
+	$("#photo-displayed")
+		.empty()
+		.append("<img src='" + ph.path + "' alt='" + ph.name + "' />")
+		.css({
+			width:  ph.width,
+			height: ph.height
+		});
+};
+
 
 /* == Slider sets pump pressure using a slider. =============================== */
 function SliderWidget(hydroinst)
@@ -1212,7 +1281,7 @@ GaugeWidget.prototype.rotate = function(deg) {
 						"SizingMethod='auto expand'" +
 					   ")");
 		
-		var i, j,
+		var i = 0, j = 0,
 		    m = [
 		         [a, c, 0],
 		         [b, d, 0],

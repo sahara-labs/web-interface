@@ -5,7 +5,7 @@
 }
 
 .hydrobutton {
-	display: block;
+	display: none;
 	position: absolute;
 	height: 75px;
 	width: 75px;
@@ -171,7 +171,7 @@
 
 #slidercont {
 	position: absolute;
-	top: 46px;
+	top: 10px;
 	left: -2px;
 	width: 105px;
 }
@@ -213,7 +213,7 @@
 #loadsetterpanel {
 	position: absolute;
 	width: 105px;
-	top: 435px;
+	top: 403px;
 	left: -2px;
 	height: 85px;
 }
@@ -251,7 +251,7 @@
 
 #gaugecontainer {
 	position: absolute;
-	top: 46px;
+	top: 10px;
 	right: 0;
     width: 150px;
 }
@@ -344,7 +344,7 @@
 
 #rpmmeter {
 	position: absolute;
-	top: 46px;
+	top: 10px;
 	left: 438px;
 	height: 381px;
 }
@@ -420,13 +420,14 @@
 #hydrocamera {
 	position:absolute;
 	left: 111px;
-	top: 46px;
+	top: 10px;
 	height: 381px;
 	background-color: #000000;
 }
 
 #hydrocamerastream {
 	background-color: #000;
+	position: relative;
 }
 
 #hydrocamerastream div {
@@ -515,4 +516,93 @@
 .cameraresized .hydropaneltitle {
 	box-shadow: 0 2px 8px #404040;
 	border: 2px solid #404040;
+}
+
+#photo-open {
+	display: block;
+	position: absolute;
+	top: 93px;
+	left: -185px;
+	width: 60px;
+	height: 16px;
+	padding-top: 7px;
+}
+
+#photo-open .ui-icon {
+	float: left;
+	margin: -2px 5px 0 0;
+}
+
+#photo-displayed {
+	margin: 0 auto;
+	box-shadow: 0 0 4px #A0A0A0;
+}
+
+#photo-bar {
+	margin: 0 auto;
+}
+
+#photo-bar .photo-option {
+	width: 60px;
+	height: 38px;
+    float: left;
+    margin: 10px;
+    box-shadow: 0 0 10px #A0A0A0;
+    cursor: pointer;
+}
+
+#photo-bar .photo-option:hover {
+	box-shadow: 0 0 10px #606060;
+}
+
+#photo-bar .photo-option img {
+	width: 60px;
+    height: 38px;
+}
+
+#pressuregrad {
+	position: absolute;
+	left: 120px;
+	top: 130px;
+	z-index: 50;
+}
+
+#pressuregrad .gaugegradmin {
+	left: 20px;
+	bottom: 31px;
+}
+
+#pressuregrad .gaugegradlabelmin {
+	left: 10px;
+	bottom: 40px;
+}
+
+#pressuregrad .gaugegradmax {
+	right: 20px;
+	bottom: 31px;
+}
+
+#pressuregrad .gaugegradlabelmax {
+	right: 10px;
+	bottom: 40px;
+}
+  
+#pressuregrad .gaugegradmid {
+	left: 71px;
+	top: 55px;
+}
+
+#pressuregrad .gaugegradlabelmid {
+	left: 62px;
+	top: 33px;
+}
+	
+#pressuregrad .gaugegradne {
+	left: 35px;
+	top: 72px;
+}
+
+#pressuregrad .gaugegradnw {
+	right: 41px;
+	top: 70px;
 }

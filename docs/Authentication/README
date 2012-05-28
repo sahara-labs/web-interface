@@ -50,7 +50,7 @@ the system account is generated. To implement it:
      * auth.useSahara = true ; This enable the Sahara_Auth system with which
                              ; LDAP Authentication is a type.
      * auth.useLocalAuth = true ; Enable local authentication.
-     * auth.type[] = LDAP ; Enable LDAP authentication (note multiple
+     * auth.type[] = Ldap ; Enable LDAP authentication (note multiple
                               ; of these can be set for multiple authentication
                               ; types.
      * ldap.params.host = <host name> ; The address of the LDAP server.
@@ -59,7 +59,7 @@ the system account is generated. To implement it:
      * ldap.params.baseDn = <String> ; Base distingused name of users tree
      * auth.ldap.<attribute> = <value> ; Required attributes and values of login
                               ; users.
-     * auth.session[] = "SaharaAccount{LDAP} ; Generates user accounts
+     * auth.session[] = "SaharaAccount{Ldap} ; Generates user accounts
                               ; on first sign in of a user.                                             
   
   4. Test authentication.
