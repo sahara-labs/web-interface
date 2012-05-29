@@ -259,7 +259,7 @@ Hydro.prototype.valuesReceived = function(values) {
 		this.raiseError("Values response errored");
 		setTimeout(function(){
 			thiz.valuesRequest();
-		}, 10000);
+		}, 5000);
 		return;
 	}
 
@@ -270,7 +270,7 @@ Hydro.prototype.valuesReceived = function(values) {
 	
 	setTimeout(function(){
 		thiz.valuesRequest();
-	}, 1500);
+	}, 500);
 };
 
 Hydro.prototype.values = function(values) {
