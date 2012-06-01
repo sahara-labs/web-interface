@@ -241,7 +241,7 @@ IWidget.prototype.init = function() {
  * event handlers. 
  */
 IWidget.prototype.destroy = function () {
-	this.$w.remove();
+	if (this.$w) this.$w.remove();
 };
 
 /**
@@ -1488,7 +1488,7 @@ Nav.prototype.drawStartPoseRobot = function() {
 	this.ctx.save();
 	this.ctx.beginPath();
 	
-	this.ctx.arc(x, y, this.r, 0, Math.PI * 2);
+	this.ctx.arc(x, y, this.r, 0, Math.PI * 2, true);
 	this.ctx.moveTo(x, y);
 	this.ctx.lineTo(x + this.r * Math.sin(a + Math.PI / 6), y + this.r * Math.cos(a + Math.PI / 6));
 	this.ctx.moveTo(x, y);
@@ -1522,7 +1522,7 @@ Nav.prototype.drawRobot = function(moving) {
 	this.ctx.save();
 	this.ctx.beginPath();
 	
-	this.ctx.arc(x, y, this.r, 0, Math.PI * 2);
+	this.ctx.arc(x, y, this.r, 0, Math.PI * 2, true);
 	this.ctx.moveTo(x, y);
 	this.ctx.lineTo(x + this.r * Math.sin(a + Math.PI / 6), y + this.r * Math.cos(a + Math.PI / 6));
 	this.ctx.moveTo(x, y);
@@ -2069,7 +2069,7 @@ LogDataSets.prototype.setLogging = function(logging) {
 	$("#log-led")
 		.removeClass((this.logging ? "red" : "green") + "-led")
 		.addClass((this.logging ? "green" : "red") + "-led");
-	$("#log-ds-enable span").text(this.logging ? "Logging" : "Not Logging");
+	$("#log-ds-enable span").text(this.logging ? "Logging On" : "Logging Off");
 };
 
 LogDataSets.prototype.setFiles = function(files) {
@@ -2121,7 +2121,7 @@ LogDataSets.prototype.setFiles = function(files) {
 	{
 		$("#log-ds").empty().append(
 				"<div class='no-ds'>" +
-					"Generate datasets by first enabling logging then starting navigation." +
+					"Generate datasets by turning logging on then starting navigation." +
 				"</div>"
 		);
 	}
