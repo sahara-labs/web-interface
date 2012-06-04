@@ -40,6 +40,10 @@ $this->headScript()->appendFile($this->baseUrl('/uts/irobot/irobot.js'));
 $this->headLink()->appendStylesheet($this->baseUrl('/uts/irobot/irobot.css'));
 
 $this->headScript()->appendFile($this->baseUrl('js/elements/cameras/flowplayer.min.js'));
+$this->headScript()->appendFile($this->baseUrl('js/excanvas.js'),
+		'text/javascript',
+        array('conditional' => 'lt IE 9')
+);
 ?>
 
 <div id="robot-canvas">

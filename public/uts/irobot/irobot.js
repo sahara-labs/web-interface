@@ -638,8 +638,9 @@ Ranger.prototype = new IWidget;
 
 Ranger.prototype.init = function() {
 	
-	var html = "<canvas id='ranger' width='" + this.width + "' height='" + this.height + "'></canvas>",
-	    i = 0;
+	var html = "",
+	    i = 0,
+	    thiz = this;
 	
 	/* Global frame enable / disable. */
 	html += "<div id='global-frame-enable'>" +
@@ -688,7 +689,8 @@ Ranger.prototype.init = function() {
 	
 	this.pageAppend(html);
 	
-	var thiz = this;
+	var canvas = getCanvas("ranger", this.width, this.height);
+	this.$w.prepend(canvas);
 	
 	/* Translation moves the origin, moving the displayed region. */
 	$("#ranger")
@@ -778,12 +780,11 @@ Ranger.prototype.init = function() {
 		else $(this).children("span").addClass("disabled");
 	});
 	
-	var canvas = $("#ranger")[0];
 	if (canvas.getContext)
 	{
 		this.ctx = canvas.getContext("2d");
 		this.ctx.font = "12px sans-serif";
-		this.ctx.fillText("Connecting...", this.xo - 40, this.yo);
+		if (this.ctx.fillText) this.ctx.fillText("Connecting...", this.xo - 40, this.yo);
 		
 		this.getConf();
 	}
@@ -1348,10 +1349,10 @@ Nav.DEFAULT_COV = 1;
 Nav.DEFAULT_ACOV = Math.PI / 6;
 
 Nav.prototype.init = function() {
-	this.pageAppend("<canvas id='nav' width='" + this.width + "' height='" + this.height + "'></canvas>" +
-					"<div id='nav-status'> </div>");
+	this.pageAppend("<div id='nav-status'> </div>");
+	this.canvas = getCanvas("nav", this.width, this.height); 
+	this.$w.prepend(this.canvas);
 	
-	this.canvas = $("#nav")[0];
 	if (this.canvas.getContext)
 	{
 		this.ctx = this.canvas.getContext("2d");
@@ -1506,7 +1507,7 @@ Nav.prototype.drawStartPoseRobot = function() {
 	
 	this.ctx.lineWidth = 0.5;
 	this.ctx.font = "10pt sans-serif";
-	this.ctx.strokeText("Start here", x - 25, y + 40);
+	if (this.ctx.strokeText) this.ctx.strokeText("Start here", x - 25, y + 40);
 	
 	this.ctx.restore();
 };
@@ -2476,11 +2477,12 @@ OverheadCameraControl.prototype.init = function() {
 			"<div id='ov-control-man' class='ov-control-button'>Manual</div>" +  
 			"<div id='ov-control-auto' class='ov-control-button'>Auto</div>" +  
 			"<div style='clear:left;'></div>" +
-		"</div>" +
-		"<canvas id='ov-control-canvas' width='" + this.width + "' height='" + this.height + "'></canvas>"
+		"</div>"
 	);
 
-	this.canvas = $("#ov-control-canvas")[0];
+	this.canvas = getCanvas("ov-control-canvas", this.width, this.height);
+	this.$w.append(this.canvas);
+	
 	if (this.canvas.getContext)
 	{
 		this.ctx = this.canvas.getContext("2d");
@@ -2646,7 +2648,9 @@ OverheadCameraControl.prototype.moveStart = function(e) {
 				  this.yo + (this.pos.y - this.boxVert / 2) * this.pxPerM, 
 				  this.boxVert * this.pxPerM, this.boxVert * this.pxPerM);
 	this.ctx.closePath();
-	if (!this.ctx.isPointInPath(e.pageX - this.offX, e.pageY - this.offY)) return;
+	
+	// FIXMEkeyb
+//	if (!this.ctx.isPointInPath(e.pageX - this.offX, e.pageY - this.offY)) return;
 	
 	this.isMoving = true;
 	
@@ -2709,6 +2713,23 @@ OverheadCameraControl.prototype.moveStop = function(e) {
 /* ----------------------------------------------------------------------------
  * -- Utility functions                                                      --
  * ---------------------------------------------------------------------------- */
+
+function getCanvas(id, width, height)
+{
+	var canvas = document.createElement("canvas");
+	canvas.setAttribute("id", id);
+	canvas.setAttribute("width", width);
+	canvas.setAttribute("height", height);
+	
+	if (typeof G_vmlCanvasManager != "undefined")
+	{
+		/* Hack to get canvas setup. */
+		G_vmlCanvasManager.initElement(canvas);
+	}
+	
+	return canvas;
+}
+
 function mathRound(num, places) 
 {
 	return Math.round(num * Math.pow(10, places)) / Math.pow(10, places);
