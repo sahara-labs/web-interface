@@ -63,7 +63,7 @@ IRobot.prototype.determineMode = function() {
 			var m = parseInt(resp.value);
 			if (m == 0)
 			{
-				thiz.changeMode(1);
+				thiz.changeMode(3); // FIXME Should be zero
 			}		
 			else thiz.displayMode(m);
 		}
@@ -123,9 +123,9 @@ IRobot.prototype.displayMode = function(mode) {
 		break;
 		
 	case 3: // Code upload mode
-		this.log("Code mode not implemented", IRobot.WARN);
-		this.widgets.push(new WarningMessage(this));
-		
+		var cs = new CodeUploadStatus(this);
+		this.widgets.push(new CodeUpload(this));
+		this.widgets.push(cs);
 		break;
 		
 	case 4: // Mode transition mode.
@@ -233,7 +233,7 @@ function IWidget(control)
  * Initialises the widget which paints it onto the canvas. 
  */
 IWidget.prototype.init = function() {	
-	this.pageControl.log(this.wid + " has no init method", IRobot.ERROR);
+	this.control.log(this.wid + " has no init method", IRobot.ERROR);
 };
 
 /**
@@ -483,6 +483,7 @@ DPad.prototype.init = function() {
 	
 	
 	/* For browsers that support device orientation. */
+	// FIXME Eventually touch device orientation support
 //	window.addEventListener("deviceorientation", function(event) {
 //		if (!thiz.loadAlpha) thiz.loadAlpha = event.alpha;
 //		if (!thiz.loadBeta) thiz.loadBeta = event.beta;
@@ -2649,7 +2650,7 @@ OverheadCameraControl.prototype.moveStart = function(e) {
 				  this.boxVert * this.pxPerM, this.boxVert * this.pxPerM);
 	this.ctx.closePath();
 	
-	// FIXMEkeyb
+//  FIXME click path check 
 //	if (!this.ctx.isPointInPath(e.pageX - this.offX, e.pageY - this.offY)) return;
 	
 	this.isMoving = true;
@@ -2709,6 +2710,233 @@ OverheadCameraControl.prototype.moveStop = function(e) {
 	);
 };
 
+/* ----------------------------------------------------------------------------
+ * -- Code Upload Buttons                                                    --
+ * ---------------------------------------------------------------------------- */
+function CodeUpload(pc)
+{
+	IWidget.call(this, pc);
+	
+	this.wid = "code-upload-buttons";
+	
+	this.$uploadDialog;
+	this.$uploadTarget;
+	
+	this.isRunning = false;
+}
+CodeUpload.prototype = new IWidget;
+
+CodeUpload.prototype.init = function() {	 
+	 this.pageAppend(
+		 	"<div id='upload-button' class='commonbutton'>" +
+		 		"<img src='/uts/irobot/images/run.png' alt=' ' /><br />" +
+		 		"Build & Run" +
+		 	"</div>" +
+		 	"<div id='kill-button' class='commonbutton disabled'>" +
+		 		"<img src='/uts/irobot/images/kill.png' alt=' ' /><br />" +
+		 		"Kill Program" +
+		 	"</div>" +
+		 	"<div id='random-walk-button' class='commonbutton'>" +
+		 		"<img src='/uts/irobot/images/random_walk.png' alt=' ' /><br />" +
+		 		"Random Walk" +
+		 	"</div>" +
+		 	"<div id='reset-button' class='commonbutton'>" +
+		 		"<img src='/uts/irobot/images/reset.png' alt=' ' /></br />" +
+		 		"Reset Player" +
+		 	"</div>"
+	 );
+	 
+	 /* Empty the upload target. */
+	 this.$uploadTarget = $("#code-upload-target").empty();
+	 
+	 var thiz = this;
+	 $("#code-upload-buttons .commonbutton").click(function () { thiz.handleClick($(this).attr("id")); });
+};
+
+CodeUpload.prototype.handleClick = function(id) {
+	switch (id)
+	{
+	case "upload-button":
+		this.displayUpload();
+		break;
+	
+	default:
+		alert("No button handling for " + id);
+		break;
+	}
+};
+
+CodeUpload.prototype.displayUpload = function() {
+	if (this.isRunning) return;
+	
+	var thiz = this;
+	$("body").append(
+		"<div id='upload-dialog'>" +
+			"<p>Upload a code archive to be extracted, built and run.</p>" +
+			"<div class='saharaform'>" +
+				"<label for='command-args'>Launch arguments:</label>" +
+				"<input type='text' id='command-args' />" +				
+				"<form id='code-upload-form' action='/batch/torigclient' target='" + this.$uploadTarget.attr("name") + "' " +
+						"method='post' enctype='multipart/form-data'>" +
+					"<label form='code-archive'>Code archive:</label>" +
+					"<input type='file' id='code-archive' name='file' />" +
+				"</form>" +
+				"<div id='code-upload-err' class='ui-state-error ui-corner-all'>" +
+					"<span class='ui-icon ui-icon-alert' />" +
+					"<p></p>" +
+				"</div>" + 
+			"</div>" +
+		"</div>"
+	);
+	
+	this.$uploadDialog = $("#upload-dialog").dialog({
+		autoOpen: true,
+		title: "Code Upload",
+		width: 400,
+		modal: true,
+		resizable: false,
+		buttons: {
+			'Upload': function() { thiz.startUpload(); },
+			'Cancel': function() { $(this).dialog("close"); }
+		},
+		close:   function() { $(this).dialog("destroy"); $("#upload-dialog").remove(); },
+	});
+};
+
+CodeUpload.prototype.startUpload = function() {
+	if (this.isRunning) return;
+	this.isRunning = true;
+	
+	/* Quick sanity check. */
+	var file = $("#code-archive").val(), thiz = this;
+
+	if (!$.browser.opera && (file.length == 0 || !(file.indexOf(".zip") > 0 || file.indexOf(".tar.gz") > 0)))
+	{
+		$("#code-upload-err").show()
+			.children("p")
+				.empty()
+				.append("Uploaded file is not valid. Ensure it has a '.zip' or '.tar.gz' file extension.");
+		return;
+	}
+	
+	/* Give the user the option of stoppong page navigation. */
+	window.onbeforeunload = function(e) {
+		var str = "Navigating away from this page will cancel the upload of your code.";
+		
+		/* IE pre 8 & and Firefox pre 4 (according MDN). */
+		e = e || window.event;
+		if (e) e.returnValue = str;
+
+		return str;
+	};
+
+	
+	/* Tear down dialog. */
+	this.$uploadDialog
+		.dialog("option", {
+			closeOnEscape: false,
+			width: 100
+		})
+		.hide()
+		.prev().hide()
+		.next().next().hide();
+	
+	/* Add a spinner. */
+	this.$uploadDialog.parent()
+		.css("left", parseInt(this.$uploadDialog.parent().css("left")) + 100)
+		.append(
+			"<div id='code-upload-spinner'>" +
+				"<img src='/uts/irobot/images/spinner.gif' alt='' /><br />" +
+				"Uploading..." +
+			"</div>"
+		);
+		
+	/* Set args. */
+	$.post(
+		"/primitive/json/pc/CodeUploadController/pa/setArgs",
+		{ args: $("#command-args").val() }
+	);
+	
+	/* Upload archive. */
+	$("#code-upload-form").submit();
+	
+	/* Start polling the target frame for upload status. */
+	setTimeout(function() { thiz.checkIfUploaded(); }, 1000);
+};
+
+CodeUpload.prototype.checkIfUploaded = function() {
+	var text = this.$uploadTarget.contents().text(), thiz = this;
+	
+	if (text == "")
+	{
+		/* File still uploading. */
+		setTimeout(function() { thiz.checkIfUploaded(); }, 1000);
+	}
+	else 
+	{
+		this.$uploadTarget.empty();
+		window.onbeforeunload = null;
+		
+		if (text.indexOf("error;") == 0 || text.indexOf("false;") == 0)
+		{
+			/* Something failed in the initial upload. */
+			$("#code-upload-err").show()
+				.children("p")
+					.empty()
+					.append(text.substring(text.indexOf(";") + 1));
+			
+			/* Restore dialog. */
+			this.$uploadDialog.parent()
+				.css("left", parseInt(this.$uploadDialog.parent().css("left")) - 100);
+			
+			this.$uploadDialog
+				.dialog("option", {
+					closeOnEscape: true,
+					width: 400
+				})
+				.show()
+				.prev().show()
+				.next().next().show();
+			
+			$("#code-upload-spinner").remove();
+			this.isRunning = false;
+		}
+		else
+		{
+			this.$uploadDialog.dialog("close");
+			
+			$("#upload-button").empty().addClass("disabled")
+				.append(
+					"<img src='/uts/irobot/images/spinner.gif' alt=' ' /><br />" +
+					"Running..."
+			);
+			
+			$("#kill-button").removeClass("disabled");
+		}
+	}
+};
+
+/* ----------------------------------------------------------------------------
+ * -- Code Upload Status.                                                    --
+ * ---------------------------------------------------------------------------- */
+function CodeUploadStatus(pc)
+{
+	IWidget.call(this, pc);
+	
+	this.wid = "code-status";
+	this,tabs = ["Stdout", "Stderr"];
+}
+CodeUploadStatus.prototype = new IWidget;
+
+CodeUploadStatus.prototype.init = function() {
+	this.pageAppend(
+		"<div id='code-status-stdout'>" +
+		"</div>" +
+		"<div id='code-status-stderr'>" +
+		"</div>",
+		"Stdout"
+	);
+};
 
 /* ----------------------------------------------------------------------------
  * -- Utility functions                                                      --
@@ -2723,7 +2951,8 @@ function getCanvas(id, width, height)
 	
 	if (typeof G_vmlCanvasManager != "undefined")
 	{
-		/* Hack to get canvas setup. */
+		/* Hack to get canvas setup on IE6 to 8 which don't support canvas
+		 * natively. */
 		G_vmlCanvasManager.initElement(canvas);
 	}
 	
