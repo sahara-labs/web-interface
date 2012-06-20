@@ -124,7 +124,7 @@ IRobot.prototype.displayMode = function(mode) {
 		
 	case 3: // Code upload mode
 		var cs = new CodeUploadStatus(this);
-		this.widgets.push(new CodeUpload(this));
+		this.widgets.push(new CodeUpload(this, cs));
 		this.widgets.push(cs);
 		break;
 		
@@ -236,6 +236,16 @@ IWidget.prototype.init = function() {
 	this.control.log(this.wid + " has no init method", IRobot.ERROR);
 };
 
+IWidget.prototype.switchTo = function(tab) {
+	/* Bottom tab selected option. */
+	$("#" + this.wid + " .widget-tab").removeClass("widget-tab-selected");
+	$("#tab-" + tab).addClass("widget-tab-selected");
+	
+	/* Tab contents. */
+	$("#" + this.wid + " .widget-tab-panel").hide();
+	$("#" + this.wid + "-" + tab).show();
+};
+
 /**
  * Destroys the widget by removing the widget from the canvas and clearing all 
  * event handlers. 
@@ -258,10 +268,40 @@ IWidget.prototype.pageAppend = function(contents, classes) {
 	{
 		html += "<div class='widget-title'>" + this.title + "</div>";
 	}
+	
+	if (this.tabs)
+	{
+		html += "<div class='widget-tab-bar'>";
+		
+		var i = 0, classes;
+		for (i in this.tabs)
+		{
+			classes = ["widget-tab"];
+			if (i == 0)	classes.push("first-tab");
+			if (i == this.tabs.length - 1) classes.push("last-tab");
+			
+			html += "<div id='tab-" + this.idify(this.tabs[i]) + "' class='" + classes.join(" ") + "'>" + this.tabs[i] + "</div>";
+		}
+		
+		html += "</div>";
+	}
+	
 	html += "</div>";
 	
 	this.control.$canvas.append(html);
 	this.$w = this.control.$canvas.find("#" + this.wid);
+	
+	if (this.tabs)
+	{
+		var thiz = this;
+		$("#" + this.wid + " .widget-tab").click(function() { thiz.switchTo($(this).attr("id").substr(4)); });
+		
+		this.switchTo(this.idify(this.tabs[0]));
+	}
+};
+
+IWidget.prototype.idify = function(id) {
+	return id.split(" ").join("").toLowerCase();
 };
 
 /* ----------------------------------------------------------------------------
@@ -2713,7 +2753,7 @@ OverheadCameraControl.prototype.moveStop = function(e) {
 /* ----------------------------------------------------------------------------
  * -- Code Upload Buttons                                                    --
  * ---------------------------------------------------------------------------- */
-function CodeUpload(pc)
+function CodeUpload(pc, status)
 {
 	IWidget.call(this, pc);
 	
@@ -2723,6 +2763,8 @@ function CodeUpload(pc)
 	this.$uploadTarget;
 	
 	this.isRunning = false;
+	
+	this.status = status;
 }
 CodeUpload.prototype = new IWidget;
 
@@ -2751,6 +2793,9 @@ CodeUpload.prototype.init = function() {
 	 
 	 var thiz = this;
 	 $("#code-upload-buttons .commonbutton").click(function () { thiz.handleClick($(this).attr("id")); });
+	 
+	 /* Determine start status. */
+	 this.getStatus();
 };
 
 CodeUpload.prototype.handleClick = function(id) {
@@ -2773,9 +2818,7 @@ CodeUpload.prototype.displayUpload = function() {
 	$("body").append(
 		"<div id='upload-dialog'>" +
 			"<p>Upload a code archive to be extracted, built and run.</p>" +
-			"<div class='saharaform'>" +
-				"<label for='command-args'>Launch arguments:</label>" +
-				"<input type='text' id='command-args' />" +				
+			"<div class='saharaform'>" +		
 				"<form id='code-upload-form' action='/batch/torigclient' target='" + this.$uploadTarget.attr("name") + "' " +
 						"method='post' enctype='multipart/form-data'>" +
 					"<label form='code-archive'>Code archive:</label>" +
@@ -2785,6 +2828,8 @@ CodeUpload.prototype.displayUpload = function() {
 					"<span class='ui-icon ui-icon-alert' />" +
 					"<p></p>" +
 				"</div>" + 
+				"<label for='command-args'>Launch arguments:</label>" +
+				"<input type='text' id='command-args' />" +		
 			"</div>" +
 		"</div>"
 	);
@@ -2806,6 +2851,9 @@ CodeUpload.prototype.displayUpload = function() {
 CodeUpload.prototype.startUpload = function() {
 	if (this.isRunning) return;
 	this.isRunning = true;
+	
+	/* Clear any previous state. */
+	this.status.clear();
 	
 	/* Quick sanity check. */
 	var file = $("#code-archive").val(), thiz = this;
@@ -2912,8 +2960,44 @@ CodeUpload.prototype.checkIfUploaded = function() {
 			);
 			
 			$("#kill-button").removeClass("disabled");
+			
+			setTimeout(function() { thiz.getStatus(); }, 2000);
 		}
 	}
+};
+
+CodeUpload.prototype.getStatus = function() {
+	var thiz = this;
+	$.ajax({
+		url: "/batch/status",
+		success: function (r) { 
+			if (typeof r != "object") window.location.reload();
+			
+			/* Display of statuses. */
+			thiz.status.setStatus(r.state);
+			thiz.status.setStdOut(r.stdout);
+			thiz.status.setStdErr(r.stderr);
+			
+			if (r.state == "IN_PROGRESS")
+			{
+				/* If the execution is not complete we keep polling the response. */
+				setTimeout(function() { thiz.getStatus(); }, 5000);
+			}
+			else
+			{
+				/* Restore the page because code is no longer running. */
+				thiz.isRunning = false;
+				$("#upload-button").empty().removeClass("disabled")
+					.append(
+						"<img src='/uts/irobot/images/run.png' alt=' ' /><br />" +
+						"Build & Run"
+				);
+				
+				$("#kill-button").addClass("disabled");
+			}
+		},
+		error: function() { setTimeout(function() { thiz.getStatus(); }, 5000); }
+	});
 };
 
 /* ----------------------------------------------------------------------------
@@ -2924,19 +3008,83 @@ function CodeUploadStatus(pc)
 	IWidget.call(this, pc);
 	
 	this.wid = "code-status";
-	this,tabs = ["Stdout", "Stderr"];
+	this.tabs = ["Status", "stdout", "stderr"];
+	
+	this.$status = null;
+	this.$stdout = null;
+	this.$stderr = null;
 }
 CodeUploadStatus.prototype = new IWidget;
 
 CodeUploadStatus.prototype.init = function() {
 	this.pageAppend(
-		"<div id='code-status-stdout'>" +
+		"<div id='code-status-status' class='widget-tab-panel'>" +
+			"<div id='run-status'></div>" +
 		"</div>" +
-		"<div id='code-status-stderr'>" +
-		"</div>",
-		"Stdout"
+		"<div id='code-status-stdout' class='widget-tab-panel'>" +
+			"<div id='code-stdout'></div>" +
+		"</div>" +
+		"<div id='code-status-stderr' class='widget-tab-panel'>" +
+			"<div id='code-stderr'></div>" +
+		"</div>"
 	);
+	
+	this.$status = $("#run-status");
+	this.$stdout = $("#code-stdout");
+	this.$stderr = $("#code-stderr");
 };
+
+CodeUploadStatus.prototype.setStatus = function(status) {
+	switch (status)
+	{
+	case 'SUCCESS':
+		break;
+		
+	case 'IN_PROGRESS':
+		break;
+		
+	case 'COMPLETE':
+		break;
+		
+	case 'FAILED':
+		break;
+		
+	case 'CLEAR':
+		break;
+		
+	default:
+		this.control.log("Unknown status: " + status, IRobot.ERROR);
+		break;
+	}
+};
+
+CodeUploadStatus.TERMINATOR = "__*~#INIT_STDOUT_TERMINATOR#~*__";
+CodeUploadStatus.prototype.setStdOut = function(stdout) {
+	if (!stdout) return;
+	
+	var parts = stdout.split(CodeUploadStatus.TERMINATOR);
+	
+	this.$status.append(parts[0]);
+	if (parts.length > 1) this.$stdout.empty().append(this.formatOutput(parts[1]));
+};
+
+CodeUploadStatus.prototype.setStdErr = function(stderr) {
+	if (!stderr) return;
+	
+	this.$stderr.empty().append(this.formatOutput(stderr));
+};
+
+CodeUploadStatus.prototype.formatOutput = function(out) {
+	// TODO properly format;
+	return "<pre>" + out + "</pre>";
+};
+
+CodeUploadStatus.prototype.clear = function() {
+	this.$status.empty();
+	this.$stdout.empty();
+	this.$stderr.empty();
+};
+
 
 /* ----------------------------------------------------------------------------
  * -- Utility functions                                                      --
