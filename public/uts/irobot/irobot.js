@@ -3064,7 +3064,7 @@ CodeUploadStatus.prototype.setStdOut = function(stdout) {
 	
 	var parts = stdout.split(CodeUploadStatus.TERMINATOR);
 	
-	this.$status.append(parts[0]);
+	this.$status.empty().append(parts[0]);
 	if (parts.length > 1) this.$stdout.empty().append(this.formatOutput(parts[1]));
 };
 
