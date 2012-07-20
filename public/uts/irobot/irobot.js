@@ -123,9 +123,18 @@ IRobot.prototype.displayMode = function(mode) {
 		break;
 		
 	case 3: // Code upload mode
-		var cs = new CodeUploadStatus(this);
-		this.widgets.push(new CodeUpload(this, cs));
+		var cs = new CodeUploadStatus(this),
+			ov = new OverheadCamera(this),
+			gr = new CodeUploadGraphics(this);
+		this.widgets.push(new CodeUpload(this, cs, gr));
 		this.widgets.push(cs);
+		this.widgets.push(gr);
+		this.widgets.push(new DPad(this));
+		
+		ov.width = 320;
+		ov.height = 240;
+//		this.widgets.push(ov);
+		this.widgets.push(new OverheadCameraControl(this));
 		break;
 		
 	case 4: // Mode transition mode.
@@ -2753,7 +2762,7 @@ OverheadCameraControl.prototype.moveStop = function(e) {
 /* ----------------------------------------------------------------------------
  * -- Code Upload Buttons                                                    --
  * ---------------------------------------------------------------------------- */
-function CodeUpload(pc, status)
+function CodeUpload(pc, status, graphics)
 {
 	IWidget.call(this, pc);
 	
@@ -2762,15 +2771,19 @@ function CodeUpload(pc, status)
 	this.$uploadDialog;
 	this.$uploadTarget;
 	
+	this.hasStatus = false;
+	this.isUploading;
 	this.isRunning = false;
+	this.isKilling = false;
 	
 	this.status = status;
+	this.graphics = graphics;
 }
 CodeUpload.prototype = new IWidget;
 
 CodeUpload.prototype.init = function() {	 
 	 this.pageAppend(
-		 	"<div id='upload-button' class='commonbutton'>" +
+		 	"<div id='upload-button' class='commonbutton disabled'>" +
 		 		"<img src='/uts/irobot/images/run.png' alt=' ' /><br />" +
 		 		"Build & Run" +
 		 	"</div>" +
@@ -2778,11 +2791,11 @@ CodeUpload.prototype.init = function() {
 		 		"<img src='/uts/irobot/images/kill.png' alt=' ' /><br />" +
 		 		"Kill Program" +
 		 	"</div>" +
-		 	"<div id='random-walk-button' class='commonbutton'>" +
+		 	"<div id='random-walk-button' class='commonbutton disabled'>" +
 		 		"<img src='/uts/irobot/images/random_walk.png' alt=' ' /><br />" +
 		 		"Random Walk" +
 		 	"</div>" +
-		 	"<div id='reset-button' class='commonbutton'>" +
+		 	"<div id='reset-button' class='commonbutton disabled'>" +
 		 		"<img src='/uts/irobot/images/reset.png' alt=' ' /></br />" +
 		 		"Reset Player" +
 		 	"</div>"
@@ -2799,10 +2812,16 @@ CodeUpload.prototype.init = function() {
 };
 
 CodeUpload.prototype.handleClick = function(id) {
+	if (!this.hasStatus) return;
+	
 	switch (id)
 	{
 	case "upload-button":
 		this.displayUpload();
+		break;
+		
+	case "kill-button":
+		this.kill();
 		break;
 	
 	default:
@@ -2849,8 +2868,8 @@ CodeUpload.prototype.displayUpload = function() {
 };
 
 CodeUpload.prototype.startUpload = function() {
-	if (this.isRunning) return;
-	this.isRunning = true;
+	if (this.isUploading) return;
+	this.isUploading = true;
 	
 	/* Clear any previous state. */
 	this.status.clear();
@@ -2878,7 +2897,6 @@ CodeUpload.prototype.startUpload = function() {
 		return str;
 	};
 
-	
 	/* Tear down dialog. */
 	this.$uploadDialog
 		.dialog("option", {
@@ -2922,6 +2940,8 @@ CodeUpload.prototype.checkIfUploaded = function() {
 	}
 	else 
 	{
+		this.isUploading = false;
+		
 		this.$uploadTarget.empty();
 		window.onbeforeunload = null;
 		
@@ -2947,20 +2967,11 @@ CodeUpload.prototype.checkIfUploaded = function() {
 				.next().next().show();
 			
 			$("#code-upload-spinner").remove();
-			this.isRunning = false;
 		}
 		else
 		{
+			this.setRunning(true);
 			this.$uploadDialog.dialog("close");
-			
-			$("#upload-button").empty().addClass("disabled")
-				.append(
-					"<img src='/uts/irobot/images/spinner.gif' alt=' ' /><br />" +
-					"Running..."
-			);
-			
-			$("#kill-button").removeClass("disabled");
-			
 			setTimeout(function() { thiz.getStatus(); }, 2000);
 		}
 	}
@@ -2981,24 +2992,77 @@ CodeUpload.prototype.getStatus = function() {
 			if (r.state == "IN_PROGRESS")
 			{
 				/* If the execution is not complete we keep polling the response. */
-				setTimeout(function() { thiz.getStatus(); }, 5000);
+				thiz.setRunning(true);
+				setTimeout(function() { thiz.getStatus(); }, 2000);
 			}
 			else
 			{
 				/* Restore the page because code is no longer running. */
-				thiz.isRunning = false;
-				$("#upload-button").empty().removeClass("disabled")
-					.append(
-						"<img src='/uts/irobot/images/run.png' alt=' ' /><br />" +
-						"Build & Run"
-				);
-				
-				$("#kill-button").addClass("disabled");
+				thiz.setRunning(false);
 			}
 		},
 		error: function() { setTimeout(function() { thiz.getStatus(); }, 5000); }
 	});
 };
+
+CodeUpload.prototype.kill = function() {
+	if (!this.isRunning) return;
+	this.isKilling = true;
+	var thiz = this;
+	
+	$("#kill-button").empty().addClass("disabled")
+		.append(
+			"<img src='/uts/irobot/images/spinner.gif' alt=' ' /><br />" +
+			"Killing..."
+	);
+	
+	$.post(
+		"/batch/abort",
+		null,
+		function (resp) {
+			if (typeof resp != "object") return;
+			
+			thiz.setRunning(resp.success);
+		}
+	);
+};
+
+CodeUpload.prototype.setRunning = function(running) {		
+	if (running && !this.isRunning)
+	{
+		this.isRunning = true;
+		$("#upload-button").empty().addClass("disabled")
+			.append(
+				"<img src='/uts/irobot/images/spinner.gif' alt=' ' /><br />" +
+				"Running..."	
+		);
+		
+		$("#kill-button").removeClass("disabled");
+		this.graphics.enable(true);
+	}
+	else if (!running && (this.isRunning || !this.hasStatus))
+	{
+		this.isRunning = false;
+		$("#upload-button").empty().removeClass("disabled")
+			.append(
+				"<img src='/uts/irobot/images/run.png' alt=' ' /><br />" +
+				"Build & Run"
+		);
+			
+		if (this.isKilling)
+		{
+			$("#kill-button").empty().append(
+				"<img src='/uts/irobot/images/kill.png' alt=' ' /><br />" +
+				"Kill Program"
+			);
+		}
+		else $("#kill-button").addClass("disabled");
+		this.graphics.enable(false);
+	}
+	
+	this.hasStatus = true;
+};
+
 
 /* ----------------------------------------------------------------------------
  * -- Code Upload Status.                                                    --
@@ -3008,30 +3072,40 @@ function CodeUploadStatus(pc)
 	IWidget.call(this, pc);
 	
 	this.wid = "code-status";
-	this.tabs = ["Status", "stdout", "stderr"];
+	this.tabs = ["Verify", "Compile", "StdOut", "StdErr"];
 	
 	this.$status = null;
+	this.$compile = null;
 	this.$stdout = null;
 	this.$stderr = null;
+	
+	this.statusPos = 0;
+	this.compilePos = 0;
+	this.stdOutPos = 0;
+	this.stdErrPos = 0;
 }
 CodeUploadStatus.prototype = new IWidget;
 
 CodeUploadStatus.prototype.init = function() {
 	this.pageAppend(
-		"<div id='code-status-status' class='widget-tab-panel'>" +
-			"<div id='run-status'></div>" +
+		"<div id='code-status-verify' class='widget-tab-panel'>" +
+			"<div id='run-verify'></div>" +
+		"</div>" +
+		"<div id='code-status-compile' class='widget-tab-panel'>" +
+			"<div id='run-compile'></div>" +
 		"</div>" +
 		"<div id='code-status-stdout' class='widget-tab-panel'>" +
-			"<div id='code-stdout'></div>" +
+			"<div id='run-stdout'></div>" +
 		"</div>" +
 		"<div id='code-status-stderr' class='widget-tab-panel'>" +
-			"<div id='code-stderr'></div>" +
+			"<div id='run-stderr'></div>" +
 		"</div>"
 	);
 	
-	this.$status = $("#run-status");
-	this.$stdout = $("#code-stdout");
-	this.$stderr = $("#code-stderr");
+	this.$status = $("#run-verify");
+	this.$compile = $("#run-compile");
+	this.$stdout = $("#run-stdout");
+	this.$stderr = $("#run-stderr");
 };
 
 CodeUploadStatus.prototype.setStatus = function(status) {
@@ -3058,14 +3132,47 @@ CodeUploadStatus.prototype.setStatus = function(status) {
 	}
 };
 
-CodeUploadStatus.TERMINATOR = "__*~#INIT_STDOUT_TERMINATOR#~*__";
+CodeUploadStatus.TERMINATOR_VERIF_COMP = "__*~#INIT_STDOUT_TERMINATOR#~*__";
+CodeUploadStatus.TERMINATOR_COMP_RUN   = "__*~#COMP_RUN_TERMINATOR#~*__";
+
 CodeUploadStatus.prototype.setStdOut = function(stdout) {
 	if (!stdout) return;
 	
-	var parts = stdout.split(CodeUploadStatus.TERMINATOR);
+	var parts = stdout.split(CodeUploadStatus.TERMINATOR_VERIF_COMP);
 	
-	this.$status.empty().append(parts[0]);
-	if (parts.length > 1) this.$stdout.empty().append(this.formatOutput(parts[1]));
+	this.appendStatus(parts[0]);
+	
+	if (parts.length > 1)
+	{
+		parts = parts[1].split(CodeUploadStatus.TERMINATOR_COMP_RUN);
+
+		this.appendCompile(parts[0]);
+		if (parts.length > 1) this.appendStdOut(parts[1]);
+	}
+};
+
+CodeUploadStatus.prototype.appendStatus = function(text) {
+	if (this.statusPos >= text.length) return;
+	
+	if (this.statusPos > 0)
+	{
+		text = text.substr(this.statusPos);		
+	}
+	
+	this.statusPos = this.statusPos + text.length;
+	
+	// TODO format
+	this.$status.append(text);
+};
+
+CodeUploadStatus.prototype.appendCompile = function(text) {	
+	// TODO format
+	this.$compile.empty().append(this.formatOutput(text));
+};
+
+CodeUploadStatus.prototype.appendStdOut = function(text) {
+	// TODO format
+	this.$stdout.empty().append(this.formatOutput(text));
 };
 
 CodeUploadStatus.prototype.setStdErr = function(stderr) {
@@ -3081,10 +3188,261 @@ CodeUploadStatus.prototype.formatOutput = function(out) {
 
 CodeUploadStatus.prototype.clear = function() {
 	this.$status.empty();
+	this.statusPos = 0;
+	
 	this.$stdout.empty();
+	this.stdOutPos = 0;
+	
 	this.$stderr.empty();
+	this.stdErrPos = 0;
 };
 
+/* ----------------------------------------------------------------------------
+ * -- Code upload graphics display.                                          --
+ * ---------------------------------------------------------------------------- */
+function CodeUploadGraphics(pc) 
+{
+	IWidget.call(this, pc);
+	
+	this.wid = "code-upload-graphics-box";
+	this.title = "Graphics";
+	
+	this.ctx = null;
+	this.width = 0;
+	this.height = 0;
+	this.currentFID= -1;
+	
+	this.offX = 0;
+	this.offY = 0;
+	
+	this.enabled = false;
+}
+CodeUploadGraphics.prototype = new IWidget;
+
+CodeUploadGraphics.prototype.init = function() {
+	this.pageAppend(
+		"<div id='code-upload-graphics'></div>"
+	);
+	
+	// FIXME remove 
+	this.enable(true);
+};
+
+CodeUploadGraphics.prototype.getFrame = function() {
+	var thiz = this;
+	$.ajax({
+		url: "/primitive/file/pc/CodeUploadController/pa/getGraphicsFrame/mime/text-xml",
+		cache: false,
+		dataType: 'xml',
+		success: function (data) { 
+			thiz.parseFrame(data); 
+			setTimeout(function() { thiz.getFrame(); }, 1000);
+		},
+		error:   function() { setTimeout(function() { thiz.getFrame(); }, 2000); }
+	});
+};
+
+CodeUploadGraphics.prototype.parseFrame = function(frame) {
+	if (typeof frame != "object") return;
+	
+	var gui = frame.documentElement, fid, height, width, e, thiz = this;
+	
+	if (!(fid = gui.getAttribute("frame")))
+	{
+		/* No frame identifer so empty frame. */
+		if (this.ctx) this.clearFrame();
+	}
+	else if (this.currentFID == (fid = parseInt(fid)))
+	{
+		/* Same frame as that rendered. No need to render again. */
+		return;
+	}
+	
+	/* Rendering a new frame. */
+	this.currentFID = fid;
+	if ((height = parseInt(gui.getAttribute("height"))) != this.height | 
+		(width  = parseInt(gui.getAttribute("width")))  != this.width)
+	{
+		/* Either first load or frame resized so we need to deploy new canvas. */
+		var canvas = getCanvas("graphics-canvas", this.width = width, this.height = height);
+		$("#code-upload-graphics").empty().append(canvas);
+		this.ctx = canvas.getContext("2d");
+		
+		this.offX = $(canvas).offset().left;
+		this.offY = $(canvas).offset().top;
+		
+		$(canvas).click(function(evt) { thiz.click(evt); });
+	}
+	
+	this.clearFrame();
+	
+	if ((e = gui.getElementsByTagName("map")).length == 1)   this.renderMap(e[0]);
+	if ((e = gui.getElementsByTagName("grid")).length == 1)  this.renderGrid(e[0]);
+	if ((e = gui.getElementsByTagName("frame")).length == 1) this.renderFrame(e[0]);
+};
+
+CodeUploadGraphics.prototype.renderMap = function(map) {
+	/* The map is black lines 2 lines long. */
+	this.ctx.save();
+	this.ctx.strokeStyle = "#000000";
+	this.ctx.lineWidth = 2;
+	this.render(map, false);
+	this.ctx.restore();
+};
+
+CodeUploadGraphics.prototype.renderGrid = function(grid) {
+	/* The grid is a pixel grey. */
+	this.ctx.save();
+	this.ctx.strokeStyle = "#AAAAAA";
+	this.ctx.lineWidth = 1;
+	
+	var e, xs, ys, xe, ye, p, sz = 4, dash;
+	for (e = grid.firstChild; e != null; e = e.nextSibling)
+	{
+		xs = parseFloat(e.getAttribute("xs"));
+		ys = parseFloat(e.getAttribute("ys"));
+		xe = parseFloat(e.getAttribute("xe"));
+		ye = parseFloat(e.getAttribute("ye"));
+		
+		this.ctx.beginPath();
+		dash = false;
+	
+		if (ys == ye)
+		{
+			/* Horizontal lines. */
+			for (p = xs; p <= xe; p += sz)
+			{
+				if (dash) this.ctx.lineTo(p, ys);
+				else      this.ctx.moveTo(p, ys);
+				dash = !dash;
+			}
+		}
+		else
+		{
+			/* Vertical lines. */
+			for (p = ys; p <= ye; p += sz)
+			{
+				if (dash) this.ctx.lineTo(xs, p);
+				else      this.ctx.moveTo(xs, p);
+				dash = !dash;
+			}
+		}
+		
+		this.ctx.closePath();
+		this.ctx.stroke();
+	}
+	
+	this.ctx.restore();
+};
+
+CodeUploadGraphics.prototype.renderFrame = function(frame) {
+	this.render(frame, true);
+};
+
+CodeUploadGraphics.prototype.render = function(content, colorize) {
+	var element;
+	for (element = content.firstChild; element != null; element = element.nextSibling)
+	{
+		/* We are only interested in elements. */
+		if (element.nodeType != 1) continue;
+				
+		if (colorize && element.hasAttribute("c"))
+		{
+			/* Set the desired color. */
+			switch (parseInt(element.getAttribute("c")))
+			{
+			case 0: // White
+				this.ctx.fillStyle = this.ctx.strokeStyle = "#FFFFFF";
+				break;
+			case 1: // Green
+				this.ctx.fillStyle = this.ctx.strokeStyle = "#00FF00";
+				break;
+			case 2: // Red
+				this.ctx.fillStyle = this.ctx.strokeStyle = "#FF0000";
+				break;
+			case 3: // Blue
+				this.ctx.fillStype = this.ctx.strokeStyle = "#0000FF";
+				break;
+			case 4: // Yellow
+				this.ctx.fillStyle = this.ctx.strokeStyle = "#FCE700";
+				break;
+			case 5: // Grey
+				this.ctx.fillStyle = this.ctx.strokeStyle = "#AAAAAA";
+				break;
+			case 6: // Black
+				this.ctx.fillStyle = this.ctx.strokeStyle = "#000000";
+				break;
+			default:
+				this.control.log("Unknown color: " + element.getAttribute("c"), IRobot.ERROR);
+			}
+		}
+		
+		this.ctx.beginPath();
+		switch (element.nodeName)
+		{
+		case 'line':
+			
+			this.ctx.moveTo(parseFloat(element.getAttribute("xs")), parseFloat(element.getAttribute("ys")));
+			this.ctx.lineTo(parseFloat(element.getAttribute("xe")), parseFloat(element.getAttribute("ye")));
+			break;
+			
+		case 'point':
+			this.ctx.rect(parseFloat(element.getAttribute("x")), parseFloat(element.getAttribute("y")), 1, 1);
+			break;
+			
+		case 'rect':
+			this.ctx.rect(parseFloat(element.getAttribute("x")), parseFloat(element.getAttribute("y")), 
+						  parseFloat(element.getAttribute("w")), parseFloat(element.getAttribute("h")));
+			break;
+			
+		case 'circle':
+			this.ctx.arc(parseFloat(element.getAttribute("x")), parseFloat(element.getAttribute("y")), 
+						 parseFloat(element.getAttribute("r")), 0, Math.PI * 2, true);
+			break;
+			
+		case 'text':
+			this.ctx.strokeStyle = "#000000";
+			this.ctx.strokeText(element.textContent, parseFloat(element.getAttribute("x")), 
+								parseFloat(element.getAttribute("y")));
+			break;
+		}
+		this.ctx.closePath();
+		
+		/* Determine whether this element needs to be stroked or filled. */
+		if (element.hasAttribute("f") && element.getAttribute("f") == 't')
+		{
+			this.ctx.fill();
+		}
+		else
+		{
+			this.ctx.stroke();
+		}
+	}
+};
+
+CodeUploadGraphics.prototype.click = function(evt) {
+	if (!this.enabled) return;
+	
+	$.post(
+		"/primitive/json/pc/CodeUploadController/pa/registerGraphicsClick",
+		{
+			clickX: evt.pageX - this.offX,
+			clickY: evt.pageY - this.offY
+		}
+	);
+};
+
+CodeUploadGraphics.prototype.clearFrame = function() {
+	this.ctx.clearRect(0, 0, this.width, this.height);
+};
+
+CodeUploadGraphics.prototype.enable = function(enabled) {
+	if (!this.enabled && (this.enabled = enabled))
+	{
+		/* If running and previously not running, get a frame. */
+		this.getFrame();
+	}
+};
 
 /* ----------------------------------------------------------------------------
  * -- Utility functions                                                      --
