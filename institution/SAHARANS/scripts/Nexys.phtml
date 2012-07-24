@@ -1,0 +1,233 @@
+<?php
+/**
+ * SAHARA Web Interface
+ *
+ * User interface to Sahara Remote Laboratory system.
+ *
+ * @license See LICENSE in the top level directory for complete license terms.
+ *
+ * Copyright (c) 2010, University of Technology, Sydney
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of the University of Technology, Sydney nor the names
+ *    of its contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * @author Michael Diponio (mdiponio)
+ * @date 21st February 2010
+ */
+
+$this->headScript()->appendFile($this->baseUrl('uts/fpga/fpga.js'));
+$this->headLink()->appendStylesheet($this->baseUrl('uts/fpga/fpga.css'));
+
+$cam = new Sahara_Session_Element_Cameras($this->rigClient);
+$cam->setDraggable(false);
+
+/* Code upload buttons. */
+$code = new Sahara_Session_Element_MultiButtons($this->rigClient, 'codebutton',
+    array(
+        array(
+        	'title' => 'Program FPGA',
+            'tooltip' => 'Program the FPGA with an uploaded bitstream file.',
+			'icon' => '/uts/fpga/images/run.png',
+            'click' => "$('#bitstreamupload').dialog('open');"
+        ),
+/*        array(
+        	'title' => 'Program Demo',
+            'tooltip' => 'Program the FPGA with a demonstration program (binary to hexadecimal converter).',
+            'icon' => '/uts/fpga/images/rundemo.png',
+            'click' => "disableFPGAButtons();performPrimitiveJSON('FPGAAuxController', 'loadDemo', null, checkDemoLoadedStart, 'Loading demo...', false)"
+        ) */
+    ),
+    array(
+        'orientation' => Sahara_Session_Element_MultiButtons::VERTICAL,
+        'top'         => 100,
+        'left'        => 65,
+        'width'       => 70,
+        'height'      => 70
+    )
+);
+
+/* Reset buttons. */
+$reset = new Sahara_Session_Element_MultiButtons($this->rigClient, 'reset',
+    array(
+        array(
+        	'title' => 'Soft Reset',
+            'tooltip' => 'Soft resets back to un-programmed state. This will leave switch state untouched.',
+            'icon' => '/uts/fpga/images/softreset.png',
+            'click' => "disableFPGAButtons();performPrimitiveJSON('FPGAController', 'softReset', null, softResetCallback)"
+        ),
+        array(
+        	'title' => 'Hard Reset',
+        	'tooltip' => 'Power cycles the FPGA. This will clear switch state.',
+            'icon' => '/uts/fpga/images/hardreset.png',
+            'click' => "disableFPGAButtons();performPrimitiveJSON('FPGAController', 'hardReset', null, hardResetCallback, 'Resetting...')"
+        )
+    ),
+    array(
+        'orientation' => Sahara_Session_Element_MultiButtons::VERTICAL,
+        'top'         => 100,
+        'left'        => 525,
+        'width'       => 70,
+        'height'      => 70
+    )
+);
+
+/* IO buttons. */
+$io = new Sahara_Session_Element_MultiButtons($this->rigClient, 'io',
+    array(
+        array(
+        	'title'      => '7',
+        	'icon'       => '/uts/fpga/images/pushbuttonup.png',
+            'mousedown'  => 'setIO(0)',
+			'mouseup'    => 'setIO(0)',
+            'mouseleave' => 'clearIO(0)'
+        ),
+        array(
+        	'title'      => '6',
+        	'icon'       => '/uts/fpga/images/pushbuttonup.png',
+            'mousedown'  => 'setIO(1)',
+			'mouseup'    => 'setIO(1)',
+			'mouseleave' => 'clearIO(1)'
+        ),
+        array(
+        	'title' => '5',
+            'icon'  => '/uts/fpga/images/switchup.png',
+            'click' => 'setIO(2)'
+        ),
+        array(
+        	'title' => '4',
+            'icon'  => '/uts/fpga/images/switchup.png',
+            'click' => 'setIO(3)'
+        ),
+        array(
+        	'title' => '3',
+            'icon'  => '/uts/fpga/images/switchup.png',
+            'click' => 'setIO(4)'
+        ),
+        array(
+        	'title' => '2',
+            'icon'  => '/uts/fpga/images/switchup.png',
+            'click' => 'setIO(5)'
+        ),
+        array(
+        	'title' => '1',
+            'icon'  => '/uts/fpga/images/switchup.png',
+            'click' => 'setIO(6)'
+        ),
+        array(
+        	'title' => '0',
+            'icon'  => '/uts/fpga/images/switchup.png',
+            'click' => 'setIO(7)'
+        )
+    ),
+    array(
+        'orientation' => Sahara_Session_Element_MultiButtons::HORIZONTAL,
+        'top'         => 400,
+        'left'        => 110,
+        'width'       => 45,
+        'height'      => 60
+    )
+);
+?>
+
+
+
+<div id="operationpanel" class="sessionpanel ui-corner-all leftpush overlayelementhide">
+	<div class="sessionpanelheader">
+		<p>
+			<span class="ui-icon ui-icon-script sessionpanelheadericon"></span>
+			Operations List
+		</p>
+	</div>
+	<div id="operationpanelcontents">
+		<ul id="operationpanellist">
+		</ul>
+	</div>
+</div>
+
+<?php
+echo $cam;
+echo $code;
+//echo $reset;
+//echo $io;
+?>
+
+<div id="bitstreamupload">
+	<p>Please select the JTAG Bitstream (.bit) file you wish to upload.</p>
+	<ul id="bitstreamuploadinfo" >
+		<li>Compressed bitstreams in .zip and .bit.gz format are also acceptable.</li>
+		<li>Bitstreams must be less than 2Mb in size (2097152 bytes).</li>
+		<li>Do not refresh the page when uploading a bitstream because programming the
+		FPGA will fail.</li>
+	</ul>
+
+	<div id="bitstreamuploaderror" class="ui-state-error ui-corner-all" style="display:none">
+		<p>
+			<span class="ui-icon ui-icon-alert bitstreamuploadicon"></span>
+			<span id="bitstreamuploaderrormessage"></span>
+		</p>
+	</div>
+
+	<div id="bitstreamuploadformdiv">
+		<form id="bitstreamuploadform" method="post" enctype="multipart/form-data"
+		  		action="<?=$this->baseUrl('/batch/torigclient')?>" target="uploadtarget">
+			<input type="hidden" name="MAX_FILE_SIZE" value="2097152" />
+			<input id="bitstreamuploadformfile" name="file" id="file" size="27" type="file" />
+		</form>
+	</div>
+</div>
+
+<iframe id="uploadtarget" name="uploadtarget" src=""></iframe>
+
+
+<script type="text/javascript">
+$(document).ready(function() {
+	$("#bitstreamupload").dialog({
+		autoOpen: false,
+		buttons: {
+			'Program': function() {
+				uploadBitStream();
+			},
+			'Cancel': function() {
+				$(this).dialog('close');
+				enableFPGAButtons();
+			}
+		},
+		modal: true,
+		title: 'Program FPGA',
+		width: 400,
+		resizable: false,
+		open: function() {
+			$(".camera object, .camera embed").css("margin-left", "10000px");
+		},
+		close: function() {
+			$(".camera object, .camera embed").css("margin-left", "0px");
+		}
+	});
+
+	initIO('PPSSSSSS');
+});
+</script>
+
+<div style="height:120px">
+</div>
