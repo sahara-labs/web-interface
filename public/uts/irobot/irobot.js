@@ -63,7 +63,7 @@ IRobot.prototype.determineMode = function() {
 			var m = parseInt(resp.value);
 			if (m == 0)
 			{
-				thiz.changeMode(0);
+				thiz.changeMode(1);
 			}		
 			else thiz.displayMode(m);
 		}
