@@ -3363,7 +3363,7 @@ CodeUploadGraphics.prototype.render = function(content, colorize) {
 				this.ctx.fillStyle = this.ctx.strokeStyle = "#FF0000";
 				break;
 			case 3: // Blue
-				this.ctx.fillStype = this.ctx.strokeStyle = "#0000FF";
+				this.ctx.fillStyle = this.ctx.strokeStyle = "#0000FF";
 				break;
 			case 4: // Yellow
 				this.ctx.fillStyle = this.ctx.strokeStyle = "#FCE700";
@@ -3380,17 +3380,16 @@ CodeUploadGraphics.prototype.render = function(content, colorize) {
 		}
 		
 		
-		this.ctx.beginPath();
+		if (element.nodeName != "point") this.ctx.beginPath();
 		switch (element.nodeName)
 		{
 		case 'line':
-			
 			this.ctx.moveTo(parseFloat(element.getAttribute("xs")), parseFloat(element.getAttribute("ys")));
 			this.ctx.lineTo(parseFloat(element.getAttribute("xe")), parseFloat(element.getAttribute("ye")));
 			break;
 			
 		case 'point':
-			this.ctx.rect(parseFloat(element.getAttribute("x")), parseFloat(element.getAttribute("y")), 1, 1);
+			this.ctx.fillRect(parseFloat(element.getAttribute("x")), parseFloat(element.getAttribute("y")), 1, 1);
 			break;
 			
 		case 'rect':
@@ -3409,17 +3408,21 @@ CodeUploadGraphics.prototype.render = function(content, colorize) {
 								parseFloat(element.getAttribute("y")));
 			break;
 		}
-		this.ctx.closePath();
 		
-		/* Determine whether this element needs to be stroked or filled. */
-		if (element.hasAttribute("f") && element.getAttribute("f") == 't')
-		{
+                if (element.nodeName != "point")
+                {
+		    this.ctx.closePath();
+		
+	  	    /* Determine whether this element needs to be stroked or filled. */
+		    if (element.hasAttribute("f") && element.getAttribute("f") == 't')
+		    {
 			this.ctx.fill();
-		}
-		else
-		{
-			this.ctx.stroke();
-		}
+		    }  
+		    else
+		    {
+	  		this.ctx.stroke();
+	   	    }
+                }
 		this.ctx.restore();
 	}
 };
