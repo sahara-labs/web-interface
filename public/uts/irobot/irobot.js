@@ -3223,6 +3223,8 @@ CodeUploadGraphics.prototype.init = function() {
 	this.pageAppend(
 		"<div id='code-upload-graphics'></div>"
 	);
+
+	this.getFrame();
 };
 
 CodeUploadGraphics.prototype.getFrame = function() {
@@ -3247,7 +3249,7 @@ CodeUploadGraphics.prototype.parseFrame = function(frame) {
 	if (!(fid = gui.getAttribute("frame")))
 	{
 		/* No frame identifer so empty frame. */
-		// FIXME Clearing this causes flicker.
+		// FIXME Clearing the frame causes flicker.
 		return;
 	}
 	else if (this.currentFID == (fid = parseInt(fid)))
