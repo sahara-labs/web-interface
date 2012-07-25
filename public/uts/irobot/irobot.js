@@ -63,7 +63,7 @@ IRobot.prototype.determineMode = function() {
 			var m = parseInt(resp.value);
 			if (m == 0)
 			{
-				thiz.changeMode(3); // FIXME Should be zero
+				thiz.changeMode(0);
 			}		
 			else thiz.displayMode(m);
 		}
@@ -133,7 +133,7 @@ IRobot.prototype.displayMode = function(mode) {
 		
 		ov.width = 320;
 		ov.height = 240;
-//		this.widgets.push(ov);
+		this.widgets.push(ov);
 		this.widgets.push(new OverheadCameraControl(this));
 		break;
 		
