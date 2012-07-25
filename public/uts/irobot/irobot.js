@@ -3223,9 +3223,6 @@ CodeUploadGraphics.prototype.init = function() {
 	this.pageAppend(
 		"<div id='code-upload-graphics'></div>"
 	);
-	
-	// FIXME remove 
-	this.enable(true);
 };
 
 CodeUploadGraphics.prototype.getFrame = function() {
@@ -3236,7 +3233,7 @@ CodeUploadGraphics.prototype.getFrame = function() {
 		dataType: 'xml',
 		success: function (data) { 
 			thiz.parseFrame(data); 
-			setTimeout(function() { thiz.getFrame(); }, 1000);
+			if (thiz.enabled) setTimeout(function() { thiz.getFrame(); }, 1000);
 		},
 		error:   function() { setTimeout(function() { thiz.getFrame(); }, 2000); }
 	});
@@ -3444,7 +3441,7 @@ CodeUploadGraphics.prototype.clearFrame = function() {
 };
 
 CodeUploadGraphics.prototype.enable = function(enabled) {
-	if (!this.enabled && (this.enabled = enabled))
+	if (this.enabled = enabled)
 	{
 		/* If running and previously not running, get a frame. */
 		this.getFrame();
