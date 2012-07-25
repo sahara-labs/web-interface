@@ -61,7 +61,7 @@ IRobot.prototype.determineMode = function() {
 				return;
 			}
 			var m = parseInt(resp.value);
-			if (m == 0)
+			if(m == 0)
 			{
 				thiz.changeMode(1);
 			}		
@@ -3250,7 +3250,8 @@ CodeUploadGraphics.prototype.parseFrame = function(frame) {
 	if (!(fid = gui.getAttribute("frame")))
 	{
 		/* No frame identifer so empty frame. */
-		if (this.ctx) this.clearFrame();
+		// FIXME Clearing this causes flicker.
+		return;
 	}
 	else if (this.currentFID == (fid = parseInt(fid)))
 	{
@@ -3346,6 +3347,7 @@ CodeUploadGraphics.prototype.render = function(content, colorize) {
 		/* We are only interested in elements. */
 		if (element.nodeType != 1) continue;
 				
+		this.ctx.save();
 		if (colorize && element.hasAttribute("c"))
 		{
 			/* Set the desired color. */
@@ -3376,6 +3378,7 @@ CodeUploadGraphics.prototype.render = function(content, colorize) {
 				this.control.log("Unknown color: " + element.getAttribute("c"), IRobot.ERROR);
 			}
 		}
+		
 		
 		this.ctx.beginPath();
 		switch (element.nodeName)
@@ -3417,6 +3420,7 @@ CodeUploadGraphics.prototype.render = function(content, colorize) {
 		{
 			this.ctx.stroke();
 		}
+		this.ctx.restore();
 	}
 };
 
