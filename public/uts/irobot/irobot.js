@@ -3072,7 +3072,7 @@ function CodeUploadStatus(pc)
 	IWidget.call(this, pc);
 	
 	this.wid = "code-status";
-	this.tabs = ["Verify", "Compile", "StdOut", "StdErr"];
+	this.tabs = ["Verify", "Compile", "Terminal", "StdErr"];
 	
 	this.$status = null;
 	this.$compile = null;
@@ -3094,7 +3094,7 @@ CodeUploadStatus.prototype.init = function() {
 		"<div id='code-status-compile' class='widget-tab-panel'>" +
 			"<div id='run-compile'></div>" +
 		"</div>" +
-		"<div id='code-status-stdout' class='widget-tab-panel'>" +
+		"<div id='code-status-terminal' class='widget-tab-panel'>" +
 			"<div id='run-stdout'></div>" +
 		"</div>" +
 		"<div id='code-status-stderr' class='widget-tab-panel'>" +
@@ -3106,6 +3106,11 @@ CodeUploadStatus.prototype.init = function() {
 	this.$compile = $("#run-compile");
 	this.$stdout = $("#run-stdout");
 	this.$stderr = $("#run-stderr");
+	
+	$("#code-status").resizable({
+		minWidth: this.$w.width(),
+		minHeight: this.$w.height()
+	});
 };
 
 CodeUploadStatus.prototype.setStatus = function(status) {
@@ -3154,15 +3159,50 @@ CodeUploadStatus.prototype.setStdOut = function(stdout) {
 CodeUploadStatus.prototype.appendStatus = function(text) {
 	if (this.statusPos >= text.length) return;
 	
-	if (this.statusPos > 0)
+	var tasks = text.split("---"), task, i = 0, p, s, 
+		html = '<ul class="status-tasks">';
+	
+	for (i in tasks)
 	{
-		text = text.substr(this.statusPos);		
+		task = tasks[i];
+		
+		if (task.indexOf("[OK]") > 0) s = 'task-success';
+		else s = task.indexOf("[Failed]") == -1 ? 'task-inprogress' : 'task-failure';
+		
+		html += "<li class='status-task'>" +
+					"<div class='status-name " + s + "'>";
+
+		if ((p = task.indexOf('[')) == -1)
+		{
+			html += task;
+		}
+		else
+		{
+			html += task.substr(0, p);
+			if ((s = task.slice(p)).indexOf("[Failed]") == 0)
+			{
+				/* Error occured, should have an error reason. */
+				html += "</div>" +
+						"<div class='task-failure-reason'>" +
+							s.substr(s.indexOf(']') + 1);
+			}
+			else if (s.indexOf("[OK]") != 0)
+			{
+				/* Warnings or information. */
+				
+			}
+		}
+		
+		html +=		"</div>" + 
+				"</li>";
 	}
 	
-	this.statusPos = this.statusPos + text.length;
+	html += "</ul>";
+	
+	this.statusPos = text.length;
 	
 	// TODO format
-	this.$status.append(text);
+	this.$status.append(html);
 };
 
 CodeUploadStatus.prototype.appendCompile = function(text) {	
@@ -3340,7 +3380,7 @@ CodeUploadGraphics.prototype.renderFrame = function(frame) {
 };
 
 CodeUploadGraphics.prototype.render = function(content, colorize) {
-	var element;
+	var element, ppoint, fx, fy;
 	for (element = content.firstChild; element != null; element = element.nextSibling)
 	{
 		/* We are only interested in elements. */
@@ -3378,27 +3418,52 @@ CodeUploadGraphics.prototype.render = function(content, colorize) {
 			}
 		}
 		
-		
 		if (element.nodeName != "point") this.ctx.beginPath();
+		
 		switch (element.nodeName)
 		{
 		case 'line':
-			this.ctx.moveTo(parseFloat(element.getAttribute("xs")), parseFloat(element.getAttribute("ys")));
-			this.ctx.lineTo(parseFloat(element.getAttribute("xe")), parseFloat(element.getAttribute("ye")));
+			this.ctx.moveTo(parseInt(element.getAttribute("xs")), parseInt(element.getAttribute("ys")));
+			this.ctx.lineTo(parseInt(element.getAttribute("xe")), parseInt(element.getAttribute("ye")));
 			break;
 			
 		case 'point':
-			this.ctx.fillRect(parseFloat(element.getAttribute("x")), parseFloat(element.getAttribute("y")), 1, 1);
+			this.ctx.fillRect(parseInt(element.getAttribute("x")), parseInt(element.getAttribute("y")), 1, 1);
 			break;
 			
 		case 'rect':
-			this.ctx.rect(parseFloat(element.getAttribute("x")), parseFloat(element.getAttribute("y")), 
-						  parseFloat(element.getAttribute("w")), parseFloat(element.getAttribute("h")));
+			this.ctx.rect(parseInt(element.getAttribute("x")), parseInt(element.getAttribute("y")), 
+						  parseInt(element.getAttribute("w")), parseInt(element.getAttribute("h")));
 			break;
 			
 		case 'circle':
-			this.ctx.arc(parseFloat(element.getAttribute("x")), parseFloat(element.getAttribute("y")), 
-						 parseFloat(element.getAttribute("r")), 0, Math.PI * 2, true);
+			this.ctx.arc(parseInt(element.getAttribute("x")), parseInt(element.getAttribute("y")), 
+						 parseInt(element.getAttribute("r")), 0, Math.PI * 2, true);
+			break;
+			
+		case 'arc':
+			this.ctx.arc(parseInt(element.getAttribute("x")), parseInt(element.getAttribute("y")), 
+						 parseInt(element.getAttribute("r")), parseFloat(element.getAttribute("s")),
+						 parseFloat(element.getAttribute("e")), false);
+			break;
+			
+		case 'path':
+			fy = fx = -1;
+
+			for (ppoint = element.firstChild; ppoint != null; ppoint = ppoint.nextSibling)
+			{
+				/* The only child elements of a path are ppoint elements. */
+				if (ppoint.nodeName != "ppoint") continue;
+				
+				if (fx == -1) 
+				{	
+					this.ctx.moveTo(fx = parseInt(ppoint.getAttribute("x")), fy = parseInt(ppoint.getAttribute("y"))); 
+				}
+				else this.ctx.lineTo(parseInt(ppoint.getAttribute("x")), parseInt(ppoint.getAttribute));
+			}
+			
+			/* After adding at the points we need to close up the path. */
+			this.ctx.lineTo(fx, fy);
 			break;
 			
 		case 'text':
@@ -3408,20 +3473,20 @@ CodeUploadGraphics.prototype.render = function(content, colorize) {
 			break;
 		}
 		
-                if (element.nodeName != "point")
-                {
-		    this.ctx.closePath();
-		
-	  	    /* Determine whether this element needs to be stroked or filled. */
-		    if (element.hasAttribute("f") && element.getAttribute("f") == 't')
-		    {
-			this.ctx.fill();
-		    }  
-		    else
-		    {
-	  		this.ctx.stroke();
-	   	    }
-                }
+		if (element.nodeName != "point")
+		{
+			this.ctx.closePath();
+
+			/* Determine whether this element needs to be stroked or filled. */
+			if (element.hasAttribute("f") && element.getAttribute("f") == 't')
+			{
+				this.ctx.fill();
+			}  
+			else
+			{
+				this.ctx.stroke();
+			}
+		}
 		this.ctx.restore();
 	}
 };
