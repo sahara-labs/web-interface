@@ -532,7 +532,7 @@ DPad.prototype.init = function() {
 	
 	
 	/* For browsers that support device orientation. */
-	// FIXME Eventually touch device orientation support
+	// TODO Eventually touch device orientation support
 //	window.addEventListener("deviceorientation", function(event) {
 //		if (!thiz.loadAlpha) thiz.loadAlpha = event.alpha;
 //		if (!thiz.loadBeta) thiz.loadBeta = event.beta;
@@ -904,6 +904,7 @@ Ranger.prototype.mainLoop = function() {
 	var thiz = this;
 	$.ajax({
 		url: "/primitive/json/pc/" + IRobot.MANUAL_CONTROLLER + "/pa/ranger",
+		cache: false,
 		success: function (resp) {
 			if (typeof resp != "object")
 			{
@@ -1200,6 +1201,7 @@ NavControl.prototype.mainLoop = function() {
 	
 	$.ajax({
 		url: "/primitive/json/pc/" + IRobot.NAV_CONTROLLER + "/pa/packet",
+		cache: false,
 		success: function(resp) {
 			if (typeof resp != "object")
 			{
@@ -2602,6 +2604,7 @@ OverheadCameraControl.prototype.requestStatus = function() {
 	var thiz = this;
 	$.ajax({
 		url: "/primitive/json/pc/" + OverheadCameraControl.CONTROLLER + "/pa/status",
+		cache: false,
 		success: function(resp) {
 			thiz.parseStatus(resp);
 		},
@@ -2699,8 +2702,8 @@ OverheadCameraControl.prototype.moveStart = function(e) {
 				  this.boxVert * this.pxPerM, this.boxVert * this.pxPerM);
 	this.ctx.closePath();
 	
-//  FIXME click path check 
-//	if (!this.ctx.isPointInPath(e.pageX - this.offX, e.pageY - this.offY)) return;
+	if (typeof this.ctx.isPointInPath != "undefined" && 
+		!this.ctx.isPointInPath(e.pageX - this.offX, e.pageY - this.offY)) return;
 	
 	this.isMoving = true;
 	
@@ -2778,6 +2781,8 @@ function CodeUpload(pc, status, graphics)
 	
 	this.status = status;
 	this.graphics = graphics;
+	
+	this.lastDown = 0;
 }
 CodeUpload.prototype = new IWidget;
 
@@ -2794,10 +2799,6 @@ CodeUpload.prototype.init = function() {
 		 	"<div id='random-walk-button' class='commonbutton disabled'>" +
 		 		"<img src='/uts/irobot/images/random_walk.png' alt=' ' /><br />" +
 		 		"Random Walk" +
-		 	"</div>" +
-		 	"<div id='reset-button' class='commonbutton disabled'>" +
-		 		"<img src='/uts/irobot/images/reset.png' alt=' ' /></br />" +
-		 		"Reset Player" +
 		 	"</div>"
 	 );
 	 
@@ -2809,6 +2810,12 @@ CodeUpload.prototype.init = function() {
 	 
 	 /* Determine start status. */
 	 this.getStatus();
+	 
+	 $(document).bind("keydown.terminate", function(event) {
+		 /* If the last two key presses are Ctrl-C, terminate the application. */
+		 if (thiz.lastDown == 17 && event.which == 67) thiz.kill();
+		 thiz.lastDown = event.which;
+	 });
 };
 
 CodeUpload.prototype.handleClick = function(id) {
@@ -2852,6 +2859,9 @@ CodeUpload.prototype.displayUpload = function() {
 			"</div>" +
 		"</div>"
 	);
+
+	/* We need to disable the termianl so it won't be greedy with keypresses. */ 
+	this.status.enable(false);
 	
 	this.$uploadDialog = $("#upload-dialog").dialog({
 		autoOpen: true,
@@ -2860,8 +2870,14 @@ CodeUpload.prototype.displayUpload = function() {
 		modal: true,
 		resizable: false,
 		buttons: {
-			'Upload': function() { thiz.startUpload(); },
-			'Cancel': function() { $(this).dialog("close"); }
+			'Upload': function() { 
+				thiz.status.enable(true);
+				thiz.startUpload(); 
+			},
+			'Cancel': function() { 
+				thiz.status.enable(true);
+				$(this).dialog("close"); 
+			}
 		},
 		close:   function() { $(this).dialog("destroy"); $("#upload-dialog").remove(); },
 	});
@@ -2877,12 +2893,13 @@ CodeUpload.prototype.startUpload = function() {
 	/* Quick sanity check. */
 	var file = $("#code-archive").val(), thiz = this;
 
-	if (!$.browser.opera && (file.length == 0 || !(file.indexOf(".zip") > 0 || file.indexOf(".tar.gz") > 0)))
+	if (!$.browser.opera && (file.length == 0 || !file.indexOf(".zip") > 0))
 	{
 		$("#code-upload-err").show()
 			.children("p")
 				.empty()
-				.append("Uploaded file is not valid. Ensure it has a '.zip' or '.tar.gz' file extension.");
+				.append("Uploaded file is not valid. Ensure it has a '.zip' file extension.");
+		this.isUploading = false;
 		return;
 	}
 	
@@ -2981,13 +2998,12 @@ CodeUpload.prototype.getStatus = function() {
 	var thiz = this;
 	$.ajax({
 		url: "/batch/status",
+		cache: false,
 		success: function (r) { 
 			if (typeof r != "object") window.location.reload();
 			
 			/* Display of statuses. */
-			thiz.status.setStatus(r.state);
 			thiz.status.setStdOut(r.stdout);
-			thiz.status.setStdErr(r.stderr);
 			
 			if (r.state == "IN_PROGRESS")
 			{
@@ -3021,7 +3037,6 @@ CodeUpload.prototype.kill = function() {
 		null,
 		function (resp) {
 			if (typeof resp != "object") return;
-			
 			thiz.setRunning(resp.success);
 		}
 	);
@@ -3039,6 +3054,7 @@ CodeUpload.prototype.setRunning = function(running) {
 		
 		$("#kill-button").removeClass("disabled");
 		this.graphics.enable(true);
+		this.status.enable(true);
 	}
 	else if (!running && (this.isRunning || !this.hasStatus))
 	{
@@ -3058,9 +3074,15 @@ CodeUpload.prototype.setRunning = function(running) {
 		}
 		else $("#kill-button").addClass("disabled");
 		this.graphics.enable(false);
+		this.status.enable(false);
 	}
 	
 	this.hasStatus = true;
+};
+
+CodeUpload.prototype.destroy = function() {
+	$(document).unbind("keydown.terminate");
+	if (this.$w) this.$w.remove();
 };
 
 
@@ -3072,17 +3094,24 @@ function CodeUploadStatus(pc)
 	IWidget.call(this, pc);
 	
 	this.wid = "code-status";
-	this.tabs = ["Verify", "Compile", "Terminal", "StdErr"];
+	this.tabs = ["Verify", "Compile", "Terminal"];
 	
-	this.$status = null;
+	this.$verify = null;
 	this.$compile = null;
 	this.$stdout = null;
-	this.$stderr = null;
+	this.stdOutScoll = null;
 	
-	this.statusPos = 0;
-	this.compilePos = 0;
-	this.stdOutPos = 0;
-	this.stdErrPos = 0;
+	this.verifySize = 0;
+	this.compileSize = 0;
+	this.stdOutLines = 0;
+	
+	this.$cursor = null;
+	this.cursorBlinkIt = null;
+	this.termBuf = '';
+	this.termActive = false;
+	
+	this.progRunning = false;
+	this.stop = false;
 }
 CodeUploadStatus.prototype = new IWidget;
 
@@ -3095,46 +3124,80 @@ CodeUploadStatus.prototype.init = function() {
 			"<div id='run-compile'></div>" +
 		"</div>" +
 		"<div id='code-status-terminal' class='widget-tab-panel'>" +
-			"<div id='run-stdout'></div>" +
-		"</div>" +
-		"<div id='code-status-stderr' class='widget-tab-panel'>" +
-			"<div id='run-stderr'></div>" +
+			"<div id='run-stdout'>" +
+				"<ul>" +
+					"<li id='terminal-input'>" +
+						"<div id='terminal-input-cursor' class='terminal-input-cell'></div>" +
+						"<div id='terminal-input-send'>&gt;</div>" +
+						"<div id='terminal-input-clear'></div>" +
+					"</li>" +
+				"</ul>" +
+			"</div>" +
 		"</div>"
 	);
 	
-	this.$status = $("#run-verify");
+	this.$verify = $("#run-verify");
 	this.$compile = $("#run-compile");
-	this.$stdout = $("#run-stdout");
-	this.$stderr = $("#run-stderr");
+	this.$stdout = $("#terminal-input");
+	
+	this.stdOutScoll = $("#run-stdout")[0];
 	
 	$("#code-status").resizable({
 		minWidth: this.$w.width(),
 		minHeight: this.$w.height()
 	});
+	
+	var thiz = this;
+	
+	this.$cursor = $("#terminal-input-cursor");
+	this.cursorBlinkIt = setInterval(function() {
+		if (thiz.progRunning) thiz.$cursor.toggleClass("cursor-active");
+	}, 500);
+	
+	$(document).bind("keypress.terminal", function(event) {
+		thiz.terminalKey(event.which);
+		return !(thiz.progRunning && thiz.termActive);
+	});
+	
+	$("#terminal-input-send").click(function() {
+		thiz.sendTerminal();
+	});
 };
 
-CodeUploadStatus.prototype.setStatus = function(status) {
-	switch (status)
+CodeUploadStatus.prototype.terminalKey = function(code) {
+	/* Terminal is only active if a program is running and the terminal is in
+	 * focus. */
+	if (!(this.progRunning && this.termActive)) return;
+	
+	switch (code)
 	{
-	case 'SUCCESS':
+	case 13: // Enter key has been pressed so send along the input 
+		this.sendTerminal();
 		break;
 		
-	case 'IN_PROGRESS':
-		break;
+	case 8: // Backspace removes the last enter field
+		this.$cursor.prev().remove();
+		this.termBuf = this.termBuf.substr(0, this.termBuf.length - 1);
+		break;	
 		
-	case 'COMPLETE':
-		break;
-		
-	case 'FAILED':
-		break;
-		
-	case 'CLEAR':
-		break;
-		
-	default:
-		this.control.log("Unknown status: " + status, IRobot.ERROR);
+	default: // The rest of the characters are terminal input
+		var char = String.fromCharCode(code);
+		this.termBuf += char;
+		this.$cursor.before("<div class='terminal-input-cell'>" + this.quote(char) + "</div>");
 		break;
 	}
+};
+
+CodeUploadStatus.prototype.sendTerminal = function() {
+	$.post(
+		"/primitive/echo/pc/CodeUploadController/pa/stdin",
+		{
+			'in': this.termBuf
+		}
+	);
+	
+	this.termBuf = '';
+	this.$cursor.siblings().not("#terminal-input-send").remove();
 };
 
 CodeUploadStatus.TERMINATOR_VERIF_COMP = "__*~#INIT_STDOUT_TERMINATOR#~*__";
@@ -3143,34 +3206,42 @@ CodeUploadStatus.TERMINATOR_COMP_RUN   = "__*~#COMP_RUN_TERMINATOR#~*__";
 CodeUploadStatus.prototype.setStdOut = function(stdout) {
 	if (!stdout) return;
 	
-	var parts = stdout.split(CodeUploadStatus.TERMINATOR_VERIF_COMP);
+	var parts = stdout.split(CodeUploadStatus.TERMINATOR_VERIF_COMP, 2);
 	
-	this.appendStatus(parts[0]);
+	/* The first part of standard error is the code verification string. */
+	this.appendVerify(parts[0]);
 	
 	if (parts.length > 1)
 	{
 		parts = parts[1].split(CodeUploadStatus.TERMINATOR_COMP_RUN);
 
+		/* The second part of standard error is the compilation output. */
 		this.appendCompile(parts[0]);
+		
+		/* The third part is standard error of the output. */
 		if (parts.length > 1) this.appendStdOut(parts[1]);
 	}
 };
 
-CodeUploadStatus.prototype.appendStatus = function(text) {
-	if (this.statusPos >= text.length) return;
+CodeUploadStatus.prototype.appendVerify = function(text) {
+	if (this.verifySize >= text.length) return;
 	
-	var tasks = text.split("---"), task, i = 0, p, s, 
+	if (this.verifySize == 0) this.switchTo("verify");
+	
+	var tasks = text.split("---"), task, i = 0, j = 0, p, s, wa,
 		html = '<ul class="status-tasks">';
 	
 	for (i in tasks)
 	{
 		task = tasks[i];
+		if (task == "") continue;
 		
 		if (task.indexOf("[OK]") > 0) s = 'task-success';
 		else s = task.indexOf("[Failed]") == -1 ? 'task-inprogress' : 'task-failure';
 		
-		html += "<li class='status-task'>" +
-					"<div class='status-name " + s + "'>";
+		html += "<li class='status-task " + s + "'>" +
+					"<div class='status-name'>" +
+						"<span class='ui-icon ui-icon-triangle-1-e'></span>";
 
 		if ((p = task.indexOf('[')) == -1)
 		{
@@ -3184,13 +3255,31 @@ CodeUploadStatus.prototype.appendStatus = function(text) {
 				/* Error occured, should have an error reason. */
 				html += "</div>" +
 						"<div class='task-failure-reason'>" +
-							s.substr(s.indexOf(']') + 1);
+							"Code verification failed because: " + 
+							s.substr(s.indexOf(']') + 1) +
+							"<p class='task-failure-help'>If you think this is a system error please use the " +
+							"'Contact Support' button for help.</p>";
 			}
 			else if (s.indexOf("[OK]") != 0)
 			{
-				/* Warnings or information. */
+				html += "<div class='task-warning-list'>" +
+							"<ul>";
 				
-			}
+				/* Warnings or information. */
+				wa = s.split(/\s*\[\s*/);
+				for (j in wa)
+				{
+					/* Junk data or end of list. */
+					if (!(wa[j].indexOf("W]") == 0 || wa[j].indexOf("I]") == 0)) continue;
+					
+					html += "<li class='task-info-" + (wa[j].indexOf("W") == 0 ? 'warn' : 'info') + "'>" +
+								wa[j].substr(wa[j].indexOf(']') + 1) +
+							"</li>";
+				}
+				
+				html +=   "</ul>" +
+						"</div>";
+			}	
 		}
 		
 		html +=		"</div>" + 
@@ -3199,42 +3288,79 @@ CodeUploadStatus.prototype.appendStatus = function(text) {
 	
 	html += "</ul>";
 	
-	this.statusPos = text.length;
+	this.verifySize = text.length;
+	this.$verify.empty().append(html);
 	
-	// TODO format
-	this.$status.append(html);
+	$("#run-verify .status-task").click(function() {		
+		$(this).find(".task-warning-list").slideToggle();
+		$(this).find("span.ui-icon").toggleClass("ui-icon-triangle-1-e ui-icon-triangle-1-s");
+	});
 };
 
 CodeUploadStatus.prototype.appendCompile = function(text) {	
-	// TODO format
-	this.$compile.empty().append(this.formatOutput(text));
+	if (this.compileSize >= text.length) return;
+	
+	/* Switch to tab if we have content. */
+	if (this.compileSize == 0) this.switchTo('compile');
+	
+	this.compileSize = text.length;	
+	this.$compile.empty().append("<pre>" + this.quote(text) + "</pre>");
 };
 
 CodeUploadStatus.prototype.appendStdOut = function(text) {
-	// TODO format
-	this.$stdout.empty().append(this.formatOutput(text));
-};
-
-CodeUploadStatus.prototype.setStdErr = function(stderr) {
-	if (!stderr) return;
+	var lines = text.split("\n"), i = 0, html = '';
 	
-	this.$stderr.empty().append(this.formatOutput(stderr));
+	if (this.stdOutLines >= lines.length) return;
+	
+	if (this.stdOutLines == 0) this.switchTo("terminal");
+	else lines.splice(0, this.stdOutLines - 1);
+	
+	for (i in lines)
+	{
+		html += "<li>" + this.quote(lines[i]) + "</li>";	
+	}
+	
+	/* We want to insert the output lines immediately before the 
+	 * terminal input line.*/
+	this.$stdout.before(html);
+	this.stdOutLines += lines.length;
+	this.stdOutScoll.scrollTop = this.stdOutLines * 50;
 };
 
-CodeUploadStatus.prototype.formatOutput = function(out) {
-	// TODO properly format;
-	return "<pre>" + out + "</pre>";
+CodeUploadStatus.prototype.quote = function(text) {
+	return text.replace("&", "&amp;")
+			   .replace(">", "&gt;")
+			   .replace("<", "&lt;")
+			   .replace(' ', "&nbsp;");
 };
 
 CodeUploadStatus.prototype.clear = function() {
-	this.$status.empty();
-	this.statusPos = 0;
+	this.$verify.empty();
+	this.verifySize = 0;
+	this.$compile.empty();
+	this.compileSize = 0;
+	this.$stdout.siblings().remove();
+	this.stdOutLines = 0;
+};
+
+CodeUploadStatus.prototype.enable = function(enabled) {
+	this.progRunning = enabled;
+};
+
+CodeUploadStatus.prototype.switchTo = function(tab) {
+	$("#" + this.wid + " .widget-tab").removeClass("widget-tab-selected");
+	$("#tab-" + tab).addClass("widget-tab-selected");
+
+	$("#" + this.wid + " .widget-tab-panel").hide();
+	$("#" + this.wid + "-" + tab).show();
 	
-	this.$stdout.empty();
-	this.stdOutPos = 0;
-	
-	this.$stderr.empty();
-	this.stdErrPos = 0;
+	this.termActive = tab == "terminal";
+};
+
+CodeUploadStatus.prototype.destroy = function () {
+	clearInterval(this.cursorBlinkIt);
+	$(document).unbind("keypress.terminal");
+	if (this.$w) this.$w.remove();
 };
 
 /* ----------------------------------------------------------------------------
@@ -3256,12 +3382,15 @@ function CodeUploadGraphics(pc)
 	this.offY = 0;
 	
 	this.enabled = false;
+	this.resizeEnabled = false;
 }
 CodeUploadGraphics.prototype = new IWidget;
 
 CodeUploadGraphics.prototype.init = function() {
 	this.pageAppend(
-		"<div id='code-upload-graphics'></div>"
+		"<div id='code-upload-graphics'>" +
+			"<p>Upload a program using the graphical libraries to display graphics.</p>" +
+		"</div>"
 	);
 
 	this.getFrame();
@@ -3270,14 +3399,15 @@ CodeUploadGraphics.prototype.init = function() {
 CodeUploadGraphics.prototype.getFrame = function() {
 	var thiz = this;
 	$.ajax({
-		url: "/primitive/file/pc/CodeUploadController/pa/getGraphicsFrame/mime/text-xml",
+		url: "/primitive/echo/pc/CodeUploadController/pa/getGraphicsFrame",
 		cache: false,
-		dataType: 'xml',
 		success: function (data) { 
 			thiz.parseFrame(data); 
 			if (thiz.enabled) setTimeout(function() { thiz.getFrame(); }, 1000);
 		},
-		error:   function() { setTimeout(function() { thiz.getFrame(); }, 2000); }
+		error:   function() {
+			setTimeout(function() { thiz.getFrame(); }, 2000); 
+		}
 	});
 };
 
@@ -3312,6 +3442,17 @@ CodeUploadGraphics.prototype.parseFrame = function(frame) {
 		this.offY = $(canvas).offset().top;
 		
 		$(canvas).click(function(evt) { thiz.click(evt); });
+		
+		/* If the canvas size is greater than the bounding box size, we
+		 * we make the bounding box resizable. */
+		if (this.height > this.$w.height() || this.width > this.$w.width() && !this.resizeEnabled)
+		{
+			this.$w.resizable({
+				minWidth: this.$w.width(),
+				minHeight: this.$w.height()
+			});
+			this.resizeEnabled = true;
+		}
 	}
 	
 	this.clearFrame();
