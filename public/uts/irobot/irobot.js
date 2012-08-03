@@ -3155,8 +3155,35 @@ CodeUploadStatus.prototype.init = function() {
 	}, 500);
 	
 	$(document).bind("keypress.terminal", function(event) {
-		thiz.terminalKey(event.which);
-		return !(thiz.progRunning && thiz.termActive);
+		
+		if (thiz.progRunning && thiz.termActive)
+		{
+			thiz.terminalKey(event.which);
+		}
+		else
+		{
+			/* We are stopping this event bubble because the terminal is 
+			 * intercepting all the key press interrupts. */
+			event.stopImmediatePropagation();
+			return false;
+		}
+	});
+	
+	$(document).bind("keydown.terminal", function(event) {
+		if (thiz.progRunning && thiz.termActive)
+		{
+			/* Stopping event handlers firing because the terminal is greedy. */
+			event.stopImmediatePropagation();
+			
+			if (event.which == 8)
+			{
+				/* Backspace, removes the last character from the buffer. */
+				thiz.$cursor.prev().remove();
+				thiz.termBuf = thiz.termBuf.substr(0, thiz.termBuf.length - 1);
+			}
+			
+			return false;
+		}
 	});
 	
 	$("#terminal-input-send").click(function() {
@@ -3176,8 +3203,8 @@ CodeUploadStatus.prototype.terminalKey = function(code) {
 		break;
 		
 	case 8: // Backspace removes the last enter field
-		this.$cursor.prev().remove();
-		this.termBuf = this.termBuf.substr(0, this.termBuf.length - 1);
+		/* This is being performed used a keydown event as some browsers 
+		 * (Chrome, IE) do not provide it as a keypress event. */
 		break;	
 		
 	default: // The rest of the characters are terminal input
@@ -3189,6 +3216,7 @@ CodeUploadStatus.prototype.terminalKey = function(code) {
 };
 
 CodeUploadStatus.prototype.sendTerminal = function() {
+	if (!this.progRunning) return;
 	$.post(
 		"/primitive/echo/pc/CodeUploadController/pa/stdin",
 		{
@@ -3308,22 +3336,24 @@ CodeUploadStatus.prototype.appendCompile = function(text) {
 };
 
 CodeUploadStatus.prototype.appendStdOut = function(text) {
-	var lines = text.split("\n"), i = 0, html = '';
+	var lines = text.split(/\n/), i = 0, html = '';
 	
 	if (this.stdOutLines >= lines.length) return;
 	
+	
 	if (this.stdOutLines == 0) this.switchTo("terminal");
 	else lines.splice(0, this.stdOutLines - 1);
-	
+		
 	for (i in lines)
 	{
+		if (lines[i] == '') continue;
 		html += "<li>" + this.quote(lines[i]) + "</li>";	
 	}
 	
 	/* We want to insert the output lines immediately before the 
 	 * terminal input line.*/
 	this.$stdout.before(html);
-	this.stdOutLines += lines.length;
+	this.stdOutLines += lines.length - 1;
 	this.stdOutScoll.scrollTop = this.stdOutLines * 50;
 };
 
@@ -3360,6 +3390,7 @@ CodeUploadStatus.prototype.switchTo = function(tab) {
 CodeUploadStatus.prototype.destroy = function () {
 	clearInterval(this.cursorBlinkIt);
 	$(document).unbind("keypress.terminal");
+	$(document).unbind("keydown.terminal");
 	if (this.$w) this.$w.remove();
 };
 
@@ -3402,9 +3433,9 @@ CodeUploadGraphics.prototype.getFrame = function() {
 		url: "/primitive/echo/pc/CodeUploadController/pa/getGraphicsFrame",
 		cache: false,
 		success: function (data) { 
-			thiz.parseFrame(data); 
+			thiz.parseFrame(data);
 			if (thiz.enabled) setTimeout(function() { thiz.getFrame(); }, 1000);
-		},
+		},	
 		error:   function() {
 			setTimeout(function() { thiz.getFrame(); }, 2000); 
 		}
@@ -3412,10 +3443,28 @@ CodeUploadGraphics.prototype.getFrame = function() {
 };
 
 CodeUploadGraphics.prototype.parseFrame = function(frame) {
-	if (typeof frame != "object") return;
+	if (typeof frame != "string") return;
 	
-	var gui = frame.documentElement, fid, height, width, e, thiz = this;
+	var doc, gui, fid, height, width, e, thiz = this;
 	
+	/* Parse frame XML to DOM Document. */
+    if (window.DOMParser)
+    {
+    	doc = new DOMParser().parseFromString(frame, "text/xml");
+    }
+    else if (window.ActiveXObject)
+    {
+    	doc = new ActiveXObject("Microsoft.XMLDOM");
+        doc.async = "false";
+        doc.loadXML(frame);
+    }
+    else
+    {
+    	this.control.log("Unable to parse graphics XML - no DOM parser.", IRobot.ERROR);
+    	return;
+    }
+	
+    gui = doc.documentElement;
 	if (!(fid = gui.getAttribute("frame")))
 	{
 		/* No frame identifer so empty frame. */
@@ -3528,7 +3577,7 @@ CodeUploadGraphics.prototype.render = function(content, colorize) {
 		if (element.nodeType != 1) continue;
 				
 		this.ctx.save();
-		if (colorize && element.hasAttribute("c"))
+		if (colorize && element.getAttribute("c"))
 		{
 			/* Set the desired color. */
 			switch (parseInt(element.getAttribute("c")))
@@ -3619,7 +3668,7 @@ CodeUploadGraphics.prototype.render = function(content, colorize) {
 			this.ctx.closePath();
 
 			/* Determine whether this element needs to be stroked or filled. */
-			if (element.hasAttribute("f") && element.getAttribute("f") == 't')
+			if (element.getAttribute("f") && element.getAttribute("f") == 't')
 			{
 				this.ctx.fill();
 			}  
