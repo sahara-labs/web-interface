@@ -2871,11 +2871,11 @@ CodeUpload.prototype.displayUpload = function() {
 		resizable: false,
 		buttons: {
 			'Upload': function() { 
-				thiz.status.enable(true);
+				if (thiz.isRunning) thiz.status.enable(true);
 				thiz.startUpload(); 
 			},
 			'Cancel': function() { 
-				thiz.status.enable(true);
+				if (thiz.isRunning) thiz.status.enable(false);
 				$(this).dialog("close"); 
 			}
 		},
@@ -3104,6 +3104,7 @@ function CodeUploadStatus(pc)
 	this.verifySize = 0;
 	this.compileSize = 0;
 	this.stdOutLines = 0;
+	this.stdOutLast = '';
 	
 	this.$cursor = null;
 	this.cursorBlinkIt = null;
@@ -3159,9 +3160,7 @@ CodeUploadStatus.prototype.init = function() {
 		if (thiz.progRunning && thiz.termActive)
 		{
 			thiz.terminalKey(event.which);
-		}
-		else
-		{
+
 			/* We are stopping this event bubble because the terminal is 
 			 * intercepting all the key press interrupts. */
 			event.stopImmediatePropagation();
@@ -3181,7 +3180,7 @@ CodeUploadStatus.prototype.init = function() {
 				thiz.$cursor.prev().remove();
 				thiz.termBuf = thiz.termBuf.substr(0, thiz.termBuf.length - 1);
 			}
-			
+
 			return false;
 		}
 	});
@@ -3228,26 +3227,57 @@ CodeUploadStatus.prototype.sendTerminal = function() {
 	this.$cursor.siblings().not("#terminal-input-send").remove();
 };
 
-CodeUploadStatus.TERMINATOR_VERIF_COMP = "__*~#INIT_STDOUT_TERMINATOR#~*__";
-CodeUploadStatus.TERMINATOR_COMP_RUN   = "__*~#COMP_RUN_TERMINATOR#~*__";
+CodeUploadStatus.TERMINATOR_VERIF_START = "__*~#START_INIT_TERMINATOR#~*__";
+CodeUploadStatus.TERMINATOR_VERIF_COMP  = "__*~#INIT_STDOUT_TERMINATOR#~*__";
+CodeUploadStatus.TERMINATOR_COMP_RUN    = "__*~#COMP_RUN_TERMINATOR#~*__";
 
 CodeUploadStatus.prototype.setStdOut = function(stdout) {
 	if (!stdout) return;
 	
-	var parts = stdout.split(CodeUploadStatus.TERMINATOR_VERIF_COMP, 2);
+	var verifStart, compStart = -1, stdoutStart = -1;
+	 
+	/* The output format has three sections, verification, compiliation and 
+	 * program output seperated by terminators. It is also rolling and may not
+	 * contain each section as oldest output is removed from the output stream. */
 	
-	/* The first part of standard error is the code verification string. */
-	this.appendVerify(parts[0]);
-	
-	if (parts.length > 1)
+	if ((verifStart = stdout.indexOf(CodeUploadStatus.TERMINATOR_VERIF_START)) != -1)
 	{
-		parts = parts[1].split(CodeUploadStatus.TERMINATOR_COMP_RUN);
+		verifStart += CodeUploadStatus.TERMINATOR_VERIF_START.length;
+		if ((compStart = stdout.indexOf(CodeUploadStatus.TERMINATOR_VERIF_COMP)))
+		{
+			this.appendVerify(stdout.substring(verifStart, compStart));
+		}
+		else 
+		{
+			this.appendVerify(stdout.substring(verifStart));
+			return;
+		}
+	}
 
-		/* The second part of standard error is the compilation output. */
-		this.appendCompile(parts[0]);
-		
-		/* The third part is standard error of the output. */
-		if (parts.length > 1) this.appendStdOut(parts[1]);
+	if (compStart > 0 || (compStart = stdout.indexOf(CodeUploadStatus.TERMINATOR_VERIF_COMP)) != -1)
+	{
+		compStart += CodeUploadStatus.TERMINATOR_VERIF_COMP.length;
+		if ((stdoutStart = stdout.indexOf(CodeUploadStatus.TERMINATOR_COMP_RUN)) != -1)
+		{
+			this.appendCompile(stdout.substring(compStart, stdoutStart));
+		}
+		else
+		{
+			this.appendCompile(stdout.substring(compStart));
+			return;
+		}
+	}
+	
+	if (stdoutStart > 0 || (stdoutStart = stdout.indexOf(CodeUploadStatus.TERMINATOR_COMP_RUN)) != -1)
+	{
+		stdoutStart += CodeUploadStatus.TERMINATOR_COMP_RUN.length;
+		this.appendStdOut(stdout.substring(stdoutStart));
+	}
+	
+	if (verifStart == -1 && compStart == -1 && stdoutStart == -1)
+	{
+		/* All the terminators have been overritten. */
+		this.appendStdOut(stdout);
 	}
 };
 
@@ -3336,14 +3366,24 @@ CodeUploadStatus.prototype.appendCompile = function(text) {
 };
 
 CodeUploadStatus.prototype.appendStdOut = function(text) {
-	var lines = text.split(/\n/), i = 0, html = '';
+	var lines, pos = 0, i = 0, html = '', k;
 	
-	if (this.stdOutLines >= lines.length) return;
-	
-	
-	if (this.stdOutLines == 0) this.switchTo("terminal");
-	else lines.splice(0, this.stdOutLines - 1);
+	if ((pos = text.indexOf(this.stdOutLast)) == -1)
+	{
+		this.$stdout.siblings().remove();
+		this.stdOutLines = 0;
+	}
+	else
+	{
+		text = text.substr(pos + this.stdOutLast.length);
+	}
+
+	if (this.stdOutLines == 0) 
+	{
+		this.switchTo("terminal");
+	}
 		
+	lines = text.split("\n");
 	for (i in lines)
 	{
 		if (lines[i] == '') continue;
@@ -3354,7 +3394,24 @@ CodeUploadStatus.prototype.appendStdOut = function(text) {
 	 * terminal input line.*/
 	this.$stdout.before(html);
 	this.stdOutLines += lines.length - 1;
+	
+	k = lines.length;
+	do
+	{
+		this.stdOutLast = lines[k - 3] + "\n" + lines[lines.length - 2] + "\n" + lines[lines.length - 1];
+	}
+	while (k > 3 && this.stdOutLast == '');
+	
+	/* We want the terminal to scroll to the latest content. */
 	this.stdOutScoll.scrollTop = this.stdOutLines * 50;
+
+	/* Limit the number of lines on the page ot sto the browser
+	 * from running out of memory. */
+	while (this.stdOutLines > 100)
+	{
+		this.$stdout.siblings(":first").remove();
+		this.stdOutLines--;
+	}
 };
 
 CodeUploadStatus.prototype.quote = function(text) {
@@ -3402,7 +3459,7 @@ function CodeUploadGraphics(pc)
 	IWidget.call(this, pc);
 	
 	this.wid = "code-upload-graphics-box";
-	this.title = "Graphics";
+	this.title = "Graphics Display";
 	
 	this.ctx = null;
 	this.width = 0;
