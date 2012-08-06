@@ -3243,7 +3243,7 @@ CodeUploadStatus.prototype.setStdOut = function(stdout) {
 	if ((verifStart = stdout.indexOf(CodeUploadStatus.TERMINATOR_VERIF_START)) != -1)
 	{
 		verifStart += CodeUploadStatus.TERMINATOR_VERIF_START.length;
-		if ((compStart = stdout.indexOf(CodeUploadStatus.TERMINATOR_VERIF_COMP)))
+		if ((compStart = stdout.indexOf(CodeUploadStatus.TERMINATOR_VERIF_COMP)) != -1)
 		{
 			this.appendVerify(stdout.substring(verifStart, compStart));
 		}
@@ -3428,6 +3428,7 @@ CodeUploadStatus.prototype.clear = function() {
 	this.compileSize = 0;
 	this.$stdout.siblings().remove();
 	this.stdOutLines = 0;
+	this.stdOutLast = '';
 };
 
 CodeUploadStatus.prototype.enable = function(enabled) {
@@ -3665,7 +3666,7 @@ CodeUploadGraphics.prototype.render = function(content, colorize) {
 			}
 		}
 		
-		if (element.nodeName != "point") this.ctx.beginPath();
+		if (element.nodeName != "point" || element.nodeName != "arc") this.ctx.beginPath();
 		
 		switch (element.nodeName)
 		{
@@ -3706,7 +3707,7 @@ CodeUploadGraphics.prototype.render = function(content, colorize) {
 				{	
 					this.ctx.moveTo(fx = parseInt(ppoint.getAttribute("x")), fy = parseInt(ppoint.getAttribute("y"))); 
 				}
-				else this.ctx.lineTo(parseInt(ppoint.getAttribute("x")), parseInt(ppoint.getAttribute));
+				else this.ctx.lineTo(parseInt(ppoint.getAttribute("x")), parseInt(ppoint.getAttribute("y")));
 			}
 			
 			/* After adding at the points we need to close up the path. */
@@ -3722,7 +3723,7 @@ CodeUploadGraphics.prototype.render = function(content, colorize) {
 		
 		if (element.nodeName != "point")
 		{
-			this.ctx.closePath();
+			if (element.nodeName != "arc") this.ctx.closePath();
 
 			/* Determine whether this element needs to be stroked or filled. */
 			if (element.getAttribute("f") && element.getAttribute("f") == 't')
@@ -3744,8 +3745,8 @@ CodeUploadGraphics.prototype.click = function(evt) {
 	$.post(
 		"/primitive/json/pc/CodeUploadController/pa/registerGraphicsClick",
 		{
-			clickX: evt.pageX - this.offX,
-			clickY: evt.pageY - this.offY
+			clickX: parseInt(evt.pageX - this.offX),
+			clickY: parseInt(evt.pageY - this.offY)
 		}
 	);
 };
