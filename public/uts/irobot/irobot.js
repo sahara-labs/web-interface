@@ -2331,9 +2331,9 @@ CameraWidget.prototype.deployMJpeg = function() {
 	else if ($.browser.mozilla)
 	{
 		var img = new Image(), thiz = this;
-		img.alt = " ";
-		img.style.height = this.height;
-		img.style.width = this.width;
+		img.alt = "video";
+		img.style.height = this.height + "px";
+		img.style.width = this.width + "px";
 		img.onload = function() {
 			thiz.lastHeartBeat = new Date().getTime();
 		};
@@ -2347,7 +2347,7 @@ CameraWidget.prototype.deployMJpeg = function() {
 	else
 	{
 		$("#" + this.cameraBox).append(
-			"<img src='" + this.urls.mjpeg + "' alt='video' style='height:" + this.height + "px;width:" + this.width + "px;'/>"
+			"<img src='" + this.urls.mjpeg + "' alt='video' style='height: " + this.height + "px; width: " + this.width + "px' />"
 		);
 	}
 };
