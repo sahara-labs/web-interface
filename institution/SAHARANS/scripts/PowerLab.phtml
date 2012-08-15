@@ -1,0 +1,25 @@
+<?php
+/**
+ * Power Systems Lab interface.
+ */
+
+$this->headScript()->appendFile($this->baseUrl('uts/power/power.js'));
+$this->headLink()->appendStylesheet($this->baseUrl('uts/power/power.css'));
+?>
+
+<div id='power-systems-lab'>
+    <div id='backing-left'></div>
+    <div id='backing-center'>
+    	<div id='backing-title'>Power Systems Lab</div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+/* Remove the rig name. */
+$("#content > .contentheader").remove();
+
+/* Initialise the interface. */
+var lab = new PowerLab("power-systems-lab");
+lab.init();
+</script>
