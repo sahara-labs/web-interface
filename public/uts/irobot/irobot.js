@@ -3071,8 +3071,10 @@ CodeUpload.prototype.setRunning = function(running) {
 				"<img src='/uts/irobot/images/kill.png' alt=' ' /><br />" +
 				"Kill Program"
 			);
+			this.isKilling = false;
 		}
 		else $("#kill-button").addClass("disabled");
+		
 		this.graphics.enable(false);
 		this.status.enable(false);
 	}
