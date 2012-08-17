@@ -3169,8 +3169,9 @@ CodeUploadStatus.prototype.init = function() {
 	});
 	
 	$(document).bind("keydown.terminal", function(event) {
-		if (thiz.progRunning && thiz.termActive)
-		{
+		if (thiz.progRunning && thiz.termActive &&
+				!(event.which >= 37 && event.which <= 40)) // Arrow keys should propogate to the DPad key down
+		{			
 			/* Stopping event handlers firing because the terminal is greedy. */
 			event.stopImmediatePropagation();
 			
@@ -3179,9 +3180,8 @@ CodeUploadStatus.prototype.init = function() {
 				/* Backspace, removes the last character from the buffer. */
 				thiz.$cursor.prev().remove();
 				thiz.termBuf = thiz.termBuf.substr(0, thiz.termBuf.length - 1);
+				return false;
 			}
-
-			return false;
 		}
 	});
 	
