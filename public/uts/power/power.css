@@ -73,7 +73,7 @@
 	width: 120px;
 	height: 52px;
 	margin: 6px;
-	background-color: #AAB092;
+	background-color: #C8C8C8;
 	border: 1px solid #000000;
 }
 
@@ -102,6 +102,99 @@
 
 #power-systems-lab .yellow-color {
 	background-color: #EFEFC5;
+}
+
+/* ----------------------------------------------------------------------------
+ * -- Seven Segment Display                                                  --
+ * ---------------------------------------------------------------------------- */
+#power-systems-lab .ssd-digit {
+	position: relative;
+	float: left;
+	width: 27px;
+	height: 50px;
+	margin-top: 6px;
+}
+
+#power-systems-lab .ssd-digit-4 {
+	margin-left: 1px;
+}
+
+#power-systems-lab .ssd-digit-3 {
+}
+
+#power-systems-lab .ssd-digit-2 {
+}
+
+#power-systems-lab .ssd-digit-1 {
+}
+
+#power-systems-lab .ssd-seg {
+	position: absolute;
+}
+
+#power-systems-lab .ssd-seg-on {
+    background-image: url(images/ssd.png);
+}
+
+
+#power-systems-lab .ssd-horz-seg {
+	width: 16px;
+	height: 5px;
+	background-position: -1px 22px;
+}
+
+#power-systems-lab .ssd-vert-seg {
+	width: 5px;
+	height: 16px;
+	background-position: 15px 0px;
+}
+
+#power-systems-lab .ssd-seg-1 {
+	top: 1px;
+	left: 5px;
+}
+
+#power-systems-lab .ssd-seg-2 {
+	top: 4px;
+	left: 20px;
+}
+ 
+#power-systems-lab .ssd-seg-3 {
+	top: 20px;
+	left: 20px;
+}
+ 
+#power-systems-lab .ssd-seg-4 {
+	top: 34px;
+	left: 4px;
+}
+ 
+#power-systems-lab .ssd-seg-5 {
+	top: 20px;
+	left: 0px;
+}
+ 
+#power-systems-lab .ssd-seg-6 {
+	top: 4px;
+	left: 0px;
+}
+ 
+#power-systems-lab .ssd-seg-7 {
+	top: 18px;
+	left: 5px;
+}
+
+#power-systems-lab .ssd-dot {
+	float: left;
+	margin-top: 34px;
+	width: 10px;
+	height: 10px;
+	background-image: url(images/ssd.png);
+	background-position: -3px 9px;
+}
+
+#power-systems-lab .ssd-dot-on {
+	
 }
 
 /* ----------------------------------------------------------------------------
@@ -185,7 +278,7 @@
 	top: 400px;
 }
 
-#power-systems-lab.lab1 #line-frequency-2 {
+#power-systems-lab.lab1 #line-current-2 {
 	left: 485px;
 	top: 500px;
 }
@@ -484,27 +577,27 @@
 }
 
 #graphics-default-settings {
-	width: 100px;
+	width: 188px;
 	top: 780px;
-	left: -30px;
+	left: -88px;
 }
 
 #graphics-default-set-voltage {
 	height: 40px;
 	top: 740px;
-	left: -30px;
+	left: -88px;
 }
 
 #graphics-default-set-freq {
 	height: 40px;
-	top: 740px;
-	left: 70px;
+	top: 743px;
+	left: 99px;
 }
 
 #graphics-default-to-button {
 	height: 40px;
 	top: 783px;
-	left: 20px;
+	left: 5px;
 }
 
 

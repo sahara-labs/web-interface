@@ -38,21 +38,21 @@ PowerLab.prototype.setMode = function(mode) {
 		}));
 		
 		/* --- Meters ---------------------------------------------------------------------------------------- */
-		this.widgets.push(new LCDWidget(this.$canvas, "active-power",     "Active Power",   "W",   3, "teal-color"));
-		this.widgets.push(new LCDWidget(this.$canvas, "apparent-power",   "Apparent Power", "VA",  3, "green-color"));
-		this.widgets.push(new LCDWidget(this.$canvas, "ln-voltage",       "L - N Voltage",  "V",   3, "teal-color"));
-		this.widgets.push(new LCDWidget(this.$canvas, "set-voltage",      "Set Voltage",    "V",   3, "yellow-color"));
-		this.widgets.push(new LCDWidget(this.$canvas, "reactive-power",   "Reactive Power", "Var", 3, "red-color"));
-		this.widgets.push(new LCDWidget(this.$canvas, "active-factor",    "Active Factor",  "%",   3, "yellow-color"));
-		this.widgets.push(new LCDWidget(this.$canvas, "line-frequency",   "Line Frequency", "Hz",  3, "red-color"));
-		this.widgets.push(new LCDWidget(this.$canvas, "set-frequency",    "Set Frequency",  "Hz",  3, "teal-color"));
+		this.widgets.push(new LCDWidget(this.$canvas, "active-power",     "Active Power",   "W",   2, "teal-color"));
+		this.widgets.push(new LCDWidget(this.$canvas, "apparent-power",   "Apparent Power", "VA",  2, "green-color"));
+		this.widgets.push(new LCDWidget(this.$canvas, "ln-voltage",       "L - N Voltage",  "V",   1, "teal-color"));
+		this.widgets.push(new LCDWidget(this.$canvas, "set-voltage",      "Set Voltage",    "V",   1, "yellow-color"));
+		this.widgets.push(new LCDWidget(this.$canvas, "reactive-power",   "Reactive Power", "Var", 1, "red-color"));
+		this.widgets.push(new LCDWidget(this.$canvas, "active-factor",    "Active Factor",  "%",   2, "yellow-color"));
+		this.widgets.push(new LCDWidget(this.$canvas, "line-frequency",   "Line Frequency", "Hz",  1, "red-color"));
+		this.widgets.push(new LCDWidget(this.$canvas, "set-frequency",    "Set Frequency",  "Hz",  2, "teal-color"));
 		this.widgets.push(new LCDWidget(this.$canvas, "line-current",     "Line Current",   "A",   3, "yellow-color"));
-		this.widgets.push(new LCDWidget(this.$canvas, "active-power-2",   "Active Power",   "W",   3, "teal-color"));
-		this.widgets.push(new LCDWidget(this.$canvas, "apparent-power-2", "Apparent Power", "VA",  3, "green-color"));
-		this.widgets.push(new LCDWidget(this.$canvas, "ln-voltage-2",     "L - N Voltage",  "V",   3, "teal-color"));
-		this.widgets.push(new LCDWidget(this.$canvas, "reactive-power-2", "Reactive Power", "Var", 3, "red-color"));
+		this.widgets.push(new LCDWidget(this.$canvas, "active-power-2",   "Active Power",   "W",   2, "teal-color"));
+		this.widgets.push(new LCDWidget(this.$canvas, "apparent-power-2", "Apparent Power", "VA",  2, "green-color"));
+		this.widgets.push(new LCDWidget(this.$canvas, "ln-voltage-2",     "L - N Voltage",  "V",   0, "teal-color"));
+		this.widgets.push(new LCDWidget(this.$canvas, "reactive-power-2", "Reactive Power", "Var", 2, "red-color"));
 		this.widgets.push(new LCDWidget(this.$canvas, "active-factor-2",  "Active Factor",  "%",   3, "yellow-color"));
-		this.widgets.push(new LCDWidget(this.$canvas, "line-frequency-2", "Line Frequency", "Hz",  3, "red-color"));
+		this.widgets.push(new LCDWidget(this.$canvas, "line-current-2",   "Line Current",   "A",   3, "red-color"));
 		
 		/* --- Miscellaneous things on the page. */
 		this.widgets.push(new Graphics(this.$canvas));
@@ -114,6 +114,8 @@ function LCDWidget($canvas, id, title, units, scale, cclass)
 	this.units = units;
 	this.scale = scale;
 	this.cclass = cclass;
+	
+	this.value = undefined;
 }
 
 LCDWidget.prototype = new Widget;
@@ -122,17 +124,135 @@ LCDWidget.prototype.init = function() {
 	this.$canvas.append(
 		"<div id='" + this.id + "' class='lcd-box'>" +
 			"<div class='lcd-title " + this.cclass + "'>" + this.title + "</div>" +
-			"<div class='lcd-value'> </div>" +
+			"<div class='lcd-value'>" +
+				"<div class='ssd-digit ssd-digit-4'>" +
+					"<div class='ssd-seg ssd-horz-seg ssd-seg-1'></div>" +
+					"<div class='ssd-seg ssd-vert-seg ssd-seg-2'></div>" +
+					"<div class='ssd-seg ssd-vert-seg ssd-seg-3'></div>" +
+					"<div class='ssd-seg ssd-horz-seg ssd-seg-4'></div>" +
+					"<div class='ssd-seg ssd-vert-seg ssd-seg-5'></div>" +
+					"<div class='ssd-seg ssd-vert-seg ssd-seg-6'></div>" +
+					"<div class='ssd-seg ssd-horz-seg ssd-seg-7'></div>" +
+				"</div>" +
+				(this.scale == 3 ? "<div class='ssd-dot'></div>" : '') +
+				"<div class='ssd-digit ssd-digit-3'>" +
+					"<div class='ssd-seg ssd-horz-seg ssd-seg-1'></div>" +
+					"<div class='ssd-seg ssd-vert-seg ssd-seg-2'></div>" +
+					"<div class='ssd-seg ssd-vert-seg ssd-seg-3'></div>" +
+					"<div class='ssd-seg ssd-horz-seg ssd-seg-4'></div>" +
+					"<div class='ssd-seg ssd-vert-seg ssd-seg-5'></div>" +
+					"<div class='ssd-seg ssd-vert-seg ssd-seg-6'></div>" +
+					"<div class='ssd-seg ssd-horz-seg ssd-seg-7'></div>" +
+				"</div>" +
+				(this.scale == 2 ? "<div class='ssd-dot'></div>" : '') +
+				"<div class='ssd-digit ssd-digit-2'>" +
+					"<div class='ssd-seg ssd-horz-seg ssd-seg-1'></div>" +
+					"<div class='ssd-seg ssd-vert-seg ssd-seg-2'></div>" +
+					"<div class='ssd-seg ssd-vert-seg ssd-seg-3'></div>" +
+					"<div class='ssd-seg ssd-horz-seg ssd-seg-4'></div>" +
+					"<div class='ssd-seg ssd-vert-seg ssd-seg-5'></div>" +
+					"<div class='ssd-seg ssd-vert-seg ssd-seg-6'></div>" +
+					"<div class='ssd-seg ssd-horz-seg ssd-seg-7'></div>" +
+				"</div>" +
+				(this.scale == 1 ? "<div class='ssd-dot'></div>" : '') +
+				"<div class='ssd-digit ssd-digit-1'>" +
+					"<div class='ssd-seg ssd-horz-seg ssd-seg-1'></div>" +
+					"<div class='ssd-seg ssd-vert-seg ssd-seg-2'></div>" +
+					"<div class='ssd-seg ssd-vert-seg ssd-seg-3'></div>" +
+					"<div class='ssd-seg ssd-horz-seg ssd-seg-4'></div>" +
+					"<div class='ssd-seg ssd-vert-seg ssd-seg-5'></div>" +
+					"<div class='ssd-seg ssd-vert-seg ssd-seg-6'></div>" +
+					"<div class='ssd-seg ssd-horz-seg ssd-seg-7'></div>" +
+				"</div>" +
+				(this.scale == 0 ? "<div class='ssd-dot'></div>" : '') +
+			"</div>" +
 			"<div class='lcd-unit'>" + this.units + "</div>" +
 		"</div>"
 	);
-	
+
 	this.$w = $("#" + this.id);
-	this.setValue(0);
+	this.setValue(9876.5432);
 };
 
-LCDWidget.prototype.setValue = function(val) {
-	// TODO
+LCDWidget.prototype.update = function(data) {
+	if (data[this.id] != undefined)
+	{
+		this.setValue(parseFloat(data[this.id]));
+	}
+};
+
+LCDWidget.prototype.setValue = function(num) {
+	num = Math.floor(num * Math.pow(10, this.scale));
+	
+	/* We don't need to change the value to an identical value. */
+	if (num == this.value) return;
+	this.value = num;
+	
+	
+	
+	this.setDigit(1, num > 0 ? num % 10 : 0);
+	
+	num = Math.floor(num / 10);
+	this.setDigit(2, num > 0 ? num % 10 : 0);
+	
+	num = Math.floor(num / 10);
+	this.setDigit(3, num > 0 ? num % 10 : 0);
+	
+	num = Math.floor(num / 10);
+	this.setDigit(4, num > 0 ?  num % 10 : 0);
+};
+
+LCDWidget.prototype.setDigit = function(digit, val) {
+	var mask, i = 0, $n;
+	
+	switch (val)
+	{
+	case 0:
+		mask = [true,  true,  true,  true,  true,  true,  false];
+		break;
+	case 1:
+		mask = [false, true,  true,  false, false, false, false];
+		break;
+	case 2:
+		mask = [true,  true,  false, true,  true,  false, true];
+		break;
+	case 3:
+		mask = [true,  true,  true,  true,  false, false, true];
+		break;
+	case 4:
+		mask = [false, true,  true,  false, false, true,  true];
+		break;
+	case 5:
+		mask = [true,  false, true,  true,  false, true,  true];
+		break;
+	case 6:
+		mask = [true, false, true,  true,  true,  true,  true];
+		break;
+	case 7: 
+		mask = [true,  true,  true,  false, false, false, false];
+		break;
+	case 8:
+		mask = [true,  true,  true,  true,  true,  true,  true];
+		break;
+	case 9:
+		mask = [true,  true,  true,  false, false, true,  true];
+		break;
+	default:
+		throw "Invalid SSD digit " + val;
+	}
+	
+	for (i = 0; i < 7; i++)
+	{
+		$n = this.$w.find('.ssd-digit-' + digit + " .ssd-seg-" + (i + 1));
+		if (mask[i])
+		{
+			if (!$n.hasClass("ssd-seg-on")) $n.addClass("ssd-seg-on");
+		}
+		else
+		{
+			$n.removeClass("ssd-seg-off");
+		}
+	}
 };
 
 /** ---------------------------------------------------------------------------
