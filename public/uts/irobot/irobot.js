@@ -2233,20 +2233,23 @@ CameraWidget.prototype.init = function() {
 			attribute: this.prop
 		},
 		function (resp) {
-			if (typeof resp != "object")
+			/* Incase no camera configured. */ 
+			if (resp.value == undefined)
 			{
-				window.location.reload();
-				return;
+				/* No camera configured. */
+				thiz.deployDummy();
 			}
-			
-			var pts = resp.value.split(","), i = 0, p;			
-			for (i in pts)
+			else
 			{
-				p = pts[i].indexOf("=");
-				thiz.urls[$.trim(pts[i].substring(0, p))] = $.trim(pts[i].substring(p + 1));
+				var pts = resp.value.split(","), i = 0, p;			
+				for (i in pts)
+				{
+					p = pts[i].indexOf("=");
+					thiz.urls[$.trim(pts[i].substring(0, p))] = $.trim(pts[i].substring(p + 1));
+				}
+				
+				thiz.deployDefault();
 			}
-			
-			thiz.deployDefault();
 		}
 	);
 	
@@ -2266,9 +2269,26 @@ CameraWidget.prototype.init = function() {
 };
 
 CameraWidget.prototype.deployDefault = function() {
-	var format = this.getStoredFormat();
+	var i = 0, hasStream = false, format;
 	
-	if (format == "")
+	/* Deploy a dummy camera if it isn't connected. */
+	for (i in this.urls)
+	{
+		if (typeof this.urls[i] != "undefined" && this.urls[i])
+		{
+			hasStream = true;
+			break;
+		}
+	}
+	
+	if (!hasStream)
+	{
+		alert("Deplying dummy");
+		this.deployDummy();
+		return;
+	}
+	
+	if ((format = this.getStoredFormat()) == "")
 	{
 		/* Choose based on browser. */
 		format = /Mobile|mobi/i.test(navigator.userAgent) ? 'mjpeg' : 'swf';
@@ -2443,6 +2463,18 @@ CameraWidget.prototype.deployFLV = function() {
 	});
 
 	player.load();
+};
+
+CameraWidget.prototype.deployDummy = function() {
+	$("#" + this.cameraBox)
+		.empty()
+		.append(
+			"<div class='camera-dummy'>" +
+				"<div class='camera-dummy-text'>" +
+					this.title.substr(0, this.title.indexOf(' ')) + " camera is not connected." +
+				"</div>" +
+			"</div>"
+		);
 };
 
 CameraWidget.prototype.getStoredFormat = function() {
