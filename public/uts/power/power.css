@@ -2,6 +2,10 @@
  * Stylesheet for the Power Systems lab.
  */
  
+/* ----------------------------------------------------------------------------
+ * -- Changes to default rig page styles.                                    --
+ * ---------------------------------------------------------------------------- */
+  
 #rigscriptcontainer {
 	height: 960px;
 } 
@@ -9,6 +13,14 @@
 #sessioninfo {
 	margin-top: 10px;
 }
+
+#warningmessage div {
+	display: none;
+}
+
+/* ----------------------------------------------------------------------------
+ * -- Page backing.                                                          --
+ * ---------------------------------------------------------------------------- */
 
 #backing-left {
 	position: absolute;
@@ -36,21 +48,62 @@
 }
 
 #backing-title {
-	 font-family: ‘Lucida Console’, Monaco, 'Bitstream Vera Sans Mono', monospace;
-	 width: 100%;
-	 font-size: 18pt;
-	 text-align: center;
-	 color: #EEEEEE;
-	 padding: 7px 3px;
+	font-family: ‘Lucida Console’, Monaco, 'Bitstream Vera Sans Mono', monospace;
+	width: 100%;
+	font-size: 18pt;
+	text-align: center;
+	color: #EEEEEE;
+	padding: 7px 3px;
 }
 
+#backing-working {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+}
+
+#mode-loading {
+	position: absolute;
+	left: 285px;
+	top: 100px;
+	font-family: ‘Lucida Console’, Monaco, 'Bitstream Vera Sans Mono', monospace;
+	color: #EEEEEE;
+}
+
+#back-button {
+	background-color: #EEEEEE;
+	left: 15px;
+	top: 22px;
+}
+
+#back-button .ui-icon {
+	float: left;
+	margin-right: 5px;
+}
+
+/* ----------------------------------------------------------------------------
+ * -- Mode Switch Widget                                                     --
+ * ---------------------------------------------------------------------------- */
+#lab-selection {
+	position: absolute;
+	left: 120px;
+	top: 100px;
+	list-style: none;
+}
+
+#lab-selection li.button {
+	position: static;
+	margin: 10px;
+	width: 400px;
+	text-align: left;
+}
 
 /* ----------------------------------------------------------------------------
  * -- LCD Widget                                                             --
  * ---------------------------------------------------------------------------- */
 #power-systems-lab .lcd-box {
 	position: absolute;
-	width: 175px;
+	width: 195px;
 	height: 90px;
 	z-index: 2;
 	background-color: #F3F3F3;
@@ -70,7 +123,7 @@
 
 #power-systems-lab .lcd-value {
 	position: relative;
-	width: 120px;
+	width: 148px;
 	height: 52px;
 	margin: 6px;
 	background-color: #C8C8C8;
@@ -79,10 +132,10 @@
 
 #power-systems-lab .lcd-unit {
 	position: absolute;
-	right: 5px;
+	right: 0px;
 	top: 40px;
 	width: 35px;
-	text-align: left;
+	text-align: center;
 	font-family: ‘Lucida Console’, Monaco, 'Bitstream Vera Sans Mono', monospace;
 	font-size: 18pt;
 	font-weight: bold;
@@ -115,8 +168,11 @@
 	margin-top: 6px;
 }
 
+#power-systems-lab .ssd-digit-5 {
+    margin-left: 1px;	
+}
+
 #power-systems-lab .ssd-digit-4 {
-	margin-left: 1px;
 }
 
 #power-systems-lab .ssd-digit-3 {
@@ -210,6 +266,10 @@
 	top: 400px;
 }
 
+#apparent-power .lcd-unit {
+	font-size: 14pt;
+}
+
 #power-systems-lab.lab1 #ln-voltage {
 	left: -175px;
 	top: 500px;
@@ -221,26 +281,26 @@
 }
 
 #power-systems-lab.lab1 #reactive-power {
-	left: 10px;
+	left: 25px;
 	top: 300px;
 }
 
 #reactive-power .lcd-unit {
-	font-size: 14pt;
+	font-size: 12pt;
 }
 
 #power-systems-lab.lab1 #active-factor {
-	left: 10px;
+	left: 25px;
 	top: 400px;
 }
 
 #power-systems-lab.lab1 #line-frequency {
-	left: 10px;
+	left: 25px;
 	top: 500px;
 }
 
 #power-systems-lab.lab1 #set-frequency {
-	left: 10px;
+	left: 25px;
 	top: 600px;
 }
 
@@ -250,36 +310,40 @@
 }
 
 #power-systems-lab.lab1 #active-power-2 {
-	left: 300px;
+	left: 265px;
 	top: 300px;
 }
 
 #power-systems-lab.lab1 #apparent-power-2 {
-	left: 300px;
+	left: 265px;
 	top: 400px;
 }
 
+#apparent-power-2 .lcd-unit {
+	font-size: 14pt;
+}
+
 #power-systems-lab.lab1 #ln-voltage-2 {
-	left: 300px;
+	left: 265px;
 	top: 500px;
 }
 
 #power-systems-lab.lab1 #reactive-power-2 {
-	left: 485px;
+	left: 465px;
 	top: 300px;
 }
 
 #reactive-power-2 .lcd-unit {
-	font-size: 14pt;
+	font-size: 12pt;
 }
 
 #power-systems-lab.lab1 #active-factor-2 {
-	left: 485px;
+	left: 465px;
 	top: 400px;
 }
 
 #power-systems-lab.lab1 #line-current-2 {
-	left: 485px;
+	left: 465px;
 	top: 500px;
 }
 
@@ -299,6 +363,16 @@
 
 #power-systems-lab .button:hover {
 	box-shadow: 0 0 6px #EEEEEE;
+}
+
+#power-systems-lab .button-disabled {
+	opacity: 0.3;
+	color: #555555;
+	cursor: default;
+}
+
+#power-systems-lab .button-disabled:hover {
+	box-shadow: 0 0 1px #000000;
 }
 
 #power-systems-lab .button-unknown-state {
@@ -347,17 +421,16 @@
 	top: 105px
 }
 
-
 #load-r-button {
-	top: 40px;
+	top: 70px;
 }
 
 #load-l-button {
-	top: 105px;
+	top: 135px;
 }
 
 #load-c-button {
-	top: 170px;
+	top: 200px;
 }
 
 #power-systems-lab .load-button {
@@ -402,28 +475,36 @@
 	box-shadow: 1px 0 0 #000000;
 }
 
+#power-systems-lab .arrow-head {
+	position: absolute;
+	width: 20px;
+	height: 10px;
+	background-image: url(images/arrow-head.png);
+    background-repeat: no-repeat;
+}
+
 #graphics-pm1 {
 	width: 150px;
 	left: -150px;
-	top: 165px;
+	top: 167px;
 }
 
 #graphics-pm1-line-t {
-	width: 190px;
+	width: 210px;
 	top: 190px;
 	left: -175px;
 }
 
 #graphics-pm1-line-b {
-	width: 177px;
+	width: 190px;
 	top: 290px;
-	left: 12px;
+	left: 32px;
 }
 
 #graphics-pm1-line-t-to-b {
 	height: 97px;
 	top: 193px;
-	left: 12px;
+	left: 32px;
 }
 
 #graphics-g-to-pm1 {
@@ -439,16 +520,38 @@
 	
 }
 
+#graphics-cb1-to-transformer {
+	width: 30px;
+	left: 175px;
+	top: 118px;
+}
+
+#graphics-transformer-to-bus1 {
+	width: 30px;
+	left: 244px;
+	top: 118px;
+}
+
 #graphics-pm2 {
 	width: 150px;
 	right: 25px;
-	top: 265px;
+	top: 267px;
 }
 
 #graphics-pm2-line {
-	width: 362px;
+	width: 397px;
 	right: 12px;
 	top: 290px;
+}
+
+#graphics-transformer {
+	position: absolute;
+	width: 60px;
+	height: 60px;
+	top: 94px;
+	left: 201px;
+	background-image: url(images/transformer.png);
+	background-repeat: no-repeat;
 }
 
 #graphics-bus1 {
@@ -531,19 +634,19 @@
 #graphics-load-bus-load1 {
     width: 18px;
     right: 77px;
-    top: 62px;	
+    top: 92px;	
 }
 
 #graphics-load-bus-load2 {
     width: 18px;
     right: 77px;
-    top: 130px;	
+    top: 160px;	
 }
 
 #graphics-load-bus-load3 {
     width: 18px;
     right: 77px;
-    top: 195px;	
+    top: 225px;	
 }
 
 #graphics-gcb-to-load-bus {
@@ -588,10 +691,20 @@
 	left: -88px;
 }
 
+#graphics-default-set-voltage-arrow {
+	left: -96px;
+	top: 734px;
+}
+
 #graphics-default-set-freq {
 	height: 40px;
 	top: 743px;
 	left: 99px;
+}
+
+#graphics-default-set-freq-arrow {
+	left: 91px;
+	top: 734px;
 }
 
 #graphics-default-to-button {
@@ -599,6 +712,163 @@
 	top: 783px;
 	left: 5px;
 }
+
+/* ----------------------------------------------------------------------------
+ * -- Message box                                                            --
+ * ---------------------------------------------------------------------------- */  
+
+#power-systems-lab .message-box {
+	position: absolute;
+	width: 190px;
+	border: 2px solid #EEEEEE;
+	text-align: left;
+	z-index: 100;
+	opacity: 0.9;
+	border-radius: 4px;
+}
+
+#power-systems-lab .message-box-error {
+	background-color: #FC0000;
+}
+
+#power-systems-lab .message-box-text {
+	padding: 6px;
+	color: #EEEEEE;
+	font-size: 10pt;
+	opacity: 1;
+}
+
+#power-systems-lab .message-box-arrow {
+	position: absolute;
+	width: 12px;
+	height: 12px;
+}
+
+#power-systems-lab .message-box-arrow-left {
+	left: -10px;
+	top: 5px;
+}
+
+#power-systems-lab .message-box-arrow-line {
+	position: absolute;
+}
+
+#power-systems-lab .message-box-error .message-box-arrow-line  {
+	background-color: #FC0000;
+}
+
+#power-systems-lab .message-box-arrow-left .message-box-arrow-line, 
+#power-systems-lab .message-box-arrow-right .message-box-arrow-line {
+	border-top: 2px solid #EEEEEE;
+	border-bottom: 2px solid #EEEEEE;
+	width: 1px;
+}
+
+#power-systems-lab .message-box-arrow-left .message-box-arrow-line0 {
+	height: 12px;
+	right: 2px;
+	top: -1px;
+}
+
+#power-systems-lab .message-box-arrow-left .message-box-arrow-line1 {
+	height: 10px;
+	right: 3px;
+	top: 0;
+}
+
+#power-systems-lab .message-box-arrow-left .message-box-arrow-line2 {
+	height: 8px;
+	right: 4px;
+	top: 1px;
+}
+
+#power-systems-lab .message-box-arrow-left .message-box-arrow-line3 {
+	height: 6px;
+	right: 5px;
+	top: 2px;
+}
+
+#power-systems-lab .message-box-arrow-left .message-box-arrow-line4 {
+	height: 4px;
+	right: 6px;
+	top: 3px;
+}
+
+#power-systems-lab .message-box-arrow-left .message-box-arrow-line5 {
+	height: 2px;
+	right: 7px;
+	top: 4px;
+}
+
+#power-systems-lab .message-box-arrow-left .message-box-arrow-line6 {
+	height: 0px;
+	right: 8px;
+	top: 5px;
+}
+
+#power-systems-lab .message-box-arrow-left .message-box-arrow-line7 {
+	height: 0px;
+	right: 9px;
+	top: 6px;
+	border-bottom: none;
+}
+
+#power-systems-lab .message-box-arrow-right {
+	right: -10px;
+	top: 5px;
+}
+
+#power-systems-lab .message-box-arrow-right .message-box-arrow-line0 {
+	height: 12px;
+	left: 2px;
+	top: -1px;
+}
+
+#power-systems-lab .message-box-arrow-right .message-box-arrow-line1 {
+	height: 10px;
+	left: 3px;
+	top: 0;
+}
+
+#power-systems-lab .message-box-arrow-right .message-box-arrow-line2 {
+	height: 8px;
+	left: 4px;
+	top: 1px;
+}
+
+#power-systems-lab .message-box-arrow-right .message-box-arrow-line3 {
+	height: 6px;
+	left: 5px;
+	top: 2px;
+}
+
+#power-systems-lab .message-box-arrow-right .message-box-arrow-line4 {
+	height: 4px;
+	left: 6px;
+	top: 3px;
+}
+
+#power-systems-lab .message-box-arrow-right .message-box-arrow-line5 {
+	height: 2px;
+	left: 7px;
+	top: 4px;
+}
+
+#power-systems-lab .message-box-arrow-right .message-box-arrow-line6 {
+	height: 0px;
+	left: 8px;
+	top: 5px;
+}
+
+#power-systems-lab .message-box-arrow-right .message-box-arrow-line7 {
+	height: 0px;
+	left: 9px;
+	top: 6px;
+	border-bottom: none;
+}
+
+
+
 
 
 
