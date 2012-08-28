@@ -36,8 +36,8 @@
  * @date 21st February 2010
  */
 
-$this->headScript()->appendFile($this->baseUrl('uts/fpga/fpga.js'));
-$this->headLink()->appendStylesheet($this->baseUrl('uts/fpga/fpga.css'));
+$this->headScript()->appendFile($this->baseUrl('uts/nexys/nexys.js'));
+$this->headLink()->appendStylesheet($this->baseUrl('uts/nexys/nexys.css'));
 
 $cam = new Sahara_Session_Element_Cameras($this->rigClient);
 $cam->setDraggable(false);
@@ -48,47 +48,24 @@ $code = new Sahara_Session_Element_MultiButtons($this->rigClient, 'codebutton',
         array(
         	'title' => 'Program FPGA',
             'tooltip' => 'Program the FPGA with an uploaded bitstream file.',
-			'icon' => '/uts/fpga/images/run.png',
+			'icon' => '/uts/nexys/images/program.png',
             'click' => "$('#bitstreamupload').dialog('open');"
         ),
-/*        array(
+        array(
         	'title' => 'Program Demo',
             'tooltip' => 'Program the FPGA with a demonstration program (binary to hexadecimal converter).',
             'icon' => '/uts/fpga/images/rundemo.png',
-            'click' => "disableFPGAButtons();performPrimitiveJSON('FPGAAuxController', 'loadDemo', null, checkDemoLoadedStart, 'Loading demo...', false)"
-        ) */
-    ),
-    array(
-        'orientation' => Sahara_Session_Element_MultiButtons::VERTICAL,
-        'top'         => 100,
-        'left'        => 65,
-        'width'       => 70,
-        'height'      => 70
-    )
-);
-
-/* Reset buttons. */
-$reset = new Sahara_Session_Element_MultiButtons($this->rigClient, 'reset',
-    array(
-        array(
-        	'title' => 'Soft Reset',
-            'tooltip' => 'Soft resets back to un-programmed state. This will leave switch state untouched.',
-            'icon' => '/uts/fpga/images/softreset.png',
-            'click' => "disableFPGAButtons();performPrimitiveJSON('FPGAController', 'softReset', null, softResetCallback)"
-        ),
-        array(
-        	'title' => 'Hard Reset',
-        	'tooltip' => 'Power cycles the FPGA. This will clear switch state.',
-            'icon' => '/uts/fpga/images/hardreset.png',
-            'click' => "disableFPGAButtons();performPrimitiveJSON('FPGAController', 'hardReset', null, hardResetCallback, 'Resetting...')"
+            'click' => "disableFPGAButtons();" .
+                       "resetIO();" .
+            		   "performPrimitiveJSON('NexysController', 'loadDemo', null, checkDemoLoadedStart, 'Loading demo...', false)"
         )
     ),
     array(
         'orientation' => Sahara_Session_Element_MultiButtons::VERTICAL,
-        'top'         => 100,
-        'left'        => 525,
-        'width'       => 70,
-        'height'      => 70
+        'top'         => -45,
+        'left'        => 60,
+        'width'       => 60,
+        'height'      => 60
     )
 );
 
@@ -97,61 +74,105 @@ $io = new Sahara_Session_Element_MultiButtons($this->rigClient, 'io',
     array(
         array(
         	'title'      => '7',
-        	'icon'       => '/uts/fpga/images/pushbuttonup.png',
-            'mousedown'  => 'setIO(0)',
-			'mouseup'    => 'setIO(0)',
-            'mouseleave' => 'clearIO(0)'
+        	'icon'       => '/uts/nexys/images/push-off.png',
+            'mousedown'  => 'setIO(7)',
+			'mouseup'    => 'setIO(7)',
+            'mouseleave' => 'clearIO(7)'
         ),
         array(
         	'title'      => '6',
-        	'icon'       => '/uts/fpga/images/pushbuttonup.png',
-            'mousedown'  => 'setIO(1)',
-			'mouseup'    => 'setIO(1)',
-			'mouseleave' => 'clearIO(1)'
+        	'icon'       => '/uts/nexys/images/push-off.png',
+            'mousedown'  => 'setIO(6)',
+			'mouseup'    => 'setIO(6)',
+			'mouseleave' => 'clearIO(6)'
         ),
         array(
         	'title' => '5',
-            'icon'  => '/uts/fpga/images/switchup.png',
-            'click' => 'setIO(2)'
-        ),
-        array(
-        	'title' => '4',
-            'icon'  => '/uts/fpga/images/switchup.png',
-            'click' => 'setIO(3)'
-        ),
-        array(
-        	'title' => '3',
-            'icon'  => '/uts/fpga/images/switchup.png',
-            'click' => 'setIO(4)'
-        ),
-        array(
-        	'title' => '2',
-            'icon'  => '/uts/fpga/images/switchup.png',
+            'icon'  => '/uts/nexys/images/off.png',
             'click' => 'setIO(5)'
         ),
         array(
+        	'title' => '4',
+        	'icon'  => '/uts/nexys/images/off.png',
+            'click' => 'setIO(4)'
+        ),
+        array(
+        	'title' => '3',
+            'icon'  => '/uts/nexys/images/off.png',
+            'click' => 'setIO(3)'
+        ),
+        array(
+        	'title' => '2',
+        	'icon'  => '/uts/nexys/images/off.png',
+            'click' => 'setIO(2)'
+        ),
+        array(
         	'title' => '1',
-            'icon'  => '/uts/fpga/images/switchup.png',
-            'click' => 'setIO(6)'
+        	'icon'  => '/uts/nexys/images/off.png',
+            'click' => 'setIO(1)'
         ),
         array(
         	'title' => '0',
-            'icon'  => '/uts/fpga/images/switchup.png',
-            'click' => 'setIO(7)'
+        	'icon'  => '/uts/nexys/images/off.png',
+            'click' => 'setIO(0)'
         )
     ),
     array(
         'orientation' => Sahara_Session_Element_MultiButtons::HORIZONTAL,
-        'top'         => 400,
-        'left'        => 110,
+        'top'         => 0,
+        'left'        => 165,
         'width'       => 45,
         'height'      => 60
     )
 );
 ?>
 
+<!-- Information specifying address of button. -->
+<div id='ioaddr'>Virtual buttons are address 0x00</div>
 
+<!-- Register send form to the board -->
+<div id="registerpanel" class="sessionpanel ui-corner-all leftpush overlayelementhide">
+	<div class="sessionpanelheader">
+		<p>
+			<span class="ui-icon ui-icon-transfer-e-w sessionpanelheadericon"></span>
+			Registers
+		</p>
+	</div>
+	<div id="registercontents">
+		<form id='registerform' onsubmit='return registerSubmit();' class='saharaform'>
+			<div>
+				<label for='registeraddr'>Address: </label>
+        		<select id="registeraddr" name="registeraddr">
+        			<option value="0">0x00</option>
+        			<option value="1">0x01</option>
+        			<option value="2">0x02</option>
+        			<option value="3">0x03</option>
+        			<option value="4">0x04</option>
+        			<option value="5">0x05</option>
+        			<option value="6">0x06</option>
+        			<option value="7">0x07</option>
+        			<option value="8">0x08</option>
+        			<option value="9">0x09</option>
+        			<option value="10">0x10</option>
+        			<option value="11">0x11</option>
+        			<option value="12">0x12</option>
+        			<option value="13">0x13</option>
+        			<option value="14">0x14</option>
+        			<option value="15">0x15</option>
+        		</select>
+    		</div>
+    		<div>
+    			<label for='registerval'>Value: </label>
+    			<input type='text' id='registerval' name='registerval' />
+    		</div>
+    		<div>
+    			<submit id='registersub' name='registersub'>Send</submit>
+    		</div>
+    	</form>
+	</div>
+</div>
 
+<!-- Operation log. -->
 <div id="operationpanel" class="sessionpanel ui-corner-all leftpush overlayelementhide">
 	<div class="sessionpanelheader">
 		<p>
@@ -166,12 +187,12 @@ $io = new Sahara_Session_Element_MultiButtons($this->rigClient, 'io',
 </div>
 
 <?php
-echo $cam;
+echo $io;
 echo $code;
-//echo $reset;
-//echo $io;
+echo $cam;
 ?>
 
+<!-- Upload form. -->
 <div id="bitstreamupload">
 	<p>Please select the JTAG Bitstream (.bit) file you wish to upload.</p>
 	<ul id="bitstreamuploadinfo" >
@@ -202,6 +223,7 @@ echo $code;
 
 <script type="text/javascript">
 $(document).ready(function() {
+	/* Programming form. */
 	$("#bitstreamupload").dialog({
 		autoOpen: false,
 		buttons: {
@@ -225,7 +247,11 @@ $(document).ready(function() {
 		}
 	});
 
+	/* Init IO form. */
 	initIO('PPSSSSSS');
+
+	/* Register form. */
+	$("#registersub").button();
 });
 </script>
 
