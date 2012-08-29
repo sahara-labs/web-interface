@@ -1,0 +1,261 @@
+#------------------------------------------------------------------
+#-- Company: 		UTS Remote Labs
+#-- Author: 		Alex Gibson
+#-- Creation Date: 	24th March 2012
+#--
+#-- Project Name:  	Nexys3
+#-- Design Name:  	Nexys
+#-- File Name:   	nexys.ucf
+#-- Purpose : 		Pin constraints file for top level design
+#-- 
+#-- Target Board:  	UTS Remote Labs Nexys FPGA
+#-- Target Device: 	xc6slx16l-1Lcsg324 
+#-- 
+#-- Tool versions: 	Ise 13.2 , ISE 13.4 , ISE14.1
+#--
+#--	VERSION : 		v1.04
+#-- Modified by LJC 24/08/2012
+#-- 
+#------------------------------------------------------------------
+
+#------------------------------------------------------------------
+# Inputs
+#------------------------------------------------------------------
+
+#-Clock signal
+Net "clk" LOC=V10 | IOSTANDARD=LVCMOS33;
+Net "clk" TNM_NET = sys_clk_pin;
+TIMESPEC TS_sys_clk_pin = PERIOD sys_clk_pin 100000 kHz;
+
+#Net "switches<0>" LOC=T10  |  IOSTANDARD=LVCMOS33;
+#Net "switches<1>" LOC=T9   |  IOSTANDARD=LVCMOS33;
+#Net "switches<2>" LOC=V9   |  IOSTANDARD=LVCMOS33;
+#Net "switches<3>" LOC=M8   |  IOSTANDARD=LVCMOS33;
+#Net "switches<4>" LOC=N8   |  IOSTANDARD=LVCMOS33;
+#Net "switches<5>" LOC=U8   |  IOSTANDARD=LVCMOS33;
+#Net "switches<6>" LOC=V8   |  IOSTANDARD=LVCMOS33;
+#Net "switches<7>" LOC=T5   |  IOSTANDARD=LVCMOS33;
+
+#------------------------------------------------------------------
+#Outputs
+#------------------------------------------------------------------
+
+#-LEDs
+
+#--Nexys3 Board LEDs
+Net "Led<0>" LOC = U16 | IOSTANDARD=LVCMOS33;
+Net "Led<1>" LOC = V16 | IOSTANDARD=LVCMOS33;
+Net "Led<2>" LOC = U15 | IOSTANDARD=LVCMOS33;
+Net "Led<3>" LOC = V15 | IOSTANDARD=LVCMOS33;
+Net "Led<4>" LOC = M11 | IOSTANDARD=LVCMOS33;
+Net "Led<5>" LOC = N11 | IOSTANDARD=LVCMOS33;
+Net "Led<6>" LOC = R11 | IOSTANDARD=LVCMOS33;
+Net "Led<7>" LOC = T11 | IOSTANDARD=LVCMOS33;
+
+#--Display Board LEDs
+
+#---Red LEDs
+Net "RedLed<0>" LOC = C7  | IOSTANDARD=LVCMOS33;
+Net "RedLed<1>" LOC = C14 | IOSTANDARD=LVCMOS33;
+Net "RedLed<2>" LOC = A6  | IOSTANDARD=LVCMOS33;
+Net "RedLed<3>" LOC = C5  | IOSTANDARD=LVCMOS33;
+
+#---Amber LEDs
+Net "AmberLed<0>" LOC = A7  | IOSTANDARD=LVCMOS33;
+Net "AmberLed<1>" LOC = F13 | IOSTANDARD=LVCMOS33;
+Net "AmberLed<2>" LOC = D11 | IOSTANDARD=LVCMOS33;
+Net "AmberLed<3>" LOC = A5  | IOSTANDARD=LVCMOS33;
+
+#---Green LEDs
+Net "GreenLed<0>" LOC = B6  | IOSTANDARD=LVCMOS33;
+Net "GreenLed<1>" LOC = E13 | IOSTANDARD=LVCMOS33;
+Net "GreenLed<2>" LOC = D6  | IOSTANDARD=LVCMOS33;
+Net "GreenLed<3>" LOC = D14 | IOSTANDARD=LVCMOS33;
+
+#-Alpha Numeric Displays (ANDs)
+
+#--Display Board ANDs
+
+#---AND Display selection
+Net "Alpha<0>" LOC = G11 | IOSTANDARD=LVCMOS33;
+Net "Alpha<1>" LOC = F10 | IOSTANDARD=LVCMOS33;
+Net "Alpha<2>" LOC = F11 | IOSTANDARD=LVCMOS33;
+Net "Alpha<3>" LOC = E11 | IOSTANDARD=LVCMOS33;
+Net "Alpha<4>" LOC = A4 | IOSTANDARD=LVCMOS33;
+Net "Alpha<5>" LOC = B4 | IOSTANDARD=LVCMOS33;
+
+#---AND Segment Selection
+Net "AlphaHex<0>"  LOC = V11 | IOSTANDARD=LVCMOS33; #A1
+Net "AlphaHex<1>"  LOC = U11 | IOSTANDARD=LVCMOS33; #A2
+Net "AlphaHex<2>"  LOC = N9  | IOSTANDARD=LVCMOS33; #B 
+Net "AlphaHex<3>"  LOC = M10 | IOSTANDARD=LVCMOS33; #C 
+Net "AlphaHex<4>"  LOC = P11 | IOSTANDARD=LVCMOS33; #D1
+Net "AlphaHex<5>"  LOC = N10 | IOSTANDARD=LVCMOS33; #D2
+Net "AlphaHex<6>"  LOC = V12 | IOSTANDARD=LVCMOS33; #E
+Net "AlphaHex<7>"  LOC = T12 | IOSTANDARD=LVCMOS33; #F
+Net "AlphaHex<8>"  LOC = K5  | IOSTANDARD=LVCMOS33; #G1
+Net "AlphaHex<9>"  LOC = K3  | IOSTANDARD=LVCMOS33; #G2
+Net "AlphaHex<10>" LOC = J1  | IOSTANDARD=LVCMOS33; #H
+Net "AlphaHex<11>" LOC = J3  | IOSTANDARD=LVCMOS33; #J
+Net "AlphaHex<12>" LOC = L3  | IOSTANDARD=LVCMOS33; #K
+Net "AlphaHex<13>" LOC = L4  | IOSTANDARD=LVCMOS33; #L
+Net "AlphaHex<14>" LOC = K1  | IOSTANDARD=LVCMOS33; #M
+Net "AlphaHex<15>" LOC = K2  | IOSTANDARD=LVCMOS33; #N
+
+#-Seven Segment Displays (SSDs)
+
+#--Nexys3 Board Seven segment display
+
+#---SSD Display Digit Selection
+Net "SSEG_AN<0>" LOC=N16 | IOSTANDARD=LVCMOS33;
+Net "SSEG_AN<1>" LOC=N15 | IOSTANDARD=LVCMOS33;
+Net "SSEG_AN<2>" LOC=P18 | IOSTANDARD=LVCMOS33;
+Net "SSEG_AN<3>" LOC=P17 | IOSTANDARD=LVCMOS33;
+
+#---SSD Display Segment Selection
+Net "SSEG_CA<0>" LOC=T17 | IOSTANDARD=LVCMOS33; #A
+Net "SSEG_CA<1>" LOC=T18 | IOSTANDARD=LVCMOS33; #B
+Net "SSEG_CA<2>" LOC=U17 | IOSTANDARD=LVCMOS33; #C
+Net "SSEG_CA<3>" LOC=U18 | IOSTANDARD=LVCMOS33; #D
+Net "SSEG_CA<4>" LOC=M14 | IOSTANDARD=LVCMOS33; #E
+Net "SSEG_CA<5>" LOC=N14 | IOSTANDARD=LVCMOS33; #F
+Net "SSEG_CA<6>" LOC=L14 | IOSTANDARD=LVCMOS33; #G
+Net "SSEG_CA<7>" LOC=M13 | IOSTANDARD=LVCMOS33; #DP
+
+#--Display board Seven Segment displays
+
+#---SSD Display Digit Selection
+
+#----SSEGD0 (Digit 0) on Display <n>
+Net "SSEGD0<0>" LOC = D12 | IOSTANDARD=LVCMOS33;
+Net "SSEGD0<1>" LOC = C12 | IOSTANDARD=LVCMOS33;
+Net "SSEGD0<2>" LOC = F12 | IOSTANDARD=LVCMOS33;
+Net "SSEGD0<3>" LOC = E12 | IOSTANDARD=LVCMOS33;
+
+#----SSDG1 (Digit 1) on Display <n>
+Net "SSEGD1<0>" LOC = H3 | IOSTANDARD=LVCMOS33;
+Net "SSEGD1<1>" LOC = L7 | IOSTANDARD=LVCMOS33;
+Net "SSEGD1<2>" LOC = K6 | IOSTANDARD=LVCMOS33;
+Net "SSEGD1<3>" LOC = G3 | IOSTANDARD=LVCMOS33;
+
+#----SSDG2 (Digit 2) on Display <n>
+Net "SSEGD2<0>" LOC = A15 | IOSTANDARD=LVCMOS33;
+Net "SSEGD2<1>" LOC = C15 | IOSTANDARD=LVCMOS33;
+Net "SSEGD2<2>" LOC = A16 | IOSTANDARD=LVCMOS33;
+Net "SSEGD2<3>" LOC = B16 | IOSTANDARD=LVCMOS33;
+
+#----SSDG3 (Digit 3) on Display <n>
+Net "SSEGD3<0>" LOC = G1 | IOSTANDARD=LVCMOS33;
+Net "SSEGD3<1>" LOC = J7 | IOSTANDARD=LVCMOS33;
+Net "SSEGD3<2>" LOC = J6 | IOSTANDARD=LVCMOS33;
+Net "SSEGD3<3>" LOC = F2 | IOSTANDARD=LVCMOS33;
+
+#----SSCOL (Colon) on Display <n>
+Net "SSEGCL<0>" LOC = A2 | IOSTANDARD=LVCMOS33;
+Net "SSEGCL<1>" LOC = B2 | IOSTANDARD=LVCMOS33;
+Net "SSEGCL<2>" LOC = A3 | IOSTANDARD=LVCMOS33;
+Net "SSEGCL<3>" LOC = B3 | IOSTANDARD=LVCMOS33;
+
+#---SSD Segment Selection
+Net "SSEGHex<0>" LOC = C13  |  IOSTANDARD=LVCMOS33; #A  
+Net "SSEGHex<1>" LOC = A13  |  IOSTANDARD=LVCMOS33; #B                     
+Net "SSEGHex<2>" LOC = B11  |  IOSTANDARD=LVCMOS33; #C                      
+Net "SSEGHex<3>" LOC = A11  |  IOSTANDARD=LVCMOS33; #D                      
+Net "SSEGHex<4>" LOC = B14  |  IOSTANDARD=LVCMOS33; #E
+Net "SSEGHex<5>" LOC = A14  |  IOSTANDARD=LVCMOS33; #F
+Net "SSEGHex<6>" LOC = B12  |  IOSTANDARD=LVCMOS33; #G                     
+Net "SSEGHex<7>" LOC = A12  |  IOSTANDARD=LVCMOS33; #DP
+Net "SSEGHex<8>" LOC = C6   |  IOSTANDARD=LVCMOS33; #COL        
+
+#--Display Board Servo Motors
+#---Continuous Rotation Servos
+Net "servo<0>" LOC = C8 | IOSTANDARD=LVCMOS33; 
+Net "servo<1>" LOC = D8 | IOSTANDARD=LVCMOS33;
+#---180 Degree Positioning Servos
+Net "servo<2>" LOC = F9 | IOSTANDARD=LVCMOS33; 
+Net "servo<3>" LOC = G9 | IOSTANDARD=LVCMOS33;                 
+
+#---VGA Output
+
+#----Green
+#NET "VGA_GREEN<0>" LOC=P8 | IOSTANDARD=LVCMOS33;
+#NET "VGA_GREEN<1>" LOC=T6 | IOSTANDARD=LVCMOS33;
+#NET "VGA_GREEN<2>" LOC=V6 | IOSTANDARD=LVCMOS33;
+
+#----Red
+#NET "VGA_RED<0>" LOC=U7 | IOSTANDARD=LVCMOS33;
+#NET "VGA_RED<1>" LOC=V7 | IOSTANDARD=LVCMOS33;
+#NET "VGA_RED<2>" LOC=N7 | IOSTANDARD=LVCMOS33;
+
+#----Blue
+#NET "VGA_BLUE<0>" LOC=R7 | IOSTANDARD=LVCMOS33;
+#NET "VGA_BLUE<1>" LOC=T7 | IOSTANDARD=LVCMOS33;
+
+#----Sync
+#NET "VGA_VSYNC" LOC=N6 | IOSTANDARD=LVCMOS33;
+#NET "VGA_HSYNC" LOC=P7 | IOSTANDARD=LVCMOS33;
+
+#--Nexys3 Board Memory
+
+#---Onboard Cellular RAM, Numonyx StrataFlash and Numonyx Quad Flash
+#Net "MemOE"  LOC = L18 | IOSTANDARD=LVCMOS33; 				#Bank = 1, pin name = IO_L46N_FOE_B_M1DQ3, Sch name = P30-OE
+#Net "MemWR"  LOC = M16 | IOSTANDARD=LVCMOS33; 				#Bank = 1, pin name = IO_L47P_FWE_B_M1DQ0, Sch name = P30-WE
+#Net "MemAdv" LOC = H18 | IOSTANDARD=LVCMOS33; 				#Bank = 1, pin name = IO_L43N_GCLK4_M1DQ5, Sch name = P30-ADV
+#Net "MemWait" LOC = V4 | IOSTANDARD=LVCMOS33; 				#Bank = 2, pin name = IO_L63N, Sch name = P30-WAIT
+#Net "MemClk" LOC = R10 | IOSTANDARD=LVCMOS33; 				#Bank = 2, pin name = IO_L29P_GCLK3, Sch name = P30-CLK
+
+#Net "RamCS" LOC = L15  | IOSTANDARD=LVCMOS33; 				#Bank = 1, pin name = IO_L42P_GCLK7_M1UDM, Sch name = MT-CE
+#Net "RamCRE" LOC = M18 | IOSTANDARD=LVCMOS33; 				#Bank = 1, pin name = IO_L47N_LDC_M1DQ1, Sch name = MT-CRE
+#Net "RamUB" LOC = K15  | IOSTANDARD=LVCMOS33; 				#Bank = 1, pin name = IO_L41P_GCLK9_IRDY1_M1RASN, Sch name = MT-UB
+#Net "RamLB" LOC = K16  | IOSTANDARD=LVCMOS33; 				#Bank = 1, pin name = IO_L41N_GCLK8_M1CASN, Sch name = MT-LB
+
+#Net "FlashCS" LOC = L17 | IOSTANDARD=LVCMOS33; 				#Bank = 1, pin name = IO_L46P_FCS_B_M1DQ2, Sch name = P30-CE
+#Net "FlashRp" LOC = T4  | IOSTANDARD=LVCMOS33; 				#Bank = 2, pin name = IO_L63P, Sch name = P30-RST
+
+#Net "QuadSpiFlashCS"  LOC = V3  | IOSTANDARD=LVCMOS33; 		#Bank = MISC, pin name = IO_L65N_CSO_B_2, Sch name = CS
+#Net "QuadSpiFlashSck" LOC = R15 | IOSTANDARD=LVCMOS33; 		#Bank = MISC, pin name = IO_L1P_CCLK_2, Sch name = SCK
+
+#Net "MemAdr<1>" LOC = K18  | IOSTANDARD=LVCMOS33; 			#Bank = 1, pin name = IO_L45N_A0_M1LDQSN, Sch name = P30-A0
+#Net "MemAdr<2>" LOC = K17  | IOSTANDARD=LVCMOS33; 			#Bank = 1, pin name = IO_L45P_A1_M1LDQS, Sch name = P30-A1
+#Net "MemAdr<3>" LOC = J18  | IOSTANDARD=LVCMOS33; 			#Bank = 1, pin name = IO_L44N_A2_M1DQ7, Sch name = P30-A2
+#Net "MemAdr<4>" LOC = J16  | IOSTANDARD=LVCMOS33; 			#Bank = 1, pin name = IO_L44P_A3_M1DQ6, Sch name = P30-A3
+#Net "MemAdr<5>" LOC = G18  | IOSTANDARD=LVCMOS33; 			#Bank = 1, pin name = IO_L38N_A4_M1CLKN, Sch name = P30-A4
+#Net "MemAdr<6>" LOC = G16  | IOSTANDARD=LVCMOS33; 			#Bank = 1, pin name = IO_L38P_A5_M1CLK, Sch name = P30-A5
+#Net "MemAdr<7>" LOC = H16  | IOSTANDARD=LVCMOS33; 			#Bank = 1, pin name = IO_L37N_A6_M1A1, Sch name = P30-A6
+#Net "MemAdr<8>" LOC = H15  | IOSTANDARD=LVCMOS33; 			#Bank = 1, pin name = IO_L37P_A7_M1A0, Sch name = P30-A7
+#Net "MemAdr<9>" LOC = H14  | IOSTANDARD=LVCMOS33; 			#Bank = 1, pin name = IO_L36N_A8_M1BA1, Sch name = P30-A8
+#Net "MemAdr<10>" LOC = H13 | IOSTANDARD=LVCMOS33; 			#Bank = 1, pin name = IO_L36P_A9_M1BA0, Sch name = P30-A9
+#Net "MemAdr<11>" LOC = F18 | IOSTANDARD=LVCMOS33; 			#Bank = 1, pin name = IO_L35N_A10_M1A2, Sch name = P30-A10
+#Net "MemAdr<12>" LOC = F17 | IOSTANDARD=LVCMOS33; 			#Bank = 1, pin name = IO_L35P_A11_M1A7, Sch name = P30-A11
+#Net "MemAdr<13>" LOC = K13 | IOSTANDARD=LVCMOS33; 			#Bank = 1, pin name = IO_L34N_A12_M1BA2, Sch name = P30-A12
+#Net "MemAdr<14>" LOC = K12 | IOSTANDARD=LVCMOS33; 			#Bank = 1, pin name = IO_L34P_A13_M1WE, Sch name = P30-A13
+#Net "MemAdr<15>" LOC = E18 | IOSTANDARD=LVCMOS33; 			#Bank = 1, pin name = IO_L33N_A14_M1A4, Sch name = P30-A14
+#Net "MemAdr<16>" LOC = E16 | IOSTANDARD=LVCMOS33; 			#Bank = 1, pin name = IO_L33P_A15_M1A10, Sch name = P30-A15
+#Net "MemAdr<17>" LOC = G13 | IOSTANDARD=LVCMOS33; 			#Bank = 1, pin name = IO_L32N_A16_M1A9, Sch name = P30-A16
+#Net "MemAdr<18>" LOC = H12 | IOSTANDARD=LVCMOS33; 			#Bank = 1, pin name = IO_L32P_A17_M1A8, Sch name = P30-A17
+#Net "MemAdr<19>" LOC = D18 | IOSTANDARD=LVCMOS33; 			#Bank = 1, pin name = IO_L31N_A18_M1A12, Sch name = P30-A18
+#Net "MemAdr<20>" LOC = D17 | IOSTANDARD=LVCMOS33; 			#Bank = 1, pin name = IO_L31P_A19_M1CKE, Sch name = P30-A19
+#Net "MemAdr<21>" LOC = G14 | IOSTANDARD=LVCMOS33; 			#Bank = 1, pin name = IO_L30N_A20_M1A11, Sch name = P30-A20
+#Net "MemAdr<22>" LOC = F14 | IOSTANDARD=LVCMOS33; 			#Bank = 1, pin name = IO_L30P_A21_M1RESET Sch name = P30-A21
+#Net "MemAdr<23>" LOC = C18 | IOSTANDARD=LVCMOS33; 			#Bank = 1, pin name = IO_L29N_A22_M1A14, Sch name = P30-A22
+#Net "MemAdr<24>" LOC = C17 | IOSTANDARD=LVCMOS33; 			#Bank = 1, pin name = IO_L29P_A23_M1A13, Sch name = P30-A23
+#Net "MemAdr<25>" LOC = F16 | IOSTANDARD=LVCMOS33; 			#Bank = 1, pin name = IO_L1N_A24_VREF, Sch name = P30-A24
+#Net "MemAdr<26>" LOC = F15 | IOSTANDARD=LVCMOS33; 			#Bank = 1, pin name = IO_L1P_A25, Sch name = P30-A25
+
+#Net "QuadSpiFlashDB<0>" LOC = T13 | IOSTANDARD=LVCMOS33; 	#Dual/Quad SPI Flash DB<0>, Bank = MISC, pin name = IO_L3N_MOSI_CSI_B_MISO0_2, Sch name = SDI
+#Net "MemDB<0>"  LOC = R13 | IOSTANDARD=LVCMOS33; 			#Ram or Numonyx Paralell Flash DB<0>, or Dual/Quad SPI Flash DB<1>, Bank = MISC, pin name = IO_L3P_D0_DIN_MISO_MISO1_2, Sch name = P30-DQ0
+#Net "MemDB<1>"  LOC = T14 | IOSTANDARD=LVCMOS33; 			#Ram or Numonyx Paralell Flash DB<1>, or Quad SPI Flash DB<2>, Bank = MISC, pin name = IO_L12P_D1_MISO2_2, Sch name = P30-DQ1
+#Net "MemDB<2>"  LOC = V14 | IOSTANDARD=LVCMOS33; 			#Ram or Numonyx Paralell Flash DB<2>, or Quad SPI Flash DB<3>, Bank = MISC, pin name = IO_L12N_D2_MISO3_2, Sch name = P30-DQ2
+#Net "MemDB<3>"  LOC = U5  | IOSTANDARD=LVCMOS33; 			#Bank = 2, pin name = IO_49P_D3, Sch name = P30-DQ3
+#Net "MemDB<4>"  LOC = V5  | IOSTANDARD=LVCMOS33; 			#Bank = 2, pin name = IO_49N_D4, Sch name = P30-DQ4
+#Net "MemDB<5>"  LOC = R3  | IOSTANDARD=LVCMOS33; 			#Bank = 2, pin name = IO_L62P_D5, Sch name = P30-DQ5
+#Net "MemDB<6>"  LOC = T3  | IOSTANDARD=LVCMOS33; 			#Bank = 2, pin name = IO_L62N_D6, Sch name = P30-DQ6
+#Net "MemDB<7>"  LOC = R5  | IOSTANDARD=LVCMOS33; 			#Bank = 2, pin name = IO_L48P_D7, Sch name = P30-DQ7
+#Net "MemDB<8>"  LOC = N5  | IOSTANDARD=LVCMOS33; 			#Bank = 2, pin name = IO_L64P_D8, Sch name = P30-DQ8
+#Net "MemDB<9>"  LOC = P6  | IOSTANDARD=LVCMOS33; 			#Bank = 2, pin name = IO_L64N_D9, Sch name = P30-DQ9
+#Net "MemDB<10>" LOC = P12 | IOSTANDARD=LVCMOS33; 			#Bank = 2, pin name = IO_L13N_D10, Sch name = P30-DQ10
+#Net "MemDB<11>" LOC = U13 | IOSTANDARD=LVCMOS33; 			#Bank = 2, pin name = IO_L14P_D11, Sch name = P30-DQ11
+#Net "MemDB<12>" LOC = V13 | IOSTANDARD=LVCMOS33; 			#Bank = 2, pin name = IO_L14N_D12, Sch name = P30-DQ12
+#Net "MemDB<13>" LOC = U10 | IOSTANDARD=LVCMOS33; 			#Bank = 2, pin name = IO_L30P_GCLK1_D13, Sch name = P30-DQ13
+#Net "MemDB<14>" LOC = R8  | IOSTANDARD=LVCMOS33; 			#Bank = 2, pin name = IO_L31P_GCLK31_D14, Sch name = P30-DQ14
+#Net "MemDB<15>" LOC = T8  | IOSTANDARD=LVCMOS33; 			#Bank = 2, pin name = IO_L31N_GCLK30_D15, Sch name = P30-DQ15
