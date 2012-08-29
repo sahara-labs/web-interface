@@ -139,7 +139,7 @@ $io = new Sahara_Session_Element_MultiButtons($this->rigClient, 'io',
 		</p>
 	</div>
 	<div id="registercontents">
-		<form id='registerform' onsubmit='return registerSubmit();' class='saharaform'>
+		<form id='registerform' onsubmit='registerSubmit();return false;' class='saharaform'>
 			<div>
 				<label for='registeraddr'>Address: </label>
         		<select id="registeraddr" name="registeraddr">
@@ -166,7 +166,7 @@ $io = new Sahara_Session_Element_MultiButtons($this->rigClient, 'io',
     			<input type='text' id='registerval' name='registerval' />
     		</div>
     		<div>
-    			<submit id='registersub' name='registersub'>Send</submit>
+    			<button id='registersub' name='registersub' type='submit'>Send</button>
     		</div>
     	</form>
 	</div>
@@ -182,6 +182,28 @@ $io = new Sahara_Session_Element_MultiButtons($this->rigClient, 'io',
 	</div>
 	<div id="operationpanelcontents">
 		<ul id="operationpanellist">
+		</ul>
+	</div>
+</div>
+
+<!--Resources. -->
+<div id="resourcespanel" class="sessionpanel ui-corner-all leftpush overlayelementhide">
+	<div class="sessionpanelheader">
+		<p>
+			<span class="ui-icon ui-icon-folder-open sessionpanelheadericon"></span>
+			Resources
+		</p>
+	</div>
+	<div>
+		<ul>
+			<li><a href='/uts/nexys/resources/Nexys_UserGuide.pdf' target='_blank' class='plaina'>
+					<span class="ui-icon ui-icon-circle-arrow-e sessionpanelheadericon"></span>
+					User Guide
+			</a></li>
+			<li><a href='/uts/nexys/resources/nexys.ucf' target='_blank' class='plaina'>
+				<span class="ui-icon ui-icon-circle-arrow-e sessionpanelheadericon"></span>
+				User Contraints File
+			</a></li>
 		</ul>
 	</div>
 </div>

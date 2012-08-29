@@ -1,38 +1,7 @@
 /**
- * SAHARA Web Interface
- *
- * User interface to Sahara Remote Laboratory system.
- *
- * @license See LICENSE in the top level directory for complete license terms.
- *
- * Copyright (c) 2010, University of Technology, Sydney
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- *  * Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *  * Neither the name of the University of Technology, Sydney nor the names
- *    of its contributors may be used to endorse or promote products derived from
- *    this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * @author Michael Diponio (mdiponio)
- * @date 1st August 2010
+ * Nexys rig scripting.
+ * 
+ * @author Michael Diponio
  */
 
 var io = new Array(8);
@@ -297,6 +266,94 @@ function addFPGAMessage(m)
 
 function registerSubmit() 
 {
-	alert("Register submit");
-	return false; // Stop form submit
+	var params = {}, $input = $("#registerval"), val, i, c;
+	
+	/* Address. */
+	params.addr = parseInt($("#registeraddr option:selected").attr("value"));
+	
+	if ((val = $input.val()) == '')
+	{
+		/* No value supplied. */
+		registerError("No value to send.");
+		return;
+	}
+	else if (val.indexOf("0b") === 0 && val.length > 2)
+	{
+		/* Binary value entered. */
+		val = val.substr(2);
+		
+		/* Make sure we have enough characters. */
+		if (val.length != 8)
+		{
+			registerError("The register byte must be eight bits.");
+			return;
+		}
+		
+		/* Validate characters in string. */
+		for (i = 0; i < val.length; i++)
+		{
+			if (!(val.charAt(i) == '0' || val.charAt(i) == '1'))
+			{
+				registerError("Invalid binary format, character '" + val.charAt(i) + "' not allowed.");
+				return;
+			}
+		}
+		
+		params.value = parseInt(val, 2); 
+	}
+	else if (val.indexOf("0x") === 0 && val.length > 2)
+	{
+		/* Hexadecimal value entered. */
+		val = val.substr(2);
+		
+		/* Validate characters in string. */
+		for (i = 0; i < val.length; i++)
+		{
+			if (!(((c = val.charCodeAt(i)) >= 48 && c < 58) || // Decimal numbers.
+				  (c >= 65 && c < 71) ||                       // A to F
+				  (c >= 97 && c < 103)))                       // a to f
+			{
+				registerError("Invalid hexadecimal format, character '" + val.charAt(i) + "' not allowed.");
+				return;
+			}
+		}
+		
+		params.value = parseInt(val, 16);
+	}
+	else
+	{
+		/* (Possibly) decimal value. */
+		for (i = 0; i < val.length; i++)
+		{
+			if ((c = val.charCodeAt(i)) < 48 || c > 57)
+			{
+				registerError("Invalid decimal format, character '" + val.charAt(i) + "' not allowed.");
+				return;
+			}
+		}
+		
+		params.value = parseInt(val);
+	}
+	
+	/* Range check. */
+	if (params.value < 0 || params.val > 255)
+	{
+		registerError("Invalid value, it must be between 0 and 255.");
+		return;
+	}
+	
+	/* Send data. */
+	performPrimitiveJSON('NexysController', 'setDataByte', params);
+	
+	/* The button bar may be changed if register 0 has been changed. */
+	if (params.addr == 0)
+	{
+		resetIO();
+		restoreIO(params);
+	}
+}
+
+function registerError(m)
+{
+	alert(m);
 }
