@@ -1,5 +1,9 @@
 @CHARSET "UTF-8";
 
+#rigscriptcontainer #cameracontrolpanel {
+	top: 96px;
+}
+
 #bitstreamuploadinfo {
 	margin: 10px 20px 0;
 }
@@ -23,7 +27,7 @@
 #operationpanel {
 	position: absolute;
 	left: -185px;
-	top: 362px;
+	top: 361px;
 }
 
 #operationpanelcontents {
@@ -94,7 +98,7 @@
 #registerpanel {
 	position: absolute;
 	left: -185px;
-	top: 200px;
+	top: 198px;
 }
 
 #registerform label {
@@ -116,7 +120,7 @@
 #resourcespanel {
 	position: absolute;
 	left: -185px;
-	top: 560px;
+	top: 559px;
 }
 
 #resourcespanel ul {

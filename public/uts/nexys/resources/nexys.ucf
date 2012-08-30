@@ -13,9 +13,9 @@
 #-- 
 #-- Tool versions: 	Ise 13.2 , ISE 13.4 , ISE14.1
 #--
-#--	VERSION : 		v1.04
+#--	VERSION : 		v1.05
 #-- Modified by LJC 24/08/2012
-#-- 
+#-- Modified by DA  30/08/2012
 #------------------------------------------------------------------
 
 #------------------------------------------------------------------
@@ -35,6 +35,20 @@ TIMESPEC TS_sys_clk_pin = PERIOD sys_clk_pin 100000 kHz;
 #Net "switches<5>" LOC=U8   |  IOSTANDARD=LVCMOS33;
 #Net "switches<6>" LOC=V8   |  IOSTANDARD=LVCMOS33;
 #Net "switches<7>" LOC=T5   |  IOSTANDARD=LVCMOS33;
+
+#-Virtual Inputs
+#Net "EppAstb"   LOC = H1 | IOSTANDARD = LVCMOS33;
+#Net "EppDstb"   LOC = K4 | IOSTANDARD = LVCMOS33;
+#Net "EppWait"   LOC = C2 | IOSTANDARD = LVCMOS33; 
+#Net "EppDB<0>"  LOC = E1 | IOSTANDARD = LVCMOS33; 
+#Net "EppDB<1>"  LOC = F4 | IOSTANDARD = LVCMOS33;
+#Net "EppDB<2>"  LOC = F3 | IOSTANDARD = LVCMOS33;
+#Net "EppDB<3>"  LOC = D2 | IOSTANDARD = LVCMOS33;
+#Net "EppDB<4>"  LOC = D1 | IOSTANDARD = LVCMOS33;
+#Net "EppDB<5>"  LOC = H7 | IOSTANDARD = LVCMOS33;
+#Net "EppDB<6>"  LOC = G6 | IOSTANDARD = LVCMOS33;
+#Net "EppDB<7>"  LOC = E4 | IOSTANDARD = LVCMOS33;
+#Net "EppWr"    LOC = H2 | IOSTANDARD = LVCMOS33;
 
 #------------------------------------------------------------------
 #Outputs

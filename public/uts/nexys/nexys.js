@@ -170,8 +170,8 @@ function clearIO(i)
 	if (io[i] == 0) return;
 	
 	io[i] = 0;
-	$("#io" + i).css('background-color', '#ED8686');
-	$("#io" + i + " img").attr('src', '/uts/nexys/images/' + (ty[7 - i] == 'P' ? 'push-off.png' :'off.png'));
+	$("#io" + (7 - i)).css('background-color', '#ED8686');
+	$("#io" + (7 - i) + " img").attr('src', '/uts/nexys/images/' + (ty[7 - i] == 'P' ? 'push-off.png' :'off.png'));
 
 	if (ty[i] == 'S') addFPGAMessage("Switch " + i + " turned off.");
 	else addFPGAMessage("Push button " + i + " released.");
@@ -218,7 +218,7 @@ function checkDemoLoadedCallback(data)
 	}
 	else
 	{
-		setTimeout(checkDemoLoaded, 2000);
+		setTimeout(checkDemoLoaded, 1000);
 	}
 }
 
