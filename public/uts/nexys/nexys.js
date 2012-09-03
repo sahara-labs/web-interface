@@ -7,6 +7,23 @@
 var io = new Array(8);
 var ty = new Array(8);
 
+var lastTickle = undefined;
+
+function initTickle()
+{
+	lastTickle = new Date().getTime();
+	performPrimitiveJSON('NexysController', 'tickle');
+	
+	setInterval(function() {
+		if (new Date().getTime() - lastTickle > 29500)
+		{
+			/* Need to tickle the server to notify about activity. */
+			performPrimitiveJSON('NexysController', 'tickle');
+			lastTickle = new Date().getTime();
+		}
+	}, 30000);
+}
+
 function uploadBitStream()
 {
 	var width = $("body").width();
@@ -106,6 +123,7 @@ function clearBitstreamUploadOverlay()
 function initIO(types)
 {
 	performPrimitiveJSON('NexysController', 'getDataByte', { addr: '0' }, restoreIO, null);
+	this.lastTickle = new Date().getTime();
 	
 	for (var i = 0; i < 8; i++)
 	{
@@ -159,6 +177,7 @@ function setIO(i)
 		val += io[i] * Math.pow(2, i);
 	}
 
+	this.lastTickle = new Date().getTime();
 	performPrimitiveJSON('NexysController', 'setDataByte', { 
 		addr: '0',
 		value: val
@@ -183,6 +202,7 @@ function clearIO(i)
 		val += io[i] * Math.pow(2, i);
 	}
 	
+	this.lastTickle = new Date().getTime();
 	performPrimitiveJSON('NexysController', 'setDataByte', {
 		addr: '0',
 		value: val
@@ -196,6 +216,7 @@ function checkDemoLoadedStart()
 
 function checkDemoLoaded()
 {
+	this.lastTickle = new Date().getTime();
 	performPrimitiveJSON('NexysController', 'isDemoLoaded', null, checkDemoLoadedCallback);
 }
 
@@ -294,7 +315,7 @@ function registerSubmit()
 		{
 			if (!(val.charAt(i) == '0' || val.charAt(i) == '1'))
 			{
-				registerError("Invalid binary format, character '" + val.charAt(i) + "' not allowed.");
+				registerError("Invalid binary format, '" + val.charAt(i) + "' not allowed.");
 				return;
 			}
 		}
@@ -313,7 +334,7 @@ function registerSubmit()
 				  (c >= 65 && c < 71) ||                       // A to F
 				  (c >= 97 && c < 103)))                       // a to f
 			{
-				registerError("Invalid hexadecimal format, character '" + val.charAt(i) + "' not allowed.");
+				registerError("Invalid hex format, '" + val.charAt(i) + "' not allowed.");
 				return;
 			}
 		}
@@ -327,7 +348,7 @@ function registerSubmit()
 		{
 			if ((c = val.charCodeAt(i)) < 48 || c > 57)
 			{
-				registerError("Invalid decimal format, character '" + val.charAt(i) + "' not allowed.");
+				registerError("Invalid decimal format, '" + val.charAt(i) + "' not allowed.");
 				return;
 			}
 		}
@@ -336,13 +357,20 @@ function registerSubmit()
 	}
 	
 	/* Range check. */
-	if (params.value < 0 || params.val > 255)
+	if (params.value < 0 || params.value > 255)
 	{
 		registerError("Invalid value, it must be between 0 and 255.");
 		return;
 	}
 	
+	/* Clear validation. */
+	$("#registervalidation").empty();
+	
+	/* Write message. */
+	addFPGAMessage("Setting register " + params.addr + " to " + params.value + ".");
+	
 	/* Send data. */
+	this.lastTickle = new Date().getTime();
 	performPrimitiveJSON('NexysController', 'setDataByte', params);
 	
 	/* The button bar may be changed if register 0 has been changed. */
@@ -355,5 +383,5 @@ function registerSubmit()
 
 function registerError(m)
 {
-	alert(m);
+	$("#registervalidation").empty().append(m);
 }

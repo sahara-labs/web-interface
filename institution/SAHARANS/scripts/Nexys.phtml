@@ -168,6 +168,7 @@ $io = new Sahara_Session_Element_MultiButtons($this->rigClient, 'io',
     		<div>
     			<button id='registersub' name='registersub' type='submit'>Send</button>
     		</div>
+    		<div id='registervalidation'></div>
     	</form>
 	</div>
 </div>
@@ -274,6 +275,9 @@ $(document).ready(function() {
 
 	/* Register form. */
 	$("#registersub").button();
+
+	/* Initial activity tickle. */
+	initTickle();
 });
 </script>
 

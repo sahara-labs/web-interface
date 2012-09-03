@@ -4,6 +4,11 @@
 	top: 96px;
 }
 
+#rigscriptcontainer #warningmessage {
+	position: relative;
+	top: 95px;
+}
+
 #bitstreamuploadinfo {
 	margin: 10px 20px 0;
 }
@@ -115,6 +120,15 @@
 
 #registersub {
 	margin-left: 103px;
+}
+
+#registervalidation {
+	position: absolute;
+	color: #FC0000;
+	left: 0px;
+	bottom: 0px;
+	font-size: 0.7em;
+	width: 100px;
 }
 
 #resourcespanel {
