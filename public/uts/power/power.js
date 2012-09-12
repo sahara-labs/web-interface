@@ -45,26 +45,180 @@ PowerLab.prototype.setMode = function(mode) {
 		this.widgets.push(new BackButton(this));
 		
 		/* --- Controls --------------------------------------------------------------------------------------- */
-		this.widgets.push(new Button(this, "g-button",      "G",      "circ-button"));
-		this.widgets.push(new Button(this, "cb1-button",    "CB1"));
-		this.widgets.push(new Button(this, "gcb-button",    "GCB"));
-		this.widgets.push(new Button(this, "load-r-button", "R Load", "load-button"));
-		this.widgets.push(new Button(this, "load-l-button", "L Load", "load-button"));
-		this.widgets.push(new Button(this, "load-c-button", "C Load", "load-button"));
-		this.widgets.push(new ExclusiveButton(this, "trans-model", {
+		/* Generator on / off. */
+		o = new Button(this, "g-on", "G", "circ-button");
+		o.clicked = function() {
+			if (this.isOn)
+			{
+				/* Turning generator off. */
+				if (this.control.data["gcb-on"] == "true")
+				{
+					/* INTERLOCK: Stopping generator with loads busbar closed (GCB on). */
+					this.addMessage("Open load busbar before stopping generator.", "error", 420, 160, "top-center");
+					return;
+				}
+			}
+			else
+			{
+				/* Turning generator on. */
+				var t = parseInt(this.control.data["trans-line"]);
+				if (!(t == 1 || t == 2))
+				{
+					/* INTERLOCK: Transmission mode must be set before turning on generator. */
+					this.addMessage("Choose one of the transmission models before starting generator.", "error",
+							100, 65, "right");
+					return;
+				}
+				
+				if (this.control.data["gcb-on"] == "true")
+				{
+					/* INTERLOCK: Starting generator with loads busbar open (GCB on). 
+					 * NOTE: the interface sequencing should prohibt this ever occurring. */
+					this.addMessage("Open load busbar before starting generator.", "error", 420, 160, "top-center");
+					return;
+				}
+			}
+			
+			this.control.setWorking(true);
+			this.setOn(!this.isOn);
+			this.isChanging = true;
+			
+			var thiz = this;
+			this.control.post("setGen", { on: this.isOn }, function(err) {
+				/* Server side validation failed. */
+				thiz.isChanging = false;
+				thiz.setOn(!thiz.isOn);
+				thiz.addMessage(err, "error", 9, 150, "top-left");
+				thiz.control.setWorking(false);
+			});
+		};
+		this.widgets.push(o);
+		
+		/* CB1 indicator. */
+		o = new Button(this, "cb1-button",    "CB1");
+		o.clicked = function() {
+			this.addMessage("This is only an indicator. It will update automatically.", "info", 40, 140, "top-center");
+		};
+		this.widgets.push(o);
+		
+		/* GCB load bus. */
+		o = new Button(this, "gcb-on", "GCB");
+		o.clicked = function() {
+			if (this.isOn)
+			{
+				/* Turning GCB off. */
+				var interlockFailed = false;
+				if (this.control.data["r-load"] == "true")
+				{
+					/* INTERLOCK: Inhibit deactivation of load busbar if loads are running. */
+					this.addMessage("Turn off load before closing load busbar.", "error", 400, 75, "right");
+					interlockFailed = true;
+				}
+				if (this.control.data["l-load"] == "true")
+				{
+					/* INTERLOCK: Inhibit deactivation of load busbar if loads are running. */
+					this.addMessage("Turn off load before closing load busbar.", "error", 400, 135, "right");
+					interlockFailed = true;
+				}
+				if (this.control.data["c-load"] == "true")
+				{
+					/* INTERLOCK: Inhibit deactivation of load busbar if loads are running. */
+					this.addMessage("Turn off load before closing load busbar.", "error", 400, 195, "right");
+					interlockFailed = true;
+				}
+				
+				if (interlockFailed) return;
+			}
+			else 
+			{
+				/* Turning GCB on. */
+				if (this.control.data["g-on"] == "false")
+				{
+					/* INTERLOCK: Inhibit activation of load busbar if generator off. */
+					this.addMessage("Turn on generator before opening load busbar.", "error", 10, 150, "top-left");
+					return;
+				}
+			}
+			
+			this.control.setWorking(true);
+			this.setOn(!this.isOn);
+			this.isChanging = true;
+			
+			var thiz = this;
+			this.control.post("setGCB", { on: this.isOn }, function(err) {
+				/* Server side validation failed. */
+				thiz.isChanging = false;
+				thiz.setOn(!thiz.isOn);
+				thiz.addMessage(err, "error", 420, 162, "top-center");
+				thiz.control.setWorking(false);
+			});
+		};
+		this.widgets.push(o);
+		
+		/* Load buttons. */
+		var r = new Button(this, "r-load", "R Load", "load-button"), 
+			l = new Button(this, "l-load", "L Load", "load-button"),
+			c = new Button(this, "c-load", "C Load", "load-button");
+		r.clicked = l.clicked = c.clicked = function() {
+			if (!this.isOn && this.control.data["gcb-on"] == "false")
+			{
+				/* INTERLOCK: Inhibit turning on of a load if the load bus bar is open. */
+				this.addMessage("Close busbar before turning on a load.", "error", 420, 160, "top-center");
+				return;
+			}
+			
+			this.control.setWorking(true);
+			this.setOn(!this.isOn);
+			this.isChanging = true;
+			
+			var thiz = this;
+			this.control.post("setLoad", { load: this.id, on: this.isOn }, function(err) {
+				thiz.isChanging = false;
+				thiz.setOn(!thiz.isOn);
+				thiz.addMessage(err, "error", 400, thiz.id == "r-load" ? 75 : thiz.id == "l-load" ? 135 : 195, "right");
+				thiz.control.setWorking(false);
+			});
+		};
+		this.widgets.push(r);
+		this.widgets.push(l);
+		this.widgets.push(c);
+		
+		/* Transmission model button. */
+		o = new ExclusiveButton(this, "trans-line", {
 			1: "Trans. Model 1",
 			2: "Trans. Model 2"
-		}));
-		
+		});
+		o.clicked = function(id) {
+			var val = parseInt(id.substr(id.lastIndexOf('_')));
+			if (val == this.currentVal)                   // INTERLOCK: A transmission line must always be selected
+				this.addMessage("Transmission line already on.", "info", 450, val == 1 ? 65 : 140, "left");
+			else if (this.control.data["g-on"] == "true") // INTERLOCK: Inhibit activation of trans line which gen running
+				this.addMessage("Turn generator off before changing tranmission lines.", "error", 10, 150, "top-left");
+			else
+			{
+				this.control.setWorking(true);
+				this.isChanging = true;
+				this.setOn(val);
+				
+				var thiz = this;
+				this.control.post("setTransModel", { model: val}, function(err) {
+					/* Server side validation failed. */
+					thiz.isChanging = false;
+					thiz.setOn(val == 1 ? 2 : 1);
+					thiz.addMessage(err, "error", 450, val == 1 ? 65 : 140, "left");
+					thiz.control.setWorking(false);
+				});
+			}
+		};
+		this.widgets.push(o);
+			
 		/* --- Meters ---------------------------------------------------------------------------------------- */
 		this.widgets.push(new LCDWidget(this, "active-power",     "Active Power",   "W",   2, "teal-color"));
 		this.widgets.push(new LCDWidget(this, "apparent-power",   "Apparent Power", "VA",  2, "green-color"));
-		this.widgets.push(new LCDWidget(this, "ln-voltage",       "L - N Voltage",  "V",   1, "teal-color"));
-		this.widgets.push(new LCDWidget(this, "set-voltage",      "Set Voltage",    "V",   1, "yellow-color"));
+		this.widgets.push(new LCDWidget(this, "ln-voltage",       "L - N Voltage",  "V",   1, "teal-color"));		
 		this.widgets.push(new LCDWidget(this, "reactive-power",   "Reactive Power", "Var", 1, "red-color"));
 		this.widgets.push(new LCDWidget(this, "active-factor",    "Active Factor",  "%",   2, "yellow-color"));
 		this.widgets.push(new LCDWidget(this, "line-frequency",   "Line Frequency", "Hz",  1, "red-color"));
-		this.widgets.push(new LCDWidget(this, "set-frequency",    "Set Frequency",  "Hz",  2, "teal-color"));
 		this.widgets.push(new LCDWidget(this, "line-current",     "Line Current",   "A",   3, "yellow-color"));
 		this.widgets.push(new LCDWidget(this, "active-power-2",   "Active Power",   "W",   2, "teal-color"));
 		this.widgets.push(new LCDWidget(this, "apparent-power-2", "Apparent Power", "VA",  2, "green-color"));
@@ -72,6 +226,24 @@ PowerLab.prototype.setMode = function(mode) {
 		this.widgets.push(new LCDWidget(this, "reactive-power-2", "Reactive Power", "Var", 2, "red-color"));
 		this.widgets.push(new LCDWidget(this, "active-factor-2",  "Active Factor",  "%",   3, "yellow-color"));
 		this.widgets.push(new LCDWidget(this, "line-current-2",   "Line Current",   "A",   3, "red-color"));
+		
+		/* Set voltage indicator and buttons. */
+		o = new LCDWidget(this, "set-voltage",      "Set Voltage",    "V",   1, "yellow-color");
+		this.widgets.push(o);
+		o = new UpDownButton(this, "set-voltage-buttons", o, 0.1);
+		o.checkRange = function(val) {
+			// TODO Set voltage range check.
+		};
+		this.widgets.push(o);
+
+		/* Set frequency indicator and buttons. */
+		o = new LCDWidget(this, "set-frequency",    "Set Frequency",  "Hz",  2, "teal-color");
+		this.widgets.push(o);
+		o = new UpDownButton(this, "set-frequency-buttons", 0, 0.1);
+		o.checkRange = function(val) {
+			// TODO Set frequency range check. 
+		};
+		this.widgets.push(o);
 		
 		/* --- Miscellaneous things on the page. */
 		this.widgets.push(new Graphics(this));
@@ -94,11 +266,13 @@ PowerLab.prototype.setMode = function(mode) {
 	this.setWorking(false);
 };
 
-PowerLab.prototype.post = function(action, data, callback) {
+PowerLab.prototype.post = function(action, data, errCallback) {
 	$.post(
 			"/primitive/json/pc/PowerController/pa/" + action,
 			data,
-			function() { if (callback) callback(data); }
+			function(resp) { 
+				if (errCallback && typeof resp == "string" && resp.indexOf("FAILED") == 0) errCallback(resp.substr(7)); 
+			}
 	);
 };
 
@@ -139,16 +313,16 @@ PowerLab.prototype.requestData = function() {
 			for (i in packet) data[packet[i].name] = packet[i].value;
 			
 			/* If the mode is not the displayed mode, switch it. */
-			if (data['mode'] != thiz.mode) thiz.setMode(data['mode']);
+			if (data['lab'] != thiz.mode) thiz.setMode(data['lab']);
 
 			/* Provide data to each of the versions. */
-			this.data = data;
+			thiz.data = data;
 			for (i in thiz.widgets) thiz.widgets[i].update(data);
 			
-			setTimeout(function() { thiz.requestData(); }, 1000);
+			setTimeout(function() { thiz.requestData(); }, 3000);
 		},
 		error: function() {
-			setTimeout(function() { thiz.requestData(); }, 5000);
+			setTimeout(function() { thiz.requestData(); }, 10000);
 		}
 	});
 };
@@ -201,6 +375,15 @@ Widget.prototype.destroy = function() {
 	if (this.$w) this.$w.remove();
 };
 
+/**
+ * Adds a message to the page.
+ * 
+ * @param message the message to display
+ * @param type the message type, 'error', 'info'
+ * @param left left absolute coordinate
+ * @param top top absolute coordinate
+ * @param pos the arrow position, 'left', 'right', 'top', 'bottom'
+ */
 Widget.prototype.addMessage = function(message, type, left, top, pos) {
 	var $box, i, aniIn, bs = 1, up = true, html = 
 		"<div class='message-box message-box-" + type + " message-box-in1' style='left:" + left + "px; top:" + top + "px'>" +
@@ -228,6 +411,13 @@ Widget.prototype.addMessage = function(message, type, left, top, pos) {
 		clearInterval(aniIn);
 		$box.remove();
 	});
+};
+
+/** 
+ * Remove all messages from the page.
+ */
+Widget.prototype.removeMessages = function() {
+	this.control.$canvas.find(".message-box").remove();
 };
 
 /** ---------------------------------------------------------------------------
@@ -277,7 +467,7 @@ SwitchMode.prototype.clicked = function(n) {
 	/* Give the appearance of not being able to be clicked. */
 	$(n).toggleClass("green-color red-color");
 	
-	this.control.post("setMode", { 
+	this.control.post("setLab", { 
 		'new-mode': $(n).attr('id') == 'lab-select-1' ? 1 : 2
 	});
 };
@@ -518,7 +708,7 @@ function Button(control, id, text, cclass)
 	this.id = id;
 	this.text = text;
 	this.isOn = undefined;
-	this.isActive = false;
+	this.isChanging = false;
 	this.cclass = cclass ? cclass : '';
 }
 
@@ -532,20 +722,16 @@ Button.prototype.init = function() {
 	);
 	
 	var thiz = this;
-	this.$w = $("#" + this.id)
-				.click(function() { thiz.clicked(); });
+	this.$w = $("#" + this.id).click(function() {
+		if (thiz.control.working) return;
+		thiz.removeMessages();
+		thiz.clicked();
+	});
 	
 	this.setOn(false);
 };
 
-Button.prototype.clicked = function() {
-	// TODO
-	alert(this.id + " clicked");
-};
-
-Button.prototype.setValue = function(val) {
-	// TODO
-};
+Button.prototype.clicked = function() { alert(this.id + " clicked"); };
 
 Button.prototype.setOn = function(on) {
 	if (this.isOn === on) return;
@@ -573,6 +759,20 @@ Button.prototype.enable = function(enabled) {
 	}
 };
 
+
+Button.prototype.update = function(data) {
+	if(data[this.id] == undefined) return;
+	
+	var on = data[this.id] == "true";
+	if (this.isChanging && on != this.isOn) return; // Masking server update
+	else if (this.isChanging)                       // Server acknowledged update
+	{
+		this.isChanging = false;
+		this.control.setWorking(false);
+	}
+	else if (on != this.isOn) this.setOn(on);      // Server has correct status
+};
+
 /** ---------------------------------------------------------------------------
  *  -- Exclusive Button Widget                                               --
  *  --------------------------------------------------------------------------- */
@@ -584,6 +784,7 @@ function ExclusiveButton(control, id, buttons)
 	this.buttons = buttons;
 	
 	this.currentVal = undefined;
+	this.isChanging = false;
 }
 
 ExclusiveButton.prototype = new Widget;
@@ -605,15 +806,16 @@ ExclusiveButton.prototype.init = function() {
 	this.control.$canvas.append(html);
 	this.$w = $("#" + this.id);
 	
-	this.$w.children(".button").click(function() { thiz.clicked($(this).attr("id")); });
+	this.$w.children(".button").click(function() { 
+		if (thiz.control.working) return;
+		thiz.removeMessages(); 
+		thiz.clicked($(this).attr("id")); 
+	});
 	
 	this.setOn(0);
 };
 
-ExclusiveButton.prototype.clicked = function(id) {
-	// TODO
-	alert(id + " clicked");
-};
+ExclusiveButton.prototype.clicked = function(id) { alert(id + " has been clicked."); };
 
 ExclusiveButton.prototype.setOn = function(val) {
 	if (this.currentVal === val) return;
@@ -623,14 +825,13 @@ ExclusiveButton.prototype.setOn = function(val) {
 		$n = $("#" + this.id + "-button-" + val),
 		t;
 
-	
 	if ($n.length != 0)
 	{
-		$ch = $n.sibling();
+		$ch = $n.siblings();
 		
 		t = $n.text();
 		$n.addClass("button-on-state")
-		  .text(t.substr(0, t.length - 3) + "On&nbsp;");
+		  .html(t.substr(0, t.length - 3) + "On&nbsp;");
 	}
 	
 	$ch.each(function() {
@@ -650,6 +851,44 @@ ExclusiveButton.prototype.enable = function (enable) {
 		this.$w.children(".button").addClass("button-disabled");
 	}
 };
+
+ExclusiveButton.prototype.update = function(data) {
+	if (typeof data[this.id] == "undefined") return; // Server is not provided data for this variable.
+	
+	var val = parseInt(data[this.id]);
+	
+	if (this.isChanging && val != this.currentVal) return; // Masking page state whist waiting for server state change
+	else if (this.isChanging)                              // Server acknowledged change
+	{
+		this.isChanging = false;  
+		this.control.setWorking(false);
+	}
+	else if (val != this.currentVal) this.setOn(val);      // Matching server state
+};
+
+/** ---------------------------------------------------------------------------
+ *  - Up / Down Buttons                                                      --
+ *  --------------------------------------------------------------------------- */
+function UpDownButton(control, id, lcd, delta)
+{
+	Widget.call(this, control);
+	
+	this.id = id;
+}
+UpDownButton.prototype = new Widget;
+
+UpDownButton.prototype.init = function() {
+	this.control.$canvas.append(
+		"<div id='" + this.id + "'>" +
+			"<div class='up-button plain-button button'>+</div>" +
+			"<div class='down-button plain-button button'>-</div>" +
+		"</div>" 
+	);
+	
+	this.$w = $("#" + this.id);
+};
+
+UpDownButton.prototype.checkRange = function(val) { return 0; };
 
 /** ---------------------------------------------------------------------------
  *  -- Back Button                                                           --
@@ -676,17 +915,18 @@ BackButton.prototype.init = function() {
 };
 
 BackButton.prototype.clicked = function() {
+	this.removeMessages();
 	if (this.control.isWorking()) return;
 	
 	/* Interlock validation. */
-	if (true) //this.control.data['g-on'] == 'true')
+	if (this.control.data['g-on'] == 'true')
 	{
-		this.addMessage("The generator must be turned off before changing labs.", 'info', 57, 92, 'left');
+		this.addMessage("The generator must be turned off before changing labs.", 'error', 57, 92, 'left');
 	}
 	else
 	{
 		this.control.setWorking(true);
-		this.control.post("setMode", { 'new-mode': 0 });
+		this.control.post("setLab", { 'new-mode': 0 });
 	}
 };
 

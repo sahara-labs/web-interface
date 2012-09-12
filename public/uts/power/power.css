@@ -405,7 +405,7 @@
 /** ---------------------------------------------------------------------------
  *  -- Button positions                                                      --
  *  --------------------------------------------------------------------------- */
-#g-button {
+#g-on {
 	left: 10px;
 	top: 90px
 }
@@ -415,21 +415,21 @@
 	top: 105px
 }
 
-#gcb-button {
+#gcb-on {
 	width: 60px;
 	right: 120px;
 	top: 105px
 }
 
-#load-r-button {
+#r-load {
 	top: 70px;
 }
 
-#load-l-button {
+#l-load {
 	top: 135px;
 }
 
-#load-c-button {
+#c-load {
 	top: 200px;
 }
 
@@ -438,7 +438,7 @@
 	width: 55px;
 }
 
-#trans-model {
+#trans-line {
 	top: 40px;
 	left: 300px;
 	width: 140px;
@@ -725,10 +725,15 @@
 	z-index: 100;
 	opacity: 0.9;
 	border-radius: 4px;
+	cursor: pointer;
 }
 
 #power-systems-lab .message-box-error {
-	background-color: #FC0000;
+	background-color: #BA5454;
+}
+
+#power-systems-lab .message-box-info {
+	background-color: #F8EC86;
 }
 
 #power-systems-lab .message-box-text {
@@ -738,15 +743,14 @@
 	opacity: 1;
 }
 
+#power-systems-lab .message-box-info .message-box-text {
+	color: #000000;
+}
+
 #power-systems-lab .message-box-arrow {
 	position: absolute;
 	width: 12px;
 	height: 12px;
-}
-
-#power-systems-lab .message-box-arrow-left {
-	left: -10px;
-	top: 5px;
 }
 
 #power-systems-lab .message-box-arrow-line {
@@ -754,7 +758,11 @@
 }
 
 #power-systems-lab .message-box-error .message-box-arrow-line  {
-	background-color: #FC0000;
+	background-color: #BA5454;
+}
+
+#power-systems-lab .message-box-info .message-box-arrow-line {
+	background-color: #F8EC86;
 }
 
 #power-systems-lab .message-box-arrow-left .message-box-arrow-line, 
@@ -762,6 +770,11 @@
 	border-top: 2px solid #EEEEEE;
 	border-bottom: 2px solid #EEEEEE;
 	width: 1px;
+}
+
+#power-systems-lab .message-box-arrow-left {
+	left: -10px;
+	top: 5px;
 }
 
 #power-systems-lab .message-box-arrow-left .message-box-arrow-line0 {
@@ -868,7 +881,80 @@
 }
 
 
+#power-systems-lab .message-box-arrow-top-left .message-box-arrow-line, 
+#power-systems-lab .message-box-arrow-top-center .message-box-arrow-line {
+	border-left: 2px solid #EEEEEE;
+	border-right: 2px solid #EEEEEE;
+	height: 1px;
+}
 
+#power-systems-lab .message-box-arrow-top-center {
+	left: 90px;
+	top: -10px;
+}
 
+#power-systems-lab .message-box-arrow-top-left {
+	left: 20px;
+	top: -10px;
+}
+
+#power-systems-lab .message-box-arrow-top-left .message-box-arrow-line0,
+#power-systems-lab .message-box-arrow-top-center .message-box-arrow-line0 {
+	width: 12px;
+	bottom: 2px;
+	left: -1px;
+}
+
+#power-systems-lab .message-box-arrow-top-left .message-box-arrow-line1,
+#power-systems-lab .message-box-arrow-top-center .message-box-arrow-line1 {
+	width: 10px;
+	bottom: 3px;
+	left: 0;
+}
+
+#power-systems-lab .message-box-arrow-top-left .message-box-arrow-line2,
+#power-systems-lab .message-box-arrow-top-center .message-box-arrow-line2 {
+	width: 8px;
+	bottom: 4px;
+	left: 1px;
+}
+
+#power-systems-lab .message-box-arrow-top-left .message-box-arrow-line3,
+#power-systems-lab .message-box-arrow-top-center .message-box-arrow-line3 {
+	width: 6px;
+	bottom: 5px;
+	left: 2px;
+}
+
+#power-systems-lab .message-box-arrow-top-left .message-box-arrow-line4,
+#power-systems-lab .message-box-arrow-top-center .message-box-arrow-line4 {
+	width: 4px;
+	bottom: 6px;
+	left: 3px;
+}
+
+#power-systems-lab .message-box-arrow-top-left .message-box-arrow-line5,
+#power-systems-lab .message-box-arrow-top-center .message-box-arrow-line5 {
+
+	width: 2px;
+	bottom: 7px;
+	left: 4px;
+}
+
+#power-systems-lab .message-box-arrow-top-left .message-box-arrow-line6,
+#power-systems-lab .message-box-arrow-top-center .message-box-arrow-line6 {
+
+	width: 0px;
+	bottom: 8px;
+	left: 5px;
+}
+
+#power-systems-lab .message-box-arrow-top-left .message-box-arrow-line7,
+#power-systems-lab .message-box-arrow-top-center .message-box-arrow-line7 {
+	width: 0px;
+	bottom: 9px;
+	left: 6px;
+	border-right: none;
+}
 
 
