@@ -402,6 +402,21 @@
 	margin: 25px 0;
 }
 
+#power-systems-lab .up-down-buttons {
+	position: absolute;
+	width: 165px;
+}
+
+#power-systems-lab .up-down-buttons .button {
+	position: static;
+	float: left;
+	width: 40px;
+	height: 20px;
+	margin: 15px;
+	background-color: #EEEEEE;
+	font-weight: bold;
+}
+
 /** ---------------------------------------------------------------------------
  *  -- Button positions                                                      --
  *  --------------------------------------------------------------------------- */
@@ -442,6 +457,17 @@
 	top: 40px;
 	left: 300px;
 	width: 140px;
+}
+
+#set-voltage-buttons {
+	left: -159px;
+	top: 715px;
+	
+}
+
+#set-frequency-buttons {
+	left: 42px;
+	top: 715px;
 }
 
 /* ----------------------------------------------------------------------------
@@ -658,59 +684,59 @@
 #graphics-set-voltage-line {
 	width: 134px;
 	top: 720px;
-	left: -155px;
+	left: -145px;
 }
 
 #graphics-set-voltage-to-lcd {
 	height: 30px;
 	top: 690px;
-	left: -88px;
+	left: -77px;
 }
 
 #graphics-set-freq-line {
 	width: 134px;
 	top: 720px;
-	left: 31px;
+	left: 57px;
 }
 
 #graphics-set-freq-to-lcd {
 	height: 30px;
 	top: 690px;
-	left: 98px;
+	left: 124px;
 }
 
 #graphics-default-settings {
-	width: 188px;
+	width: 203px;
 	top: 780px;
-	left: -88px;
+	left: -77px;
 }
 
 #graphics-default-set-voltage {
 	height: 40px;
 	top: 740px;
-	left: -88px;
+	left: -77px;
 }
 
 #graphics-default-set-voltage-arrow {
-	left: -96px;
+	left: -86px;
 	top: 734px;
 }
 
 #graphics-default-set-freq {
 	height: 40px;
 	top: 743px;
-	left: 99px;
+	left: 124px;
 }
 
 #graphics-default-set-freq-arrow {
-	left: 91px;
+	left: 115px;
 	top: 734px;
 }
 
 #graphics-default-to-button {
 	height: 40px;
 	top: 783px;
-	left: 5px;
+	left: 23px;
 }
 
 /* ----------------------------------------------------------------------------

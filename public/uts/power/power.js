@@ -237,7 +237,7 @@ PowerLab.prototype.setMode = function(mode) {
 		this.widgets.push(o);
 
 		/* Set frequency indicator and buttons. */
-		o = new LCDWidget(this, "set-frequency",    "Set Frequency",  "Hz",  2, "teal-color");
+		o = new LCDWidget(this, "set-frequency",    "Set Frequency",  "Hz",  1, "teal-color");
 		this.widgets.push(o);
 		o = new UpDownButton(this, "set-frequency-buttons", 0, 0.1);
 		o.checkRange = function(val) {
@@ -874,20 +874,43 @@ function UpDownButton(control, id, lcd, delta)
 	Widget.call(this, control);
 	
 	this.id = id;
+	this.lcd = lcd;
+	this.delta = delta;
 }
 UpDownButton.prototype = new Widget;
 
 UpDownButton.prototype.init = function() {
 	this.control.$canvas.append(
-		"<div id='" + this.id + "'>" +
-			"<div class='up-button plain-button button'>+</div>" +
-			"<div class='down-button plain-button button'>-</div>" +
+		"<div id='" + this.id + "' class='up-down-buttons'>" +
+			"<div class='up-button button'>+</div>" +
+			"<div class='down-button button'>-</div>" +
 		"</div>" 
 	);
 	
 	this.$w = $("#" + this.id);
+	
+	var thiz = this;
+	this.$w.children(".button").click(function() {
+		thiz.removeMessages();
+		
+		if ($(this).hasClass("up-button")) thiz.increase();
+		else thiz.decrease();
+	});
 };
 
+UpDownButton.prototype.increase = function() {
+	alert("Increase");
+};
+
+UpDownButton.prototype.decrease = function() {
+	alert("Decrase");
+};
+
+/** 
+ * Checks a value to ensure it is in an acceptable range. Returns 0 if the value 
+ * is in range, -1 if the value is less than or at the low limit or 1 if the value
+ * is greater than or at the high limit.
+ */
 UpDownButton.prototype.checkRange = function(val) { return 0; };
 
 /** ---------------------------------------------------------------------------
