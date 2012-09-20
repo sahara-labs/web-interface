@@ -189,7 +189,7 @@ PowerLab.prototype.setMode = function(mode) {
 			2: "Trans. Model 2"
 		});
 		o.clicked = function(id) {
-			var val = parseInt(id.substr(id.lastIndexOf('_')));
+			var val = parseInt(id.substr(id.lastIndexOf('-') + 1));
 			if (val == this.currentVal)                   // INTERLOCK: A transmission line must always be selected
 				this.addMessage("Transmission line already on.", "info", 450, val == 1 ? 65 : 140, "left");
 			else if (this.control.data["g-on"] == "true") // INTERLOCK: Inhibit activation of trans line which gen running
@@ -211,18 +211,59 @@ PowerLab.prototype.setMode = function(mode) {
 			}
 		};
 		this.widgets.push(o);
+		
+		/* Open loop button. */
+		o = new Button(this, "closed-loop", "Closed Loop Control");
+		o.clicked = function() {
+			var setVolt = parseFloat(this.control.data["set-voltage"]);
+
+			if (this.control.data["g-on"] == "true")
+			{
+				/* INTERLOCK: Inhibit switching to open loop if the generator is on. */
+				this.addMessage("Turn generator off before turning closed loop control " + (this.isOn ? "off." : "on."), 
+						"error", 10, 150, "top-left");
+			}
+			else if (setVolt < 210 && !this.isOn)
+			{
+				/* INTERLOCK: Minimum generator voltage is 210 volts in closed loop control. */
+				this.addMessage("Increase generator to 210V before turning closed loop control on.", 
+						"error", -88, 725, "left");
+			}
+			else if (setVolt > 250 && !this.isOn)
+			{
+				/* INTERLOCK: Maximum generator voltage is 250 volts in closed loop control. */
+				this.addMessage("Decrease generator to 250V before turning closed loop control on.", 
+						"error", -7, 725, "left");
+			}
+			else
+			{	
+				this.control.setWorking(true);
+				this.isChanging = true;
+				this.setOn(!this.isOn);
+				
+				var thiz = this;
+				this.control.post("setClosedLoop", { on: this.isOn }, function(err) {
+					/* Server side validation failed. */
+					thiz.isChanging = false;
+					thiz.setOn(!thiz.isOn);
+					thiz.addMessage(err, "error", 375, 660, "left");
+					thiz.control.setWorking(false);
+				});
+			}
+		};
+		this.widgets.push(o);
 			
 		/* --- Meters ---------------------------------------------------------------------------------------- */
-		this.widgets.push(new LCDWidget(this, "active-power",     "Active Power",   "W",   2, "teal-color"));
-		this.widgets.push(new LCDWidget(this, "apparent-power",   "Apparent Power", "VA",  2, "green-color"));
+		this.widgets.push(new LCDWidget(this, "active-power",     "Active Power",   "W",   1, "teal-color"));
+		this.widgets.push(new LCDWidget(this, "apparent-power",   "Apparent Power", "VA",  1, "green-color"));
 		this.widgets.push(new LCDWidget(this, "ln-voltage",       "L - N Voltage",  "V",   1, "teal-color"));		
 		this.widgets.push(new LCDWidget(this, "reactive-power",   "Reactive Power", "Var", 1, "red-color"));
 		this.widgets.push(new LCDWidget(this, "active-factor",    "Active Factor",  "%",   2, "yellow-color"));
 		this.widgets.push(new LCDWidget(this, "line-frequency",   "Line Frequency", "Hz",  1, "red-color"));
 		this.widgets.push(new LCDWidget(this, "line-current",     "Line Current",   "A",   3, "yellow-color"));
-		this.widgets.push(new LCDWidget(this, "active-power-2",   "Active Power",   "W",   2, "teal-color"));
-		this.widgets.push(new LCDWidget(this, "apparent-power-2", "Apparent Power", "VA",  2, "green-color"));
-		this.widgets.push(new LCDWidget(this, "ln-voltage-2",     "L - N Voltage",  "V",   0, "teal-color"));
+		this.widgets.push(new LCDWidget(this, "active-power-2",   "Active Power",   "W",   1, "teal-color"));
+		this.widgets.push(new LCDWidget(this, "apparent-power-2", "Apparent Power", "VA",  1, "green-color"));
+		this.widgets.push(new LCDWidget(this, "ln-voltage-2",     "L - N Voltage",  "V",   1, "teal-color"));
 		this.widgets.push(new LCDWidget(this, "reactive-power-2", "Reactive Power", "Var", 2, "red-color"));
 		this.widgets.push(new LCDWidget(this, "active-factor-2",  "Active Factor",  "%",   3, "yellow-color"));
 		this.widgets.push(new LCDWidget(this, "line-current-2",   "Line Current",   "A",   3, "red-color"));
@@ -232,16 +273,42 @@ PowerLab.prototype.setMode = function(mode) {
 		this.widgets.push(o);
 		o = new UpDownButton(this, "set-voltage-buttons", o, 0.1);
 		o.checkRange = function(val) {
-			// TODO Set voltage range check.
+			if       (val < 200 || (this.control.data["closed-loop"] == "true" && val < 210)) return -1; // INTERLOCK: Value too small
+			else if (val > 270 || (this.control.data["closed-loop"] == "true" && val > 250)) return 1;   // INTERLOCK: Value too large     
+			else return 0; // Value in range
 		};
 		this.widgets.push(o);
 
 		/* Set frequency indicator and buttons. */
 		o = new LCDWidget(this, "set-frequency",    "Set Frequency",  "Hz",  1, "teal-color");
 		this.widgets.push(o);
-		o = new UpDownButton(this, "set-frequency-buttons", 0, 0.1);
+		o = new UpDownButton(this, "set-frequency-buttons", o, 0.1);
 		o.checkRange = function(val) {
-			// TODO Set frequency range check. 
+			if (val < 45) return -1;      // INTERLOCK: Value too small
+			else if (val > 55) return 1; // INTERLOCK: Value too large
+			else return 0;               // Value in range
+		};
+		this.widgets.push(o);
+		
+		/* Default settings button. */
+		o = new Button(this, "default-settings", "Default Settings");
+		o.setOn = function(on) { };
+		o.clicked = function() {
+			var thiz = this, i = 0;
+			
+			/* Updated the displayed values. */
+			this.control.data["set-voltage"] = "240";
+			this.control.data["set-frequency"] = "50";
+			for (i in this.control.widgets)
+			{
+				if (this.control.widgets[i].id == 'set-voltage' || this.control.widgets[i].id == "set-frequency") 
+					this.control.widgets[i].update(this.control.data);
+			}
+			
+			/* Tell server to update. */
+			this.control.post("defaultSettings", null, function(err) {
+				thiz.addMessage(err, "error", 105, 830, "left");
+			});
 		};
 		this.widgets.push(o);
 		
@@ -266,12 +333,13 @@ PowerLab.prototype.setMode = function(mode) {
 	this.setWorking(false);
 };
 
-PowerLab.prototype.post = function(action, data, errCallback) {
+PowerLab.prototype.post = function(action, data, errCallback, finCallback) {
 	$.post(
 			"/primitive/json/pc/PowerController/pa/" + action,
 			data,
 			function(resp) { 
-				if (errCallback && typeof resp == "string" && resp.indexOf("FAILED") == 0) errCallback(resp.substr(7)); 
+				if (errCallback && typeof resp == "string" && resp.indexOf("FAILED") == 0) errCallback(resp.substr(7));
+				if (finCallback) finCallback();
 			}
 	);
 };
@@ -496,6 +564,7 @@ function LCDWidget(control, id, title, units, scale, cclass)
 	this.units = units;
 	this.scale = scale;
 	this.cclass = cclass;
+	this.maskServer = false;
 	
 	this.value = undefined;
 	this.digits = [ undefined, undefined, undefined, undefined ];
@@ -568,7 +637,7 @@ LCDWidget.prototype.init = function() {
 };
 
 LCDWidget.prototype.update = function(data) {
-	if (data[this.id] != undefined)
+	if (data[this.id] != undefined && !this.maskServer)
 	{
 		this.setValue(parseFloat(data[this.id]));
 	}
@@ -876,6 +945,12 @@ function UpDownButton(control, id, lcd, delta)
 	this.id = id;
 	this.lcd = lcd;
 	this.delta = delta;
+	
+	/* Change variables. */
+	this.startVal = undefined;
+	this.isChanging = false;
+	this.numChanged = 0;
+	this.increasing = false;
 }
 UpDownButton.prototype = new Widget;
 
@@ -890,20 +965,79 @@ UpDownButton.prototype.init = function() {
 	this.$w = $("#" + this.id);
 	
 	var thiz = this;
-	this.$w.children(".button").click(function() {
+	this.$w.children(".button").mousedown(function() {
+		/* Page working. */
+		if (thiz.control.working) return;
+		
 		thiz.removeMessages();
 		
-		if ($(this).hasClass("up-button")) thiz.increase();
-		else thiz.decrease();
+		thiz.isChanging = true;
+		thiz.numChanged = 0;
+		thiz.startVal = thiz.lcd.value;
+		thiz.increasing = $(this).hasClass("up-button");
+		thiz.lcd.maskServer = true;
+		thiz.changeVal();
+	});
+	
+	this.$w.children(".button").bind("mouseup mouseout", function() {
+		thiz.isChanging = false;	
 	});
 };
 
-UpDownButton.prototype.increase = function() {
-	alert("Increase");
-};
-
-UpDownButton.prototype.decrease = function() {
-	alert("Decrase");
+UpDownButton.prototype.changeVal = function() {
+	var newVal, thiz = this;
+	if (!this.isChanging)
+	{
+		/* Update server with value. */
+		this.control.post("setValue", 
+				{ type: this.lcd.id, val: this.lcd.value }, 
+				function (err) {
+					thiz.addMessage(err, "error", thiz.$w.position().left - 15, thiz.$w.position().top + 55, "top-center");
+				}, 
+				function() {
+					/* Button released, server update, server values should be consistent. */
+					thiz.lcd.maskServer = false;
+				}
+		);
+		return;
+	}
+	
+	/* The nwe val is calculated with a scaling so the reate of change increases
+	 * the longer the button is pressed. */
+	newVal = this.lcd.value + 0.1 * (this.increasing ? 1 : -1) * (100 + this.numChanged * 2) / 100;
+	
+	/* We want to round the value to the closet decimal value. */
+	newVal = Math.round(newVal * Math.pow(10, this.lcd.scale)) / Math.pow(10, this.lcd.scale);
+	
+	if (this.checkRange(newVal) != 0)
+	{
+		/* The max / min values should be round values. */
+		newVal = Math.round(newVal);
+		this.lcd.setValue(newVal);
+		
+		/* If the value is out of range, a message is provided to the user and 
+		 * the last acceptable value is provided to the server. */
+		if (this.increasing) this.addMessage(this.lcd.value + " is the maximum allowed value.", "error", 
+				this.$w.position().left + 70, this.$w.position().top + 10, "left"); 
+		else				  this.addMessage(this.lcd.value + " is the minimum allowed value.", "error", 
+				this.$w.position().left + 150, this.$w.position().top + 10, "left");
+		
+		/* Trigger server send of values. */
+		this.isChanging = false;
+		
+		/* If we were already at the limit, we don't need to send the balue again. */ 
+		if (this.startVal != newVal) this.changeVal();
+	}
+	else
+	{
+		/* Value OK, keep ticking new values. */
+		this.lcd.setValue(newVal);
+		this.numChanged++;
+		
+		setTimeout(function() {
+			thiz.changeVal();
+		}, 100);
+	}
 };
 
 /** 
@@ -912,6 +1046,17 @@ UpDownButton.prototype.decrease = function() {
  * is greater than or at the high limit.
  */
 UpDownButton.prototype.checkRange = function(val) { return 0; };
+
+UpDownButton.prototype.enable = function(enable) { 
+	if (enable)
+	{
+		this.$w.children(".button").removeClass("button-disabled");
+	}
+	else
+	{
+		this.$w.children(".button").addClass("button-disabled");
+	}
+};
 
 /** ---------------------------------------------------------------------------
  *  -- Back Button                                                           --
@@ -1028,4 +1173,17 @@ Graphics.prototype.init = function()  {
 
 Graphics.prototype.destroy = function() {
 	this.control.$canvas.children(".graphics, .graphics-nobg").remove();
+};
+
+/******************************************************************************
+ ** Camera Display                                                           **
+ ******************************************************************************/
+function Camera(control) 
+{
+	Widget.call(this, control);
+}
+Camera.prototype = new Widget;
+
+Camera.prototype.init = function() {
+	
 };
