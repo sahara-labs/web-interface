@@ -112,6 +112,10 @@
 	box-shadow: 0 0 1px #000000;
 }
 
+#power-systems-lab .multi-lcd-box {
+	height: 150px;
+}
+
 #power-systems-lab .lcd-title {
 	font-family: ‘Lucida Console’, Monaco, 'Bitstream Vera Sans Mono', monospace;
 	width: 100%;
@@ -130,15 +134,29 @@
 	border: 1px solid #000000;
 }
 
-#power-systems-lab .lcd-unit {
-	position: absolute;
-	right: 0px;
-	top: 40px;
+#power-systems-lab .multi-lcd-box .lcd-value {
+	left: 33px;
+}
+
+#power-systems-lab .lcd-unit, #power-systems-lab .multi-lcd-label {
 	width: 35px;
 	text-align: center;
 	font-family: ‘Lucida Console’, Monaco, 'Bitstream Vera Sans Mono', monospace;
-	font-size: 18pt;
 	font-weight: bold;
+}
+
+#power-systems-lab .lcd-unit {
+	position: absolute;
+	top: 40px;
+	right: 0px;
+	font-size: 18pt;
+}
+
+#power-systems-lab .multi-lcd-label {
+	position: absolute;
+	font-size: 16px;
+	left: 3px;
+	margin-top: 20px;
 }
 
 #power-systems-lab .red-color {
@@ -155,6 +173,10 @@
 
 #power-systems-lab .yellow-color {
 	background-color: #EFEFC5;
+}
+
+#power-systems-lab .amber-color {
+	background-color: #E1D482;
 }
 
 /* ----------------------------------------------------------------------------
@@ -309,42 +331,137 @@
 	top: 200px;
 }
 
-#power-systems-lab.lab1 #active-power-2 {
+#power-systems-lab.lab1 #active-power-3 {
 	left: 265px;
 	top: 300px;
 }
 
-#power-systems-lab.lab1 #apparent-power-2 {
+#power-systems-lab.lab1 #apparent-power-3 {
 	left: 265px;
 	top: 400px;
 }
 
-#apparent-power-2 .lcd-unit {
+#apparent-power-3 .lcd-unit {
 	font-size: 14pt;
 }
 
-#power-systems-lab.lab1 #ln-voltage-2 {
+#power-systems-lab.lab1 #ln-voltage-3 {
 	left: 265px;
 	top: 500px;
 }
 
-#power-systems-lab.lab1 #reactive-power-2 {
+#power-systems-lab.lab1 #reactive-power-3 {
 	left: 465px;
 	top: 300px;
+}
+
+#reactive-power-3 .lcd-unit {
+	font-size: 12pt;
+}
+
+#power-systems-lab.lab1 #active-factor-3 {
+	left: 465px;
+	top: 400px;
+}
+
+#power-systems-lab.lab1 #line-current-3 {
+	left: 465px;
+	top: 500px;
+}
+
+#power-systems-lab.lab2 #q-var {
+	width: 162px;
+	top: 100px;
+	left: 170px;
+}
+
+#power-systems-lab.lab2 #power-wat {
+	width: 162px;
+	top: 100px;
+	left: 432px;
+}
+
+#power-systems-lab.lab2 #line-current {
+	left: 25px;
+	top: 340px;
+}
+
+#power-systems-lab.lab2 #apparent-power {
+	left: -175px;
+	top: 440px;
+}
+
+#power-systems-lab.lab2 #reactive-power {
+	left: 25px;
+	top: 440px;
+}
+
+#power-systems-lab.lab2 #active-factor {
+	left: -175px;
+	top: 540px;
+}
+
+#power-systems-lab.lab2 #active-power {
+	left: 25px;
+	top: 540px;
+}
+
+#power-systems-lab.lab2 #pow-factor {
+	left: -175px;
+	top: 640px;
+}
+
+#power-systems-lab.lab2 #kilo-watt {
+	left: 25px;
+	top: 640px;
+}
+
+#power-systems-lab.lab2 #gcb-line-frequency {
+	right: 245px;
+	top: 340px;
+}
+
+#power-systems-lab.lab2 #gcb-ln-voltage {
+	right: 45px;
+	top: 340px;
+}
+
+#power-systems-lab.lab2 #active-power-2 {
+	right: 210px;
+	top: 540px;
+}
+
+#power-systems-lab.lab2 #reactive-power-2 {
+	right: 10px;
+	top: 540px;
 }
 
 #reactive-power-2 .lcd-unit {
 	font-size: 12pt;
 }
 
-#power-systems-lab.lab1 #active-factor-2 {
-	left: 465px;
-	top: 400px;
+#power-systems-lab.lab2 #apparent-power-2 {
+	right: 210px;
+	top: 640px;
 }
 
-#power-systems-lab.lab1 #line-current-2 {
-	left: 465px;
-	top: 500px;
+#apparent-power-2 .lcd-unit {
+	font-size: 14pt;
+}
+
+#power-systems-lab.lab2 #active-factor-2 {
+	right: 10px;
+	top: 640px;
+}
+
+#power-systems-lab.lab2 #ln-voltage-2 {
+	right: 210px;
+	top: 740px;
+}
+
+#power-systems-lab.lab2 #line-current-2 {
+	right: 10px;
+	top: 740px;
 }
 
 /* ----------------------------------------------------------------------------
@@ -425,7 +542,7 @@
 	top: 90px
 }
 
-#cb1-button {
+#cb1-on {
 	left: 100px;
 	top: 105px
 }
@@ -483,12 +600,68 @@
 	width: 90px;
 }
 
+#power-systems-lab.lab2 #g-on  {
+	left: -160px;
+	top: 230px;
+}
+
+#power-systems-lab.lab2 #cb1-on {
+	left: -70px;
+	top: 240px;
+}
+
+#power-systems-lab.lab2  #trans-line-1 {
+	left: 120px;
+	top: 240px;
+}
+
+#power-systems-lab.lab2 #mcb-on {
+	top: 130px;
+	left: 345px;
+}
+
+#power-systems-lab.lab2 #gcb-on {
+	top: 240px;
+	left: 345px;
+	width: 65px;
+}
+
+#power-systems-lab.lab2 #load-on {
+	top: 230px;
+	right: 40px;
+	width: 150px;
+}
+
+#pow-factor-buttons {
+	top: 755px;
+	left: -160px;
+}
+
+#kilo-watt-buttons {
+	top: 755px;
+	left: 43px;
+}
+
+#default-settings-2 {
+	top: 863px;
+	left: -68px;
+}
+
 /* ----------------------------------------------------------------------------
  * -- Panel graphics                                                         --
  * ---------------------------------------------------------------------------- */
 #power-systems-lab .graphics {
 	position: absolute;
 	background-color: #EEEEEE;
+}
+
+#power-systems-lab .graphics-details {
+	position: absolute;
+	background-color: #E8C8E8;
+}
+
+#power-systems-lab .graphics-nobg {
+	position: absolute;
 }
 
 #power-systems-lab .label-box {
@@ -749,6 +922,250 @@
 #graphics-default-to-button {
 	height: 40px;
 	top: 783px;
+	left: 23px;
+}
+
+#graphics-gen-details {
+	top: 150px;
+	left: 15px;
+	height: 20px;
+}
+
+#graphics-trans-details {
+	top: 150px;
+	left: 204px;
+	height: 20px;
+}
+
+#graphics-voltage-alert-2 {
+	top: 60px;
+	left: 275px;
+	height: 20px;
+	width: 200px;
+	background-color: #E1D482;
+	background-image: url(images/voltage-alert.png);
+	background-repeat: no-repeat;
+	background-position: 4px 4px;
+}
+
+#graphics-voltage-alert-to-mcb-2 {
+	height: 40px;
+	left: 382px;
+	top: 90px;
+}
+
+#graphics-mcb-to-busbar-2 {
+	height: 48px;
+	left: 382px;
+	top: 162px;
+}
+
+#graphics-busbar-to-gcb-2 {
+	height: 25px;
+	left: 382px;
+	top: 215px;
+}
+
+#graphics-busbar-mcb-gcb-2.graphics {
+	width: 140px;
+	height: 8px;
+	top: 210px;
+	left: 310px;
+	background-color: #E8C8E8;
+}
+
+#graphics-g-to-cb1-2 {
+	left: -104px;
+	top: 255px;
+	width: 34px;
+}
+
+#graphics-cb1-to-trans-2 {
+	left: 5px;
+	top: 255px;
+	width: 34px;
+}
+
+#graphics-trans-2 {
+	width: 60px;
+	height: 60px;
+	top: 231px;
+	left: 38px;
+	background-image: url(images/transformer.png);
+	background-repeat: no-repeat;
+}
+#graphics-trans-details-2 {
+	left: 43px;
+	top: 192px;
+}
+
+#graphics-gen-details-2.graphics-details {
+	left: -160px;
+	top: 170px;
+	width: 70px;
+	text-align: left;
+}
+
+#graphics-trans-to-gcb-2 {
+	left: 81px;
+	top: 255px;
+	width: 39px;
+}
+
+#graphics-transline-to-gcb-2 {
+	left: 276px;
+	top: 255px;
+	width: 69px;
+}
+
+#graphics-pm1-label-2 {
+	left: -165px;
+	top: 406px;
+}
+
+#graphics-pm1-lower-2 {
+	left: -175px;
+	top: 432px;
+	width: 194px;
+}
+
+#graphics-pm1-lower-to-higher-2 {
+	left: 18px;
+	top: 332px;
+	height: 103px;
+}
+
+#graphics-pm1-higher-2 {
+	left: 21px;
+	top: 332px;
+	width: 202px;
+}
+
+#graphics-pm1-higher-2-to-meter-2 {
+	left: 122px;
+	top: 290px;
+	height: 42px;
+}
+
+#graphics-pm1-meter-2 {
+	left: 125px;
+	top: 290px;
+	width: 185px;
+}
+
+#graphics-meter-to-gcb-2 {
+	left: 310px;
+	top: 258px;
+	height: 35px;
+}
+
+#graphics-pm3-label-2 {
+	left: 243px;
+	top: 307px;
+}
+
+#graphics-pm3-2 {
+	left: 233px;
+	top: 332px;
+	width: 395px;
+}
+
+#graphics-pm3-to-gcb-2 {
+	left: 382px;
+	top: 273px;
+	height: 59px;
+}
+
+#graphics-gcb-to-load-top-2 {
+	right: 120px;
+	top: 212px;
+	width: 105px;
+}
+
+#graphics-gcb-to-load-vert-2 {
+	right: 120px;
+	top: 212px;
+	height: 18px;
+}
+
+#graphics-pm2-2 {
+	top: 532px;
+	right: 12px;
+	width: 397px;
+}
+
+#graphics-pm2-label-2 {
+	top: 508px;
+	right: 275px;
+}
+
+#graphics-pm2-to-load-up-2 {
+	top: 255px;
+	right: 25px;
+	height: 277px;
+}
+
+#graphics-pm2-to-load-2 {
+	right: 28px;
+	top: 255px;
+	width: 12px;
+}
+
+#graphics-set-voltage-line-2 {
+	width: 134px;
+	top: 760px;
+	left: -145px;
+}
+
+#graphics-set-voltage-to-lcd-2 {
+	height: 30px;
+	top: 730px;
+	left: -77px;
+}
+
+#graphics-set-freq-line-2 {
+	width: 134px;
+	top: 760px;
+	left: 57px;
+}
+
+#graphics-set-freq-to-lcd-2 {
+	height: 30px;
+	top: 730px;
+	left: 124px;
+}
+
+#graphics-default-settings-2 {
+	width: 203px;
+	top: 820px;
+	left: -77px;
+}
+
+#graphics-default-set-voltage-2 {
+	height: 40px;
+	top: 780px;
+	left: -77px;
+}
+
+#graphics-default-set-voltage-arrow-2 {
+	left: -86px;
+	top: 774px;
+}
+
+#graphics-default-set-freq-2 {
+	height: 40px;
+	top: 783px;
+	left: 124px;
+}
+
+#graphics-default-set-freq-arrow-2 {
+	left: 115px;
+	top: 774px;
+}
+
+#graphics-default-to-button-2 {
+	height: 40px;
+	top: 823px;
 	left: 23px;
 }
 

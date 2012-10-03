@@ -95,7 +95,7 @@ PowerLab.prototype.setMode = function(mode) {
 		this.widgets.push(o);
 		
 		/* CB1 indicator. */
-		o = new Button(this, "cb1-button",    "CB1");
+		o = new Button(this, "cb1-on",    "CB1");
 		o.clicked = function() {
 			this.addMessage("This is only an indicator. It will update automatically.", "info", 40, 140, "top-center");
 		};
@@ -261,12 +261,12 @@ PowerLab.prototype.setMode = function(mode) {
 		this.widgets.push(new LCDWidget(this, "active-factor",    "Active Factor",  "%",   2, "yellow-color"));
 		this.widgets.push(new LCDWidget(this, "line-frequency",   "Line Frequency", "Hz",  1, "red-color"));
 		this.widgets.push(new LCDWidget(this, "line-current",     "Line Current",   "A",   3, "yellow-color"));
-		this.widgets.push(new LCDWidget(this, "active-power-2",   "Active Power",   "W",   1, "teal-color"));
-		this.widgets.push(new LCDWidget(this, "apparent-power-2", "Apparent Power", "VA",  1, "green-color"));
-		this.widgets.push(new LCDWidget(this, "ln-voltage-2",     "L - N Voltage",  "V",   1, "teal-color"));
-		this.widgets.push(new LCDWidget(this, "reactive-power-2", "Reactive Power", "Var", 2, "red-color"));
-		this.widgets.push(new LCDWidget(this, "active-factor-2",  "Active Factor",  "%",   3, "yellow-color"));
-		this.widgets.push(new LCDWidget(this, "line-current-2",   "Line Current",   "A",   3, "red-color"));
+		this.widgets.push(new LCDWidget(this, "active-power-3",   "Active Power",   "W",   1, "teal-color"));
+		this.widgets.push(new LCDWidget(this, "apparent-power-3", "Apparent Power", "VA",  1, "green-color"));
+		this.widgets.push(new LCDWidget(this, "ln-voltage-3",     "L - N Voltage",  "V",   1, "teal-color"));
+		this.widgets.push(new LCDWidget(this, "reactive-power-3", "Reactive Power", "Var", 2, "red-color"));
+		this.widgets.push(new LCDWidget(this, "active-factor-3",  "Active Factor",  "%",   3, "yellow-color"));
+		this.widgets.push(new LCDWidget(this, "line-current-3",   "Line Current",   "A",   3, "red-color"));
 		
 		/* Set voltage indicator and buttons. */
 		o = new LCDWidget(this, "set-voltage",      "Set Voltage",    "V",   1, "yellow-color");
@@ -319,6 +319,84 @@ PowerLab.prototype.setMode = function(mode) {
 	case 2:
 		this.setTitle("Generator / Mains Parallel Operation");
 		this.widgets.push(new BackButton(this));
+		
+		/* --- Controls ------------------------------------------------------- */
+		/* Generator. */
+		o = new Button(this, "g-on", "G", "circ-button");
+		this.widgets.push(o);
+		
+		/* CB1 indicator. */
+		o = new Button(this, "cb1-on",    "CB1");
+		o.clicked = function() {
+			this.addMessage("This is only an indicator. It will update automatically.", "info", -130, 275, "top-center");
+		};
+		this.widgets.push(o);
+		
+		/* MCB relay. */
+		o = new Button(this, "mcb-on", "MCB");
+		this.widgets.push(o);http://slashdot.org/
+		
+		/* GCB relay. */
+		o = new Button(this, "gcb-on", "GCB");
+		this.widgets.push(o);
+		
+		/* Transmission line 1. */
+		o = new Button(this, "trans-line-1", "Trans Line 1");
+		this.widgets.push(o);
+		
+		/* Load button. */
+		o = new Button(this, "load-on", "Load 74.23+j104");
+		this.widgets.push(o);
+		
+		/* --- Meters. -------------------------------------------------------- */
+		this.widgets.push(new LCDWidget(this, "q-var",     "Q (VAR)", null, 0, "amber-color"));
+		this.widgets.push(new LCDWidget(this, "power-wat", "P (W)",   null, 0, "amber-color"));
+		
+		/* Power Meter 1. */
+		this.widgets.push(new LCDWidget(this, "line-current",   "L1 Current",     "A",   3, "yellow-color"));
+		this.widgets.push(new LCDWidget(this, "apparent-power", "Apparent Power", "VA",  0, "yellow-color"));
+		this.widgets.push(new LCDWidget(this, "reactive-power", "Reactive Power", "Var", 0, "yellow-color"));
+		this.widgets.push(new LCDWidget(this, "active-factor",  "Active Factor",  "%",   2, "yellow-color"));
+		this.widgets.push(new LCDWidget(this, "active-power",   "Active Power",   "KW",  2, "yellow-color"));
+		
+		/* Power Meter 3. */
+		this.widgets.push(new MultiLCDWidget(this, "gcb-line-frequency", "Frequency (Hz)",    { 'freq-ml': 'ML', 'freq-g1': 'G1' }, 1, "teal-color"));
+		this.widgets.push(new MultiLCDWidget(this, "gcb-ln-voltage",     "L - N Voltage (V)", { 'volt-ml': 'ML', 'volt-g1': 'G1' }, 1, "teal-color"));
+		
+		/* Power Meter 2. */
+		this.widgets.push(new LCDWidget(this, "active-power-2",   "Active Power",   "W",   0, "red-color"));
+		this.widgets.push(new LCDWidget(this, "reactive-power-2", "Reactive Power", "Var", 0, "red-color"));
+		this.widgets.push(new LCDWidget(this, "apparent-power-2", "Apparent Power", "VA",  0, "red-color"));
+		this.widgets.push(new LCDWidget(this, "active-factor-2",  "Active Factor",  "%",   2, "red-color"));
+		this.widgets.push(new LCDWidget(this, "ln-voltage-2",     "L - N Voltage",  "V",   1, "red-color"));
+		this.widgets.push(new LCDWidget(this, "line-current-2",   "Line Current",   "A",   2, "red-color"));
+		
+		/* Set power factor indicator and buttons. */
+		o = new LCDWidget(this, "pow-factor",     "PF:0.80-0.995",  "%",   3, "yellow-color");
+		this.widgets.push(o);
+		o = new UpDownButton(this, "pow-factor-buttons", o, 0.1);
+		o.checkRange = function(val) {
+			// TODO Check power factor allowed range.
+			return 0;
+		};
+		this.widgets.push(o);
+		
+		/* Set kilowatt indicator and buttons. */
+		o = new LCDWidget(this, "kilo-watt",      "KW: 0.8-1.7",    "KW",  2, "yellow-color");
+		this.widgets.push(o);
+		o = new UpDownButton(this, "kilo-watt-buttons", o, 0.1);
+		o.checkRange = function(val) {
+			// TODO Check kilo watt allowed range.
+			return 0;
+		};
+		this.widgets.push(o);
+		
+		/* Default settings button. */
+		o = new Button(this, "default-settings-2", "Default Settings");
+		o.setOn = function(on) { };
+		this.widgets.push(o);
+		
+		this.widgets.push(new Graphics(this));
 		break;
 		
 	default:
@@ -577,63 +655,69 @@ LCDWidget.prototype.init = function() {
 		"<div id='" + this.id + "' class='lcd-box'>" +
 			"<div class='lcd-title " + this.cclass + "'>" + this.title + "</div>" +
 			"<div class='lcd-value'>" +
-				"<div class='ssd-digit ssd-digit-5'>" +
-					"<div class='ssd-seg ssd-horz-seg ssd-seg-1'></div>" +
-					"<div class='ssd-seg ssd-vert-seg ssd-seg-2'></div>" +
-					"<div class='ssd-seg ssd-vert-seg ssd-seg-3'></div>" +
-					"<div class='ssd-seg ssd-horz-seg ssd-seg-4'></div>" +
-					"<div class='ssd-seg ssd-vert-seg ssd-seg-5'></div>" +
-					"<div class='ssd-seg ssd-vert-seg ssd-seg-6'></div>" +
-					"<div class='ssd-seg ssd-horz-seg ssd-seg-7'></div>" +
-				"</div>" +
-				(this.scale == 4 ? "<div class='ssd-dot'></div>" : '') + 
-				"<div class='ssd-digit ssd-digit-4'>" +
-					"<div class='ssd-seg ssd-horz-seg ssd-seg-1'></div>" +
-					"<div class='ssd-seg ssd-vert-seg ssd-seg-2'></div>" +
-					"<div class='ssd-seg ssd-vert-seg ssd-seg-3'></div>" +
-					"<div class='ssd-seg ssd-horz-seg ssd-seg-4'></div>" +
-					"<div class='ssd-seg ssd-vert-seg ssd-seg-5'></div>" +
-					"<div class='ssd-seg ssd-vert-seg ssd-seg-6'></div>" +
-					"<div class='ssd-seg ssd-horz-seg ssd-seg-7'></div>" +
-				"</div>" +
-				(this.scale == 3 ? "<div class='ssd-dot'></div>" : '') +
-				"<div class='ssd-digit ssd-digit-3'>" +
-					"<div class='ssd-seg ssd-horz-seg ssd-seg-1'></div>" +
-					"<div class='ssd-seg ssd-vert-seg ssd-seg-2'></div>" +
-					"<div class='ssd-seg ssd-vert-seg ssd-seg-3'></div>" +
-					"<div class='ssd-seg ssd-horz-seg ssd-seg-4'></div>" +
-					"<div class='ssd-seg ssd-vert-seg ssd-seg-5'></div>" +
-					"<div class='ssd-seg ssd-vert-seg ssd-seg-6'></div>" +
-					"<div class='ssd-seg ssd-horz-seg ssd-seg-7'></div>" +
-				"</div>" +
-				(this.scale == 2 ? "<div class='ssd-dot'></div>" : '') +
-				"<div class='ssd-digit ssd-digit-2'>" +
-					"<div class='ssd-seg ssd-horz-seg ssd-seg-1'></div>" +
-					"<div class='ssd-seg ssd-vert-seg ssd-seg-2'></div>" +
-					"<div class='ssd-seg ssd-vert-seg ssd-seg-3'></div>" +
-					"<div class='ssd-seg ssd-horz-seg ssd-seg-4'></div>" +
-					"<div class='ssd-seg ssd-vert-seg ssd-seg-5'></div>" +
-					"<div class='ssd-seg ssd-vert-seg ssd-seg-6'></div>" +
-					"<div class='ssd-seg ssd-horz-seg ssd-seg-7'></div>" +
-				"</div>" +
-				(this.scale == 1 ? "<div class='ssd-dot'></div>" : '') +
-				"<div class='ssd-digit ssd-digit-1'>" +
-					"<div class='ssd-seg ssd-horz-seg ssd-seg-1'></div>" +
-					"<div class='ssd-seg ssd-vert-seg ssd-seg-2'></div>" +
-					"<div class='ssd-seg ssd-vert-seg ssd-seg-3'></div>" +
-					"<div class='ssd-seg ssd-horz-seg ssd-seg-4'></div>" +
-					"<div class='ssd-seg ssd-vert-seg ssd-seg-5'></div>" +
-					"<div class='ssd-seg ssd-vert-seg ssd-seg-6'></div>" +
-					"<div class='ssd-seg ssd-horz-seg ssd-seg-7'></div>" +
-				"</div>" +
-				(this.scale == 0 ? "<div class='ssd-dot'></div>" : '') +
+				this.getLCDHtml() + 
 			"</div>" +
-			"<div class='lcd-unit'>" + this.units + "</div>" +
+			(this.units ? "<div class='lcd-unit'>" + this.units + "</div>" : '') +
 		"</div>"
 	);
 
 	this.$w = $("#" + this.id);
 	this.setValue(0);
+};
+
+LCDWidget.prototype.getLCDHtml = function() {
+	return (
+	  		"<div class='ssd-digit ssd-digit-5'>" +
+				"<div class='ssd-seg ssd-horz-seg ssd-seg-1'></div>" +
+				"<div class='ssd-seg ssd-vert-seg ssd-seg-2'></div>" +
+				"<div class='ssd-seg ssd-vert-seg ssd-seg-3'></div>" +
+				"<div class='ssd-seg ssd-horz-seg ssd-seg-4'></div>" +
+				"<div class='ssd-seg ssd-vert-seg ssd-seg-5'></div>" +
+				"<div class='ssd-seg ssd-vert-seg ssd-seg-6'></div>" +
+				"<div class='ssd-seg ssd-horz-seg ssd-seg-7'></div>" +
+			"</div>" +
+			(this.scale == 4 ? "<div class='ssd-dot'></div>" : '') + 
+			"<div class='ssd-digit ssd-digit-4'>" +
+				"<div class='ssd-seg ssd-horz-seg ssd-seg-1'></div>" +
+				"<div class='ssd-seg ssd-vert-seg ssd-seg-2'></div>" +
+				"<div class='ssd-seg ssd-vert-seg ssd-seg-3'></div>" +
+				"<div class='ssd-seg ssd-horz-seg ssd-seg-4'></div>" +
+				"<div class='ssd-seg ssd-vert-seg ssd-seg-5'></div>" +
+				"<div class='ssd-seg ssd-vert-seg ssd-seg-6'></div>" +
+				"<div class='ssd-seg ssd-horz-seg ssd-seg-7'></div>" +
+			"</div>" +
+			(this.scale == 3 ? "<div class='ssd-dot'></div>" : '') +
+			"<div class='ssd-digit ssd-digit-3'>" +
+				"<div class='ssd-seg ssd-horz-seg ssd-seg-1'></div>" +
+				"<div class='ssd-seg ssd-vert-seg ssd-seg-2'></div>" +
+				"<div class='ssd-seg ssd-vert-seg ssd-seg-3'></div>" +
+				"<div class='ssd-seg ssd-horz-seg ssd-seg-4'></div>" +
+				"<div class='ssd-seg ssd-vert-seg ssd-seg-5'></div>" +
+				"<div class='ssd-seg ssd-vert-seg ssd-seg-6'></div>" +
+				"<div class='ssd-seg ssd-horz-seg ssd-seg-7'></div>" +
+			"</div>" +
+			(this.scale == 2 ? "<div class='ssd-dot'></div>" : '') +
+			"<div class='ssd-digit ssd-digit-2'>" +
+				"<div class='ssd-seg ssd-horz-seg ssd-seg-1'></div>" +
+				"<div class='ssd-seg ssd-vert-seg ssd-seg-2'></div>" +
+				"<div class='ssd-seg ssd-vert-seg ssd-seg-3'></div>" +
+				"<div class='ssd-seg ssd-horz-seg ssd-seg-4'></div>" +
+				"<div class='ssd-seg ssd-vert-seg ssd-seg-5'></div>" +
+				"<div class='ssd-seg ssd-vert-seg ssd-seg-6'></div>" +
+				"<div class='ssd-seg ssd-horz-seg ssd-seg-7'></div>" +
+			"</div>" +
+			(this.scale == 1 ? "<div class='ssd-dot'></div>" : '') +
+			"<div class='ssd-digit ssd-digit-1'>" +
+				"<div class='ssd-seg ssd-horz-seg ssd-seg-1'></div>" +
+				"<div class='ssd-seg ssd-vert-seg ssd-seg-2'></div>" +
+				"<div class='ssd-seg ssd-vert-seg ssd-seg-3'></div>" +
+				"<div class='ssd-seg ssd-horz-seg ssd-seg-4'></div>" +
+				"<div class='ssd-seg ssd-vert-seg ssd-seg-5'></div>" +
+				"<div class='ssd-seg ssd-vert-seg ssd-seg-6'></div>" +
+				"<div class='ssd-seg ssd-horz-seg ssd-seg-7'></div>" +
+			"</div>" +
+			(this.scale == 0 ? "<div class='ssd-dot'></div>" : '')
+	);
 };
 
 LCDWidget.prototype.update = function(data) {
@@ -699,8 +783,9 @@ LCDWidget.prototype.setValue = function(num) {
 		else
 		{
 			/* Unable to fit negative symbol, error out. */
-			throw "Unable to add negative symbol of value of " + this.title + ", value: " + this.value + 
-					", scale: " + this.scale;
+			// FIXME 
+//			throw "Unable to add negative symbol of value of " + this.title + ", value: " + this.value + 
+//					", scale: " + this.scale;
 		}
 	}
 };
@@ -766,6 +851,39 @@ LCDWidget.prototype.setDigit = function(digit, val) {
 		}
 	}
 };
+
+/** ---------------------------------------------------------------------------
+ *  -- Multi LCD Widget                                                      --
+ *  --------------------------------------------------------------------------- */
+function MultiLCDWidget(control, id, title, fields, scale, cclass)
+{
+	LCDWidget.call(this, control, id, title, null, scale, cclass);
+	
+	this.fields = fields;
+}
+MultiLCDWidget.prototype = new LCDWidget;
+
+MultiLCDWidget.prototype.init = function() {
+	var f = 0, html = 
+		"<div id='" + this.id + "' class='lcd-box multi-lcd-box'>" +
+			"<div class='lcd-title " + this.cclass +  "'>" + this.title + "</div>";
+	
+	for (f in this.fields) 
+	{
+		html += "<div class='multi-lcd-label'>" + this.fields[f] + "</div>" +
+				"<div class='lcd-value'>" +
+					this.getLCDHtml() +
+				"</div>";
+	}
+	
+	html += 
+		"</div>";
+	
+	this.control.$canvas.append(html);
+	this.$w = $("#" + this.id);
+	this.setValue(0);
+};
+// TODO implement multi lcd value handling
 
 /** ---------------------------------------------------------------------------
  *  -- Button Widget                                                         --
@@ -936,7 +1054,7 @@ ExclusiveButton.prototype.update = function(data) {
 };
 
 /** ---------------------------------------------------------------------------
- *  - Up / Down Buttons                                                      --
+ *  -- Up / Down Buttons                                                     --
  *  --------------------------------------------------------------------------- */
 function UpDownButton(control, id, lcd, delta)
 {
@@ -1111,8 +1229,8 @@ BackButton.prototype.enable = function(enable) {
 
 
 /** ---------------------------------------------------------------------------
- * -- Graphics                                                               --
- * ---------------------------------------------------------------------------- */
+ *  -- Lab 1 Graphics                                                        --
+ *  --------------------------------------------------------------------------- */
 function Graphics(control)
 {
 	Widget.call(this, control);
@@ -1121,63 +1239,119 @@ function Graphics(control)
 Graphics.prototype = new Widget;
 
 Graphics.prototype.init = function()  {
-	this.control.$canvas.append(
-		"<div id='graphics-pm1' class='graphics label-box label-head'>Power Meter 1</div>" +
-		"<div id='graphics-pm1-line-t' class='graphics h-line'></div>" +	
-		"<div id='graphics-pm1-line-t-to-b' class='graphics v-line'></div>" +	
-		"<div id='graphics-pm1-line-b' class='graphics h-line'></div>" +	
-		"<div id='graphics-g-to-cb1' class='graphics h-line'></div>" +
-		"<div id='graphics-g-to-pm1' class='graphics v-line'></div>" +
+	var html = '';
+	
+	switch (this.control.mode)
+	{
+	case 1:
+		html = 
+			"<div id='graphics-pm1' class='graphics label-box label-head'>Power Meter 1</div>" +
+			"<div id='graphics-pm1-line-t' class='graphics h-line'></div>" +	
+			"<div id='graphics-pm1-line-t-to-b' class='graphics v-line'></div>" +	
+			"<div id='graphics-pm1-line-b' class='graphics h-line'></div>" +	
+			"<div id='graphics-g-to-cb1' class='graphics h-line'></div>" +
+			"<div id='graphics-g-to-pm1' class='graphics v-line'></div>" +
+			
+			"<div id='graphics-pm2' class='graphics label-box label-head'>Power Meter 2</div>" +
+			"<div id='graphics-pm2-line' class='graphics h-line'></div>" +
+			
+			"<div id='graphics-cb1-to-transformer' class='graphics h-line'></div>" +
+			"<div id='graphics-transformer' class='graphics-nobg'></div>" +
+			"<div id='graphics-transformer-to-bus1' class='graphics h-line'></div>" +		
+			
+			"<div id='graphics-bus1-l' class='graphics v-line'></div>" +
+			"<div id='graphics-bus1-r' class='graphics v-line'></div>" +
+			"<div id='graphics-bus1' class='graphics label-box'>BUS 1</div>" +
+			
+			"<div id='graphics-bus1-to-trans1' class='graphics h-line'></div>" +
+			"<div id='graphics-bus1-to-trans2' class='graphics h-line'></div>" +
+			"<div id='graphics-trans1-to-bus2' class='graphics h-line'></div>" +
+			"<div id='graphics-trans2-to-bus2' class='graphics h-line'></div>" +
+			
+			"<div id='graphics-bus2-l' class='graphics v-line'></div>" +
+			"<div id='graphics-bus2-r' class='graphics v-line'></div>" +
+			"<div id='graphics-bus2-to-gcb' class='graphics h-line'></div>" +
+			"<div id='graphics-bus2' class='graphics label-box'>BUS 2</div>" +
+			
+			"<div id='graphics-gcb-to-load-bus' class='graphics h-line'></div>" +
+			"<div id='graphics-load-l' class='graphics v-line'></div>" +
+			"<div id='graphics-load-r' class='graphics v-line'></div>" +
+			"<div id='graphics-load-bus-load1' class='graphics h-line'></div>" +
+			"<div id='graphics-load-bus-load2' class='graphics h-line'></div>" +
+			"<div id='graphics-load-bus-load3' class='graphics h-line'></div>" +
+			
+			"<div id='graphics-set-voltage-line' class='graphics h-line'></div>" + 
+			"<div id='graphics-set-voltage-to-lcd' class='graphics v-line'></div>" +
+			"<div id='graphics-set-freq-line' class='graphics h-line'></div>" + 
+			"<div id='graphics-set-freq-to-lcd' class='graphics v-line'></div>" +
+			
+			"<div id='graphics-default-settings' class='graphics h-line'></div>" +
+			"<div id='graphics-default-set-voltage' class='graphics v-line'></div>" +
+			"<div id='graphics-default-set-voltage-arrow' class='graphics-nobg arrow-head'></div>" +
+			"<div id='graphics-default-set-freq' class='graphics v-line'></div>" +
+			"<div id='graphics-default-set-freq-arrow' class='graphics-nobg arrow-head'></div>" +
+			"<div id='graphics-default-to-button' class='graphics v-line'></div>" +
+			
+			"<div id='graphics-gen-details' class='graphics-details label-box'>P=2.2KW I=3A</div>" +
+			"<div id='graphics-trans-details' class='graphics-details label-box'>1:1</div>";
+		break;
+	case 2:
+		html =
+			"<div id='graphics-g-to-cb1-2' class='graphics h-line'></div>" +
+			"<div id='graphics-cb1-to-trans-2' class='graphics h-line'></div>" +
+			"<div id='graphics-trans-2' class='graphics-nobg'></div>" +
+			"<div id='graphics-trans-details-2' class='graphics-details label-box'>1:1</div>" +
+			"<div id='graphics-gen-details-2' class='graphics-details label-box'>P=2.2KW I=3A</div>" +
+			"<div id='graphics-trans-to-gcb-2' class='graphics h-line'></div>" +
+			"<div id='graphics-transline-to-gcb-2' class='graphics h-line'></div>" +
+			
+			"<div id='graphics-voltage-alert-to-mcb-2' class='graphics v-line'></div>" +
+			"<div id='graphics-voltage-alert-2' class='graphics-nobg label-box'>415V Utility</div>" +
+			"<div id='graphics-mcb-to-busbar-2' class='graphics v-line'></div>" +
+			"<div id='graphics-busbar-to-gcb-2' class='graphics v-line'></div>" +
+			"<div id='graphics-busbar-mcb-gcb-2' class='graphics h-line'></div>" +
+			
+			"<div id='graphics-pm1-label-2' class='graphics label-box label-head'>Power Meter 1</div>" +
+			"<div id='graphics-pm1-lower-2' class='graphics h-line'></div>" +
+			"<div id='graphics-pm1-lower-to-higher-2' class='graphics v-line'></div>" +
+			"<div id='graphics-pm1-higher-2' class='graphics h-line'></div>" +
+			"<div id='graphics-pm1-higher-2-to-meter-2' class='graphics v-line'></div>" +
+			"<div id='graphics-pm1-meter-2' class='graphics h-line'></div>" +
+			"<div id='graphics-meter-to-gcb-2' class='graphics v-line'></div>" +
 		
-		"<div id='graphics-pm2' class='graphics label-box label-head'>Power Meter 2</div>" +
-		"<div id='graphics-pm2-line' class='graphics h-line'></div>" +
-		
-		"<div id='graphics-cb1-to-transformer' class='graphics h-line'></div>" +
-		"<div id='graphics-transformer' class='graphics-nobg'></div>" +
-		"<div id='graphics-transformer-to-bus1' class='graphics h-line'></div>" +		
-		
-		"<div id='graphics-bus1-l' class='graphics v-line'></div>" +
-		"<div id='graphics-bus1-r' class='graphics v-line'></div>" +
-		"<div id='graphics-bus1' class='graphics label-box'>BUS 1</div>" +
-		
-		"<div id='graphics-bus1-to-trans1' class='graphics h-line'></div>" +
-		"<div id='graphics-bus1-to-trans2' class='graphics h-line'></div>" +
-		"<div id='graphics-trans1-to-bus2' class='graphics h-line'></div>" +
-		"<div id='graphics-trans2-to-bus2' class='graphics h-line'></div>" +
-		
-		"<div id='graphics-bus2-l' class='graphics v-line'></div>" +
-		"<div id='graphics-bus2-r' class='graphics v-line'></div>" +
-		"<div id='graphics-bus2-to-gcb' class='graphics h-line'></div>" +
-		"<div id='graphics-bus2' class='graphics label-box'>BUS 2</div>" +
-		
-		"<div id='graphics-gcb-to-load-bus' class='graphics h-line'></div>" +
-		"<div id='graphics-load-l' class='graphics v-line'></div>" +
-		"<div id='graphics-load-r' class='graphics v-line'></div>" +
-		"<div id='graphics-load-bus-load1' class='graphics h-line'></div>" +
-		"<div id='graphics-load-bus-load2' class='graphics h-line'></div>" +
-		"<div id='graphics-load-bus-load3' class='graphics h-line'></div>" +
-		
-		"<div id='graphics-set-voltage-line' class='graphics h-line'></div>" + 
-		"<div id='graphics-set-voltage-to-lcd' class='graphics v-line'></div>" +
-		"<div id='graphics-set-freq-line' class='graphics h-line'></div>" + 
-		"<div id='graphics-set-freq-to-lcd' class='graphics v-line'></div>" +
-		
-		"<div id='graphics-default-settings' class='graphics h-line'></div>" +
-		"<div id='graphics-default-set-voltage' class='graphics v-line'></div>" +
-		"<div id='graphics-default-set-voltage-arrow' class='graphics-nobg arrow-head'></div>" +
-		"<div id='graphics-default-set-freq' class='graphics v-line'></div>" +
-		"<div id='graphics-default-set-freq-arrow' class='graphics-nobg arrow-head'></div>" +
-		"<div id='graphics-default-to-button' class='graphics v-line'></div>"
-	);
+			"<div id='graphics-pm3-label-2' class='graphics label-box label-head'>Some Meter 3?</div>" +
+			"<div id='graphics-pm3-2' class='graphics h-line'></div>" +
+			"<div id='graphics-pm3-to-gcb-2' class='graphics v-line'></div>" +
+			
+			"<div id='graphics-gcb-to-load-top-2' class='graphics h-line'></div>" +
+			"<div id='graphics-gcb-to-load-vert-2' class='graphics v-line'></div>" +
+			"<div id='graphics-pm2-label-2' class='graphics label-box label-head'>Power Meter 2</div>" +
+			"<div id='graphics-pm2-2' class='graphics h-line'></div>" +
+			"<div id='graphics-pm2-to-load-up-2' class='graphics v-line'></div>" +
+			"<div id='graphics-pm2-to-load-2' class='graphics h-line'></div>" +
+			
+			"<div id='graphics-set-voltage-line-2' class='graphics h-line'></div>" + 
+			"<div id='graphics-set-voltage-to-lcd-2' class='graphics v-line'></div>" +
+			"<div id='graphics-set-freq-line-2' class='graphics h-line'></div>" + 
+			"<div id='graphics-set-freq-to-lcd-2' class='graphics v-line'></div>" +
+			"<div id='graphics-default-settings-2' class='graphics h-line'></div>" +
+			"<div id='graphics-default-set-voltage-2' class='graphics v-line'></div>" +
+			"<div id='graphics-default-set-voltage-arrow-2' class='graphics-nobg arrow-head'></div>" +
+			"<div id='graphics-default-set-freq-2' class='graphics v-line'></div>" +
+			"<div id='graphics-default-set-freq-arrow-2' class='graphics-nobg arrow-head'></div>" +
+			"<div id='graphics-default-to-button-2' class='graphics v-line'></div>";
+		break;
+	}
+	this.control.$canvas.append(html);
 };
 
 Graphics.prototype.destroy = function() {
-	this.control.$canvas.children(".graphics, .graphics-nobg").remove();
+	this.control.$canvas.children(".graphics, .graphics-nobg, .graphics-details").remove();
 };
 
-/******************************************************************************
- ** Camera Display                                                           **
- ******************************************************************************/
+/** ---------------------------------------------------------------------------
+ *  -- Camera Display                                                        --
+ *  --------------------------------------------------------------------------- */
 function Camera(control) 
 {
 	Widget.call(this, control);
