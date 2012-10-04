@@ -254,22 +254,22 @@ PowerLab.prototype.setMode = function(mode) {
 		this.widgets.push(o);
 			
 		/* --- Meters ---------------------------------------------------------------------------------------- */
-		this.widgets.push(new LCDWidget(this, "active-power",     "Active Power",   "W",   1, "teal-color"));
-		this.widgets.push(new LCDWidget(this, "apparent-power",   "Apparent Power", "VA",  1, "green-color"));
-		this.widgets.push(new LCDWidget(this, "ln-voltage",       "L - N Voltage",  "V",   1, "teal-color"));		
-		this.widgets.push(new LCDWidget(this, "reactive-power",   "Reactive Power", "Var", 1, "red-color"));
-		this.widgets.push(new LCDWidget(this, "active-factor",    "Active Factor",  "%",   2, "yellow-color"));
-		this.widgets.push(new LCDWidget(this, "line-frequency",   "Line Frequency", "Hz",  1, "red-color"));
-		this.widgets.push(new LCDWidget(this, "line-current",     "Line Current",   "A",   3, "yellow-color"));
-		this.widgets.push(new LCDWidget(this, "active-power-3",   "Active Power",   "W",   1, "teal-color"));
-		this.widgets.push(new LCDWidget(this, "apparent-power-3", "Apparent Power", "VA",  1, "green-color"));
-		this.widgets.push(new LCDWidget(this, "ln-voltage-3",     "L - N Voltage",  "V",   1, "teal-color"));
-		this.widgets.push(new LCDWidget(this, "reactive-power-3", "Reactive Power", "Var", 2, "red-color"));
-		this.widgets.push(new LCDWidget(this, "active-factor-3",  "Active Factor",  "%",   3, "yellow-color"));
-		this.widgets.push(new LCDWidget(this, "line-current-3",   "Line Current",   "A",   3, "red-color"));
+		this.widgets.push(new LCD(this, "active-power",     "Active Power",   "W",   1, "teal-color"));
+		this.widgets.push(new LCD(this, "apparent-power",   "Apparent Power", "VA",  1, "green-color"));
+		this.widgets.push(new LCD(this, "ln-voltage",       "L - N Voltage",  "V",   1, "teal-color"));		
+		this.widgets.push(new LCD(this, "reactive-power",   "Reactive Power", "Var", 1, "red-color"));
+		this.widgets.push(new LCD(this, "active-factor",    "Active Factor",  "%",   2, "yellow-color"));
+		this.widgets.push(new LCD(this, "line-frequency",   "Line Frequency", "Hz",  1, "red-color"));
+		this.widgets.push(new LCD(this, "line-current",     "Line Current",   "A",   3, "yellow-color"));
+		this.widgets.push(new LCD(this, "active-power-3",   "Active Power",   "W",   1, "teal-color"));
+		this.widgets.push(new LCD(this, "apparent-power-3", "Apparent Power", "VA",  1, "green-color"));
+		this.widgets.push(new LCD(this, "ln-voltage-3",     "L - N Voltage",  "V",   1, "teal-color"));
+		this.widgets.push(new LCD(this, "reactive-power-3", "Reactive Power", "Var", 2, "red-color"));
+		this.widgets.push(new LCD(this, "active-factor-3",  "Active Factor",  "%",   3, "yellow-color"));
+		this.widgets.push(new LCD(this, "line-current-3",   "Line Current",   "A",   3, "red-color"));
 		
 		/* Set voltage indicator and buttons. */
-		o = new LCDWidget(this, "set-voltage",      "Set Voltage",    "V",   1, "yellow-color");
+		o = new LCD(this, "set-voltage",      "Set Voltage",    "V",   1, "yellow-color");
 		this.widgets.push(o);
 		o = new UpDownButton(this, "set-voltage-buttons", o, 0.1);
 		o.checkRange = function(val) {
@@ -280,7 +280,7 @@ PowerLab.prototype.setMode = function(mode) {
 		this.widgets.push(o);
 
 		/* Set frequency indicator and buttons. */
-		o = new LCDWidget(this, "set-frequency",    "Set Frequency",  "Hz",  1, "teal-color");
+		o = new LCD(this, "set-frequency",    "Set Frequency",  "Hz",  1, "teal-color");
 		this.widgets.push(o);
 		o = new UpDownButton(this, "set-frequency-buttons", o, 0.1);
 		o.checkRange = function(val) {
@@ -349,30 +349,30 @@ PowerLab.prototype.setMode = function(mode) {
 		this.widgets.push(o);
 		
 		/* --- Meters. -------------------------------------------------------- */
-		this.widgets.push(new LCDWidget(this, "q-var",     "Q (VAR)", null, 0, "amber-color"));
-		this.widgets.push(new LCDWidget(this, "power-wat", "P (W)",   null, 0, "amber-color"));
+		this.widgets.push(new LCD(this, "q-var",     "Q (VAR)", null, 0, "amber-color"));
+		this.widgets.push(new LCD(this, "power-wat", "P (W)",   null, 0, "amber-color"));
 		
 		/* Power Meter 1. */
-		this.widgets.push(new LCDWidget(this, "line-current",   "L1 Current",     "A",   3, "yellow-color"));
-		this.widgets.push(new LCDWidget(this, "apparent-power", "Apparent Power", "VA",  0, "yellow-color"));
-		this.widgets.push(new LCDWidget(this, "reactive-power", "Reactive Power", "Var", 0, "yellow-color"));
-		this.widgets.push(new LCDWidget(this, "active-factor",  "Active Factor",  "%",   2, "yellow-color"));
-		this.widgets.push(new LCDWidget(this, "active-power",   "Active Power",   "KW",  2, "yellow-color"));
+		this.widgets.push(new LCD(this, "line-current",   "L1 Current",     "A",   3, "yellow-color"));
+		this.widgets.push(new LCD(this, "apparent-power", "Apparent Power", "VA",  0, "yellow-color"));
+		this.widgets.push(new LCD(this, "reactive-power", "Reactive Power", "Var", 0, "yellow-color"));
+		this.widgets.push(new LCD(this, "active-factor",  "Active Factor",  "%",   2, "yellow-color"));
+		this.widgets.push(new LCD(this, "active-power",   "Active Power",   "KW",  2, "yellow-color"));
 		
 		/* Power Meter 3. */
-		this.widgets.push(new MultiLCDWidget(this, "gcb-line-frequency", "Frequency (Hz)",    { 'freq-ml': 'ML', 'freq-g1': 'G1' }, 1, "teal-color"));
-		this.widgets.push(new MultiLCDWidget(this, "gcb-ln-voltage",     "L - N Voltage (V)", { 'volt-ml': 'ML', 'volt-g1': 'G1' }, 1, "teal-color"));
+		this.widgets.push(new MultiLCD(this, "gcb-line-frequency", "Frequency (Hz)",    { 'freq-ml': 'ML', 'freq-g1': 'G1' }, 1, "teal-color"));
+		this.widgets.push(new MultiLCD(this, "gcb-ln-voltage",     "L - N Voltage (V)", { 'volt-ml': 'ML', 'volt-g1': 'G1' }, 1, "teal-color"));
 		
 		/* Power Meter 2. */
-		this.widgets.push(new LCDWidget(this, "active-power-2",   "Active Power",   "W",   0, "red-color"));
-		this.widgets.push(new LCDWidget(this, "reactive-power-2", "Reactive Power", "Var", 0, "red-color"));
-		this.widgets.push(new LCDWidget(this, "apparent-power-2", "Apparent Power", "VA",  0, "red-color"));
-		this.widgets.push(new LCDWidget(this, "active-factor-2",  "Active Factor",  "%",   2, "red-color"));
-		this.widgets.push(new LCDWidget(this, "ln-voltage-2",     "L - N Voltage",  "V",   1, "red-color"));
-		this.widgets.push(new LCDWidget(this, "line-current-2",   "Line Current",   "A",   2, "red-color"));
+		this.widgets.push(new LCD(this, "active-power-2",   "Active Power",   "W",   0, "red-color"));
+		this.widgets.push(new LCD(this, "reactive-power-2", "Reactive Power", "Var", 0, "red-color"));
+		this.widgets.push(new LCD(this, "apparent-power-2", "Apparent Power", "VA",  0, "red-color"));
+		this.widgets.push(new LCD(this, "active-factor-2",  "Active Factor",  "%",   2, "red-color"));
+		this.widgets.push(new LCD(this, "ln-voltage-2",     "L - N Voltage",  "V",   1, "red-color"));
+		this.widgets.push(new LCD(this, "line-current-2",   "Line Current",   "A",   2, "red-color"));
 		
 		/* Set power factor indicator and buttons. */
-		o = new LCDWidget(this, "pow-factor",     "PF:0.80-0.995",  "%",   3, "yellow-color");
+		o = new LCD(this, "pow-factor",     "PF:0.80-0.995",  "%",   3, "yellow-color");
 		this.widgets.push(o);
 		o = new UpDownButton(this, "pow-factor-buttons", o, 0.1);
 		o.checkRange = function(val) {
@@ -382,7 +382,7 @@ PowerLab.prototype.setMode = function(mode) {
 		this.widgets.push(o);
 		
 		/* Set kilowatt indicator and buttons. */
-		o = new LCDWidget(this, "kilo-watt",      "KW: 0.8-1.7",    "KW",  2, "yellow-color");
+		o = new LCD(this, "kilo-watt",      "KW: 0.8-1.7",    "KW",  2, "yellow-color");
 		this.widgets.push(o);
 		o = new UpDownButton(this, "kilo-watt-buttons", o, 0.1);
 		o.checkRange = function(val) {
@@ -633,7 +633,7 @@ SwitchMode.prototype.enable = function(enable) {
 /** ---------------------------------------------------------------------------
  *  -- LCD Widget                                                            --
  *  --------------------------------------------------------------------------- */
-function LCDWidget(control, id, title, units, scale, cclass) 
+function LCD(control, id, title, units, scale, cclass) 
 {
 	Widget.call(this, control);
 	
@@ -648,9 +648,9 @@ function LCDWidget(control, id, title, units, scale, cclass)
 	this.digits = [ undefined, undefined, undefined, undefined ];
 }
 
-LCDWidget.prototype = new Widget;
+LCD.prototype = new Widget;
 
-LCDWidget.prototype.init = function() {
+LCD.prototype.init = function() {
 	this.control.$canvas.append(
 		"<div id='" + this.id + "' class='lcd-box'>" +
 			"<div class='lcd-title " + this.cclass + "'>" + this.title + "</div>" +
@@ -665,7 +665,7 @@ LCDWidget.prototype.init = function() {
 	this.setValue(0);
 };
 
-LCDWidget.prototype.getLCDHtml = function() {
+LCD.prototype.getLCDHtml = function() {
 	return (
 	  		"<div class='ssd-digit ssd-digit-5'>" +
 				"<div class='ssd-seg ssd-horz-seg ssd-seg-1'></div>" +
@@ -720,14 +720,14 @@ LCDWidget.prototype.getLCDHtml = function() {
 	);
 };
 
-LCDWidget.prototype.update = function(data) {
+LCD.prototype.update = function(data) {
 	if (data[this.id] != undefined && !this.maskServer)
 	{
 		this.setValue(parseFloat(data[this.id]));
 	}
 };
 
-LCDWidget.prototype.setValue = function(num) {
+LCD.prototype.setValue = function(num) {
 	/* We don't need to change the value to an identical value. */
 	if (num == this.value) return;
 	this.value = num;
@@ -790,7 +790,7 @@ LCDWidget.prototype.setValue = function(num) {
 	}
 };
 
-LCDWidget.prototype.setDigit = function(digit, val) {
+LCD.prototype.setDigit = function(digit, val) {
 	if (this.digits[digit] == val) return;
 		
 	this.digits[digit] = val;
@@ -855,16 +855,16 @@ LCDWidget.prototype.setDigit = function(digit, val) {
 /** ---------------------------------------------------------------------------
  *  -- Multi LCD Widget                                                      --
  *  --------------------------------------------------------------------------- */
-function MultiLCDWidget(control, id, title, fields, scale, cclass)
+function MultiLCD(control, id, title, fields, scale, cclass)
 {
-	LCDWidget.call(this, control, id, title, null, scale, cclass);
+	LCD.call(this, control, id, title, null, scale, cclass);
 	
 	this.fields = fields;
 	this.lcds = {};
 }
-MultiLCDWidget.prototype = new LCDWidget;
+MultiLCD.prototype = new LCD;
 
-MultiLCDWidget.prototype.init = function() {
+MultiLCD.prototype.init = function() {
 	var f = 0, html = 
 		"<div id='" + this.id + "' class='lcd-box multi-lcd-box'>" +
 			"<div class='lcd-title " + this.cclass +  "'>" + this.title + "</div>";
@@ -885,13 +885,13 @@ MultiLCDWidget.prototype.init = function() {
 	
 	for (f in this.fields)
 	{
-		this.lcds[f] = new LCDWidget(this.constructor, f, null, null, this.scale, null);
+		this.lcds[f] = new LCD(this.constructor, f, null, null, this.scale, null);
 		this.lcds[f].$w = this.$w.find("#" + f);
 		this.lcds[f].setValue(0);
 	}
 };
 
-MultiLCDWidget.prototype.update = function(data) {
+MultiLCD.prototype.update = function(data) {
 	var f = 0;
 	for (f in this.fields)
 	{
