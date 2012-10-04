@@ -1021,6 +1021,7 @@
 #graphics-pm1-label-2 {
 	left: -165px;
 	top: 406px;
+	height: 21px;
 }
 
 #graphics-pm1-lower-2 {
@@ -1062,6 +1063,7 @@
 #graphics-pm3-label-2 {
 	left: 243px;
 	top: 307px;
+	height: 21px;
 }
 
 #graphics-pm3-2 {
@@ -1097,6 +1099,7 @@
 #graphics-pm2-label-2 {
 	top: 508px;
 	right: 275px;
+	height: 21px;
 }
 
 #graphics-pm2-to-load-up-2 {
@@ -1164,7 +1167,7 @@
 }
 
 #graphics-default-to-button-2 {
-	height: 40px;
+	height: 33px;
 	top: 823px;
 	left: 23px;
 }

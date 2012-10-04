@@ -860,6 +860,7 @@ function MultiLCDWidget(control, id, title, fields, scale, cclass)
 	LCDWidget.call(this, control, id, title, null, scale, cclass);
 	
 	this.fields = fields;
+	this.lcds = {};
 }
 MultiLCDWidget.prototype = new LCDWidget;
 
@@ -871,7 +872,7 @@ MultiLCDWidget.prototype.init = function() {
 	for (f in this.fields) 
 	{
 		html += "<div class='multi-lcd-label'>" + this.fields[f] + "</div>" +
-				"<div class='lcd-value'>" +
+				"<div id='" + f + "' class='lcd-value'>" +
 					this.getLCDHtml() +
 				"</div>";
 	}
@@ -881,9 +882,25 @@ MultiLCDWidget.prototype.init = function() {
 	
 	this.control.$canvas.append(html);
 	this.$w = $("#" + this.id);
-	this.setValue(0);
+	
+	for (f in this.fields)
+	{
+		this.lcds[f] = new LCDWidget(this.constructor, f, null, null, this.scale, null);
+		this.lcds[f].$w = this.$w.find("#" + f);
+		this.lcds[f].setValue(0);
+	}
 };
-// TODO implement multi lcd value handling
+
+MultiLCDWidget.prototype.update = function(data) {
+	var f = 0;
+	for (f in this.fields)
+	{
+		if (data[f] != undefined && !this.maskServer)
+		{
+			this.lcds[f].setValue(parseFloat(data[f]));
+		}
+	}
+};
 
 /** ---------------------------------------------------------------------------
  *  -- Button Widget                                                         --
@@ -1319,7 +1336,7 @@ Graphics.prototype.init = function()  {
 			"<div id='graphics-pm1-meter-2' class='graphics h-line'></div>" +
 			"<div id='graphics-meter-to-gcb-2' class='graphics v-line'></div>" +
 		
-			"<div id='graphics-pm3-label-2' class='graphics label-box label-head'>Some Meter 3?</div>" +
+			"<div id='graphics-pm3-label-2' class='graphics label-box label-head'>Power Meter 3?</div>" +
 			"<div id='graphics-pm3-2' class='graphics h-line'></div>" +
 			"<div id='graphics-pm3-to-gcb-2' class='graphics v-line'></div>" +
 			
