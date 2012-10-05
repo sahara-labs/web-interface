@@ -1416,4 +1416,16 @@
 	border-right: none;
 }
 
+/* ----------------------------------------------------------------------------
+ * -- Cameras                                                                --
+ * ---------------------------------------------------------------------------- */
+#camera-button {
+	background-color: #EEEEEE;
+	left: 90px;
+	top: 22px;
+}
 
+#camera-button span {
+	float: left;
+	margin-right: 5px;
+}

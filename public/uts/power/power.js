@@ -314,6 +314,7 @@ PowerLab.prototype.setMode = function(mode) {
 		
 		/* --- Miscellaneous things on the page. */
 		this.widgets.push(new Graphics(this));
+		this.widgets.push(new Camera(this));
 		break;
 		
 	case 2:
@@ -396,7 +397,9 @@ PowerLab.prototype.setMode = function(mode) {
 		o.setOn = function(on) { };
 		this.widgets.push(o);
 		
+		/* --- Miscellanous elements. ----------------------------------------- */
 		this.widgets.push(new Graphics(this));
+		this.widgets.push(new Camera(this));
 		break;
 		
 	default:
@@ -1376,5 +1379,29 @@ function Camera(control)
 Camera.prototype = new Widget;
 
 Camera.prototype.init = function() {
+	/* Button to open camera dialog. */
+	this.control.$canvas.append(
+			"<div id='camera-button' class='button'>" +
+				"<span class='ui-icon ui-icon-video'></span>" +
+				"Cameras" + 
+			"</div>" 
+	);
 	
+	this.$w = $("#camera-button");
+	
+	var thiz = this;
+	this.$w.click(function() { thiz.clicked(); });
+};
+
+Camera.prototype.clicked = function() {
+	alert("TODO Implement cameras");
+	// TODO Implement camera dialog. 
+};
+
+Camera.prototype.deploy = function() {
+	// TODO camera deployment
+};
+
+Camera.prototype.undeploy = function() {
+	// TODO camera removal
 };
