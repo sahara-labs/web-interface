@@ -376,13 +376,13 @@ PowerLab.prototype.setMode = function(mode) {
 		this.widgets.push(o);
 		
 		/* --- Meters. -------------------------------------------------------- */
-		this.widgets.push(new LCD(this, "import-export-active-power",   "Q (VAR)", null, 0, "amber-color"));
-		this.widgets.push(new LCD(this, "import-export-reactive-power", "P (W)",   null, 0, "amber-color"));
+		this.widgets.push(new LCD(this, "import-export-reactive-power", "Q (VAR)", null, 0, "amber-color"));
+		this.widgets.push(new LCD(this, "import-export-active-power",   "P (W)",   null, 0, "amber-color"));
 		
 		/* Power Meter 1. */
 		this.widgets.push(new LCD(this, "line-current-3",   "L1 Current",     "A",   3, "yellow-color"));
-		this.widgets.push(new LCD(this, "apparent-power-3-scaled", "Apparent Power", "KVA",  0, "yellow-color"));
-		this.widgets.push(new LCD(this, "reactive-power-3-scaled", "Reactive Power", "KVar", 0, "yellow-color"));
+		this.widgets.push(new LCD(this, "apparent-power-3-scaled", "Apparent Power", "KVA",  2, "yellow-color"));
+		this.widgets.push(new LCD(this, "reactive-power-3-scaled", "Reactive Power", "KVar", 2, "yellow-color"));
 		this.widgets.push(new LCD(this, "active-factor-3",  "Active Factor",  "%",   2, "yellow-color"));
 		this.widgets.push(new LCD(this, "active-power-3-scaled",   "Active Power",   "KW",  2, "yellow-color"));
 		

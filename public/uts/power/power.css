@@ -369,13 +369,13 @@
 	top: 500px;
 }
 
-#power-systems-lab.lab2 #import-export-active-power {
+#power-systems-lab.lab2 #import-export-reactive-power {
 	width: 162px;
 	top: 100px;
 	left: 170px;
 }
 
-#power-systems-lab.lab2 #import-export-reactive-power {
+#power-systems-lab.lab2 #import-export-active-power {
 	width: 162px;
 	top: 100px;
 	left: 432px;
