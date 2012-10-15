@@ -331,77 +331,85 @@
 	top: 200px;
 }
 
-#power-systems-lab.lab1 #active-power-3 {
+#power-systems-lab.lab1 #active-power-2 {
 	left: 265px;
 	top: 300px;
 }
 
-#power-systems-lab.lab1 #apparent-power-3 {
+#power-systems-lab.lab1 #apparent-power-2 {
 	left: 265px;
 	top: 400px;
 }
 
-#apparent-power-3 .lcd-unit {
+#apparent-power-2 .lcd-unit {
 	font-size: 14pt;
 }
 
-#power-systems-lab.lab1 #ln-voltage-3 {
+#power-systems-lab.lab1 #ln-voltage-2 {
 	left: 265px;
 	top: 500px;
 }
 
-#power-systems-lab.lab1 #reactive-power-3 {
+#power-systems-lab.lab1 #reactive-power-2 {
 	left: 465px;
 	top: 300px;
 }
 
-#reactive-power-3 .lcd-unit {
+#reactive-power-2 .lcd-unit {
 	font-size: 12pt;
 }
 
-#power-systems-lab.lab1 #active-factor-3 {
+#power-systems-lab.lab1 #active-factor-2 {
 	left: 465px;
 	top: 400px;
 }
 
-#power-systems-lab.lab1 #line-current-3 {
+#power-systems-lab.lab1 #line-current-2 {
 	left: 465px;
 	top: 500px;
 }
 
-#power-systems-lab.lab2 #q-var {
+#power-systems-lab.lab2 #import-export-active-power {
 	width: 162px;
 	top: 100px;
 	left: 170px;
 }
 
-#power-systems-lab.lab2 #power-wat {
+#power-systems-lab.lab2 #import-export-reactive-power {
 	width: 162px;
 	top: 100px;
 	left: 432px;
 }
 
-#power-systems-lab.lab2 #line-current {
+#power-systems-lab.lab2 #line-current-3 {
 	left: 25px;
 	top: 340px;
 }
 
-#power-systems-lab.lab2 #apparent-power {
+#power-systems-lab.lab2 #apparent-power-3-scaled {
 	left: -175px;
 	top: 440px;
 }
 
-#power-systems-lab.lab2 #reactive-power {
+#apparent-power-3-scaled .lcd-unit {
+	font-size: 11pt;
+}
+
+#power-systems-lab.lab2 #reactive-power-3-scaled {
 	left: 25px;
 	top: 440px;
 }
 
-#power-systems-lab.lab2 #active-factor {
+#reactive-power-3-scaled .lcd-unit {
+	font-size: 10pt;
+}
+
+#power-systems-lab.lab2 #active-factor-3 {
 	left: -175px;
 	top: 540px;
 }
 
-#power-systems-lab.lab2 #active-power {
+#power-systems-lab.lab2 #active-power-3-scaled {
 	left: 25px;
 	top: 540px;
 }
@@ -411,7 +419,7 @@
 	top: 640px;
 }
 
-#power-systems-lab.lab2 #kilo-watt {
+#power-systems-lab.lab2 #load-point {
 	left: 25px;
 	top: 640px;
 }
@@ -431,12 +439,12 @@
 	top: 540px;
 }
 
-#power-systems-lab.lab2 #reactive-power-2 {
+#power-systems-lab.lab2 #reactive-power-3 {
 	right: 10px;
 	top: 540px;
 }
 
-#reactive-power-2 .lcd-unit {
+#reactive-power-3 .lcd-unit {
 	font-size: 12pt;
 }
 
@@ -626,7 +634,7 @@
 	width: 65px;
 }
 
-#power-systems-lab.lab2 #load-on {
+#power-systems-lab.lab2 #load-lab-2 {
 	top: 230px;
 	right: 40px;
 	width: 150px;
@@ -637,7 +645,7 @@
 	left: -160px;
 }
 
-#kilo-watt-buttons {
+#load-point-buttons {
 	top: 755px;
 	left: 43px;
 }
@@ -1170,6 +1178,14 @@
 	height: 33px;
 	top: 823px;
 	left: 23px;
+}
+
+#graphics-voltage-direction-2 {
+	left: 30px;
+	top: 120px;
+	width: 120px;
+	font-size: 10pt;
+	background-color: #E1D482;
 }
 
 /* ----------------------------------------------------------------------------

@@ -261,17 +261,17 @@ PowerLab.prototype.setMode = function(mode) {
 		this.widgets.push(new LCD(this, "active-factor",    "Active Factor",  "%",   2, "yellow-color"));
 		this.widgets.push(new LCD(this, "line-frequency",   "Line Frequency", "Hz",  1, "red-color"));
 		this.widgets.push(new LCD(this, "line-current",     "Line Current",   "A",   3, "yellow-color"));
-		this.widgets.push(new LCD(this, "active-power-3",   "Active Power",   "W",   1, "teal-color"));
-		this.widgets.push(new LCD(this, "apparent-power-3", "Apparent Power", "VA",  1, "green-color"));
-		this.widgets.push(new LCD(this, "ln-voltage-3",     "L - N Voltage",  "V",   1, "teal-color"));
-		this.widgets.push(new LCD(this, "reactive-power-3", "Reactive Power", "Var", 2, "red-color"));
-		this.widgets.push(new LCD(this, "active-factor-3",  "Active Factor",  "%",   3, "yellow-color"));
-		this.widgets.push(new LCD(this, "line-current-3",   "Line Current",   "A",   3, "red-color"));
+		this.widgets.push(new LCD(this, "active-power-2",   "Active Power",   "W",   1, "teal-color"));
+		this.widgets.push(new LCD(this, "apparent-power-2", "Apparent Power", "VA",  1, "green-color"));
+		this.widgets.push(new LCD(this, "ln-voltage-2",     "L - N Voltage",  "V",   1, "teal-color"));
+		this.widgets.push(new LCD(this, "reactive-power-2", "Reactive Power", "Var", 2, "red-color"));
+		this.widgets.push(new LCD(this, "active-factor-2",  "Active Factor",  "%",   3, "yellow-color"));
+		this.widgets.push(new LCD(this, "line-current-2",   "Line Current",   "A",   3, "red-color"));
 		
 		/* Set voltage indicator and buttons. */
 		o = new LCD(this, "set-voltage",      "Set Voltage",    "V",   1, "yellow-color");
 		this.widgets.push(o);
-		o = new UpDownButton(this, "set-voltage-buttons", o, 0.1);
+		o = new UpDownButton(this, "set-voltage-buttons", o, 0.1, true);
 		o.checkRange = function(val) {
 			if       (val < 200 || (this.control.data["closed-loop"] == "true" && val < 210)) return -1; // INTERLOCK: Value too small
 			else if (val > 270 || (this.control.data["closed-loop"] == "true" && val > 250)) return 1;   // INTERLOCK: Value too large     
@@ -282,7 +282,7 @@ PowerLab.prototype.setMode = function(mode) {
 		/* Set frequency indicator and buttons. */
 		o = new LCD(this, "set-frequency",    "Set Frequency",  "Hz",  1, "teal-color");
 		this.widgets.push(o);
-		o = new UpDownButton(this, "set-frequency-buttons", o, 0.1);
+		o = new UpDownButton(this, "set-frequency-buttons", o, 0.1, true);
 		o.checkRange = function(val) {
 			if (val < 45) return -1;      // INTERLOCK: Value too small
 			else if (val > 55) return 1; // INTERLOCK: Value too large
@@ -324,6 +324,20 @@ PowerLab.prototype.setMode = function(mode) {
 		/* --- Controls ------------------------------------------------------- */
 		/* Generator. */
 		o = new Button(this, "g-on", "G", "circ-button");
+		o.clicked = function() {
+			this.control.setWorking(true);
+			this.setOn(!this.isOn);
+			this.isChanging = true;
+			
+			var thiz = this;
+			this.control.post("setGen", { on: this.isOn }, function(err) {
+				/* Server side validation failed. */
+				thiz.isChanging = false;
+				thiz.setOn(!thiz.isOn);
+				thiz.addMessage(err, "error", 9, 150, "top-left");
+				thiz.control.setWorking(false);
+			});
+		};
 		this.widgets.push(o);
 		
 		/* CB1 indicator. */
@@ -335,66 +349,97 @@ PowerLab.prototype.setMode = function(mode) {
 		
 		/* MCB relay. */
 		o = new Button(this, "mcb-on", "MCB");
-		this.widgets.push(o);http://slashdot.org/
+		o.clicked = function() {
+			this.addMessage("This is only an indicator. It will update automatically.", "info", 285, 165, "top-center");
+		};
+		this.widgets.push(o);
 		
 		/* GCB relay. */
 		o = new Button(this, "gcb-on", "GCB");
+		o.clicked = function() {
+			this.addMessage("This is only an indicator. It will update automatically.", "info", 285, 275, "top-center");
+		};
 		this.widgets.push(o);
 		
 		/* Transmission line 1. */
 		o = new Button(this, "trans-line-1", "Trans Line 1");
+		o.clicked = function() {
+			this.addMessage("This is only an indicator. It will update automatically.", "info", 100, 275, "top-center");
+		};
 		this.widgets.push(o);
 		
 		/* Load button. */
-		o = new Button(this, "load-on", "Load 74.23+j104");
+		o = new Button(this, "load-lab-2", "Load 74.23+j104");
+		o.clicked = function() {
+			this.addMessage("This is only an indicator. It will update automatically.", "info", 455, 285, "top-center");
+		};
 		this.widgets.push(o);
 		
 		/* --- Meters. -------------------------------------------------------- */
-		this.widgets.push(new LCD(this, "q-var",     "Q (VAR)", null, 0, "amber-color"));
-		this.widgets.push(new LCD(this, "power-wat", "P (W)",   null, 0, "amber-color"));
+		this.widgets.push(new LCD(this, "import-export-active-power",   "Q (VAR)", null, 0, "amber-color"));
+		this.widgets.push(new LCD(this, "import-export-reactive-power", "P (W)",   null, 0, "amber-color"));
 		
 		/* Power Meter 1. */
-		this.widgets.push(new LCD(this, "line-current",   "L1 Current",     "A",   3, "yellow-color"));
-		this.widgets.push(new LCD(this, "apparent-power", "Apparent Power", "VA",  0, "yellow-color"));
-		this.widgets.push(new LCD(this, "reactive-power", "Reactive Power", "Var", 0, "yellow-color"));
-		this.widgets.push(new LCD(this, "active-factor",  "Active Factor",  "%",   2, "yellow-color"));
-		this.widgets.push(new LCD(this, "active-power",   "Active Power",   "KW",  2, "yellow-color"));
+		this.widgets.push(new LCD(this, "line-current-3",   "L1 Current",     "A",   3, "yellow-color"));
+		this.widgets.push(new LCD(this, "apparent-power-3-scaled", "Apparent Power", "KVA",  0, "yellow-color"));
+		this.widgets.push(new LCD(this, "reactive-power-3-scaled", "Reactive Power", "KVar", 0, "yellow-color"));
+		this.widgets.push(new LCD(this, "active-factor-3",  "Active Factor",  "%",   2, "yellow-color"));
+		this.widgets.push(new LCD(this, "active-power-3-scaled",   "Active Power",   "KW",  2, "yellow-color"));
 		
 		/* Power Meter 3. */
-		this.widgets.push(new MultiLCD(this, "gcb-line-frequency", "Frequency (Hz)",    { 'freq-ml': 'ML', 'freq-g1': 'G1' }, 1, "teal-color"));
-		this.widgets.push(new MultiLCD(this, "gcb-ln-voltage",     "L - N Voltage (V)", { 'volt-ml': 'ML', 'volt-g1': 'G1' }, 1, "teal-color"));
+		this.widgets.push(new MultiLCD(this, "gcb-line-frequency", "Frequency (Hz)",    { 'main-frequency': 'ML',  'line-frequency': 'G1' }, 1, "teal-color"));
+		this.widgets.push(new MultiLCD(this, "gcb-ln-voltage",     "L - N Voltage (V)", { 'main-ln-voltage': 'ML', 'ln-voltage-2-g1': 'G1' }, 1, "teal-color"));
 		
 		/* Power Meter 2. */
 		this.widgets.push(new LCD(this, "active-power-2",   "Active Power",   "W",   0, "red-color"));
-		this.widgets.push(new LCD(this, "reactive-power-2", "Reactive Power", "Var", 0, "red-color"));
+		this.widgets.push(new LCD(this, "reactive-power-3", "Reactive Power", "Var", 0, "red-color"));
 		this.widgets.push(new LCD(this, "apparent-power-2", "Apparent Power", "VA",  0, "red-color"));
 		this.widgets.push(new LCD(this, "active-factor-2",  "Active Factor",  "%",   2, "red-color"));
 		this.widgets.push(new LCD(this, "ln-voltage-2",     "L - N Voltage",  "V",   1, "red-color"));
 		this.widgets.push(new LCD(this, "line-current-2",   "Line Current",   "A",   2, "red-color"));
 		
 		/* Set power factor indicator and buttons. */
-		o = new LCD(this, "pow-factor",     "PF:0.80-0.995",  "%",   3, "yellow-color");
+		o = new LCD(this, "pow-factor",     "PF: 0.8-0.995",  "%",   3, "yellow-color");
 		this.widgets.push(o);
-		o = new UpDownButton(this, "pow-factor-buttons", o, 0.1);
+		o = new UpDownButton(this, "pow-factor-buttons", o, 0.001, false);
 		o.checkRange = function(val) {
-			// TODO Check power factor allowed range.
-			return 0;
+			if (val < 0.8) return -1;       // INTERLOCK: Value too small
+			else if (val > 0.955) return 1; // INTERLOCK: Value too large
+			else return 0; 
 		};
 		this.widgets.push(o);
 		
 		/* Set kilowatt indicator and buttons. */
-		o = new LCD(this, "kilo-watt",      "KW: 0.8-1.7",    "KW",  2, "yellow-color");
+		o = new LCD(this, "load-point",      "KW: 0.8-1.7",    "KW",  2, "yellow-color");
 		this.widgets.push(o);
-		o = new UpDownButton(this, "kilo-watt-buttons", o, 0.1);
+		o = new UpDownButton(this, "load-point-buttons", o, 0.01, false);
 		o.checkRange = function(val) {
-			// TODO Check kilo watt allowed range.
-			return 0;
+			if (val < 0.8) return -1;      // INTERLOCK: Value too small
+			else if (val > 1.7) return 1;  // INTERLOCK: Value too large
+			else return 0; 
 		};
 		this.widgets.push(o);
 		
 		/* Default settings button. */
 		o = new Button(this, "default-settings-2", "Default Settings");
 		o.setOn = function(on) { };
+		o.clicked = function() {
+			var thiz = this, i = 0;
+			
+			/* Updated the displayed values. */
+			this.control.data["pow-factor"] = "0.9";
+			this.control.data["load-point"] = "1.4";
+			for (i in this.control.widgets)
+			{
+				if (this.control.widgets[i].id == 'power-factor' || this.control.widgets[i].id == "load-point") 
+					this.control.widgets[i].update(this.control.data);
+			}
+			
+			/* Tell server to update. */
+			this.control.post("defaultSettings", null, function(err) {
+				thiz.addMessage(err, "error", 105, 830, "left");
+			});
+		};
 		this.widgets.push(o);
 		
 		/* --- Miscellanous elements. ----------------------------------------- */
@@ -1076,13 +1121,14 @@ ExclusiveButton.prototype.update = function(data) {
 /** ---------------------------------------------------------------------------
  *  -- Up / Down Buttons                                                     --
  *  --------------------------------------------------------------------------- */
-function UpDownButton(control, id, lcd, delta)
+function UpDownButton(control, id, lcd, delta, round)
 {
 	Widget.call(this, control);
 	
 	this.id = id;
 	this.lcd = lcd;
 	this.delta = delta;
+	this.round = round;
 	
 	/* Change variables. */
 	this.startVal = undefined;
@@ -1140,18 +1186,21 @@ UpDownButton.prototype.changeVal = function() {
 		return;
 	}
 	
-	/* The nwe val is calculated with a scaling so the reate of change increases
+	/* The new val is calculated with a scaling so the reate of change increases
 	 * the longer the button is pressed. */
-	newVal = this.lcd.value + 0.1 * (this.increasing ? 1 : -1) * (100 + this.numChanged * 2) / 100;
+	newVal = this.lcd.value + this.delta * (this.increasing ? 1 : -1) * (100 + this.numChanged * 2) / 100;
 	
 	/* We want to round the value to the closet decimal value. */
 	newVal = Math.round(newVal * Math.pow(10, this.lcd.scale)) / Math.pow(10, this.lcd.scale);
 	
 	if (this.checkRange(newVal) != 0)
 	{
-		/* The max / min values should be round values. */
-		newVal = Math.round(newVal);
-		this.lcd.setValue(newVal);
+		if (this.round)
+		{
+			/* The max / min values should be round values. */
+			newVal = Math.round(newVal);
+			this.lcd.setValue(newVal);
+		}
 		
 		/* If the value is out of range, a message is provided to the user and 
 		 * the last acceptable value is provided to the server. */
@@ -1227,7 +1276,8 @@ BackButton.prototype.clicked = function() {
 	/* Interlock validation. */
 	if (this.control.data['g-on'] == 'true')
 	{
-		this.addMessage("The generator must be turned off before changing labs.", 'error', 57, 92, 'left');
+		this.addMessage("The generator must be turned off before changing labs.", 'error', 
+				this.control.data["lab"] == 1 ? 57 : -110, this.control.data["lab"] == 1 ? 92 : 230, 'left');
 	}
 	else
 	{
@@ -1339,7 +1389,6 @@ Graphics.prototype.init = function()  {
 			"<div id='graphics-pm1-meter-2' class='graphics h-line'></div>" +
 			"<div id='graphics-meter-to-gcb-2' class='graphics v-line'></div>" +
 		
-			"<div id='graphics-pm3-label-2' class='graphics label-box label-head'>Power Meter 3?</div>" +
 			"<div id='graphics-pm3-2' class='graphics h-line'></div>" +
 			"<div id='graphics-pm3-to-gcb-2' class='graphics v-line'></div>" +
 			
@@ -1359,7 +1408,8 @@ Graphics.prototype.init = function()  {
 			"<div id='graphics-default-set-voltage-arrow-2' class='graphics-nobg arrow-head'></div>" +
 			"<div id='graphics-default-set-freq-2' class='graphics v-line'></div>" +
 			"<div id='graphics-default-set-freq-arrow-2' class='graphics-nobg arrow-head'></div>" +
-			"<div id='graphics-default-to-button-2' class='graphics v-line'></div>";
+			"<div id='graphics-default-to-button-2' class='graphics v-line'></div>" +
+			"<div id='graphics-voltage-direction-2' class='graphics-nobg label-box'>Power Import - Power Export +</div>";
 		break;
 	}
 	this.control.$canvas.append(html);

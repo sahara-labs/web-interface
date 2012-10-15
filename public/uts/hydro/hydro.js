@@ -560,9 +560,6 @@ CameraWidget.prototype.init = function() {
 			         '</p>' +
 			      '</div>' +
 			      '<div id="hydrocamerastream">' +
-			    	   '<div class="loadinggif">' +
-			      	       '<img src="/uts/hydro/images/loading.gif" alt="L" />' +
-			      	   '</div>' +
 			      '</div>' +
 			      '<div id="hydrocamerabuttons">' +
 			      '</div>' +
