@@ -392,7 +392,7 @@ PowerLab.prototype.setMode = function(mode) {
 		
 		/* Power Meter 2. */
 		this.widgets.push(new LCD(this, "active-power-2",   "Active Power",   "W",   0, "red-color"));
-		this.widgets.push(new LCD(this, "reactive-power-3", "Reactive Power", "Var", 0, "red-color"));
+		this.widgets.push(new LCD(this, "reactive-power-2", "Reactive Power", "Var", 0, "red-color"));
 		this.widgets.push(new LCD(this, "apparent-power-2", "Apparent Power", "VA",  0, "red-color"));
 		this.widgets.push(new LCD(this, "active-factor-2",  "Active Factor",  "%",   2, "red-color"));
 		this.widgets.push(new LCD(this, "ln-voltage-2",     "L - N Voltage",  "V",   1, "red-color"));
