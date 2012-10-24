@@ -1,0 +1,15 @@
+
+# /
+/*.buildpath
+/.buildpath
+/.settings
+/webinterface.log
+
+# /application/
+/application/configs
+
+# /institution/UTS/scripts/
+/institution/UTS/scripts/Inclined_Plane.phtml
+
+# /library/
+/library/Zend
