@@ -112,6 +112,9 @@ class IndexController extends Sahara_Controller_Action_Acl
                 case Sahara_Acl::USER:
                     $this->_redirectTo('index', 'queue');
                     break;
+                case Sahara_Acl::RESEARCH:
+                    $this->_redirectTo('index', 'queue');
+                    break;
                 case Sahara_Acl::ACADEMIC:
                     $this->_redirectTo('index', 'queue');
                     break;
@@ -176,6 +179,9 @@ class IndexController extends Sahara_Controller_Action_Acl
             case Sahara_Acl::USER:
                 $this->_redirectTo('index', 'queue');
                 break;
+            case Sahara_Acl::RESEARCH:
+            	$this->_redirectTo('index', 'queue');
+            	break;
             case Sahara_Acl::ACADEMIC:
                 $this->_redirectTo('index', 'queue');
                 break;
