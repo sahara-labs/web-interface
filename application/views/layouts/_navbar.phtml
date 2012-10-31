@@ -44,6 +44,14 @@ switch ($this->userRole)
             'Existing Reservations' => array('controller' => 'bookings', 'action' => 'existing')
         );
         break;
+        
+    case Sahara_Acl::RESEARCH:
+        $menu = array(
+            'Rig Selection' => array('controller' => 'queue', 'action' => 'index'),
+            'Existing Reservations' => array('controller' => 'bookings', 'action' => 'existing'),
+        );
+        break;
+        
     case Sahara_Acl::ACADEMIC:
         $menu = array(
             'Rig Selection' => array('controller' => 'queue', 'action' => 'index'),
@@ -51,6 +59,7 @@ switch ($this->userRole)
             'Reports' => array('controller' => 'reports', 'action' => 'index')
         );
     	break;
+    	
     case Sahara_Acl::ADMIN:
         $menu = array(
             'Rig Administration' => array('controller' => 'admin', 'action' => 'rig'),
@@ -59,33 +68,37 @@ switch ($this->userRole)
             'Reports' => array('controller' => 'reports', 'action' => 'index')
         );
         break;
+        
     case Sahara_Controller_Action_Acl::PSEUDO_ROLE_QUEUE:
         $menu = array(
             'Queue' => array('controller' => 'queue', 'action' => 'queuing')
         );
         break;
+        
     case Sahara_Controller_Action_Acl::PSEUDO_ROLE_SESSION:
         $menu = array(
             'Session' => array('controller' => 'session', 'action' => 'index')
         );
         break;
+        
     case Sahara_Controller_Action_Acl::PSEUDO_ROLE_BOOKING:
         $menu = array(
             'Reservation' => array('controller' => 'bookings', 'action' => 'waiting')
         );
         break;
+        
     case 'ERROR':
         $menu = array(
             'Login' => array('controller' => 'index', 'action' => 'index')
         );
         break;
+        
     default:
         $menu = array(
         	'Login' => array('controller' => 'index', 'action' => 'index'),
-//             'Laboratory Rigs' => array('controller' => 'labinfo', 'action' => 'index'),
-//             'FAQ' => array('controller' => 'info', 'action' => 'faq'),
             'Contact Us' => array('controller' => 'info', 'action' => 'contact')
         );
+        break;
 }
 
 /* Make sure the current controller / action exists otherwise use the first
