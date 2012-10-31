@@ -92,7 +92,7 @@ class Sahara_Acl extends Zend_Acl
                             );
     
     /** @var assoc array Pages a research user may access. */
-    protected $_researchPages  = array();
+    protected $_researchPages  = array('research' => array('index'));
 
     /** @var assoc array Pages an academic user may access. */
     protected $_academicPages = array('reports' => array('index','getvalue','accessreport',
