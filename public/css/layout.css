@@ -71,7 +71,7 @@ legend {
 /******************************************************************************
  ** Common styles                                                            **
  *****************************************************************************/
-.commonbutton {
+.commonbutton, .common-button {
 	display: block;
     padding: 5px;
     text-align: center;
@@ -89,14 +89,14 @@ legend {
     position: relative;
 }
 
-.commonbutton:hover {
+.commonbutton:hover, .common-button:hover {
 	color: #000000;
 	-moz-box-shadow: 0 0 4px #606060;
     -webkit-box-shadow: 0 0 4px #606060;
     box-shadow: 0 0 4px #606060;
 }
 
-.commonbutton img {
+.commonbutton img, .common-button img {
 	border: 0 none;
 }
 
