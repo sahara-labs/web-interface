@@ -33,22 +33,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 31st October 2012
+ * @date 1st November 2012
  */
 
-/**
- * Controller for research project management.
- */
-class ResearchController extends Sahara_Controller_Action_Acl
+class Sahara_Database_Record
 {
-    /**
-     * Action that shows list of existing projects.
-     */
-    public function indexAction()
+    /** Record data. */
+    protected $_data = array();
+    
+    public function __construct()
     {
-        $this->view->headTitle($this->_headPrefix . 'Research Projects');
+    }        
+    
         
-        /* Load all the projects for the user. */
         
-    }
+    
+
 }

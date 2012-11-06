@@ -34,3 +34,11 @@
  * @author Michael Diponio (mdiponio)
  * @date 31st October 2012
  */
+
+#add-project-button {
+	position: absolute;
+	width: 70px;
+	height: 70px;
+	margin: 10px 10px 0 0;
+}
+
