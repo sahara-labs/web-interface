@@ -1,4 +1,4 @@
-sahara-labs-web-interface
+Sahara Labs Web Interface
 =========================
 
 Web Interface for the Sahara Labs remote laboratory framework.
