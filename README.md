@@ -15,5 +15,6 @@ The Web Interface is one component of the Sahara Remote Labs framework (along wi
 
 More information and installation files can be found at: http://sourceforge.net/projects/labshare-sahara/
 
-The Rig Client can be found at: https://github.com/mdiponio/sahara-labs-rig-client
-The Scheduling Server can be found at: https://github.com/mdiponio/sahara-labs-scheduling-server
+The Rig Client can be found at: https://github.com/mdiponio/sahara-labs-rig-client.
+
+The Scheduling Server can be found at: https://github.com/mdiponio/sahara-labs-scheduling-server.
