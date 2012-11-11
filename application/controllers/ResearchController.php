@@ -32,28 +32,20 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * @author Tania Machet (tmachet)
- * @date 8th April 2010
+ * @author Michael Diponio (mdiponio)
+ * @date 31st October 2012
  */
 
-class SAHARANS_Contacts
+/**
+ * Controller for research project management.
+ */
+class ResearchController extends Sahara_Controller_Action_Acl
 {
-	public function getContacts()
-	{
-	    /*
-	     * Array of contact information. The structure is an associative array
-	     * containing role => contact information.
-	     * The contact information is an associative array containing the desired
-	     * contact information. This array can contain any key => values as desired.
-	     */
-		return array(
-				"Sahara Technical Contact" => array(
-					"Contact Name:" => "SAHARA Labs Support",
-					"Contact Phone:" => "(02) 9514 2975",
-					"Contact Address:" => "University of Technology, Sydney",
-					"" => "15 Broadway,<br />" .
-				          "Ultimo, NSW 2070<br />" .
-				      	  "Building 1, Level 23, Room 16",
-					"Contact Email:" => "<a href=\"mailto:michael.diponio@uts.edu.au\">SAHARA Labs Support</a>"));
-	}
+    /**
+     * Action that shows list of existing projects.
+     */
+    public function indexAction()
+    {
+        
+    }
 }
