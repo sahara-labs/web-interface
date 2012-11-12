@@ -60,10 +60,10 @@ $dout = new Sahara_Session_Element_MultiButtons($this->rigClient, 'dout',
     ),
     array(
         'orientation' => Sahara_Session_Element_MultiButtons::VERTICAL,
-        'top'         => 10,
-        'left'        => 40,
-        'width'       => 60,
-        'height'      => 60
+        'top'         => 55,
+        'left'        => 75,
+        'width'       => 15,
+        'height'      => 15
     )
 );
 
@@ -74,16 +74,15 @@ $dout = new Sahara_Session_Element_MultiButtons($this->rigClient, 'dout',
 <?=$control?>
 
 <!-- Paddle speed -->
-<div id="paddle-container" class="saharaform">
-    <div id='paddle-title'>Paddle Speed:</div>
+<div id="paddle-container" class="block-container saharaform">
+    <div class='block-title'>Paddle Speed:</div>
    <input id="paddle" type="text" name="paddle" /><span>&nbsp;Hz</span>
    <?=$paddleSend?>
 </div>
 
-<!-- Digital input -->
-<div id='digital-input'>
-    <div id='digital-input-title'>Digital Inputs:</div>
-    
+<!-- Digital inputs. -->
+<div id='digital-input' class='block-container'>
+    <div class='block-title'>Digital Inputs:</div>
     <table>
         <tr>
             <th>Chan&nbsp;&nbsp;</th>
@@ -122,6 +121,50 @@ $dout = new Sahara_Session_Element_MultiButtons($this->rigClient, 'dout',
             <td><div id='digital-status-7' class='led-status'></div></td>            
         </tr>
     </table>
+</div>
+
+<!-- Digital outputs. -->
+<div id='digital-output' class='block-container'>
+    <div class='block-title'>Digital Outputs:</div>
+    <table>
+        <tr>
+            <th>Chan&nbsp;&nbsp;</th>
+            <th>Status</th>
+        </tr>
+        <tr>
+            <td>0</td>
+            <td>&nbsp;</td>            
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>&nbsp;</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td>&nbsp;</td>
+        </tr>
+        <tr>
+            <td>3</td>
+            <td>&nbsp;</td>
+        </tr>
+        <tr>
+            <td>4</td>
+            <td>&nbsp;</td>
+        </tr>
+        <tr>
+            <td>5</td>
+            <td>&nbsp;</td>
+        </tr>
+        <tr>
+            <td>6</td>
+            <td>&nbsp;</td>
+        </tr>
+        <tr>
+            <td>7</td>
+            <td>&nbsp;</td>
+        </tr>
+    </table>
+    <?=$dout?>
 </div>
 
 <div style="height:700px"></div>
