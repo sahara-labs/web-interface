@@ -1,0 +1,127 @@
+<?php
+
+$this->headLink()->appendStylesheet($this->baseUrl('/uts/wavetank/wavetank.css'));
+$this->headScript()->appendFile($this->baseUrl('/uts/wavetank/wavetank.js'));
+
+/* Pump and inverter controls. */
+$control = new Sahara_Session_Element_MultiButtons($this->rigClient, 'controls',
+    array(
+        array(
+        	'title' => 'Pump',
+            'tooltip' => 'Turn the pump on or off.',
+			'icon' => '/uts/wavetank/images/unknown.png',
+            'click' => ""
+        ),
+        array(
+        	'title' => 'Inverter',
+            'tooltip' => 'Turn the inverter on or off.',
+            'icon' => '/uts/wavetank/images/unknown.png',
+            'click' => ""
+        )
+    ),
+    array(
+        'orientation' => Sahara_Session_Element_MultiButtons::VERTICAL,
+        'top'         => 10,
+        'left'        => 40,
+        'width'       => 60,
+        'height'      => 60
+    )
+);
+
+/* Paddle speed submit button. */
+$paddleSend = new Sahara_Session_Element_MultiButtons($this->rigClient, 'paddlesend', 
+        array(
+            array(
+            		'title' => 'Set',
+                    'icon' => '/uts/wavetank/images/set.png',
+            		'tooltip' => 'Set the paddle frequency in Hz.',
+            		'click' => ""
+            ),
+        ),
+        array(
+           'top'         => 10,
+           'left'        => 150,
+           'width'       => 40,
+           'height'      => 40
+        )        
+);
+
+/* Digital outputs. */
+$dout = new Sahara_Session_Element_MultiButtons($this->rigClient, 'dout',
+    array(
+        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut()' ),
+        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut()' ),
+        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut()' ),
+        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut()' ),
+        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut()' ),
+        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut()' ),
+        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut()' ),
+        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut()' ),
+    ),
+    array(
+        'orientation' => Sahara_Session_Element_MultiButtons::VERTICAL,
+        'top'         => 10,
+        'left'        => 40,
+        'width'       => 60,
+        'height'      => 60
+    )
+);
+
+
+?>
+
+<!-- Pump / inverter controls. -->
+<?=$control?>
+
+<!-- Paddle speed -->
+<div id="paddle-container" class="saharaform">
+    <div id='paddle-title'>Paddle Speed:</div>
+   <input id="paddle" type="text" name="paddle" /><span>&nbsp;Hz</span>
+   <?=$paddleSend?>
+</div>
+
+<!-- Digital input -->
+<div id='digital-input'>
+    <div id='digital-input-title'>Digital Inputs:</div>
+    
+    <table>
+        <tr>
+            <th>Chan&nbsp;&nbsp;</th>
+            <th>Status</th>
+        </tr>
+        <tr>
+            <td>0</td>
+            <td><div id='digital-status-0' class='led-status'></div></td>            
+        </tr>
+        <tr>
+            <td>1</td>
+            <td><div id='digital-status-1' class='led-status'></div></td>            
+        </tr>
+        <tr>
+            <td>2</td>
+            <td><div id='digital-status-2' class='led-status'></div></td>            
+        </tr>
+        <tr>
+            <td>3</td>
+            <td><div id='digital-status-3' class='led-status'></div></td>            
+        </tr>
+        <tr>
+            <td>4</td>
+            <td><div id='digital-status-4' class='led-status'></div></td>
+        </tr>
+        <tr>
+            <td>5</td>
+            <td><div id='digital-status-5' class='led-status'></div></td>            
+        </tr>
+        <tr>
+            <td>6</td>
+            <td><div id='digital-status-6' class='led-status'></div></td>            
+        </tr>
+        <tr>
+            <td>7</td>
+            <td><div id='digital-status-7' class='led-status'></div></td>            
+        </tr>
+    </table>
+</div>
+
+<div style="height:700px"></div>
