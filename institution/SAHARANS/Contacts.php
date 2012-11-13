@@ -36,7 +36,7 @@
  * @date 8th April 2010
  */
 
-class SAHARA_Contacts
+class SAHARANS_Contacts
 {
 	public function getContacts()
 	{
