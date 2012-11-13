@@ -1425,6 +1425,10 @@ Graphics.prototype.destroy = function() {
 function Camera(control) 
 {
 	Widget.call(this, control);
+	
+	this.width = 640;
+	this.height = 480;
+	this.url = 'http://shakermonitor1.eng.uts.edu.au:7070/camera3.swf';
 }
 Camera.prototype = new Widget;
 
@@ -1444,14 +1448,44 @@ Camera.prototype.init = function() {
 };
 
 Camera.prototype.clicked = function() {
-	alert("TODO Implement cameras");
-	// TODO Implement camera dialog. 
+	this.deploy();
 };
 
 Camera.prototype.deploy = function() {
-	// TODO camera deployment
+	$("body").append(
+			"<div id='camera-dialog' title='Camera'>" +
+			(!$.browser.msie ?
+				'<object type="application/x-shockwave-flash" data="' + this.url + '" ' +
+		 				'width="' +  this.width  + '" height="' + this.height + '">' +
+			        '<param name="movie" value="' + this.url+ '"/>' +
+			        '<a href="http://www.adobe.com/go/getflash">' +
+			        	'<img src="http://www.adobe.com/images/shared/download_buttons/get_flash_player.gif" ' +
+			        			'alt="Get Adobe Flash player"/>' +
+			        '</a>' +
+			    '</object>'
+			:
+				'<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000"  width="' + this.width + '" height="' + this.height + '"  id="camera-swf-movie">' +
+					'<param name="movie" value="' + this.url + '" />' +
+					'<a href="http://www.adobe.com/go/getflash">' +
+						'<img src="http://www.adobe.com/images/shared/download_buttons/get_flash_player.gif" alt="Get Adobe Flash player"/>' +
+					'</a>' +
+				'</object>'
+			) +
+			"</div>"
+	);
+	
+	$("#camera-dialog").dialog({
+		autoOpen: true,
+		closeOnEscape: true,
+		modal: false,
+		draggable: true,
+		width: 660,
+		height: 530,
+		minWidth:340,
+		minHeight: 260
+	});
 };
 
 Camera.prototype.undeploy = function() {
-	// TODO camera removal
+	$("#camera-dialog").dialog("close");
 };
