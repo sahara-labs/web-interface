@@ -36,6 +36,18 @@
  * @date 21st February 2010
  */
 
+/**
+ * Access control list definitions for user roles. 
+ * <br />
+ * Roles work in an inheritance structure will the following roles defined:
+ * <ol>
+ *     <li>User - (base role) - access to queue, reserve and use a rig.</li>
+ *     <li>Researcher - (inherits from User) - access to project management
+ *     form pages.</li>
+ *     <li>Academic - (inherits from Researcher) - access to reporting.M</li>
+ *     <li>Admin - (inherits from Academic) - access to manage rigs.</li>
+ * </ol>
+ */
 class Sahara_Acl extends Zend_Acl
 {
     /** Unauthorised user. */
@@ -46,6 +58,9 @@ class Sahara_Acl extends Zend_Acl
 
     /** Normal users. */
     const USER = 'USER';
+    
+    /** Research users. */
+    const RESEARCH = 'RESEARCH';
 
     /** Academic users. */
     const ACADEMIC = 'ACADEMIC';
@@ -75,6 +90,9 @@ class Sahara_Acl extends Zend_Acl
                                   'home' => array('index', 'list', 'listsession', 'download',
                                   				  'delete', 'deletesession')
                             );
+    
+    /** @var assoc array Pages a research user may access. */
+    protected $_researchPages  = array('research' => array('index'));
 
     /** @var assoc array Pages an academic user may access. */
     protected $_academicPages = array('reports' => array('index','getvalue','accessreport',
@@ -122,7 +140,8 @@ class Sahara_Acl extends Zend_Acl
         $this->addRole(new Zend_Acl_Role(self::UNAUTH));
         $this->addRole(new Zend_Acl_Role(self::DEMO), self::UNAUTH);
         $this->addRole(new Zend_Acl_Role(self::USER), self::DEMO);
-        $this->addRole(new Zend_Acl_Role(self::ACADEMIC), self::USER);
+        $this->addRole(new Zend_Acl_Role(self::RESEARCH), self::USER);
+        $this->addRole(new Zend_Acl_Role(self::ACADEMIC), self::RESEARCH);
         $this->addRole(new Zend_Acl_Role(self::ADMIN), self::ACADEMIC);
 
         /* Loads the permissions in a stack with each higher privilege role
@@ -134,6 +153,9 @@ class Sahara_Acl extends Zend_Acl
                 /* Falls through. */
             case self::ACADEMIC:
                 $this->_loadAclAssoc(self::ACADEMIC, $this->_academicPages);
+                /* Falls through. */
+            case self::RESEARCH:
+                $this->_loadAclAssoc(self::RESEARCH, $this->_researchPages);
                 /* Falls through. */
             case self::USER:
                 $this->_loadAclAssoc(self::USER, $this->_userPages);

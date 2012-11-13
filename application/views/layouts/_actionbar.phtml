@@ -39,6 +39,7 @@
 switch ($this->userRole)
 {
     case Sahara_Acl::USER:
+    case Sahara_Acl::RESEARCH:
         $actionMenu = array(
             'logout' => array('title' => 'Logout', 'script' => '_logout.phtml',
                     'icon' => $this->baseUrl('images/logout.png'), 'alt' => 'logout',
