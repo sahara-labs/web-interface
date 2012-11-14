@@ -10,13 +10,13 @@ $control = new Sahara_Session_Element_MultiButtons($this->rigClient, 'controls',
         	'title' => 'Pump',
             'tooltip' => 'Turn the pump on or off.',
 			'icon' => '/uts/wavetank/images/unknown.png',
-            'click' => ""
+            'click' => "setPump()"
         ),
         array(
         	'title' => 'Inverter',
             'tooltip' => 'Turn the inverter on or off.',
             'icon' => '/uts/wavetank/images/unknown.png',
-            'click' => ""
+            'click' => "setInverter()"
         )
     ),
     array(
@@ -35,7 +35,7 @@ $paddleSend = new Sahara_Session_Element_MultiButtons($this->rigClient, 'paddles
             		'title' => 'Set',
                     'icon' => '/uts/wavetank/images/set.png',
             		'tooltip' => 'Set the paddle frequency in Hz.',
-            		'click' => ""
+            		'click' => "setPaddle()"
             ),
         ),
         array(
@@ -49,14 +49,14 @@ $paddleSend = new Sahara_Session_Element_MultiButtons($this->rigClient, 'paddles
 /* Digital outputs. */
 $dout = new Sahara_Session_Element_MultiButtons($this->rigClient, 'dout',
     array(
-        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut()' ),
-        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut()' ),
-        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut()' ),
-        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut()' ),
-        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut()' ),
-        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut()' ),
-        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut()' ),
-        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut()' ),
+        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut(0)' ),
+        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut(1)' ),
+        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut(2)' ),
+        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut(3)' ),
+        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut(4)' ),
+        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut(5)' ),
+        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut(6)' ),
+        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut(7)' ),
     ),
     array(
         'orientation' => Sahara_Session_Element_MultiButtons::VERTICAL,
@@ -199,7 +199,7 @@ $aout = new Sahara_Session_Element_MultiButtons($this->rigClient, 'aout',
         </tr>
         <tr>
             <td class='heading-cell'>Value</td>
-            <?php for ($i = 0; $i < 9; $i++): ?><td>0.00</td><?php endfor; ?>
+            <?php for ($i = 0; $i < 9; $i++): ?><td id="analog-input-<?=$i?>">0.00</td><?php endfor; ?>
         </tr>
         <tr>
             <td class='heading-cell'>Chan</td>
@@ -207,7 +207,7 @@ $aout = new Sahara_Session_Element_MultiButtons($this->rigClient, 'aout',
         </tr>
         <tr>
             <td class='heading-cell'>Value</td>
-            <?php for ($i = 9; $i < 17; $i++): ?><td>0.00</td><?php endfor; ?>
+            <?php for ($i = 9; $i < 17; $i++): ?><td id="analog-input-<?=$i?>">0.00</td><?php endfor; ?>
         </tr>
     </table>
 </div>
@@ -231,3 +231,11 @@ $aout = new Sahara_Session_Element_MultiButtons($this->rigClient, 'aout',
 </div>
 
 <div style="height:700px"></div>
+
+<script type="text/javascript">
+$(document).ready(function() {
+	/* Start data updates. */
+	update([], true);
+});
+
+</script>
