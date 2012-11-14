@@ -49,7 +49,7 @@ function setDigitalOut(num)
 	
 	digitalOut[num] = !digitalOut[num];
 	$("#dout" + num + " img").attr("src", "/uts/wavetank/images/" + (digitalOut[num] ? "on_small" : "off_small") + ".png");
-	command("setDigialOutput", {chan: num, val: digitalOut[num]});
+	command("setDigitalOutput", {chan: num, val: digitalOut[num]});
 }
 
 var analogOut = [0, 0, 0, 0, 0, 0, 0, 0];
@@ -87,10 +87,10 @@ function update(data, isUpdate)
 	
 	for (k in data)
 	{
-		switch (k)
+		switch (data[k].name)
 		{
 		case 'pump':
-			var pump = "true" == data[k];
+			var pump = "true" == data[k].value;
 			if (!dataUpdate || pump != isPumpOn)
 			{
 				isPumpOn = pump;
@@ -99,7 +99,7 @@ function update(data, isUpdate)
 			break;
 			
 		case 'inverter':
-			var inv = "true" == data[k];
+			var inv = "true" == data[k].value;
 			if (!dataUpdate || inv != isInverterOn)
 			{
 				isInverterOn = inv;
@@ -108,7 +108,7 @@ function update(data, isUpdate)
 			break;
 			
 		case 'paddle':
-			var val = parseFloat(data[k]);
+			var val = parseFloat(data[k].value);
 			if (!dataUpdate || val != paddleSpeed)
 			{
 				paddleSpeed = val;
@@ -117,11 +117,13 @@ function update(data, isUpdate)
 			break;
 			
 		case 'din':
-			var i = 0, din = data[k].split(","), val;
+			var i = 0, din = data[k].value.replace(/[\s*|\[|\]]/g, "").split(","), val;
 			for (i in din)
 			{
-				val = din[i] == "true";
-				if (!dataUpadte || val != digitalIn[i])
+				if (i == 0) din[i] = din[i].substring(1);
+				if (i == din.length - 1) din[i] = din[i].substring(0, din[i].length - 1);
+				val = din[i].replace(/^\s+|\s+$/g, "").toLowerCase() == "true";
+				if (!dataUpdate || val != digitalIn[i])
 				{
 					digitalIn[i] = val;
 					$("#digital-status-" + i).removeClass(val ? 'led-off' : 'led-on')
@@ -131,10 +133,11 @@ function update(data, isUpdate)
 			break;
 			
 		case 'ain':
-			var i = 0, ain = data[k].split(","), val;
+			var i = 0, ain = data[k].value.split(","), val;
 			for (i in ain)
 			{
-				val = parseFloat(ain[i]);
+				if (i == 0) ain[i] = ain[i].substr(1);
+				val = decimal(parseFloat(ain[i]));
 				if (!dataUpdate || val != analogIn[i])
 				{
 					analogIn[i] = val;
@@ -144,23 +147,25 @@ function update(data, isUpdate)
 			break;
 			
 		case 'dout':
-			var i = 0, dout = data[k].split(","), val;
+			var i = 0, dout = data[k].value.replace(/[\s*|\[|\]]/g, "").split(","), val;
 			for (i in dout)
 			{
 				val = dout[i] == "true";
+				
 				if (!dataUpdate || val != digitalOut[i])
 				{
 					digitalOut[i] = val;
-					$("#dout" + num + " img").attr("src", "/uts/wavetank/images/" + (digitalOut[num] ? "on_small" : "off_small") + ".png");
+					$("#dout" + i + " img").attr("src", "/uts/wavetank/images/" + (digitalOut[i] ? "on_small" : "off_small") + ".png");
 				}
 			}
 			break;
 			
 		case 'aout':
-			var i = 0, aout = data[k].split(","), val;
+			var i = 0, aout = data[k].value.split(","), val;
 			for (i in aout)
 			{
-				val = parseFloat(aout[i]);
+				if (i == 0) aout[i] = aout[i].substr(1);
+				val = decimal(parseFloat(aout[i]));
 				if (!dataUpdate || val != analogOut[i])
 				{
 					analogOut[i] = val;
@@ -197,4 +202,12 @@ function command(action, params)
 			if (typeof resp == "object") update(resp);
 		}
 	);
+}
+
+function decimal(val)
+{
+	val *= 100;
+	val = Math.round(val);
+	val = val / 100;
+	return val;
 }
