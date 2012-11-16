@@ -362,6 +362,7 @@ PowerLab.prototype.setMode = function(mode) {
 		this.widgets.push(o);
 		
 		/* --- Miscellaneous things on the page ----------------------------------------------------------------------- */
+		this.widgets.push(new AlarmIndicator(this));
 		this.widgets.push(new Graphics(this));
 		this.widgets.push(new Camera(this));
 		break;
@@ -550,6 +551,7 @@ PowerLab.prototype.setMode = function(mode) {
 		this.widgets.push(o);
 		
 		/* --- Miscellanous elements. ----------------------------------------- */
+		this.widgets.push(new AlarmIndicator(this));
 		this.widgets.push(new Graphics(this));
 		this.widgets.push(new Camera(this));
 		break;
@@ -1422,9 +1424,26 @@ BackButton.prototype.enable = function(enable) {
 	}
 };
 
+/** ---------------------------------------------------------------------------
+ *  -- Alarm indicator                                                       --
+ *  --------------------------------------------------------------------------- */
+function AlarmIndicator(control)
+{
+	Widget.call(this, control);
+}
+
+AlarmIndicator.prototype = new Widget;
+
+AlarmIndicator.prototype.init = function() {
+	
+};
+
+AlarmIndicator.prototype.destroy = function() {
+	
+};
 
 /** ---------------------------------------------------------------------------
- *  -- Lab 1 Graphics                                                        --
+ *  -- Graphics                                                              --
  *  --------------------------------------------------------------------------- */
 function Graphics(control)
 {
