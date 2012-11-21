@@ -38,6 +38,7 @@ PowerLab.prototype.setMode = function(mode) {
 	case 0: // Lab selection
 		this.setTitle("Power System Lab");
 		this.widgets.push(new SwitchMode(this));
+		this.widgets.push(new Camera(this));
 		break;
 	
 	case 1: // Lab 1 mode
@@ -1430,12 +1431,51 @@ BackButton.prototype.enable = function(enable) {
 function AlarmIndicator(control)
 {
 	Widget.call(this, control);
+	
+	/* Master alarm. */
+	this.masterAlarm = false;
+	
+	/* Other alarms. */
+	this.shutdown = false;
+	this.currentLevel1 = false;
+	this.currentLevel3 = false;
+	this.excitationCircuit = false;
+	this.inverter = false;
 }
 
 AlarmIndicator.prototype = new Widget;
 
 AlarmIndicator.prototype.init = function() {
+	this.control.$canvas.append(
+		"<div id='alarm-indicator' class='button button-unknown-state'>" +
+			"<div id='master-alarm-led' class='alarm-led alarm-off'></div>" +
+			"No Alarms" +
+		"</div>"
+	);
 	
+	var thiz = this;
+	$("#alarm-indicator").click(function() { thiz.showAlarms(); });
+};
+
+AlarmIndicator.prototype.update = function(data) {
+	var val;
+	
+	if (data["is-alarmed"] && !(val = ("true" == data["is-alarmed"])) ^ !this.masterAlarm)
+	{
+		/* Master alarm changed status. */
+		this.masterAlarm = val;
+	}
+	
+	/* Other alarm indicators. */
+	if (data["shutdown-alarm"]) this.shutdown = data["shutdown-alarm"] == "true";
+	if (data["current-level-1-fault"]) this.currentLevel1 = data["current-level-1-fault"] == "true";
+	if (data["current-level-3-fault"]) this.currentLevel3 = data["current-level-3-fault"] == "true";
+	if (data["excitation-circuit-alarm"]) this.excitationCircuit = data["excitation-circuit-alarm"] == "true";
+	if (data["inverter-alarm"]) this.inverter = data["inverter-alarm"] == "true";
+};
+
+AlarmIndicator.prototype.showAlarms = function() {
+	alert("Show alarms.");
 };
 
 AlarmIndicator.prototype.destroy = function() {
