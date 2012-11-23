@@ -5,6 +5,7 @@
 
 $this->headScript()->appendFile($this->baseUrl('uts/power/power.js'));
 $this->headLink()->appendStylesheet($this->baseUrl('uts/power/power.css'));
+$this->headLink()->appendStylesheet($this->baseUrl('uts/power/power-ie-lt9.css'), 'screen', 'IE lt 9');
 ?>
 
 <div id='power-systems-lab'>
