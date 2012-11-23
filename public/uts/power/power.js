@@ -683,7 +683,7 @@ Widget.prototype.destroy = function() {
  * Adds a message to the page.
  * 
  * @param message the message to display
- * @param type the message type, 'error', 'info'
+ * @param type the message type, 'error', 'info', 'backing'
  * @param left left absolute coordinate
  * @param top top absolute coordinate
  * @param pos the arrow position, 'left', 'right', 'top', 'bottom'
@@ -1441,6 +1441,10 @@ function AlarmIndicator(control)
 	this.currentLevel3 = false;
 	this.excitationCircuit = false;
 	this.inverter = false;
+	
+	this.animate = false;
+	this.depth = 0;
+	this.increasing = true;
 }
 
 AlarmIndicator.prototype = new Widget;
@@ -1448,13 +1452,15 @@ AlarmIndicator.prototype = new Widget;
 AlarmIndicator.prototype.init = function() {
 	this.control.$canvas.append(
 		"<div id='alarm-indicator' class='button button-unknown-state'>" +
-			"<div id='master-alarm-led' class='alarm-led alarm-off'></div>" +
-			"No Alarms" +
+			"<div class='alarm-led alarm-off'></div>" +
+			"<div class='alarm-text'>No Alarm</div>" +
 		"</div>"
 	);
 	
+	this.$w = $("#alarm-indicator");
+	
 	var thiz = this;
-	$("#alarm-indicator").click(function() { thiz.showAlarms(); });
+	this.$w.click(function() { thiz.displayAlarms(); });
 };
 
 AlarmIndicator.prototype.update = function(data) {
@@ -1464,6 +1470,7 @@ AlarmIndicator.prototype.update = function(data) {
 	{
 		/* Master alarm changed status. */
 		this.masterAlarm = val;
+		this.updateDisplay();
 	}
 	
 	/* Other alarm indicators. */
@@ -1474,13 +1481,68 @@ AlarmIndicator.prototype.update = function(data) {
 	if (data["inverter-alarm"]) this.inverter = data["inverter-alarm"] == "true";
 };
 
-AlarmIndicator.prototype.showAlarms = function() {
-	alert("Show alarms.");
+AlarmIndicator.prototype.updateDisplay = function() {
+	this.removeMessages();
+	this.$w.children(".alarm-led").removeClass("alarm-on alarm-off");
+
+	if (this.masterAlarm) 
+	{
+		this.$w.children(".alarm-text").empty().append("Alarm!");
+		this.$w.children(".alarm-led").addClass("alarm-on");
+		
+		/* Start the animation of the error LED. */
+		this.animate = true;
+		this.depth = 0;
+		this.increasing = true;
+		this.animateLed();
+	}
+	else 
+	{
+		this.$w.children(".alarm-text").empty().append("No Alarm");
+		this.$w.children(".alarm-led").addClass("alarm-off");
+		
+		/* Clear animations. */
+		this.$w.children(".alarm-led").css("box-shadow", "0 0 0 red");
+		this.animate = false;
+	}
 };
 
-AlarmIndicator.prototype.destroy = function() {
+AlarmIndicator.prototype.animateLed = function() {
+	/* Alarm has cleared, no need to continue animating. */
+	if (!this.animate) return;
 	
+	/* If we have reached a limit inverse the direction. */
+	if (this.depth == -1 || this.depth == 7) this.increasing = !this.increasing;
+	
+	this.$w.children(".alarm-on").css("box-shadow", "0 0 " + (this.increasing ? this.depth++ : this.depth--) + "px #F75C5C");
+	$("#alarm-list .alarm-on").css("box-shadow", "0 0 " + this.depth + "px red");
+	
+	var thiz = this;
+	setTimeout(function() { thiz.animateLed(); }, 100);
 };
+
+AlarmIndicator.prototype.displayAlarms = function() {
+	this.removeMessages();
+	
+	if (this.masterAlarm)
+	{
+		this.addMessage(
+				"<ul id='alarm-list'>" +
+					"<li><div class='alarm-led " + (this.shutdown ? "alarm-on" : "alarm-off") + "'></div>Shutdown</li>" +
+					"<li><div class='alarm-led " + (this.currentLevel1 ? "alarm-on" : "alarm-off") + "'></div>Overcurrent Level 1</li>" +
+					"<li><div class='alarm-led " + (this.currentLevel3 ? "alarm-on" : "alarm-off") + "'></div>Overcurrent Level 3</li>" +
+					"<li><div class='alarm-led " + (this.excitationCircuit ? "alarm-on" : "alarm-off") + "'></div>Excitation Circuit</li>" +
+					"<li><div class='alarm-led " + (this.inverter ? "alarm-on" : "alarm-off") + "'></div>Inverter</li>" +
+				"</ul>", 
+				"backing", 360, 752, "right-bottom");
+	}
+	else
+	{
+		/* No alarms are active. */
+		this.addMessage("No alarms are active.", "info", 350, 870, "right");
+	}
+};
+
 
 /** ---------------------------------------------------------------------------
  *  -- Graphics                                                              --
