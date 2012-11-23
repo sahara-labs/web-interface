@@ -1211,6 +1211,10 @@
 	background-color: #F8EC86;
 }
 
+#power-systems-lab .message-box-backing {
+	background-color: #333333;
+}
+
 #power-systems-lab .message-box-text {
 	padding: 6px;
 	color: #EEEEEE;
@@ -1240,8 +1244,13 @@
 	background-color: #F8EC86;
 }
 
+#power-systems-lab .message-box-backing .message-box-arrow-line {
+	background-color: #333333;
+}
+
 #power-systems-lab .message-box-arrow-left .message-box-arrow-line, 
-#power-systems-lab .message-box-arrow-right .message-box-arrow-line {
+#power-systems-lab .message-box-arrow-right .message-box-arrow-line,
+#power-systems-lab .message-box-arrow-right-bottom .message-box-arrow-line {
 	border-top: 2px solid #EEEEEE;
 	border-bottom: 2px solid #EEEEEE;
 	width: 1px;
@@ -1306,49 +1315,62 @@
 	top: 5px;
 }
 
-#power-systems-lab .message-box-arrow-right .message-box-arrow-line0 {
+#power-systems-lab .message-box-arrow-right-bottom {
+	right: -10px;
+	bottom: 5px;
+}
+
+#power-systems-lab .message-box-arrow-right .message-box-arrow-line0,
+#power-systems-lab .message-box-arrow-right-bottom .message-box-arrow-line0 {
 	height: 12px;
 	left: 2px;
 	top: -1px;
 }
 
-#power-systems-lab .message-box-arrow-right .message-box-arrow-line1 {
+#power-systems-lab .message-box-arrow-right .message-box-arrow-line1,
+#power-systems-lab .message-box-arrow-right-bottom .message-box-arrow-line1 {
 	height: 10px;
 	left: 3px;
 	top: 0;
 }
 
-#power-systems-lab .message-box-arrow-right .message-box-arrow-line2 {
+#power-systems-lab .message-box-arrow-right .message-box-arrow-line2,
+#power-systems-lab .message-box-arrow-right-bottom .message-box-arrow-line2 {
 	height: 8px;
 	left: 4px;
 	top: 1px;
 }
 
-#power-systems-lab .message-box-arrow-right .message-box-arrow-line3 {
+#power-systems-lab .message-box-arrow-right .message-box-arrow-line3,
+#power-systems-lab .message-box-arrow-right-bottom .message-box-arrow-line3 {
 	height: 6px;
 	left: 5px;
 	top: 2px;
 }
 
-#power-systems-lab .message-box-arrow-right .message-box-arrow-line4 {
+#power-systems-lab .message-box-arrow-right .message-box-arrow-line4,
+#power-systems-lab .message-box-arrow-right-bottom .message-box-arrow-line4 {
 	height: 4px;
 	left: 6px;
 	top: 3px;
 }
 
-#power-systems-lab .message-box-arrow-right .message-box-arrow-line5 {
+#power-systems-lab .message-box-arrow-right .message-box-arrow-line5,
+#power-systems-lab .message-box-arrow-right-bottom .message-box-arrow-line5 {
 	height: 2px;
 	left: 7px;
 	top: 4px;
 }
 
-#power-systems-lab .message-box-arrow-right .message-box-arrow-line6 {
+#power-systems-lab .message-box-arrow-right .message-box-arrow-line6,
+#power-systems-lab .message-box-arrow-right-bottom .message-box-arrow-line6 {
 	height: 0px;
 	left: 8px;
 	top: 5px;
 }
 
-#power-systems-lab .message-box-arrow-right .message-box-arrow-line7 {
+#power-systems-lab .message-box-arrow-right .message-box-arrow-line7,
+#power-systems-lab .message-box-arrow-right-bottom .message-box-arrow-line7 {
 	height: 0px;
 	left: 9px;
 	top: 6px;
@@ -1443,7 +1465,7 @@
 
 #camera-button span {
 	float: left;
-	margin-right: 5px;
+	margin-right: 10px;
 }
 
 /* ----------------------------------------------------------------------------
@@ -1452,22 +1474,30 @@
 #alarm-indicator {
 	position: absolute;
 	top: 870px;
-	right: 10px;
+	right: 15px;
+	width: 100px;
 }
 
-#master-alarm-led {
+#alarm-indicator div {
 	float: left;
-	margin-top: 2px;
-	margin-right: 10px;
+}
+
+#alarm-indicator .alarm-text {
+	margin: 0 auto;
+	font-family: ‘Lucida Console’,Monaco,'Bitstream Vera Sans Mono',monospace;
+}
+
+#alarm-indicator .alarm-led {
+	margin: 1px 5px 0 5px;
 }
 
 .alarm-led {
+	position: relative;
 	width: 15px;
 	height: 15px;
-	border-radius: 8px;
-	border: 1px solid #222;
+	border-radius: 9px;
 	box-shadow: 0 0 2px #AAA;
-	
+	border: 1px solid #AAA;
 }
 
 .alarm-off {
@@ -1478,3 +1508,25 @@
 	background-image: -o-radial-gradient(circle, #EFEFEF 25%, #AAA);
 	background-image: -ms-radial-gradient(circle, #EFEFEF 25%, #AAA);
 }
+
+.alarm-on {
+	background-color: #F75C5C;
+	border: 1px solid #BB1E1E;	
+}
+
+#alarm-list {
+	list-style: none;
+	padding: 5px;
+}
+
+#alarm-list li {
+	display: block;
+	clear: both;
+	height: 24px;
+}
+
+#alarm-list .alarm-led {
+	float: left;
+	margin-right: 5px;
+}
+
