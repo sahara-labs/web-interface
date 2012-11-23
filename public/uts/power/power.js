@@ -44,7 +44,7 @@ PowerLab.prototype.setMode = function(mode) {
 		this.setTitle("Isolated Single Generator Operation");
 		this.widgets.push(new BackButton(this));
 		
-		/* --- Controls --------------------------------------------------------------------------------------- */
+		/* --- Circuit controls --------------------------------------------------------------------------------------- */
 		/* Generator on / off. */
 		o = new Button(this, "g-on", "G", "circ-button");
 		o.clicked = function() {
@@ -253,28 +253,63 @@ PowerLab.prototype.setMode = function(mode) {
 		};
 		this.widgets.push(o);
 			
-		/* --- Meters ---------------------------------------------------------------------------------------- */
+		/* --- Meters ------------------------------------------------------------------------------------------------- */
 		this.widgets.push(new LCD(this, "active-power",     "Active Power",   "W",   1, "teal-color"));
 		this.widgets.push(new LCD(this, "apparent-power",   "Apparent Power", "VA",  1, "green-color"));
 		this.widgets.push(new LCD(this, "ln-voltage",       "L - N Voltage",  "V",   1, "teal-color"));		
 		this.widgets.push(new LCD(this, "reactive-power",   "Reactive Power", "Var", 1, "red-color"));
-		this.widgets.push(new LCD(this, "active-factor",    "Active Factor",  "%",   2, "yellow-color"));
 		this.widgets.push(new LCD(this, "line-frequency",   "Line Frequency", "Hz",  1, "red-color"));
 		this.widgets.push(new LCD(this, "line-current",     "Line Current",   "A",   3, "yellow-color"));
 		this.widgets.push(new LCD(this, "active-power-2",   "Active Power",   "W",   1, "teal-color"));
 		this.widgets.push(new LCD(this, "apparent-power-2", "Apparent Power", "VA",  1, "green-color"));
 		this.widgets.push(new LCD(this, "ln-voltage-2",     "L - N Voltage",  "V",   1, "teal-color"));
 		this.widgets.push(new LCD(this, "reactive-power-2", "Reactive Power", "Var", 2, "red-color"));
-		this.widgets.push(new LCD(this, "active-factor-2",  "Active Factor",  "%",   3, "yellow-color"));
 		this.widgets.push(new LCD(this, "line-current-2",   "Line Current",   "A",   3, "red-color"));
 		
+		o = new LCD(this, "active-factor",    "Active Factor",  "Lg",   2, "yellow-color");
+		o.update = function(data) {
+			if (data[this.id] != undefined && !this.maskServer)
+			{
+				this.setValue(parseFloat(data[this.id]));
+				
+				/* The unit is dependant on the reactive power sign. */
+				if (parseFloat(data["reactive-power"]) >= 0) this.setUnits("Lg");
+				else this.setUnits("Ld");
+			}
+		};
+		this.widgets.push(o);
+		
+		o = new LCD(this, "active-factor-2",  "Active Factor",  "Lg",   2, "yellow-color");
+		o.update = function(data) {
+			if (data[this.id] != undefined && !this.maskServer)
+			{
+				this.setValue(parseFloat(data[this.id]));
+				
+				/* The unit is dependant on the reactive power 2 sign. */
+				if (parseFloat(data["reactive-power-2"]) >= 0) this.setUnits("Lg");
+				else this.setUnits("Ld");
+			}
+		};
+		this.widgets.push(o);
+		
+		/* --- Value controls ----------------------------------------------------------------------------------------- */
 		/* Set voltage indicator and buttons. */
 		o = new LCD(this, "set-voltage",      "Set Voltage",    "V",   1, "yellow-color");
 		this.widgets.push(o);
+		
 		o = new UpDownButton(this, "set-voltage-buttons", o, 0.1, true);
+		o.checkPreconditions = function() {
+			if (this.control.data["g-on"] == "false")
+			{
+				/* INTERLOCK: The generator must be on before the set voltage can be changed. */
+				this.addMessage("Turn generator on before setting the voltage.", "error", 10, 150, "top-left");
+				return false;
+			}
+			else return true;
+		};
 		o.checkRange = function(val) {
-			if       (val < 200 || (this.control.data["closed-loop"] == "true" && val < 210)) return -1; // INTERLOCK: Value too small
-			else if (val > 270 || (this.control.data["closed-loop"] == "true" && val > 250)) return 1;   // INTERLOCK: Value too large     
+			if      (val < 200) return -1; // INTERLOCK: Value too small
+			else if (val > 260) return 1;  // INTERLOCK: Value too large     
 			else return 0; // Value in range
 		};
 		this.widgets.push(o);
@@ -282,10 +317,20 @@ PowerLab.prototype.setMode = function(mode) {
 		/* Set frequency indicator and buttons. */
 		o = new LCD(this, "set-frequency",    "Set Frequency",  "Hz",  1, "teal-color");
 		this.widgets.push(o);
+		
 		o = new UpDownButton(this, "set-frequency-buttons", o, 0.1, true);
+		o.checkPreconditions = function() {
+			if (this.control.data["g-on"] == "false")
+			{
+				/* INTERLOCK: The generator must be on before the set frequency can be changed. */
+				this.addMessage("Turn generator on before setting the frequency.", "error", 10, 150, "top-left");
+				return false;
+			}
+			else return true;
+		};
 		o.checkRange = function(val) {
-			if (val < 45) return -1;      // INTERLOCK: Value too small
-			else if (val > 55) return 1; // INTERLOCK: Value too large
+			if (val < 45) return -1;     // INTERLOCK: Value too small
+			else if (val > 53) return 1; // INTERLOCK: Value too large
 			else return 0;               // Value in range
 		};
 		this.widgets.push(o);
@@ -294,6 +339,10 @@ PowerLab.prototype.setMode = function(mode) {
 		o = new Button(this, "default-settings", "Default Settings");
 		o.setOn = function(on) { };
 		o.clicked = function() {
+			/* If the generator is off, the voltage and frequency will already 
+			 * be at default values. */
+			if (this.control.data["g-on"] == "false") return;
+			
 			var thiz = this, i = 0;
 			
 			/* Updated the displayed values. */
@@ -312,7 +361,7 @@ PowerLab.prototype.setMode = function(mode) {
 		};
 		this.widgets.push(o);
 		
-		/* --- Miscellaneous things on the page. */
+		/* --- Miscellaneous things on the page ----------------------------------------------------------------------- */
 		this.widgets.push(new Graphics(this));
 		this.widgets.push(new Camera(this));
 		break;
@@ -321,7 +370,7 @@ PowerLab.prototype.setMode = function(mode) {
 		this.setTitle("Generator / Mains Parallel Operation");
 		this.widgets.push(new BackButton(this));
 		
-		/* --- Controls ------------------------------------------------------- */
+		/* --- Circuit controls --------------------------------------------------------------------------------------- */
 		/* Generator. */
 		o = new Button(this, "g-on", "G", "circ-button");
 		o.clicked = function() {
@@ -375,7 +424,7 @@ PowerLab.prototype.setMode = function(mode) {
 		};
 		this.widgets.push(o);
 		
-		/* --- Meters. -------------------------------------------------------- */
+		/* --- Meters. ------------------------------------------------------------------------------------------------ */
 		this.widgets.push(new LCD(this, "import-export-reactive-power", "Q (VAR)", null, 0, "amber-color"));
 		this.widgets.push(new LCD(this, "import-export-active-power",   "P (W)",   null, 0, "amber-color"));
 		
@@ -383,8 +432,20 @@ PowerLab.prototype.setMode = function(mode) {
 		this.widgets.push(new LCD(this, "line-current-3",   "L1 Current",     "A",   3, "yellow-color"));
 		this.widgets.push(new LCD(this, "apparent-power-3-scaled", "Apparent Power", "KVA",  2, "yellow-color"));
 		this.widgets.push(new LCD(this, "reactive-power-3-scaled", "Reactive Power", "KVar", 2, "yellow-color"));
-		this.widgets.push(new LCD(this, "active-factor-3",  "Active Factor",  "%",   2, "yellow-color"));
 		this.widgets.push(new LCD(this, "active-power-3-scaled",   "Active Power",   "KW",  2, "yellow-color"));
+
+		o = new LCD(this, "active-factor-3",  "Active Factor",  "Lg",   2, "yellow-color");
+		this.widgets.push(o);
+		o.update = function(data) {
+			if (data[this.id] != undefined && !this.maskServer)
+			{
+				this.setValue(parseFloat(data[this.id]));
+				
+				/* The unit is dependant on the reactive power 3 sign. */
+				if (parseFloat(data["reactive-power-3"]) >= 0) this.setUnits("Lg");
+				else this.setUnits("Ld");
+			}
+		};
 		
 		/* Power Meter 3. */
 		this.widgets.push(new MultiLCD(this, "gcb-line-frequency", "Frequency (Hz)",    { 'main-frequency': 'ML',  'line-frequency': 'G1' }, 1, "teal-color"));
@@ -394,28 +455,70 @@ PowerLab.prototype.setMode = function(mode) {
 		this.widgets.push(new LCD(this, "active-power-2",   "Active Power",   "W",   0, "red-color"));
 		this.widgets.push(new LCD(this, "reactive-power-2", "Reactive Power", "Var", 0, "red-color"));
 		this.widgets.push(new LCD(this, "apparent-power-2", "Apparent Power", "VA",  0, "red-color"));
-		this.widgets.push(new LCD(this, "active-factor-2",  "Active Factor",  "%",   2, "red-color"));
 		this.widgets.push(new LCD(this, "ln-voltage-2",     "L - N Voltage",  "V",   1, "red-color"));
 		this.widgets.push(new LCD(this, "line-current-2",   "Line Current",   "A",   2, "red-color"));
 		
-		/* Set power factor indicator and buttons. */
-		o = new LCD(this, "pow-factor",     "PF: 0.8-0.995",  "%",   3, "yellow-color");
+		o = new LCD(this, "active-factor-2",  "Active Factor",  "Lg",   2, "red-color");
 		this.widgets.push(o);
+		o.update = function(data) {
+			if (data[this.id] != undefined && !this.maskServer)
+			{
+				this.setValue(parseFloat(data[this.id]));
+				
+				/* The unit is dependant on the reactive power 2 sign. */
+				if (parseFloat(data["reactive-power-2"]) >= 0) this.setUnits("Lg");
+				else this.setUnits("Ld");
+			}
+		};
+		
+		/* Set power factor indicator and buttons. */
+		o = new LCD(this, "pow-factor",     "PF: 0.8 - 0.95",  "Lg",   3, "yellow-color");
+		this.widgets.push(o);
+		o.update = function(data) {
+			if (data[this.id] != undefined && !this.maskServer)
+			{
+				this.setValue(parseFloat(data[this.id]));
+				
+				/* The unit is dependant on the reactive power 2 sign. */
+				if (parseFloat(data["reactive-power-3"]) >= 0) this.setUnits("Lg");
+				else this.setUnits("Ld");
+			}
+		};
+		
 		o = new UpDownButton(this, "pow-factor-buttons", o, 0.001, false);
+		o.checkPreconditions = function() {
+			if (this.control.data["g-on"] == "false")
+			{
+				/* INTERLOCK: The generator must be on before the power factor can be changed. */
+				this.addMessage("Turn generator on before setting the power factor.", "error", -160, 285, "top-left");
+				return false;
+			}
+			else return true;
+		};
 		o.checkRange = function(val) {
 			if (val < 0.8) return -1;       // INTERLOCK: Value too small
-			else if (val > 0.955) return 1; // INTERLOCK: Value too large
+			else if (val > 0.95) return 1; // INTERLOCK: Value too large
 			else return 0; 
 		};
 		this.widgets.push(o);
 		
 		/* Set kilowatt indicator and buttons. */
-		o = new LCD(this, "load-point",      "KW: 0.8-1.7",    "KW",  2, "yellow-color");
+		o = new LCD(this, "load-point",      "KW: 0.8-1.6",    "KW",  2, "yellow-color");
 		this.widgets.push(o);
+		
 		o = new UpDownButton(this, "load-point-buttons", o, 0.01, false);
+		o.checkPreconditions = function() {
+			if (this.control.data["g-on"] == "false")
+			{
+				/* INTERLOCK: The generator must be on before the load point can be changed. */
+				this.addMessage("Turn generator on before setting the load point.", "error", -160, 285, "top-left");
+				return false;
+			}
+			else return true;
+		};
 		o.checkRange = function(val) {
 			if (val < 0.8) return -1;      // INTERLOCK: Value too small
-			else if (val > 1.7) return 1;  // INTERLOCK: Value too large
+			else if (val > 1.6) return 1;  // INTERLOCK: Value too large
 			else return 0; 
 		};
 		this.widgets.push(o);
@@ -424,6 +527,10 @@ PowerLab.prototype.setMode = function(mode) {
 		o = new Button(this, "default-settings-2", "Default Settings");
 		o.setOn = function(on) { };
 		o.clicked = function() {
+			/* If the generator is not on, the default settings will already 
+			 * have been set. */
+			if (this.control.data["g-on"] == "false") return;
+			
 			var thiz = this, i = 0;
 			
 			/* Updated the displayed values. */
@@ -830,8 +937,7 @@ LCD.prototype.setValue = function(num) {
 		}
 		else
 		{
-			/* Unable to fit negative symbol, error out. */
-			// FIXME 
+			/* FIXME: Unable to fit negative symbol, error out. */
 //			throw "Unable to add negative symbol of value of " + this.title + ", value: " + this.value + 
 //					", scale: " + this.scale;
 		}
@@ -897,6 +1003,14 @@ LCD.prototype.setDigit = function(digit, val) {
 		{
 			$n.removeClass("ssd-seg-on");
 		}
+	}
+};
+
+LCD.prototype.setUnits = function(u) {
+	if (u != this.units)
+	{
+		this.units = u;
+		this.$w.children(".lcd-unit").empty().append(this.units);
 	}
 };
 
@@ -1155,6 +1269,10 @@ UpDownButton.prototype.init = function() {
 		
 		thiz.removeMessages();
 		
+		/* Check whether there are any enabled preconditions preventing the 
+		 * changing of values. */
+		if (!thiz.checkPreconditions()) return;
+		
 		thiz.isChanging = true;
 		thiz.numChanged = 0;
 		thiz.startVal = thiz.lcd.value;
@@ -1226,6 +1344,13 @@ UpDownButton.prototype.changeVal = function() {
 		}, 100);
 	}
 };
+
+/**
+ * Checks if there are any preconditions preventing this buttons values 
+ * being changed. Returns true if the value can successfully be changed,
+ * false otherwise.
+ */
+UpDownButton.prototype.checkPreconditions = function() { return true; };
 
 /** 
  * Checks a value to ensure it is in an acceptable range. Returns 0 if the value 
