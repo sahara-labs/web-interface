@@ -1,0 +1,241 @@
+<?php
+
+$this->headLink()->appendStylesheet($this->baseUrl('/uts/wavetank/wavetank.css'));
+$this->headScript()->appendFile($this->baseUrl('/uts/wavetank/wavetank.js'));
+
+/* Pump and inverter controls. */
+$control = new Sahara_Session_Element_MultiButtons($this->rigClient, 'controls',
+    array(
+        array(
+        	'title' => 'Pump',
+            'tooltip' => 'Turn the pump on or off.',
+			'icon' => '/uts/wavetank/images/unknown.png',
+            'click' => "setPump()"
+        ),
+        array(
+        	'title' => 'Inverter',
+            'tooltip' => 'Turn the inverter on or off.',
+            'icon' => '/uts/wavetank/images/unknown.png',
+            'click' => "setInverter()"
+        )
+    ),
+    array(
+        'orientation' => Sahara_Session_Element_MultiButtons::VERTICAL,
+        'top'         => 10,
+        'left'        => 40,
+        'width'       => 60,
+        'height'      => 60
+    )
+);
+
+/* Paddle speed submit button. */
+$paddleSend = new Sahara_Session_Element_MultiButtons($this->rigClient, 'paddlesend', 
+        array(
+            array(
+            		'title' => 'Set',
+                    'icon' => '/uts/wavetank/images/set.png',
+            		'tooltip' => 'Set the paddle frequency in Hz.',
+            		'click' => "setPaddle()"
+            ),
+        ),
+        array(
+           'top'         => 10,
+           'left'        => 150,
+           'width'       => 40,
+           'height'      => 40
+        )        
+);
+
+/* Digital outputs. */
+$dout = new Sahara_Session_Element_MultiButtons($this->rigClient, 'dout',
+    array(
+        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut(0)' ),
+        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut(1)' ),
+        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut(2)' ),
+        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut(3)' ),
+        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut(4)' ),
+        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut(5)' ),
+        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut(6)' ),
+        array('title' => '', 'icon' => '/uts/wavetank/images/unknown_small.png',  'click' => 'setDigitalOut(7)' ),
+    ),
+    array(
+        'orientation' => Sahara_Session_Element_MultiButtons::VERTICAL,
+        'top'         => 55,
+        'left'        => 75,
+        'width'       => 15,
+        'height'      => 15
+    )
+);
+
+/* Analog output submit button. */
+$aout = new Sahara_Session_Element_MultiButtons($this->rigClient, 'aout',
+		array(
+				array(
+						'title' => 'Set',
+						'icon' => '/uts/wavetank/images/set.png',
+						'tooltip' => 'Set the analog outputs.',
+						'click' => "setAnalogOutputs()"
+				),
+		),
+		array(
+				'top'         => 40,
+				'left'        => 470,
+				'width'       => 40,
+				'height'      => 40
+		)
+);
+?>
+
+<!-- Camera box -->
+<div id='camera-container' class='block-container'>
+    <div class='block-title'>Camera:</div>
+    <div id='camera'></div>
+</div>
+
+<!-- Pump / inverter controls. -->
+<?=$control?>
+
+<!-- Paddle speed -->
+<div id="paddle-container" class="block-container saharaform">
+    <div class='block-title'>Paddle Speed:</div>
+   <input id="paddle" type="text" name="paddle" /><span>&nbsp;Hz</span>
+   <?=$paddleSend?>
+</div>
+
+<!-- Digital inputs. -->
+<div id='digital-input' class='block-container'>
+    <div class='block-title'>Digital Inputs:</div>
+    <table>
+        <tr>
+            <th>Chan&nbsp;&nbsp;</th>
+            <th>Status</th>
+        </tr>
+        <tr>
+            <td>0</td>
+            <td><div id='digital-status-0' class='led-status'></div></td>            
+        </tr>
+        <tr>
+            <td>1</td>
+            <td><div id='digital-status-1' class='led-status'></div></td>            
+        </tr>
+        <tr>
+            <td>2</td>
+            <td><div id='digital-status-2' class='led-status'></div></td>            
+        </tr>
+        <tr>
+            <td>3</td>
+            <td><div id='digital-status-3' class='led-status'></div></td>            
+        </tr>
+        <tr>
+            <td>4</td>
+            <td><div id='digital-status-4' class='led-status'></div></td>
+        </tr>
+        <tr>
+            <td>5</td>
+            <td><div id='digital-status-5' class='led-status'></div></td>            
+        </tr>
+        <tr>
+            <td>6</td>
+            <td><div id='digital-status-6' class='led-status'></div></td>            
+        </tr>
+        <tr>
+            <td>7</td>
+            <td><div id='digital-status-7' class='led-status'></div></td>            
+        </tr>
+    </table>
+</div>
+
+<!-- Digital outputs. -->
+<div id='digital-output' class='block-container'>
+    <div class='block-title'>Digital Outputs:</div>
+    <table>
+        <tr>
+            <th>Chan&nbsp;&nbsp;</th>
+            <th>Status</th>
+        </tr>
+        <tr>
+            <td>0</td>
+            <td>&nbsp;</td>            
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>&nbsp;</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td>&nbsp;</td>
+        </tr>
+        <tr>
+            <td>3</td>
+            <td>&nbsp;</td>
+        </tr>
+        <tr>
+            <td>4</td>
+            <td>&nbsp;</td>
+        </tr>
+        <tr>
+            <td>5</td>
+            <td>&nbsp;</td>
+        </tr>
+        <tr>
+            <td>6</td>
+            <td>&nbsp;</td>
+        </tr>
+        <tr>
+            <td>7</td>
+            <td>&nbsp;</td>
+        </tr>
+    </table>
+    <?=$dout?>
+</div>
+
+<!-- Analog inputs. -->
+<div id='analog-input' class='block-container'>
+    <div class='block-title'>Analog Inputs:</div>
+    <table>
+        <tr>
+            <td class='heading-cell'>Chan</td>
+            <?php for ($i = 0; $i < 9; $i++):?><td><?=$i?></td><?php endfor; ?>    
+        </tr>
+        <tr>
+            <td class='heading-cell'>Value</td>
+            <?php for ($i = 0; $i < 9; $i++): ?><td id="analog-input-<?=$i?>">0.00</td><?php endfor; ?>
+        </tr>
+        <tr>
+            <td class='heading-cell'>Chan</td>
+            <?php for ($i = 9; $i < 17; $i++):?><td><?=$i?></td><?php endfor; ?>    
+        </tr>
+        <tr>
+            <td class='heading-cell'>Value</td>
+            <?php for ($i = 9; $i < 17; $i++): ?><td id="analog-input-<?=$i?>">0.00</td><?php endfor; ?>
+        </tr>
+    </table>
+</div>
+
+<!-- Analog outputs -->
+<div id='analog-output' class='block-container saharaform'>
+    <div class='block-title'>Analog Outputs:</div>
+    <table>
+        <tr>
+            <td class='heading-cell'>Chan</td>
+            <?php for ($i = 0; $i < 8; $i++):?><td><?=$i?></td><?php endfor; ?>
+        </tr>
+        <tr>
+            <td class='heading-cell'>Value</td>
+             <?php for ($i = 0; $i < 8; $i++):?><td>
+                 <input id="analog-out-<?=$i?>" type="text" name="<?=$i?>" />
+             </td><?php endfor; ?>
+        </tr>
+    </table>
+    <?=$aout?>
+</div>
+
+<div style="height:700px"></div>
+
+<script type="text/javascript">
+$(document).ready(function() {
+	/* Start data updates. */
+	update([], true);
+});
+
+</script>

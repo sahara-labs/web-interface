@@ -36,8 +36,8 @@
  * @date 13th February 2010
  */
 
-$this->headScript()->appendFile($this->baseUrl('/uts/irobot/irobot.js'));
-$this->headLink()->appendStylesheet($this->baseUrl('/uts/irobot/irobot.css'));
+$this->headScript()->appendFile($this->baseUrl('uts/irobot/irobot.js'));
+$this->headLink()->appendStylesheet($this->baseUrl('uts/irobot/irobot.css'));
 
 $this->headScript()->appendFile($this->baseUrl('js/elements/cameras/flowplayer.min.js'));
 $this->headScript()->appendFile($this->baseUrl('js/excanvas.js'),
@@ -58,3 +58,6 @@ $(document).ready(function() {
 	irobot.init();
 });
 </script>
+
+<!-- Upload target. -->
+<iframe src="#" id="code-upload-target" name="code-upload-target"></iframe>

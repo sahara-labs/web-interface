@@ -13,29 +13,9 @@ echo $files;
 
 ?>
 
-<div style="margin: 10px auto 0; width: 550px; padding:20px">
-   Please be aware that due to an irreparable hardware fault - that the following 
-   limitations exist for the level sensors:
-   <ul style="margin: 10px 0 10px 20px">
-   <?php if ($this->rig == 'Coupled Tanks 1'): ?>
-       <li>Maximum Level Tank 1:  261mm</li>
-       <li>Maximum Level Tank 2:  250mm</li>
-   <?php else: ?>
-       <li>Maximum Level Tank 1:  130mm</li>
-       <li>Maximum Level Tank 2:  200mm</li>
-   <?php endif; ?>
-   </ul>
-
-
-   Also, as a reminder, the pumps have a minimum flow rate that is required for
-   the head to overcome the effect of gravity, this is normal and not a fault:
-   <ul style="margin: 10px 0 10px 20px">
-   <?php if ($this->rig == 'Coupled Tanks 1'): ?>
-       <li>Minimum Pump Flow: 1.3 L/min (initially), can then be decreased to 1.0 L/min.</li>
-   <?php else: ?>
-       <li>Minimum Pump Flow: 1.4 L/min (initially), can then be decreased to 1.2 L/min.</li>
-   <?php endif; ?>
-   </ul>
+<div style='position:absolute;top:340px;left:687px;width:275px;padding:5px;' class='ui-state-highlight ui-corner-all'>
+	<span class='ui-icon ui-icon-info' style='float:left;margin-right:10px'> </span>
+	This is a new and redesigned rig. Please report any errors or quirks you encounter by clicking 'Contact Support'.
 </div>
 
 <div style="height:50px">

@@ -54,7 +54,7 @@ class UTS_Contacts
 	                                                          Australia",
 	                                ),
 	                              "Help Desk" => array(
-	                                    "Email:"       => "<a href='mailto:helpdesk@labshare.edu.au'>helpdesk@labshare.edu.au</a><br />
+	                                    "Email:"       => "
 							You must have a valid login account to use the UTS remotelab. If you 
 							are a UTS FEIT student who is enrolled in a subject that has a remote 
 							laboratory component or if you are a staff member who has requested 
