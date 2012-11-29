@@ -1798,7 +1798,7 @@ Camera.prototype.deploy = function() {
 	this.deployed = true;
 	
 	$("body").append(
-			"<div id='camera-dialog' title='Camera'>" +
+			"<div id='camera-dialog' title='Power System Lab Camera'>" +
 				"<div id='camera-formats'>" +
 					"Video format: " +
 					"<span id='camera-format-swf' class='camera-format'>Flash</span> " +
