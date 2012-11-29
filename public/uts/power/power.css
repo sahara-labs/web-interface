@@ -1530,3 +1530,35 @@
 	margin-right: 5px;
 }
 
+/* ----------------------------------------------------------------------------
+ * -- Alarm indicator.                                                       --
+ * ---------------------------------------------------------------------------- */
+#alarm-indicator {
+	position: absolute;
+	top: 870px;
+	right: 10px;
+}
+
+#master-alarm-led {
+	float: left;
+	margin-top: 2px;
+	margin-right: 10px;
+}
+
+.alarm-led {
+	width: 15px;
+	height: 15px;
+	border-radius: 8px;
+	border: 1px solid #222;
+	box-shadow: 0 0 2px #AAA;
+	
+}
+
+.alarm-off {
+	background-color: #CCCCCC;
+	background-image: radial-gradient(circle, #EFEFEF 25%, #AAA);
+	background-image: -moz-radial-gradient(circle, #EFEFEF 25%, #AAA);
+	background-image: -webkit-radial-gradient(circle, #EFEFEF 25%, #AAA);
+	background-image: -o-radial-gradient(circle, #EFEFEF 25%, #AAA);
+	background-image: -ms-radial-gradient(circle, #EFEFEF 25%, #AAA);
+}
