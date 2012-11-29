@@ -1468,6 +1468,43 @@
 	margin-right: 10px;
 }
 
+#camera-formats {
+	float: right;
+	font-size: 0.9em;
+	color: #606060;
+	margin-bottom: 8px;
+}
+
+#camera-formats span {
+	display: inline-block;
+	padding: 3px;
+	border: 1px solid #CCCCCC;
+	border-radius: 3px;
+	cursor: pointer;
+}
+
+#camera-formats span:hover {
+	background-color: #F6F7F7;
+	box-shadow: 0 0 2px #CCCCCC;
+}
+
+#camera-formats .camera-format-selected {
+	color: #000000;
+	border-color: #000000;
+	background-color: #EFEFEF;
+}
+
+#camera-box {
+	clear: both;
+	background-color: #333333;
+	border-radius: 6px;
+	box-shadow: 0 0 3px #333333;
+}
+
+#camera-dialog .camera-resizing {
+	opacity: 0.7;
+}
+
 /* ----------------------------------------------------------------------------
  * -- Alarm indicator.                                                       --
  * ---------------------------------------------------------------------------- */
