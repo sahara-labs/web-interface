@@ -263,7 +263,7 @@ PowerLab.prototype.setMode = function(mode) {
 		this.widgets.push(new LCD(this, "active-power-2",   "Active Power",   "W",   1, "teal-color"));
 		this.widgets.push(new LCD(this, "apparent-power-2", "Apparent Power", "VA",  1, "green-color"));
 		this.widgets.push(new LCD(this, "ln-voltage-2",     "L - N Voltage",  "V",   1, "teal-color"));
-		this.widgets.push(new LCD(this, "reactive-power-2", "Reactive Power", "Var", 2, "red-color"));
+		this.widgets.push(new LCD(this, "reactive-power-2", "Reactive Power", "Var", 1, "red-color"));
 		this.widgets.push(new LCD(this, "line-current-2",   "Line Current",   "A",   3, "red-color"));
 		
 		o = new LCD(this, "active-factor",    "Active Factor",  "Lg",   2, "yellow-color");
