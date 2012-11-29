@@ -38,7 +38,6 @@ PowerLab.prototype.setMode = function(mode) {
 	case 0: // Lab selection
 		this.setTitle("Power System Lab");
 		this.widgets.push(new SwitchMode(this));
-		this.widgets.push(new Camera(this));
 		break;
 	
 	case 1: // Lab 1 mode
@@ -722,6 +721,38 @@ Widget.prototype.addMessage = function(message, type, left, top, pos) {
  */
 Widget.prototype.removeMessages = function() {
 	this.control.$canvas.find(".message-box").remove();
+};
+
+/**
+ * Gets the cookie with the specified (unprefixed) key.
+ * 
+ * @param key unprefixed key to get
+ * @return value or an empty string in not found
+ */
+Widget.prototype.getCookie = function(key) {
+	var cookies = document.cookie.split('; ');
+	key = "power-lab-" + key;
+	
+	for (i in cookies)
+	{
+		var c = cookies[i].split('=', 2);
+		if (c[0] == key)
+		{
+			return c[1];
+		}
+	}
+	return "";
+};
+
+/**
+ * Sets the cookie.
+ * 
+ * @param key unprefixed key to set
+ * @param value value to set 
+ */
+Widget.prototype.setCookie = function(key, value)
+{
+	document.cookie = "power-lab-" + key + "=" + value + ";";
 };
 
 /** ---------------------------------------------------------------------------
@@ -1672,9 +1703,20 @@ function Camera(control)
 {
 	Widget.call(this, control);
 	
-	this.width = 640;
-	this.height = 480;
-	this.url = 'http://shakermonitor1.eng.uts.edu.au:7070/camera3.swf';
+	this.width = undefined;
+	this.height = undefined;
+	
+	this.urls = {
+		swf: '',
+		mjpeg: ''
+	};
+	this.urlsReceived = false;
+	
+	this.deployed = false;
+	this.currentFormat = undefined;
+	
+	this.$dialog = undefined;
+	this.$box = undefined;
 }
 Camera.prototype = new Widget;
 
@@ -1683,14 +1725,60 @@ Camera.prototype.init = function() {
 	this.control.$canvas.append(
 			"<div id='camera-button' class='button'>" +
 				"<span class='ui-icon ui-icon-video'></span>" +
-				"Cameras" + 
+				"Camera" + 
 			"</div>" 
 	);
 	
 	this.$w = $("#camera-button");
 	
-	var thiz = this;
+	var thiz = this, tmp = "";
 	this.$w.click(function() { thiz.clicked(); });
+	
+	/* Get the camera size. */
+	if ((tmp = this.getCookie("camera-width")) == "")
+	{
+		this.width = 640; // Default camera width
+	}
+	else
+	{
+		this.width = parseInt(tmp);
+	}
+	
+	if ((tmp = this.getCookie("camera-height")) == "")
+	{
+		this.height = 480; // Default camera height
+	}
+	else
+	{
+		this.height = parseInt(tmp);
+	}
+	
+	/* Get the default camera format. */
+	if ((this.currentFormat = this.getCookie("camera-format")) == "")
+	{
+		/* Choose based on browser. */
+		this.currentFormat = /Mobile|mobi/i.test(navigator.userAgent) ? 'mjpeg' : 'swf';
+	}
+	
+	/* Get the format URLs. */
+	$.get(
+		"/session/attributebridge",
+		{
+			attribute: "PowerLab_Camera"
+		},
+		function (resp) {
+			thiz.urlsReceived = true;
+			if (resp.value != undefined)
+			{
+				var pts = resp.value.split(","), i = 0, p;			
+				for (i in pts)
+				{
+					p = pts[i].indexOf("=");
+					thiz.urls[$.trim(pts[i].substring(0, p))] = $.trim(pts[i].substring(p + 1));
+				}
+			}
+		}
+	);
 };
 
 Camera.prototype.clicked = function() {
@@ -1698,40 +1786,192 @@ Camera.prototype.clicked = function() {
 };
 
 Camera.prototype.deploy = function() {
+	/* We can only have one dialog open. */
+	if (this.deployed) return;
+	this.deployed = true;
+	
 	$("body").append(
 			"<div id='camera-dialog' title='Camera'>" +
-			(!$.browser.msie ?
-				'<object type="application/x-shockwave-flash" data="' + this.url + '" ' +
-		 				'width="' +  this.width  + '" height="' + this.height + '">' +
-			        '<param name="movie" value="' + this.url+ '"/>' +
-			        '<a href="http://www.adobe.com/go/getflash">' +
-			        	'<img src="http://www.adobe.com/images/shared/download_buttons/get_flash_player.gif" ' +
-			        			'alt="Get Adobe Flash player"/>' +
-			        '</a>' +
-			    '</object>'
-			:
-				'<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000"  width="' + this.width + '" height="' + this.height + '"  id="camera-swf-movie">' +
-					'<param name="movie" value="' + this.url + '" />' +
-					'<a href="http://www.adobe.com/go/getflash">' +
-						'<img src="http://www.adobe.com/images/shared/download_buttons/get_flash_player.gif" alt="Get Adobe Flash player"/>' +
-					'</a>' +
-				'</object>'
-			) +
+				"<div id='camera-formats'>" +
+					"Video format: " +
+					"<span id='camera-format-swf' class='camera-format'>Flash</span> " +
+					"<span id='camera-format-mjpeg' class='camera-format'>MJpeg</span> " +
+				"</div>" + 
+				"<div id='camera-box' style='height:" + this.height + "px;width:" + this.width + "px'> </div>" +
 			"</div>"
 	);
 	
-	$("#camera-dialog").dialog({
+	this.$box = $("#camera-box");
+	
+	var thiz = this;
+	this.$dialog = $("#camera-dialog").dialog({
 		autoOpen: true,
 		closeOnEscape: true,
 		modal: false,
 		draggable: true,
-		width: 660,
-		height: 530,
-		minWidth:340,
-		minHeight: 260
+		width: this.width + 25,
+		height: this.height + 105,
+		minWidth: 365,
+		minHeight: 345,
+		resizeStart: function()     { thiz.resizeStart(); },
+		resizeStop: function(e, ui) { thiz.resize(ui.size.width, ui.size.height); },
+		close:  function()          { thiz.close(); }
 	});
+	
+	/* Setup video format control. */
+	this.$dialog.find(".camera-format").click(function() { thiz.switchFormat($(this).text()); });
+	
+	/* Deploy the video. */
+	this.deployVideo();
 };
 
-Camera.prototype.undeploy = function() {
-	$("#camera-dialog").dialog("close");
+Camera.prototype.resizeStart = function() {
+	this.$box.addClass("camera-resizing");
+};
+
+Camera.prototype.resize = function(width, height) {
+	/* The provided width and height are the dialog not the camera box. */
+	width -= 25;
+	height -= 85;
+	
+	/* We want to preserve the aspect ratio of the dialog. */
+	if (Math.abs(this.width - width) > Math.abs(this.height - height))
+	{
+		this.height -= 3/4 * (this.width - width);
+		this.width = width;
+	}
+	else 
+	{
+		this.width -=  4/3 * (this.height - height);
+		this.height = height;
+	}
+	
+	/* Store camera size. */
+	this.setCookie("camera-height", this.height);
+	this.setCookie("camera-width", this.width);
+		
+	/* Resize camera dialog and box. */
+	this.$box.css({
+		width: this.width,
+		height: this.height
+	});
+	
+	this.$dialog.dialog("option", {
+		width: this.width + 25,
+		height: this.height + 105
+	});
+	
+	/* Remove the resizing display. */
+	this.$box.removeClass("camera-resizing");
+	
+	/* Resize the video. */
+	this.undeployVideo();
+	this.deployVideo();
+};
+
+Camera.prototype.close = function() {
+	this.deployed = false;
+	
+	/* Remove the video. */
+	this.undeployVideo();
+	
+	/* Destroy the dialog. */
+	this.$dialog.dialog("destroy").remove();
+};
+
+Camera.prototype.deployVideo = function() {
+	if (!this.urlsReceived)
+	{
+		/* We have received the camera addresses from the inital deployment so we 
+		 * need to wait until they are received. */
+		var thiz = this;
+		setTimeout(function() {	thiz.deployVideo(); }, 1000);
+		return;
+	}
+	
+	/* Update the format switcher display. */
+	this.$dialog.find(".camera-format-selected").removeClass("camera-format-selected");
+	$("#camera-format-" + this.currentFormat).addClass("camera-format-selected");
+	
+	/* Call a format deploying function. */
+	switch (this.currentFormat)
+	{
+	case 'mjpeg':
+		this.deployMJPEG();
+		break;
+		
+	case 'swf':
+		this.deploySWF();
+		break;
+		
+	default: // Some form of corruption in the cookie value
+		this.currentFormat = /Mobile|mobi/i.test(navigator.userAgent) ? 'mjpeg' : 'swf';
+		this.deployVideo();
+		break;
+	}
+};
+
+Camera.prototype.deploySWF = function() {
+	this.$box.empty().append(
+		(!$.browser.msie ? // Firefox, Chrome, ...
+			'<object type="application/x-shockwave-flash" data="' + this.urls.swf + '" ' +
+	 				'width="' +  this.width  + '" height="' + this.height + '">' +
+		        '<param name="movie" value="' + this.urls.swf + '"/>' +
+		        '<a href="http://www.adobe.com/go/getflash">' +
+		        	'<img src="http://www.adobe.com/images/shared/download_buttons/get_flash_player.gif" ' +
+		        			'alt="Get Adobe Flash player"/>' +
+		        '</a>' +
+		    '</object>'
+		:                  // Internet Explorer
+			'<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000"  width="' + this.width + '" height="' + this.height + '"  id="camera-swf-movie">' +
+				'<param name="movie" value="' + this.urls.swf + '" />' +
+				'<a href="http://www.adobe.com/go/getflash">' +
+					'<img src="http://www.adobe.com/images/shared/download_buttons/get_flash_player.gif" alt="Get Adobe Flash player"/>' +
+				'</a>' +
+			'</object>'
+		)
+	);
+	
+	/* Flash movies have a 16000 frame limit, so after 7 minutes, the movie
+	 * is reloaded so it never hits the limit. */
+	var thiz = this;
+	this.swfTimeout = setTimeout(function() {
+		thiz.freshenSWF();
+	}, 7 * 60 * 1000);
+};
+
+Camera.prototype.deployMJPEG = function() {
+	/* Remove the current format. */
+	this.$w.children(".camera-box").empty();
+	
+	if ($.browser.msie)
+	{
+		/* Internet Explorer does not support MJPEG streaming so a Java applet 
+		 * is streaming. */
+		this.$box.empty().append(
+				'<applet code="com.charliemouse.cambozola.Viewer" archive="/applets/cambozola.jar" ' + 
+						'width="' + this.width + '" height="' + this.height + '">' +
+					'<param name="url" value="' + this.urls.mjpeg + '"/>' +
+					'<param name="accessories" value="none"/>' +
+				'</applet>'
+		);
+	}
+	else
+	{
+		this.$box.empty().append(
+			"<img src='" + this.urls.mjpeg + "' alt='video' style='height: " + this.height + "px; width: " + this.width + "px' />"
+		);
+	}
+};
+
+Camera.prototype.switchFormat = function(format) {
+	this.currentFormat = format.toLowerCase();
+	this.setCookie("camera-format", this.currentFormat);
+	this.undeployVideo();
+	this.deployVideo();
+};
+
+Camera.prototype.undeployVideo = function() {
+	this.$box.empty();	
+	if (this.swfTimeout) clearTimeout(this.swfTimeout);
 };
