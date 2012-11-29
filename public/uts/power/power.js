@@ -1266,7 +1266,7 @@ UpDownButton.prototype.init = function() {
 	this.$w = $("#" + this.id);
 	
 	var thiz = this;
-	this.$w.children(".button").mousedown(function() {
+	this.$w.children(".button").bind("mousedown touchstart", function() {
 		/* Page working. */
 		if (thiz.control.working) return;
 		
@@ -1284,7 +1284,7 @@ UpDownButton.prototype.init = function() {
 		thiz.changeVal();
 	});
 	
-	this.$w.children(".button").bind("mouseup mouseout", function() {
+	this.$w.children(".button").bind("mouseup touchend mouseout touchleave", function() {
 		thiz.isChanging = false;	
 	});
 };
