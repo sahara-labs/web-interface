@@ -1355,6 +1355,13 @@ UpDownButton.prototype.changeVal = function() {
  */
 UpDownButton.prototype.checkPreconditions = function() { return true; };
 
+/**
+ * Checks if there are any preconditions preventing this buttons values 
+ * being changed. Returns true if the value can successfully be changed,
+ * false otherwise.
+ */
+UpDownButton.prototype.checkPreconditions = function() { return true; };
+
 /** 
  * Checks a value to ensure it is in an acceptable range. Returns 0 if the value 
  * is in range, -1 if the value is less than or at the low limit or 1 if the value
