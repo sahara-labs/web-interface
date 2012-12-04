@@ -1665,7 +1665,7 @@ Graphics.prototype.init = function()  {
 			"<div id='graphics-busbar-to-gcb-2' class='graphics v-line'></div>" +
 			"<div id='graphics-busbar-mcb-gcb-2' class='graphics h-line'></div>" +
 			
-			"<div id='graphics-pm1-label-2' class='graphics label-box label-head'>Power Meter 1</div>" +
+			"<div id='graphics-pm1-label-2' class='graphics label-box label-head'>Genset Controller</div>" +
 			"<div id='graphics-pm1-lower-2' class='graphics h-line'></div>" +
 			"<div id='graphics-pm1-lower-to-higher-2' class='graphics v-line'></div>" +
 			"<div id='graphics-pm1-higher-2' class='graphics h-line'></div>" +
