@@ -41,6 +41,35 @@ $this->headScript()->appendFile($this->baseUrl('/js/projects.js'));
 
 ?>
 
+<script type='text/javascript'>
+var definitions = [
+<?php foreach($this->definitions as $def): ?>
+    {
+        id:          '<?=strtolower(implode('_', explode(' ', $def->name)))?>',
+        name:        '<?=$def->name?>',	
+        description: '<?=$def->description?>',	
+        hint:        '<?=$def->hint?>',	
+        optional:    <?=ord($def->is_optional) === 1 ? 'true' : 'false' ?>,	
+        regex:       '<?=$def->regex?>',	
+    },
+<?php endforeach; ?>
+];
+
+var userClasses = [
+<?php foreach($this->user->userClasses as $uc): ?> 
+{
+	id: <?=$uc->id?>,
+    name: '<?=$uc->name?>',
+},
+<?php endforeach; ?>
+];
+
+$(document).ready(function() {
+	/* Event handlers. */
+	$("#add-project-button").click(displayAddProjectDialog);
+});
+</script>
+
 <div id="add-project-button" class="common-button">
     <img src='/images/project-add.png' alt='add' /><br />Add Project
 </div>

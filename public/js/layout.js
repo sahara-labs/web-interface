@@ -149,13 +149,94 @@ function resizeFooter()
 	}
 }
 
+/**
+ * Form input focus in highlight.
+ */
 function formFocusIn() 
 {
 	$(this).css("border", "1px solid #333333");
 }
 
+/**
+ * Form input focus out highlight.
+ */
 function formFocusOut()
 {
 	$(this).css("border", "1px solid #AAAAAA");
 }
+
+/**
+ * Guidance bubble creation.
+ * 
+ * @param selector the base selector to initialise guidance bubbles from
+ * @param type 'alert' for error message, 'info' for informational messages
+ * @param position the arrow position, can be 'left', 'right'
+ * @param leftoff left offset for bubble
+ * @param topoff top offset for bubble
+ */
+function GuidanceBubble(selector, type, position, leftoff, topoff)
+{
+	this.selector = selector;
+	this.type = type;
+	this.position = position;
+	
+	this.leftOff = leftoff ? leftoff : 0;
+	this.topOff = topoff ? topoff : 0;
+}
+
+/**
+ * Initialise buttons that have the class '.guidance-button' to
+ * open a guidance button when they are clicked. The messages for the 
+ * guidance bubble are expected to be in a child paragraph of the
+ * clicked button.
+ */
+GuidanceBubble.prototype.initButtons = function() {
+	/* Initialise click handling. */
+	var thiz = this;
+	$(this.selector + " .guidance-button").click(function() {
+		thiz.removeAll();
+		thiz.show(this, $(this).children("p").text());
+	});
+};
+
+/**
+ * Adds a message to the page.
+ * 
+ * @param e node where the bubble will be positioned
+ * @param message the message to display
+ */
+GuidanceBubble.prototype.show = function(e, message) {
+	var $box, i, aniIn, bs = 3, up = true,
+		left = $(e).position().left + this.leftOff, top = $(e).position().top - this.topOff,
+		html = 
+		"<div class='guidance-bubble guidance-bubble-" + this.type + " guidance-bubble-in1' style='left:" + left + "px; top:" + top + "px'>" +
+			"<div class='guidance-bubble-text'>" + message + "</div>" +
+			"<div class='guidance-bubble-arrow guidance-bubble-arrow-" + this.position + "'>";
+	
+	for (i = 0; i < 8; i++)
+	{
+		html += "<div class='guidance-bubble-arrow-line guidance-bubble-arrow-line" + i + "'></div>";
+	}
+	
+	html += "</div>" +
+		"</div>";
+	
+	$box = $(e).after(html).next();
+		
+	/* Throb box shadow around message box. */
+	aniIn = setInterval(function() {
+		if (bs == 2 || bs == 12) up = !up;
+		$box.css("box-shadow", "0 0 " + (up ? bs++ : bs--) + "px #AAAAAA");
+	}, 120);
+	
+	/* Remove box on click. */
+	$box.click(function() {
+		clearInterval(aniIn);
+		$box.remove();
+	});
+};
+
+GuidanceBubble.prototype.removeAll = function() {
+	$(this.selector + " .guidance-bubble").remove();
+};
 

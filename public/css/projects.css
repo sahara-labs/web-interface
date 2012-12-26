@@ -42,3 +42,14 @@
 	margin: 10px 10px 0 0;
 }
 
+#add-project-dialog .form-line {
+	clear: both;
+}
+
+#add-project-dialog label {
+	width: 120px;
+}
+
+#add-project-dialog .metadata-enable {
+	margin: 0 10px 0 -28px;
+}

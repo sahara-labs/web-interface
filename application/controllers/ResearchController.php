@@ -48,6 +48,12 @@ class ResearchController extends Sahara_Controller_Action_Acl
     {
         $this->view->headTitle($this->_headPrefix . 'Research Projects');
         
+        /* Metadata definitions. */
+        $this->view->definitions = Sahara_Database_Table_ProjectMetadataTypes::load(NULL, NULL, 'is_optional');
+        
+        /* Load the users and their class. */
+        $this->view->user = Sahara_Database_Table_User::getLoginUser();
+        
         /* Load all the projects for the user. */
         
     }
