@@ -65,7 +65,7 @@ function displayAddProjectDialog()
     html += 		"</select>" +
     				"<div class='guidance-button'>" +
     					"<span class='ui-icon ui-icon-help'></span>" +
-						"<p>Selects the rigs that this project uses to generate datasets.</p>" +
+						"<p>Selects the permission that allows access to rigs that this project uses.</p>" +
 					"</div>" + 
 				"</div>" +
 				"<div class='form-line'>" +
@@ -144,7 +144,7 @@ function displayAddProjectDialog()
 	$("#add-project-dialog input").focusin(formFocusIn).focusout(formFocusOut);
 	
 	/* Guidance button handling. */
-	new GuidanceBubble("#add-project-dialog", "info", "left", 20, 20).initButtons();
+	new GuidanceBubble("#add-project-dialog", "info", "left", 20, -20).initButtons();
 }
 
 /**
@@ -152,15 +152,79 @@ function displayAddProjectDialog()
  */
 function addProject() 
 {
-	var params = {}, valid = true;
+	var params = {}, valid = true,
+		i = 0, val = "",
+		gd = new GuidanceBubble("#add-project-dialog", "error", "left", 200, -10);
+	
+	/* Clear any existing guidance bubbles. */
+	gd.removeAll();
 	
 	/* Validate entered values. */
 	if ((params.activityID = $("#add-activity-id").val()) == "")
 	{
 		valid = false;
-		new GuidanceBubble("#add-project-dialog", "error", "left").show($("#add-activity-id"), "Activity ID must be set.");
+		gd.show("Activity ID must be specified.", "#add-activity-id");
 	}
 	
+	if ((params.userClass = $("#add-permissions option:selected").text()) == "")
+	{
+		valid = false;
+		gd.show("A permission must selected for a project. If you don't have a permission " +
+			    "use the 'Contact Support' form to request access.", "#add-activity-id");
+	}
 	
+	params.shareCollection = $("#add-share-collection:checked").size() == 1 ? "true" : "false";
+	params.openAccess = $("#add-open-access").size() == 1 ? "true" : "false";
+	params.autoPublish = $("#add-open-access").size() == 1 ? "true" : "false";
+	
+	/* Validate other metadata fields. */
+	for (i in definitions)
+	{
+		/* Optional parameters that have been selected to be added can be 
+		 * ignored. */
+		if (definitions[i].optional && $("#" + definitions[i].id + "-enable:checked").size() == 0) continue;
+		
+		
+		val = $("#" + definitions[i].id).val();
+		
+		if (!definitions[i].optional && val == "")
+		{
+			/* Mandatory parameter not entered, valdiation failed. */
+			valid = false;
+			gd.show(definitions[i].name + " must be specified.", "#" + definitions[i].id);
+		}
+		else if (val == "") continue; // Optional parameter not specified.
+		
+		if (definitions[i].regex != "")
+		{
+			if (!new RegExp(definitions[i].regex).test(val))
+			{
+				valid = false;
+				gd.show(definitions[i].hint, "#" + definitions[i].id);
+				continue;
+			}
+		}
+		
+		/* Metadata valid we can add it to the parameter set. */
+		params[definitions[i].name] = val;
+	}
 
+	if (valid)
+	{
+		/* All fields correctly populated so we can add the project. */
+		var $dialog = $("#add-project-dialog");
+		$dialog.dialog("option", {
+				closeOnEscape: false,
+				width: 200,
+			})
+			.html(
+				"<div id='add-project-submitting'>" +
+					"<img src='/images/ajax-loading.gif' alt='' /><br />" +
+					"Please wait..." +
+				"</div>"
+			)
+			.parent()
+				.css("left", parseInt($dialog.parent().css("left")) + 100)
+				.children(".ui-dialog-titlebar, .ui-dialog-buttonpane").hide();
+	}
 }

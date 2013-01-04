@@ -195,19 +195,20 @@ GuidanceBubble.prototype.initButtons = function() {
 	var thiz = this;
 	$(this.selector + " .guidance-button").click(function() {
 		thiz.removeAll();
-		thiz.show(this, $(this).children("p").text());
+		thiz.show($(this).children("p").text(), this);
 	});
 };
 
 /**
  * Adds a message to the page.
  * 
- * @param e node where the bubble will be positioned
  * @param message the message to display
+ * @param e node where the bubble will be positioned, if null the parent 
+ * 			element is used
  */
-GuidanceBubble.prototype.show = function(e, message) {
-	var $box, i, aniIn, bs = 3, up = true,
-		left = $(e).position().left + this.leftOff, top = $(e).position().top - this.topOff,
+GuidanceBubble.prototype.show = function(message, e) {
+	var $box, i, aniIn, bs = 3, up = true, $e = e ? $(e) : $(this.selector),
+		left = $e.position().left + this.leftOff, top = $e.position().top + this.topOff,
 		html = 
 		"<div class='guidance-bubble guidance-bubble-" + this.type + " guidance-bubble-in1' style='left:" + left + "px; top:" + top + "px'>" +
 			"<div class='guidance-bubble-text'>" + message + "</div>" +
@@ -221,7 +222,7 @@ GuidanceBubble.prototype.show = function(e, message) {
 	html += "</div>" +
 		"</div>";
 	
-	$box = $(e).after(html).next();
+	$box = $e.after(html).next();
 		
 	/* Throb box shadow around message box. */
 	aniIn = setInterval(function() {
@@ -236,7 +237,18 @@ GuidanceBubble.prototype.show = function(e, message) {
 	});
 };
 
+/**
+ * Removes all the guidance bubbles from nested from this objects 
+ * selector.
+ */
 GuidanceBubble.prototype.removeAll = function() {
 	$(this.selector + " .guidance-bubble").remove();
+};
+
+/**
+ * Removes all the guidance bubbles from the page. 
+ */
+GuidanceBubble.prototype.globalRemove = function() {
+	$(".guidance-bubble").remove();
 };
 

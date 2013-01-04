@@ -53,3 +53,7 @@
 #add-project-dialog .metadata-enable {
 	margin: 0 10px 0 -28px;
 }
+
+#add-project-submitting {
+	text-align: center;
+}

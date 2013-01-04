@@ -57,4 +57,17 @@ class ResearchController extends Sahara_Controller_Action_Acl
         /* Load all the projects for the user. */
         
     }
+    
+    /**
+     * Action that adds a new project.
+     */
+    public function addprojectAction()
+    {
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();
+        
+
+        
+        echo $this->view->json(array('success' => 'true'));
+    }
 }
