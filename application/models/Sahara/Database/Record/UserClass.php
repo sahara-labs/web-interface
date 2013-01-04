@@ -33,46 +33,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 18th December 2012
+ * @date 19th December 2012
  */
-
-/**
- * Users table record.
- */
-class Sahara_Database_Table_User extends Sahara_Database_Record
-{
-    /** @var String Name of table. */
-    protected $_name = 'users';
-    
-    /** @var array Relationships with other tables. */
-    protected $_relationships = array(
-            'userClasses' => array(
-                'table' => 'user_class',
-                'entity' => 'Sahara_Database_Table_UserClass',
-                'join'  => 'table',
-                'join_table'  => 'user_association',
-                'join_table_source' => 'users_id',
-                'join_table_dest' => 'user_class_id'
-            )
-    );
-    
-    /**
-     * Gets the user record of the logged is user. If no user is logged in,
-     * NULL is returned.
-     * 
-     * @return Sahara_Database_Table_User logged in user
-     */
-    public static function getLoginUser()
-    {    
-        $name = Zend_Auth::getInstance()->getIdentity();
-        if (!$name)
-        {
-            /* No user logged in. */
-            return NULL;
-        }
-
-        $name = explode(':', $name, 2);
-        return self::load(array('namespace' => $name[0], 'name' => $name[1]));
-    }
-}
  
+/** 
+ * User class record.
+ */
+class Sahara_Database_Record_UserClass extends Sahara_Database_Record
+{
+    /** @var String Table name. */
+    protected $_name = 'user_class';
+}

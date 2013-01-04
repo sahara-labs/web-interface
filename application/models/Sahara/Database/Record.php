@@ -227,7 +227,8 @@ abstract class Sahara_Database_Record
             if (!array_key_exists($col, $this->_loadedRelationships) && $this->_isPersistant)
             {
                 $rel = $this->_relationships[$col];
-                $entity = new $rel['entity'];
+                $entityName = 'Sahara_Database_Record_' . $rel['entity'];
+                $entity = new $entityName;
                 
                 /* Selected all fields form the join table. */
                 $stm = 'SELECT ' . $rel['table'] . '.* FROM ' . $rel['table'];
@@ -262,7 +263,7 @@ abstract class Sahara_Database_Record
                 $this->_loadedRelationships[$col] = array();
                 foreach ($qu->fetchAll() as $row)
                 {
-                    array_push($this->_loadedRelationships[$col], new $rel['entity']($row));
+                    array_push($this->_loadedRelationships[$col], new $entityName($row));
                 }
             }
             
