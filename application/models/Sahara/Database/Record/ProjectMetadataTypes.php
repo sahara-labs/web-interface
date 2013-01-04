@@ -33,14 +33,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 19th December 2012
+ * @date 15th December 2012
  */
  
-/** 
- * User class record.
+/**
+ * Project metadata types record.
  */
-class Sahara_Database_Table_UserClass extends Sahara_Database_Record
+class Sahara_Database_Record_ProjectMetadataTypes extends Sahara_Database_Record 
 {
     /** @var String Table name. */
-    protected $_name = 'user_class';
+    protected $_name = 'project_metadata_types';
 }
