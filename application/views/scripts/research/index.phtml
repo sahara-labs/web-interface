@@ -49,7 +49,7 @@ var definitions = [
         name:        '<?=$def->name?>',	
         description: '<?=$def->description?>',	
         hint:        '<?=$def->hint?>',	
-        optional:    <?=ord($def->is_optional) === 1 ? 'true' : 'false' ?>,	
+        optional:    <?=$def->is_optional ? 'true' : 'false' ?>,	
         regex:       '<?=$def->regex?>',	
     },
 <?php endforeach; ?>

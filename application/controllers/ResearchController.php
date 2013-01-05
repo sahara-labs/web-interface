@@ -50,7 +50,7 @@ class ResearchController extends Sahara_Controller_Action_Acl
         
         /* Metadata definitions. */
         $this->view->definitions = Sahara_Database_Record_ProjectMetadataTypes::load(NULL, NULL, 'is_optional');
-        
+
         /* Load the users and their class. */
         $this->view->user = Sahara_Database_Record_User::getLoginUser();
         
@@ -66,8 +66,66 @@ class ResearchController extends Sahara_Controller_Action_Acl
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout()->disableLayout();
         
-
+         Sahara_Database_Record_UserClass::load($this->_request->getParam('userClass'));
         
-        echo $this->view->json(array('success' => 'true'));
+        $project = new Sahara_Database_Record_Project();
+        
+        $success = true;
+        $reason = '';
+        
+        /* Activity ID. */
+        if (!($project->activity = $this->_request->getParam('activityID')))
+        {
+            $success = false;
+            $reason = 'Parameter not supplied';
+        }
+        
+        /* User. */
+        list($ns, $name) = explode(':', $this->_auth->getIdentity());
+        if (!($project->user = Sahara_Database_Record_User::load(array('namespace' => $ns, 'name' => $name))))
+        {
+            $success = false;
+            $reason = 'User not found.';
+        }
+        
+        /* User class. */
+        if (!($this->_request->getParam('userClass') && 
+                $project->userClass = Sahara_Database_Record_UserClass::load($this->_request->getParam('userClass'))))
+        {
+            $success = false;
+            $reason = 'Parameter not supplied or invalid.';
+        }
+    
+        /* Project modifiers. */
+        $project->is_open = $this->_request->getParam('openAccess') == 'true' ? 1 : 0;
+        $project->is_shared = $this->_request->getParam('shareCollection') == 'true' ? 1 : 0;
+        $project->auto_publish_collection = $this->_request->getParam('autoPublish') == 'true' ? 1 : 0;
+        
+        /* Other metadata. */
+        $definitions = Sahara_Database_Record_ProjectMetadataTypes::load();
+        if (count($definitions) > 0)
+        {
+            foreach ($definitions as $def)
+            {
+                if ($this->_request->getParam($def->name) != null)
+                {
+                    $metadata = new Sahara_Database_Record_ProjectMetadata();
+                    $metadata->type = $def;
+                    $metadata->value = $this->_request->getParam($def->name);
+                    $project->metadata = $metadata;
+                }
+                else if ($def->is_optional)
+                {
+                    $success = false;
+                    $reason = 'Missing metadata.';
+                    break;
+                }
+            }
+        }
+        
+        /* Actually save the record. */
+        if ($success) $success = $project->save();
+        
+        echo $this->view->json(array('success' => $success, 'reason' => $reason));
     }
 }
