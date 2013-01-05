@@ -73,8 +73,9 @@ abstract class Sahara_Database_Record
      * <ul>
      *    <li>table - The name of the table that this relationship joins to.</li>
      *    <li>entity - The name of the class that this record resolves to.</li>
-     *    <li>join - The type of join, either 'foreign' or 'table' for foreign 
-     *    keys or join tables respectively.</li>
+     *    <li>join - The type of join, either 'foreign', 'local' or 'table' for foreign 
+     *    keys in the relationship table, relationship tables foriegn key in this table
+     *    or join tables respectively.</li>
      *    <li>foreign_key - The foreign key column on the joined table. This 
      *    is only used for the 'foreign' key join type.</li>
      *    <li>join_table - The name of the join table. This is only used for the
@@ -92,6 +93,9 @@ abstract class Sahara_Database_Record
     /** @var array Loaded relationships. */
     protected $_loadedRelationships = array();
     
+    /** @var array Updated relationships. */
+    protected $_updatedRelationships = array();
+    
     public function __construct($data = array())
     {        
         /* Instead of using Zend_Db to interface we are using PDO directory. 
@@ -106,9 +110,11 @@ abstract class Sahara_Database_Record
     
     /**
      * Load a record with the specified where constraint(s). The return of this function is 
-     * either a entity of the loaded record type or an array of record entities. 
+     * either a entity of the loaded record type or an array of record entities.
+     * <br />
+     * The where constraint can be either a list of column names and  
      *
-     * @param array $where where constraints (optional)
+     * @param mixed $where where constraints (optional)
      * @param array $cols list of columns to select, (optional)
      * @param String $order column name to order the result set by (optional)
      * @param boolean $asc whether the order is ascending or descending, default ascending
@@ -127,15 +133,29 @@ abstract class Sahara_Database_Record
         $stm = 'SELECT ' . (count($cols) ? implode(', ', $cols) : ' * ') . ' FROM ' . $record->_name;
         if (is_array($where))
         {
-             $stm .= ' WHERE ';
+            /* Query of table column constraints. */
+            $stm .= ' WHERE ';
              
-             $first = true;
-             foreach ($where as $c => $v)
-             {
-                 if (!$first) $stm .= ' AND ';
-                 $first = false;
-                 $stm .= $c . ' = ? ';
-             }
+            $first = true;
+            foreach ($where as $c => $v)
+            {
+                if (!$first) $stm .= ' AND ';
+                $first = false;
+                $stm .= $c . ' = ? ';
+            }
+             
+            $constraints = array_values($where);
+        }
+        else if (is_numeric($where))
+        {
+            /* Primary key constraint. */
+            $stm .= ' WHERE ' . $record->_idColumn . ' = ?';
+            $constraints = array($where);
+        }
+        else
+        {
+            /* No constraints. */
+            $constraints = NULL;
         }
         
         /* Add order if specified. */
@@ -146,7 +166,7 @@ abstract class Sahara_Database_Record
         
         /* Execute the query. */
         $qu = $record->_db->prepare($stm);
-        if (!$qu->execute(is_array($where) ? array_values($where) : NULL))
+        if (!$qu->execute($constraints))
         {
             /* An error occurred executing the statement. */
             throw new Sahara_Database_Exception($qu);
@@ -183,12 +203,12 @@ abstract class Sahara_Database_Record
     }
         
     /**
-     * Store this record in the database. If the record is not persistent
-     * 
+     * Store this record in the database. If the record is not persistent, it 
+     * is inserted into the database as a new record. If the record is persistant
+     * the record is updated with any updated data.
      */
-    public function store()
+    public function save()
     {
-        // TODO
         if ($this->_isPersistant)
         {
             if ($this->_isDirty)
@@ -199,7 +219,38 @@ abstract class Sahara_Database_Record
         }
         else
         {
-            $stm = 'INSERT INTO ' . $this->_name . ' ( ' . implode(', ', array_keys($this->_updatedData)) . ') VALUES ( ';
+            $stm = 'INSERT INTO ' . $this->_name . ' ( ' . implode(', ', array_keys($this->_updatedData));
+            $values = array_values($this->_updatedData);
+            
+            /* After the record has been inserted, it may be requested but we don't
+             * want another database hit. */
+            $this->_data = $this->_updatedData;
+                        
+            /* Local relationships are added as column values. */
+            foreach ($this->_updatedRelationships as $rel => $ref)
+            {
+                if ($this->_relationships[$rel]['join'] == 'local')
+                {
+                    /* Local relationship entities need to be persistent so they have a primary key. */
+                    if (!$ref->isPersistent()) throw new Sahara_Database_Exception('Referenced entity is not persistent.'); 
+                    
+                    $stm .= ', ' . $this->_relationships[$rel]['foreign_key'];
+                    array_push($values, $ref->__get($ref->getIdentityColumn()));
+                    
+                    $this->_data[$this->_relationships[$rel['foreign_key']]] = $ref->__get($ref->getIdentityColumn()); 
+                }
+            }
+            
+            $stm .= ' ) VALUES ( ?' . str_repeat(', ?', count($values) - 1) . ' )';
+
+            /* Insert the record. */
+            $stm = $this->_db->prepare($stm);
+            if (!$stm->execute($values))
+            {
+                /* Some error inserting record into database. */
+                throw new Sahara_Database_Exception($stm);
+            }
+            
             
         }
     }
@@ -227,6 +278,7 @@ abstract class Sahara_Database_Record
             if (!array_key_exists($col, $this->_loadedRelationships) && $this->_isPersistant)
             {
                 $rel = $this->_relationships[$col];
+                
                 $entityName = 'Sahara_Database_Record_' . $rel['entity'];
                 $entity = new $entityName;
                 
@@ -236,8 +288,15 @@ abstract class Sahara_Database_Record
                 /* Adding reference information. */
                 if ($rel['join'] == 'foreign')
                 {
-                    /* Foriegn key reference type. */
+                    /* Foriegn key of the record in the relationship table. */
                     $stm .= ' WHERE ' . $rel['table'] . '.' . $rel['foreign_key'] . ' = ?';
+                    $request = $this->_data[$this->_idColumn];
+                }
+                else if ($rel['join'] == 'local')
+                {
+                    /* Foriegn key of the relationship table stored in this record. */
+                    $stm .= ' WHERE ' . $rel['table'] . '.' . $entity->getIdentityColumn() . ' = ?';
+                    $request = $this->__get($$rel['foreign_key']);
                 }
                 else if ($rel['join'] == 'table')
                 {
@@ -246,6 +305,8 @@ abstract class Sahara_Database_Record
                     
                     /* Constraint on join table. */
                     $stm .= ' WHERE ' . $rel['join_table'] . '.' . $rel['join_table_source'] . ' = ?';
+                    
+                    $request = $this->_data[$this->_idColumn];
                 }
                 else 
                 {
@@ -254,7 +315,7 @@ abstract class Sahara_Database_Record
                 }
                 
                 $qu = $this->_db->prepare($stm);
-                if (!$qu->execute(array($this->_data[$this->_idColumn])))
+                if (!$qu->execute(array($request)))
                 {
                     /* Error making query. */
                     throw new Sahara_Database_Exception($qu);
@@ -287,12 +348,23 @@ abstract class Sahara_Database_Record
             
             /* If the record is not persistant we haven't hit the database and 
              * therefore we still need to check whether the array is populated. */
-            return array_key_exists($col, $this->_data) ? $this->_data[$col] : NULL;
+            $val = array_key_exists($col, $this->_data) ? $this->_data[$col] : NULL;
+            
+            /* For booleans we need to do a bit of massaging to make the value a 
+             * proper boolean. */
+            if (is_string($val) && strlen($val) == 1 && (ord($val) === 0 || ord($val) === 1))
+            {
+                return ord($val) === 1;
+            }
+            
+            /* Other data type. */
+            return $val;
         }   
     }
     
     /**
-     * Sets a value to be stored in the next call to the store method.
+     * Sets a value to be stored in the next call to the store method. This can 
+     * be either column values or relationships to other tables. 
      * 
      * @param String $col column name
      * @param mixed $val value to store
@@ -300,7 +372,35 @@ abstract class Sahara_Database_Record
     public function __set($col, $val)
     {
         $this->_isDirty = true;
-        $this->_updatedData[$col] = $val;
+        
+        if (array_key_exists($col, $this->_relationships))
+        {
+            if ($this->_relationships[$col]['join'] == 'local')
+            {
+                /* This is a many-to-one case. */
+                $this->_updatedRelationships[$col] = $val;
+            }
+            else
+            {
+                /* This is a one-to-many or many-to-many case. */
+                if (!is_array($this->_updatedRelationships[$col])) $this->_updatedRelationships[$col] = array();
+                array_push($this->_updatedRelationships[$col], $val);
+            }
+        }
+        else
+        {
+            $this->_updatedData[$col] = $val;
+        }
+    }
+    
+    /**
+     * Returns whether this entity is persistent.
+     * 
+     * @return bool true if persistent
+     */
+    public function isPersistent()
+    {
+        return $this->_isPersistant;
     }
     
     /**
