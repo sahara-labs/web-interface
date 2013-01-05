@@ -43,25 +43,27 @@ $this->headScript()->appendFile($this->baseUrl('/js/projects.js'));
 
 <script type='text/javascript'>
 var definitions = [
-<?php foreach($this->definitions as $def): ?>
-    {
-        id:          '<?=strtolower(implode('_', explode(' ', $def->name)))?>',
-        name:        '<?=$def->name?>',	
-        description: '<?=$def->description?>',	
-        hint:        '<?=$def->hint?>',	
+<?php if ($this->definitions): 
+      foreach($this->definitions as $def): ?>
+      {
+          id:          '<?=strtolower(implode('_', explode(' ', $def->name)))?>',
+          name:        '<?=$def->name?>',	
+          description: '<?=$def->description?>',	
+          hint:        '<?=$def->hint?>',	
         optional:    <?=$def->is_optional ? 'true' : 'false' ?>,	
-        regex:       '<?=$def->regex?>',	
-    },
-<?php endforeach; ?>
+          regex:       '<?=$def->regex?>',	
+      },
+<?php endforeach; endif; ?>
 ];
 
 var userClasses = [
-<?php foreach($this->user->userClasses as $uc): ?> 
-{
-	id: <?=$uc->id?>,
-    name: '<?=$uc->name?>',
-},
-<?php endforeach; ?>
+<?php if (count($this->user->userClasses)): 
+      foreach($this->user->userClasses as $uc): ?> 
+      {
+          id: <?=$uc->id?>,
+          name: '<?=$uc->name?>',
+      },
+<?php endforeach; endif; ?>
 ];
 
 $(document).ready(function() {
