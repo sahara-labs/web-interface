@@ -105,7 +105,10 @@ abstract class Sahara_Database_Record
         
         /* The record data maybe supplied from things like relation loads. */
         $this->_data = $data;
-        $this->_isPersistant = in_array($this->_idColumn, $data);
+        foreach ($this->_data as $col => $val) $this->_data[$col] = self::_convertFromSQL($val);
+        
+        /* We are persistant if we have a primary key. */
+        $this->_isPersistant = array_key_exists($this->_idColumn, $this->_data);
     }
     
     /**
@@ -181,10 +184,7 @@ abstract class Sahara_Database_Record
         else if ($qu->rowCount() == 1)
         {
             /* One row. */
-            $record->_data = $qu->fetch();
-            $record->_isPersistant = true;
-            
-            return $record;
+            return new static($qu->fetch());
         }
         else
         {
@@ -192,9 +192,7 @@ abstract class Sahara_Database_Record
             $rowSet = array();
             foreach ($qu->fetchAll() as $row)
             {
-                $rec = new static();
-                $rec->_data = $row;
-                $rec->_isPersistant = true;
+                $rec = new static($row);
                 array_push($rowSet, $rec);
             }
             
@@ -209,23 +207,23 @@ abstract class Sahara_Database_Record
      */
     public function save()
     {
+        /* No work to do. */
+        if (!$this->_isDirty) return;
+        
+        
         if ($this->_isPersistant)
         {
-            if ($this->_isDirty)
-            {
-                /* This is already a persistant record, however we need to 
-                 * update its record. */
-            }
+            /* This is already a persistant record, so we need to update its record. */
+            
         }
         else
         {
             $stm = 'INSERT INTO ' . $this->_name . ' ( ' . implode(', ', array_keys($this->_updatedData));
             $values = array_values($this->_updatedData);
             
-            /* After the record has been inserted, it may be requested but we don't
-             * want another database hit. */
-            $this->_data = $this->_updatedData;
-                        
+            /* Run conversion for correct types. */
+            foreach ($values as $i => $v) $values[$i] = self::_convertForSQL($v);
+
             /* Local relationships are added as column values. */
             foreach ($this->_updatedRelationships as $rel => $ref)
             {
@@ -237,22 +235,63 @@ abstract class Sahara_Database_Record
                     $stm .= ', ' . $this->_relationships[$rel]['foreign_key'];
                     array_push($values, $ref->__get($ref->getIdentityColumn()));
                     
-                    $this->_data[$this->_relationships[$rel['foreign_key']]] = $ref->__get($ref->getIdentityColumn()); 
+                    $this->_data[$this->_relationships[$rel]['foreign_key']] = $ref->__get($ref->getIdentityColumn()); 
+                    unset($this->_updatedRelationships[$rel]);
                 }
             }
             
             $stm .= ' ) VALUES ( ?' . str_repeat(', ?', count($values) - 1) . ' )';
 
             /* Insert the record. */
-            $stm = $this->_db->prepare($stm);
-            if (!$stm->execute($values))
+            $qu = $this->_db->prepare($stm);
+            if (!$qu->execute($values))
             {
                 /* Some error inserting record into database. */
                 throw new Sahara_Database_Exception($stm);
             }
             
+            /* After the record has been inserted, it may be requested but we don't
+             * want another database hit. */
+            $this->_data = $this->_updatedData;
+            foreach ($this->_data as $key => $val)
+            {
+                $this->_data[$key] = self::_convertFromSQL($val);
+            }
             
+            /* Mark the entity as persistent. */
+            $this->_isPersistant = true;
+            $this->_data[$this->_idColumn] = $this->_db->lastInsertId();
+            
+            /* All data has been commited so there is nothing more to updated. */
+            $this->_isDirty = false;
+            $this->_updatedData = array();
         }
+        
+        /* Make sure all the references are consistent. */
+        foreach ($this->_updatedRelationships as $rel => $ref)
+        {
+            switch ($this->_relationships[$rel]['join'])
+            {
+                case 'foreign':
+                    break;
+                    
+                case 'local':
+                    /* Local joins need to update this record so we set this information and call updated. */
+                    
+                    break;
+                    
+                case 'table':
+                    break;
+            }
+        }
+    }
+
+    /**
+     * Deletes the record including any referenced records.
+     */
+    public function delete()
+    {
+        // TODO delete record
     }
 
     /** 
@@ -343,22 +382,12 @@ abstract class Sahara_Database_Record
                     throw new Sahara_Database_Exception($qu);
                 }
                 
-                $this->_data = array_merge($this->_data, $qu->fetch());
+                $this->_data = array_merge($this->_data, self::_convertFromSQL($qu->fetch()));
             }
             
             /* If the record is not persistant we haven't hit the database and 
              * therefore we still need to check whether the array is populated. */
-            $val = array_key_exists($col, $this->_data) ? $this->_data[$col] : NULL;
-            
-            /* For booleans we need to do a bit of massaging to make the value a 
-             * proper boolean. */
-            if (is_string($val) && strlen($val) == 1 && (ord($val) === 0 || ord($val) === 1))
-            {
-                return ord($val) === 1;
-            }
-            
-            /* Other data type. */
-            return $val;
+            return array_key_exists($col, $this->_data) ? $this->_data[$col] : NULL;
         }   
     }
     
@@ -411,5 +440,42 @@ abstract class Sahara_Database_Record
     public function getIdentityColumn()
     {
         return $this->_idColumn;
+    }
+    
+    /**
+     * Converts any native PHP types to there SQL equivalent.
+     *
+     * @param mixed $val  data value
+     * @return array converted data value
+     */
+    private static function _convertForSQL($val)
+    {
+        /* Booleans. */
+        if (is_bool($val)) $val = $val ? 1 : 0;
+        
+        /* Dates. */
+        if ($val instanceof DateTime)
+        {
+        	$val = $val->format('Y-m-d H:i:s');
+        }
+        
+        return $val;
+    }
+    
+    /**
+     * Converts SQL data types to more friendly PHP equivalents.
+     *
+     * @param mixed $val data value
+     * @return mixed converted data value
+     */
+    private static function _convertFromSQL($val)
+    {
+        /* Booleans. */
+        if (is_string($val) && strlen($val) == 1 && (ord($val) === 0 || ord($val) === 1))
+        {
+         	$val = ord($val) === 1;
+        }
+        
+        return $val;
     }
 }
