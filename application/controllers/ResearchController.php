@@ -101,6 +101,10 @@ class ResearchController extends Sahara_Controller_Action_Acl
         $project->is_shared = $this->_request->getParam('shareCollection') == 'true' ? 1 : 0;
         $project->auto_publish_collection = $this->_request->getParam('autoPublish') == 'true' ? 1 : 0;
         
+        /* Timestamps. */
+        $project->creation_time = new DateTime();
+        $project->last_update = new DateTime();
+        
         /* Other metadata. */
         $definitions = Sahara_Database_Record_ProjectMetadataTypes::load();
         if (count($definitions) > 0)
@@ -114,7 +118,7 @@ class ResearchController extends Sahara_Controller_Action_Acl
                     $metadata->value = $this->_request->getParam($def->name);
                     $project->metadata = $metadata;
                 }
-                else if ($def->is_optional)
+                else if (!$def->is_optional)
                 {
                     $success = false;
                     $reason = 'Missing metadata.';
