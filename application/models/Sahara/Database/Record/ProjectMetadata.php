@@ -47,10 +47,10 @@ class Sahara_Database_Record_ProjectMetadata extends Sahara_Database_Record
     /** @var array Relationship details. */
     protected $_relationships = array(
         'type' => array(
-            'table' => 'project_metadata_types',
-            'entity' => 'ProjectMetadataTypes',
-            'type' => 'local',
-            'foriegn_key' => 'type_id'
+            'join'        => 'local',
+            'table'       => 'project_metadata_types',
+            'entity'      => 'ProjectMetadataTypes',
+            'foreign_key' => 'type_id'
         )
     );
 }

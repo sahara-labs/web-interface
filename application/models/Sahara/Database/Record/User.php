@@ -72,7 +72,8 @@ class Sahara_Database_Record_User extends Sahara_Database_Record
         }
 
         $name = explode(':', $name, 2);
-        return self::load(array('namespace' => $name[0], 'name' => $name[1]));
+        $users = self::load(array('namespace' => $name[0], 'name' => $name[1]));
+        return count($users) == 1 ? $users[0] : NULL;
     }
 }
  
