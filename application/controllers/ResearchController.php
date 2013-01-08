@@ -59,6 +59,26 @@ class ResearchController extends Sahara_Controller_Action_Acl
     }
     
     /**
+     * Action which checks whether an activity identifer is unique.      
+     */
+    public function checkactivityAction()
+    {
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();
+        
+        if ($param = $this->_request->getParam('activityID'))
+        {
+            echo $this->view->json(array(
+                    'unique' => count(Sahara_Database_Record_Project::load(array('activity' => $param))) == 0
+            ));
+        }
+        else echo $this->view->json(array(
+                'unique' => false,
+                'error'  => 'Missing parameter.'
+        ));
+    }
+    
+    /**
      * Action that adds a new project.
      */
     public function addprojectAction()
@@ -66,7 +86,7 @@ class ResearchController extends Sahara_Controller_Action_Acl
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout()->disableLayout();
         
-         Sahara_Database_Record_UserClass::load($this->_request->getParam('userClass'));
+        Sahara_Database_Record_UserClass::load($this->_request->getParam('userClass'));
         
         $project = new Sahara_Database_Record_Project();
         
@@ -80,9 +100,19 @@ class ResearchController extends Sahara_Controller_Action_Acl
             $reason = 'Parameter not supplied';
         }
         
+        /* The Activity ID must be unique. */
+        if (count(Sahara_Database_Record_Project::load(array('activity' => $project->activity))) != 0)
+        {
+            echo $this->view->json(array(
+                    'success' => false,
+                    'reason' => 'Activity ID is not unique'
+            ));
+            return;
+        }
+        
         /* User. */
         list($ns, $name) = explode(':', $this->_auth->getIdentity());
-        if (!($project->user = Sahara_Database_Record_User::load(array('namespace' => $ns, 'name' => $name))))
+        if (!($project->user = Sahara_Database_Record_User::getLoginUser()))
         {
             $success = false;
             $reason = 'User not found.';
@@ -99,7 +129,7 @@ class ResearchController extends Sahara_Controller_Action_Acl
         /* Project modifiers. */
         $project->is_open = $this->_request->getParam('openAccess') == 'true' ? 1 : 0;
         $project->is_shared = $this->_request->getParam('shareCollection') == 'true' ? 1 : 0;
-        $project->auto_publish_collection = $this->_request->getParam('autoPublish') == 'true' ? 1 : 0;
+        $project->auto_publish_collections = $this->_request->getParam('autoPublish') == 'true' ? 1 : 0;
         
         /* Timestamps. */
         $project->creation_time = new DateTime();
@@ -117,18 +147,37 @@ class ResearchController extends Sahara_Controller_Action_Acl
                     $metadata->type = $def;
                     $metadata->value = $this->_request->getParam($def->name);
                     $project->metadata = $metadata;
+                    
+                    /* If a metadata value validationr regex is stored, make sure the
+                     * value match the regex. */
+                    if ($def->regex && preg_match('/' . $def->regex . '/', $metadata->value) === 0)
+                    {
+                        $success = false;
+                        $reason = 'Value of metadata \'' . $def->name . '\' is not valid.';
+                    }
                 }
                 else if (!$def->is_optional)
                 {
                     $success = false;
-                    $reason = 'Missing metadata.';
+                    $reason = 'Missing metadata \'' . $def->name . '\'.';
                     break;
                 }
             }
         }
         
         /* Actually save the record. */
-        if ($success) $success = $project->save();
+        if ($success) 
+        {
+            try 
+            {
+                $project->save();
+            }
+            catch (Sahara_Database_Exception $ex)
+            {
+                $success = false;
+                $reason = $ex->getMessage();
+            }
+        }
         
         echo $this->view->json(array('success' => $success, 'reason' => $reason));
     }

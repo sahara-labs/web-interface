@@ -57,3 +57,14 @@
 #add-project-submitting {
 	text-align: center;
 }
+
+#add-project-error {
+	border-radius: 4px;
+	margin-top: 15px;
+	padding: 8px;
+}
+
+#add-project-error .ui-icon {
+	float: left;
+	margin-right: 5px;
+}

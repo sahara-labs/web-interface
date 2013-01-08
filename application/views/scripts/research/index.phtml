@@ -38,32 +38,29 @@
 
 $this->headLink()->appendStylesheet($this->baseUrl('/css/projects.css'));
 $this->headScript()->appendFile($this->baseUrl('/js/projects.js'));
-
 ?>
 
 <script type='text/javascript'>
 var definitions = [
-<?php if ($this->definitions): 
-      foreach($this->definitions as $def): ?>
+<?php foreach($this->definitions as $def): ?>
       {
           id:          '<?=strtolower(implode('_', explode(' ', $def->name)))?>',
           name:        '<?=$def->name?>',	
           description: '<?=$def->description?>',	
           hint:        '<?=$def->hint?>',	
-        optional:    <?=$def->is_optional ? 'true' : 'false' ?>,	
-          regex:       '<?=$def->regex?>',	
+          optional:     <?=$def->is_optional ? 'true' : 'false' ?>,	
+          regex:       '<?=str_replace('\\', '\\\\', $def->regex)?>',	
       },
-<?php endforeach; endif; ?>
+<?php endforeach; ?>
 ];
 
 var userClasses = [
-<?php if (count($this->user->userClasses)): 
-      foreach($this->user->userClasses as $uc): ?> 
+<?php foreach($this->user->userClasses as $uc): ?> 
       {
           id: <?=$uc->id?>,
           name: '<?=$uc->name?>',
       },
-<?php endforeach; endif; ?>
+<?php endforeach; ?>
 ];
 
 $(document).ready(function() {

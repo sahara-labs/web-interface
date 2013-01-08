@@ -145,13 +145,60 @@ function displayAddProjectDialog()
 	
 	/* Guidance button handling. */
 	new GuidanceBubble("#add-project-dialog", "info", "left", 20, -20).initButtons();
+	
+	/* Check whether the activity ID is unique on focous out. */
+	$("#add-activity-id")
+		.focusin(function() { new GuidanceBubble().remove("#add-activity-id"); })
+		.focusout(checkActivityID);
+}
+
+/**
+ * Checks whether the entered activity ID is unique. If not a guidance bubble
+ * is added to the page. 
+ */
+var isCheckingActivityID = false;
+var activityIDUnique = false;
+function checkActivityID()
+{
+	var id = $("#add-activity-id").val();
+	if (id == "") return;
+
+	isCheckingActivityID = true;
+	$.get(
+		"/research/checkactivity",
+		{ activityID: id },
+		function (resp) {
+			/* User has probably logged out. */
+			if (typeof resp != "object") window.location.reload();
+			
+			activityIDUnique = resp.unique;
+			if (!resp.unique)
+			{
+				new GuidanceBubble("#add-project-dialog", "error", "left", 200, -10)
+						.show("The activity ID of the project is not unique. Please enter a different activity ID.", "#add-activity-id");
+			}
+			isCheckingActivityID = false;
+		}
+	);
 }
 
 /**
  * Adds a project using the contents of the add project dialog.
  */
+var addProjectTimeout = false;
 function addProject() 
 {
+	if (isCheckingActivityID)
+	{
+		if (addProjectTimeout) return;
+		
+		addProjectTimeout = true;
+		setTimeout(function() {
+			addProjectTimeout = false;
+			addProject();
+		}, 50);
+	}
+	
 	var params = {}, valid = true,
 		i = 0, val = "",
 		gd = new GuidanceBubble("#add-project-dialog", "error", "left", 200, -10);
@@ -165,8 +212,13 @@ function addProject()
 		valid = false;
 		gd.show("Activity ID must be specified.", "#add-activity-id");
 	}
+	else if (!activityIDUnique)
+	{
+		valid = false;
+		gd.show("The activity ID of the project is not unique. Please enter a different activity ID.", "#add-activity-id");
+	}
 	
-	if ((params.userClass = $("#add-permissions option:selected").text()) == "")
+	if ((params.userClass = $("#add-permissions option:selected").val()) == "")
 	{
 		valid = false;
 		gd.show("A permission must selected for a project. If you don't have a permission " +
@@ -183,8 +235,7 @@ function addProject()
 		/* Optional parameters that have been selected to be added can be 
 		 * ignored. */
 		if (definitions[i].optional && $("#" + definitions[i].id + "-enable:checked").size() == 0) continue;
-		
-		
+
 		val = $("#" + definitions[i].id).val();
 		
 		if (!definitions[i].optional && val == "")
@@ -195,14 +246,11 @@ function addProject()
 		}
 		else if (val == "") continue; // Optional parameter not specified.
 		
-		if (definitions[i].regex != "")
+		if (definitions[i].regex != "" && !(new RegExp(definitions[i].regex).test(val)))
 		{
-			if (!new RegExp(definitions[i].regex).test(val))
-			{
-				valid = false;
-				gd.show(definitions[i].hint, "#" + definitions[i].id);
-				continue;
-			}
+			valid = false;
+			gd.show(definitions[i].hint, "#" + definitions[i].id);
+			continue;
 		}
 		
 		/* Metadata valid we can add it to the parameter set. */
@@ -226,5 +274,41 @@ function addProject()
 			.parent()
 				.css("left", parseInt($dialog.parent().css("left")) + 100)
 				.children(".ui-dialog-titlebar, .ui-dialog-buttonpane").hide();
+		
+		/* Make the request to add the project. */
+		$.post(
+			"/research/addproject",
+			params,
+			function (resp)
+			{
+				/* User session timed out. */
+				if (typeof resp != "object") window.location.reload();
+				
+				/* Refresh the page to show the project in the list of existing projects. */
+				if (resp.success)
+				{
+					window.location.reload();
+					return;
+				}
+				
+				/* Unexpected error, display error on restored dialog. */
+				$dialog.dialog("option", {
+						closeOnEscape: true,
+						width: 400,
+						buttons: {
+							Cancel: function() { $(this).dialog("close"); }
+						}
+					})
+					.html(
+						"<div id='add-project-error' class='ui-state ui-state-error'>" +
+							"<span class='ui-icon ui-icon-alert'></span>" +
+							"Failed: " + resp.reason + 
+						"</div>"
+					)
+					.parent()
+						.css("left", parseInt($dialog.parent().css("left")) - 100)
+						.children(".ui-dialog-titlebar, .ui-dialog-buttonpane").show();
+			}
+		);
 	}
 }

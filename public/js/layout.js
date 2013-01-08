@@ -238,6 +238,15 @@ GuidanceBubble.prototype.show = function(message, e) {
 };
 
 /**
+ * Removes a specific selector. 
+ * 
+ * @param e node where the bubble has been positioned
+ */
+GuidanceBubble.prototype.remove = function(e) {
+	$(e).siblings(".guidance-bubble").remove();
+};
+
+/**
  * Removes all the guidance bubbles from nested from this objects 
  * selector.
  */
