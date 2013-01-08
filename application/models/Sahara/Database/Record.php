@@ -112,10 +112,10 @@ abstract class Sahara_Database_Record
     }
     
     /**
-     * Load a record with the specified where constraint(s). The return of this function is 
-     * either a entity of the loaded record type or an array of record entities.
-     * <br />
-     * The where constraint can be either a list of column names and  
+     * Load a record with the specified where constraint(s). The where constraint can be 
+     * either a list of column names or a primary key of the entity to load. If where 
+     * constraints are specified a list of records is returned, if a primary key is supplied
+     * a record is returned of false if record was not found.
      *
      * @param mixed $where where constraints (optional)
      * @param array $cols list of columns to select, (optional)
@@ -149,7 +149,7 @@ abstract class Sahara_Database_Record
              
             $constraints = array_values($where);
         }
-        else if (is_numeric($where))
+        else if ($where !== NULL)
         {
             /* Primary key constraint. */
             $stm .= ' WHERE ' . $record->_idColumn . ' = ?';
@@ -179,16 +179,16 @@ abstract class Sahara_Database_Record
         if ($qu->rowCount() == 0)
         {
             /* No rows found. */
-            return false;
+            return is_array($where) || $where == NULL ? array() : false;
         }
-        else if ($qu->rowCount() == 1)
+        else if ($qu->rowCount() == 1 && !is_array($where) && $where != NULL)
         {
-            /* One row. */
+            /* One row from primary key. */
             return new static($qu->fetch());
         }
         else
         {
-            /* Lots of rows have been returned, an array set will be returned. */
+            /* Search, an array set will be returned. */
             $rowSet = array();
             foreach ($qu->fetchAll() as $row)
             {
@@ -214,7 +214,8 @@ abstract class Sahara_Database_Record
         if ($this->_isPersistant)
         {
             /* This is already a persistant record, so we need to update its record. */
-            
+            // TODO
+            $this->_isDirty = false;
         }
         else
         {
@@ -235,7 +236,8 @@ abstract class Sahara_Database_Record
                     $stm .= ', ' . $this->_relationships[$rel]['foreign_key'];
                     array_push($values, $ref->__get($ref->getIdentityColumn()));
                     
-                    $this->_data[$this->_relationships[$rel]['foreign_key']] = $ref->__get($ref->getIdentityColumn()); 
+                    $this->_data[$this->_relationships[$rel]['foreign_key']] = $ref->__get($ref->getIdentityColumn());
+                    $this->_loadedRelationships[$rel] = $ref; 
                     unset($this->_updatedRelationships[$rel]);
                 }
             }
@@ -247,7 +249,7 @@ abstract class Sahara_Database_Record
             if (!$qu->execute($values))
             {
                 /* Some error inserting record into database. */
-                throw new Sahara_Database_Exception($stm);
+                throw new Sahara_Database_Exception($qu);
             }
             
             /* After the record has been inserted, it may be requested but we don't
@@ -273,17 +275,49 @@ abstract class Sahara_Database_Record
             switch ($this->_relationships[$rel]['join'])
             {
                 case 'foreign':
-                    break;
-                    
-                case 'local':
-                    /* Local joins need to update this record so we set this information and call updated. */
-                    
+                    /* For foriegn relationships we need to inject this records primary 
+                     * key and save the relationship entity. */
+                    foreach ($ref as $record)
+                    {
+                        $record->__set($this->_relationships[$rel]['foreign_key'], $this->_data[$this->_idColumn]);
+                        $record->save();
+                    }
+                    $this->_loadedRelationships[$rel] = $ref;
                     break;
                     
                 case 'table':
+                    /* For join table relationships we need to insert a record into the 
+                     * join table with the primary keys of the records. Therefore, the 
+                     * relationship entity must already be persistant. */
+                    foreach ($ref as $record)
+                    {
+                        if (!$record->isPersistent()) throw new Sahara_Database_Exception('Cannot add relationship in join table ' .
+                                'because the relationship entity is not persistent.');
+                        
+                        $stm = 'INSERT INTO ' . $this->_relationships[$rel]['join_table'] . 
+                                ' ( ' . $this->_relationships[$rel]['join_table_source'] . ', ' . $this->_relationships[$rel]['join_table_dest'] . ' ) ' .
+                                ' VALUES ( ? , ? )';
+                        
+                        $qu = $this->_db->prepare($stm);
+                        if (!$qu->execute(array($this->_data[$this->_idColumn], $record->__get($record->getIdentityColumn()))));
+                        {
+                            throw new Sahara_Database_Exception($qu);
+                        }
+                    }
+                    
+                    $this->_loadedRelationships[$rel] = $ref;
+                    break;
+                    
+                case 'local':
+                    throw new Sahara_Database_Exception('Assertion error, bug in Sahara_Database_Record->save, ' . 
+                            'local relationships should not need further processing.');
+                    break;
+                    
+                default:
+                    throw new Sahara_Database_Exception('Bad relationship join type. Must be \'foreign\', \'table\' or \'local\'.');
                     break;
             }
-        }
+        }        
     }
 
     /**
@@ -299,10 +333,7 @@ abstract class Sahara_Database_Record
      * where the database will be hit at most once to load a variable. It is 
      * recommended to have the database object load values that will be 
      * subsequently be consumed in the load call rather than requiring selects
-     * queries for each record column for obvious performance improvements.<br />
-     * If the value of a column has been modified but it has not been persisted 
-     * to the database, the original valueis returned. Only after the original
-     * value has been stored, will it be returned as the record value.
+     * queries for each record column for obvious performance improvements.
      * 
      * @param String $col column name
      * @return String value of column.
@@ -311,9 +342,18 @@ abstract class Sahara_Database_Record
     public function __get($col)
     {
         if (array_key_exists($col, $this->_relationships))
-        {
+        {         
             /* If the requested field is a relationship, we need to return the
              * relationship entities. */
+
+            /* Updated related entities override existing related entities. */
+            $resultSet = array();
+            if (array_key_exists($col, $this->_updatedRelationships))
+            {
+            	if ($this->_relationships[$col]['join'] == 'local') return $this->_updatedRelationships[$col];
+            	else $resultSet = $this->_updatedRelationships[$col];
+            }
+            
             if (!array_key_exists($col, $this->_loadedRelationships) && $this->_isPersistant)
             {
                 $rel = $this->_relationships[$col];
@@ -335,7 +375,9 @@ abstract class Sahara_Database_Record
                 {
                     /* Foriegn key of the relationship table stored in this record. */
                     $stm .= ' WHERE ' . $rel['table'] . '.' . $entity->getIdentityColumn() . ' = ?';
-                    $request = $this->__get($$rel['foreign_key']);
+                   
+                    /* Local records may foreign key may be NULL. */
+                    if (!($request = $this->__get($$rel['foreign_key']))) return NULL;
                 }
                 else if ($rel['join'] == 'table')
                 {
@@ -360,18 +402,32 @@ abstract class Sahara_Database_Record
                     throw new Sahara_Database_Exception($qu);
                 }
                        
-                $this->_loadedRelationships[$col] = array();
-                foreach ($qu->fetchAll() as $row)
+                if ($this->_relationships[$col]['join'] == 'local')
                 {
-                    array_push($this->_loadedRelationships[$col], new $entityName($row));
+                    return $this->_loadedRelationships[$col] = new $entityName($row);
+                }
+                else
+                {
+                    $this->_loadedRelationships[$col] = array();
+                    foreach ($qu->fetchAll() as $row)
+                    {
+                        array_push($this->_loadedRelationships[$col], new $entityName($row));
+                    }
                 }
             }
             
-            return $this->_loadedRelationships[$col];
+            $resultSet = array_merge($resultSet, $this->_loadedRelationships[$col]);
+            return $resultSet;
         }
         else
         {
             /* Requested field is a record column. */
+            if (array_key_exists($col, $this->_updatedData))
+            {
+                /* Recently set values overrides the actual record data. */
+                return $this->_updatedData[$col];    
+            }
+            
             if (!array_key_exists($col, $this->_data) && $this->_isPersistant) 
             {
                 /* If the column has not been previously been loaded, we need to 
@@ -383,10 +439,9 @@ abstract class Sahara_Database_Record
                 }
                 
                 $this->_data = array_merge($this->_data, self::_convertFromSQL($qu->fetch()));
+
             }
             
-            /* If the record is not persistant we haven't hit the database and 
-             * therefore we still need to check whether the array is populated. */
             return array_key_exists($col, $this->_data) ? $this->_data[$col] : NULL;
         }   
     }
