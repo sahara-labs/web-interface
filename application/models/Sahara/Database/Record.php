@@ -395,6 +395,9 @@ abstract class Sahara_Database_Record
                     throw new Sahara_Database_Exception('Unknown relationship type ' . $rel['join']);
                 }
                 
+                /* Add consistent order. */
+                $stm .= ' ORDER BY ' . $rel['table'] . '.' . $entity->getIdentityColumn() . ' ASC ';
+                
                 $qu = $this->_db->prepare($stm);
                 if (!$qu->execute(array($request)))
                 {

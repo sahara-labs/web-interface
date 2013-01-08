@@ -53,6 +53,12 @@ class Sahara_Database_Record_User extends Sahara_Database_Record
                 'join_table'  => 'user_association',
                 'join_table_source' => 'users_id',
                 'join_table_dest' => 'user_class_id'
+            ),
+            'projects' => array(
+                'table' => 'project',
+                'entity' => 'Project',
+                'join' => 'foreign',
+                'foreign_key' => 'users_id' 
             )
     );
     
