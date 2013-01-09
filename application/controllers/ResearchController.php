@@ -53,9 +53,6 @@ class ResearchController extends Sahara_Controller_Action_Acl
 
         /* Load the users and their class. */
         $this->view->user = Sahara_Database_Record_User::getLoginUser();
-        
-        /* Load all the projects for the user. */
-        
     }
     
     /**

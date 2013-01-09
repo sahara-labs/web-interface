@@ -312,3 +312,27 @@ function addProject()
 		);
 	}
 }
+
+/**
+ * Publishes a project.
+ */
+function publishProject()
+{
+	alert("Publishing project.");
+}
+
+/**
+ * Creates collections for a project.
+ */
+function createCollectionsForProject()
+{
+	alert("Create collections");
+}
+
+/**
+ * Removes a project.
+ */
+function removeProject()
+{
+	alert("Removing project");
+}
