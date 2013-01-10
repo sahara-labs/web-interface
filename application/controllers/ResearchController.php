@@ -233,4 +233,12 @@ class ResearchController extends Sahara_Controller_Action_Acl
         
         echo $this->view->json(array('success' => true));
     }
+    
+    /**
+     * Action that display the view for collections and collection creation.
+     */
+    public function collectionsAction()
+    {
+        echo 'Collection with ID: ' . $this->_request->getParam('activityID');        
+    }
 }

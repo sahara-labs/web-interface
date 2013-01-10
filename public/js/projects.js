@@ -322,11 +322,12 @@ function publishProject()
 }
 
 /**
- * Creates collections for a project.
+ * Redirects to the collections page.
  */
-function createCollectionsForProject()
+function collectionsForProject()
 {
-	alert("Create collections");
+	window.location.href = "/research/collections/activityID/" + 
+			$(this).parents(".project-item").find(".project-activity-id").text();
 }
 
 /**
