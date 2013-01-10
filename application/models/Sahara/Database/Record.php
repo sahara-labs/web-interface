@@ -84,6 +84,9 @@ abstract class Sahara_Database_Record
      *    foreign key. This is only used for the 'table' join type.</li>
      *    <li>join_table_dest - The join table column that has the relationships
      *    record foreign key. This is only used for the 'table' join type.</li>
+     *    <li>null_on_delete - Whether the foreign relationship record should have the 
+     *     foreign key column nulled instead of the record being deleted. This only
+     *     applies to 'foreign' type joins'.</li>
      * </ul>
      * 
      * @var array
@@ -322,10 +325,62 @@ abstract class Sahara_Database_Record
 
     /**
      * Deletes the record including any referenced records.
+     * 
+     * @throws Sahara_Database_Exception if error occurs during deletion
      */
     public function delete()
     {
-        // TODO delete record
+        /* It does not make sense to attempt to delete a non-persistant record. */
+        if (!$this->_isPersistant)
+        {
+            throw new Sahara_Database_Exception('Unable to delete non-persistant record.');
+        }
+        
+        /* First the reference records must be deleted. */
+        foreach ($this->_relationships as $name => $rel)
+        {
+            switch ($rel['join'])
+            {
+                case 'local':
+                    /* Nothing to delete for this case, because the reference 
+                     * is stored in this record. */
+                    break;
+                    
+                case 'foreign':
+                    foreach ($this->__get($name) as $r)
+                    {
+                        if (array_key_exists('null_on_delete', $rel) && $rel['null_on_delete'])
+                        {
+                            $r->__set($rel['foreign_key'], NULL);
+                            $r->save();
+                        }
+                        else
+                        {
+                            /* Delete the relationship record. */
+                            $r->delete();
+                        }
+                    }
+                    break;
+                    
+                case 'table':
+                    /* Any join table records need to be deleted. */
+                    $stm = 'DELETE FROM ' . $rel['join_table'] . ' WHERE ' . $rel['join_table_source'] . ' = ?';
+                    $qu = $this->_db->prepare($stm);
+                    if (!$qu->execute(array($this->_data[$this->_idColumn])))
+                    {
+                        throw new Sahara_Database_Exception($qu);
+                    }
+                    break;
+            }
+            
+            /* Delete this record. */
+            $stm = 'DELETE FROM ' . $this->_name . ' WHERE ' . $this->_idColumn . ' = ?';
+            $qu = $this->_db->prepare($stm);
+            if (!$qu->execute(array($this->_data[$this->_idColumn])))
+            {
+                throw new Sahara_Database_Exception($qu);
+            }
+        }
     }
 
     /** 
