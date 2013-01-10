@@ -334,5 +334,45 @@ function createCollectionsForProject()
  */
 function removeProject()
 {
-	alert("Removing project");
+	var activity = $(this).parents(".project-item").find('.project-activity-id').text(), e = this;
+	
+	$("body").append(
+		"<div id='remove-project-dialog' title='Remove Confirmation'>" +
+			"<p>Are you sure want to remove the project with activity identifier '" + activity + "'?</p>" + 
+			"<p class='ui-priority-secondary'>" +
+				"<span class='ui-icon ui-icon-info'></span>Removing the project does not affect the published status of the project." +
+			"</p>" +
+		"</div>"
+	);
+	
+	$("#remove-project-dialog").dialog({
+		closeOnEscape: true,
+		width: 400,
+		resizable: false,
+		buttons: {
+			'Remove': function() {
+				$.post(
+					"/research/removeproject",
+					{ activityID: activity },
+					function(resp) {
+						if (typeof resp != "object" || !resp.success) window.location.reload();
+						
+						$("#remove-project-dialog").dialog("close");
+						$(e).parents(".project-item").remove();
+						
+						/* After deleting the last project we should display
+						 * the no project text. */
+						if ($("#project-list .project-item").length == 0) 
+						{
+							$("#project-list-container").remove();
+							$("#no-projects").show();
+						}
+					}
+					
+				);
+			},
+			'Cancel': function() { $(this).dialog("close"); }
+		},
+		close: function() { $(this).dialog("destroy"); $(this).remove(); }
+	});
 }

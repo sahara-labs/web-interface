@@ -154,3 +154,12 @@
 	box-shadow: 0 2px 3px #B5B5B5;
 	font-weight: bold; 
 }
+
+#remove-project-dialog p {
+	margin: 5px 0px;
+}
+
+#remove-project-dialog .ui-icon {
+	float: left;
+	margin-right: 5px;
+}

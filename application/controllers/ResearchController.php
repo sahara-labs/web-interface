@@ -178,4 +178,59 @@ class ResearchController extends Sahara_Controller_Action_Acl
         
         echo $this->view->json(array('success' => $success, 'reason' => $reason));
     }
+    
+    /**
+     * Action that publishs a project. 
+     */
+    public function publishprojectAction()
+    {
+        
+    }
+    
+    /**
+     * Action that remove a project. 
+     */
+    public function removeprojectAction()
+    {
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();
+        
+        if (!$this->_request->getParam('activityID'))
+        {
+            echo $this->view->json(array(
+                    'success' => false,
+                    'error'   => 'Required parameter not supplied.'
+            ));
+            return;
+        }
+        
+        $project = Sahara_Database_Record_Project::load(array('activity' => $this->_request->getParam('activityID')));
+        if (count($project) == 0)
+        {
+            echo $this->view->json(array(
+                    'success' => false,
+                    'error' => 'Project not found.'
+            ));
+            return;
+        }
+        
+        /* There can only be one project as the activity ID has a unique 
+         * constraint. */
+        $project = $project[0];
+        
+        try
+        {
+            $project->delete();
+        }
+        catch (Sahara_Database_Exception $ex)
+        {
+            echo $this->view->json(array(
+                    'success' => false,
+                    'error' => $ex->getMessage()
+            ));
+            return;
+        }
+        
+        echo $this->view->json(array('success' => true));
+    }
 }

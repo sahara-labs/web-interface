@@ -149,9 +149,9 @@ $(document).ready(function() {
 </script>
 
 
-<?php else: ?>
-<div id='no-projects' class='ui-state-error'>
+<?php endif; ?>
+<div id='no-projects' class='ui-state-error' style='display:<?=count($this->user->projects) > 0 ? 'none' : 'block'?>'>
     <span class='ui-icon ui-icon-alert'></span>
     You have no projects.
 </div>
-<?php endif; ?>
+
