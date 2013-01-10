@@ -112,10 +112,12 @@ $(document).ready(function() {
 
 <script type="text/javascript">
 $(document).ready(function() {
+	/* Events for buttons. */
 	$("#project-list .project-button-publish").click(publishProject);
 	$("#project-list .project-button-create-collection").click(createCollectionsForProject);
 	$("#project-list .project-button-remove").click(removeProject);
 
+	/* Project list accordian. */
 	$("#project-list .project-item-title").click(function() {
 	    var $contents = $(this).siblings(".project-item-contents");
 	    if ($contents.css("display") == "none")
@@ -144,6 +146,28 @@ $(document).ready(function() {
 		                .removeClass("ui-icon-circle-arrow-s")
 		                .addClass("ui-icon-circle-arrow-e");
 	    }
+	});
+
+	/* Filter box. */
+	$("#project-list-filter").keyup(function() {
+		var filter = $(this).val();
+
+		if (filter == "")
+		{
+			/* Display all proejcts. */
+			$("#project-list .project-item").show();
+		}
+		else
+		{
+			/* Only display projects that begin with filter. */
+			$("#project-list .project-item").each(function() {
+				if (!$(this).find(".project-activity-id").text().startsWith(filter))
+				{
+					$(this).hide();
+				}
+				else $(this).show();
+			});
+		}
 	});
 });
 </script>
