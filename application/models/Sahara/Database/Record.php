@@ -217,8 +217,47 @@ abstract class Sahara_Database_Record
         if ($this->_isPersistant)
         {
             /* This is already a persistant record, so we need to update its record. */
-            // TODO
+            $stm = 'UPDATE ' . $this->_name . ' SET ' . implode(' = ?,', array_keys($this->_updatedData));
+            $stm .= ' = ? ';
+            $values = array_values($this->_updatedData);
+            
+            /* Run conversison for correct types. */
+            foreach ($values as $i => $v) $values[$i] = self::_convertForSQL($v);
+            
+            /* Local relationships are added as column values. */
+            foreach ($this->_updatedRelationships as $rel => $ref)
+            {
+                if ($this->_relationships[$rel]['join'] == 'local')
+                {
+                    if (!$ref->isPersistent()) throw new Sahara_Database_Exception('Reference entity is not persistent.');
+                    
+                    $stm .= ', ' . $this->_relationships[$rel]['foreign_key'] . ' = ? ';
+                    array_push($values, $ref->__get($ref->getIdentityColumn()));
+                    
+                    $this->_data[$this->_relationships[$rel]['foreign_key']] = $ref->__get($ref->getIdentityColumn());
+                    $this->_loadedRelationships[$rel] = $ref;
+                    unset($this->_updatedRelationships[$rel]);
+                }
+            }
+            
+            /* Constraint to update the correct record. */
+            $stm .= ' WHERE ' . $this->_idColumn . ' = ?';
+            array_push($values, $this->_data[$this->_idColumn]);
+            
+            /* Update the record. */
+            $qu = $this->_db->prepare($stm);
+            if (!$qu->execute($values))
+            {
+                /* Error running update. */
+                throw new Sahara_Database_Exception($qu);
+            }
+            
+            /* Load the updated data. */
+            foreach ($this->_updatedData as $key => $val) $this->_data[$key] = self::_convertFromSQL($val);
+            
+            /* Make this record as clean. */
             $this->_isDirty = false;
+            $this->_updatedData = array();
         }
         else
         {
@@ -432,7 +471,7 @@ abstract class Sahara_Database_Record
                     $stm .= ' WHERE ' . $rel['table'] . '.' . $entity->getIdentityColumn() . ' = ?';
                    
                     /* Local records may foreign key may be NULL. */
-                    if (!($request = $this->__get($$rel['foreign_key']))) return NULL;
+                    if (!($request = $this->__get($rel['foreign_key']))) return NULL;
                 }
                 else if ($rel['join'] == 'table')
                 {
@@ -459,7 +498,7 @@ abstract class Sahara_Database_Record
                        
                 if ($this->_relationships[$col]['join'] == 'local')
                 {
-                    return $this->_loadedRelationships[$col] = new $entityName($row);
+                    return $this->_loadedRelationships[$col] = new $entityName($qu->fetch());
                 }
                 else
                 {
@@ -499,6 +538,25 @@ abstract class Sahara_Database_Record
             
             return array_key_exists($col, $this->_data) ? $this->_data[$col] : NULL;
         }   
+    }
+    
+    /**
+     * Compares equality between this entity and another entity. An entity is the same
+     * if it is the same type and has the same primary key value.
+     * 
+     * @param Sahara_Database_Record $obj entity to test against
+     * @return bool true if the entities are equal
+     */
+    public function equals($obj)
+    {
+        if ($obj === this) return true;
+        if (get_class($obj) != get_class($this)) return false;
+        
+        if ($obj->_name != $this->_name) return false;
+        if (!($obj->isPersistent() && $this->_isPersistant)) return false;
+        
+        return $obj->__get($this->_idColumn) === $this->_data[$this->_idColumn];
+        
     }
     
     /**
