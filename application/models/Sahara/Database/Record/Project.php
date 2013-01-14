@@ -62,4 +62,21 @@ class Sahara_Database_Record_Project extends Sahara_Database_Record
             'foreign_key' => 'user_class_id'
         )   
     );
+    
+    /**
+     * Gets value of the specified metadata type. If the type has no
+     * value NULL is returned.
+     * 
+     * @param Sahara_Database_Record_ProjectMetadataType $type metadata type
+     * @return Sahara_Database_Record_ProjectMetadata | NULL metadata type
+     */
+    public function getMetadata($type)
+    {
+        foreach ($this->metadata as $metadata)
+        {
+            if ($type->equals($metadata->type)) return $metadata;
+        }
+        
+        return NULL;
+    }
 }
