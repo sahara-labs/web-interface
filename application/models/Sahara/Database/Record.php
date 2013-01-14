@@ -510,8 +510,15 @@ abstract class Sahara_Database_Record
                 }
             }
             
-            $resultSet = array_merge($resultSet, $this->_loadedRelationships[$col]);
-            return $resultSet;
+            if ($this->_relationships[$col]['join'] == 'local')
+            {
+                return $this->_loadedRelationships[$col];
+            }
+            else
+            {
+                $resultSet = array_merge($resultSet, $this->_loadedRelationships[$col]);
+                return $resultSet;
+            }
         }
         else
         {
