@@ -51,6 +51,7 @@ function displayAddProjectDialog()
 						"<p>The activity ID of the project. If you have a 'Research Master' project ID, use that as your ID.</p>" +
 					"</div>" + 
 				"</div>" +
+				"<div class='project-behaviour-title project-contents-title'>Behaviour</div>" +
 				"<div class='form-line'>" +
 					"<label for='add-permissions'>Permissions:</label>" +
 					"<select id='add-permissions' name='add-permissions'>";
@@ -93,7 +94,8 @@ function displayAddProjectDialog()
 						"research equipment. If they are not automatically published, collections of datasets " +
 						"need to manually collated.</p>" + 
 					"</div>" + 
-				"</div>";
+				"</div>" +
+			    "<div class='project-metadata-title project-contents-title'>Metadata</div>";
     
     /* Other metadata of the project. */
     for (i in definitions)
@@ -318,7 +320,7 @@ function addProject()
  */
 function publishProject()
 {
-	var activity = $(this).parents(".project-item").find(".project-activity-id").text();
+	var $button = $(this), activity = $button.parents(".project-item").find(".project-activity-id").text();
 	
 	$("body").append(
 		"<div id='publish-project-dialog' title='Publish Confirmation'>" +
@@ -345,13 +347,46 @@ function publishProject()
 					"/research/publishproject",
 					{ activityID: activity },
 					function(resp) {
-						if (typeof resp != "object" || resp.success)
+						if (typeof resp != "object" || !resp.success)
 						{
 							window.location.reload();
 							return;
 						}
 						
-						// TODO Update display to match published status
+						/* Project contents drop down. */
+						var $li = $button.parents(".project-item");
+						$li.find(".project-content-save").remove();
+						$li.children(".project-contents").append(
+							"<div class='project-content-published'>" +
+								"<p>Published projects cannot be modified.</p>" +
+							"</div>"
+						);
+						
+						/* Buttons. */
+						$button.remove();
+						
+						if ($li.find('.auto-publish-checkbox:checked').length == 1)
+						{
+							$li.children(".project-buttons").append(
+								"<div class='project-button-view-collection'>" +
+									"<span class='ui-icon ui-icon-search'></span> View Collections" +
+								"</div>"
+							);
+							
+							$li.find(".project-button-view-collection").click(collectionsForProject);
+						}
+						else
+						{
+							$li.children(".project-buttons").append(
+								"<div class='project-button-create-collection'>" +
+									"<span class='ui-icon ui-icon-plus'></span> Create Collections" +
+								"</div>"
+							);
+							
+							$li.find(".project-button-create-collection").click(collectionsForProject);
+						}
+						
+						$("#publish-project-dialog").dialog("close");
 					}
 				);
 			},

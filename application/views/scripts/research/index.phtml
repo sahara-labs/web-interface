@@ -141,7 +141,7 @@ $(document).ready(function() {
                            </div>
                            <div class='form-line'>
                                <label for='<?=$pid?>-auto-publish'>Auto Publish:</label>
-                               <input id='<?=$pid?>-auto-publish' type='checkbox' name='<?=$pid?>-auto-publish' 
+                               <input id='<?=$pid?>-auto-publish' type='checkbox' name='<?=$pid?>-auto-publish' class='auto-publish-checkbox'
                                        <?php if($project->auto_publish_collections): ?>checked='checked'<?php endif; ?> />
                                <div class='guidance-button'>
             				       <span class='ui-icon ui-icon-help'></span>

@@ -44,11 +44,13 @@
 	left: 0px;
 }
 
-#add-project-dialog .form-line, #project-list .form-line {
+#add-project-dialog .form-line, 
+#project-list .form-line {
 	clear: both;
 }
 
-#add-project-dialog label, #project-list label {
+#add-project-dialog label, 
+#project-list label {
 	width: 120px;
 }
 
@@ -66,7 +68,8 @@
 	padding: 8px;
 }
 
-#add-project-error .ui-icon, #no-projects .ui-icon {
+#add-project-error .ui-icon, 
+#no-projects .ui-icon {
 	float: left;
 	margin-right: 5px;
 }
@@ -126,6 +129,7 @@
 	margin-right: 5px;
 }
 
+#add-project-dialog .project-contents-title,
 #project-list .project-buttons div, 
 #project-list .project-contents-title,
 #project-list .project-content-save {
@@ -161,13 +165,15 @@
 	margin: 5px 0px;
 }
 
-#remove-project-dialog .ui-priority-secondary, #publish-project-dialog .ui-priority-secondary {
+#remove-project-dialog .ui-priority-secondary, 
+#publish-project-dialog .ui-priority-secondary {
 	padding: 5px;
 	border: 1px dashed #B5B5B5;
 	border-radius: 4px;
 }
 
-#remove-project-dialog .ui-icon, #publish-project-dialog .ui-icon {
+#remove-project-dialog .ui-icon, 
+#publish-project-dialog .ui-icon {
 	float: left;
 	margin-right: 5px;
 }
@@ -178,13 +184,21 @@
 
 }
 
+#add-project-dialog .project-contents-title,
+#project-list .project-contents-title {
+	border-radius: 0 0 4px 4px;
+	width: 100px;
+	padding: 4px 20px;
+	text-align: center;
+}
+
+#add-project-dialog .project-contents-title {
+	margin: 10px auto;	
+}
+
 #project-list .project-contents-title {
 	position: relative;
-	padding: 4px 20px;
-	border-radius: 0 0 4px 4px;
 	top: 16px;
-	text-align: center;
-	width: 100px;
 }
 
 #project-list .project-behaviour-title {
