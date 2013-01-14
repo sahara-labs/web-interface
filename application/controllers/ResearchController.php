@@ -184,7 +184,55 @@ class ResearchController extends Sahara_Controller_Action_Acl
      */
     public function publishprojectAction()
     {
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();
         
+        if (!$this->_request->getParam('activityID'))
+        {
+            echo $this->view->json(array(
+                    'success' => false,
+                    'error'   => 'Required parameter not supplied.'
+            ));
+            return;
+        }
+        
+        $project = Sahara_Database_Record_Project::load(array('activity' => $this->_request->getParam('activityID')));
+        if (count($project) == 0)
+        {
+            echo $this->view->json(array(
+                    'success' => false,
+                    'error'   => 'Project not found'
+            ));
+            return;
+        }
+
+        $project = $project[0];
+        
+        /* Check the project being deleted is actually owned by the logged
+         * in user. */
+        if (!Sahara_Database_Record_User::getLoginUser()->equals($project->user))
+        {
+        	echo $this->view->json(array(
+        			'success' => false,
+        			'error' => 'Not authorised'
+        	));
+        	return;
+        }
+        
+        /* Check the project has not already been published. */
+        if ($project->publish_time)
+        {
+            echo $tis->view->json(array(
+                    'success' => false,
+                    'error' => 'Project already published'
+            ));
+        }
+
+        // TODO Properly implement this. 
+        $project->publish_time = new DateTime();
+        $project->save();
+        
+        echo $this->view->json(array('success' => true));
     }
     
     /**
@@ -217,6 +265,17 @@ class ResearchController extends Sahara_Controller_Action_Acl
         /* There can only be one project as the activity ID has a unique 
          * constraint. */
         $project = $project[0];
+        
+        /* Check the project being deleted is actually owned by the logged 
+         * in user. */
+        if (!Sahara_Database_Record_User::getLoginUser()->equals($project->user))
+        {
+            echo $this->view->json(array(
+                    'success' => false,
+                    'error' => 'Not authorised'
+            ));
+            return;
+        }
         
         try
         {

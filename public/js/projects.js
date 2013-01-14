@@ -318,7 +318,47 @@ function addProject()
  */
 function publishProject()
 {
-	alert("Publishing project.");
+	var activity = $(this).parents(".project-item").find(".project-activity-id").text();
+	
+	$("body").append(
+		"<div id='publish-project-dialog' title='Publish Confirmation'>" +
+			"<p>Are you sure you want to publish project to the UTS metadata store?</p>" +
+			"<p class='ui-priority-secondary'>" +
+				"<span class='ui-icon ui-icon-info'></span>Once your project has been published " +
+				"you can no longer modify project behaviour or metadata." +
+			"</p>" +
+			"<p class='ui-priority-secondary'>" +
+				"<span class='ui-icon ui-icon-info'></span>If your project is set to be shared, " +
+				"it with be submittied to ANDS." +
+			"</p>" +
+		"</div>"
+	);
+	
+	$("#publish-project-dialog").dialog({
+		closeOnEscape: true,
+		width: 400,
+		resizable: false,
+		modal: true,
+		buttons: {
+			'Publish': function() {
+				$.post(
+					"/research/publishproject",
+					{ activityID: activity },
+					function(resp) {
+						if (typeof resp != "object" || resp.success)
+						{
+							window.location.reload();
+							return;
+						}
+						
+						// TODO Update display to match published status
+					}
+				);
+			},
+			'Cancel': function() { $(this).dialog("close"); }
+		},
+		close: function() { $(this).dialog("destroy"); $(this).remove(); }
+	});
 }
 
 /**
@@ -350,6 +390,7 @@ function removeProject()
 		closeOnEscape: true,
 		width: 400,
 		resizable: false,
+		modal: true,
 		buttons: {
 			'Remove': function() {
 				$.post(

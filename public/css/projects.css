@@ -155,11 +155,21 @@
 	font-weight: bold; 
 }
 
-#remove-project-dialog p {
+#remove-project-dialog p, #publish-project-dialog p {
 	margin: 5px 0px;
 }
 
-#remove-project-dialog .ui-icon {
+#remove-project-dialog .ui-priority-secondary, #publish-project-dialog .ui-priority-secondary {
+	padding: 5px;
+	border: 1px dashed #B5B5B5;
+	border-radius: 4px;
+}
+
+#remove-project-dialog .ui-icon, #publish-project-dialog .ui-icon {
 	float: left;
 	margin-right: 5px;
+}
+
+#project-list .project-item-title {
+	
 }

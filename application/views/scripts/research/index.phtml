@@ -98,14 +98,17 @@ $(document).ready(function() {
                     <div class='project-button-create-collection'><span class='ui-icon ui-icon-plus'></span> Create Collections</div>
                 <?php endif; ?>
                 <?php if ($project->publish_time && $project->auto_publish_collections): ?>
-                    <div class='project-button-view-collection'><span class='ui-icon ui-icon-plus'></span> View Collections</div>
+                    <div class='project-button-view-collection'><span class='ui-icon ui-icon-search'></span> View Collections</div>
                 <?php endif; ?>
                 <?php if (!$project->publish_time): ?>
                     <div class='project-button-publish'><span class='ui-icon ui-icon-arrowthick-1-e'></span>Publish</div>
                 <?php endif; ?>
                 </div>
                 <div class='project-item-contents'>
-                    Details about <?=$project->activity?>.
+                   <div class='project-behaviour-title project-item-title'>Behaviour</div>
+                   <div class='project-metadata-title project-item-title'>Metadata</div>
+                   
+                   
                 </div>
             </li>
         <?php endforeach; ?>
