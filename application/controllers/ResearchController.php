@@ -122,9 +122,9 @@ class ResearchController extends Sahara_Controller_Action_Acl
         }
     
         /* Project modifiers. */
-        $project->is_open = $this->_request->getParam('openAccess') == 'true' ? 1 : 0;
-        $project->is_shared = $this->_request->getParam('shareCollection') == 'true' ? 1 : 0;
-        $project->auto_publish_collections = $this->_request->getParam('autoPublish') == 'true' ? 1 : 0;
+        $project->is_open = $this->_request->getParam('openAccess') == 'true';
+        $project->is_shared = $this->_request->getParam('shareCollection') == 'true';
+        $project->auto_publish_collections = $this->_request->getParam('autoPublish') == 'true';
         
         /* Timestamps. */
         $project->creation_time = new DateTime();

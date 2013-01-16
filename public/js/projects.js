@@ -228,8 +228,8 @@ function addProject()
 	}
 	
 	params.shareCollection = $("#add-share-collection:checked").size() == 1 ? "true" : "false";
-	params.openAccess = $("#add-open-access").size() == 1 ? "true" : "false";
-	params.autoPublish = $("#add-open-access").size() == 1 ? "true" : "false";
+	params.openAccess = $("#add-open-access:checked").size() == 1 ? "true" : "false";
+	params.autoPublish = $("#add-auto-publish:checked").size() == 1 ? "true" : "false";
 	
 	/* Validate other metadata fields. */
 	for (i in definitions)
