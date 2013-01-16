@@ -210,17 +210,13 @@ abstract class Sahara_Database_Record
      */
     public function save()
     {
-        /* No work to do. */
-        if (!$this->_isDirty) return;
-        
-        
-        if ($this->_isPersistant)
+        if ($this->_isPersistant && $this->_isDirty)
         {
             /* This is already a persistant record, so we need to update its record. */
-            $stm = 'UPDATE ' . $this->_name . ' SET ' . implode(' = ?,', array_keys($this->_updatedData));
+            $stm = 'UPDATE ' . $this->_name . ' SET ' . implode(' = ?, ', array_keys($this->_updatedData));
             $stm .= ' = ? ';
             $values = array_values($this->_updatedData);
-            
+
             /* Run conversison for correct types. */
             foreach ($values as $i => $v) $values[$i] = self::_convertForSQL($v);
             
@@ -243,7 +239,7 @@ abstract class Sahara_Database_Record
             /* Constraint to update the correct record. */
             $stm .= ' WHERE ' . $this->_idColumn . ' = ?';
             array_push($values, $this->_data[$this->_idColumn]);
-            
+
             /* Update the record. */
             $qu = $this->_db->prepare($stm);
             if (!$qu->execute($values))
@@ -259,7 +255,7 @@ abstract class Sahara_Database_Record
             $this->_isDirty = false;
             $this->_updatedData = array();
         }
-        else
+        else if (!$this->_isPersistant)
         {
             $stm = 'INSERT INTO ' . $this->_name . ' ( ' . implode(', ', array_keys($this->_updatedData));
             $values = array_values($this->_updatedData);
@@ -359,7 +355,15 @@ abstract class Sahara_Database_Record
                     throw new Sahara_Database_Exception('Bad relationship join type. Must be \'foreign\', \'table\' or \'local\'.');
                     break;
             }
-        }        
+        }
+
+        /* Loaded relationships, may have been modified so we need to cascade the
+         * updated to those records. */
+        foreach ($this->_loadedRelationships as $ref) 
+        {
+            if (is_array($ref)) foreach ($ref as $r) $r->save();
+            else $ref->save();
+        }
     }
 
     /**
@@ -548,6 +552,40 @@ abstract class Sahara_Database_Record
     }
     
     /**
+     * Sets a value to be stored in the next call to the store method. This can 
+     * be either column values or relationships to other tables. 
+     * 
+     * @param String $col column name
+     * @param mixed $val value to store
+     */
+    public function __set($col, $val)
+    {   
+        if (array_key_exists($col, $this->_relationships))
+        {       
+            if ($this->_relationships[$col]['join'] == 'local')
+            {
+                /* This is a many-to-one case. */
+                $this->_updatedRelationships[$col] = $val;
+                $this->_isDirty = true;
+            }
+            else
+            {
+                /* This is a one-to-many or many-to-many case. */
+                if (!is_array($this->_updatedRelationships[$col])) $this->_updatedRelationships[$col] = array();
+                array_push($this->_updatedRelationships[$col], $val);
+            }
+        }
+        else
+        {
+            if (!(array_key_exists($col, $this->_data) && $this->_data[$col] === $val))
+            {
+                $this->_updatedData[$col] = $val;
+                $this->_isDirty = true;
+            }
+        }
+    }
+    
+    /**
      * Compares equality between this entity and another entity. An entity is the same
      * if it is the same type and has the same primary key value.
      * 
@@ -563,38 +601,6 @@ abstract class Sahara_Database_Record
         if (!($obj->isPersistent() && $this->_isPersistant)) return false;
         
         return $obj->__get($this->_idColumn) === $this->_data[$this->_idColumn];
-        
-    }
-    
-    /**
-     * Sets a value to be stored in the next call to the store method. This can 
-     * be either column values or relationships to other tables. 
-     * 
-     * @param String $col column name
-     * @param mixed $val value to store
-     */
-    public function __set($col, $val)
-    {
-        $this->_isDirty = true;
-        
-        if (array_key_exists($col, $this->_relationships))
-        {
-            if ($this->_relationships[$col]['join'] == 'local')
-            {
-                /* This is a many-to-one case. */
-                $this->_updatedRelationships[$col] = $val;
-            }
-            else
-            {
-                /* This is a one-to-many or many-to-many case. */
-                if (!is_array($this->_updatedRelationships[$col])) $this->_updatedRelationships[$col] = array();
-                array_push($this->_updatedRelationships[$col], $val);
-            }
-        }
-        else
-        {
-            $this->_updatedData[$col] = $val;
-        }
     }
     
     /**
@@ -626,7 +632,7 @@ abstract class Sahara_Database_Record
     private static function _convertForSQL($val)
     {
         /* Booleans. */
-        if (is_bool($val)) $val = $val ? 1 : 0;
+        if (is_bool($val)) $val = $val ? chr(1) : chr(0);
         
         /* Dates. */
         if ($val instanceof DateTime)
