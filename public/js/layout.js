@@ -251,7 +251,7 @@ GuidanceBubble.prototype.remove = function(e) {
  * selector.
  */
 GuidanceBubble.prototype.removeAll = function() {
-	$(this.selector + " .guidance-bubble").remove();
+	$(this.selector).find(" .guidance-bubble").remove();
 };
 
 /**

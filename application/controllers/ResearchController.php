@@ -83,8 +83,6 @@ class ResearchController extends Sahara_Controller_Action_Acl
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout()->disableLayout();
         
-        Sahara_Database_Record_UserClass::load($this->_request->getParam('userClass'));
-        
         $project = new Sahara_Database_Record_Project();
         
         $success = true;
@@ -171,12 +169,135 @@ class ResearchController extends Sahara_Controller_Action_Acl
             }
             catch (Sahara_Database_Exception $ex)
             {
+                $this->_logger->error('Failed to add project with error: ' . $ex->getMessage());
                 $success = false;
                 $reason = $ex->getMessage();
             }
         }
         
         echo $this->view->json(array('success' => $success, 'reason' => $reason));
+    }
+    
+    /**
+     * Actions that updates a project.
+     */
+    public function updateprojectAction()
+    {
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();
+        
+        if (!($activity = $this->_request->getParam('activityID')))
+        {
+            echo $this->view->json(array(
+                    'success' => false,
+                    'reason' => 'Required parameter missing.' 
+            ));
+            return;
+        }
+        
+        $project = Sahara_Database_Record_Project::load(array('activity' => $activity));
+        if (count($project) != 1)
+        {
+            echo $this->view->json(array(
+                    'success' => false,
+                    'reason' => 'Project not found.'
+            ));
+            return;
+        }
+        
+        /* Only one project can be loaded because of the unique constraint on 
+         * the activity identifier. */
+        $project = $project[0];
+        
+        if (!Sahara_Database_Record_User::getLoginUser()->equals($project->user))
+        {
+            /* The logged in user is not authorised to modified the project. */
+            echo $this->view->json(array(
+                    'success' => false,
+                    'reason' => 'Not authorised.'
+            ));
+            return;
+        }
+        
+        if ($project->publish_time)
+        {
+            /* The project has been published and is therefore finalished from 
+             * changes. */ 
+            echo $this->view->json(array(
+                     'success' => false,
+                     'reason' => 'Not authorised'
+            ));
+            return;
+        }
+        
+        /* User class. */
+        if ($this->_request->getParam('userClass'))
+        {
+            $userClass = Sahara_Database_Record_UserClass::load($this->_request->getParam('userClass'));
+            if (!$project->userClass->equals($userClass))
+            {
+                $project->userClass = $userClass;
+            }
+        }
+        
+        /* Behavioural parameters. */
+        if ($this->_request->getParam('shareCollection'))
+        {
+            $project->is_shared = $this->_request->getParam('shareCollection') == 't';
+        }
+        
+        if ($this->_request->getParam('openAccess'))
+        {
+            $project->is_open = $this->_request->getParam('openAccess') == 't';
+        }
+        
+        if ($this->_request->getParam('autoPublish'))
+        {
+            $project->auto_publish_collections = $this->_request->getParam('autoPublish') == 't';
+        }
+        
+        /* Metadata. */
+        foreach (Sahara_Database_Record_ProjectMetadataTypes::load() as $metadata)
+        {
+            if (!($val = $this->_request->getParam($metadata->name))) continue;
+
+            if ($metadata->regex && preg_match("/$metadata->regex/", $val) == 0)
+            {
+                echo $this->view->json(array(
+                        'success' => false,
+                        'error' => 'Metadata value is not valid.'
+                ));
+                return;
+            }
+            
+            if ($mdRecord = $project->getMetadata($metadata))
+            {
+                $mdRecord->value = $val;
+            }
+            else
+            {
+                $mdRecord = new Sahara_Database_Record_ProjectMetadata();
+                $mdRecord->value = $val;
+                $mdRecord->type = $metadata;
+                $project->metadata = $mdRecord;
+            }
+        }
+        
+        try
+        {
+            $project->save();
+            echo $this->view->json(array(
+                    'success' => true
+            ));
+        }
+        catch (Sahara_Database_Exception $ex)
+        {
+            $this->_logger->error("Failed updating project '$project->activity' with error: " . $ex->getMessage());
+            echo $this->_view->json(array(
+                    'success' => false,
+                    'error' => 'Failed to update record.'
+            ));
+        }
     }
     
     /**
@@ -230,9 +351,20 @@ class ResearchController extends Sahara_Controller_Action_Acl
 
         // TODO Properly implement this. 
         $project->publish_time = new DateTime();
-        $project->save();
         
-        echo $this->view->json(array('success' => true));
+        try
+        {
+            $project->save();
+            echo $this->view->json(array('success' => true));
+        }
+        catch (Sahara_Database_Exception $ex)
+        {
+            $this->_logger->error("Failed to publish project '$project->activity' with error: " . $ex->getMessage());
+            echo $this->view->json(array(
+                    'success' => false,
+                    'error' => 'Failed publishing project.'
+            ));
+        }       
     }
     
     /**
@@ -280,17 +412,16 @@ class ResearchController extends Sahara_Controller_Action_Acl
         try
         {
             $project->delete();
+            echo $this->view->json(array('success' => true));
         }
         catch (Sahara_Database_Exception $ex)
         {
+            $this->_logger->error("Failed to delete project '$project->activity' with error: " . $ex->getMessage());
             echo $this->view->json(array(
                     'success' => false,
                     'error' => $ex->getMessage()
             ));
-            return;
         }
-        
-        echo $this->view->json(array('success' => true));
     }
     
     /**

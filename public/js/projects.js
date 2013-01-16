@@ -365,7 +365,7 @@ function publishProject()
 						/* Buttons. */
 						$button.remove();
 						
-						if ($li.find('.auto-publish-checkbox:checked').length == 1)
+						if ($li.find('.auto-publish:checked').length == 1)
 						{
 							$li.children(".project-buttons").append(
 								"<div class='project-button-view-collection'>" +
@@ -403,6 +403,79 @@ function collectionsForProject()
 {
 	window.location.href = "/research/collections/activityID/" + 
 			$(this).parents(".project-item").find(".project-activity-id").text();
+}
+
+/**
+ * Updates a project.
+ */
+function updateProject()
+{
+	var $item = $(this).parents(".project-item"), params = {}, i = 0, val, 
+		valid = true, gd = new GuidanceBubble($item, "error", "left", 180, -20);
+	
+	/* Clear previous valdiation dialogs. */
+	gd.removeAll();
+	
+	/* Project parameters. */
+	params.activityID = $item.find(".project-activity-id").text();
+	params.userClass = $item.find(".permissions-select option:selected").val();
+	params.shareCollection = $item.find(".share-collection:checked").length == 1 ? 't' : 'f';
+	params.openAccess = $item.find(".open-access:checked").length == 1 ? 't' : 'f';
+	params.autoPublish = $item.find(".auto-publish:checked").length == 1 ? 't' : 'f';
+	
+	/* Project metadata. */
+	for (i in definitions)
+	{
+		val = $item.find(".metadata-" + definitions[i].rid).val();
+		
+		/* Optional parameters that have been selected to be added can be 
+		 * ignored. */
+		if (definitions[i].optional && $item.find(".metadata-enable-" + definitions[i].rid).size() == 0) continue;
+
+		if (!definitions[i].optional && val == "")
+		{
+			/* Mandatory parameter not entered, valdiation failed. */
+			valid = false;
+			gd.show(definitions[i].name + " must be specified.", $item.find(".metadata-" + definitions[i].rid));
+		}
+		else if (val == "") continue; // Optional parameter not specified.
+		
+		if (definitions[i].regex != "" && !(new RegExp(definitions[i].regex).test(val)))
+		{
+			valid = false;
+			gd.show(definitions[i].hint, $item.find(".metadata-" + definitions[i].rid));
+			continue;
+		}
+		
+		/* Metadata valid we can add it to the parameter set. */
+		params[definitions[i].name] = val;
+	}
+	
+	if (valid)
+	{
+		/* Validation succeeded so we can update the record. */
+		$.post(
+			"/research/updateproject",
+			params,
+			function(resp) {
+				if (typeof resp != "object") 
+				{
+//					window.location.reload();
+					return;
+				}
+				
+				if (resp.success)
+				{
+					$item.find(".project-content-save")
+							.removeClass("project-content-save-active");
+				}
+				else
+				{
+					alert(resp.error);
+				}				
+			}
+		);
+	}
 }
 
 /**
