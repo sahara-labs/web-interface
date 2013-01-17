@@ -526,3 +526,11 @@ function removeProject()
 		close: function() { $(this).dialog("destroy"); $(this).remove(); }
 	});
 }
+
+/**
+ * Adds a collection.
+ */
+function addCollection()
+{
+	alert("TODO: Add collection")
+}

@@ -429,6 +429,35 @@ class ResearchController extends Sahara_Controller_Action_Acl
      */
     public function collectionsAction()
     {
-        echo 'Collection with ID: ' . $this->_request->getParam('activityID');        
+        $this->view->headTitle($this->_headPrefix . ' Collections');
+        
+        if (!$this->_request->getParam('activityID'))
+        {
+            /* We need the activity indentifier to show collection information. */
+            $this->_redirectTo('index', 'research');
+        }
+        
+        $project = Sahara_Database_Record_Project::load(array('activity' => $this->_request->getParam('activityID')));
+        if (count($project) != 1)
+        {
+            /* Project not found. */
+            $this->_redirectTo('index', 'research');
+        }
+        
+        $project = $project[0];
+        
+        if (!$project->user->equals(Sahara_Database_Record_User::getLoginUser()))
+        {
+            /* Login user does not own the specified project. */
+            $this->_redirectTo('index', 'research');
+        }
+        
+        if (!$project->publish_time)
+        {
+            /* Only published projects have collections. */
+            $this->_redirectTO('index', 'research');
+        }
+        
+        $this->view->project = $project;
     }
 }

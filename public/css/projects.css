@@ -35,7 +35,7 @@
  * @date 31st October 2012
  */
 
-#add-project-button {
+#add-project-button, #add-collection-button {
 	position: absolute;
 	width: 70px;
 	height: 70px;
@@ -69,26 +69,37 @@
 }
 
 #add-project-error .ui-icon, 
-#no-projects .ui-icon {
+#no-projects .ui-icon,
+#no-collections .ui-icon {
 	float: left;
 	margin-right: 5px;
 }
 
-#no-projects {
-	width: 200px;
+#no-projects,
+#no-collections {
 	margin: 20px auto;
 	padding: 8px;
 	border-radius: 4px;
 }
 
-#project-list-container {
+#no-projects {
+	width: 200px;
+}
+
+#no-collections {
+	width: 250px;
+}
+
+#project-list-container,
+#collection-list-container {
 	position: absolute;
 	top: 127px;
 	left: 90px;
 	width: 770px;
 }
 
-#project-list-title {
+#project-list-title,
+#collection-list-title {
 	height: 20px;
 }
 
@@ -102,7 +113,8 @@
 	width: 40px;
 }
 
-#project-list ul {
+#project-list ul,
+#collection-list ul {
 	list-style: none;
 }
 

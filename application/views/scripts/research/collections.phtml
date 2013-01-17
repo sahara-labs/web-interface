@@ -34,8 +34,43 @@
  *
  * @author Michael Diponio (mdiponio)
  * @date 10th Janurary 2013.
- */
- 
+ */ 
+
+$this->headLink()->appendStylesheet($this->baseUrl('/css/projects.css'));
+$this->headScript()->appendFile($this->baseUrl('/js/projects.js'));
 ?>
 
-<h2>TODO</h2>
+<?php if (!$this->project->auto_publish_collections): ?>
+<div id="add-collection-button" class="common-button">
+    <img src='/images/project-add.png' alt='add' /><br />Add Collection
+</div>
+<?php endif; ?>
+
+<script type="text/javascript">
+$(document).ready(function() {
+    $("#add-collection-button").click(addCollection);
+});
+</script>
+
+<?php if (count($this->project->collections)): ?>
+<div id='collection-list-container' class='common-box'>
+    <div id='collection-list-title' class='common-title'>
+        <span class='ui-icon ui-icon-folder-collapsed'></span>
+        Collections for Project: <?=$this->project->activity?>
+    </div>
+    <div id='collection-list'>
+        <ul><?php foreach($this->project->collections as $collection): ?>
+            <li>
+                <?=$collection->id?>
+           </li>
+        <?php endforeach; ?></ul>
+    </div>
+</div>
+
+<?php else: ?>
+<div id='no-collections' class='ui-state-error'>
+    <span class='ui-icon ui-icon-alert'></span>
+    This project has no collections.
+</div>
+
+<?php endif; ?>
