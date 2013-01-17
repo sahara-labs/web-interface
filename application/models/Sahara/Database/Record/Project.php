@@ -41,7 +41,7 @@ class Sahara_Database_Record_Project extends Sahara_Database_Record
     /** @var String Name of database table. */
     protected $_name = 'project';
     
-    /** @var Relationship information for joined tables. */
+    /** @var array Relationship information for joined tables. */
     protected $_relationships = array(
         'metadata' => array(
             'table' => 'project_metadata',
