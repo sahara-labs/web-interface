@@ -33,56 +33,32 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 4th Janurary 2013
+ * @date 17th Janurary 2013
  */
- 
-class Sahara_Database_Record_Project extends Sahara_Database_Record
+
+/**
+ * Entity for collection records.
+ */
+class Sahara_Database_Record_Collection extends  Sahara_Database_Record
 {
-    /** @var String Name of database table. */
-    protected $_name = 'project';
+    /** @var String Name of the database table. */
+    protected $_name = 'collection';
     
-    /** @var Relationship information for joined tables. */
+    /** @var array Relationship information for joined tables. */
     protected $_relationships = array(
-        'metadata' => array(
-            'table' => 'project_metadata',
-            'entity' => 'ProjectMetadata',
-            'join' => 'foreign',
-            'foreign_key' => 'project_id'
-        ),
-        'user' => array(
-            'table' => 'users',
-            'entity' => 'User',
-            'join' => 'local',
-            'foreign_key' => 'users_id'
-        ),
-        'userClass' => array(
-            'table' => 'user_class',
-            'entity' => 'UserClass',
-            'join' => 'local',
-            'foreign_key' => 'user_class_id'
-        ),
-        'collections' => array(
-            'table' => 'collection',
-            'entity' => 'Collection',
-            'join' => 'foreign',
-            'foreign_key' => 'project_id'
-         )
+        'project' => array(
+             'table' => 'project',
+             'entity' => 'Project',
+             'join' => 'local',
+             'foreign_key' => 'project_id'
+         ),
+         'sessions' => array(
+             'table' => 'session',
+             'entity' => 'Session',
+             'join' => 'table',
+             'join_table' => 'collection_sessions', 
+             'join_table_source' => 'collection_id',
+             'join_table_dest' => 'session_id'
+          )
     );
-    
-    /**
-     * Gets value of the specified metadata type. If the type has no
-     * value NULL is returned.
-     * 
-     * @param Sahara_Database_Record_ProjectMetadataType $type metadata type
-     * @return Sahara_Database_Record_ProjectMetadata | NULL metadata type
-     */
-    public function getMetadata($type)
-    {
-        foreach ($this->metadata as $metadata)
-        {
-            if ($type->equals($metadata->type)) return $metadata;
-        }
-        
-        return NULL;
-    }
 }

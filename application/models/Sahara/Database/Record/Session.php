@@ -33,56 +33,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 4th Janurary 2013
+ * @date 17th Janurary 2013
  */
- 
-class Sahara_Database_Record_Project extends Sahara_Database_Record
+
+/**
+ * Entity for session records.
+ */
+class Sahara_Database_Record_Session extends Sahara_Database_Record
 {
-    /** @var String Name of database table. */
-    protected $_name = 'project';
+    /** String name of table. */
+    protected $_name = 'session';
     
-    /** @var Relationship information for joined tables. */
+    /** @var array Relationships with other tables. */
     protected $_relationships = array(
-        'metadata' => array(
-            'table' => 'project_metadata',
-            'entity' => 'ProjectMetadata',
-            'join' => 'foreign',
-            'foreign_key' => 'project_id'
-        ),
-        'user' => array(
-            'table' => 'users',
-            'entity' => 'User',
-            'join' => 'local',
-            'foreign_key' => 'users_id'
-        ),
-        'userClass' => array(
-            'table' => 'user_class',
-            'entity' => 'UserClass',
-            'join' => 'local',
-            'foreign_key' => 'user_class_id'
-        ),
-        'collections' => array(
-            'table' => 'collection',
-            'entity' => 'Collection',
-            'join' => 'foreign',
-            'foreign_key' => 'project_id'
-         )
+        'files' => array(
+            'table' => 'session_file',
+            'entity' => 'SessionFile',
+            'join' => 'foreign', 
+            'foreign_key' => 'session_id'
+        )
     );
-    
-    /**
-     * Gets value of the specified metadata type. If the type has no
-     * value NULL is returned.
-     * 
-     * @param Sahara_Database_Record_ProjectMetadataType $type metadata type
-     * @return Sahara_Database_Record_ProjectMetadata | NULL metadata type
-     */
-    public function getMetadata($type)
-    {
-        foreach ($this->metadata as $metadata)
-        {
-            if ($type->equals($metadata->type)) return $metadata;
-        }
-        
-        return NULL;
-    }
 }
