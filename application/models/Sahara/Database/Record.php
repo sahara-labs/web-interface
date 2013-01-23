@@ -636,9 +636,7 @@ abstract class Sahara_Database_Record
     {
         /* Booleans. */
         if (is_bool($val)) $val = $val ? chr(1) : chr(0);
-        
-        /* Dates. */
-        if ($val instanceof DateTime)
+        else if ($val instanceof DateTime) // Date
         {
         	$val = $val->format('Y-m-d H:i:s');
         }
@@ -658,6 +656,10 @@ abstract class Sahara_Database_Record
         if (is_string($val) && strlen($val) == 1 && (ord($val) === 0 || ord($val) === 1))
         {
          	$val = ord($val) === 1;
+        }
+        else if (preg_match('/^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}/', $val) === 1) // Dates
+        {
+            $val = new DateTime($val);
         }
         
         return $val;
