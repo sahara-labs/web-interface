@@ -42,7 +42,7 @@ $this->headScript()->appendFile($this->baseUrl('/js/projects.js'));
 
 <?php if (!$this->project->auto_publish_collections): ?>
 <div id="add-collection-button" class="common-button">
-    <img src='/images/project-add.png' alt='add' /><br />Add Collection
+    <img src='/images/project-add.png' alt='add' /><br />Create Collection
 </div>
 <?php endif; ?>
 
@@ -55,17 +55,74 @@ $(document).ready(function() {
 <?php if (count($this->project->collections)): ?>
 <div id='collection-list-container' class='common-box'>
     <div id='collection-list-title' class='common-title'>
-        <span class='ui-icon ui-icon-folder-collapsed'></span>
+        <span class='ui-icon ui-icon-folder-open'></span>
         Collections for Project: <?=$this->project->activity?>
     </div>
     <div id='collection-list'>
         <ul><?php foreach($this->project->collections as $collection): ?>
-            <li>
-                <?=$collection->id?>
+            <li class='collection-item'>
+                <div class='collection-item-title'>
+                    <span class='ui-icon ui-icon-circle-arrow-e'></span>
+                    <span>    
+                    <?php if ($collection->publish_time): ?>
+                        Published on <?=$collection->publish_time->format('d-M-Y') . ' at ' . $collection->publish_time->format('H:i:s');?>.
+                    <?php else: ?>
+                        Not yet published
+                    <?php endif; ?>
+                    </span>
+                </div>
+                <div class='collection-contents'>
+                    <div class='collection-details-title'>Details</div>
+                    <div class='collection-details'>
+                       <div>Started: <?=$collection->getStartTime()->format('d-M-Y H:i:s')?></div>
+                       <div>Finished: <?=$collection->getEndTime()->format('d-M-Y H:i:s')?></div>
+                       <div>Apparatus(es): </div>
+                        
+                    </div>
+                    <div class='collection-data-title'>Data Files</div>
+                    <div class='collection-data'>
+                    
+                    </div>
+                </div>
            </li>
         <?php endforeach; ?></ul>
     </div>
 </div>
+
+<script type="text/javascript">
+$(document).ready(function() {
+    $("#collection-list .collection-item-title").click(function() {
+        var $contents = $(this).siblings(".collection-contents");
+        if ($contents.css("display") == "none")
+        {
+            /* Opening closed contents. */
+            $("#collection-list .collection-contents").slideUp();
+            $("#collection-list .project-contents-open")
+                .removeClass("project-contents-open")
+                .children(".ui-icon")
+                    .removeClass("ui-icon-circle-arrow-s")
+                    .addClass("ui-icon-circle-arrow-e");
+
+            $(this)
+                .addClass("project1-contents-open")
+                .children(".ui-icon")
+                    .removeClass("ui-icon-circle-arrow-e")
+                    .addClass("ui-icon-circle-arrow-s");
+            $contents.slideDown();
+        }
+        else
+        {
+            /* Closing open contents. */
+            $contents.slideUp();
+            
+            $(this).removeClass(".project-contents-open")
+                   .children(".ui-icon")
+                       .removeClass("ui-icon-circle-arrow-s")
+                       .addClass("ui-icon-circle-arrow-e");
+        }
+    });
+});
+</script>
 
 <?php else: ?>
 <div id='no-collections' class='ui-state-error'>

@@ -118,14 +118,20 @@
 	list-style: none;
 }
 
-#project-list .project-item-title {
+#project-list .project-item-title, 
+#collection-list .collection-item-title {
 	padding: 8px;
 	border-bottom: 1px solid #B5B5B5;
 	border-top: 1px solid #B5B5B5;
 	color: #606060;
 }
 
-#project-list .project-item-title:hover { 
+#collection-list .collection-item {
+	cursor: pointer;
+}
+
+#project-list .project-item-title:hover,
+#collection-list .collection-item-title:hover { 
 	box-shadow: 0 0 4px #B5B5B5;
 	color: #000000;
 	background-color: #FCFCFC;
@@ -136,7 +142,8 @@
 	float: right;
 }
 
-#project-list .ui-icon {
+#project-list .ui-icon,
+#collection-list .ui-icon {
 	float: left;
 	margin-right: 5px;
 }
@@ -144,7 +151,9 @@
 #add-project-dialog .project-contents-title,
 #project-list .project-buttons div, 
 #project-list .project-contents-title,
-#project-list .project-content-save {
+#project-list .project-content-save,
+#collection-list .collection-details-title,
+#collection-list .collection-data-title {
 	border: 1px solid #B5B5B5;
 	border-radius: 5px;
 	box-shadow: 0 0 2px #B5B5B5;
@@ -167,7 +176,8 @@
 	z-index: 10;
 }
 
-#project-list .project-contents-open {
+#project-list .project-contents-open,
+#collcetion-list .collection-contents-open {
 	color: #000000;
 	box-shadow: 0 2px 3px #B5B5B5;
 	font-weight: bold; 
@@ -190,14 +200,16 @@
 	margin-right: 5px;
 }
 
-#project-list .project-contents {
+#project-list .project-contents,
+#collection-list .collection-contents {
 	display: none;
 	position: relative;
-
 }
 
 #add-project-dialog .project-contents-title,
-#project-list .project-contents-title {
+#project-list .project-contents-title,
+#collection-list .collection-details-title,
+#collection-list .collection-data-title {
 	border-radius: 0 0 4px 4px;
 	width: 100px;
 	padding: 4px 20px;
@@ -208,7 +220,9 @@
 	margin: 10px auto;	
 }
 
-#project-list .project-contents-title {
+#project-list .project-contents-title,
+#collection-list .collection-details-title,
+#collection-list .collection-data-title {
 	position: relative;
 	top: 16px;
 }
@@ -221,6 +235,16 @@
 #project-list .project-metadata-title {
 	left: 440px;
 	top: -148px;
+}
+
+#collection-list .collection-details-title {
+	top: 5px;
+	left: 50px;
+}
+
+#collection-list .collection-data-title {
+	top: -17px;
+	left: 400px;
 }
 
 #project-list .project-behaviour {
@@ -290,4 +314,14 @@
 	color: #000000;
 	padding: 5px;
 	opacity: 1;
+}
+
+#collection-list .collection-details {
+	position: relative;
+	top: 10px;
+	left: 10px;
+}
+
+#collection-list .collection-details div {
+	padding: 5px;
 }

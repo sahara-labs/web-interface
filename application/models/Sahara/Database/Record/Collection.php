@@ -61,4 +61,55 @@ class Sahara_Database_Record_Collection extends  Sahara_Database_Record
              'join_table_dest' => 'session_id'
           )
     );
+    
+    /**
+     * Returns the start time of this collection. Start time is the time
+     * the earliest session of the collection ran.
+     * 
+     * @return DateTime start time of this collection
+     */
+    public function getStartTime()
+    {
+        $start = NULL;
+        
+        foreach ($this->sessions as $session)
+        {
+            if ($session->assignment_time && (!$start || $session->assignment_time->diff($start)->invert === 0))
+            {
+                $start = $session->assignment_time;
+            }
+        }
+        
+        return $start;
+    }
+    
+    /**
+     * Gets the end time of this project. End time is the time the latest
+     * session of the collection finished.
+     * 
+     * @return DateTime end time of this collection
+     */
+    public function getEndTime()
+    {
+        $end = NULL;
+        
+        foreach ($this->sessions as $session)
+        {
+            if ($session->removal_time && (!$end || $session->removal_time->diff($end)->invert === 1))
+            {
+                $end = $session->removal_time;
+            }
+        }
+        
+        return $end;
+    }
+    
+    /**
+     * Gets the apparatuses used by this collection. The response is an associative 
+     * array keyed by rig types 
+     */
+    public function getApparatuses()
+    {
+        
+    }
 }
