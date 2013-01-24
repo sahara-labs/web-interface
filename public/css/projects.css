@@ -126,7 +126,7 @@
 	color: #606060;
 }
 
-#collection-list .collection-item {
+#collection-list .collection-item-title {
 	cursor: pointer;
 }
 
@@ -177,7 +177,7 @@
 }
 
 #project-list .project-contents-open,
-#collcetion-list .collection-contents-open {
+#collection-list .collection-contents-open {
 	color: #000000;
 	box-shadow: 0 2px 3px #B5B5B5;
 	font-weight: bold; 
@@ -221,8 +221,6 @@
 }
 
 #project-list .project-contents-title,
-#collection-list .collection-details-title,
-#collection-list .collection-data-title {
 	position: relative;
 	top: 16px;
 }
@@ -235,16 +233,6 @@
 #project-list .project-metadata-title {
 	left: 440px;
 	top: -148px;
-}
-
-#collection-list .collection-details-title {
-	top: 5px;
-	left: 50px;
-}
-
-#collection-list .collection-data-title {
-	top: -17px;
-	left: 400px;
 }
 
 #project-list .project-behaviour {
@@ -316,12 +304,29 @@
 	opacity: 1;
 }
 
-#collection-list .collection-details {
-	position: relative;
-	top: 10px;
-	left: 10px;
+#collection-list .collection-details,
+#collection-list .collection-data {
+	float: left;
+	padding: 10px;
+}
+
+
+
+#collection-list .collection-details-title,
+#collection-list .collection-data-title {
+	margin: 10px auto;
 }
 
 #collection-list .collection-details div {
 	padding: 5px;
 }
+
+#collection-list .collection-details ul {
+	list-style: inside;
+	margin-top: 5px;
+}
+
+#collection-list .collection-details li {
+	padding: 5px;
+}
+
