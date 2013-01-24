@@ -33,36 +33,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 17th Janurary 2013
+ * @date 23rd Janurary 2013
  */
 
 /**
- * Entity for session records.
+ * Entity for rig type records.
  */
-class Sahara_Database_Record_Session extends Sahara_Database_Record
+class Sahara_Database_Record_RigType extends  Sahara_Database_Record
 {
-    /** String name of table. */
-    protected $_name = 'session';
+    /** @var String Name of database table. */
+    protected $_name = 'rig_type';
     
-    /** @var array Relationships with other tables. */
+    /** @var array List of rigs in type. */
     protected $_relationships = array(
-        'user' => array(
-            'table' => 'users',
-            'entity' => 'User',
-            'join' => 'local',
-            'foreign_key' => 'users_id'
-        ),
-        'rig' => array(
-            'table' => 'rig',
-            'entity' => 'Rig',
-            'join' => 'local',
-            'foreign_key' => 'assigned_rig_id'
-        ),
-        'files' => array(
-            'table' => 'session_file',
-            'entity' => 'SessionFile',
-            'join' => 'foreign', 
-            'foreign_key' => 'session_id'
+        'rigs' => array(
+             'table' => 'rig',
+             'entity' => 'Rig', 
+             'join' => 'foreign',
+             'foreign_key' => 'type_id'
         )
     );
 }

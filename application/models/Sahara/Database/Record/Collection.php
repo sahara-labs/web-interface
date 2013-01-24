@@ -106,10 +106,24 @@ class Sahara_Database_Record_Collection extends  Sahara_Database_Record
     
     /**
      * Gets the apparatuses used by this collection. The response is an associative 
-     * array keyed by rig types 
+     * array keyed by rig type names and with values of an array of rig names in that 
+     * type.
+     * 
+     *  @return array rig types and rig names
      */
     public function getApparatuses()
     {
+        $apparatuses = array();
         
+        foreach ($this->sessions as $session)
+        {
+            if ($rig = $session->rig)
+            {
+                if (!array_key_exists($rig->type->name, $apparatuses)) $apparatuses[$rig->type->name] = array();
+                array_push($apparatuses[$rig->type->name], $rig->name);
+            }
+        }
+        
+        return $apparatuses;
     }
 }
