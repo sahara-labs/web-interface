@@ -169,7 +169,7 @@ class ResearchController extends Sahara_Controller_Action_Acl
             }
             catch (Sahara_Database_Exception $ex)
             {
-                $this->_logger->error('Failed to add project with error: ' . $ex->getMessage());
+                $this->_logger->error('Failed to add activity with error: ' . $ex->getMessage());
                 $success = false;
                 $reason = $ex->getMessage();
             }
@@ -429,8 +429,6 @@ class ResearchController extends Sahara_Controller_Action_Acl
      */
     public function collectionsAction()
     {
-        $this->view->headTitle($this->_headPrefix . ' Collections');
-        
         if (!$this->_request->getParam('activityID'))
         {
             /* We need the activity indentifier to show collection information. */
@@ -457,7 +455,8 @@ class ResearchController extends Sahara_Controller_Action_Acl
             /* Only published projects have collections. */
             $this->_redirectTO('index', 'research');
         }
-        
+
+        $this->view->headTitle($this->_headPrefix . ' Datasets for Activity: ' . $project->activity);
         $this->view->project = $project;
     }
 }

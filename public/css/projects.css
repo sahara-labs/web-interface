@@ -220,7 +220,7 @@
 	margin: 10px auto;	
 }
 
-#project-list .project-contents-title,
+#project-list .project-contents-title {
 	position: relative;
 	top: 16px;
 }

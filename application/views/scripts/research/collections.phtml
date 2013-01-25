@@ -42,7 +42,7 @@ $this->headScript()->appendFile($this->baseUrl('/js/projects.js'));
 
 <?php if (!$this->project->auto_publish_collections): ?>
 <div id="add-collection-button" class="common-button">
-    <img src='/images/project-add.png' alt='add' /><br />Create Collection
+    <img src='/images/project-add.png' alt='add' /><br />Collate Datasets
 </div>
 <?php endif; ?>
 
@@ -56,7 +56,7 @@ $(document).ready(function() {
 <div id='collection-list-container' class='common-box'>
     <div id='collection-list-title' class='common-title'>
         <span class='ui-icon ui-icon-folder-open'></span>
-        Collections for Project: <?=$this->project->activity?>
+        Datasets for Activity: <?=$this->project->activity?>
     </div>
     <div id='collection-list'>
         <ul><?php foreach($this->project->collections as $collection): ?>
@@ -144,7 +144,7 @@ $(document).ready(function() {
 <?php else: ?>
 <div id='no-collections' class='ui-state-error'>
     <span class='ui-icon ui-icon-alert'></span>
-    This project has no collections.
+    This activity has no datasets.
 </div>
 
 <?php endif; ?>
