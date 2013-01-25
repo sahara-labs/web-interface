@@ -657,7 +657,7 @@ abstract class Sahara_Database_Record
         {
          	$val = ord($val) === 1;
         }
-        else if (preg_match('/^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}/', $val) === 1) // Dates
+        else if (is_string($val) && preg_match('/^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}/', $val) === 1) // Dates
         {
             $val = new DateTime($val);
         }
