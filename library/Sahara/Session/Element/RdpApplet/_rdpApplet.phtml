@@ -42,6 +42,10 @@
 		<p><span class="ui-icon ui-icon-wrench sessionpanelheadericon"></span>Rig Control</p>
 	</div>
 	<div id="rdppanelcontent" style="overflow:hidden">
+	    <div class='ui-state-error' style='padding:5px;border-radius:4px;margin:5px'>
+            <span class='ui-icon ui-icon-alert' style='float:left;margin-right:5px'></span><strong>NOTE:</strong>
+            Java version 7 update 21 is known to not work. Please use Java 7 update 17 until this is resolved.
+        </div>
 		<applet id="rdpapplet" name="Control Applet" style="margin-left:5px;margin-top:5px"
 				code="au.edu.uts.eng.remotelabs.rdp.SaharaRdpApplet.class" archive="<?=$this->baseUrl('/applets/' . $this->applet)?>"
 				width="165" height="<?=$this->height?>">
@@ -67,10 +71,10 @@ $(document).ready(function(){
 	}
 
 	$("#rdpcontrolpanel").css("top", top);
-
 	provideSessionInfoApplet();
-
 	if ($("#readyoverlay").length == 0) $("#rdpcontrolpanel").css("display", "block");
+
+
 });
 
 function provideSessionInfoApplet()
