@@ -1,0 +1,65 @@
+<?php
+$this->headScript()->appendFile($this->baseUrl('uts/coupledtanksnew/coupledtanksnew.js'));
+$this->headLink()->appendStylesheet($this->baseUrl('uts/coupledtanksnew/coupledtanksnew.css'));
+?>
+<!-- link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:300' rel='stylesheet' type='text/css'-->
+
+<div class = "windowWrapper draggable toggleWindow">
+    <div class = "windowHeader">
+        <img src="uts/coupledtanksnew/images/settings_Icon.png"/>
+        <span class="windowTitle">Toggle</span>
+    </div>
+    <div class = "windowContent">
+    	<div class="buttonWrapper">
+            <div class="button toggle" name="settings">settings</div>
+            <div class="button toggle" name="chartOne">chart one</div>
+            <div class="button toggle" name="chartTwo">chart two</div>
+            <div class="button toggle" name="diagram">Diagram</div>
+            <div class="button toggle" name="video">video</div>
+        </div>
+    </div>
+</div>
+<div class = "windowWrapper draggable settings">
+    <div class = "windowHeader">
+        <img src="uts/coupledtanksnew/images/settings_Icon.png"/>
+        <span class="windowTitle">Settings</span>
+    </div>
+    <div class = "windowContent resizable">
+        <div class="slider"></div><br />
+            <label for="sliderValue">Valve:</label>
+            <input type="text" class="sliderValue" style="border: solid 1px #E4E4E4; color: #f6931f; font-weight: bold; width: 40px;" />
+    </div>
+</div>
+<div class = "windowWrapper draggable chartOne">
+    <div class = "windowHeader">
+        <img src="uts/coupledtanksnew/images/settings_Icon.png"/>
+        <span class="windowTitle">Chart One</span>
+    </div>
+    <div class = "windowContent resizable">
+    </div>
+</div>
+<div class = "windowWrapper draggable chartTwo">
+    <div class = "windowHeader">
+        <img src="uts/coupledtanksnew/images/settings_Icon.png"/>
+        <span class="windowTitle">Chart Two</span>
+    </div>
+    <div class = "windowContent resizable">
+    </div>
+</div>
+<div class = "windowWrapper draggable video">
+    <div class = "windowHeader">
+        <img src="uts/coupledtanksnew/images/settings_Icon.png"/>
+        <span class="windowTitle">Coupled Tanks</span>
+    </div>
+    <div class = "windowContent resizableVideo">
+        <div class="videoPlayer"></div>
+    </div>
+</div>
+<div class = "windowWrapper draggable diagram">
+    <div class = "windowHeader">
+        <img src="uts/coupledtanksnew/images/settings_Icon.png"/>
+        <span class="windowTitle">Diagram</span>
+    </div>
+    <div class = "windowContent resizable">
+    </div>
+</div>

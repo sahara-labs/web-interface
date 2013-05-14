@@ -1,0 +1,92 @@
+@CHARSET "UTF-8";
+
+*{
+    margin: 0;
+    padding: 0;
+    font-family: 'Source Sans Pro', sans-serif;
+}
+.buttonWrapper{
+    margin: -11px;
+}
+.button{
+    background: #f3f3f3;
+    height: 20px;
+    width: 145px;
+    padding: 10px;
+    border:solid 1px #e0e0e0;
+    cursor: pointer;
+}
+.button:hover{
+    background: #fff;	
+}
+
+/******************************************************************************
+ ** Windows                                                                  **
+ ******************************************************************************/
+.windowWrapper{
+    position: fixed;
+    background: #fafafa;
+    border-radius: 10px;
+    border: 2px solid #dfdfdf;
+}
+.draggable:hover{
+    border: 2px dashed #63d8ee;
+}
+.windowHeader{
+    height: 30px;
+    font-size: 24px;
+    padding: 5px 10px;
+    color: #525252;
+    cursor: move;
+}
+.windowTitle{
+    position: relative;
+    top: -10px;
+    left: 10px;    
+    padding-right: 10px;
+}
+.windowContent{
+    padding: 10px;
+    margin: 5px;
+    background: #FFF;
+    border: solid 1px #E4E4E4;
+    border-radius: 0 0 10px 10px;
+}
+.resizable{
+    min-width: 145px;
+    min-height: 50px;
+}
+.icon{
+	background-image: url('images/settings_icon.png');
+	width: 37px;
+	height: 38px;
+}
+/******************************************************************************
+ ** Widgets                                                                  **
+ ******************************************************************************/
+.videoPlayer{
+    height: 100%;
+    width: 100%;
+    background: #eee;
+    border: solid 1px #E4E4E4;   
+    min-width: 192px;
+    min-height: 108px; 
+}
+.settings{
+    left: 360px;
+    top: 270px;
+}
+.chartOne{
+    left: 890px;
+    top: 270px;
+}
+.chartTwo{
+    left: 890px;
+    top: 370px;
+}
+.diagram{
+}
+.toggleWindow{
+    left: 360px;
+    top: 400px;
+}
