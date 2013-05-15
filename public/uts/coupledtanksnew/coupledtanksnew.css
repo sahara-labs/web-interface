@@ -5,7 +5,7 @@
     padding: 0;
     font-family: 'Source Sans Pro', sans-serif;
 }
-.buttonWrapper{
+.buttonwrapper{
     margin: -11px;
 }
 .button{
@@ -19,33 +19,60 @@
 .button:hover{
     background: #fff;	
 }
+.tabbed{
+    background: #fafafa;
+    margin: 5px 5px -5px 5px;
+    padding: 5px;
+}
+.pidsettings{
+	font-size: 80%;
+}
+.ui-widget-header{
+    margin: -4px -4px 0px -3px !important;
+}
+.ui-widget-header, .ui-widget-content{
+    border: solid 1px #e4e4e4 !important;
+}
+.ui-tabs-panel{
+	border: none !important;
+}
 
+/******************************************************************************
+ ** Overrides Old layout elements                                            **
+ ******************************************************************************/
+#sessioninfo{
+	margin: 4px 0 0 0 !important;
+}
+.contentheader{
+	display:none !important;
+}
 /******************************************************************************
  ** Windows                                                                  **
  ******************************************************************************/
-.windowWrapper{
-    position: fixed;
+.windowwrapper{
+    float:left;
     background: #fafafa;
     border-radius: 10px;
     border: 2px solid #dfdfdf;
+	margin: 4px;
 }
 .draggable:hover{
     border: 2px dashed #63d8ee;
 }
-.windowHeader{
+.windowheader{
     height: 30px;
     font-size: 24px;
     padding: 5px 10px;
     color: #525252;
     cursor: move;
 }
-.windowTitle{
+.windowtitle{
     position: relative;
     top: -10px;
     left: 10px;    
     padding-right: 10px;
 }
-.windowContent{
+.windowcontent{
     padding: 10px;
     margin: 5px;
     background: #FFF;
@@ -56,37 +83,36 @@
     min-width: 145px;
     min-height: 50px;
 }
-.icon{
-	background-image: url('images/settings_icon.png');
-	width: 37px;
-	height: 38px;
+.resizablevideo{
+	min-height: 195px;
+    min-width: 344px;
 }
 /******************************************************************************
  ** Widgets                                                                  **
  ******************************************************************************/
-.videoPlayer{
+.videoplayer{
     height: 100%;
     width: 100%;
     background: #eee;
     border: solid 1px #E4E4E4;   
-    min-width: 192px;
-    min-height: 108px; 
+    min-width: 344px;
+    min-height: 195px; 
 }
-.settings{
-    left: 360px;
-    top: 270px;
+
+.settingscontent{
+    width: 241px;
+    height: 212px;
 }
-.chartOne{
-    left: 890px;
-    top: 270px;
+.chartonecontent{
+    width: 633px;
+    height: 120px;
 }
-.chartTwo{
-    left: 890px;
-    top: 370px;
+.charttwocontent{
+    width: 633px;
+    height: 120px;
 }
-.diagram{
-}
-.toggleWindow{
-    left: 360px;
-    top: 400px;
+.toggleposition{
+    position: absolute;
+    left: -192px;
+    top: 140px;
 }

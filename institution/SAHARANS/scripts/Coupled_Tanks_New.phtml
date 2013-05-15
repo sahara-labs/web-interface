@@ -1,65 +1,102 @@
 <?php
 $this->headScript()->appendFile($this->baseUrl('uts/coupledtanksnew/coupledtanksnew.js'));
 $this->headLink()->appendStylesheet($this->baseUrl('uts/coupledtanksnew/coupledtanksnew.css'));
+$settingsIcon = $this->baseUrl('uts/coupledtanksnew/images/settings_Icon.png');
 ?>
 <!-- link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:300' rel='stylesheet' type='text/css'-->
-
-<div class = "windowWrapper draggable toggleWindow">
-    <div class = "windowHeader">
-        <img src="uts/coupledtanksnew/images/settings_Icon.png"/>
-        <span class="windowTitle">Toggle</span>
+<div class = "windowwrapper video">
+    <div class = "windowheader">
+        <img src="<?php echo $settingsIcon ?>"/>
+        <span class="windowtitle">Coupled Tanks</span>
     </div>
-    <div class = "windowContent">
-    	<div class="buttonWrapper">
-            <div class="button toggle" name="settings">settings</div>
-            <div class="button toggle" name="chartOne">chart one</div>
-            <div class="button toggle" name="chartTwo">chart two</div>
-            <div class="button toggle" name="diagram">Diagram</div>
-            <div class="button toggle" name="video">video</div>
+    <div class = "windowcontent resizablevideo">
+        <div class="videoplayer"></div>
+    </div>
+</div>
+<div class = "windowwrapper settings">
+    <div class = "windowheader">
+        <img src="<?php echo $settingsIcon ?>"/>
+        <span class="windowtitle">Settings</span>
+    </div>
+    <div id="tabs" class = "windowcontent settingscontent">   
+	  <ul>
+	    <li><a href="#tabs-1">Manual</a></li>
+	    <li><a href="#tabs-2">PID</a></li>
+	  </ul>
+	  <div id="tabs-1">
+		        <div class="slider"></div><br />
+        <label for="sliderValue">Valve:</label>
+        <input type="number" class="sliderValue" style="border: solid 1px #E4E4E4; color: #f6931f; font-weight: bold; width: 60px;" />
+	  </div>
+	  <div id="tabs-2">
+        <div class="pidsettings">
+            <table cellspacing="0">
+            	<tr>
+            		<td>Setpoint (mm)</td>
+            		<td><input type="number" name="setpoint" placeholder="setpoint"/></td>
+            	</tr>
+            	<tr>
+            		<td>Kp</td>
+            		<td><input type="number" name="kp" placeholder="kp"/></td>
+            	</tr>
+            	<tr>
+            		<td>Ki</td>
+            		<td><input type="number" name="ki" placeholder="ki"/></td>
+            	</tr>
+            	<tr>
+            		<td>Kd</td>
+            		<td><input type="number" name="kd" placeholder="kd"/></td>
+            	</tr> 
+            	<tr>
+            		<td>Auto Save</td>
+            		<td><input type="checkbox" name="autosavepid" placeholder="autosave"/></td>
+            	</tr>
+            	<tr>
+            		<td>Enable</td>
+            		<td><input type="checkbox" name="enablepid" placeholder="enable"/></td>
+            	</tr>     	
+            </table>         
         </div>
+	  </div>
     </div>
 </div>
-<div class = "windowWrapper draggable settings">
-    <div class = "windowHeader">
-        <img src="uts/coupledtanksnew/images/settings_Icon.png"/>
-        <span class="windowTitle">Settings</span>
+<div class = "windowwrapper chartone">
+    <div class = "windowheader">
+        <img src="<?php echo $settingsIcon ?>"/>
+        <span class="windowtitle">Chart One</span>
     </div>
-    <div class = "windowContent resizable">
-        <div class="slider"></div><br />
-            <label for="sliderValue">Valve:</label>
-            <input type="text" class="sliderValue" style="border: solid 1px #E4E4E4; color: #f6931f; font-weight: bold; width: 40px;" />
+    <div class = "windowcontent chartonecontent">
     </div>
 </div>
-<div class = "windowWrapper draggable chartOne">
-    <div class = "windowHeader">
-        <img src="uts/coupledtanksnew/images/settings_Icon.png"/>
-        <span class="windowTitle">Chart One</span>
+<div class = "windowwrapper charttwo">
+    <div class = "windowheader">
+        <img src="<?php echo $settingsIcon ?>"/>
+        <span class="windowtitle">Chart Two</span>
     </div>
-    <div class = "windowContent resizable">
-    </div>
-</div>
-<div class = "windowWrapper draggable chartTwo">
-    <div class = "windowHeader">
-        <img src="uts/coupledtanksnew/images/settings_Icon.png"/>
-        <span class="windowTitle">Chart Two</span>
-    </div>
-    <div class = "windowContent resizable">
+    <div class = "windowcontent charttwocontent">
     </div>
 </div>
-<div class = "windowWrapper draggable video">
-    <div class = "windowHeader">
-        <img src="uts/coupledtanksnew/images/settings_Icon.png"/>
-        <span class="windowTitle">Coupled Tanks</span>
+<div class = "windowwrapper diagram">
+    <div class = "windowheader">
+        <img src="<?php echo $settingsIcon ?>"/>
+        <span class="windowtitle">Diagram</span>
     </div>
-    <div class = "windowContent resizableVideo">
-        <div class="videoPlayer"></div>
+    <div class = "windowcontent">
+        <img src="<?php echo $this->baseUrl('uts/coupledtanksnew/images/diagram.png') ?>" width="100%"/>
     </div>
 </div>
-<div class = "windowWrapper draggable diagram">
-    <div class = "windowHeader">
-        <img src="uts/coupledtanksnew/images/settings_Icon.png"/>
-        <span class="windowTitle">Diagram</span>
+<div class = "windowwrapper toggleposition">
+    <div class = "windowheader">
+        <img src="<?php echo $settingsIcon ?>"/>
+        <span class="windowtitle">Toggle</span>
     </div>
-    <div class = "windowContent resizable">
+    <div class = "windowcontent">
+    	<div class="buttonwrapper">
+    		<div class="button toggle" name="video">video</div>
+            <div class="button toggle" name="diagram">Diagram</div>
+            <div class="button toggle" name="settings">settings</div>
+            <div class="button toggle" name="chartone">chart one</div>
+            <div class="button toggle" name="charttwo">chart two</div>
+        </div>
     </div>
 </div>
