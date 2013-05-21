@@ -1,30 +1,31 @@
 <?php
 $this->headScript()->appendFile($this->baseUrl('uts/coupledtanksnew/coupledtanksnew.js'));
 $this->headLink()->appendStylesheet($this->baseUrl('uts/coupledtanksnew/coupledtanksnew.css'));
-$settingsIcon = $this->baseUrl('uts/coupledtanksnew/images/settings_Icon.png');
+$settingsIcon = $this->baseUrl('uts/coupledtanksnew/images/icon_settings.png');
+$videoIcon = $this->baseUrl('uts/coupledtanksnew/images/icon_video.png');
+$toggleIcon = $this->baseUrl('uts/coupledtanksnew/images/icon_toggle.png');
 ?>
-<!-- link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:300' rel='stylesheet' type='text/css'-->
-<div class = "windowwrapper video">
-    <div class = "windowheader">
-        <img src="<?php echo $settingsIcon ?>"/>
+<div class="windowwrapper video">
+    <div class="windowheader">
+        <img src="<?php echo $videoIcon ?>"/>
         <span class="windowtitle">Coupled Tanks</span>
     </div>
-    <div class = "windowcontent resizablevideo">
+    <div class="windowcontent resizablevideo">
         <div class="videoplayer"></div>
     </div>
 </div>
-<div class = "windowwrapper settings">
-    <div class = "windowheader">
+<div class="windowwrapper settings">
+    <div class="windowheader">
         <img src="<?php echo $settingsIcon ?>"/>
         <span class="windowtitle">Settings</span>
     </div>
-    <div id="tabs" class = "windowcontent settingscontent">   
+    <div id="tabs" class="windowcontent settingscontent">   
 	  <ul>
 	    <li><a href="#tabs-1">Manual</a></li>
 	    <li><a href="#tabs-2">PID</a></li>
 	  </ul>
 	  <div id="tabs-1">
-		        <div class="slider"></div><br />
+		        <div class="slider" name="setvalve"></div><br />
         <label for="sliderValue">Valve:</label>
         <input type="number" class="sliderValue" style="border: solid 1px #E4E4E4; color: #f6931f; font-weight: bold; width: 60px;" />
 	  </div>
@@ -60,43 +61,120 @@ $settingsIcon = $this->baseUrl('uts/coupledtanksnew/images/settings_Icon.png');
 	  </div>
     </div>
 </div>
-<div class = "windowwrapper chartone">
-    <div class = "windowheader">
+<div class="windowwrapper chartone">
+    <div class="windowheader">
         <img src="<?php echo $settingsIcon ?>"/>
         <span class="windowtitle">Chart One</span>
     </div>
-    <div class = "windowcontent chartonecontent">
+    <div class="windowcontent chartonecontent">
+        <table>
+            <tr>
+                <td>Level One</td>
+                <td><input type="text" name="chartlevelsensorone" placeholder="Level One"/></td>
+            </tr>
+            <tr>
+                <td>Level Two</td>
+                <td><input type="text" name="chartlevelsensortwo" placeholder="Level Two"/></td>
+            </tr>
+            <tr>
+                <td>Setpoint Two</td>
+                <td><input type="text" name="chartsetpoint" placeholder="Setpoint"/></td>
+            </tr> 
+        </table> 
     </div>
 </div>
-<div class = "windowwrapper charttwo">
-    <div class = "windowheader">
+<div class="windowwrapper charttwo">
+    <div class="windowheader">
         <img src="<?php echo $settingsIcon ?>"/>
         <span class="windowtitle">Chart Two</span>
     </div>
-    <div class = "windowcontent charttwocontent">
+    <div class="windowcontent charttwocontent">
+        <table>
+            <tr>
+                <td>Tank One Flow In</td>
+                <td><input type="text" name="charttankoneflowin" placeholder="Tank One In"/></td>
+            </tr>
+            <tr>
+                <td>Tank Two Flow Out</td>
+                <td><input type="text" name="charttanktwoflowout" placeholder="Tank Two Out"/></td>
+            </tr>
+            <tr>
+                <td>Flow Between Tanks</td>
+                <td><input type="text" name="chartflowsensorbetween" placeholder="Flow Between Tanks"/></td>
+            </tr>
+        </table> 
     </div>
 </div>
-<div class = "windowwrapper diagram">
-    <div class = "windowheader">
+<div class="windowwrapper diagram">
+    <div class "windowheader">
         <img src="<?php echo $settingsIcon ?>"/>
         <span class="windowtitle">Diagram</span>
     </div>
-    <div class = "windowcontent">
-        <img src="<?php echo $this->baseUrl('uts/coupledtanksnew/images/diagram.png') ?>" width="100%"/>
+    <div class="windowcontent">
+            <table>
+            	<tr>
+            		<td>Level One</td>
+            		<td><input type="text" name="levelsensorone" placeholder="Level One"/></td>
+            	</tr>
+                <tr>
+                    <td>Level Two</td>
+            		<td><input type="text" name="levelsensortwo" placeholder="Level Two"/></td>
+            	</tr>
+                <tr>
+            		<td>Tank One Flow In</td>
+            		<td><input type="text" name="tankoneflowin" placeholder="Tank One In"/></td>
+            	</tr>
+                <tr>
+                	<td>Tank Two Flow Out</td>
+            		<td><input type="text" name="tanktwoflowout" placeholder="Tank Two Out"/></td>
+            	</tr>
+            	<tr>
+            		<td>Flow Between Tanks</td>
+            		<td><input type="text" name="flowsensorbetween" placeholder="Flow Between Tanks"/></td>
+            	</tr>
+                <tr>
+                    <td>Pump RPM</td>
+            	    <td><input type="text" name="pumprpm" placeholder="Pump RPM"/></td>
+            	</tr>   	
+            	<tr>
+            		<td>Valve %</td>
+            		<td><input type="text" name="valvepercent" placeholder="Valve %"/></td>
+            	</tr> 
+            </table> 
     </div>
 </div>
-<div class = "windowwrapper toggleposition">
-    <div class = "windowheader">
-        <img src="<?php echo $settingsIcon ?>"/>
+<div class="windowwrapper toggleposition">
+    <div class="windowheader">
+        <img src="<?php echo $toggleIcon ?>"/>
         <span class="windowtitle">Toggle</span>
     </div>
-    <div class = "windowcontent">
+    <div class="windowcontent">
     	<div class="buttonwrapper">
-    		<div class="button toggle" name="video">video</div>
-            <div class="button toggle" name="diagram">Diagram</div>
-            <div class="button toggle" name="settings">settings</div>
-            <div class="button toggle" name="chartone">chart one</div>
-            <div class="button toggle" name="charttwo">chart two</div>
+            <div class="button toggle" name="video">Video
+                <div class="switch">
+                    <div class="animated slide on"></div>
+                </div>	
+            </div>
+            <div class="button toggle" name="settings">Settings
+                <div class="switch">
+                    <div class="animated slide on"></div>
+                </div>	
+            </div>
+            <div class="button toggle" name="chartone">Chart One
+                <div class="switch">
+                    <div class="animated slide on"></div>
+                </div>	
+            </div>
+            <div class="button toggle" name="charttwo">Chart Two
+                <div class="switch">
+                    <div class="animated slide on"></div>
+                </div>	
+            </div>
+            <div class="button toggle" name="diagram">Diagram
+                <div class="switch">
+                    <div class="animated slide on"></div>
+                </div>	
+            </div>
         </div>
     </div>
 </div>

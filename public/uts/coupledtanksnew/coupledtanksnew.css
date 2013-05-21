@@ -1,118 +1,173 @@
-@CHARSET "UTF-8";
+@charset  UTF-8;
 
-*{
+* {
     margin: 0;
     padding: 0;
     font-family: 'Source Sans Pro', sans-serif;
 }
-.buttonwrapper{
+
+.buttonwrapper {
     margin: -11px;
 }
-.button{
-    background: #f3f3f3;
-    height: 20px;
-    width: 145px;
-    padding: 10px;
-    border:solid 1px #e0e0e0;
-    cursor: pointer;
+
+.button {
+    height: 25px;
+    min-width: 145px;
+    position: relative;
+    color: #7c7c7c;
+    left: 0;
+    right: 0;
+    padding: 5px;
+    background: 0;
+    background: 0 to(#eeedf5));
+    border: 1px solid #ebebeb;
 }
-.button:hover{
-    background: #fff;	
-}
-.tabbed{
+
+.tabbed {
     background: #fafafa;
-    margin: 5px 5px -5px 5px;
+    margin: 5px 5px -5px;
     padding: 5px;
 }
-.pidsettings{
-	font-size: 80%;
+
+.pidsettings {
+    font-size: 80%;
 }
-.ui-widget-header{
-    margin: -4px -4px 0px -3px !important;
+
+.ui-widget-header {
+    margin: -4px -4px 0 -3px !important;
 }
-.ui-widget-header, .ui-widget-content{
+
+.ui-widget-header,.ui-widget-content {
     border: solid 1px #e4e4e4 !important;
 }
-.ui-tabs-panel{
-	border: none !important;
+
+.ui-tabs-panel {
+    border: none !important;
 }
 
 /******************************************************************************
  ** Overrides Old layout elements                                            **
  ******************************************************************************/
-#sessioninfo{
-	margin: 4px 0 0 0 !important;
+#sessioninfo {
+    margin: 4px 0 0 !important;
 }
-.contentheader{
-	display:none !important;
+
+.contentheader {
+    display: none !important;
 }
+
 /******************************************************************************
  ** Windows                                                                  **
  ******************************************************************************/
-.windowwrapper{
-    float:left;
+.windowwrapper {
+    float: left;
     background: #fafafa;
     border-radius: 10px;
     border: 2px solid #dfdfdf;
-	margin: 4px;
+    margin: 4px;
 }
-.draggable:hover{
+
+.draggable:hover {
     border: 2px dashed #63d8ee;
 }
-.windowheader{
+
+.windowheader {
     height: 30px;
     font-size: 24px;
     padding: 5px 10px;
     color: #525252;
     cursor: move;
 }
-.windowtitle{
+
+.windowtitle {
     position: relative;
     top: -10px;
-    left: 10px;    
+    left: 10px;
     padding-right: 10px;
 }
-.windowcontent{
+
+.windowcontent {
     padding: 10px;
     margin: 5px;
     background: #FFF;
     border: solid 1px #E4E4E4;
     border-radius: 0 0 10px 10px;
 }
-.resizable{
+
+.resizable {
     min-width: 145px;
     min-height: 50px;
 }
-.resizablevideo{
-	min-height: 195px;
+
+.resizablevideo {
+    min-height: 195px;
     min-width: 344px;
 }
+
 /******************************************************************************
  ** Widgets                                                                  **
  ******************************************************************************/
-.videoplayer{
+.videoplayer {
     height: 100%;
     width: 100%;
     background: #eee;
-    border: solid 1px #E4E4E4;   
+    border: solid 1px #E4E4E4;
     min-width: 344px;
-    min-height: 195px; 
+    min-height: 195px;
 }
 
-.settingscontent{
-    width: 241px;
+.settingscontent {
+    width: 255px;
     height: 212px;
 }
-.chartonecontent{
+
+.chartonecontent {
     width: 633px;
     height: 120px;
 }
-.charttwocontent{
+
+.charttwocontent {
     width: 633px;
     height: 120px;
 }
-.toggleposition{
+
+.toggleposition {
     position: absolute;
     left: -192px;
     top: 140px;
+    min-width: 179px;
+}
+
+/******************************************************************************
+ ** The Switch                                                                  **
+ ******************************************************************************/
+.switch{
+    height:20px;
+    width:40px;
+    background: #f5f5f5;
+    border: solid 1px #ddd;
+    border-radius:20px;
+    float: right;
+}
+.slide{
+    height:15px;
+    width:15px;
+    background: #ccc;
+    margin: 2px;
+    border-radius: 10px;
+}
+.animated{
+    -webkit-transition:all 0.3s ease-in-out;
+    -moz-transition:all 0.3s ease-in-out;
+    -o-transition:all 0.3s ease-in-out;
+    transition:all 0.3s ease-in-out;
+}
+.on{
+    background: #01C3DD;
+    float:right; 
+    
+}
+.off{
+    background: #dfdfdf;
+    float:left;
 }
