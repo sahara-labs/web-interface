@@ -1,11 +1,29 @@
 <?php
+$this->headScript()->appendFile('http://jqueryrotate.googlecode.com/svn/trunk/jQueryRotate.js');
 $this->headScript()->appendFile($this->baseUrl('uts/coupledtanksnew/coupledtanksnew.js'));
 $this->headLink()->appendStylesheet($this->baseUrl('uts/coupledtanksnew/coupledtanksnew.css'));
 $settingsIcon = $this->baseUrl('uts/coupledtanksnew/images/icon_settings.png');
 $videoIcon = $this->baseUrl('uts/coupledtanksnew/images/icon_video.png');
 $toggleIcon = $this->baseUrl('uts/coupledtanksnew/images/icon_toggle.png');
+$spinner = $this->baseUrl('uts/coupledtanksnew/images/spinner.png');
 ?>
-<div class="windowwrapper video">
+
+<div id="coupledTanks">
+	<!--  Experiment canvas. -->
+</div>
+
+
+<script type="text/javascript">
+var CoupledTanks = new CoupledTanks();
+$(document).ready(function() {
+	CoupledTanks.init();
+});
+</script>
+
+
+
+
+<!--div class="windowwrapper video">
     <div class="windowheader">
         <img src="<?php echo $videoIcon ?>"/>
         <span class="windowtitle">Coupled Tanks</span>
@@ -106,41 +124,71 @@ $toggleIcon = $this->baseUrl('uts/coupledtanksnew/images/icon_toggle.png');
     </div>
 </div>
 <div class="windowwrapper diagram">
-    <div class "windowheader">
+    <div class="windowheader" style="padding-bottom:10px;">
         <img src="<?php echo $settingsIcon ?>"/>
         <span class="windowtitle">Diagram</span>
-    </div>
-    <div class="windowcontent">
-            <table>
-            	<tr>
-            		<td>Level One</td>
-            		<td><input type="text" name="levelsensorone" placeholder="Level One"/></td>
-            	</tr>
-                <tr>
-                    <td>Level Two</td>
-            		<td><input type="text" name="levelsensortwo" placeholder="Level Two"/></td>
-            	</tr>
-                <tr>
-            		<td>Tank One Flow In</td>
-            		<td><input type="text" name="tankoneflowin" placeholder="Tank One In"/></td>
-            	</tr>
-                <tr>
-                	<td>Tank Two Flow Out</td>
-            		<td><input type="text" name="tanktwoflowout" placeholder="Tank Two Out"/></td>
-            	</tr>
-            	<tr>
-            		<td>Flow Between Tanks</td>
-            		<td><input type="text" name="flowsensorbetween" placeholder="Flow Between Tanks"/></td>
-            	</tr>
-                <tr>
-                    <td>Pump RPM</td>
-            	    <td><input type="text" name="pumprpm" placeholder="Pump RPM"/></td>
-            	</tr>   	
-            	<tr>
-            		<td>Valve %</td>
-            		<td><input type="text" name="valvepercent" placeholder="Valve %"/></td>
-            	</tr> 
-            </table> 
+    </div> 
+        <div id="diagramTabs">
+	        <ul>
+	            <li><a href="#diagramTabs-D1">Diagram</a></li>
+	            <li><a href="#diagramTabs-D2">Data Only</a></li>
+	        </ul>
+            <div id="diagramTabs-D1" style="padding: 0 !important;">
+                <div class="windowcontent diagramBG">
+                    <div class="toggleWater">Toggle Water</div>
+                    <div class="waterTube waterBackground">
+                        <div class="level tubeOne"></div>
+                    </div>
+                    <div class="waterTube waterTubeRight waterBackground">
+                        <div class="level tubeTwo"></div>
+                    </div>       
+                    <div class="containerBottom waterBackground">
+                        <div class="level tubeThree"></div>
+                    </div>
+                    <input type="text" class="diagramInfo levelsensorone" name="levelsensorone" placeholder="0.0"/> 
+                    <input type="text" class="diagramInfo levelsensortwo" name="levelsensortwo" placeholder="0.0"/> 
+                    <input type="text" class="diagramInfo tankoneflowin" name="tankoneflowin" placeholder="0.0 L/M"/> 
+                    <input type="text" class="diagramInfo tanktwoflowout" name="tanktwoflowout" placeholder="0.0 L/M"/> 
+                    <input type="text" class="diagramInfo flowsensorbetween" name="flowsensorbetween" placeholder="0.0 L/M"/> 
+                    <input type="text" class="diagramInfo pumprpm" name="pumprpm" placeholder="0 RPM"/> 
+                    <input type="text" class="diagramInfo valvepercent" name="valvepercent" placeholder="0.0 %"/>
+                    <img src="<?php echo $spinner ?>" border='0' alt="spinner" class="spinner"/>
+	            </div>
+    	    </div>	    
+        <div id="diagramTabs-D2" style="padding: 0 !important;">
+            <div class="windowcontent">
+                <table>
+                    <tr>
+                        <td>Level One</td>
+                        <td><input type="text" name="levelsensorone" placeholder="Level One"/></td>
+                    </tr>
+                    <tr>
+                        <td>Level Two</td>
+                        <td><input type="text" name="levelsensortwo" placeholder="Level Two"/></td>
+                    </tr>
+                    <tr>
+                        <td>Tank One Flow In</td>
+                        <td><input type="text" name="tankoneflowin" placeholder="Tank One In"/></td>
+                    </tr>
+                    <tr>
+                        <td>Tank Two Flow Out</td>
+                        <td><input type="text" name="tanktwoflowout" placeholder="Tank Two Out"/></td>
+                    </tr>
+                    <tr>
+                        <td>Flow Between Tanks</td>
+                        <td><input type="text" name="flowsensorbetween" placeholder="Flow Between Tanks"/></td>
+                    </tr>
+                    <tr>
+                        <td>Pump RPM</td>
+                        <td><input type="text" name="pumprpm" placeholder="Pump RPM"/></td>
+                    </tr>   	
+                    <tr>
+                        <td>Valve %</td>
+                        <td><input type="text" name="valvepercent" placeholder="Valve %"/></td>
+                    </tr> 
+                </table> 
+            </div> 
+        </div> 
     </div>
 </div>
 <div class="windowwrapper toggleposition">
@@ -177,4 +225,4 @@ $toggleIcon = $this->baseUrl('uts/coupledtanksnew/images/icon_toggle.png');
             </div>
         </div>
     </div>
-</div>
+</div-->
