@@ -13,3 +13,11 @@
 
 # /library/
 /library/Zend
+
+# Private UTS projects
+institution/SAHARANS/scripts/ANDS.phtml
+institution/SAHARANS/scripts/CT_Scanner.phtml
+institution/SAHARANS/scripts/Coupled_Tanks.phtml
+institution/SAHARANS/scripts/Tims.phtml
+/public/uts/tims
+
