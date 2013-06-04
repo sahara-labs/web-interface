@@ -48,6 +48,7 @@ class PrimitiveController extends Zend_Controller_Action
     {
         $this->_auth = Zend_Auth::getInstance();
     }
+
     /**
      * Action to bridge a primitive call to the in session rigclient. The
      * results are returned as a JSON string (either the response object or
@@ -129,6 +130,148 @@ class PrimitiveController extends Zend_Controller_Action
         {
             echo 'FAILED';
         }
+    }
+
+    /**
+     * Action to bridge a primitive call to the in session rigclient. The
+     * results are returned as a JSON string (either the response object or
+     * a Zend fault).
+     * <br />
+     * The mandatory parameters are:
+     * <ul>
+     * 	<li> pc | primitiveController => The name of the primitive controller.</li>
+     *  <lI> pa | primitiveAction => The name of the action to run on the specified
+     *  controller.</li>
+     * </ul>
+
+     * Any other provided parameters are used as primitive request parameters.
+     * If the primitive call fails, a JSON string is returned.
+     */
+    public function mapjsonAction()
+    {
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();
+
+        $response = Sahara_Soap::getSchedServerSessionClient()->getSessionInformation(array(
+                'userQName' => $this->_auth->getIdentity()
+        ));
+
+        if (!$response->isInSession)
+        {
+            /* Not in session, so unable to determine the rig clients address. */
+            echo $this->view->json(array(
+                    'success' => false,
+                    'errorCode' => -1,
+                    'errorReason' => 'User not in session'
+            ));
+            return;
+        }
+
+        /* Set up the correct object model. */
+        list($junk, $allocUser) = explode(':', $this->_auth->getIdentity(), 2);
+        $request = array(
+                'requestor' => $allocUser,
+                'param' => array()
+        );
+
+        foreach ($this->_request->getParams() as $key => $val)
+        {
+            switch ($key)
+            {
+                case 'pc':
+                case 'primitiveController':
+                    $request['controller'] = $val;
+                    break;
+                case 'pa':
+                case 'primitiveAction':
+                    $request['action'] = $val;
+                    break;
+                case 'rp':
+                case 'responseParam':
+                    $responseParam = $val;
+                    break;
+
+                    /* These are Zend request parameters and irrelevant to the
+                     * primitive call. */
+                case 'controller':
+                case 'action':
+                case 'module':
+                    break;
+
+                    /* Parameters to provide to primitive call. */
+                default:
+                    $param = array(
+                    'name' => $key,
+                    'value' => $val
+                    );
+                    array_push($request['param'], $param);
+                    break;
+            }
+        }
+
+        try
+        {
+            $rigClient = new Sahara_Soap($response->contactURL . '?wsdl');
+            $response = $rigClient->performPrimitiveControl($request);
+
+            if (!$response->success)
+            {
+                echo $this->view->json(array(
+                    'success' => false,
+                    'errorCode' => $response->error->code,
+                    'errorReason' => $response->error->reason
+                ));
+                return;
+            }
+
+            /* Return the specified response. */
+            $results = array();
+
+            if (is_array($response->result))
+            {
+                foreach ($response->result as $r)
+                {
+                    $results[$r->name] = $this->_parseVal($r->value);
+                }
+            }
+            else
+            {
+                $results[$response->result->name] = $this->_parseVal($response->result->value);
+            }
+
+            echo $this->view->json($results);
+        }
+        catch (Exception $ex)
+        {
+            echo $this->view->json(array(
+                 'success' => false,
+                 'errorCode' => -2,
+                 'errorReason' => 'SOAP fault communicating with Rig Client'
+            ));
+        }
+    }
+
+    /**
+     * Parses the value to turn the string representation so that the
+     * value is represented with a more natural type. For example, an
+     * integer string is returned as a string.
+     *
+     * @param String $val value in string
+     * @return mixed value in native type
+     */
+    public function _parseVal($val)
+    {
+        if      ($val === 'true')  return true;
+        else if ($val === 'false') return false;
+        else if (is_numeric($val)) return (float)$val;
+        else if (preg_match('/^\[.*\]$/', $val))
+        {
+            $val = substr(substr($val, 0, strlen($val) - 1), 1);
+            $res = array();
+            foreach (split(',', $val) as $v) array_push($res, $this->_parseVal($v));
+            return $res;
+        }
+        else return $val;
     }
 
 	/**
