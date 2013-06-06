@@ -10,9 +10,6 @@ function WaterLevelControl() { };
 
 /** Runs the Display Manager. */
 WaterLevelControl.prototype.setup = function() {
-	
-    this.PCONTROLLER = "CoupledTanksTwoController";
-
 	DisplayManager();
 };
 
@@ -23,27 +20,137 @@ WaterLevelControl.prototype.run = function() { };
  * == Widget.                                                                ==
  * ============================================================================ */
 
-function Widget() { };
+/* ----- WIDGET CONTSRUCTOR --------------------------------------------------- */
 
-/** adds the widget to the page. */
+/**
+ * Base class widgets that comprise the Coupled Tanks interface.
+ * It provides declarations of a widgets required functionality
+ * and implementations of common functionality.
+ * 
+ * @param $container a jQuery object that is the base where the widget is \ 
+ * 				appended to
+ * @param title the widget's title
+ */
+function Widget($container, title) 
+{
+	/** The jQuery object of the container the widget is attached to. */
+	this.$container = $container;
+	
+	/** The page title. */
+	this.title = title;
+	
+	/** The jQuery object of the outermost element of this widget. 
+	 *  This is not initialised until the 'init' method has been called. */
+	this.$widget = null;
+};
+
+/* ----- WIDGET LIFE CYCLE ---------------------------------------------------- */
+
+/** 
+ * Adds the widget to the page and sets up any widgets event handlers.
+ */
 Widget.prototype.init = function() {
     throw "Widget init not defined.";
 };
 
-/** Retrieves data from the server. */
+/** 
+ * Method which is provided with data from the server. The data object is the 
+ * return from /data operation and is a map of the response keys and objects. 
+ * 
+ * @param data data object
+ */
 Widget.prototype.consume = function(data) { };
 
-/** Removes the widget from the page. */
+/** 
+ * Removes the widget from the page and cleans up all registered
+ * events handlers. 
+ */
 Widget.prototype.destroy = function() { };
 
-/** Updates the widget. */
-Widget.prototype.update = function(width,height) { };
+/* ----- WIDGET EVENT CALLBACKS ----------------------------------------------- */
 
-/** Adds a message to the page. */
+/**
+ * Event callback if an error has occurred and the widget should provide
+ * a view that indicates something is amiss. An example of a possible error
+ * is an error was received in server data polling.
+ */
 Widget.prototype.blur = function() { };
 
-/** Posts data to the server. */
-Widget.prototype.postControl = function(action,params) { };
+/**
+ * Event callback to notify a previous blur can be cleared.
+ */
+Widget.prototype.unblur = function() { };
+
+/** 
+ * Event callback that is invoked when the widget is resized.  This is
+ * provided in case the widget contents require rescaling. 
+ * 
+ * @param width the new widget width
+ * @param height the new widget height
+ */
+Widget.prototype.resize = function(width, height) { };
+
+/**
+ * Event callback that is invoked when the widget has been dragged. 
+ * 
+ * @param xpos the new x coordinate from its enclosing container
+ * @param ypos the new y coordinate from its enclosing container
+ */
+Widget.prototype.dragged = function(xpos, ypos) { };
+
+/* ----- WIDGET COMMON BEHAVIOURS AND DISPLAY GENERATION ---------------------- */
+
+/** 
+ * Adds a message to the page. 
+ * 
+ * @param message the message to display
+ */
+Widget.prototype.addMessage = function(message) { 
+	// IMPLEMENT THIS THE DECLARATION REQUIRES MORE PARAMETERS
+};
+
+/**
+ * Removes messages from the page.
+ */
+Widget.prototype.removeMessages = function() {
+	// IMPLEMENT THIS 
+};
+
+/**
+ * Generates the common styled widget box.
+ * 
+ * @param boxId ID of the box
+ * @return jQuery node of the generated box that has been appended to the page
+ */
+Widget.prototype.generateBox = function(boxId) {
+	// IMPLEMENT THIS
+};
+
+/**
+ * Enables this widget to be draggable.
+ */
+Widget.prototype.enableDraggable = function() {
+	// IMPLEMENT THIS
+};
+
+/**
+ * Enables this widget to be resizable. 
+ */
+Widget.prototype.enableResizable = function() {
+	// IMPLMENT THIS
+};
+
+
+/** 
+ * Posts data to the server.
+ * 
+ * @param action the name of the action called from the Rig Client
+ * @param params data object of POST variables
+ * @param responseCallback function to be invoked with the response of POST
+ */
+Widget.prototype.postControl = function(action, params, responseCallback) {
+	// IMPLEMENT THIS
+};
 
 /* ============================================================================
  * == Display Manager.                                                       ==
@@ -53,6 +160,7 @@ function DisplayManager(control){
 	
     Widget.call(this, control);
     
+    this.PCONTROLLER = "CoupledTanksTwoController";
 	this.widgets = [];
 };
 
@@ -68,44 +176,23 @@ DisplayManager.prototype.init = function() {
 function WaterLevelsMimic(control) {
 	
 	Widget.call(this, control);
-
+    this.width = 280;
+	this.height = 305;
 };
 
-WaterLevelsMimic.prototype = new Widget;
-
-/* Controls the Water Levels Mimic */
-WaterLevelsMimic.prototype.animateLoop = function() { };
+WaterLevelsMimic.prototype.animateLoop = function() {
+	
+};
 
 function PIDControl(control) {
 	
 	Widget.call(this, control);
-
+    this.width = 255;
+	this.height = 210;
 };
 
-PIDControl.prototype = new Widget;
 
-function TabbedWidget(control) {
-	
-	Widget.call(this, control);
-};
 
-TabbedWidget.prototype = new Widget;
-
-function Slider(control) {
-};
-
-Slider.prototype = new Widget;
-
-function Camera(control) {
-	
-	Widget.call(this, control);
-	
-
-};
-
-Camera.prototype = new Widget;
-
-/* Older Code *============================================================================ */
 
 
 /* ============================================================================
@@ -332,6 +419,54 @@ function diagram(CTinst)
 }
 
 diagram.prototype.init = function() {};
+
+diagram.prototype.animateTanks = function() {
+
+	/* Sets tank variables. */
+    var valvepercent;
+    var pumprpm;
+    var tankoneflowin;
+    var flowsensorbetween;
+    var tanktwoflowout;
+    var levelBottom;
+    
+    
+    $('.toggleWater').click(function(){ 
+    	startSpin()
+    	var percent =  "%";
+        var tubeOneHeight;
+        var i = 0; while (i<6){
+        tubeOneHeight = randomNum();
+        tubeTwoHeight = randomNum();
+        tubeThreeHeight = randomNum();
+    
+        /* Gets latest data. */
+        valvepercent = randomNum();
+        pumprpm = randomNum();
+        console.log('');
+        tankoneflowin = randomNum();
+        flowsensorbetween = randomNum();
+        tanktwoflowout = randomNum();
+        levelBottom = randomNum();
+    
+        /*Animates the water levels */
+        $('.tubeOne').animate({"height": tubeOneHeight+percent }, 400);
+        $('.tubeTwo').animate({"height": tubeTwoHeight+percent }, 400);
+        $('.tubeThree').animate({"height": tubeTwoHeight+percent }, 400);
+        
+        /* Displays the latest data */
+        $(".valvepercent").val(valvepercent + percent);
+        $(".pumprpm").val(pumprpm + " RPM");
+        $(".tankoneflowin").val(tankoneflowin + " L/m");
+        $(".flowsensorbetween").val(flowsensorbetween + " L/m");
+        $(".tanktwoflowout").val(tanktwoflowout + " L/m");
+        $(".levelsensorone").val(tubeOneHeight);
+        $(".levelsensortwo").val(tubeTwoHeight);
+
+        i++;
+        };
+    });	
+};
 
 diagram.prototype.animateSpin = function() {
     var angle = 0;
