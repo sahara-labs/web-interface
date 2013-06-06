@@ -10,6 +10,9 @@ function WaterLevelControl() { };
 
 /** Runs the Display Manager. */
 WaterLevelControl.prototype.setup = function() {
+	
+    this.PCONTROLLER = "CoupledTanksTwoController";
+
 	DisplayManager();
 };
 
@@ -39,9 +42,6 @@ Widget.prototype.update = function(width,height) { };
 /** Adds a message to the page. */
 Widget.prototype.blur = function() { };
 
-/** Resets the widgets position. */
-Widget.prototype.requestData = function() { };
-
 /** Posts data to the server. */
 Widget.prototype.postControl = function(action,params) { };
 
@@ -53,7 +53,6 @@ function DisplayManager(control){
 	
     Widget.call(this, control);
     
-    this.PCONTROLLER = "CoupledTanksTwoController";
 	this.widgets = [];
 };
 
@@ -69,23 +68,44 @@ DisplayManager.prototype.init = function() {
 function WaterLevelsMimic(control) {
 	
 	Widget.call(this, control);
-    this.width = 280;
-	this.height = 305;
+
 };
 
-WaterLevelsMimic.prototype.animateLoop = function() {
-	
-};
+WaterLevelsMimic.prototype = new Widget;
+
+/* Controls the Water Levels Mimic */
+WaterLevelsMimic.prototype.animateLoop = function() { };
 
 function PIDControl(control) {
 	
 	Widget.call(this, control);
-    this.width = 255;
-	this.height = 210;
+
 };
 
+PIDControl.prototype = new Widget;
 
+function TabbedWidget(control) {
+	
+	Widget.call(this, control);
+};
 
+TabbedWidget.prototype = new Widget;
+
+function Slider(control) {
+};
+
+Slider.prototype = new Widget;
+
+function Camera(control) {
+	
+	Widget.call(this, control);
+	
+
+};
+
+Camera.prototype = new Widget;
+
+/* Older Code *============================================================================ */
 
 
 /* ============================================================================
@@ -312,54 +332,6 @@ function diagram(CTinst)
 }
 
 diagram.prototype.init = function() {};
-
-diagram.prototype.animateTanks = function() {
-
-	/* Sets tank variables. */
-    var valvepercent;
-    var pumprpm;
-    var tankoneflowin;
-    var flowsensorbetween;
-    var tanktwoflowout;
-    var levelBottom;
-    
-    
-    $('.toggleWater').click(function(){ 
-    	startSpin()
-    	var percent =  "%";
-        var tubeOneHeight;
-        var i = 0; while (i<6){
-        tubeOneHeight = randomNum();
-        tubeTwoHeight = randomNum();
-        tubeThreeHeight = randomNum();
-    
-        /* Gets latest data. */
-        valvepercent = randomNum();
-        pumprpm = randomNum();
-        console.log('');
-        tankoneflowin = randomNum();
-        flowsensorbetween = randomNum();
-        tanktwoflowout = randomNum();
-        levelBottom = randomNum();
-    
-        /*Animates the water levels */
-        $('.tubeOne').animate({"height": tubeOneHeight+percent }, 400);
-        $('.tubeTwo').animate({"height": tubeTwoHeight+percent }, 400);
-        $('.tubeThree').animate({"height": tubeTwoHeight+percent }, 400);
-        
-        /* Displays the latest data */
-        $(".valvepercent").val(valvepercent + percent);
-        $(".pumprpm").val(pumprpm + " RPM");
-        $(".tankoneflowin").val(tankoneflowin + " L/m");
-        $(".flowsensorbetween").val(flowsensorbetween + " L/m");
-        $(".tanktwoflowout").val(tanktwoflowout + " L/m");
-        $(".levelsensorone").val(tubeOneHeight);
-        $(".levelsensortwo").val(tubeTwoHeight);
-
-        i++;
-        };
-    });	
-};
 
 diagram.prototype.animateSpin = function() {
     var angle = 0;
