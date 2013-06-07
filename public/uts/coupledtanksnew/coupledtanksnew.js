@@ -65,7 +65,9 @@ Widget.prototype.consume = function(data) { };
  * Removes the widget from the page and cleans up all registered
  * events handlers. 
  */
-Widget.prototype.destroy = function() { };
+Widget.prototype.destroy = function() { 
+    this.widget.remove();
+};
 
 /* ----- WIDGET EVENT CALLBACKS ----------------------------------------------- */
 
@@ -103,17 +105,47 @@ Widget.prototype.dragged = function(xpos, ypos) { };
 /** 
  * Adds a message to the page. 
  * 
+ * @param msgId ID of the message
  * @param message the message to display
+ * @param type the message type, 'error', 'info', 'backing'
+ * @param left left absolute coordinate
+ * @param top top absolute coordinate
+ * @param pos the arrow position, 'left', 'right', 'top', 'bottom'
  */
-Widget.prototype.addMessage = function(message) { 
-	// IMPLEMENT THIS THE DECLARATION REQUIRES MORE PARAMETERS
+Widget.prototype.addMessage = function(msgId,message,type,left,top,pos) {
+	var $box, i, aniIn, bs = 1, up = true, html = 
+		"<div id='" + msgId + "' class='message-box message-box-" + type + " message-box-in1' style='left:" + left + "px; top:" + top + "px'>" +
+			"<div class='message-box-text'>" + message + "</div>" +
+			"<div class='message-box-arrow message-box-arrow-" + pos + "'>";
+	
+	for (i = 0; i < 8; i++)
+	{
+		html += "<div class='message-box-arrow-line message-box-arrow-line" + i + "'></div>";
+	}
+	
+	html += "</div>" +
+		"</div>";
+	
+	$box = this.$widget.after(html).next();
+		
+	/* Throb box shadow around message box. */
+	aniIn = setInterval(function() {
+		if (bs == 0 || bs == 12) up = !up;
+		$box.css("box-shadow", "0 0 " + (up ? bs++ : bs--) + "px #EEEEEE");
+	}, 120);
+	
+	/* Remove box on click. */
+	$box.click(function() {
+		clearInterval(aniIn);
+		$box.remove();
+	});
 };
 
 /**
  * Removes messages from the page.
  */
 Widget.prototype.removeMessages = function() {
-	// IMPLEMENT THIS 
+	this.widget.find(".message-box").remove();
 };
 
 /**
@@ -130,14 +162,33 @@ Widget.prototype.generateBox = function(boxId) {
  * Enables this widget to be draggable.
  */
 Widget.prototype.enableDraggable = function() {
-	// IMPLEMENT THIS
+
+	/* Enables increase Z-index on mouse down. */	
+    $.ui.plugin.add('draggable', 'increaseZindexOnmousedown', {
+        create: function() {
+            this.mousedown(function(e) {
+                var inst = $(this).data('draggable');
+                inst._mouseStart(e);
+                inst._trigger('start', e);
+                inst._clear();
+            });
+        }
+    });
+
+	/* Enables dragging on the widgets 'windowwrapper' class. */	
+	this.widget.find(".windowwrapper").draggable({
+        snap: true,
+        snapTolerance: 5,
+        stack: '.windowwrapper',
+        increaseZindexOnmousedown: true
+    });
 };
 
 /**
  * Enables this widget to be resizable. 
  */
 Widget.prototype.enableResizable = function() {
-	// IMPLMENT THIS
+	this.widget.find(".windowcontent").resizable();
 };
 
 
@@ -173,27 +224,66 @@ DisplayManager.prototype.init = function() {
  * == Page Widgets.                                                          ==
  * ============================================================================ */
 
-function WaterLevelsMimic(control) {
-	
-	Widget.call(this, control);
-    this.width = 280;
-	this.height = 305;
+/**
+ * Creates and controls the TabbedWidget widget.
+ */
+function TabbedWidget(container) {
+   
+   Widget.call(this, container,title);
+    
+ };
+ 
+TabbedWidget.prototype = new Widget;
+
+/**
+ * Creates and controls the PIDControl widget.
+ */
+function PIDControl(container) {
+   
+   Widget.call(this, container,title);
+    
+ };
+ 
+PIDControl.prototype = new Widget;
+
+/**
+ * Creates and controls the Camera widget.
+ */
+function Camera(container) {
+   
+   Widget.call(this, container,title);
+    
+ };
+ 
+Camera.prototype = new Widget;
+
+/**
+ * Creates and controls the Slider widget.
+ */
+function Slider(container) {
+   
+   Widget.call(this, container,title);
+    
+ };
+ 
+Slider.prototype = new Widget;
+
+/**
+ * Creates and controls the Water Levels Mimic widget.
+ */
+function WaterLevelsMimic(container) {
+		
+	Widget.call(this, container,title);
 };
 
-WaterLevelsMimic.prototype.animateLoop = function() {
-	
-};
+/**
+ * Creates and controls the Water Levels Mimic widget's amimation.
+ */
+WaterLevelsMimic.prototype.animateLoop = function() { };
 
-function PIDControl(control) {
-	
-	Widget.call(this, control);
-    this.width = 255;
-	this.height = 210;
-};
-
-
-
-
+/* ============================================================================
+ * == OLDER CODE BELOW THIS POINT.                                           ==
+ * ============================================================================ */
 
 /* ============================================================================
  * == Control.                                                               ==
@@ -351,12 +441,7 @@ Slider.prototype.update = function() {};
     /* JQuery Tabs. */
     $("#tabs").tabs();
     $("#diagramTabs").tabs();
-    $(".windowcontent").resizable();
-    $(".resizableVideo").resizable({
-        aspectRatio: 16 / 9,
-        minHeight: 192,
-        minWidth: 108
-    });
+
     
     /* Toggle Buttons. */
     $('.toggle').click(function() {
@@ -374,24 +459,7 @@ Slider.prototype.update = function() {};
         var x = Math.floor(Math.random()*100)+1;
         return x;
     };
-        
-    $.ui.plugin.add('draggable', 'increaseZindexOnmousedown', {
-        create: function() {
-            this.mousedown(function(e) {
-                var inst = $(this).data('draggable');
-                inst._mouseStart(e);
-                inst._trigger('start', e);
-                inst._clear();
-            });
-        }
-    });
-    
-    $(".windowwrapper").draggable({
-        snap: true,
-        snapTolerance: 5,
-        stack: '.windowwrapper',
-        increaseZindexOnmousedown: true
-    });
+
 
 /* ============================================================================
  * == Page Widgets.                                                          ==
