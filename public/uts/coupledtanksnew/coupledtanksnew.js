@@ -66,7 +66,7 @@ Widget.prototype.consume = function(data) { };
  * events handlers. 
  */
 Widget.prototype.destroy = function() { 
-    this.widget.remove();
+    this.$widget.remove();
 };
 
 /* ----- WIDGET EVENT CALLBACKS ----------------------------------------------- */
@@ -145,17 +145,30 @@ Widget.prototype.addMessage = function(msgId,message,type,left,top,pos) {
  * Removes messages from the page.
  */
 Widget.prototype.removeMessages = function() {
-	this.widget.find(".message-box").remove();
+	this.$widget.find(".message-box").remove();
 };
 
 /**
  * Generates the common styled widget box.
  * 
  * @param boxId ID of the box
+ * @param title the title of the widget
+ * @param content the content of the widget
+ * @param icon the type of icon the box will display, 'settings', 'toggle', 'video'
  * @return jQuery node of the generated box that has been appended to the page
  */
-Widget.prototype.generateBox = function(boxId) {
-	// IMPLEMENT THIS
+Widget.prototype.generateBox = function(boxId,title,content,icon) {
+
+  $("body").append(
+      "<div class='windowwrapper' id=" + boxId + ">" +
+          "<div class='windowheader'><img src='uts/coupledtanksnew/images/icon_" + icon + "'/>" +
+              "<span class='windowtitle'>" + title +
+              "</span>" +
+          "</div>" +
+          "<div class='windowcontent'>" + content +
+          "</div>" +
+      "</div>"
+  );
 };
 
 /**
@@ -176,21 +189,28 @@ Widget.prototype.enableDraggable = function() {
     });
 
 	/* Enables dragging on the widgets 'windowwrapper' class. */	
-	this.widget.find(".windowwrapper").draggable({
+	this.$widget.draggable({
         snap: true,
         snapTolerance: 5,
         stack: '.windowwrapper',
-        increaseZindexOnmousedown: true
+        increaseZindexOnmousedown: true,
     });
 };
 
 /**
  * Enables this widget to be resizable. 
+ * 
+ * @param aspect the aspect resize the drag is restricted to
+ * @param minHeight the minimum height the widget can be resized to
+ * @param minWidth the minimum width the widget can be resized to
  */
-Widget.prototype.enableResizable = function() {
-	this.widget.find(".windowcontent").resizable();
+Widget.prototype.enableResizable = function(aspect,minHeight,minWidth) {
+	this.$widget.find(".windowcontent").resizable({
+		 aspectRatio: aspect,
+         minHeight: minHeight,
+         minWidth: minWidth
+	});
 };
-
 
 /** 
  * Posts data to the server.
@@ -207,12 +227,14 @@ Widget.prototype.postControl = function(action, params, responseCallback) {
  * == Display Manager.                                                       ==
  * ============================================================================ */
 
-function DisplayManager(control){
+function DisplayManager(container,title){
 	
-    Widget.call(this, control);
+    Widget.call(this, container,title);
     
     this.PCONTROLLER = "CoupledTanksTwoController";
 	this.widgets = [];
+    Widget.prototype.generateBox('boxId','title','content','settings');
+
 };
 
 DisplayManager.prototype = new Widget;
@@ -227,7 +249,7 @@ DisplayManager.prototype.init = function() {
 /**
  * Creates and controls the TabbedWidget widget.
  */
-function TabbedWidget(container) {
+function TabbedWidget(container,title) {
    
    Widget.call(this, container,title);
     
@@ -238,7 +260,7 @@ TabbedWidget.prototype = new Widget;
 /**
  * Creates and controls the PIDControl widget.
  */
-function PIDControl(container) {
+function PIDControl(container,title) {
    
    Widget.call(this, container,title);
     
@@ -249,7 +271,7 @@ PIDControl.prototype = new Widget;
 /**
  * Creates and controls the Camera widget.
  */
-function Camera(container) {
+function Camera(container,title) {
    
    Widget.call(this, container,title);
     
@@ -260,7 +282,7 @@ Camera.prototype = new Widget;
 /**
  * Creates and controls the Slider widget.
  */
-function Slider(container) {
+function Slider(container,title) {
    
    Widget.call(this, container,title);
     
@@ -271,7 +293,7 @@ Slider.prototype = new Widget;
 /**
  * Creates and controls the Water Levels Mimic widget.
  */
-function WaterLevelsMimic(container) {
+function WaterLevelsMimic(container,title) {
 		
 	Widget.call(this, container,title);
 };
@@ -459,7 +481,6 @@ Slider.prototype.update = function() {};
         var x = Math.floor(Math.random()*100)+1;
         return x;
     };
-
 
 /* ============================================================================
  * == Page Widgets.                                                          ==
