@@ -10,7 +10,7 @@ function WaterLevelControl() { };
 
 /** Runs the Display Manager. */
 WaterLevelControl.prototype.setup = function() {
-	DisplayManager();
+	var dM = new DisplayManager($('#rigscriptcontainer'), 'Display Manager');
 };
 
 /** Retrieves latest data from the server. */
@@ -157,15 +157,14 @@ Widget.prototype.removeMessages = function() {
  * @param icon the type of icon the box will display, 'settings', 'toggle', 'video'
  * @return jQuery node of the generated box that has been appended to the page
  */
-Widget.prototype.generateBox = function(boxId,title,content,icon) {
-
-  $("body").append(
+Widget.prototype.generateBox = function(boxId,icon) {
+    this.$container.append(
       "<div class='windowwrapper' id=" + boxId + ">" +
-          "<div class='windowheader'><img src='uts/coupledtanksnew/images/icon_" + icon + "'/>" +
-              "<span class='windowtitle'>" + title +
+          "<div class='windowheader'><img src='/uts/coupledtanksnew/images/icon_" + icon + ".png'/>" +
+              "<span class='windowtitle'>" + this.title +
               "</span>" +
           "</div>" +
-          "<div class='windowcontent'>" + content +
+          "<div class='windowcontent'>" + this.getHTML() +
           "</div>" +
       "</div>"
   );
@@ -176,7 +175,12 @@ Widget.prototype.generateBox = function(boxId,title,content,icon) {
  */
 Widget.prototype.enableDraggable = function() {
 
-	/* Enables increase Z-index on mouse down. */	
+this.$widget.addClass('.draggable');
+
+//Testing
+console.log(this.$widget);
+
+	//Enables increase Z-index on mouse down. 	
     $.ui.plugin.add('draggable', 'increaseZindexOnmousedown', {
         create: function() {
             this.mousedown(function(e) {
@@ -187,6 +191,7 @@ Widget.prototype.enableDraggable = function() {
             });
         }
     });
+    
 
 	/* Enables dragging on the widgets 'windowwrapper' class. */	
 	this.$widget.draggable({
@@ -227,20 +232,76 @@ Widget.prototype.postControl = function(action, params, responseCallback) {
  * == Display Manager.                                                       ==
  * ============================================================================ */
 
-function DisplayManager(container,title){
+function DisplayManager(container, title) {
 	
-    Widget.call(this, container,title);
+    Widget.call(this, container, title);
     
     this.PCONTROLLER = "CoupledTanksTwoController";
 	this.widgets = [];
-    Widget.prototype.generateBox('boxId','title','content','settings');
-
+	
+	var camera = new Camera(container, "Camera");
+	var pidControl = new PIDControl(container, "PID Control");
+	var waterLevelsMimic = new WaterLevelsMimic(container, "Water Levels");
+	
+	camera.init();
+    pidControl.init();
+    waterLevelsMimic.init();
+    this.init();
 };
 
 DisplayManager.prototype = new Widget;
+
 DisplayManager.prototype.init = function() {
-	
+
+    this.$widget = $('#DisplayManagerWidgetId');
+	this.generateBox('DisplayManagerWidgetId','toggle');
+
+	    /* Toggle Buttons. */
+    $('.toggle').click(function() {
+        var x = '.' + $(this).attr('name');
+        var y = $(this);
+        $(x).is(':visible') ? $(x).hide('fade', 150) : $(x).show('fade', 150);
+        if ($(this).find('.switch').find('.slide').hasClass('off')) {
+            $(this).find('.switch').find('.slide').addClass("on").removeClass("off");
+        }else{
+            $(this).find('.switch').find('.slide').addClass("off").removeClass("on");
+        } 
+    });
+    
 };
+
+DisplayManager.prototype.getHTML = function() {	
+	return(
+		'<div class="buttonwrapper">' +
+            '<div class="button toggle" name="video">Video' +
+                '<div class="switch">' +
+                    '<div class="animated slide on"></div>' +
+                '</div>' +
+            '</div>' +
+            '<div class="button toggle" name="settings">Settings' +
+                '<div class="switch">' +
+                    '<div class="animated slide on"></div>' +
+                '</div>' +
+            '</div>' +
+            '<div class="button toggle" name="chartone">Chart One' +
+                '<div class="switch">' +
+                    '<div class="animated slide on"></div>' +
+                '</div>' +
+            '</div>' +
+            '<div class="button toggle" name="charttwo">Chart Two' +
+                '<div class="switch">' +
+                    '<div class="animated slide on"></div>' +
+                '</div>' +
+            '</div>' +
+            '<div class="button toggle" name="diagram">Diagram' +
+                '<div class="switch">' +
+                    '<div class="animated slide on"></div>' +
+                '</div>' +
+            '</div>' +
+        '</div>'
+	);
+};
+
 
 /* ============================================================================
  * == Page Widgets.                                                          ==
@@ -268,25 +329,77 @@ function PIDControl(container,title) {
  
 PIDControl.prototype = new Widget;
 
+PIDControl.prototype.init = function() {		
+	this.$widget = $('#PIDWidgetId');
+	this.generateBox('PIDWidgetId','settings');
+
+};
+
+PIDControl.prototype.getHTML = function() {	
+	return(
+		'<div class="pidsettings">' +
+            '<table cellspacing="0">' +
+            	'<tr>' +
+            		'<td>Setpoint (mm)</td>' +
+            		'<td><input type="number" name="setpoint" placeholder="setpoint" style="height: 20px;"/></td>' +
+            	'</tr>' +
+            	'<tr>' +
+            		'<td>Kp</td>' +
+            		'<td><input type="number" name="kp" placeholder="kp" style="height: 20px;"/></td>' +
+            	'</tr>' +
+            	'<tr>' +
+            		'<td>Ki</td>' +
+            		'<td><input type="number" name="ki" placeholder="ki" style="height: 20px;"/></td>' +
+            	'</tr>' +
+            	'<tr>' +
+            		'<td>Kd</td>' +
+            		'<td><input type="number" name="kd" placeholder="kd" style="height: 20px;"/></td>' +
+            	'</tr>' +
+            	'<tr>' +
+            		'<td>Auto Save</td>' +
+            		'<td><input type="checkbox" name="autosavepid" placeholder="autosave"/></td>' +
+            	'</tr>' +
+            	'<tr>' +
+            		'<td>Enable</td>' +
+            		'<td><input type="checkbox" name="enablepid" placeholder="enable"/></td>' +
+            	'</tr>' +	
+            '</table>' +     
+        '</div>'
+	);
+};
+
 /**
  * Creates and controls the Camera widget.
  */
 function Camera(container,title) {
-   
-   Widget.call(this, container,title);
+	
+    Widget.call(this, container,title);
     
  };
  
 Camera.prototype = new Widget;
 
+Camera.prototype.init = function() {
+	
+	this.$widget = $('#CameraWidgetId');
+	this.generateBox('CameraWidgetId','settings');
+	this.enableDraggable();
+
+
+};
+
+Camera.prototype.getHTML = function() {	
+	return(
+		'<div class="videoplayer"></div>'
+	);
+};
 /**
  * Creates and controls the Slider widget.
  */
 function Slider(container,title) {
    
    Widget.call(this, container,title);
-    
- };
+};
  
 Slider.prototype = new Widget;
 
@@ -298,10 +411,24 @@ function WaterLevelsMimic(container,title) {
 	Widget.call(this, container,title);
 };
 
+WaterLevelsMimic.prototype = new Widget;
+
+WaterLevelsMimic.prototype.init = function() {
+    this.$widget = $('#WaterLevelsWidgetId');
+	this.generateBox('WaterLevelsWidgetId','settings');
+
+};
+
+WaterLevelsMimic.prototype.getHTML = function() {	
+	return(
+		'<img src="/uts/coupledtanksnew/images/diagram.png">'
+	);
+};
 /**
  * Creates and controls the Water Levels Mimic widget's amimation.
  */
-WaterLevelsMimic.prototype.animateLoop = function() { };
+WaterLevelsMimic.prototype.animateLoop = function() { 	
+};
 
 /* ============================================================================
  * == OLDER CODE BELOW THIS POINT.                                           ==
@@ -462,20 +589,7 @@ Slider.prototype.update = function() {};
     
     /* JQuery Tabs. */
     $("#tabs").tabs();
-    $("#diagramTabs").tabs();
-
-    
-    /* Toggle Buttons. */
-    $('.toggle').click(function() {
-        var x = '.' + $(this).attr('name');
-        var y = $(this);
-        $(x).is(':visible') ? $(x).hide('fade', 150) : $(x).show('fade', 150);
-        if ($(this).find('.switch').find('.slide').hasClass('off')) {
-            $(this).find('.switch').find('.slide').addClass("on").removeClass("off");
-        }else{
-            $(this).find('.switch').find('.slide').addClass("off").removeClass("on");
-        } 
-    }); 
+    $("#diagramTabs").tabs(); 
     
     function randomNum(){	
         var x = Math.floor(Math.random()*100)+1;
@@ -507,55 +621,6 @@ function diagram(CTinst)
     this.t1Tot2 = "";
 }
 
-diagram.prototype.init = function() {};
-
-diagram.prototype.animateTanks = function() {
-
-	/* Sets tank variables. */
-    var valvepercent;
-    var pumprpm;
-    var tankoneflowin;
-    var flowsensorbetween;
-    var tanktwoflowout;
-    var levelBottom;
-    
-    
-    $('.toggleWater').click(function(){ 
-    	startSpin()
-    	var percent =  "%";
-        var tubeOneHeight;
-        var i = 0; while (i<6){
-        tubeOneHeight = randomNum();
-        tubeTwoHeight = randomNum();
-        tubeThreeHeight = randomNum();
-    
-        /* Gets latest data. */
-        valvepercent = randomNum();
-        pumprpm = randomNum();
-        console.log('');
-        tankoneflowin = randomNum();
-        flowsensorbetween = randomNum();
-        tanktwoflowout = randomNum();
-        levelBottom = randomNum();
-    
-        /*Animates the water levels */
-        $('.tubeOne').animate({"height": tubeOneHeight+percent }, 400);
-        $('.tubeTwo').animate({"height": tubeTwoHeight+percent }, 400);
-        $('.tubeThree').animate({"height": tubeTwoHeight+percent }, 400);
-        
-        /* Displays the latest data */
-        $(".valvepercent").val(valvepercent + percent);
-        $(".pumprpm").val(pumprpm + " RPM");
-        $(".tankoneflowin").val(tankoneflowin + " L/m");
-        $(".flowsensorbetween").val(flowsensorbetween + " L/m");
-        $(".tanktwoflowout").val(tanktwoflowout + " L/m");
-        $(".levelsensorone").val(tubeOneHeight);
-        $(".levelsensortwo").val(tubeTwoHeight);
-
-        i++;
-        };
-    });	
-};
 
 diagram.prototype.animateSpin = function() {
     var angle = 0;

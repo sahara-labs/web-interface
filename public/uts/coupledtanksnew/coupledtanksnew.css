@@ -20,6 +20,7 @@
     background: 0;
     background: 0 to(#eeedf5));
     border: 1px solid #ebebeb;
+    cursor: pointer;
 }
 
 .tabbed {
