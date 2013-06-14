@@ -158,7 +158,7 @@ Widget.prototype.removeMessages = function() {
  * @return jQuery node of the generated box that has been appended to the page
  */
 Widget.prototype.generateBox = function(boxId,icon) {
-    this.$container.append(
+    return this.$container.append(
       "<div class='windowwrapper' id=" + boxId + ">" +
           "<div class='windowheader'><img src='/uts/coupledtanksnew/images/icon_" + icon + ".png'/>" +
               "<span class='windowtitle'>" + this.title +
@@ -171,14 +171,26 @@ Widget.prototype.generateBox = function(boxId,icon) {
 };
 
 /**
+ * Generates the HTML content for the widget box.
+ */
+Widget.prototype.getHTML = function() {	};
+
+/**
  * Enables this widget to be draggable.
  */
 Widget.prototype.enableDraggable = function() {
 
-this.$widget.addClass('.draggable');
-
-//Testing
-console.log(this.$widget);
+    /* Adds the CSS for the draggable widgets */
+    this.$widget.find('.windowwrapper').addClass('draggable');
+    this.$widget.find('.windowheader').addClass('draggableHeader');
+    
+	/* Enables dragging on the widgets 'windowwrapper' class. */	
+	this.$widget.find('.windowwrapper').draggable({
+        snap: true,
+        snapTolerance: 5,
+        stack: '.windowwrapper',
+        increaseZindexOnmousedown: true,
+    });
 
 	//Enables increase Z-index on mouse down. 	
     $.ui.plugin.add('draggable', 'increaseZindexOnmousedown', {
@@ -192,14 +204,6 @@ console.log(this.$widget);
         }
     });
     
-
-	/* Enables dragging on the widgets 'windowwrapper' class. */	
-	this.$widget.draggable({
-        snap: true,
-        snapTolerance: 5,
-        stack: '.windowwrapper',
-        increaseZindexOnmousedown: true,
-    });
 };
 
 /**
@@ -253,9 +257,9 @@ DisplayManager.prototype = new Widget;
 
 DisplayManager.prototype.init = function() {
 
-    this.$widget = $('#DisplayManagerWidgetId');
-	this.generateBox('DisplayManagerWidgetId','toggle');
-
+	this.$widget = this.generateBox('DisplayManagerWidgetId','toggle');
+    this.enableDraggable();
+    
 	    /* Toggle Buttons. */
     $('.toggle').click(function() {
         var x = '.' + $(this).attr('name');
@@ -329,10 +333,10 @@ function PIDControl(container,title) {
  
 PIDControl.prototype = new Widget;
 
-PIDControl.prototype.init = function() {		
-	this.$widget = $('#PIDWidgetId');
-	this.generateBox('PIDWidgetId','settings');
-
+PIDControl.prototype.init = function() {	
+		
+	this.$widget = this.generateBox('PIDWidgetId','settings');
+    this.enableDraggable();
 };
 
 PIDControl.prototype.getHTML = function() {	
@@ -381,11 +385,9 @@ Camera.prototype = new Widget;
 
 Camera.prototype.init = function() {
 	
-	this.$widget = $('#CameraWidgetId');
-	this.generateBox('CameraWidgetId','settings');
+	this.$widget = this.generateBox('CameraWidgetId','video');
 	this.enableDraggable();
-
-
+	
 };
 
 Camera.prototype.getHTML = function() {	
@@ -414,287 +416,36 @@ function WaterLevelsMimic(container,title) {
 WaterLevelsMimic.prototype = new Widget;
 
 WaterLevelsMimic.prototype.init = function() {
-    this.$widget = $('#WaterLevelsWidgetId');
-	this.generateBox('WaterLevelsWidgetId','settings');
-
+	this.$widget = this.generateBox('WaterLevelsWidgetId','video');
+    this.enableDraggable();
 };
 
 WaterLevelsMimic.prototype.getHTML = function() {	
 	return(
-		'<img src="/uts/coupledtanksnew/images/diagram.png">'
+    '<div class="toggleWater">Toggle Water</div>' +
+        '<div class="mimicBG">' +
+            '<div class="waterTube waterBackground">' +
+                '<div class="level tubeOne"></div>' +
+                '</div>' +
+            '<div class="waterTube waterTubeRight waterBackground">' +
+                '<div class="level tubeTwo"></div>' +
+            '</div>' +
+            '<div class="containerBottom waterBackground">' +
+                '<div class="level tubeThree"></div>' +
+            '</div>' +
+            '<input type="text" class="diagramInfo levelsensorone" name="levelsensorone" placeholder="0.0"/>' +
+            '<input type="text" class="diagramInfo levelsensortwo" name="levelsensortwo" placeholder="0.0"/>' + 
+            '<input type="text" class="diagramInfo tankoneflowin" name="tankoneflowin" placeholder="0.0 L/M"/>' + 
+            '<input type="text" class="diagramInfo tanktwoflowout" name="tanktwoflowout" placeholder="0.0 L/M"/>' + 
+            '<input type="text" class="diagramInfo flowsensorbetween" name="flowsensorbetween" placeholder="0.0 L/M"/>' + 
+            '<input type="text" class="diagramInfo pumprpm" name="pumprpm" placeholder="0 RPM"/>' + 
+            '<input type="text" class="diagramInfo valvepercent" name="valvepercent" placeholder="0.0 %"/>' +
+            '<img src="/uts/coupledtanksnew/images/spinner.png" border="0" alt="spinner" class="spinner"/>'+
+        '</div>'
 	);
 };
 /**
  * Creates and controls the Water Levels Mimic widget's amimation.
  */
 WaterLevelsMimic.prototype.animateLoop = function() { 	
-};
-
-/* ============================================================================
- * == OLDER CODE BELOW THIS POINT.                                           ==
- * ============================================================================ */
-
-/* ============================================================================
- * == Control.                                                               ==
- * ============================================================================ */
-function CoupledTanks()
-{
-	
-    /* Experiment variables. */
-    this.valve = 0.0;
-    this.setpoint = 0.0;
-	
-    /* Currently displayed mode. */
-	this.mode = 0;
-	
-	/** The list of widgets that are displayed on the page. */
-	this.widgets = [];
-	
-    
-	this.PCONTROLLER = "CoupledTanksTwo";
-
-}
-
-CoupledTanks.prototype.init = function() {
-	this.requestData();
-};
-
-CoupledTanks.prototype.requestData = function() {
-	var thiz = this;
-	$.ajax({
-		url: "/primitive/mapjson/pc/" + PCONTROLLER + "/pa/data",
-		cache: false,
-		success: function(packet) {
-			if (typeof packet!= "object") 
-			{
-				/* User is probably logged out. */
-				window.location.reload();
-				return;
-			}
-			
-			var data = {}, i = 0;
-			
-			/* Key the variables into a hash table. */
-			for (i in packet) data[packet[i].name] = packet[i].value;
-			
-			/* If the mode is not the displayed mode, switch it. */
-			if (data['lab'] != thiz.mode) thiz.setMode(data['lab']);
-
-			/* Provide data to each of the versions. */
-			thiz.data = data;
-			for (i in thiz.widgets) thiz.widgets[i].update(data);
-			
-			setTimeout(function() { thiz.requestData(); }, 3000);
-		},
-		error: function() {
-			setTimeout(function() { thiz.requestData(); }, 10000);
-		}
-	});
-};
-
-CoupledTanks.prototype.isWorking = function() {
-	return this.working;
-};
-
-CoupledTanks.prototype.startSave = function() {};
-CoupledTanks.prototype.stopSave = function() {};
-
-/* ============================================================================
- * == Get Values.                                                            ==
- * ============================================================================ */
-
-CoupledTanks.prototype.setPID = function(val) {
-	var thiz = this;
-	this.valve = val;
-	$.get("/primitive/mapjson/pc/" + this.PCONTROLLER + "/pa/setPID" + val,
-		   null,
-		   function(response) {
-				if (typeof response == 'object')
-				{
-					thiz.values(response);
-					thiz.repaint();
-				}
-				else thiz.raiseError("Failed response");
-			}
-	);
-};
-
-CoupledTanks.prototype.setValve = function(val) {
-	var thiz = this;
-	this.setpoint = val;
-	$.get("/primitive/mapjson/pc/" + this.PCONTROLLER + "/pa/setValve" + val,
-		   null,
-		   function(response) {
-				if (typeof response == 'object')
-				{
-					thiz.values(response);
-					thiz.repaint();
-				}
-				else thiz.raiseError("Failed response");
-			}
-	);
-};
-
-
-/* ============================================================================
- * == Set Values.                                                            ==
- * ============================================================================ */
-
-CoupledTanks.prototype.values = function(values) {
-	for (i in values)
-	{
-		switch (values[i].name)
-		{
-		case "setPID":
-			this.valve = round(parseFloat(values[i].value, 10), 2);
-			break;
-			
-		case "setVavle":
-			this.setpoint = round(parseFloat(values[i].value, 10), 2);
-			break;
-		}
-	}
-};
-
-/* ============================================================================
- * == Slider                                                                 ==
- * ============================================================================ */
-
-function Slider(){
-	
-	    $(".slider").slider({
-        range: "min",
-        min: 0,
-        max: 100,
-        value: 0,
-        slide: function(event, ui) {
-            $(".sliderValue").val(ui.value);
-            console.log('sliding');
-        }
-    });
-    
-    $(".sliderValue").change(function() {
-        var value = this.value.substring(1);
-        $(".slider").slider("value", parseInt(value));
-        $(".sliderValue").val($(".slider").slider("value"));
-    });
-};
-Slider.prototype.inti = function() {};
-Slider.prototype.slide = function() {};
-Slider.prototype.update = function() {};
-
-/* ============================================================================
- * == Page Elements.                                                         ==
- * ============================================================================ */
-    
-    /* JQuery Tabs. */
-    $("#tabs").tabs();
-    $("#diagramTabs").tabs(); 
-    
-    function randomNum(){	
-        var x = Math.floor(Math.random()*100)+1;
-        return x;
-    };
-
-/* ============================================================================
- * == Page Widgets.                                                          ==
- * ============================================================================ */
-
-function ControlPanel() {};
-ControlPanel.prototype.init = function() {};
-ControlPanel.prototype.setManualMode = function() {};
-ControlPanel.prototype.toggle = function() {};
-
-function diagram(CTinst)
-{
-	CoupledTanksWidget.call(this, CTinst);
-	
-	/* Default diagram properties. */
-	this.width = 320;
-	this.height = 240;
-    this.duration = "";
-    this.period = "";
-    this.l1 = "";
-    this.l2 = "";
-    this.t1In = "";
-    this.t2Out = "";
-    this.t1Tot2 = "";
-}
-
-
-diagram.prototype.animateSpin = function() {
-    var angle = 0;
-    setInterval(function(){
-        angle+=3;
-        $(".spinner").rotate(angle);
-    },10); 
-};
-
-diagram.prototype.toggle = function() {};
-
-function camera(CTinst)
-{
-	CoupledTanksWidget.call(this, CTinst);
-	
-	/* Default diagram properties. */
-	this.width = 320;
-	this.height = 240;
-}
-diagram.prototype.init = function() {};
-diagram.prototype.resize = function() {};
-diagram.prototype.pausefeed = function() {};
-diagram.prototype.deployVideo = function() {};
-diagram.prototype.deploySWF = function() {};
-diagram.prototype.deployMPEG = function() {};
-diagram.prototype.Format = function() {};
-diagram.prototype.toggle = function() {};
-
-function toggle(CTinst){
-	CoupledTanksWidget.call(this, CTinst);
-	
-	/* Default diagram properties. */
-	this.width = 320;
-	this.height = 240;
-}
-toggle.prototype.init = function(){};
-toggle.prototype.toggleWidget = function(){};
-
-function chart(CTinst){
-	CoupledTanksWidget.call(this, CTinst);
-	
-	/* Default diagram properties. */
-    this.width = "";
-    this.height = "";
-}
-chart.prototype.init = function() {};
-chart.prototype.repaint = function() {};
-chart.prototype.clearPlot = function() {};
-chart.prototype.toggle = function() {};
-
-
-/* ============================================================================
- * == Utility & debug.                                                       ==
- * ============================================================================ */
-
-CoupledTanks.prototype.raiseError = function(error, level) {
-	if (typeof console == "undefined") return;
-	
-	switch (level)
-	{
-	case 'DEBUG':
-		console.debug("CoupledTanks debug: " + error);
-		break;
-	
-	case 'INFO':
-		console.info("CoupledTanks Info: " + error);
-		break;
-	
-	case 'WARN':
-		console.warn("CoupledTanks Warn: " + error);
-		break;
-		
-	case 'ERR':
-	default:
-		console.error("CoupledTanks Err: " + error);		
-	}
 };

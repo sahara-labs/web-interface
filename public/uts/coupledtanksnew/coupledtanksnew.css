@@ -67,8 +67,11 @@
     margin: 4px;
 }
 
-.draggable:hover {
-    border: 2px dashed #63d8ee;
+.dragged {
+    border: 2px dashed #8CE2FF;
+}
+.draggableHeader {
+	cursor: move;
 }
 
 .windowheader {
@@ -76,7 +79,6 @@
     font-size: 24px;
     padding: 5px 10px;
     color: #525252;
-    cursor: move;
 }
 
 .windowtitle {
@@ -137,6 +139,18 @@
     top: 140px;
     min-width: 179px;
 }
+
+
+/******************************************************************************
+ ** The Mimic                                                                  **
+ ******************************************************************************/
+
+.mimicBG{
+	background-image: url('/uts/coupledtanksnew/images/mimicBG.png');
+	background-repeat: no-repeat;
+	width: 292px;
+	height: 310px;
+}	
 .level {
     height: 90%;
     background: #DBF1FF;
@@ -148,84 +162,46 @@
     border: solid 1px #686868;
     margin: 5px;
     position: relative;
-    top: -16px;
-    left: 68px;
+    float: left;
+    left: 78px;
+    top: 23px;
+
 }
 .waterTubeRight{
-    top:-193px !important; 
-    left:213px !important;
+    left: 151px !important;
+    top: 23px !important;
 }
 
 .containerBottom{
-    position: absolute;
-    top: 249px;
-    left: 98px;
     width: 190px;
     height: 60px;
     border: solid 1px #686868;
+    clear: both;
+    position: relative;
+    top: 66px;
+    left: 98px;
 }
-.diagramBG{
-	background-image: url('/uts/coupledtanksnew/images/diagram.png');
-	background-repeat: no-repeat;
-	min-width: 280px;
-	height: 305px;
-}
+
 .toggleWater{
     color: #94949E;
     cursor: pointer;
     background: #F1F1F1;
     padding: 5px;
-    width: 100px;
-    border: solid 1px #777;
+    width: 65px;
+    height: 15px;
+    border: solid 1px #b4b4b4;
+    float: right;
     position: relative;
-    top: -48px;
+    font-size: 10px;
+    top: -45px;
     border-radius: 5px;
-    right: -180px;
 }
+
 .spinner{
-    position: absolute;
-    top: 210px;
-    left: 2px;
-
+    float: left;
+    position: relative;
+    top: -50px;
 }
-.diagramInfo{
-	position: absolute;
-	text-align: center;
-    font-size: 10px !important;
-    height: 16px;
-	width: 54px;
-}
-.levelsensorone{
-	top: 177px;
-	left: 85px;
-}
-.levelsensortwo{
-	top: 177px;
-	left: 230px;
-}
-.tankoneflowin{
-	top: 37px;
-	left: 18px;	
-}
-.tanktwoflowout{
-	top: 217px;
-	left: 187px;
-}
-.flowsensorbetween{
-	top: 153px;
-	left: 158px;
-}
-.pumprpm{
-	width: 60px;
-	top: 217px;
-	left: 70px;	
-}
-.valvepercent{
-	top: 157px;
-	left: 19px;
-}
-
-
 
 .waterBackground{
     background: rgb(208,228,247); /* Old browsers */
@@ -246,8 +222,54 @@
     background: linear-gradient(to bottom,  rgba(208,228,247,1) 0%,rgba(0,165,211,1) 0%,rgba(59,210,237,1) 34%,rgba(139,224,239,1) 75%); /* W3C */
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#d0e4f7', endColorstr='#8be0ef',GradientType=0 ); /* IE6-9 */
 }
+
+/* Input Fields */
+.diagramInfo{
+	position: relative;
+	text-align: center;
+    font-size: 10px !important;
+    height: 16px;
+	width: 54px;
+}
+
+.levelsensorone{
+    top: -67px;
+    left: 85px
+}
+
+.levelsensortwo{
+	top: -67px;
+	left: 172px;
+}
+
+.tankoneflowin{
+    top: -209px;
+    right: 98px;
+}
+
+.tanktwoflowout{
+    top: -30px;
+    right: -10px;
+}
+
+.flowsensorbetween{
+    top: -92px;
+    right: 74px;
+}
+
+.pumprpm{
+    top: -51px;
+    right: -5px;
+    width: 80px;
+}
+
+.valvepercent{
+    top: -110px;
+    right: 130px;
+}
+
 /******************************************************************************
- ** The Switch                                                                  **
+ ** The Switch                                                               **
  ******************************************************************************/
 .switch{
     height: 20px;
