@@ -368,14 +368,6 @@ PIDControl.prototype.getHTML = function() {
             	'<tr>' +
             		'<td>Kd</td>' +
             		'<td><input type="number" name="kd" placeholder="kd" style="height: 20px;"/></td>' +
-            	'</tr>' +
-            	'<tr>' +
-            		'<td>Auto Save</td>' +
-            		'<td><input type="checkbox" name="autosavepid" placeholder="autosave"/></td>' +
-            	'</tr>' +
-            	'<tr>' +
-            		'<td>Enable</td>' +
-            		'<td><input type="checkbox" name="enablepid" placeholder="enable"/></td>' +
             	'</tr>' +	
             '</table>' +     
         '</div>'
