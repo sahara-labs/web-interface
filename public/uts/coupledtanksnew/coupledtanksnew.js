@@ -190,6 +190,7 @@ Widget.prototype.enableDraggable = function() {
         snapTolerance: 5,
         stack: '.windowwrapper',
         increaseZindexOnmousedown: true,
+        distance: 10,
     });
 
 	//Enables increase Z-index on mouse down. 	
@@ -214,10 +215,15 @@ Widget.prototype.enableDraggable = function() {
  * @param minWidth the minimum width the widget can be resized to
  */
 Widget.prototype.enableResizable = function(aspect,minHeight,minWidth) {
+	
+	this.minHeight = minHeight;
+	this.minWidth = minWidth;
+		
 	this.$widget.find(".windowcontent").resizable({
 		 aspectRatio: aspect,
-         minHeight: minHeight,
-         minWidth: minWidth
+         minHeight: this.minHeight,
+         minWidth: this.minWidth,
+         distance: 10,
 	});
 };
 
@@ -259,12 +265,13 @@ DisplayManager.prototype.init = function() {
 
 	this.$widget = this.generateBox('DisplayManagerWidgetId','toggle');
     this.enableDraggable();
+    this.enableResizable(' ',0,0);
     
 	    /* Toggle Buttons. */
     $('.toggle').click(function() {
-        var x = '.' + $(this).attr('name');
+        var x = '#' + $(this).attr('name');
         var y = $(this);
-        $(x).is(':visible') ? $(x).hide('fade', 150) : $(x).show('fade', 150);
+        $(x).is(':visible') ? $(x).remove : $(x).init;
         if ($(this).find('.switch').find('.slide').hasClass('off')) {
             $(this).find('.switch').find('.slide').addClass("on").removeClass("off");
         }else{
@@ -322,6 +329,7 @@ function TabbedWidget(container,title) {
  
 TabbedWidget.prototype = new Widget;
 
+TabbedWidget.prototype.init = function() { };
 /**
  * Creates and controls the PIDControl widget.
  */
@@ -337,6 +345,8 @@ PIDControl.prototype.init = function() {
 		
 	this.$widget = this.generateBox('PIDWidgetId','settings');
     this.enableDraggable();
+    this.enableResizable(' ',189,180);
+
 };
 
 PIDControl.prototype.getHTML = function() {	
@@ -387,6 +397,7 @@ Camera.prototype.init = function() {
 	
 	this.$widget = this.generateBox('CameraWidgetId','video');
 	this.enableDraggable();
+	this.enableResizable('16 / 9',192,340);
 	
 };
 
@@ -405,6 +416,76 @@ function Slider(container,title) {
  
 Slider.prototype = new Widget;
 
+Slider.prototype.init = function() { 
+   this.val = coupledTanksTwo.pump;
+    var i, html =
+	    '<div id="slidercont">' +
+		'<div id="sliderinner">' +
+		'<div id="slider"> </div>' +
+		'<div id="sliderleg">';
+		for (i = 0; i <= 10; i++)
+		{
+		    html += 
+		        '<div class="slidertick">' +
+				    '<span class="ui-icon ui-icon-arrowthick-1-w"> </span>' +
+				    (i < 10 ? (100 - i * 10) + ' %'  : 'Off') +
+                '</div>';
+	    }
+	    
+		html +=	'</div>' +
+			'</div>' +
+			'<div id="sliderval">Value: <span>' + this.val + '</span> %</div>' +
+		'</div>';
+	this.container.append(html);
+	
+	this.$widget = $("#slidercont");
+	
+	var thiz = this;
+	$("#slider").slider({
+		orientation: "vertical",
+		min: 0,
+		max: 100,
+		value: this.val,
+		range: "min",
+		slide: function(event, ui) {
+			$("#sliderval span").empty().append(ui.value);
+		},
+		stop: function(event, ui) {
+			thiz.setter.call(thiz.hydro, ui.value);
+		}
+	});
+	
+	this.slider = $("#slider");
+	this.slider.children(".ui-slider-handle").css('width', 30)
+		.css("left", "-11px")
+		.css("cursor", "row-resize");
+	
+	this.slider.children(".ui-slider-range").removeClass("ui-widget-header")
+		.css("background-color", "#EFEFEF")
+		.css("overflow", "hidden")
+		.css("width", "10px");
+	this.sliderVal = $("#sliderval span");
+};
+
+Slider.prototype.repaint = function() {
+	(this.val != coupledTanksTwo.pump)
+	{
+		this.slider.slider("value",coupledTanksTwo.pump);
+		this.sliderVal.empty().append(coupledTanksTwo.pump);
+	}
+	return this;
+};
+
+/* Valve slider which sets pump pressure */
+function ValveSlider(container)
+{
+	Slider.call(this, container);
+	
+	this.setter = this.widget.setValve;
+}
+ValveSlider.prototype = new Slider;
+
+
 /**
  * Creates and controls the Water Levels Mimic widget.
  */
@@ -418,6 +499,8 @@ WaterLevelsMimic.prototype = new Widget;
 WaterLevelsMimic.prototype.init = function() {
 	this.$widget = this.generateBox('WaterLevelsWidgetId','video');
     this.enableDraggable();
+    this.enableResizable(' ',290,310);
+    this.animateLoop();
 };
 
 WaterLevelsMimic.prototype.getHTML = function() {	
@@ -440,12 +523,41 @@ WaterLevelsMimic.prototype.getHTML = function() {
             '<input type="text" class="diagramInfo flowsensorbetween" name="flowsensorbetween" placeholder="0.0 L/M"/>' + 
             '<input type="text" class="diagramInfo pumprpm" name="pumprpm" placeholder="0 RPM"/>' + 
             '<input type="text" class="diagramInfo valvepercent" name="valvepercent" placeholder="0.0 %"/>' +
-            '<img src="/uts/coupledtanksnew/images/spinner.png" border="0" alt="spinner" class="spinner"/>'+
+            '<img src="/uts/coupledtanksnew/images/spinner.png" border="0" alt="spinner" class="spinner spin"/>'+
         '</div>'
 	);
 };
 /**
  * Creates and controls the Water Levels Mimic widget's amimation.
  */
-WaterLevelsMimic.prototype.animateLoop = function() { 	
+WaterLevelsMimic.prototype.animateLoop = function() { 
+		
+	/** Animation is enabled with the 'toggleWater' button, will be replaced with autoplay(setInterval) */
+	$('.toggleWater').click(function(){
+		
+	    /** Get the values required for the animation */
+	    function getNum(){
+    	
+	        /** Currently a random number, will be replaced with data request */
+            var x = Math.floor(Math.random()*100)+1;
+            return x;
+        };
+
+        /** Defines the variables used in the animation */
+        var p = '%';
+        var t1 = getNum();
+        var t2 = getNum();
+        var t3 = getNum();
+
+        /** Displays values in input fields */
+        $('.levelsensorone').val(t1 + p);
+        $('.levelsensortwo').val(t2 + p);
+        
+        /** Animates the tube levels */
+        $('.tubeOne').animate({"height": (100 - t1) + p }, 400);
+        $('.tubeTwo').animate({"height": (100 - t2) + p }, 400);
+        $('.tubeThree').animate({"height": (100 - t3) + p }, 400);
+
+        // setInterval(this.animateLoop(), 1000);
+    });
 };

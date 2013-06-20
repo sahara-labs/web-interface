@@ -56,6 +56,9 @@
     display: none !important;
 }
 
+#slide,.menu ol {
+	z-index: 4 !important;
+}
 /******************************************************************************
  ** Windows                                                                  **
  ******************************************************************************/
@@ -94,6 +97,7 @@
     background: #FFF;
     border: solid 1px #E4E4E4;
     border-radius: 0 0 10px 10px;
+    overflow: hidden;
 }
 
 .resizable {
@@ -140,6 +144,50 @@
     min-width: 179px;
 }
 
+/******************************************************************************
+ ** The Slider                                                               **
+ ******************************************************************************/
+
+#slidercont {
+	position: absolute;
+	top: 10px;
+	left: -2px;
+	width: 105px;
+}
+
+#sliderinner {
+	margin: 10px 0 0 15px;
+	padding: 5px;
+}
+
+#slider {
+	float: left;
+	height: 300px;
+}
+
+.slidertick {
+	height: 29px;
+	width: 80px;
+}
+
+.slidertick span {
+	float: left;
+}
+
+#sliderval {
+	clear: both;
+	margin: -15px 0 5px;
+	text-align: center;
+}
+
+#sliderval span {
+	font-size: 1.2em;
+	font-weight: bold;
+}
+
+#sliderleg {
+	width: 65px;
+}
 
 /******************************************************************************
  ** The Mimic                                                                  **
@@ -193,14 +241,8 @@
     float: right;
     position: relative;
     font-size: 10px;
-    top: -45px;
+    top: -5px;
     border-radius: 5px;
-}
-
-.spinner{
-    float: left;
-    position: relative;
-    top: -50px;
 }
 
 .waterBackground{
@@ -266,6 +308,40 @@
 .valvepercent{
     top: -110px;
     right: 130px;
+}
+
+.spinner{
+    float: left;
+    position: relative;
+    top: -50px;      
+}
+
+.spin{
+    -webkit-animation: spin 1s infinite linear;
+    -moz-animation: spin 1s infinite linear;
+    -ms-animation: spin 1s infinite linear;
+    -o-animation: spin 1s infinite linear;
+    animation: spin 1s infinite linear;
+}
+
+@-webkit-keyframes spin {
+    to { -webkit-transform: rotate(360deg); }
+}
+
+@-moz-keyframes spin {
+    to { -moz-transform: rotate(360deg); }
+}
+
+@-ms-keyframes spin {
+    to { -ms-transform: rotate(360deg); }
+}
+
+@-o-keyframes spin {
+    to { -o-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
 /******************************************************************************
