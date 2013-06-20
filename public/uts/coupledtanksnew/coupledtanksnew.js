@@ -160,7 +160,7 @@ Widget.prototype.removeMessages = function() {
 Widget.prototype.generateBox = function(boxId,icon) {
     return this.$container.append(
       "<div class='windowwrapper' id=" + boxId + ">" +
-          "<div class='windowheader'><img src='/uts/coupledtanksnew/images/icon_" + icon + ".png'/>" +
+          "<div class='windowheader'><img class='windowIcon' src='/uts/coupledtanksnew/images/icon_" + icon + ".png'/>" +
               "<span class='windowtitle'>" + this.title +
               "</span>" +
           "</div>" +
@@ -431,15 +431,15 @@ Slider.prototype.init = function() {
 				    (i < 10 ? (100 - i * 10) + ' %'  : 'Off') +
                 '</div>';
 	    }
-	    
+
 		html +=	'</div>' +
 			'</div>' +
 			'<div id="sliderval">Value: <span>' + this.val + '</span> %</div>' +
 		'</div>';
 	this.container.append(html);
-	
+
 	this.$widget = $("#slidercont");
-	
+
 	var thiz = this;
 	$("#slider").slider({
 		orientation: "vertical",
@@ -454,12 +454,12 @@ Slider.prototype.init = function() {
 			thiz.setter.call(thiz.hydro, ui.value);
 		}
 	});
-	
+
 	this.slider = $("#slider");
 	this.slider.children(".ui-slider-handle").css('width', 30)
 		.css("left", "-11px")
 		.css("cursor", "row-resize");
-	
+
 	this.slider.children(".ui-slider-range").removeClass("ui-widget-header")
 		.css("background-color", "#EFEFEF")
 		.css("overflow", "hidden")
@@ -480,7 +480,7 @@ Slider.prototype.repaint = function() {
 function ValveSlider(container)
 {
 	Slider.call(this, container);
-	
+
 	this.setter = this.widget.setValve;
 }
 ValveSlider.prototype = new Slider;
@@ -505,7 +505,6 @@ WaterLevelsMimic.prototype.init = function() {
 
 WaterLevelsMimic.prototype.getHTML = function() {	
 	return(
-    '<div class="toggleWater">Toggle Water</div>' +
         '<div class="mimicBG">' +
             '<div class="waterTube waterBackground">' +
                 '<div class="level tubeOne"></div>' +
@@ -516,13 +515,13 @@ WaterLevelsMimic.prototype.getHTML = function() {
             '<div class="containerBottom waterBackground">' +
                 '<div class="level tubeThree"></div>' +
             '</div>' +
-            '<input type="text" class="diagramInfo levelsensorone" name="levelsensorone" placeholder="0.0"/>' +
-            '<input type="text" class="diagramInfo levelsensortwo" name="levelsensortwo" placeholder="0.0"/>' + 
-            '<input type="text" class="diagramInfo tankoneflowin" name="tankoneflowin" placeholder="0.0 L/M"/>' + 
-            '<input type="text" class="diagramInfo tanktwoflowout" name="tanktwoflowout" placeholder="0.0 L/M"/>' + 
-            '<input type="text" class="diagramInfo flowsensorbetween" name="flowsensorbetween" placeholder="0.0 L/M"/>' + 
-            '<input type="text" class="diagramInfo pumprpm" name="pumprpm" placeholder="0 RPM"/>' + 
-            '<input type="text" class="diagramInfo valvepercent" name="valvepercent" placeholder="0.0 %"/>' +
+            '<div class="diagramInfo levelsensorone" name="levelsensorone">0.0</div>' +
+            '<div class="diagramInfo levelsensortwo" name="levelsensortwo">0.0</div>' + 
+            '<div class="diagramInfo tankoneflowin" name="tankoneflowin">0.0 L/M</div>' + 
+            '<div class="diagramInfo tanktwoflowout" name="tanktwoflowout">0.0 L/M</div>' + 
+            '<div class="diagramInfo flowsensorbetween" name="flowsensorbetween">0.0 L/M</div>' + 
+            '<div class="diagramInfo pumprpm" name="pumprpm">0 RPM</div>' + 
+            '<div class="diagramInfo valvepercent" name="valvepercent">0.0 %</div>' +
             '<img src="/uts/coupledtanksnew/images/spinner.png" border="0" alt="spinner" class="spinner spin"/>'+
         '</div>'
 	);
@@ -532,32 +531,28 @@ WaterLevelsMimic.prototype.getHTML = function() {
  */
 WaterLevelsMimic.prototype.animateLoop = function() { 
 		
-	/** Animation is enabled with the 'toggleWater' button, will be replaced with autoplay(setInterval) */
-	$('.toggleWater').click(function(){
+	/** Get the values required for the animation */
+	function getNum(){
 		
-	    /** Get the values required for the animation */
-	    function getNum(){
-    	
-	        /** Currently a random number, will be replaced with data request */
-            var x = Math.floor(Math.random()*100)+1;
-            return x;
-        };
+        /** Currently a random number, will be replaced with data request */
+        var x = Math.floor(Math.random()*100)+1;
+        return x;
+    };
 
-        /** Defines the variables used in the animation */
-        var p = '%';
-        var t1 = getNum();
-        var t2 = getNum();
-        var t3 = getNum();
+    /** Defines the variables used in the animation */
+    var p = '%';
+    var t1 = getNum();
+    var t2 = getNum();
+    var t3 = getNum();
 
-        /** Displays values in input fields */
-        $('.levelsensorone').val(t1 + p);
-        $('.levelsensortwo').val(t2 + p);
-        
-        /** Animates the tube levels */
-        $('.tubeOne').animate({"height": (100 - t1) + p }, 400);
-        $('.tubeTwo').animate({"height": (100 - t2) + p }, 400);
-        $('.tubeThree').animate({"height": (100 - t3) + p }, 400);
+    /** Displays values in input fields */
+    $('.levelsensorone').html(t1 + p);
+    $('.levelsensortwo').html(t2 + p);
+    
+    /** Animates the tube levels */
+    $('.tubeOne').animate({"height": (100 - t1) + p }, 400);
+    $('.tubeTwo').animate({"height": (100 - t2) + p }, 400);
+    $('.tubeThree').animate({"height": (100 - t3) + p }, 400);
 
-        // setInterval(this.animateLoop(), 1000);
-    });
+    // setInterval(this.animateLoop(), 1000);
 };

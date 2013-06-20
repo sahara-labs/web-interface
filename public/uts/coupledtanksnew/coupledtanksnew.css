@@ -30,7 +30,7 @@
 }
 
 .pidsettings {
-    font-size: 80%;
+    font-size: 88%;
 }
 
 .ui-widget-header {
@@ -78,17 +78,23 @@
 }
 
 .windowheader {
-    height: 30px;
+    height: 10px;
     font-size: 24px;
     padding: 5px 10px;
     color: #525252;
+    font-size: 15px;
+}
+
+.windowIcon{
+    height: 18px;
 }
 
 .windowtitle {
     position: relative;
-    top: -10px;
+    top: -5px;
     left: 10px;
     padding-right: 10px;
+    color: #777;
 }
 
 .windowcontent {
@@ -104,18 +110,12 @@
     min-width: 145px;
     min-height: 50px;
 }
-
-.resizablevideo {
-    min-height: 195px;
-    min-width: 344px;
-}
-
 /******************************************************************************
  ** Widgets                                                                  **
  ******************************************************************************/
 .videoplayer {
-    height: 100%;
-    width: 100%;
+	height: 240px;
+	width: 320px;
     background: #eee;
     border: solid 1px #E4E4E4;
     min-width: 344px;
@@ -230,21 +230,6 @@
     left: 98px;
 }
 
-.toggleWater{
-    color: #94949E;
-    cursor: pointer;
-    background: #F1F1F1;
-    padding: 5px;
-    width: 65px;
-    height: 15px;
-    border: solid 1px #b4b4b4;
-    float: right;
-    position: relative;
-    font-size: 10px;
-    top: -5px;
-    border-radius: 5px;
-}
-
 .waterBackground{
     background: rgb(208,228,247); /* Old browsers */
     background: -moz-linear-gradient(top,  rgba(208,228,247,1) 0%, 
@@ -269,9 +254,15 @@
 .diagramInfo{
 	position: relative;
 	text-align: center;
-    font-size: 10px !important;
-    height: 16px;
-	width: 54px;
+    font-size: 12px !important;
+    color: #686868;
+    line-height: 9px;
+    height: 9px;
+	width: 46px;
+	background: #fff;
+	border: 1px solid #686868;
+	padding: 5px;
+	float: left;
 }
 
 .levelsensorone{
@@ -280,8 +271,8 @@
 }
 
 .levelsensortwo{
-	top: -67px;
-	left: 172px;
+    top: -67px;
+    left: 172px;
 }
 
 .tankoneflowin{
@@ -301,19 +292,19 @@
 
 .pumprpm{
     top: -51px;
-    right: -5px;
+    right: -55px;
     width: 80px;
 }
 
 .valvepercent{
     top: -110px;
-    right: 130px;
+    right: 72px;
 }
 
 .spinner{
-    float: left;
     position: relative;
-    top: -50px;      
+    top: -50px;
+    left: -159px;
 }
 
 .spin{
