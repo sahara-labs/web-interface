@@ -1,10 +1,5 @@
 @charset  UTF-8;
 
-* {
-    margin: 0;
-    padding: 0;
-    font-family: 'Source Sans Pro', sans-serif;
-}
 .buttonwrapper {
     margin: -11px;
 }
@@ -63,6 +58,7 @@
  ** Windows                                                                  **
  ******************************************************************************/
 .windowwrapper {
+	position: relative;
     float: left;
     background: #fafafa;
     border-radius: 10px;
@@ -367,4 +363,46 @@
 .off{
     background: #dfdfdf;
     float:left;
+}
+
+/******************************************************************************
+ ** Graphs                                                                   **
+ ******************************************************************************/
+.graph-canvas-box {
+	border: 1px solid #333333;
+	margin: 30px 0 40px 40px;
+	background-color: #333333;
+	border-radius: 3px;
+    box-shadow: 0 0 1px #333333;
+}
+
+.graph-labels {
+	position: absolute;
+	right: 10px;
+	color:#777777;
+}
+
+.graph-label {
+	float: left;
+	margin: 5px 10px;
+}
+
+.graph-label-color-box {
+	float: right;
+	margin: -5px -5px 0 5px;
+	width: 25px;
+	height: 25px;
+	background-color: #333333;
+	border-radius: 3px;
+	box-shadow: 0 0 1px #333333;
+}
+
+.graph-label-color-line {
+	width: 25px;
+	height: 3px;
+	margin-top: 11px;
+}
+
+.graph-clear {
+	clear: both;
 }

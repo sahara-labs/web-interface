@@ -20,7 +20,7 @@ WaterLevelControl.prototype.run = function() { };
  * == Widget.                                                                ==
  * ============================================================================ */
 
-/* ----- WIDGET CONTSRUCTOR --------------------------------------------------- */
+/* ----- WIDGET CONSTRUCTOR --------------------------------------------------- */
 
 /**
  * Base class widgets that comprise the Coupled Tanks interface.
@@ -253,10 +253,17 @@ function DisplayManager(container, title) {
 	var pidControl = new PIDControl(container, "PID Control");
 	var waterLevelsMimic = new WaterLevelsMimic(container, "Water Levels");
 	
-	camera.init();
+	var graphOne = new GraphWidget(this.$container, "Tank Levels");
+	graphOne.setDataVariable('l1', 'Level 1',  '#0C61b6', 0, 300);
+	graphOne.setDataVariable('l2', 'Level 2',  '#95ED7E', 0, 300);
+	graphOne.setDataVariable('sp', 'Setpoint', '#EDDA7E', 0, 300);
+	
+	/* camera.init();
     pidControl.init();
-    waterLevelsMimic.init();
-    this.init();
+    waterLevelsMimic.init(); 
+    this.init(); */
+    
+    graphOne.init();
 };
 
 DisplayManager.prototype = new Widget;
@@ -317,6 +324,288 @@ DisplayManager.prototype.getHTML = function() {
 /* ============================================================================
  * == Page Widgets.                                                          ==
  * ============================================================================ */
+
+/** 
+ * Graph widget. This widget contains a scrolling graph that is user navigable
+ * through the sessions data. 
+ */
+function GraphWidget(container, title) 
+{
+	Widget.call(this, container, title);
+	
+	/** ID of canvas. */
+	this.id = "graph-" + title.toLowerCase().replace(' ', '-');
+	
+	/** Width of the graph, including the padding whitespace but excluding the
+	 *  border width. */
+	this.width = 600;
+	
+	/** Height of the graph, including the padding whitespace but excluding the
+	 *  border width and border title. */
+	this.height = 300;
+	
+	/*(* The minimum expected graphed value. A value smaller than this will be
+	 *  clipped. */
+	this.minGraphedValue = undefined;
+	
+	/** The maximum expected graphed value. A value greater than this will be 
+	 *  clipped. */
+	this.maxGraphedValue = undefined;
+	
+	/** Canvas context. */
+	this.ctx = null;
+	
+	/** Data fields. */
+	this.dataFields = { };
+	
+	/** The number of seconds this graph displays. */
+	this.duration = 120;
+	
+	/** The number of seconds the graph is actually displaying. */
+	this.displayedDuration = 0;
+	
+	/** The period in milliseconds. */
+	this.period = 100;
+
+	/** Whether this page to draw a graph. */
+	this.hasData = false;
+}
+GraphWidget.prototype = new Widget;
+
+/** The number of horizontal scales are displayed. */
+GraphWidget.NUM_HORIZONTAL_SCALES = 10;
+
+/** The stipple width. */
+GraphWidget.STIPPLE_WIDTH = 5;
+
+GraphWidget.prototype.init = function() {
+	this.$widget = this.generateBox(this.id + '-box', 'graph');
+	
+	/* Add the canvas panel. */
+	var canvas = getCanvas(this.id, this.width, this.height);
+	this.$widget.find("#" + this.id + "-canvas").append(canvas);
+	this.ctx = canvas.getContext("2d");
+	
+	this.drawFrame();
+	
+	/* Start acquiring data. */
+	this.acquireData();
+};
+
+/**
+ * Periodically requests the server to provide graph data.
+ */
+GraphWidget.prototype.acquireData = function() {
+	var thiz = this;
+	$.ajax({
+		url: "/primitive/mapjson/pc/CoupledTanksController/pa/graphData",
+		data: {
+			period: this.period,
+			duration: this.duration,
+			from: 0,     // For now we are just asked for the latest data
+		},
+		success: function(data) {
+			thiz.updateData(data);
+			setTimeout(function() { thiz.acquireData(); }, 1000);
+		},
+		error: function(data) {
+			setTimeout(function() { thiz.acquireData(); }, 30000);
+		}
+	});
+};
+
+/**
+ * Updates graph with data received from the server. 
+ * 
+ * @param data data object
+ */
+GraphWidget.prototype.updateData = function(data) {
+	var i = 0;
+	
+	for (i in this.dataFields)
+	{
+		if (data[i] == undefined) continue;
+		
+		this.dataFields[i].values = data[i];
+		this.dataFields[i].seconds = data.duration;
+	}
+	
+	this.hasData = true;
+	this.drawFrame();
+};
+
+GraphWidget.prototype.getHTML = function() {
+	
+	var i = null, html = ''; 
+	
+	/* Graph labels. */
+	html += "<div class='graph-labels'>";
+	for (i in this.dataFields)
+	{
+		html += "	<div class='graph-label'>" + 
+				"		<input id='graph-label-" + i + "' type='checkbox' checked='checked' class='graph-label-enable' />" +
+				"		<label for='graph-label-" + i + "'>" + this.dataFields[i].label + "</label>" +  
+				"		<div class='graph-label-color-box'>" +
+				"			<div class='graph-label-color-line' style='background-color:" + this.dataFields[i].color + "'></div>" +
+				"		</div>" +
+				"	</div>";
+	}
+	html += "</div>";
+	
+	/* Left scale. */
+	
+	/* Canvas element holding box. */
+	html += "<div id='" + this.id +  "-canvas' class='graph-canvas-box'></div>";
+	
+	/* Bottom scale. */
+
+	return html;
+};
+
+GraphWidget.prototype.consume = function(data) {
+	
+};
+
+/**
+ * Draws a graph frame.
+ */
+GraphWidget.prototype.drawFrame = function() {
+	var i = 0;
+	
+	/* Clear old frame. */
+	this.ctx.clearRect(0, 0, this.width, this.height);
+	
+	this.drawScales();
+	
+	if (this.hasData) for (i in this.dataFields) this.drawTrace(this.dataFields[i]);
+};
+
+/**
+ * Draws the scales on the interface.
+ */
+GraphWidget.prototype.drawScales = function() {
+	var i, j,
+		dt = Math.floor((this.maxGraphedValue - this.minGraphedValue) / GraphWidget.NUM_HORIZONTAL_SCALES);
+
+	this.ctx.save();
+	
+	this.ctx.strokeStyle = "#FFF";
+	this.ctx.lineWidth = 0.125;
+	
+	for (i = 0; i < GraphWidget.NUM_HORIZONTAL_SCALES; i++)
+	{
+		for (j = 0; j < this.width; j += GraphWidget.STIPPLE_WIDTH * 2)
+		{
+			this.ctx.moveTo(j, i * dt);
+			this.ctx.lineTo(j + GraphWidget.STIPPLE_WIDTH, i * dt);
+		}
+	}
+	
+	this.ctx.stroke();
+	this.ctx.restore();
+};
+
+/**
+ * Draws the trace of the data. 
+ * 
+ * @param dObj data object
+ */
+GraphWidget.prototype.drawTrace = function(dObj) {
+	if (!dObj.visible) return;
+	
+	var yScale = (this.maxGraphedValue - this.minGraphedValue) / this.height,
+		xStep  = this.width / (dObj.seconds * 1000 / this.period),
+		i;
+	
+	this.ctx.save();
+	
+	this.ctx.strokeStyle = dObj.color;
+	this.ctx.lineWidth = 3;
+	this.ctx.lineJoin = "round";
+	this.ctx.shadowColor = "#222222";
+	this.ctx.shadowBlur = 2;
+	this.ctx.shadowOffsetX = 1;
+	this.ctx.shadowOffsetY = 1;
+	
+	this.ctx.beginPath();
+	for (i = 0; i < dObj.values.length; i++)
+	{
+		if (i == 0)
+		{
+			this.ctx.moveTo(i * xStep, this.height - dObj.values[i] * yScale);
+		}
+		else
+		{
+			this.ctx.lineTo(i * xStep, this.height - dObj.values[i] * yScale);
+		}
+	}
+	
+	this.ctx.stroke();
+	
+	this.ctx.restore();
+};
+
+/**
+ * Adds a data variable to be graphed. The minimum and maximum 
+ * define ranges the graph will be expected to graph. If a
+ * value of this data field is out of this range, it may be 
+ * clipped.
+ * <br />
+ * If a new data variable is added, this widget must be
+ * re-initialised so the display and labeling are correctly
+ * redrawn.
+ * 
+ * @param dvar the data variable
+ * @param label label to display
+ * @param color graph line value
+ * @param min minimum value of this variable to graph
+ * @param max maximum value of this variable to graph
+ */
+GraphWidget.prototype.setDataVariable = function(dvar, label, color, min, max) {
+	this.dataFields[dvar] = {
+		label: label,
+		color: color,
+		min: min,
+		max: max,
+		values: [ ],
+		seconds: 0,
+		visible: true,
+	};
+	
+	if (this.minGraphedValue == undefined || min < this.minGraphedValue) this.minGraphedValue = min;
+	if (this.maxGraphedValue == undefined || max > this.maxGraphedValue) this.maxGraphedValue = max;
+};
+
+/**
+ * Remove a data variable from being graphed. 
+ * <br />
+ * If a new data variable is added, this widget must be
+ * re-initialised so the display and labeling are correctly
+ * redrawn.
+ * 
+ * @param dvar data variable to remove
+ */
+GraphWidget.prototype.removeDataVariable = function(dvar) {
+	delete this.dataFields[dvar];
+	
+	/* Work out the correct scale. */
+	
+	this.minGraphedValue = this.maxGraphedValue = undefined;
+	var i = null;
+	for (i in this.dataFields)
+	{
+		if (this.minGraphedValue == undefined || this.dataFields[i].min < this.minGraphedValue)
+		{
+			this.minGraphedValue = this.dataFields[i].min;
+		}
+		
+		if (this.maxGraphedValue == undefined || this.dataFields[i].min > this.maxGraphedValue)
+		{
+			this.maxGraphedValue = this.dataFields[i].max;
+		}
+	}
+};
+
 
 /**
  * Creates and controls the TabbedWidget widget.
@@ -556,3 +845,45 @@ WaterLevelsMimic.prototype.animateLoop = function() {
 
     // setInterval(this.animateLoop(), 1000);
 };
+
+/* ============================================================================
+ * == Utility functions                                                      ==
+ * ============================================================================ */
+
+/**
+ * Gets a canvas element with an appropriate fallback for IE6 to IE8 which do
+ * not natively support canvas.
+ * 
+ * @param id the ID of the element
+ * @param width the width of the canvas element
+ * @param height the height of the canvas element
+ * @return canvas element or appropriate fallback
+ */
+function getCanvas(id, width, height)
+{
+	var canvas = document.createElement("canvas");
+	canvas.setAttribute("id", id);
+	canvas.setAttribute("width", width);
+	canvas.setAttribute("height", height);
+	
+	if (typeof G_vmlCanvasManager != "undefined")
+	{
+		/* Hack to get canvas setup on IE6 to 8 which don't support canvas
+		 * natively. */
+		G_vmlCanvasManager.initElement(canvas);
+	}
+	
+	return canvas;
+}
+
+/**
+ * Rounds of a number to a specified number of significant figures.
+ * 
+ * @param num number to round
+ * @param places significant figures
+ * @returns {Number} number to return
+ */
+function mathRound(num, places) 
+{
+	return Math.round(num * Math.pow(10, places)) / Math.pow(10, places);
+}
