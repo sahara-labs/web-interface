@@ -14,30 +14,13 @@
     padding: 5px;
     background: 0;
     background: 0 to(#eeedf5));
-    border: 1px solid #ebebeb;
+    border-bottom: 1px solid #ebebeb;
+    line-height: 25px;
     cursor: pointer;
-}
-
-.tabbed {
-    background: #fafafa;
-    margin: 5px 5px -5px;
-    padding: 5px;
 }
 
 .pidsettings {
     font-size: 88%;
-}
-
-.ui-widget-header {
-    margin: -4px -4px 0 -3px !important;
-}
-
-.ui-widget-header,.ui-widget-content {
-    border: solid 1px #e4e4e4 !important;
-}
-
-.ui-tabs-panel {
-    border: none !important;
 }
 
 /******************************************************************************
@@ -139,50 +122,54 @@
     top: 140px;
     min-width: 179px;
 }
+/******************************************************************************
+ ** Tabbed Window                                                            **
+ ******************************************************************************/
 
+.tabContent{
+    margin: -5px !important;
+    padding: 0px !important;    
+}
+
+.tabBar{
+    border-radius: 3px 3px 0px 0px;
+    margin: -5px 0px !important;
+    padding: 0px !important;
+    height: 25px;
+    background: #efefef;
+}
+
+.tabButton a{
+    padding: 0px 10px !important;
+    font-size: 12px;
+    line-height: 23px;
+    color: #777 !important;
+    outline-color: transparent;
+}
 /******************************************************************************
  ** The Slider                                                               **
  ******************************************************************************/
 
-#slidercont {
-	position: absolute;
-	top: 10px;
-	left: -2px;
-	width: 105px;
-}
-
-#sliderinner {
-	margin: 10px 0 0 15px;
-	padding: 5px;
-}
-
 #slider {
 	float: left;
-	height: 300px;
+	min-width: 255px;
+    margin: 5px;
 }
 
-.slidertick {
-	height: 29px;
-	width: 80px;
+#slider .ui-widget-header{
+    background: #ABE4FF;    
 }
 
-.slidertick span {
-	float: left;
+.ui-slider .ui-slider-handle{
+    outline-color: transparent;
+    width: 10px;
+    border-radius: 0px 0px 10px 10px;
 }
 
 #sliderval {
-	clear: both;
-	margin: -15px 0 5px;
-	text-align: center;
-}
-
-#sliderval span {
-	font-size: 1.2em;
-	font-weight: bold;
-}
-
-#sliderleg {
-	width: 65px;
+    width: 40px;
+    height: 20px;
+    margin-left: 10px;
 }
 
 /******************************************************************************
@@ -337,6 +324,7 @@
 .switch{
     height: 20px;
     width: 40px;
+    margin-top: 2px;
     background: #f5f5f5;
     border: solid 1px #ddd;
     border-radius: 20px;

@@ -153,7 +153,6 @@ Widget.prototype.removeMessages = function() {
  * 
  * @param boxId ID of the box
  * @param title the title of the widget
- * @param content the content of the widget
  * @param icon the type of icon the box will display, 'settings', 'toggle', 'video'
  * @return jQuery node of the generated box that has been appended to the page
  */
@@ -657,14 +656,6 @@ PIDControl.prototype.getHTML = function() {
             	'<tr>' +
             		'<td>Kd</td>' +
             		'<td><input type="number" name="kd" placeholder="kd" style="height: 20px;"/></td>' +
-            	'</tr>' +
-            	'<tr>' +
-            		'<td>Auto Save</td>' +
-            		'<td><input type="checkbox" name="autosavepid" placeholder="autosave"/></td>' +
-            	'</tr>' +
-            	'<tr>' +
-            		'<td>Enable</td>' +
-            		'<td><input type="checkbox" name="enablepid" placeholder="enable"/></td>' +
             	'</tr>' +	
             '</table>' +     
         '</div>'
@@ -707,24 +698,13 @@ Slider.prototype = new Widget;
 
 Slider.prototype.init = function() { 
    this.val = coupledTanksTwo.pump;
-    var i, html =
-	    '<div id="slidercont">' +
-		'<div id="sliderinner">' +
-		'<div id="slider"> </div>' +
-		'<div id="sliderleg">';
-		for (i = 0; i <= 10; i++)
-		{
-		    html += 
-		        '<div class="slidertick">' +
-				    '<span class="ui-icon ui-icon-arrowthick-1-w"> </span>' +
-				    (i < 10 ? (100 - i * 10) + ' %'  : 'Off') +
-                '</div>';
-	    }
+    var html =  
+        '<div id="slidercont">' +
+        '<div id="slider"></div>' +
+        '<input id="sliderval" value="0">' +
+        '</input>' +
+        '</div>';
 
-		html +=	'</div>' +
-			'</div>' +
-			'<div id="sliderval">Value: <span>' + this.val + '</span> %</div>' +
-		'</div>';
 	this.container.append(html);
 
 	this.$widget = $("#slidercont");
@@ -737,7 +717,7 @@ Slider.prototype.init = function() {
 		value: this.val,
 		range: "min",
 		slide: function(event, ui) {
-			$("#sliderval span").empty().append(ui.value);
+			$("#sliderval").val(ui.value);
 		},
 		stop: function(event, ui) {
 			thiz.setter.call(thiz.hydro, ui.value);
@@ -745,22 +725,14 @@ Slider.prototype.init = function() {
 	});
 
 	this.slider = $("#slider");
-	this.slider.children(".ui-slider-handle").css('width', 30)
-		.css("left", "-11px")
-		.css("cursor", "row-resize");
-
-	this.slider.children(".ui-slider-range").removeClass("ui-widget-header")
-		.css("background-color", "#EFEFEF")
-		.css("overflow", "hidden")
-		.css("width", "10px");
-	this.sliderVal = $("#sliderval span");
+	this.sliderVal = $("#sliderval").val();
 };
 
 Slider.prototype.repaint = function() {
 	(this.val != coupledTanksTwo.pump)
 	{
 		this.slider.slider("value",coupledTanksTwo.pump);
-		this.sliderVal.empty().append(coupledTanksTwo.pump);
+		this.sliderVal.val(coupledTanksTwo.pump);
 	}
 	return this;
 };
