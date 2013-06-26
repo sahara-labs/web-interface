@@ -372,6 +372,15 @@ function GraphWidget(container, title)
 		y: ''
 	};
 	
+	/** The time of the first data update in seconds since epoch. */
+	this.startTime = undefined;
+	
+	/** The time of the latest data update in seconds since epoch. */
+	this.latestTime = undefined;
+	
+	/** The displayed duration in seconds. */
+	this.displayedDuration = undefined;
+
 	/** Whether this widget is in running mode, i.e. polling the server for new
 	 *  graphing information. */
 	this.isRunning = false;
@@ -429,7 +438,7 @@ GraphWidget.prototype.getHTML = function() {
 	html += "<div class='graph-left-scales'>";
 	for (i = 0; i <= GraphWidget.NUM_VERT_SCALES; i++)
 	{
-		html += "<div class='graph-left-scale graph-left-scale-" + i + "' style='top:"+ (styleScale * i) + "px'>" + 
+		html += "<div class='graph-left-scale-" + i + "' style='top:"+ (styleScale * i) + "px'>" + 
 					(this.maxGraphedValue - i * unitScale)+ 
 				"</div>";
 	}
@@ -443,11 +452,11 @@ GraphWidget.prototype.getHTML = function() {
 	html += "<div id='" + this.id +  "-canvas' class='graph-canvas-box' style='height:" + this.height + "px'></div>";
 	
 	/* Bottom scale. */
-	html += "<div class='graph-bottom-scale'>";
+	html += "<div class='graph-bottom-scales'>";
 	styleScale = this.width / GraphWidget.NUM_HORIZ_SCALES;
 	for (i = 0; i <= GraphWidget.NUM_HORIZ_SCALES; i++)
 	{
-		
+		html += "<div class='graph-bottom-scale-" + i + "' style='left:" + (styleScale * i - 5) + "px'>&nbsp</div>";
 	}
 	html += "</div>";
 	
@@ -489,15 +498,20 @@ GraphWidget.prototype.acquireData = function() {
 GraphWidget.prototype.updateData = function(data) {
 	var i = 0;
 	
+	if (this.startTime == undefined) this.startTime = data.start;
+	this.latestTime = data.time;
+	
 	for (i in this.dataFields)
 	{
 		if (data[i] == undefined) continue;
 		
 		this.dataFields[i].values = data[i];
 		this.dataFields[i].seconds = data.duration;
+		this.displayedDuration = data.duration;
 	}
 
 	this.drawFrame();
+	this.updateTimeScale();
 };
 
 /**
@@ -579,6 +593,20 @@ GraphWidget.prototype.drawTrace = function(dObj) {
 	
 	this.ctx.stroke();
 	this.ctx.restore();
+};
+
+/**
+ * Updates the time scale.
+ */
+GraphWidget.prototype.updateTimeScale = function() {
+	var xstep = this.displayedDuration / GraphWidget.NUM_HORIZ_SCALES, i,
+		$d = this.$widget.find(".graph-bottom-scale-0");
+	
+	for (i = 0; i <= GraphWidget.NUM_HORIZ_SCALES; i++)
+	{
+		$d.html(zeroPad(this.latestTime - xstep * (GraphWidget.NUM_HORIZ_SCALES - i) - this.startTime, 1));
+		$d = $d.next();
+	}
 };
 
 /**
@@ -927,4 +955,22 @@ function getCanvas(id, width, height)
 function mathRound(num, places) 
 {
 	return Math.round(num * Math.pow(10, places)) / Math.pow(10, places);
+}
+
+/**
+ * Adds '0' characters to a number so it correctly displays the specified 
+ * decimal point characters.
+ * 
+ * @param num number to pad
+ * @param places significant figures
+ * @returns {String}
+ */
+function zeroPad(num, places)
+{
+	var r = '' + mathRound(num, places);
+	
+	if (r.indexOf('.') == -1) r += '.';
+	while (r.length - r.indexOf('.') < places + 1) r += '0';
+	
+	return r;
 }

@@ -401,12 +401,33 @@
 	top: 60px;
 }
 
-.graph-left-scale {
+.graph-left-scales div {
 	position: absolute;
     width: 40px;
 	color: #777777;
     text-align: right;
     font-weight: bold;
+}
+
+.graph-bottom-scales {
+	position: absolute;	
+	left: 60px;
+	bottom: 60px;
+}
+
+.graph-bottom-scales div {
+	position: absolute;
+	color: #777777;
+    text-align: right;
+    font-weight: bold;
+}
+
+.graph-bottom-scale-0 {
+	margin-left: 10px;
+}
+
+.graph-bottom-scale-10 {
+	margin-left: -15px;
 }
 
 .graph-axis-label {
