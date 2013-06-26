@@ -254,8 +254,9 @@ function DisplayManager(container, title) {
 	
 	var graphOne = new GraphWidget(this.$container, "Tank Levels");
 	graphOne.setDataVariable('l1', 'Level 1',  '#0C61b6', 0, 300);
-	graphOne.setDataVariable('l2', 'Level 2',  '#95ED7E', 0, 300);
+	graphOne.setDataVariable('l2', 'Level 2',  '#92FF79', 0, 300);
 	graphOne.setDataVariable('sp', 'Setpoint', '#EDDA7E', 0, 300);
+	graphOne.setAxisLabels('Time (s)', 'Level (mm)');
 	
 	/* camera.init();
     pidControl.init();
@@ -324,6 +325,8 @@ DisplayManager.prototype.getHTML = function() {
  * == Page Widgets.                                                          ==
  * ============================================================================ */
 
+/* -- Graph ------------------------------------------------------------------- */
+
 /** 
  * Graph widget. This widget contains a scrolling graph that is user navigable
  * through the sessions data. 
@@ -358,24 +361,22 @@ function GraphWidget(container, title)
 	this.dataFields = { };
 	
 	/** The number of seconds this graph displays. */
-	this.duration = 120;
-	
-	/** The number of seconds the graph is actually displaying. */
-	this.displayedDuration = 0;
+	this.duration = 600;
 	
 	/** The period in milliseconds. */
-	this.period = 100;
-
-	/** Whether this page to draw a graph. */
-	this.hasData = false;
+	this.period = 1000;
+	
+	/** The X and Y axis labels. */
+	this.axis = {
+		x: '',
+		y: ''
+	};
+	
+	/** Whether this widget is in running mode, i.e. polling the server for new
+	 *  graphing information. */
+	this.isRunning = false;
 }
 GraphWidget.prototype = new Widget;
-
-/** The number of horizontal scales are displayed. */
-GraphWidget.NUM_HORIZONTAL_SCALES = 10;
-
-/** The stipple width. */
-GraphWidget.STIPPLE_WIDTH = 5;
 
 GraphWidget.prototype.init = function() {
 	this.$widget = this.generateBox(this.id + '-box', 'graph');
@@ -385,11 +386,78 @@ GraphWidget.prototype.init = function() {
 	this.$widget.find("#" + this.id + "-canvas").append(canvas);
 	this.ctx = canvas.getContext("2d");
 	
+	/* Event handlers. */
+	var thiz = this;
+	this.$widget.find(".graph-label-enable").click(function() {
+		thiz.showTrace($(this).next().text(), $(this).is(":checked"));
+	});
+	
+	/* Draw the first frame contents. */
 	this.drawFrame();
 	
 	/* Start acquiring data. */
+	this.isRunning = true;
 	this.acquireData();
 };
+
+/** The number of vertical scales. */
+GraphWidget.NUM_VERT_SCALES = 5;
+
+/** The number of horizontal scales. */
+GraphWidget.NUM_HORIZ_SCALES = 10;
+
+GraphWidget.prototype.getHTML = function() {
+	var i = null, unitScale, styleScale, html = ''; 
+	
+	/* Graph labels. */
+	html += "<div class='graph-labels'>";
+	for (i in this.dataFields)
+	{
+		html += "	<div class='graph-label'>" + 
+				"		<input id='graph-label-" + i + "' type='checkbox' checked='checked' class='graph-label-enable' />" +
+				"		<label for='graph-label-" + i + "'>" + this.dataFields[i].label + "</label>" +  
+				"		<div class='graph-label-color-box'>" +
+				"			<div class='graph-label-color-line' style='background-color:" + this.dataFields[i].color + "'></div>" +
+				"		</div>" +
+				"	</div>";
+	}
+	html += "</div>";
+	
+	/* Left scale. */
+	unitScale = Math.floor((this.maxGraphedValue - this.minGraphedValue) / GraphWidget.NUM_VERT_SCALES);
+	styleScale = this.height / GraphWidget.NUM_VERT_SCALES;
+	html += "<div class='graph-left-scales'>";
+	for (i = 0; i <= GraphWidget.NUM_VERT_SCALES; i++)
+	{
+		html += "<div class='graph-left-scale graph-left-scale-" + i + "' style='top:"+ (styleScale * i) + "px'>" + 
+					(this.maxGraphedValue - i * unitScale)+ 
+				"</div>";
+	}
+	html += "</div>";
+	
+	/* Left axis label. */
+	html += "<div class='graph-axis-label graph-left-axis-label' style='top:" + 
+			(this.width / 2 - this.axis.y.length * 9)  + "px'>" + this.axis.y + "</div>";
+	
+	/* Canvas element holding box. */
+	html += "<div id='" + this.id +  "-canvas' class='graph-canvas-box' style='height:" + this.height + "px'></div>";
+	
+	/* Bottom scale. */
+	html += "<div class='graph-bottom-scale'>";
+	styleScale = this.width / GraphWidget.NUM_HORIZ_SCALES;
+	for (i = 0; i <= GraphWidget.NUM_HORIZ_SCALES; i++)
+	{
+		
+	}
+	html += "</div>";
+	
+	/* Bottom axis label. */
+	html += "<div class='graph-axis-label graph-bottom-axis-label'>" + this.axis.x + "</div>";
+
+	return html;
+};
+
+GraphWidget.prototype.consume = function(data) { /* Does not consume. */ };
 
 /**
  * Periodically requests the server to provide graph data.
@@ -401,14 +469,14 @@ GraphWidget.prototype.acquireData = function() {
 		data: {
 			period: this.period,
 			duration: this.duration,
-			from: 0,     // For now we are just asked for the latest data
+			from: 1,     // For now we are just asked for the latest data
 		},
 		success: function(data) {
 			thiz.updateData(data);
-			setTimeout(function() { thiz.acquireData(); }, 1000);
+			if (thiz.isRunning) setTimeout(function() { thiz.acquireData(); }, 1000);
 		},
 		error: function(data) {
-			setTimeout(function() { thiz.acquireData(); }, 30000);
+			if (thiz.isRunning) setTimeout(function() { thiz.acquireData(); }, 30000);
 		}
 	});
 };
@@ -428,41 +496,8 @@ GraphWidget.prototype.updateData = function(data) {
 		this.dataFields[i].values = data[i];
 		this.dataFields[i].seconds = data.duration;
 	}
-	
-	this.hasData = true;
+
 	this.drawFrame();
-};
-
-GraphWidget.prototype.getHTML = function() {
-	
-	var i = null, html = ''; 
-	
-	/* Graph labels. */
-	html += "<div class='graph-labels'>";
-	for (i in this.dataFields)
-	{
-		html += "	<div class='graph-label'>" + 
-				"		<input id='graph-label-" + i + "' type='checkbox' checked='checked' class='graph-label-enable' />" +
-				"		<label for='graph-label-" + i + "'>" + this.dataFields[i].label + "</label>" +  
-				"		<div class='graph-label-color-box'>" +
-				"			<div class='graph-label-color-line' style='background-color:" + this.dataFields[i].color + "'></div>" +
-				"		</div>" +
-				"	</div>";
-	}
-	html += "</div>";
-	
-	/* Left scale. */
-	
-	/* Canvas element holding box. */
-	html += "<div id='" + this.id +  "-canvas' class='graph-canvas-box'></div>";
-	
-	/* Bottom scale. */
-
-	return html;
-};
-
-GraphWidget.prototype.consume = function(data) {
-	
 };
 
 /**
@@ -476,24 +511,28 @@ GraphWidget.prototype.drawFrame = function() {
 	
 	this.drawScales();
 	
-	if (this.hasData) for (i in this.dataFields) this.drawTrace(this.dataFields[i]);
+	/* Draw the trace for all graphed variables. */
+	for (i in this.dataFields) this.drawTrace(this.dataFields[i]);
 };
+
+/** The stipple width. */
+GraphWidget.STIPPLE_WIDTH = 10;
 
 /**
  * Draws the scales on the interface.
  */
 GraphWidget.prototype.drawScales = function() {
 	var i, j,
-		dt = Math.floor((this.maxGraphedValue - this.minGraphedValue) / GraphWidget.NUM_HORIZONTAL_SCALES);
+		dt = Math.floor((this.maxGraphedValue - this.minGraphedValue) / GraphWidget.NUM_VERT_SCALES);
 
 	this.ctx.save();
 	
-	this.ctx.strokeStyle = "#FFF";
-	this.ctx.lineWidth = 0.125;
+	this.ctx.strokeStyle = "#CCCCCC";
+	this.ctx.lineWidth = 0.2;
 	
-	for (i = 0; i < GraphWidget.NUM_HORIZONTAL_SCALES; i++)
+	for (i = 0; i < GraphWidget.NUM_VERT_SCALES; i++)
 	{
-		for (j = 0; j < this.width; j += GraphWidget.STIPPLE_WIDTH * 2)
+		for (j = 0; j < this.width; j += GraphWidget.STIPPLE_WIDTH * 1.5)
 		{
 			this.ctx.moveTo(j, i * dt);
 			this.ctx.lineTo(j + GraphWidget.STIPPLE_WIDTH, i * dt);
@@ -517,7 +556,6 @@ GraphWidget.prototype.drawTrace = function(dObj) {
 		i;
 	
 	this.ctx.save();
-	
 	this.ctx.strokeStyle = dObj.color;
 	this.ctx.lineWidth = 3;
 	this.ctx.lineJoin = "round";
@@ -540,8 +578,26 @@ GraphWidget.prototype.drawTrace = function(dObj) {
 	}
 	
 	this.ctx.stroke();
-	
 	this.ctx.restore();
+};
+
+/**
+ * Enables or disables displaying of the graphed variable.
+ * 
+ * @param label label of the variable
+ * @param show whether the variable is displayed
+ */
+GraphWidget.prototype.showTrace = function(label, show) {
+	var i = 0;
+	for (i in this.dataFields)
+	{
+		if (this.dataFields[i].label == label)
+		{
+			this.dataFields[i].visible = show;
+		}
+	}
+
+	this.drawFrame();
 };
 
 /**
@@ -605,6 +661,19 @@ GraphWidget.prototype.removeDataVariable = function(dvar) {
 	}
 };
 
+/**
+ * Sets the axis Labels. This widget must be re-initialised so the display and 
+ * labeling are correctly redrawn.
+ * 
+ * @param x independent axis label
+ * @param y dependent axis label
+ */
+GraphWidget.prototype.setAxisLabels = function(x, y) {
+	this.axis.x = x;
+	this.axis.y = y;
+};
+
+/* -- Tabbed Widget Container ------------------------------------------------- */
 
 /**
  * Creates and controls the TabbedWidget widget.
