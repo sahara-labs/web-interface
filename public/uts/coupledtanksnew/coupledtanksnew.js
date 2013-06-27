@@ -25,6 +25,9 @@ function WaterLevelControl(id)
 	
 	/** Container. */
 	this.$container = $('#' + id);
+	
+	/** Occurs if there is a data error. */
+	this.dataError = false;
 };
 
 /** 
@@ -60,10 +63,75 @@ WaterLevelControl.prototype.setup = function() {
 WaterLevelControl.prototype.run = function() {
 	/* Render the page. */
 	this.display.init();
+
+	/* Start acquiring data. */
+	this.acquireLoop();
+};
+
+
+WaterLevelControl.prototype.acquireLoop = function() {
+	var thiz = this;
+	
+	$.ajax({
+		url: "/primitive/mapjson/pc/CoupledTanksController/pa/data",
+		data: { },
+		success: function(data) {
+			thiz.processData(data);
+			setTimeout(function() { thiz.acquireLoop(); }, 1000);
+		},
+		error: function(data) {
+			thiz.errorData('Connection error.');
+			setTimeout(function() { thiz.acquireLoop(); }, 10000);
+		}
+	});
+};
+
+/**
+ * Processes a successfully received data packet.  
+ * 
+ * @param data data packet
+ */
+WaterLevelControl.prototype.processData = function(data) {
+	/* A data packet may specify an error so we make need to make this into an 
+	 * error message. */
+	
+	/* AJAX / Primitive / validation error. */
+	if (!(data['success'] == undefined || data['success'])) return this.errorData(data['errorReason']);
+	
+	/* Hardware communication error. */
+	if (data['system-err'] != undefined && data['system-err']) return this.errorData('Hardware communication error.');
+	
+	/* Seems like a good packet so it will be forwarded to the display to
+	 * render its contents and any error states will be cleared. */
+	if (this.dataError)
+	{
+		this.dataError = false;
+		this.display.unblur();
+	}
+	
+	this.display.consume(data);
+};
+
+/**
+ * Processes an errored communication. 
+ * 
+ * @param msg error message
+ */
+WaterLevelControl.prototype.errorData = function(msg) {
+	if (!this.dataError)
+	{
+		this.dataError = true;
+		
+		/* TODO: There should be a global error display. */
+		
+		/* Tell the display manager to correctly tells the active displays to 
+		 * provide error information. */
+		this.display.blur();
+	}
 };
 
 /* ============================================================================
- * == Widget.                                                                ==
+ * == Base widget                                                            ==
  * ============================================================================ */
 
 /**
@@ -314,8 +382,8 @@ function DisplayManager($container, title, widgets)
     /** The states of each of the widgets. */
     this.states = { };
     
-    var i = 0;
-    for (i in this.widgets) this.states[i] = false;
+    /* Whether the displayed in is blurred state. */
+    this.isBlurred = false;
 }
 DisplayManager.prototype = new Widget;
 
@@ -372,12 +440,35 @@ DisplayManager.prototype.toggleWidget = function(title) {
 	{
 		if (this.widgets[i].title == title)
 		{
-			if (this.states[i]) this.widgets[i].destroy();
-			else this.widgets[i].init();
+			if (this.states[i])  this.widgets[i].destroy();
+			else 
+			{
+				this.widgets[i].init();
+				if (this.isBlurred) this.widgets[i].blur();
+			}
 			this.states[i] = !this.states[i];
 		}
 	}
 };
+
+DisplayManager.prototype.consume = function(data) {
+	var i = 0;
+	for (i in this.widgets) if (this.states[i]) this.widgets[i].consume(data);
+};
+
+
+DisplayManager.prototype.blur = function() {
+	var i = 0;
+	this.isBlurred = true;
+	for (i in this.widgets) if (this.states[i]) this.widgets[i].blur();
+};
+
+DisplayManager.prototype.unblur = function() {
+	var i = 0;
+	this.isBlurred = false;
+	for (i in this.widgets) if (this.states[i]) this.widgets[i].unblur();
+};
+
 
 /* ============================================================================
  * == Water Level Mimic                                                      ==
@@ -445,7 +536,7 @@ WaterLevelsMimic.prototype.getHTML = function() {
 	
 	for (i in this.precision)
 	{
-		html += '<div id="mimic-' + i + '" class="diagramInfo">' + zeroPad(0, this.precision[i]) + ' ' + 
+		html += '<div id="mimic-' + i + '" class="diagramInfo"><span>' + zeroPad(0, this.precision[i]) + '</span>&nbsp;' + 
 				this.units[i] + '</div>';
 	}
         
