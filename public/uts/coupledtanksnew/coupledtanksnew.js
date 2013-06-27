@@ -389,7 +389,7 @@ function WaterLevelsMimic(container,title) {
 WaterLevelsMimic.prototype = new Widget;
 
 WaterLevelsMimic.prototype.init = function() {
-	this.$widget = this.generateBox('WaterLevelsWidgetId','video');
+	this.$widget = this.generateBox('water-levels-mimic','video');
     this.enableDraggable();
     this.enableResizable(' ',290,310);
     this.animateLoop();

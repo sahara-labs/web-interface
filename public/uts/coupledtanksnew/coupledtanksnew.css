@@ -188,6 +188,10 @@
 /******************************************************************************
  ** The Mimic                                                                  **
  ******************************************************************************/
+#water-levels-mimic {
+    left: 345px;
+    top: 20px;
+}
 
 .mimicBG{
 	background-image: url('/uts/coupledtanksnew/images/mimicBG.png');
