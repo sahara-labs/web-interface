@@ -389,69 +389,98 @@ DisplayManager.prototype.toggleWidget = function(title) {
 function WaterLevelsMimic(container,title) {
 		
 	Widget.call(this, container,title);
+	
+	/** Variables that are displayed on the mimic. */
+	this.dataVars = { };
+	
+	/** Display precision for our data variables. */
+	this.precision = {
+		'l1': 0,
+		'l2': 0,
+		't1-in': 1,
+		't2-out': 1,
+		't1-to-t2': 1,
+		'pump-rpm': 0,
+		'valve': 1
+	};
+	
+	/** Units for out data variables. */
+	this.units = {
+		'l1': 'mm',
+		'l2': 'mm',
+		't1-in': 'L/min',
+		't2-out': 'L/min',
+		't1-to-t2': 'L/min',
+		'pump-rpm': 'RPM',
+		'valve': '%',	
+	};
 };
 
 WaterLevelsMimic.prototype = new Widget;
 
 WaterLevelsMimic.prototype.init = function() {
 	this.$widget = this.generateBox('water-levels-mimic','video');
-    this.enableDraggable();
-    this.enableResizable(' ',290,310);
-    this.animateLoop();
+	
+	var i = 0;
+	for (i in this.precision)
+	{
+		this.dataVars[i] = this.$widget.find("#mimic-" + i + " span");
+	}
+	
+	this.enableDraggable();
 };
 
 WaterLevelsMimic.prototype.getHTML = function() {	
-	return(
-        '<div class="mimicBG">' +
-            '<div class="waterTube waterBackground">' +
-                '<div class="level tubeOne"></div>' +
-                '</div>' +
-            '<div class="waterTube waterTubeRight waterBackground">' +
-                '<div class="level tubeTwo"></div>' +
-            '</div>' +
-            '<div class="containerBottom waterBackground">' +
-                '<div class="level tubeThree"></div>' +
-            '</div>' +
-            '<div class="diagramInfo levelsensorone" name="levelsensorone">0.0</div>' +
-            '<div class="diagramInfo levelsensortwo" name="levelsensortwo">0.0</div>' + 
-            '<div class="diagramInfo tankoneflowin" name="tankoneflowin">0.0 L/M</div>' + 
-            '<div class="diagramInfo tanktwoflowout" name="tanktwoflowout">0.0 L/M</div>' + 
-            '<div class="diagramInfo flowsensorbetween" name="flowsensorbetween">0.0 L/M</div>' + 
-            '<div class="diagramInfo pumprpm" name="pumprpm">0 RPM</div>' + 
-            '<div class="diagramInfo valvepercent" name="valvepercent">0.0 %</div>' +
-            '<img src="/uts/coupledtanksnew/images/spinner.png" border="0" alt="spinner" class="spinner spin"/>'+
-        '</div>'
-	);
+	var i = 0, html =
+        '<div id="mimic-bg">' +
+        '	<div id="water-tube-t1" class="waterTube waterBackground">' +
+        '		<div class="level"></div>' +
+        '	</div>' +
+        '	<div id="water-tube-t2" class="waterTube waterBackground">' +
+        '		<div class="level"></div>' +
+        '	</div>' +
+        '	<div id="water-reservoir" class="waterBackground">' +
+        '		<div class="level"></div>' +
+        '	</div>';
+	
+	for (i in this.precision)
+	{
+		html += '<div id="mimic-' + i + '" class="diagramInfo">' + zeroPad(0, this.precision[i]) + ' ' + 
+				this.units[i] + '</div>';
+	}
+        
+	html +=
+        '	<img src="/uts/coupledtanksnew/images/spinner.png" border="0" alt="spinner" class="spinner spin" />'+
+        '</div>';
+	
+    return html;
 };
-/**
- * Creates and controls the Water Levels Mimic widget's amimation.
- */
-WaterLevelsMimic.prototype.animateLoop = function() { 
+
+WaterLevelsMimic.prototype.consume = function(data) {
+	var i = 0, t1, t2;
+	
+	/* Update labels. */
+	for (i in this.dataVars)  
+	{
+		if (data[i] != undefined) this.dataVars[i].html(zeroPad(data[i], this.precision[i]));
+	}
+	
+	/* Animations of water levels. */
+	if (!(data['t1'] == undefined || data['t2'] == undefined))
+	{
+		t1 = data['t1'] / 300 * 100;
+		t2 = data['t2'] / 300 * 100;
 		
-	/** Get the values required for the animation */
-	function getNum(){
-		
-        /** Currently a random number, will be replaced with data request */
-        var x = Math.floor(Math.random()*100)+1;
-        return x;
-    };
+		this.$widget.find("#water-tube-t1 .level").animate({"height": 100 - t1}, 1000);
+		this.$widget.find("#water-tube-t2 .level").animate({"height": 100 - t2}, 1000);
+		this.$widget.find("#water-reservoir").animate({"height": (t1 + t2) / 2}, 1000);
+	}
+};
 
-    /** Defines the variables used in the animation */
-    var p = '%';
-    var t1 = getNum();
-    var t2 = getNum();
-    var t3 = getNum();
-
-    /** Displays values in input fields */
-    $('.levelsensorone').html(t1 + p);
-    $('.levelsensortwo').html(t2 + p);
-    
-    /** Animates the tube levels */
-    $('.tubeOne').animate({"height": (100 - t1) + p }, 400);
-    $('.tubeTwo').animate({"height": (100 - t2) + p }, 400);
-    $('.tubeThree').animate({"height": (100 - t3) + p }, 400);
-
-    // setInterval(this.animateLoop(), 1000);
+WaterLevelsMimic.prototype.destroy = function() {
+	this.dataVars = { };
+	
+	Widget.prototype.destroy.call(this);
 };
 
 /* ============================================================================

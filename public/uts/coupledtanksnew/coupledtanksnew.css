@@ -193,44 +193,52 @@
     top: 20px;
 }
 
-.mimicBG{
+#mimic-bg {
+	position: relative;
 	background-image: url('/uts/coupledtanksnew/images/mimicBG.png');
 	background-repeat: no-repeat;
 	width: 292px;
 	height: 310px;
 }	
-.level {
-    height: 90%;
+
+#water-levels-mimic .level {
+    height: 100%;
     background: #DBF1FF;
 }
 
-.waterTube{
+#water-levels-mimic .waterTube {
     width: 60px;
     height: 170px;
     border: solid 1px #686868;
     margin: 5px;
-    position: relative;
+    position: absolute;
     float: left;
-    left: 78px;
+}
+
+#water-levels-mimic #water-tube-t1 {
+	left: 78px;
+	top: 23px;
+}
+
+#water-levels-mimic #water-tube-t2 {
+    left: 223px;
     top: 23px;
-
-}
-.waterTubeRight{
-    left: 151px !important;
-    top: 23px !important;
 }
 
-.containerBottom{
+#water-levels-mimic #water-reservoir {
     width: 190px;
     height: 60px;
     border: solid 1px #686868;
-    clear: both;
-    position: relative;
-    top: 66px;
+    position: absolute;
+    top: 248px;
     left: 98px;
 }
 
-.waterBackground{
+#water-levels-mimic #water-reservoir .level {
+	height: 0%;
+}
+
+#water-levels-mimic  .waterBackground {
     background: rgb(208,228,247); /* Old browsers */
     background: -moz-linear-gradient(top,  rgba(208,228,247,1) 0%, 
         rgba(0,165,211,1) 0%, rgba(59,210,237,1) 34%, 
@@ -251,8 +259,8 @@
 }
 
 /* Input Fields */
-.diagramInfo{
-	position: relative;
+#water-levels-mimic .diagramInfo{
+	position: absolute;
 	text-align: center;
     font-size: 12px !important;
     color: #686868;
@@ -262,52 +270,54 @@
 	background: #fff;
 	border: 1px solid #686868;
 	padding: 5px;
-	float: left;
 }
 
-.levelsensorone{
-    top: -67px;
-    left: 85px
+#water-levels-mimic #mimic-l1 {
+    top: 177px;
+    left: 85px;
 }
 
-.levelsensortwo{
-    top: -67px;
-    left: 172px;
+#water-levels-mimic #mimic-l2 {
+    top: 177px;
+    left: 2300px;
 }
 
-.tankoneflowin{
-    top: -209px;
-    right: 98px;
+#water-levels-mimic #mimic-t1-in {
+    top: 36px;
+    left: 14px;
+    width: 55px;
 }
 
-.tanktwoflowout{
-    top: -30px;
-    right: -10px;
+#water-levels-mimic #mimic-t2-out {
+	left: 175px;
+    top: 224px;
+    width: 55px;
 }
 
-.flowsensorbetween{
-    top: -92px;
-    right: 74px;
+#water-levels-mimic #mimic-t1-to-t2 {
+   left: 153px;
+   top: 154px;
+   width: 55px;
 }
 
-.pumprpm{
-    top: -51px;
-    right: -55px;
+#water-levels-mimic #mimic-pump-rpm {
+    top: 224px;
+    left: 60px;
     width: 80px;
 }
 
-.valvepercent{
-    top: -110px;
-    right: 72px;
+#water-levels-mimic #mimic-valve {
+    left: 19px;
+    top: 156px;
 }
 
-.spinner{
-    position: relative;
-    top: -50px;
-    left: -159px;
+#water-levels-mimic .spinner {
+    position: absolute;
+    top: 210px;
+    left: -6px;
 }
 
-.spin{
+.spin {
     -webkit-animation: spin 1s infinite linear;
     -moz-animation: spin 1s infinite linear;
     -ms-animation: spin 1s infinite linear;
