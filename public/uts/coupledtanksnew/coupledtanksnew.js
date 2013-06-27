@@ -1,26 +1,67 @@
 /**
  * Coupled Tanks web interface.
+ * 
+ * @author Michael Diponio <michael.diponio@uts.edu.au>
+ * @author Jesse Charlton <jesse.charlton@uts.edu.au>
+ * @date 1/6/2013
  */
 
 /* ============================================================================
  * == WaterLevelControl.                                                     ==
  * ============================================================================ */
 
-function WaterLevelControl() { };
-
-/** Runs the Display Manager. */
-WaterLevelControl.prototype.setup = function() {
-	var dM = new DisplayManager($('#rigscriptcontainer'), 'Display Manager');
+/**
+ * This object that controls the interface.
+ * 
+ * @param id container to add this interface to
+ */
+function WaterLevelControl(id) 
+{ 
+	/** Widgets. */
+	this.widgets = [ ];
+	
+	/** Container. */
+	this.$container = $('#' + id);
 };
 
-/** Retrieves latest data from the server. */
-WaterLevelControl.prototype.run = function() { };
+/** 
+ * Sets up this interface.
+ */
+WaterLevelControl.prototype.setup = function() {
+	
+	/* Graph to display tank levels. */
+	var o = new GraphWidget(this.$container, "Tank Levels");
+	o.setDataVariable('l1', 'Level 1',  '#0C61b6', 0, 300);
+	o.setDataVariable('l2', 'Level 2',  '#92FF79', 0, 300);
+	o.setDataVariable('sp', 'Setpoint', '#EDDA7E', 0, 300);
+	o.setAxisLabels('Time (s)', 'Level (mm)');
+	this.widgets.push(o);
+	
+	/* Graph to display flow rates. */
+	var o = new GraphWidget(this.$container, "Flow Rates");
+	o.setDataVariable('t1-in',    'Tank 1 In',    '#0C61b6', 0, 10);
+	o.setDataVariable('t1-to-t2', 'Tank 1 to 2',  '#92FF79', 0, 10);
+	o.setDataVariable('t2-out',   'Tank 2 Out',   '#EDDA7E', 0, 10);
+	o.setAxisLabels('Time (s)',   'Flow (L/min)');
+	this.widgets.push(o);	
+	
+	/* Display manager to allow things to be shown / removed. */
+	this.widgets.push(new DisplayManager(this.$container, 'Display', this.widgets));
+};
+
+/** 
+ * Runs the interface. 
+ */
+WaterLevelControl.prototype.run = function() {
+	var i = 0;
+	
+	/* Render the page. */
+	for (i in this.widgets) this.widgets[i].init();
+};
 
 /* ============================================================================
  * == Widget.                                                                ==
  * ============================================================================ */
-
-/* ----- WIDGET CONSTRUCTOR --------------------------------------------------- */
 
 /**
  * Base class widgets that comprise the Coupled Tanks interface.
@@ -39,9 +80,15 @@ function Widget($container, title)
 	/** The page title. */
 	this.title = title;
 	
+	/** The page icon. */
+	this.icon = undefined;
+	
 	/** The jQuery object of the outermost element of this widget. 
 	 *  This is not initialised until the 'init' method has been called. */
 	this.$widget = null;
+	
+	/** Whether this widget is displaying. */
+	this.isDisplaying = false;
 };
 
 /* ----- WIDGET LIFE CYCLE ---------------------------------------------------- */
@@ -67,9 +114,24 @@ Widget.prototype.consume = function(data) { };
  */
 Widget.prototype.destroy = function() { 
     this.$widget.remove();
+    this.isDisplaying = false;
 };
 
 /* ----- WIDGET EVENT CALLBACKS ----------------------------------------------- */
+
+/**
+ * Toggles this widget from either being displaying or hidden. 
+ */
+Widget.prototype.toggleDisplay = function() {
+	if (this.isDisplaying) 
+	{
+		this.destroy();
+	}
+	else
+	{
+		this.init();
+	}
+};
 
 /**
  * Event callback if an error has occurred and the widget should provide
@@ -156,17 +218,18 @@ Widget.prototype.removeMessages = function() {
  * @param icon the type of icon the box will display, 'settings', 'toggle', 'video'
  * @return jQuery node of the generated box that has been appended to the page
  */
-Widget.prototype.generateBox = function(boxId,icon) {
+Widget.prototype.generateBox = function(boxId, icon) {
+	this.icon = "/uts/coupledtanksnew/images/icon_" + icon + ".png";
     return this.$container.append(
       "<div class='windowwrapper' id=" + boxId + ">" +
-          "<div class='windowheader'><img class='windowIcon' src='/uts/coupledtanksnew/images/icon_" + icon + ".png'/>" +
-              "<span class='windowtitle'>" + this.title +
-              "</span>" +
+          "<div class='windowheader'><img class='windowIcon' src='" + this.icon + "'/>" +
+              "<span class='windowtitle'>" + this.title + "</span>" +
           "</div>" +
-          "<div class='windowcontent'>" + this.getHTML() +
+          "<div class='windowcontent'>" + 
+          	  this.getHTML() +
           "</div>" +
       "</div>"
-  );
+  ).children().last();
 };
 
 /**
@@ -174,36 +237,43 @@ Widget.prototype.generateBox = function(boxId,icon) {
  */
 Widget.prototype.getHTML = function() {	};
 
+/** Whether the z-index fix has been applied. */
+Widget.hasZIndexFix = false;
+
 /**
  * Enables this widget to be draggable.
  */
 Widget.prototype.enableDraggable = function() {
-
     /* Adds the CSS for the draggable widgets */
-    this.$widget.find('.windowwrapper').addClass('draggable');
-    this.$widget.find('.windowheader').addClass('draggableHeader');
+    this.$widget.addClass('draggable');
+    this.$widget.find('.windowheader').addClass('draggable-header');
     
 	/* Enables dragging on the widgets 'windowwrapper' class. */	
-	this.$widget.find('.windowwrapper').draggable({
+	this.$widget.draggable({
         snap: true,
         snapTolerance: 5,
         stack: '.windowwrapper',
         increaseZindexOnmousedown: true,
         distance: 10,
+        handle: 'draggable-header'
     });
 
-	//Enables increase Z-index on mouse down. 	
-    $.ui.plugin.add('draggable', 'increaseZindexOnmousedown', {
-        create: function() {
-            this.mousedown(function(e) {
-                var inst = $(this).data('draggable');
-                inst._mouseStart(e);
-                inst._trigger('start', e);
-                inst._clear();
-            });
-        }
-    });
-    
+	if (!Widget.hasZIndexFix)
+	{
+		/* Enables increase Z-index on mouse down. */ 	
+	    $.ui.plugin.add('draggable', 'increaseZindexOnmousedown', {
+	        create: function() {
+	            this.mousedown(function(e) {
+	                var inst = $(this).data('draggable');
+	                inst._mouseStart(e);
+	                inst._trigger('start', e);
+	                inst._clear();
+	            });
+	        }
+	    });
+	    
+	    Widget.hasZIndexFix = true;
+	}
 };
 
 /**
@@ -241,89 +311,66 @@ Widget.prototype.postControl = function(action, params, responseCallback) {
  * == Display Manager.                                                       ==
  * ============================================================================ */
 
-function DisplayManager(container, title) {
-	
-    Widget.call(this, container, title);
+function DisplayManager($container, title, widgets) 
+{	
+    Widget.call(this, $container, title);
     
-    this.PCONTROLLER = "CoupledTanksTwoController";
-	this.widgets = [];
-	
-	var camera = new Camera(container, "Camera");
-	var pidControl = new PIDControl(container, "PID Control");
-	var waterLevelsMimic = new WaterLevelsMimic(container, "Water Levels");
-	
-	var graphOne = new GraphWidget(this.$container, "Tank Levels");
-	graphOne.setDataVariable('l1', 'Level 1',  '#0C61b6', 0, 300);
-	graphOne.setDataVariable('l2', 'Level 2',  '#92FF79', 0, 300);
-	graphOne.setDataVariable('sp', 'Setpoint', '#EDDA7E', 0, 300);
-	graphOne.setAxisLabels('Time (s)', 'Level (mm)');
-	
-	/* camera.init();
-    pidControl.init();
-    waterLevelsMimic.init(); 
-    this.init(); */
-    
-    graphOne.init();
-};
-
+    /** Widgets that are toggle able by this widget. */
+    this.widgets = widgets;
+}
 DisplayManager.prototype = new Widget;
 
 DisplayManager.prototype.init = function() {
-
-	this.$widget = this.generateBox('DisplayManagerWidgetId','toggle');
+	this.$widget = this.generateBox('display-manager', 'toggle');
     this.enableDraggable();
-    this.enableResizable(' ',0,0);
     
-	    /* Toggle Buttons. */
-    $('.toggle').click(function() {
-        var x = '#' + $(this).attr('name');
-        var y = $(this);
-        $(x).is(':visible') ? $(x).remove : $(x).init;
-        if ($(this).find('.switch').find('.slide').hasClass('off')) {
-            $(this).find('.switch').find('.slide').addClass("on").removeClass("off");
-        }else{
-            $(this).find('.switch').find('.slide').addClass("off").removeClass("on");
-        } 
+    var thiz = this;
+    this.$widget.find('.toggle').click(function() {    
+    	$(this).find('.switch .slide').toggleClass("on off");
+    	thiz.toggleWidget($(this).find("span").html());
     });
-    
 };
 
 DisplayManager.prototype.getHTML = function() {	
-	return(
-		'<div class="buttonwrapper">' +
-            '<div class="button toggle" name="video">Video' +
-                '<div class="switch">' +
-                    '<div class="animated slide on"></div>' +
-                '</div>' +
-            '</div>' +
-            '<div class="button toggle" name="settings">Settings' +
-                '<div class="switch">' +
-                    '<div class="animated slide on"></div>' +
-                '</div>' +
-            '</div>' +
-            '<div class="button toggle" name="chartone">Chart One' +
-                '<div class="switch">' +
-                    '<div class="animated slide on"></div>' +
-                '</div>' +
-            '</div>' +
-            '<div class="button toggle" name="charttwo">Chart Two' +
-                '<div class="switch">' +
-                    '<div class="animated slide on"></div>' +
-                '</div>' +
-            '</div>' +
-            '<div class="button toggle" name="diagram">Diagram' +
-                '<div class="switch">' +
-                    '<div class="animated slide on"></div>' +
-                '</div>' +
-            '</div>' +
-        '</div>'
-	);
+	var i = 0, html =
+		'<div class="buttonwrapper">';
+	
+	for (i in this.widgets)
+	{
+		/* We should be adding this to be widgets that can be removed. */
+		if (this.widgets[i] == this) continue;
+		
+		html += '<div class="button toggle" name="video">' +
+					(this.icon != undefined ? '<img src=' + this.icon + ' alt="" />' : '') +  
+					'<span>' + this.widgets[i].title + '</span>' +
+        			'<div class="switch">' +
+        				'<div class="animated slide on"></div>' +
+        			'</div>' +
+        		'</div>';
+	}
+	
+    html += '</div>';
+	
+	return html;
 };
 
-
-/* ============================================================================
- * == Page Widgets.                                                          ==
- * ============================================================================ */
+/**
+ * Toggles a widget from either displaying or being invisible. 
+ * 
+ * @param title the title of the widget to toggle
+ */
+DisplayManager.prototype.toggleWidget = function(title) {
+	var i = 0;
+	
+	for (i in this.widgets)
+	{
+		if (this.widgets[i].title == title)
+		{
+			this.widgets[i].toggleDisplay();
+			break;
+		}
+	}
+};
 
 /* -- Graph ------------------------------------------------------------------- */
 
@@ -331,9 +378,9 @@ DisplayManager.prototype.getHTML = function() {
  * Graph widget. This widget contains a scrolling graph that is user navigable
  * through the sessions data. 
  */
-function GraphWidget(container, title) 
+function GraphWidget($container, title) 
 {
-	Widget.call(this, container, title);
+	Widget.call(this, $container, title);
 	
 	/** ID of canvas. */
 	this.id = "graph-" + title.toLowerCase().replace(' ', '-');
@@ -405,8 +452,11 @@ GraphWidget.prototype.init = function() {
 	this.drawFrame();
 	
 	/* Start acquiring data. */
+	this.isDisplaying = true;
 	this.isRunning = true;
 	this.acquireData();
+	
+	this.enableDraggable();
 };
 
 /** The number of vertical scales. */
@@ -600,11 +650,12 @@ GraphWidget.prototype.drawTrace = function(dObj) {
  */
 GraphWidget.prototype.updateTimeScale = function() {
 	var xstep = this.displayedDuration / GraphWidget.NUM_HORIZ_SCALES, i,
-		$d = this.$widget.find(".graph-bottom-scale-0");
+		$d = this.$widget.find(".graph-bottom-scale-0"), t;
 	
 	for (i = 0; i <= GraphWidget.NUM_HORIZ_SCALES; i++)
 	{
-		$d.html(zeroPad(this.latestTime - xstep * (GraphWidget.NUM_HORIZ_SCALES - i) - this.startTime, 1));
+		t = this.latestTime - xstep * (GraphWidget.NUM_HORIZ_SCALES - i) - this.startTime;
+		$d.html(zeroPad(t, t < 100 ? 1 : 0));
 		$d = $d.next();
 	}
 };
@@ -969,8 +1020,11 @@ function zeroPad(num, places)
 {
 	var r = '' + mathRound(num, places);
 	
-	if (r.indexOf('.') == -1) r += '.';
-	while (r.length - r.indexOf('.') < places + 1) r += '0';
+	if (places > 0)
+	{
+		if (r.indexOf('.') == -1) r += '.';
+		while (r.length - r.indexOf('.') < places + 1) r += '0';
+	}
 	
 	return r;
 }

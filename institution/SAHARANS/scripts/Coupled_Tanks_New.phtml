@@ -3,9 +3,14 @@ $this->headScript()->appendFile($this->baseUrl('uts/coupledtanksnew/coupledtanks
 $this->headLink()->appendStylesheet($this->baseUrl('uts/coupledtanksnew/coupledtanksnew.css'));
 ?>
 
+<div id="coupled-tanks-anchor">
+    <!-- Interface goes here! -->
+</div>
+
 <script type="text/javascript">
 $(document).ready(function() {
-	var wLC = new WaterLevelControl();
-	wLC.setup();
+	var inter = new WaterLevelControl("coupled-tanks-anchor");
+	inter.setup();
+	inter.run();
 });
 </script>

@@ -37,11 +37,16 @@
 #slide,.menu ol {
 	z-index: 4 !important;
 }
+
+#coupled-tanks-anchor {
+	height: 1100px;
+}
+
 /******************************************************************************
  ** Windows                                                                  **
  ******************************************************************************/
 .windowwrapper {
-	position: relative;
+	position: absolute;
     float: left;
     background: #fafafa;
     border-radius: 10px;
@@ -52,7 +57,8 @@
 .dragged {
     border: 2px dashed #8CE2FF;
 }
-.draggableHeader {
+
+.draggable-header {
 	cursor: move;
 }
 
@@ -106,22 +112,24 @@
     height: 212px;
 }
 
-.chartonecontent {
-    width: 633px;
-    height: 120px;
-}
-
-.charttwocontent {
-    width: 633px;
-    height: 120px;
-}
-
 .toggleposition {
     position: absolute;
     left: -192px;
     top: 140px;
     min-width: 179px;
 }
+
+/******************************************************************************
+ ** Display Manager                                                          **
+ ******************************************************************************/
+#display-manager .button img {
+	display: block;
+	float: left;
+	height: 20px;
+	width: 20px;
+	padding: 3px 2px 0 0;
+}
+
 /******************************************************************************
  ** Tabbed Window                                                            **
  ******************************************************************************/
@@ -358,7 +366,7 @@
  ******************************************************************************/
 .graph-canvas-box {
 	border: 1px solid #333333;
-	margin: 30px 0 50px 50px;
+	margin: 30px 0 40px 50px;
 	background-color: #333333;
 	border-radius: 3px;
     box-shadow: 0 0 1px #333333;
@@ -412,7 +420,7 @@
 .graph-bottom-scales {
 	position: absolute;	
 	left: 60px;
-	bottom: 60px;
+	bottom: 50px;
 }
 
 .graph-bottom-scales div {
