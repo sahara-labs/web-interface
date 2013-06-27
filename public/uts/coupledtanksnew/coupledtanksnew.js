@@ -931,7 +931,6 @@ GraphWidget.prototype.removeDataVariable = function(dvar) {
 	delete this.dataFields[dvar];
 	
 	/* Work out the correct scale. */
-	
 	this.minGraphedValue = this.maxGraphedValue = undefined;
 	var i = null;
 	for (i in this.dataFields)
