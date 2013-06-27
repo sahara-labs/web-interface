@@ -210,7 +210,6 @@
     border: solid 1px #686868;
     margin: 5px;
     position: absolute;
-    float: left;
 }
 
 #water-levels-mimic #water-tube-t1 {
@@ -237,6 +236,7 @@
 }
 
 #water-levels-mimic  .waterBackground {
+	overflow: hidden;
     background: rgb(208,228,247); /* Old browsers */
     background: -moz-linear-gradient(top,  rgba(208,228,247,1) 0%, 
         rgba(0,165,211,1) 0%, rgba(59,210,237,1) 34%, 
