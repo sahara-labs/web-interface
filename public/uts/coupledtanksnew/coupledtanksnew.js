@@ -17,6 +17,9 @@
  */
 function WaterLevelControl(id) 
 { 
+	/** Display Manager. */
+	this.display = undefined;
+	
 	/** Widgets. */
 	this.widgets = [ ];
 	
@@ -28,6 +31,8 @@ function WaterLevelControl(id)
  * Sets up this interface.
  */
 WaterLevelControl.prototype.setup = function() {
+	/* Mimic of the system. */
+	this.widgets.push(new WaterLevelsMimic(this.$container, 'Coupled Tanks'));
 	
 	/* Graph to display tank levels. */
 	var o = new GraphWidget(this.$container, "Tank Levels");
@@ -38,7 +43,7 @@ WaterLevelControl.prototype.setup = function() {
 	this.widgets.push(o);
 	
 	/* Graph to display flow rates. */
-	var o = new GraphWidget(this.$container, "Flow Rates");
+	o = new GraphWidget(this.$container, "Flow Rates");
 	o.setDataVariable('t1-in',    'Tank 1 In',    '#0C61b6', 0, 10);
 	o.setDataVariable('t1-to-t2', 'Tank 1 to 2',  '#92FF79', 0, 10);
 	o.setDataVariable('t2-out',   'Tank 2 Out',   '#EDDA7E', 0, 10);
@@ -46,17 +51,15 @@ WaterLevelControl.prototype.setup = function() {
 	this.widgets.push(o);	
 	
 	/* Display manager to allow things to be shown / removed. */
-	this.widgets.push(new DisplayManager(this.$container, 'Display', this.widgets));
+	this.display = new DisplayManager(this.$container, 'Display', this.widgets);
 };
 
 /** 
  * Runs the interface. 
  */
 WaterLevelControl.prototype.run = function() {
-	var i = 0;
-	
 	/* Render the page. */
-	for (i in this.widgets) this.widgets[i].init();
+	this.display.init();
 };
 
 /* ============================================================================
@@ -86,9 +89,6 @@ function Widget($container, title)
 	/** The jQuery object of the outermost element of this widget. 
 	 *  This is not initialised until the 'init' method has been called. */
 	this.$widget = null;
-	
-	/** Whether this widget is displaying. */
-	this.isDisplaying = false;
 };
 
 /* ----- WIDGET LIFE CYCLE ---------------------------------------------------- */
@@ -114,24 +114,9 @@ Widget.prototype.consume = function(data) { };
  */
 Widget.prototype.destroy = function() { 
     this.$widget.remove();
-    this.isDisplaying = false;
 };
 
 /* ----- WIDGET EVENT CALLBACKS ----------------------------------------------- */
-
-/**
- * Toggles this widget from either being displaying or hidden. 
- */
-Widget.prototype.toggleDisplay = function() {
-	if (this.isDisplaying) 
-	{
-		this.destroy();
-	}
-	else
-	{
-		this.init();
-	}
-};
 
 /**
  * Event callback if an error has occurred and the widget should provide
@@ -311,12 +296,21 @@ Widget.prototype.postControl = function(action, params, responseCallback) {
  * == Display Manager.                                                       ==
  * ============================================================================ */
 
+/**
+ * Controls which widgets are active a which point.
+ */
 function DisplayManager($container, title, widgets) 
 {	
     Widget.call(this, $container, title);
     
     /** Widgets that are toggle able by this widget. */
     this.widgets = widgets;
+    
+    /** The states of each of the widgets. */
+    this.states = { };
+    
+    var i = 0;
+    for (i in this.widgets) this.states[i] = false;
 }
 DisplayManager.prototype = new Widget;
 
@@ -324,11 +318,18 @@ DisplayManager.prototype.init = function() {
 	this.$widget = this.generateBox('display-manager', 'toggle');
     this.enableDraggable();
     
-    var thiz = this;
+    var thiz = this, i = 0;
     this.$widget.find('.toggle').click(function() {    
     	$(this).find('.switch .slide').toggleClass("on off");
     	thiz.toggleWidget($(this).find("span").html());
     });
+    
+    /* Enable all the other widgets. */
+    for (i in this.widgets) 
+    {    	
+    	this.widgets[i].init();
+    	this.states[i] = true;
+    }
 };
 
 DisplayManager.prototype.getHTML = function() {	
@@ -366,13 +367,91 @@ DisplayManager.prototype.toggleWidget = function(title) {
 	{
 		if (this.widgets[i].title == title)
 		{
-			this.widgets[i].toggleDisplay();
-			break;
+			if (this.states[i]) this.widgets[i].destroy();
+			else this.widgets[i].init();
+			this.states[i] = !this.states[i];
 		}
 	}
 };
 
-/* -- Graph ------------------------------------------------------------------- */
+/* ============================================================================
+ * == Water Level Mimic                                                      ==
+ * ============================================================================ */
+
+/**
+ * Creates and controls the Water Levels Mimic widget.
+ */
+function WaterLevelsMimic(container,title) {
+		
+	Widget.call(this, container,title);
+};
+
+WaterLevelsMimic.prototype = new Widget;
+
+WaterLevelsMimic.prototype.init = function() {
+	this.$widget = this.generateBox('WaterLevelsWidgetId','video');
+    this.enableDraggable();
+    this.enableResizable(' ',290,310);
+    this.animateLoop();
+};
+
+WaterLevelsMimic.prototype.getHTML = function() {	
+	return(
+        '<div class="mimicBG">' +
+            '<div class="waterTube waterBackground">' +
+                '<div class="level tubeOne"></div>' +
+                '</div>' +
+            '<div class="waterTube waterTubeRight waterBackground">' +
+                '<div class="level tubeTwo"></div>' +
+            '</div>' +
+            '<div class="containerBottom waterBackground">' +
+                '<div class="level tubeThree"></div>' +
+            '</div>' +
+            '<div class="diagramInfo levelsensorone" name="levelsensorone">0.0</div>' +
+            '<div class="diagramInfo levelsensortwo" name="levelsensortwo">0.0</div>' + 
+            '<div class="diagramInfo tankoneflowin" name="tankoneflowin">0.0 L/M</div>' + 
+            '<div class="diagramInfo tanktwoflowout" name="tanktwoflowout">0.0 L/M</div>' + 
+            '<div class="diagramInfo flowsensorbetween" name="flowsensorbetween">0.0 L/M</div>' + 
+            '<div class="diagramInfo pumprpm" name="pumprpm">0 RPM</div>' + 
+            '<div class="diagramInfo valvepercent" name="valvepercent">0.0 %</div>' +
+            '<img src="/uts/coupledtanksnew/images/spinner.png" border="0" alt="spinner" class="spinner spin"/>'+
+        '</div>'
+	);
+};
+/**
+ * Creates and controls the Water Levels Mimic widget's amimation.
+ */
+WaterLevelsMimic.prototype.animateLoop = function() { 
+		
+	/** Get the values required for the animation */
+	function getNum(){
+		
+        /** Currently a random number, will be replaced with data request */
+        var x = Math.floor(Math.random()*100)+1;
+        return x;
+    };
+
+    /** Defines the variables used in the animation */
+    var p = '%';
+    var t1 = getNum();
+    var t2 = getNum();
+    var t3 = getNum();
+
+    /** Displays values in input fields */
+    $('.levelsensorone').html(t1 + p);
+    $('.levelsensortwo').html(t2 + p);
+    
+    /** Animates the tube levels */
+    $('.tubeOne').animate({"height": (100 - t1) + p }, 400);
+    $('.tubeTwo').animate({"height": (100 - t2) + p }, 400);
+    $('.tubeThree').animate({"height": (100 - t3) + p }, 400);
+
+    // setInterval(this.animateLoop(), 1000);
+};
+
+/* ============================================================================
+ * == Graph Widget                                                           ==
+ * ============================================================================ */
 
 /** 
  * Graph widget. This widget contains a scrolling graph that is user navigable
@@ -450,9 +529,7 @@ GraphWidget.prototype.init = function() {
 	
 	/* Draw the first frame contents. */
 	this.drawFrame();
-	
-	/* Start acquiring data. */
-	this.isDisplaying = true;
+
 	this.isRunning = true;
 	this.acquireData();
 	
@@ -899,78 +976,6 @@ function ValveSlider(container)
 	this.setter = this.widget.setValve;
 }
 ValveSlider.prototype = new Slider;
-
-
-/**
- * Creates and controls the Water Levels Mimic widget.
- */
-function WaterLevelsMimic(container,title) {
-		
-	Widget.call(this, container,title);
-};
-
-WaterLevelsMimic.prototype = new Widget;
-
-WaterLevelsMimic.prototype.init = function() {
-	this.$widget = this.generateBox('WaterLevelsWidgetId','video');
-    this.enableDraggable();
-    this.enableResizable(' ',290,310);
-    this.animateLoop();
-};
-
-WaterLevelsMimic.prototype.getHTML = function() {	
-	return(
-        '<div class="mimicBG">' +
-            '<div class="waterTube waterBackground">' +
-                '<div class="level tubeOne"></div>' +
-                '</div>' +
-            '<div class="waterTube waterTubeRight waterBackground">' +
-                '<div class="level tubeTwo"></div>' +
-            '</div>' +
-            '<div class="containerBottom waterBackground">' +
-                '<div class="level tubeThree"></div>' +
-            '</div>' +
-            '<div class="diagramInfo levelsensorone" name="levelsensorone">0.0</div>' +
-            '<div class="diagramInfo levelsensortwo" name="levelsensortwo">0.0</div>' + 
-            '<div class="diagramInfo tankoneflowin" name="tankoneflowin">0.0 L/M</div>' + 
-            '<div class="diagramInfo tanktwoflowout" name="tanktwoflowout">0.0 L/M</div>' + 
-            '<div class="diagramInfo flowsensorbetween" name="flowsensorbetween">0.0 L/M</div>' + 
-            '<div class="diagramInfo pumprpm" name="pumprpm">0 RPM</div>' + 
-            '<div class="diagramInfo valvepercent" name="valvepercent">0.0 %</div>' +
-            '<img src="/uts/coupledtanksnew/images/spinner.png" border="0" alt="spinner" class="spinner spin"/>'+
-        '</div>'
-	);
-};
-/**
- * Creates and controls the Water Levels Mimic widget's amimation.
- */
-WaterLevelsMimic.prototype.animateLoop = function() { 
-		
-	/** Get the values required for the animation */
-	function getNum(){
-		
-        /** Currently a random number, will be replaced with data request */
-        var x = Math.floor(Math.random()*100)+1;
-        return x;
-    };
-
-    /** Defines the variables used in the animation */
-    var p = '%';
-    var t1 = getNum();
-    var t2 = getNum();
-    var t3 = getNum();
-
-    /** Displays values in input fields */
-    $('.levelsensorone').html(t1 + p);
-    $('.levelsensortwo').html(t2 + p);
-    
-    /** Animates the tube levels */
-    $('.tubeOne').animate({"height": (100 - t1) + p }, 400);
-    $('.tubeTwo').animate({"height": (100 - t2) + p }, 400);
-    $('.tubeThree').animate({"height": (100 - t3) + p }, 400);
-
-    // setInterval(this.animateLoop(), 1000);
-};
 
 /* ============================================================================
  * == Utility functions                                                      ==
