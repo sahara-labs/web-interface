@@ -357,7 +357,8 @@
     transition:all 0.3s ease-in-out;
 }
 .on{
-    background: #01C3DD;
+    background-color: #555555;
+    box-shadow: 0 0 2px #999999;
     float:right; 
     
 }

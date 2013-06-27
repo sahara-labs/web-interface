@@ -587,7 +587,7 @@ GraphWidget.STIPPLE_WIDTH = 10;
  */
 GraphWidget.prototype.drawScales = function() {
 	var i, j,
-		dt = Math.floor((this.maxGraphedValue - this.minGraphedValue) / GraphWidget.NUM_VERT_SCALES);
+		dt = this.height / GraphWidget.NUM_VERT_SCALES;
 
 	this.ctx.save();
 	
@@ -615,9 +615,9 @@ GraphWidget.prototype.drawScales = function() {
 GraphWidget.prototype.drawTrace = function(dObj) {
 	if (!dObj.visible) return;
 	
-	var yScale = (this.maxGraphedValue - this.minGraphedValue) / this.height,
+	var yScale = this.height / (this.maxGraphedValue - this.minGraphedValue),
 		xStep  = this.width / (dObj.seconds * 1000 / this.period),
-		i;
+		i, yCoord;
 	
 	this.ctx.save();
 	this.ctx.strokeStyle = dObj.color;
@@ -631,13 +631,19 @@ GraphWidget.prototype.drawTrace = function(dObj) {
 	this.ctx.beginPath();
 	for (i = 0; i < dObj.values.length; i++)
 	{
+		yCoord = this.height - dObj.values[i] * yScale;
+		/* If value too large, clipping at the top of the graph. */
+		if (yCoord > this.height) yCoord = this.height;
+		/* If value too smale, clippling at the bottom of the graph. */
+		if (yCoord < 0) yCoord = 0;
+		
 		if (i == 0)
 		{
-			this.ctx.moveTo(i * xStep, this.height - dObj.values[i] * yScale);
+			this.ctx.moveTo(i * xStep, yCoord);
 		}
 		else
 		{
-			this.ctx.lineTo(i * xStep, this.height - dObj.values[i] * yScale);
+			this.ctx.lineTo(i * xStep, yCoord);
 		}
 	}
 	
