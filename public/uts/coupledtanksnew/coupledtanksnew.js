@@ -233,14 +233,19 @@ Widget.prototype.enableDraggable = function() {
     this.$widget.addClass('draggable');
     this.$widget.find('.windowheader').addClass('draggable-header');
     
-	/* Enables dragging on the widgets 'windowwrapper' class. */	
+	/* Enables dragging on the widgets 'windowwrapper' class. */
+    var thiz = this;
 	this.$widget.draggable({
         snap: true,
         snapTolerance: 5,
         stack: '.windowwrapper',
         increaseZindexOnmousedown: true,
         distance: 10,
-        handle: 'draggable-header'
+        handle: 'draggable-header',
+        stop: function() {
+        	var p = $(this).position();
+        	thiz.dragged(p.left, p.top);
+        }
     });
 
 	if (!Widget.hasZIndexFix)

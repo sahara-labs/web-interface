@@ -6,7 +6,7 @@
 
 .button {
     height: 25px;
-    min-width: 145px;
+    width: 165px;
     position: relative;
     color: #7c7c7c;
     left: 0;
@@ -123,7 +123,7 @@
  ** Display Manager                                                          **
  ******************************************************************************/
 #display-manager {
-	left: -185px;
+	left: -195px;
 	top: 150px;
 }
 
