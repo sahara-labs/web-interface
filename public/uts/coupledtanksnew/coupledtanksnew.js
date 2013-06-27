@@ -43,10 +43,11 @@ WaterLevelControl.prototype.setup = function() {
 	o.setDataVariable('l2', 'Level 2',  '#92FF79', 0, 300);
 	o.setDataVariable('sp', 'Setpoint', '#EDDA7E', 0, 300);
 	o.setAxisLabels('Time (s)', 'Level (mm)');
+	o.isPulling = false;
 	this.widgets.push(o);
 	
 	/* Graph to display flow rates. */
-	o = new GraphWidget(this.$container, "Flow Rates");
+	o = new GraphWidget(this.$container, "Flow Rates", o);
 	o.setDataVariable('t1-in',    'Tank 1 In',    '#0C61b6', 0, 10);
 	o.setDataVariable('t1-to-t2', 'Tank 1 to 2',  '#92FF79', 0, 10);
 	o.setDataVariable('t2-out',   'Tank 2 Out',   '#EDDA7E', 0, 10);
@@ -586,8 +587,13 @@ WaterLevelsMimic.prototype.destroy = function() {
 /** 
  * Graph widget. This widget contains a scrolling graph that is user navigable
  * through the sessions data. 
+ * 
+ * @param $container the container to append the graph to
+ * @param title the graph title
+ * @param chained a graphs that are chained to this graph to receives its \
+ * 			 pulled or pushed data
  */
-function GraphWidget($container, title) 
+function GraphWidget($container, title, chained) 
 {
 	Widget.call(this, $container, title);
 	
@@ -637,9 +643,12 @@ function GraphWidget($container, title)
 	/** The displayed duration in seconds. */
 	this.displayedDuration = undefined;
 
-	/** Whether this widget is in running mode, i.e. polling the server for new
+	/** Whether this widget is pulling data, i.e. polling the server for new
 	 *  graphing information. */
-	this.isRunning = false;
+	this.isPulling = true;
+	
+	/** Graphs that are chained to this graph. */
+	this.chained = chained;
 }
 GraphWidget.prototype = new Widget;
 
@@ -659,9 +668,9 @@ GraphWidget.prototype.init = function() {
 	
 	/* Draw the first frame contents. */
 	this.drawFrame();
-
-	this.isRunning = true;
-	this.acquireData();
+	
+	/* Pull data if we are setup to pull. */
+	if (this.isPulling) this.acquireData();
 	
 	this.enableDraggable();
 };
@@ -739,10 +748,10 @@ GraphWidget.prototype.acquireData = function() {
 		},
 		success: function(data) {
 			thiz.updateData(data);
-			if (thiz.isRunning) setTimeout(function() { thiz.acquireData(); }, 1000);
+			if (thiz.isPulling) setTimeout(function() { thiz.acquireData(); }, 1000);
 		},
 		error: function(data) {
-			if (thiz.isRunning) setTimeout(function() { thiz.acquireData(); }, 30000);
+			if (thiz.isPulling) setTimeout(function() { thiz.acquireData(); }, 30000);
 		}
 	});
 };
@@ -769,6 +778,9 @@ GraphWidget.prototype.updateData = function(data) {
 
 	this.drawFrame();
 	this.updateTimeScale();
+	
+	/* Forward data onto chained graph. */
+	if (this.chained != undefined) this.chained.updateData(data);
 };
 
 /**
