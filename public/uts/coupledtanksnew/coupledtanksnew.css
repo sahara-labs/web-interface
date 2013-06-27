@@ -99,8 +99,6 @@
  ** Widgets                                                                  **
  ******************************************************************************/
 .videoplayer {
-	height: 240px;
-	width: 320px;
     background: #eee;
     border: solid 1px #E4E4E4;
     min-width: 344px;
@@ -182,7 +180,7 @@
 #sliderval {
     width: 40px;
     height: 20px;
-    margin-left: 10px;
+    margin: 10px;
 }
 
 /******************************************************************************

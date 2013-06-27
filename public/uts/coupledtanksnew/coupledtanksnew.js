@@ -53,6 +53,9 @@ WaterLevelControl.prototype.setup = function() {
 	o.setAxisLabels('Time (s)',   'Flow (L/min)');
 	this.widgets.push(o);	
 	
+	/* Add camera to page. */
+	this.widgets.push(new Camera(this.$container, 'Camera'));
+	
 	/* Display manager to allow things to be shown / removed. */
 	this.display = new DisplayManager(this.$container, 'Display', this.widgets);
 };
@@ -964,22 +967,29 @@ GraphWidget.prototype.setAxisLabels = function(x, y) {
 /**
  * Creates and controls the TabbedWidget widget.
  */
-function TabbedWidget(container,title) {
+function tabbedWidget(container,title) {
    
    Widget.call(this, container,title);
-    
+   
  };
  
-TabbedWidget.prototype = new Widget;
+tabbedWidget.prototype = new Widget;
 
-TabbedWidget.prototype.init = function() { };
+tabbedWidget.prototype.init = function() { 
+	
+	this.$widget = this.generateBox('tabbedWidgetId','settings');
+	this.enableDraggable();
+	$( "#tabs" ).tabs();   
+
+};
+
 /**
  * Creates and controls the PIDControl widget.
  */
 function PIDControl(container,title) {
    
    Widget.call(this, container,title);
-    
+   
  };
  
 PIDControl.prototype = new Widget;
@@ -1017,12 +1027,21 @@ PIDControl.prototype.getHTML = function() {
 	);
 };
 
-/**
- * Creates and controls the Camera widget.
- */
+/* ============================================================================
+ * == Camera Widget                                                           ==
+ * ============================================================================ */
+
 function Camera(container,title) {
 	
     Widget.call(this, container,title);
+    
+    this.width = 320;
+	this.height = 240;
+	
+	this.urls = {
+		swf: '',
+		mjpeg: ''
+	};
     
  };
  
@@ -1030,17 +1049,63 @@ Camera.prototype = new Widget;
 
 Camera.prototype.init = function() {
 	
-	this.$widget = this.generateBox('CameraWidgetId','video');
+	this.$widget = this.generateBox('CameraWidgetId', 'video');
+	
 	this.enableDraggable();
-	this.enableResizable('16 / 9',192,340);
+	this.enableResizable('16 / 9', 192, 340);
+	
+    
+    var thiz = this;
+
+	/* Get the format URLs. */
+	$.get(
+		"/session/coupledtanks",
+		{
+			attribute: "Coupledtanks_Camera"
+		},
+		function (resp) {
+			thiz.urlsReceived = true;
+			if (resp.value != undefined)
+			{
+				var pts = resp.value.split(","), i = 0, p;			
+				for (i in pts)
+				{
+					p = pts[i].indexOf("=");
+					thiz.urls[$.trim(pts[i].substring(0, p))] = $.trim(pts[i].substring(p + 1));
+				}
+			}
+		}
+	);
 	
 };
 
+
 Camera.prototype.getHTML = function() {	
 	return(
-		'<div class="videoplayer"></div>'
+		'<div class="videoplayer" style="height:' + this.height + 'px;width:' + this.width + 'px">' +
+		
+		(!$.browser.msie ? // Firefox, Chrome, ...
+	
+			'<object type="application/x-shockwave-flash" data="' + this.swf + '" ' +
+	 				'width="' +  this.width  + '" height="' + this.height + '">' +
+		        '<param name="movie" value="' + 'this.urls.swf' + '"/>' +
+		        '<a href="http://www.adobe.com/go/getflash">' +
+		        	'<img src="http://www.adobe.com/images/shared/download_buttons/get_flash_player.gif" ' +
+		        			'alt="Get Adobe Flash player"/>' +
+		        '</a>' +
+		    '</object>'
+		:                  // Internet Explorer
+			'<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000"  width="' + this.width + '" height="' + this.height + '"  id="camera-swf-movie">' +
+				'<param name="movie" value="' + this.swf + '" />' +
+				'<a href="http://www.adobe.com/go/getflash">' +
+					'<img src="http://www.adobe.com/images/shared/download_buttons/get_flash_player.gif" alt="Get Adobe Flash player"/>' +
+				'</a>' +
+			'</object>'
+		) +
+		'</div>'
 	);
 };
+
 /**
  * Creates and controls the Slider widget.
  */
