@@ -557,14 +557,19 @@ WaterLevelsMimic.prototype.consume = function(data) {
 	}
 	
 	/* Animations of water levels. */
-	if (!(data['t1'] == undefined || data['t2'] == undefined))
+	if (!(data['l1'] == undefined || data['l2'] == undefined))
 	{
-		t1 = data['t1'] / 300 * 100;
-		t2 = data['t2'] / 300 * 100;
+		t1 = data['l1'] / 300 * 100;
+		t2 = data['l2'] / 300 * 100;
 		
-		this.$widget.find("#water-tube-t1 .level").animate({"height": 100 - t1}, 1000);
-		this.$widget.find("#water-tube-t2 .level").animate({"height": 100 - t2}, 1000);
-		this.$widget.find("#water-reservoir").animate({"height": (t1 + t2) / 2}, 1000);
+		/* A negative tank level might occur if the sensors are out of 
+		 * calibration. */
+		if (t1 < 0) t1 = 0;
+		if (t2 < 0) t2 = 0; 
+		
+		this.$widget.find("#water-tube-t1 .level").animate({"height": (100 - t1) + "%"}, 1000);
+		this.$widget.find("#water-tube-t2 .level").animate({"height": (100 - t2) + "%"}, 1000);
+		this.$widget.find("#water-reservoir .level").animate({"height": ((t1 + t2) / 2) + "%"}, 1000);
 	}
 };
 
