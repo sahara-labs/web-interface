@@ -474,6 +474,8 @@
 
 .graph-left-axis-label {
     transform: rotate(270deg);
+    -ms-transform: rotate(270deg);
+    -webkit-transform: rotate(270deg);
     left: -17px;
 }
 

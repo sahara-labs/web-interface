@@ -676,6 +676,14 @@ GraphWidget.prototype.init = function() {
 	if (this.isPulling) this.acquireData();
 	
 	this.enableDraggable();
+
+	/** Align the boxes for webkit browers*/
+    if ($.browser.webkit) {
+        $(".graph-label-color-box").css({
+            "position": "relative",
+            "top": "-15px"
+       });
+   };
 };
 
 /** The number of vertical scales. */
