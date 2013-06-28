@@ -665,10 +665,11 @@ GraphWidget.prototype.init = function() {
 	
 	/* Event handlers. */
 	var thiz = this;
-	this.$widget.find(".graph-label-enable").click(function() {
-		thiz.showTrace($(this).next().text(), $(this).find('div').hasClass(".on"));
+	this.$widget.find('.graph-label').click(function() {    
+		thiz.showTrace($(this).children(".graph-label-text").text(), 
+				$(this).find(".switch .slide").toggleClass("on off").hasClass("on"));
 	});
-	
+
 	/* Draw the first frame contents. */
 	this.drawFrame();
 	
@@ -677,10 +678,6 @@ GraphWidget.prototype.init = function() {
 	
 	/* Enable dragging. */
 	this.enableDraggable();
-    
-   this.$widget.find('.graph-label').click(function() {    
-       $(this).find('.switch .slide').toggleClass("on off");
-   });
 };
 
 /** The number of vertical scales. */
