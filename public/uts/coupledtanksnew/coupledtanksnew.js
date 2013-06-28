@@ -529,13 +529,13 @@ WaterLevelsMimic.prototype.getHTML = function() {
 	var i = 0, html =
         '<div id="mimic-bg">' +
         '	<div id="water-tube-t1" class="waterTube waterBackground">' +
-        '		<div class="level"></div>' +
+        '		<div class="level .gradient"></div>' +
         '	</div>' +
         '	<div id="water-tube-t2" class="waterTube waterBackground">' +
-        '		<div class="level"></div>' +
+        '		<div class="level .gradient"></div>' +
         '	</div>' +
         '	<div id="water-reservoir" class="waterBackground">' +
-        '		<div class="level"></div>' +
+        '		<div class="level .gradient"></div>' +
         '	</div>';
 	
 	for (i in this.precision)
@@ -675,11 +675,8 @@ GraphWidget.prototype.init = function() {
 	/* Pull data if we are setup to pull. */
 	if (this.isPulling) this.acquireData();
 	
+	/* Enable dragging. */
 	this.enableDraggable();
-
-	/** Align the boxes for webkit browers*/
-
-   
     
    this.$widget.find('.graph-label').click(function() {    
        $(this).find('.switch .slide').toggleClass("on off");

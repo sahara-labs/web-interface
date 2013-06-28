@@ -3,6 +3,15 @@ $this->headScript()->appendFile($this->baseUrl('uts/coupledtanksnew/coupledtanks
 $this->headLink()->appendStylesheet($this->baseUrl('uts/coupledtanksnew/coupledtanksnew.css'));
 ?>
 
+<!-- IE 9 Gradient support -->
+<!--[if gte IE 9]>
+  <style type="text/css">
+    .gradient {
+       filter: none;
+    }
+  </style>
+<![endif]-->
+
 <div id="coupled-tanks-anchor">
     <!-- Interface goes here! -->
 </div>
