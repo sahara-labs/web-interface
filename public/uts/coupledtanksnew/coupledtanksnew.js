@@ -666,7 +666,7 @@ GraphWidget.prototype.init = function() {
 	/* Event handlers. */
 	var thiz = this;
 	this.$widget.find(".graph-label-enable").click(function() {
-		thiz.showTrace($(this).next().text(), $(this).is(":checked"));
+		thiz.showTrace($(this).next().text(), $(this).find('div').hasClass(".on"));
 	});
 	
 	/* Draw the first frame contents. */
@@ -678,12 +678,12 @@ GraphWidget.prototype.init = function() {
 	this.enableDraggable();
 
 	/** Align the boxes for webkit browers*/
-    if ($.browser.webkit) {
-        $(".graph-label-color-box").css({
-            "position": "relative",
-            "top": "-15px"
-       });
-   };
+
+   
+    
+   this.$widget.find('.graph-label').click(function() {    
+       $(this).find('.switch .slide').toggleClass("on off");
+   });
 };
 
 /** The number of vertical scales. */
@@ -693,6 +693,7 @@ GraphWidget.NUM_VERT_SCALES = 5;
 GraphWidget.NUM_HORIZ_SCALES = 10;
 
 GraphWidget.prototype.getHTML = function() {
+   
 	var i = null, unitScale, styleScale, html = ''; 
 	
 	/* Graph labels. */
@@ -700,8 +701,10 @@ GraphWidget.prototype.getHTML = function() {
 	for (i in this.dataFields)
 	{
 		html += "	<div class='graph-label'>" + 
-				"		<input id='graph-label-" + i + "' type='checkbox' checked='checked' class='graph-label-enable' />" +
-				"		<label for='graph-label-" + i + "'>" + this.dataFields[i].label + "</label>" +  
+				"		<label for='graph-label-" + i + "' class='graph-label-text'>" + this.dataFields[i].label + "</label>" +  
+		        "       <div id='graph-label-" + i + "'class='switch graph-label-enable'>" +
+        		"		    <div class='animated slide on'></div>" +
+        		"       </div>" +
 				"		<div class='graph-label-color-box'>" +
 				"			<div class='graph-label-color-line' style='background-color:" + this.dataFields[i].color + "'></div>" +
 				"		</div>" +

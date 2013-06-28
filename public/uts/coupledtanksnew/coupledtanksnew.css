@@ -411,6 +411,16 @@
 	margin: 5px 10px;
 }
 
+.graph-label-text{
+	float: left;
+	margin-right: 5px;
+}
+
+.graph-label .switch{
+    float: left !important;
+    margin-top: -3px !important;	
+}
+
 .graph-label-color-box {
 	float: right;
 	margin: -5px -5px 0 5px;
