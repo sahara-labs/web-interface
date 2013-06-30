@@ -518,3 +518,10 @@
 	background-color: #333333;
 }
 
+#camera-coupled-tanks .video-placeholder {
+	color: #AAAAAA;
+	font-size: 10pt;
+	text-align: center;
+	padding-top: 80px;
+}
+

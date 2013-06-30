@@ -1093,7 +1093,7 @@ CameraWidget.prototype.init = function() {
 CameraWidget.prototype.getHTML = function() {	
 	return(
 		'<div class="video-player" style="height:' + this.height + 'px;width:' + this.width + 'px">' +
-		'	Please wait...' +
+		'	<div class="video-placeholder">Please wait...' +
 		'</div>'
 	);
 };
