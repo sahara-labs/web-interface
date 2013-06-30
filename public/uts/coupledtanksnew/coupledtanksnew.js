@@ -35,7 +35,7 @@ function WaterLevelControl(id)
  */
 WaterLevelControl.prototype.setup = function() {
 	/* Mimic of the system. */
-	this.widgets.push(new WaterLevelsMimic(this.$container, 'Coupled Tanks'));
+	this.widgets.push(new WaterLevelsMimic(this.$container, 'System'));
 	
 	/* Graph to display tank levels. */
 	var o = new GraphWidget(this.$container, "Tank Levels");
@@ -55,7 +55,7 @@ WaterLevelControl.prototype.setup = function() {
 	this.widgets.push(o);	
 	
 	/* Add camera to page. */
-	this.widgets.push(new Camera(this.$container, 'Camera'));
+	this.widgets.push(new CameraWidget(this.$container, 'Coupled Tanks', 'camera'));
 	
 	/* Display manager to allow things to be shown / removed. */
 	this.display = new DisplayManager(this.$container, 'Display', this.widgets);
@@ -1053,59 +1053,56 @@ PIDControl.prototype.getHTML = function() {
  * == Camera Widget                                                           ==
  * ============================================================================ */
 
-function Camera(container,title) {
-	
-    Widget.call(this, container,title);
+/**
+ * The camera widget displays a single camera stream which may have one or more
+ * formats.  
+ * 
+ * @param $container the container to add this camera to
+ * @param title the camera box title
+ * @param attr data attribute to request from the server
+ */
+function CameraWidget($container, title, attr) 
+{
+    Widget.call(this, $container, title);
     
+    /** The width of the camera stream. */
     this.width = 320;
+    
+    /** The height of the camera stream. */
 	this.height = 240;
 	
-	this.urls = {
-		swf: '',
-		mjpeg: ''
-	};
-    
- };
- 
-Camera.prototype = new Widget;
-
-Camera.prototype.init = function() {
+	/** Identifier of the camera box. */
+	this.id = title.toLowerCase().replace(' ', '-');
 	
-	this.$widget = this.generateBox('CameraWidgetId', 'video');
+	/** The list of address for the each of the camera formats. */
+	this.urls = {
+		swf: '',   // Flash format
+		mjpeg: ''  // MJPEG format
+	};  
+};
+CameraWidget.prototype = new Widget;
+
+CameraWidget.prototype.init = function() {
+	this.$widget = this.generateBox('camera-' + this.id, 'video');
 	
 	this.enableDraggable();
 	this.enableResizable('16 / 9', 192, 340);
-	
-    
-    var thiz = this;
-
-	/* Get the format URLs. */
-	$.get(
-		"/session/coupledtanks",
-		{
-			attribute: "Coupledtanks_Camera"
-		},
-		function (resp) {
-			thiz.urlsReceived = true;
-			if (resp.value != undefined)
-			{
-				var pts = resp.value.split(","), i = 0, p;			
-				for (i in pts)
-				{
-					p = pts[i].indexOf("=");
-					thiz.urls[$.trim(pts[i].substring(0, p))] = $.trim(pts[i].substring(p + 1));
-				}
-			}
-		}
-	);
-	
 };
 
 
-Camera.prototype.getHTML = function() {	
+CameraWidget.prototype.getHTML = function() {	
 	return(
-		'<div class="videoplayer" style="height:' + this.height + 'px;width:' + this.width + 'px">' +
-		
+		'<div class="video-player" style="height:' + this.height + 'px;width:' + this.width + 'px">' +
+		'	Please wait...' +
+		'</div>'
+	);
+};
+
+/**
+ * Gets the HTML to deploy a SWF stream format. 
+ */
+CameraWidget.prototype.getSwfHtml = function() {
+	return 
 		(!$.browser.msie ? // Firefox, Chrome, ...
 	
 			'<object type="application/x-shockwave-flash" data="' + this.swf + '" ' +
@@ -1123,70 +1120,25 @@ Camera.prototype.getHTML = function() {
 					'<img src="http://www.adobe.com/images/shared/download_buttons/get_flash_player.gif" alt="Get Adobe Flash player"/>' +
 				'</a>' +
 			'</object>'
-		) +
-		'</div>'
-	);
+		);
 };
 
 /**
- * Creates and controls the Slider widget.
+ * Gets the HTML to deploy a MJPEG stream.
  */
-function Slider(container,title) {
-   
-   Widget.call(this, container,title);
+CameraWidget.prototype.getMjpegHtml = function() {
+	return 
+		(!$.browser.msie ? // Firefox, Chrome, ...
+			 '<img style="width:' + this.width + 'px;height:' + this.height + 'px" ' +
+						'src="' + this.mjpeg + '?' + new Date().getTime() + ' alt="&nbsp;" />'
+		 :                 // Internet Explorer
+			 '<applet code="com.charliemouse.cambozola.Viewer" archive="/applets/cambozola.jar" ' + 
+					'width="' + this.width + '" height="' + this.height + '">' +
+				'<param name="url" value="' + this.mjpeg + '"/>' +
+				'<param name="accessories" value="none"/>' +
+			'</applet>'
+	    );
 };
- 
-Slider.prototype = new Widget;
-
-Slider.prototype.init = function() { 
-   this.val = coupledTanksTwo.pump;
-    var html =  
-        '<div id="slidercont">' +
-        '<div id="slider"></div>' +
-        '<input id="sliderval" value="0">' +
-        '</input>' +
-        '</div>';
-
-	this.container.append(html);
-
-	this.$widget = $("#slidercont");
-
-	var thiz = this;
-	$("#slider").slider({
-		orientation: "vertical",
-		min: 0,
-		max: 100,
-		value: this.val,
-		range: "min",
-		slide: function(event, ui) {
-			$("#sliderval").val(ui.value);
-		},
-		stop: function(event, ui) {
-			thiz.setter.call(thiz.hydro, ui.value);
-		}
-	});
-
-	this.slider = $("#slider");
-	this.sliderVal = $("#sliderval").val();
-};
-
-Slider.prototype.repaint = function() {
-	(this.val != coupledTanksTwo.pump)
-	{
-		this.slider.slider("value",coupledTanksTwo.pump);
-		this.sliderVal.val(coupledTanksTwo.pump);
-	}
-	return this;
-};
-
-/* Valve slider which sets pump pressure */
-function ValveSlider(container)
-{
-	Slider.call(this, container);
-
-	this.setter = this.widget.setValve;
-}
-ValveSlider.prototype = new Slider;
 
 /* ============================================================================
  * == Utility functions                                                      ==

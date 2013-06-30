@@ -504,3 +504,17 @@
 	margin: -14px auto;
 }
 
+/******************************************************************************
+ ** Camera Widget                                                            **
+ ******************************************************************************/
+#camera-coupled-tanks {
+	position: absolute;
+	left: 5px;
+	top: 20px;
+}
+
+#camera-coupled-tanks .windowcontent {
+	padding: 0;
+	background-color: #333333;
+}
+
