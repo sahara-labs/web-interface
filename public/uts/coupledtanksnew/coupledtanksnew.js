@@ -262,38 +262,154 @@ WaterLevelsMimic.prototype.destroy = function() {
 function PIDControl($container)
 {
    Widget.call(this, $container, 'PID Controls');
+   
+   /** Whether we have the settings loaded from the server. */
+   this.hasSettings = false;
+   
+   /** Whether the values have been changed and not sent to the server. */
+   this.isChanged = false;
+   
+   /** PID variables. */
+   this.pid = {
+       sp: undefined,  // Set point
+       kp: undefined,  // Kp 
+       ki: undefined,  // Ki
+       kd: undefined   // Kd
+   };
+   
+   /** PID variables that have changed but have not been committed. */
+   this.changedPid = {
+       sp: undefined, 
+       kp: undefined,
+       ki: undefined,
+       kd: undefined
+   };
+   
+   /** Input hover state for input hover track. */
+   this.inputHovers = { };
+   
+   /** Guidance messages. */
+   this.guidanceMsgs = {
+       sp: 'Desired water level.',
+       kp: 'Proportional gain, a tuning parameter.',
+       ki: 'Integral gain, a tuning parameter.',
+       kd: 'Derivative gain, a tuning parameter.'
+   };
+   
+   /** CSS left position for guidance and validation messages. */
+   this.toolTopLeft = 155;
+   
+   /** CSS top values for guidance and validation messages. */ 
+   this.toolTipTop = {
+       sp: 45,
+       kp: 78,
+       ki: 111,
+       kd: 144
+   };
 }
 PIDControl.prototype = new Widget;
 
 PIDControl.prototype.init = function() {	
 	this.$widget = this.generateBox('pid-control', 'pid');
 
-    this.enableDraggable();
+	var thiz = this;
+	
+	/* Input field handlers. */
+	this.$widget.find("input")
+	        .focusin(formFocusIn)   // Input entered focus
+	        .focusout(formFocusOut) // Input exited focus
+	        .change(function() {    // Input value modified
+	            thiz.validate($(this).attr("id").substr(4), $(this).val());
+	        })
+	        .hover(function() {     // Mouse hover over field in
+	            var id = $(this).attr("id");
+	            thiz.inputHovers[id] = true;
+	            setTimeout(function() {
+	                if (thiz.inputHovers[id]) thiz.guidance(id.substr(4));
+	            }, 1000);
+	        }, function() {         // Mouse hover over field out
+	            thiz.inputHovers[$(this).attr("id")] = false;
+	        });
+	                
+	
+	$("#pid-send")
+	        .click(function() { thiz.applyClick(); });
+	
+	this.enableDraggable();
 };
 
 PIDControl.prototype.getHTML = function() {	
 	return(
-		'<div class="pidsettings">' +
-            '<table cellspacing="0">' +
-            	'<tr>' +
-            		'<td>Setpoint (mm)</td>' +
-            		'<td><input type="number" name="setpoint" placeholder="setpoint" style="height: 20px;"/></td>' +
-            	'</tr>' +
-            	'<tr>' +
-            		'<td>Kp</td>' +
-            		'<td><input type="number" name="kp" placeholder="kp" style="height: 20px;"/></td>' +
-            	'</tr>' +
-            	'<tr>' +
-            		'<td>Ki</td>' +
-            		'<td><input type="number" name="ki" placeholder="ki" style="height: 20px;"/></td>' +
-            	'</tr>' +
-            	'<tr>' +
-            		'<td>Kd</td>' +
-            		'<td><input type="number" name="kd" placeholder="kd" style="height: 20px;"/></td>' +
-            	'</tr>' +	
-            '</table>' +     
-        '</div>'
+		'<div id="pid-settings" class="saharaform">' +
+        	'<div>' + 
+        		'<label for="pid-sp">Setpoint:</label>' +
+        		'<input id="pid-sp" type="text" name="setpoint" disabled="disabled" />' +
+        	'</div>' +
+        	'<div>' + 
+        		'<label for="pid-kp">K<span>p</span>:</label>' +
+        		'<input id="pid-kp" type="text" name="kp" disabled="disabled" />' +
+        	'</div>' +
+        	'<div>' + 
+        		'<label for="pid-ki">K<span>i</span>:</label>' +
+        		'<input id="pid-ki" type="text" name="ki" disabled="disabled" />' +
+        	'</div>' +
+        	'<div>' + 
+        		'<label>K<span>d</span>:</label>' +
+        		'<input id="pid-kd" type="text" name="kd" disabled="disabled" />' +
+        	'</div>' +
+        '</div>' +
+        '<div id="pid-send" class="click-button click-button-disabled">Apply</div>' +
+        '<div class="data-blur"></div>' 
 	);
+};
+
+PIDControl.prototype.consume = function(data) {
+	var i = 0;
+	for (i in this.pid)
+	{
+	    /* All packets should have all PID variables. */
+	    if (data[i] == undefined) return;
+	    
+	    if (this.pid[i] != data[i])
+	    {
+	        this.pid[i] = data[i];
+	        $("#pid-" + i).val(data[i]);
+	    }
+	}
+	
+	if (!this.hasSettings)
+	{
+	    this.$widget.find("input").attr("disabled", "");
+	    this.$widget.find(".data-blur").hide();
+	}
+};
+
+/**
+ * Validates an entered value. 
+ * 
+ * @param pVar variable to validate
+ * @param val value
+ */
+PIDControl.prototype.validate = function(pVar, val) {
+    
+
+};
+
+/**
+ * Sends PID values if they correctly validate. 
+ */
+PIDControl.prototype.applyClick = function() {
+    
+};
+
+/**
+ * Provides a guidance tooltip.
+ * 
+ * @param id identifer
+ */
+PIDControl.prototype.guidance = function(id) {
+    this.removeMessages();
+    this.addMessage("pid-validation-" + id, this.guidanceMsgs[id], "info", this.toolTopLeft, this.toolTipTop[id], "left");
 };
 
 /* ============================================================================
@@ -407,12 +523,12 @@ Widget.prototype.addMessage = function(msgId,message,type,left,top,pos) {
 	html += "</div>" +
 		"</div>";
 
-	$box = this.$widget.after(html).next();
+	$box = this.$widget.append(html).children(':last');
 
 	/* Throb box shadow around message box. */
 	aniIn = setInterval(function() {
 		if (bs == 0 || bs == 12) up = !up;
-		$box.css("box-shadow", "0 0 " + (up ? bs++ : bs--) + "px #EEEEEE");
+		$box.css("box-shadow", "0 0 " + (up ? bs++ : bs--) + "px #AAAAAA");
 	}, 120);
 
 	/* Remove box on click. */
@@ -773,7 +889,7 @@ GraphWidget.prototype.getHTML = function() {
 
 	/* Left axis label. */
 	html += "<div class='graph-axis-label graph-left-axis-label' style='top:" + 
-			(this.width / 2 - this.axis.y.length * 9)  + "px'>" + this.axis.y + "</div>";
+			(this.width / 2 - this.axis.y.length * 10)  + "px'>" + this.axis.y + "</div>";
 
 	/* Canvas element holding box. */
 	html += "<div id='" + this.id +  "-canvas' class='graph-canvas-box' style='height:" + this.height + "px'></div>";
