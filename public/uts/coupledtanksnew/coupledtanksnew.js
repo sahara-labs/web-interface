@@ -181,7 +181,7 @@ function WaterLevelsMimic($container) {
 WaterLevelsMimic.prototype = new Widget;
 
 WaterLevelsMimic.prototype.init = function() {
-	this.$widget = this.generateBox('water-levels-mimic','video');
+	this.$widget = this.generateBox('water-levels-mimic','mimic');
 
 	var i = 0;
 	for (i in this.precision)
