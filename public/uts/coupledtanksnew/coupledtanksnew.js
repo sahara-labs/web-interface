@@ -266,7 +266,7 @@ function PIDControl($container)
 PIDControl.prototype = new Widget;
 
 PIDControl.prototype.init = function() {	
-	this.$widget = this.generateBox('pid-control', 'settings');
+	this.$widget = this.generateBox('pid-control', 'pid');
 
     this.enableDraggable();
 };
