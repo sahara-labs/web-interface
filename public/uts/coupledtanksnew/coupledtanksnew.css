@@ -94,30 +94,42 @@
 
 .windowIcon{
     height: 24px;
-    width: 24px;
+    width: 25px;
     display: inline-block;
     background-repeat: no-repeat;
 	background-image: url('/uts/coupledtanksnew/images/icons.png');
 }
 
 .icon_video{
-	background-position: 0px 0px;
+	background-position: -2px 0px;
 }
 
-.icon_settings{
-	background-position: -24px 0px;
+.icon_pid{
+	background-position: -28px 0px;
 }
 
 .icon_mimic{
-	background-position: -48px 0px;
+	background-position: -54px 0px;
 }
 
 .icon_graph{
-	background-position: -72px 0px;
+	background-position: -80px 0px;
 }
 
 .icon_toggle{
-	background-position: -96px 0px;
+	background-position: -106px 0px;
+}
+
+.icon_manual{
+	background-position: -132px 0px;
+}
+
+.icon_settings{
+	background-position: -158px 0px;
+}
+
+.icon_datafiles{
+	background-position: -184px 0px;
 }
 
 .windowtitle {
@@ -190,6 +202,13 @@
 	height: 20px;
 	width: 20px;
 	padding: 3px 2px 0 0;
+}
+
+.display-manager-title{
+	font-size: 13px;
+    padding: 5px;
+    top: 0px;
+    position: absolute;
 }
 
 /******************************************************************************

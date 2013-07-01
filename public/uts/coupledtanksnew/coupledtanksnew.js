@@ -302,7 +302,7 @@ function PIDControl($container)
 PIDControl.prototype = new Widget;
 
 PIDControl.prototype.init = function() {	
-	this.$widget = this.generateBox('pid-control', 'settings');
+	this.$widget = this.generateBox('pid-control', 'pid');
 
 	var thiz = this;
 	
@@ -760,8 +760,8 @@ DisplayManager.prototype.getHTML = function() {
 		if (this.widgets[i] == this) continue;
 
 		html += '<div class="button toggle" name="video">' +
-					(this.icon != undefined ? '<img src=' + this.icon + ' alt="" />' : '') +  
-					'<span>' + this.widgets[i].title + '</span>' +
+					(this.icon != undefined ? '<div class="windowIcon icon_' + this.icon + '"></div>' : '') +  
+					'<span class="display-manager-title">' + this.widgets[i].title + '</span>' +
         			'<div class="switch">' +
         				'<div class="animated slide on"></div>' +
         			'</div>' +
