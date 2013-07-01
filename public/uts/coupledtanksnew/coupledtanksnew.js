@@ -733,14 +733,7 @@ function DisplayManager($container, title, widgets)
 DisplayManager.prototype = new Widget;
 
 DisplayManager.prototype.init = function() {
-	this.$widget = this.generateBox('display-manager', 'toggle');
-    this.enableDraggable();
-    
     var thiz = this, i = 0;
-    this.$widget.find('.toggle').click(function() {    
-    	$(this).find('.switch .slide').toggleClass("on off");
-    	thiz.toggleWidget($(this).find("span").html());
-    });
     
     /* Enable all the other widgets. */
     for (i in this.widgets) 
@@ -748,6 +741,15 @@ DisplayManager.prototype.init = function() {
     	this.widgets[i].init();
     	this.states[i] = true;
     }
+
+    /* Generate our UI. */
+	this.$widget = this.generateBox('display-manager', 'toggle');
+    this.enableDraggable();
+    
+    this.$widget.find('.toggle').click(function() {    
+    	$(this).find('.switch .slide').toggleClass("on off");
+    	thiz.toggleWidget($(this).find("span").html());
+    });    
 };
 
 DisplayManager.prototype.getHTML = function() {	
@@ -760,7 +762,7 @@ DisplayManager.prototype.getHTML = function() {
 		if (this.widgets[i] == this) continue;
 
 		html += '<div class="button toggle" name="video">' +
-					(this.icon != undefined ? '<div class="windowIcon icon_' + this.icon + '"></div>' : '') +  
+					(this.icon != undefined ? '<div class="windowIcon icon_' + this.widgets[i].icon + '"></div>' : '') +  
 					'<span class="display-manager-title">' + this.widgets[i].title + '</span>' +
         			'<div class="switch">' +
         				'<div class="animated slide on"></div>' +
