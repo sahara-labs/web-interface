@@ -19,6 +19,32 @@
     cursor: pointer;
 }
 
+.click-button {
+	padding: 4px 8px;
+	margin: 5px;
+	background-color: #555555;
+	box-shadow: 0 0 2px #999999;
+	border-radius: 3px;
+	font-weight: bold;
+	color: #EEEEEE;
+	cursor: pointer;
+	font-size: 9pt;
+}
+
+.click-button:hover {
+	box-shadow: 0 0 4px #999999;
+}
+
+.click-button-disabled {
+	box-shadow: 0;
+	background-color: #DDDDDD;
+	color: normal;
+}
+
+.click-button-disabled:hover {
+	box-shadow: 0;
+}
+
 /******************************************************************************
  ** Overrides Old layout elements                                            **
  ******************************************************************************/
@@ -110,7 +136,7 @@
     border: solid 1px #E4E4E4;
     border-radius: 0 0 10px 10px;
     overflow: hidden;
-}
+}.on
 
 .resizable {
     min-width: 145px;
@@ -154,7 +180,7 @@
  ** Display Manager                                                          **
  ******************************************************************************/
 #display-manager {
-	left: -195px;
+	left: -415px;
 	top: 150px;
 }
 
@@ -374,6 +400,11 @@
 /******************************************************************************
  ** PID settings                                                             **
  ******************************************************************************/
+#pid-control {
+	left: -195px;
+	top: 150px;
+}
+ 
 #pid-settings label {
 	text-align: right;
 	width: 60px;
@@ -386,6 +417,10 @@
 #pid-settings input {
 	margin: -2px 0 0 8px;
 	width: 60px;
+}
+
+#pid-send {
+	float: right;
 }
 
 /******************************************************************************
