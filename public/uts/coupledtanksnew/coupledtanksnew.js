@@ -277,14 +277,6 @@ function PIDControl($container)
        kd: undefined   // Kd
    };
    
-   /** PID variables that have changed but have not been committed. */
-   this.changedPid = {
-       sp: undefined, 
-       kp: undefined,
-       ki: undefined,
-       kd: undefined
-   };
-   
    /** Input hover state for input hover track. */
    this.inputHovers = { };
    
@@ -319,14 +311,23 @@ PIDControl.prototype.init = function() {
 	        .focusin(formFocusIn)   // Input entered focus
 	        .focusout(formFocusOut) // Input exited focus
 	        .change(function() {    // Input value modified
-	            thiz.validate($(this).attr("id").substr(4), $(this).val());
+	            if (thiz.validate($(this).attr("id").substr(4), $(this).val()) && !thiz.isChanged)
+	            {
+	                /* Enable the send button. */
+	                thiz.isChanged = true;
+	                $("#pid-send").removeClass("click-button-disabled");
+	            }  
 	        })
+	        .keypress(function(e){
+	            /* Enter pressed. */
+	            if (e.keyCode == 13)  thiz.applyClick();
+	        })      
 	        .hover(function() {     // Mouse hover over field in
 	            var id = $(this).attr("id");
 	            thiz.inputHovers[id] = true;
 	            setTimeout(function() {
 	                if (thiz.inputHovers[id]) thiz.guidance(id.substr(4));
-	            }, 1000);
+	            }, 3000);
 	        }, function() {         // Mouse hover over field out
 	            thiz.inputHovers[$(this).attr("id")] = false;
 	        });
@@ -343,22 +344,22 @@ PIDControl.prototype.getHTML = function() {
 		'<div id="pid-settings" class="saharaform">' +
         	'<div>' + 
         		'<label for="pid-sp">Setpoint:</label>' +
-        		'<input id="pid-sp" type="text" name="setpoint" disabled="disabled" />' +
+        		'<input id="pid-sp" type="text" name="setpoint" disabled="disabled" tabindex="1" />' +
         	'</div>' +
         	'<div>' + 
         		'<label for="pid-kp">K<span>p</span>:</label>' +
-        		'<input id="pid-kp" type="text" name="kp" disabled="disabled" />' +
+        		'<input id="pid-kp" type="text" name="kp" disabled="disabled" tabindex="2" />' +
         	'</div>' +
         	'<div>' + 
         		'<label for="pid-ki">K<span>i</span>:</label>' +
-        		'<input id="pid-ki" type="text" name="ki" disabled="disabled" />' +
+        		'<input id="pid-ki" type="text" name="ki" disabled="disabled" tabindex="3" />' +
         	'</div>' +
         	'<div>' + 
         		'<label>K<span>d</span>:</label>' +
-        		'<input id="pid-kd" type="text" name="kd" disabled="disabled" />' +
+        		'<input id="pid-kd" type="text" name="kd" disabled="disabled" tabindex="4" />' +
         	'</div>' +
         '</div>' +
-        '<div id="pid-send" class="click-button click-button-disabled">Apply</div>' +
+        '<a id="pid-send" class="click-button click-button-disabled" tabindex="5" >Apply</a>' +
         '<div class="data-blur"></div>' 
 	);
 };
@@ -391,15 +392,68 @@ PIDControl.prototype.consume = function(data) {
  * @param val value
  */
 PIDControl.prototype.validate = function(pVar, val) {
+    this.removeMessages();
     
+    /* Add variables must be numbers. */
+    if (!val.match(/^\d+\.?\d*$/))
+    {
+        this.addMessage("pid-validation-" + pVar, "Value must be a number", "error", this.toolTopLeft, 
+                this.toolTipTop[pVar], "left");
+        return false;
+    }
 
+    var n = parseFloat(val);
+    switch (pVar)
+    {
+    case 'sp':
+        if (n < 0 || n > 300)
+        {
+            this.addMessage("pid-validation-" + pVar, "Setpoint out of range, must be between 0 and 300 mm.", 
+                    "error", this.toolTopLeft, this.toolTipTop[pVar], "left");
+            return false;
+        }
+        break;
+        
+    case 'kp':
+        /* No validation rules. */
+        break;
+        
+    case 'ki':
+        /* No validation rules. */
+        break;
+        
+    case 'kd':
+        /* No validation rules. */
+        break;
+    }
+
+    return true;
 };
 
 /**
  * Sends PID values if they correctly validate. 
  */
 PIDControl.prototype.applyClick = function() {
+    /* Nothing changed, nothing to send. */
+    if (!this.isChanged) return;
     
+    /* Validate values. */
+    var data = { }, i = 0, val;
+    for (i in this.pid)
+    {
+        val = $("#pid-" + i).val();
+        if (!this.validate(i, val)) return;
+        
+        data[i] = parseFloat(val);
+    }
+    
+    var thiz = this;
+    this.postControl("setPID", data, function() {
+        thiz.isChanged = false;
+        $("#pid-send").addClass("click-button-disabled");
+    }, function() {
+        
+    });
 };
 
 /**
@@ -409,7 +463,7 @@ PIDControl.prototype.applyClick = function() {
  */
 PIDControl.prototype.guidance = function(id) {
     this.removeMessages();
-    this.addMessage("pid-validation-" + id, this.guidanceMsgs[id], "info", this.toolTopLeft, this.toolTipTop[id], "left");
+    this.addMessage("pid-guidance-" + id, this.guidanceMsgs[id], "info", this.toolTopLeft, this.toolTipTop[id], "left");
 };
 
 /* ============================================================================
@@ -623,8 +677,7 @@ Widget.prototype.enableDraggable = function() {
  * @param minHeight the minimum height the widget can be resized to
  * @param minWidth the minimum width the widget can be resized to
  */
-Widget.prototype.enableResizable = function(aspect,minHeight,minWidth) {
-
+Widget.prototype.enableResizable = function(aspect, minHeight, minWidth) {
 	this.minHeight = minHeight;
 	this.minWidth = minWidth;
 
@@ -642,9 +695,19 @@ Widget.prototype.enableResizable = function(aspect,minHeight,minWidth) {
  * @param action the name of the action called from the Rig Client
  * @param params data object of POST variables
  * @param responseCallback function to be invoked with the response of POST
+ * @param errorCallback function to be invoked if an error occurs
  */
-Widget.prototype.postControl = function(action, params, responseCallback) {
-	// IMPLEMENT THIS
+Widget.prototype.postControl = function(action, params, responseCallback, errorCallback) {
+    $.ajax({
+        url: "/primitive/mapjson/pc/CoupledTanksController/pa/" + action,
+        data: params,
+        success: function(data) {
+            if (responseCallback != null) responseCallback(data);
+        },
+        error: function(data) {
+            if (errorCallabck != null) errorCallback(data);
+        }
+    });
 };
 
 /* ============================================================================
