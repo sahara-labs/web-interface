@@ -261,7 +261,7 @@ WaterLevelsMimic.prototype.destroy = function() {
  */
 function PIDControl($container)
 {
-   Widget.call(this, $container, 'PID Controls');
+   Widget.call(this, $container, 'PID');
    
    /** Whether we have the settings loaded from the server. */
    this.hasSettings = false;
