@@ -34,11 +34,13 @@ function WaterLevelControl(id)
  * Sets up this interface.
  */
 WaterLevelControl.prototype.setup = function() {
+	var o, t;
+	
 	/* Mimic of the system. */
-	this.widgets.push(new WaterLevelsMimic(this.$container, 'System'));
+	this.widgets.push(new WaterLevelsMimic(this.$container));
 	
 	/* Graph to display tank levels. */
-	var o = new GraphWidget(this.$container, "Tank Levels");
+	o = new GraphWidget(this.$container, "Tank Levels");
 	o.setDataVariable('l1', 'Level 1',  '#0C61b6', 0, 300);
 	o.setDataVariable('l2', 'Level 2',  '#92FF79', 0, 300);
 	o.setDataVariable('sp', 'Setpoint', '#EDDA7E', 0, 300);
@@ -56,6 +58,11 @@ WaterLevelControl.prototype.setup = function() {
 	
 	/* Add camera to page. */
 	this.widgets.push(new CameraWidget(this.$container, 'Coupled Tanks', 'camera'));
+	
+	/* Controls. */
+	this.widgets.push(new PIDControl(this.$container));
+//	t = new TabbedWidget(this.$container, 'Control Tabs', [ new PIDControl(this.$container) ]);	
+//	this.widgets.push(t); 
 	
 	/* Display manager to allow things to be shown / removed. */
 	this.display = new DisplayManager(this.$container, 'Display', this.widgets);
@@ -132,6 +139,161 @@ WaterLevelControl.prototype.errorData = function(msg) {
 		 * provide error information. */
 		this.display.blur();
 	}
+};
+
+/* ============================================================================
+ * == Water Level Mimic                                                      ==
+ * ============================================================================ */
+
+/**
+ * Creates and controls the Water Levels Mimic widget.
+ */
+function WaterLevelsMimic($container) {
+		
+	Widget.call(this, $container, 'Diagram');
+	
+	/** Variables that are displayed on the mimic. */
+	this.dataVars = { };
+	
+	/** Display precision for our data variables. */
+	this.precision = {
+		'l1': 0,
+		'l2': 0,
+		't1-in': 1,
+		't2-out': 1,
+		't1-to-t2': 1,
+		'pump-rpm': 0,
+		'valve': 1
+	};
+	
+	/** Units for out data variables. */
+	this.units = {
+		'l1': 'mm',
+		'l2': 'mm',
+		't1-in': 'L/min',
+		't2-out': 'L/min',
+		't1-to-t2': 'L/min',
+		'pump-rpm': 'RPM',
+		'valve': '%',	
+	};
+};
+
+WaterLevelsMimic.prototype = new Widget;
+
+WaterLevelsMimic.prototype.init = function() {
+	this.$widget = this.generateBox('water-levels-mimic','video');
+	
+	var i = 0;
+	for (i in this.precision)
+	{
+		this.dataVars[i] = this.$widget.find("#mimic-" + i + " span");
+	}
+	
+	this.enableDraggable();
+};
+
+WaterLevelsMimic.prototype.getHTML = function() {	
+	var i = 0, html =
+        '<div id="mimic-bg">' +
+        '	<div id="water-tube-t1" class="waterTube waterBackground">' +
+        '		<div class="level .gradient"></div>' +
+        '	</div>' +
+        '	<div id="water-tube-t2" class="waterTube waterBackground">' +
+        '		<div class="level .gradient"></div>' +
+        '	</div>' +
+        '	<div id="water-reservoir" class="waterBackground">' +
+        '		<div class="level .gradient"></div>' +
+        '	</div>';
+	
+	for (i in this.precision)
+	{
+		html += '<div id="mimic-' + i + '" class="diagramInfo"><span>' + zeroPad(0, this.precision[i]) + '</span>&nbsp;' + 
+				this.units[i] + '</div>';
+	}
+        
+	html +=
+        '	<img src="/uts/coupledtanksnew/images/spinner.png" border="0" alt="spinner" class="spinner spin" />'+
+        '</div>';
+	
+    return html;
+};
+
+WaterLevelsMimic.prototype.consume = function(data) {
+	var i = 0, t1, t2;
+	
+	/* Update labels. */
+	for (i in this.dataVars)  
+	{
+		if (data[i] != undefined) this.dataVars[i].html(zeroPad(data[i], this.precision[i]));
+	}
+	
+	/* Animations of water levels. */
+	if (!(data['l1'] == undefined || data['l2'] == undefined))
+	{
+		t1 = data['l1'] / 300 * 100;
+		t2 = data['l2'] / 300 * 100;
+		
+		/* A negative tank level might occur if the sensors are out of 
+		 * calibration. */
+		if (t1 < 0) t1 = 0;
+		if (t2 < 0) t2 = 0; 
+		
+		this.$widget.find("#water-tube-t1 .level").animate({"height": (100 - t1) + "%"}, 1000);
+		this.$widget.find("#water-tube-t2 .level").animate({"height": (100 - t2) + "%"}, 1000);
+		this.$widget.find("#water-reservoir .level").animate({"height": ((t1 + t2) / 2) + "%"}, 1000);
+	}
+};
+
+WaterLevelsMimic.prototype.destroy = function() {
+	this.dataVars = { };
+	
+	Widget.prototype.destroy.call(this);
+};
+
+/* ============================================================================
+ * == PID Controls                                                           ==
+ * ============================================================================ */
+
+/**
+ * Creates and controls the PID variables. 
+ * 
+ * @param $container the container to add this widget to
+ */
+function PIDControl($container)
+{
+   Widget.call(this, $container, 'PID Controls');
+}
+PIDControl.prototype = new Widget;
+
+PIDControl.prototype.init = function() {	
+	this.$widget = this.generateBox('pid-control', 'pid');
+	
+    this.enableDraggable();
+};
+
+PIDControl.prototype.getHTML = function() {	
+	return(
+		'<div class="pidsettings">' +
+            '<table cellspacing="0">' +
+            	'<tr>' +
+            		'<td>Setpoint (mm)</td>' +
+            		'<td><input type="number" name="setpoint" placeholder="setpoint" style="height: 20px;"/></td>' +
+            	'</tr>' +
+            	'<tr>' +
+            		'<td>Kp</td>' +
+            		'<td><input type="number" name="kp" placeholder="kp" style="height: 20px;"/></td>' +
+            	'</tr>' +
+            	'<tr>' +
+            		'<td>Ki</td>' +
+            		'<td><input type="number" name="ki" placeholder="ki" style="height: 20px;"/></td>' +
+            	'</tr>' +
+            	'<tr>' +
+            		'<td>Kd</td>' +
+            		'<td><input type="number" name="kd" placeholder="kd" style="height: 20px;"/></td>' +
+            	'</tr>' +	
+            '</table>' +     
+        '</div>'
+	);
 };
 
 /* ============================================================================
@@ -473,115 +635,6 @@ DisplayManager.prototype.unblur = function() {
 	for (i in this.widgets) if (this.states[i]) this.widgets[i].unblur();
 };
 
-
-/* ============================================================================
- * == Water Level Mimic                                                      ==
- * ============================================================================ */
-
-/**
- * Creates and controls the Water Levels Mimic widget.
- */
-function WaterLevelsMimic(container,title) {
-		
-	Widget.call(this, container,title);
-	
-	/** Variables that are displayed on the mimic. */
-	this.dataVars = { };
-	
-	/** Display precision for our data variables. */
-	this.precision = {
-		'l1': 0,
-		'l2': 0,
-		't1-in': 1,
-		't2-out': 1,
-		't1-to-t2': 1,
-		'pump-rpm': 0,
-		'valve': 1
-	};
-	
-	/** Units for out data variables. */
-	this.units = {
-		'l1': 'mm',
-		'l2': 'mm',
-		't1-in': 'L/min',
-		't2-out': 'L/min',
-		't1-to-t2': 'L/min',
-		'pump-rpm': 'RPM',
-		'valve': '%',	
-	};
-};
-
-WaterLevelsMimic.prototype = new Widget;
-
-WaterLevelsMimic.prototype.init = function() {
-	this.$widget = this.generateBox('water-levels-mimic','video');
-	
-	var i = 0;
-	for (i in this.precision)
-	{
-		this.dataVars[i] = this.$widget.find("#mimic-" + i + " span");
-	}
-	
-	this.enableDraggable();
-};
-
-WaterLevelsMimic.prototype.getHTML = function() {	
-	var i = 0, html =
-        '<div id="mimic-bg">' +
-        '	<div id="water-tube-t1" class="waterTube waterBackground">' +
-        '		<div class="level .gradient"></div>' +
-        '	</div>' +
-        '	<div id="water-tube-t2" class="waterTube waterBackground">' +
-        '		<div class="level .gradient"></div>' +
-        '	</div>' +
-        '	<div id="water-reservoir" class="waterBackground">' +
-        '		<div class="level .gradient"></div>' +
-        '	</div>';
-	
-	for (i in this.precision)
-	{
-		html += '<div id="mimic-' + i + '" class="diagramInfo"><span>' + zeroPad(0, this.precision[i]) + '</span>&nbsp;' + 
-				this.units[i] + '</div>';
-	}
-        
-	html +=
-        '	<img src="/uts/coupledtanksnew/images/spinner.png" border="0" alt="spinner" class="spinner spin" />'+
-        '</div>';
-	
-    return html;
-};
-
-WaterLevelsMimic.prototype.consume = function(data) {
-	var i = 0, t1, t2;
-	
-	/* Update labels. */
-	for (i in this.dataVars)  
-	{
-		if (data[i] != undefined) this.dataVars[i].html(zeroPad(data[i], this.precision[i]));
-	}
-	
-	/* Animations of water levels. */
-	if (!(data['l1'] == undefined || data['l2'] == undefined))
-	{
-		t1 = data['l1'] / 300 * 100;
-		t2 = data['l2'] / 300 * 100;
-		
-		/* A negative tank level might occur if the sensors are out of 
-		 * calibration. */
-		if (t1 < 0) t1 = 0;
-		if (t2 < 0) t2 = 0; 
-		
-		this.$widget.find("#water-tube-t1 .level").animate({"height": (100 - t1) + "%"}, 1000);
-		this.$widget.find("#water-tube-t2 .level").animate({"height": (100 - t2) + "%"}, 1000);
-		this.$widget.find("#water-reservoir .level").animate({"height": ((t1 + t2) / 2) + "%"}, 1000);
-	}
-};
-
-WaterLevelsMimic.prototype.destroy = function() {
-	this.dataVars = { };
-	
-	Widget.prototype.destroy.call(this);
-};
 
 /* ============================================================================
  * == Graph Widget                                                           ==
@@ -984,69 +1037,28 @@ GraphWidget.prototype.setAxisLabels = function(x, y) {
 	this.axis.y = y;
 };
 
-/* -- Tabbed Widget Container ------------------------------------------------- */
+/* ============================================================================
+ * == Tabbed Container Widget                                                ==
+ * ============================================================================ */
 
 /**
- * Creates and controls the TabbedWidget widget.
+ * The 'tabbed' widget provides a container that holds other widgets within 
+ * its tabs. 
  */
-function tabbedWidget(container,title) {
+function TabbedWidget($container, title, widgets) 
+{
    
-   Widget.call(this, container,title);
+   DisplayManager.call(this, $container, title, widgets);
    
- };
- 
-tabbedWidget.prototype = new Widget;
+   /** Identifer of this widget. */
+   this.id = title.toLowerCase().replace(' ', '-');
+}
+TabbedWidget.prototype = new DisplayManager;
 
-tabbedWidget.prototype.init = function() { 
+TabbedWidget.prototype.init = function() { 
+	this.$widget = this.generateBox(this.id, 'settings');
 	
-	this.$widget = this.generateBox('tabbedWidgetId','settings');
 	this.enableDraggable();
-	$( "#tabs" ).tabs();   
-
-};
-
-/**
- * Creates and controls the PIDControl widget.
- */
-function PIDControl(container,title) {
-   
-   Widget.call(this, container,title);
-   
- };
- 
-PIDControl.prototype = new Widget;
-
-PIDControl.prototype.init = function() {	
-		
-	this.$widget = this.generateBox('PIDWidgetId','settings');
-    this.enableDraggable();
-    this.enableResizable(' ',189,180);
-
-};
-
-PIDControl.prototype.getHTML = function() {	
-	return(
-		'<div class="pidsettings">' +
-            '<table cellspacing="0">' +
-            	'<tr>' +
-            		'<td>Setpoint (mm)</td>' +
-            		'<td><input type="number" name="setpoint" placeholder="setpoint" style="height: 20px;"/></td>' +
-            	'</tr>' +
-            	'<tr>' +
-            		'<td>Kp</td>' +
-            		'<td><input type="number" name="kp" placeholder="kp" style="height: 20px;"/></td>' +
-            	'</tr>' +
-            	'<tr>' +
-            		'<td>Ki</td>' +
-            		'<td><input type="number" name="ki" placeholder="ki" style="height: 20px;"/></td>' +
-            	'</tr>' +
-            	'<tr>' +
-            		'<td>Kd</td>' +
-            		'<td><input type="number" name="kd" placeholder="kd" style="height: 20px;"/></td>' +
-            	'</tr>' +	
-            '</table>' +     
-        '</div>'
-	);
 };
 
 /* ============================================================================
