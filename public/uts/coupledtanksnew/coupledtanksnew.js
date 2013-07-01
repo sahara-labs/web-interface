@@ -697,7 +697,7 @@ DisplayManager.prototype.getHTML = function() {
 		if (this.widgets[i] == this) continue;
 
 		html += '<div class="button toggle" name="video">' +
-					(this.icon != undefined ? '<span class="windowIcon icon_' + this.icon + '"></span>' : '') +  
+					(this.icon != undefined ? '<div class="windowIcon icon_' + this.icon + '"></div>' : '') +  
 					'<span class="display-manager-title">' + this.widgets[i].title + '</span>' +
         			'<div class="switch">' +
         				'<div class="animated slide on"></div>' +
