@@ -19,13 +19,13 @@ function WaterLevelControl(id)
 { 
 	/** Display Manager. */
 	this.display = undefined;
-	
+
 	/** Widgets. */
 	this.widgets = [ ];
-	
+
 	/** Container. */
 	this.$container = $('#' + id);
-	
+
 	/** Occurs if there is a data error. */
 	this.dataError = false;
 };
@@ -35,10 +35,10 @@ function WaterLevelControl(id)
  */
 WaterLevelControl.prototype.setup = function() {
 	var o, t;
-	
+
 	/* Mimic of the system. */
 	this.widgets.push(new WaterLevelsMimic(this.$container));
-	
+
 	/* Graph to display tank levels. */
 	o = new GraphWidget(this.$container, "Tank Levels");
 	o.setDataVariable('l1', 'Level 1',  '#0C61b6', 0, 300);
@@ -47,7 +47,7 @@ WaterLevelControl.prototype.setup = function() {
 	o.setAxisLabels('Time (s)', 'Level (mm)');
 	o.isPulling = false;
 	this.widgets.push(o);
-	
+
 	/* Graph to display flow rates. */
 	o = new GraphWidget(this.$container, "Flow Rates", o);
 	o.setDataVariable('t1-in',    'Tank 1 In',    '#0C61b6', 0, 10);
@@ -55,15 +55,15 @@ WaterLevelControl.prototype.setup = function() {
 	o.setDataVariable('t2-out',   'Tank 2 Out',   '#EDDA7E', 0, 10);
 	o.setAxisLabels('Time (s)',   'Flow (L/min)');
 	this.widgets.push(o);	
-	
+
 	/* Add camera to page. */
 	this.widgets.push(new CameraWidget(this.$container, 'Coupled Tanks', 'camera'));
-	
+
 	/* Controls. */
 	this.widgets.push(new PIDControl(this.$container));
 //	t = new TabbedWidget(this.$container, 'Control Tabs', [ new PIDControl(this.$container) ]);	
 //	this.widgets.push(t); 
-	
+
 	/* Display manager to allow things to be shown / removed. */
 	this.display = new DisplayManager(this.$container, 'Display', this.widgets);
 };
@@ -82,7 +82,7 @@ WaterLevelControl.prototype.run = function() {
 
 WaterLevelControl.prototype.acquireLoop = function() {
 	var thiz = this;
-	
+
 	$.ajax({
 		url: "/primitive/mapjson/pc/CoupledTanksController/pa/data",
 		data: { },
@@ -105,13 +105,13 @@ WaterLevelControl.prototype.acquireLoop = function() {
 WaterLevelControl.prototype.processData = function(data) {
 	/* A data packet may specify an error so we make need to make this into an 
 	 * error message. */
-	
+
 	/* AJAX / Primitive / validation error. */
 	if (!(data['success'] == undefined || data['success'])) return this.errorData(data['errorReason']);
-	
+
 	/* Hardware communication error. */
 	if (data['system-err'] != undefined && data['system-err']) return this.errorData('Hardware communication error.');
-	
+
 	/* Seems like a good packet so it will be forwarded to the display to
 	 * render its contents and any error states will be cleared. */
 	if (this.dataError)
@@ -119,7 +119,7 @@ WaterLevelControl.prototype.processData = function(data) {
 		this.dataError = false;
 		this.display.unblur();
 	}
-	
+
 	this.display.consume(data);
 };
 
@@ -132,9 +132,9 @@ WaterLevelControl.prototype.errorData = function(msg) {
 	if (!this.dataError)
 	{
 		this.dataError = true;
-		
+
 		/* TODO: There should be a global error display. */
-		
+
 		/* Tell the display manager to correctly tells the active displays to 
 		 * provide error information. */
 		this.display.blur();
@@ -149,12 +149,12 @@ WaterLevelControl.prototype.errorData = function(msg) {
  * Creates and controls the Water Levels Mimic widget.
  */
 function WaterLevelsMimic($container) {
-		
+
 	Widget.call(this, $container, 'Diagram');
-	
+
 	/** Variables that are displayed on the mimic. */
 	this.dataVars = { };
-	
+
 	/** Display precision for our data variables. */
 	this.precision = {
 		'l1': 0,
@@ -165,7 +165,7 @@ function WaterLevelsMimic($container) {
 		'pump-rpm': 0,
 		'valve': 1
 	};
-	
+
 	/** Units for out data variables. */
 	this.units = {
 		'l1': 'mm',
@@ -181,14 +181,14 @@ function WaterLevelsMimic($container) {
 WaterLevelsMimic.prototype = new Widget;
 
 WaterLevelsMimic.prototype.init = function() {
-	this.$widget = this.generateBox('water-levels-mimic','video');
-	
+	this.$widget = this.generateBox('water-levels-mimic','mimic');
+
 	var i = 0;
 	for (i in this.precision)
 	{
 		this.dataVars[i] = this.$widget.find("#mimic-" + i + " span");
 	}
-	
+
 	this.enableDraggable();
 };
 
@@ -204,7 +204,7 @@ WaterLevelsMimic.prototype.getHTML = function() {
         '	<div id="water-reservoir" class="waterBackground">' +
         '		<div class="level .gradient"></div>' +
         '	</div>';
-	
+
 	for (i in this.precision)
 	{
 		html += '<div id="mimic-' + i + '" class="diagramInfo"><span>' + zeroPad(0, this.precision[i]) + '</span>&nbsp;' + 
@@ -214,30 +214,30 @@ WaterLevelsMimic.prototype.getHTML = function() {
 	html +=
         '	<img src="/uts/coupledtanksnew/images/spinner.png" border="0" alt="spinner" class="spinner spin" />'+
         '</div>';
-	
+
     return html;
 };
 
 WaterLevelsMimic.prototype.consume = function(data) {
 	var i = 0, t1, t2;
-	
+
 	/* Update labels. */
 	for (i in this.dataVars)  
 	{
 		if (data[i] != undefined) this.dataVars[i].html(zeroPad(data[i], this.precision[i]));
 	}
-	
+
 	/* Animations of water levels. */
 	if (!(data['l1'] == undefined || data['l2'] == undefined))
 	{
 		t1 = data['l1'] / 300 * 100;
 		t2 = data['l2'] / 300 * 100;
-		
+
 		/* A negative tank level might occur if the sensors are out of 
 		 * calibration. */
 		if (t1 < 0) t1 = 0;
 		if (t2 < 0) t2 = 0; 
-		
+
 		this.$widget.find("#water-tube-t1 .level").animate({"height": (100 - t1) + "%"}, 1000);
 		this.$widget.find("#water-tube-t2 .level").animate({"height": (100 - t2) + "%"}, 1000);
 		this.$widget.find("#water-reservoir .level").animate({"height": ((t1 + t2) / 2) + "%"}, 1000);
@@ -246,7 +246,7 @@ WaterLevelsMimic.prototype.consume = function(data) {
 
 WaterLevelsMimic.prototype.destroy = function() {
 	this.dataVars = { };
-	
+
 	Widget.prototype.destroy.call(this);
 };
 
@@ -280,8 +280,8 @@ function PIDControl($container)
 PIDControl.prototype = new Widget;
 
 PIDControl.prototype.init = function() {	
-	this.$widget = this.generateBox('pid-control', 'pid');
-	
+	this.$widget = this.generateBox('pid-control', 'settings');
+
 	/* Focus in and out. */
 	this.$widget.find("input").focusin(formFocusIn).focusout(formFocusOut);
 	
@@ -351,13 +351,13 @@ function Widget($container, title)
 {
 	/** The jQuery object of the container the widget is attached to. */
 	this.$container = $container;
-	
+
 	/** The page title. */
 	this.title = title;
-	
+
 	/** The page icon. */
 	this.icon = undefined;
-	
+
 	/** The jQuery object of the outermost element of this widget. 
 	 *  This is not initialised until the 'init' method has been called. */
 	this.$widget = null;
@@ -436,23 +436,23 @@ Widget.prototype.addMessage = function(msgId,message,type,left,top,pos) {
 		"<div id='" + msgId + "' class='message-box message-box-" + type + " message-box-in1' style='left:" + left + "px; top:" + top + "px'>" +
 			"<div class='message-box-text'>" + message + "</div>" +
 			"<div class='message-box-arrow message-box-arrow-" + pos + "'>";
-	
+
 	for (i = 0; i < 8; i++)
 	{
 		html += "<div class='message-box-arrow-line message-box-arrow-line" + i + "'></div>";
 	}
-	
+
 	html += "</div>" +
 		"</div>";
-	
+
 	$box = this.$widget.after(html).next();
-		
+
 	/* Throb box shadow around message box. */
 	aniIn = setInterval(function() {
 		if (bs == 0 || bs == 12) up = !up;
 		$box.css("box-shadow", "0 0 " + (up ? bs++ : bs--) + "px #EEEEEE");
 	}, 120);
-	
+
 	/* Remove box on click. */
 	$box.click(function() {
 		clearInterval(aniIn);
@@ -476,10 +476,10 @@ Widget.prototype.removeMessages = function() {
  * @return jQuery node of the generated box that has been appended to the page
  */
 Widget.prototype.generateBox = function(boxId, icon) {
-	this.icon = "/uts/coupledtanksnew/images/icon_" + icon + ".png";
+	this.icon = icon;
     return this.$container.append(
       "<div class='windowwrapper' id=" + boxId + ">" +
-          "<div class='windowheader'><img class='windowIcon' src='" + this.icon + "'/>" +
+          "<div class='windowheader'><span class='windowIcon icon_"+ this.icon + "'></span>" +
               "<span class='windowtitle'>" + this.title + "</span>" +
           "</div>" +
           "<div class='windowcontent'>" + 
@@ -533,7 +533,7 @@ Widget.prototype.enableDraggable = function() {
 	            });
 	        }
 	    });
-	    
+
 	    Widget.hasZIndexFix = true;
 	}
 };
@@ -546,10 +546,10 @@ Widget.prototype.enableDraggable = function() {
  * @param minWidth the minimum width the widget can be resized to
  */
 Widget.prototype.enableResizable = function(aspect,minHeight,minWidth) {
-	
+
 	this.minHeight = minHeight;
 	this.minWidth = minWidth;
-		
+
 	this.$widget.find(".windowcontent").resizable({
 		 aspectRatio: aspect,
          minHeight: this.minHeight,
@@ -612,12 +612,12 @@ DisplayManager.prototype.init = function() {
 DisplayManager.prototype.getHTML = function() {	
 	var i = 0, html =
 		'<div class="buttonwrapper">';
-	
+
 	for (i in this.widgets)
 	{
 		/* We should be adding this to be widgets that can be removed. */
 		if (this.widgets[i] == this) continue;
-		
+
 		html += '<div class="button toggle" name="video">' +
 					(this.icon != undefined ? '<img src=' + this.icon + ' alt="" />' : '') +  
 					'<span>' + this.widgets[i].title + '</span>' +
@@ -626,9 +626,9 @@ DisplayManager.prototype.getHTML = function() {
         			'</div>' +
         		'</div>';
 	}
-	
+
     html += '</div>';
-	
+
 	return html;
 };
 
@@ -639,7 +639,7 @@ DisplayManager.prototype.getHTML = function() {
  */
 DisplayManager.prototype.toggleWidget = function(title) {
 	var i = 0;
-	
+
 	for (i in this.widgets)
 	{
 		if (this.widgets[i].title == title)
@@ -690,57 +690,57 @@ DisplayManager.prototype.unblur = function() {
 function GraphWidget($container, title, chained) 
 {
 	Widget.call(this, $container, title);
-	
+
 	/** ID of canvas. */
 	this.id = "graph-" + title.toLowerCase().replace(' ', '-');
-	
+
 	/** Width of the graph, including the padding whitespace but excluding the
 	 *  border width. */
 	this.width = 600;
-	
+
 	/** Height of the graph, including the padding whitespace but excluding the
 	 *  border width and border title. */
 	this.height = 300;
-	
+
 	/*(* The minimum expected graphed value. A value smaller than this will be
 	 *  clipped. */
 	this.minGraphedValue = undefined;
-	
+
 	/** The maximum expected graphed value. A value greater than this will be 
 	 *  clipped. */
 	this.maxGraphedValue = undefined;
-	
+
 	/** Canvas context. */
 	this.ctx = null;
-	
+
 	/** Data fields. */
 	this.dataFields = { };
-	
+
 	/** The number of seconds this graph displays. */
 	this.duration = 600;
-	
+
 	/** The period in milliseconds. */
 	this.period = 1000;
-	
+
 	/** The X and Y axis labels. */
 	this.axis = {
 		x: '',
 		y: ''
 	};
-	
+
 	/** The time of the first data update in seconds since epoch. */
 	this.startTime = undefined;
-	
+
 	/** The time of the latest data update in seconds since epoch. */
 	this.latestTime = undefined;
-	
+
 	/** The displayed duration in seconds. */
 	this.displayedDuration = undefined;
 
 	/** Whether this widget is pulling data, i.e. polling the server for new
 	 *  graphing information. */
 	this.isPulling = true;
-	
+
 	/** Graphs that are chained to this graph. */
 	this.chained = chained;
 }
@@ -748,12 +748,12 @@ GraphWidget.prototype = new Widget;
 
 GraphWidget.prototype.init = function() {
 	this.$widget = this.generateBox(this.id + '-box', 'graph');
-	
+
 	/* Add the canvas panel. */
 	var canvas = getCanvas(this.id, this.width, this.height);
 	this.$widget.find("#" + this.id + "-canvas").append(canvas);
 	this.ctx = canvas.getContext("2d");
-	
+
 	/* Event handlers. */
 	var thiz = this;
 	this.$widget.find('.graph-label').click(function() {    
@@ -763,10 +763,10 @@ GraphWidget.prototype.init = function() {
 
 	/* Draw the first frame contents. */
 	this.drawFrame();
-	
+
 	/* Pull data if we are setup to pull. */
 	if (this.isPulling) this.acquireData();
-	
+
 	/* Enable dragging. */
 	this.enableDraggable();
 };
@@ -780,7 +780,7 @@ GraphWidget.NUM_HORIZ_SCALES = 10;
 GraphWidget.prototype.getHTML = function() {
    
 	var i = null, unitScale, styleScale, html = ''; 
-	
+
 	/* Graph labels. */
 	html += "<div class='graph-labels'>";
 	for (i in this.dataFields)
@@ -796,7 +796,7 @@ GraphWidget.prototype.getHTML = function() {
 				"	</div>";
 	}
 	html += "</div>";
-	
+
 	/* Left scale. */
 	unitScale = Math.floor((this.maxGraphedValue - this.minGraphedValue) / GraphWidget.NUM_VERT_SCALES);
 	styleScale = this.height / GraphWidget.NUM_VERT_SCALES;
@@ -808,14 +808,14 @@ GraphWidget.prototype.getHTML = function() {
 				"</div>";
 	}
 	html += "</div>";
-	
+
 	/* Left axis label. */
 	html += "<div class='graph-axis-label graph-left-axis-label' style='top:" + 
 			(this.width / 2 - this.axis.y.length * 10)  + "px'>" + this.axis.y + "</div>";
-	
+
 	/* Canvas element holding box. */
 	html += "<div id='" + this.id +  "-canvas' class='graph-canvas-box' style='height:" + this.height + "px'></div>";
-	
+
 	/* Bottom scale. */
 	html += "<div class='graph-bottom-scales'>";
 	styleScale = this.width / GraphWidget.NUM_HORIZ_SCALES;
@@ -824,7 +824,7 @@ GraphWidget.prototype.getHTML = function() {
 		html += "<div class='graph-bottom-scale-" + i + "' style='left:" + (styleScale * i - 5) + "px'>&nbsp</div>";
 	}
 	html += "</div>";
-	
+
 	/* Bottom axis label. */
 	html += "<div class='graph-axis-label graph-bottom-axis-label'>" + this.axis.x + "</div>";
 
@@ -862,14 +862,14 @@ GraphWidget.prototype.acquireData = function() {
  */
 GraphWidget.prototype.updateData = function(data) {
 	var i = 0;
-	
+
 	if (this.startTime == undefined) this.startTime = data.start;
 	this.latestTime = data.time;
-	
+
 	for (i in this.dataFields)
 	{
 		if (data[i] == undefined) continue;
-		
+
 		this.dataFields[i].values = data[i];
 		this.dataFields[i].seconds = data.duration;
 		this.displayedDuration = data.duration;
@@ -877,7 +877,7 @@ GraphWidget.prototype.updateData = function(data) {
 
 	this.drawFrame();
 	this.updateTimeScale();
-	
+
 	/* Forward data onto chained graph. */
 	if (this.chained != undefined) this.chained.updateData(data);
 };
@@ -887,12 +887,12 @@ GraphWidget.prototype.updateData = function(data) {
  */
 GraphWidget.prototype.drawFrame = function() {
 	var i = 0;
-	
+
 	/* Clear old frame. */
 	this.ctx.clearRect(0, 0, this.width, this.height);
-	
+
 	this.drawScales();
-	
+
 	/* Draw the trace for all graphed variables. */
 	for (i in this.dataFields) this.drawTrace(this.dataFields[i]);
 };
@@ -908,10 +908,10 @@ GraphWidget.prototype.drawScales = function() {
 		dt = this.height / GraphWidget.NUM_VERT_SCALES;
 
 	this.ctx.save();
-	
+
 	this.ctx.strokeStyle = "#CCCCCC";
 	this.ctx.lineWidth = 0.2;
-	
+
 	for (i = 0; i < GraphWidget.NUM_VERT_SCALES; i++)
 	{
 		for (j = 0; j < this.width; j += GraphWidget.STIPPLE_WIDTH * 1.5)
@@ -920,7 +920,7 @@ GraphWidget.prototype.drawScales = function() {
 			this.ctx.lineTo(j + GraphWidget.STIPPLE_WIDTH, i * dt);
 		}
 	}
-	
+
 	this.ctx.stroke();
 	this.ctx.restore();
 };
@@ -932,11 +932,11 @@ GraphWidget.prototype.drawScales = function() {
  */
 GraphWidget.prototype.drawTrace = function(dObj) {
 	if (!dObj.visible) return;
-	
+
 	var yScale = this.height / (this.maxGraphedValue - this.minGraphedValue),
 		xStep  = this.width / (dObj.seconds * 1000 / this.period),
 		i, yCoord;
-	
+
 	this.ctx.save();
 	this.ctx.strokeStyle = dObj.color;
 	this.ctx.lineWidth = 3;
@@ -945,7 +945,7 @@ GraphWidget.prototype.drawTrace = function(dObj) {
 	this.ctx.shadowBlur = 2;
 	this.ctx.shadowOffsetX = 1;
 	this.ctx.shadowOffsetY = 1;
-	
+
 	this.ctx.beginPath();
 	for (i = 0; i < dObj.values.length; i++)
 	{
@@ -954,7 +954,7 @@ GraphWidget.prototype.drawTrace = function(dObj) {
 		if (yCoord > this.height) yCoord = this.height;
 		/* If value too smale, clippling at the bottom of the graph. */
 		if (yCoord < 0) yCoord = 0;
-		
+
 		if (i == 0)
 		{
 			this.ctx.moveTo(i * xStep, yCoord);
@@ -964,7 +964,7 @@ GraphWidget.prototype.drawTrace = function(dObj) {
 			this.ctx.lineTo(i * xStep, yCoord);
 		}
 	}
-	
+
 	this.ctx.stroke();
 	this.ctx.restore();
 };
@@ -975,7 +975,7 @@ GraphWidget.prototype.drawTrace = function(dObj) {
 GraphWidget.prototype.updateTimeScale = function() {
 	var xstep = this.displayedDuration / GraphWidget.NUM_HORIZ_SCALES, i,
 		$d = this.$widget.find(".graph-bottom-scale-0"), t;
-	
+
 	for (i = 0; i <= GraphWidget.NUM_HORIZ_SCALES; i++)
 	{
 		t = this.latestTime - xstep * (GraphWidget.NUM_HORIZ_SCALES - i) - this.startTime;
@@ -1029,7 +1029,7 @@ GraphWidget.prototype.setDataVariable = function(dvar, label, color, min, max) {
 		seconds: 0,
 		visible: true,
 	};
-	
+
 	if (this.minGraphedValue == undefined || min < this.minGraphedValue) this.minGraphedValue = min;
 	if (this.maxGraphedValue == undefined || max > this.maxGraphedValue) this.maxGraphedValue = max;
 };
@@ -1045,7 +1045,7 @@ GraphWidget.prototype.setDataVariable = function(dvar, label, color, min, max) {
  */
 GraphWidget.prototype.removeDataVariable = function(dvar) {
 	delete this.dataFields[dvar];
-	
+
 	/* Work out the correct scale. */
 	this.minGraphedValue = this.maxGraphedValue = undefined;
 	var i = null;
@@ -1055,7 +1055,7 @@ GraphWidget.prototype.removeDataVariable = function(dvar) {
 		{
 			this.minGraphedValue = this.dataFields[i].min;
 		}
-		
+
 		if (this.maxGraphedValue == undefined || this.dataFields[i].min > this.maxGraphedValue)
 		{
 			this.maxGraphedValue = this.dataFields[i].max;
@@ -1095,7 +1095,7 @@ TabbedWidget.prototype = new DisplayManager;
 
 TabbedWidget.prototype.init = function() { 
 	this.$widget = this.generateBox(this.id, 'settings');
-	
+
 	this.enableDraggable();
 };
 
@@ -1120,10 +1120,10 @@ function CameraWidget($container, title, attr)
     
     /** The height of the camera stream. */
 	this.height = 240;
-	
+
 	/** Identifier of the camera box. */
 	this.id = title.toLowerCase().replace(' ', '-');
-	
+
 	/** The list of address for the each of the camera formats. */
 	this.urls = {
 		swf: '',   // Flash format
@@ -1134,7 +1134,7 @@ CameraWidget.prototype = new Widget;
 
 CameraWidget.prototype.init = function() {
 	this.$widget = this.generateBox('camera-' + this.id, 'video');
-	
+
 	this.enableDraggable();
 	this.enableResizable('16 / 9', 192, 340);
 };
@@ -1154,7 +1154,7 @@ CameraWidget.prototype.getHTML = function() {
 CameraWidget.prototype.getSwfHtml = function() {
 	return 
 		(!$.browser.msie ? // Firefox, Chrome, ...
-	
+
 			'<object type="application/x-shockwave-flash" data="' + this.swf + '" ' +
 	 				'width="' +  this.width  + '" height="' + this.height + '">' +
 		        '<param name="movie" value="' + 'this.urls.swf' + '"/>' +
@@ -1209,14 +1209,14 @@ function getCanvas(id, width, height)
 	canvas.setAttribute("id", id);
 	canvas.setAttribute("width", width);
 	canvas.setAttribute("height", height);
-	
+
 	if (typeof G_vmlCanvasManager != "undefined")
 	{
 		/* Hack to get canvas setup on IE6 to 8 which don't support canvas
 		 * natively. */
 		G_vmlCanvasManager.initElement(canvas);
 	}
-	
+
 	return canvas;
 }
 
@@ -1243,12 +1243,12 @@ function mathRound(num, places)
 function zeroPad(num, places)
 {
 	var r = '' + mathRound(num, places);
-	
+
 	if (places > 0)
 	{
 		if (r.indexOf('.') == -1) r += '.';
 		while (r.length - r.indexOf('.') < places + 1) r += '0';
 	}
-	
+
 	return r;
 }
