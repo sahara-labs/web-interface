@@ -262,38 +262,76 @@ WaterLevelsMimic.prototype.destroy = function() {
 function PIDControl($container)
 {
    Widget.call(this, $container, 'PID Controls');
+   
+   /** Whether we have the settings loaded from the server. */
+   this.hasSettings = false;
+   
+   /** Whether the values have been changed and not sent to the server. */
+   this.isChanged = false;
+   
+   /** PID variables. */
+   this.pid = {
+       sp: undefined,  // Set point
+       kp: undefined,  // Kp 
+       ki: undefined,  // Ki
+       kd: undefined   // Kd
+   };
 }
 PIDControl.prototype = new Widget;
 
 PIDControl.prototype.init = function() {	
 	this.$widget = this.generateBox('pid-control', 'pid');
 	
-    this.enableDraggable();
+	/* Focus in and out. */
+	this.$widget.find("input").focusin(formFocusIn).focusout(formFocusOut);
+	
+	this.enableDraggable();
 };
 
 PIDControl.prototype.getHTML = function() {	
 	return(
-		'<div class="pidsettings">' +
-            '<table cellspacing="0">' +
-            	'<tr>' +
-            		'<td>Setpoint (mm)</td>' +
-            		'<td><input type="number" name="setpoint" placeholder="setpoint" style="height: 20px;"/></td>' +
-            	'</tr>' +
-            	'<tr>' +
-            		'<td>Kp</td>' +
-            		'<td><input type="number" name="kp" placeholder="kp" style="height: 20px;"/></td>' +
-            	'</tr>' +
-            	'<tr>' +
-            		'<td>Ki</td>' +
-            		'<td><input type="number" name="ki" placeholder="ki" style="height: 20px;"/></td>' +
-            	'</tr>' +
-            	'<tr>' +
-            		'<td>Kd</td>' +
-            		'<td><input type="number" name="kd" placeholder="kd" style="height: 20px;"/></td>' +
-            	'</tr>' +	
-            '</table>' +     
-        '</div>'
+		'<div id="pid-settings" class="saharaform">' +
+        	'<div>' + 
+        		'<label for="pid-sp">Setpoint:</label>' +
+        		'<input id="pid-sp" type="number" name="setpoint" disabled="disabled" />' +
+        	'</div>' +
+        	'<div>' + 
+        		'<label for="pid-kp">K<span>p</span>:</label>' +
+        		'<input id="pid-kp" type="number" name="kp" disabled="disabled" />' +
+        	'</div>' +
+        	'<div>' + 
+        		'<label for="pid-ki">K<span>i</span>:</label>' +
+        		'<input id="pid-ki" type="number" name="ki" disabled="disabled" />' +
+        	'</div>' +
+        	'<div>' + 
+        		'<label>K<span>d</span>:</label>' +
+        		'<input id="pid-kd" type="number" name="kd" disabled="disabled" />' +
+        	'</div>' +
+        '</div>' +
+        
+        '<div class="data-blur"></div>' 
 	);
+};
+
+PIDControl.prototype.consume = function(data) {
+	var i = 0;
+	for (i in this.pid)
+	{
+	    /* All packets should have all PID variables. */
+	    if (data[i] == undefined) return;
+	    
+	    if (this.pid[i] != data[i])
+	    {
+	        this.pid[i] = data[i];
+	        $("#pid-" + i).val(data[i]);
+	    }
+	}
+	
+	if (!this.hasSettings)
+	{
+	    this.$widget.find("input").attr("disabled", "");
+	    this.$widget.find(".data-blur").hide();
+	}
 };
 
 /* ============================================================================
@@ -773,7 +811,7 @@ GraphWidget.prototype.getHTML = function() {
 	
 	/* Left axis label. */
 	html += "<div class='graph-axis-label graph-left-axis-label' style='top:" + 
-			(this.width / 2 - this.axis.y.length * 9)  + "px'>" + this.axis.y + "</div>";
+			(this.width / 2 - this.axis.y.length * 10)  + "px'>" + this.axis.y + "</div>";
 	
 	/* Canvas element holding box. */
 	html += "<div id='" + this.id +  "-canvas' class='graph-canvas-box' style='height:" + this.height + "px'></div>";

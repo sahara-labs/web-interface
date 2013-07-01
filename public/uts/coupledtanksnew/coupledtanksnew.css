@@ -19,10 +19,6 @@
     cursor: pointer;
 }
 
-.pidsettings {
-    font-size: 88%;
-}
-
 /******************************************************************************
  ** Overrides Old layout elements                                            **
  ******************************************************************************/
@@ -83,6 +79,7 @@
 }
 
 .windowcontent {
+	position: relative;
     padding: 10px 10px 6px 10px;
     margin: 5px;
     background: #FFF;
@@ -95,6 +92,18 @@
     min-width: 145px;
     min-height: 50px;
 }
+
+.data-blur {
+	background-color: #F0F0F0;
+	opacity: 0.6;
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 100;
+}
+
 /******************************************************************************
  ** Widgets                                                                  **
  ******************************************************************************/
@@ -131,56 +140,6 @@
 	height: 20px;
 	width: 20px;
 	padding: 3px 2px 0 0;
-}
-
-/******************************************************************************
- ** Tabbed Window                                                            **
- ******************************************************************************/
-
-.tabContent{
-    margin: -5px !important;
-    padding: 0px !important;    
-}
-
-.tabBar{
-    border-radius: 3px 3px 0px 0px;
-    margin: -5px 0px !important;
-    padding: 0px !important;
-    height: 25px;
-    background: #efefef;
-}
-
-.tabButton a{
-    padding: 0px 10px !important;
-    font-size: 12px;
-    line-height: 23px;
-    color: #777 !important;
-    outline-color: transparent;
-}
-/******************************************************************************
- ** The Slider                                                               **
- ******************************************************************************/
-
-#slider {
-	float: left;
-	min-width: 255px;
-    margin: 5px;
-}
-
-#slider .ui-widget-header{
-    background: #ABE4FF;    
-}
-
-.ui-slider .ui-slider-handle{
-    outline-color: transparent;
-    width: 10px;
-    border-radius: 0px 0px 10px 10px;
-}
-
-#sliderval {
-    width: 40px;
-    height: 20px;
-    margin: 10px;
 }
 
 /******************************************************************************
@@ -389,6 +348,23 @@
 }
 
 /******************************************************************************
+ ** PID settings                                                             **
+ ******************************************************************************/
+#pid-settings label {
+	text-align: right;
+	width: 60px;
+}
+ 
+#pid-settings label span {
+	vertical-align: sub;
+}
+
+#pid-settings input {
+	margin: -2px 0 0 8px;
+	width: 60px;
+}
+
+/******************************************************************************
  ** Graphs                                                                   **
  ******************************************************************************/
 #graph-tank-levels-box {
@@ -411,7 +387,7 @@
 
 .graph-labels {
 	position: absolute;
-	right: 10px;
+	right: 5px;
 	color:#777777;
 }
 
@@ -452,8 +428,8 @@
 
 .graph-left-scales {
 	position: absolute;
-	left: 20px;
-	top: 60px;
+	left: 15px;
+	top: 33px;
 }
 
 .graph-left-scales div {
@@ -466,8 +442,8 @@
 
 .graph-bottom-scales {
 	position: absolute;	
-	left: 60px;
-	bottom: 50px;
+	left: 50px;
+	bottom: 44px;
 }
 
 .graph-bottom-scales div {
@@ -495,7 +471,7 @@
     transform: rotate(270deg);
     -ms-transform: rotate(270deg);
     -webkit-transform: rotate(270deg);
-    left: -17px;
+    left: -24px;
 }
 
 .graph-bottom-axis-label {
