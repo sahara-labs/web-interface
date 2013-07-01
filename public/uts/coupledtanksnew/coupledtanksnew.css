@@ -94,6 +94,10 @@
 	background-position: -72px 0px;
 }
 
+.icon_toggle{
+	background-position: -96px 0px;
+}
+
 .windowtitle {
     position: relative;
     top: -7px;
@@ -522,5 +526,26 @@
 	left: 0;
 	width: 100%;
 	margin: -14px auto;
+}
+
+/******************************************************************************
+ ** Camera Widget                                                            **
+ ******************************************************************************/
+#camera-coupled-tanks {
+	position: absolute;
+	left: 5px;
+	top: 20px;
+}
+
+#camera-coupled-tanks .windowcontent {
+	padding: 0;
+	background-color: #333333;
+}
+
+#camera-coupled-tanks .video-placeholder {
+	color: #AAAAAA;
+	font-size: 10pt;
+	text-align: center;
+	padding-top: 80px;
 }
 
