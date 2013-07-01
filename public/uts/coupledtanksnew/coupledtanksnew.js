@@ -276,10 +276,10 @@ Widget.prototype.removeMessages = function() {
  * @return jQuery node of the generated box that has been appended to the page
  */
 Widget.prototype.generateBox = function(boxId, icon) {
-	this.icon = "/uts/coupledtanksnew/images/icon_" + icon + ".png";
+	this.icon = icon;
     return this.$container.append(
       "<div class='windowwrapper' id=" + boxId + ">" +
-          "<div class='windowheader'><img class='windowIcon' src='" + this.icon + "'/>" +
+          "<div class='windowheader'><span class='windowIcon icon_" + this.icon + "'></span>" +
               "<span class='windowtitle'>" + this.title + "</span>" +
           "</div>" +
           "<div class='windowcontent'>" + 
@@ -392,7 +392,7 @@ function DisplayManager($container, title, widgets)
 DisplayManager.prototype = new Widget;
 
 DisplayManager.prototype.init = function() {
-	this.$widget = this.generateBox('display-manager', 'toggle');
+	this.$widget = this.generateBox('display-manager', 'settings');
     this.enableDraggable();
     
     var thiz = this, i = 0;
@@ -514,7 +514,7 @@ function WaterLevelsMimic(container,title) {
 WaterLevelsMimic.prototype = new Widget;
 
 WaterLevelsMimic.prototype.init = function() {
-	this.$widget = this.generateBox('water-levels-mimic','video');
+	this.$widget = this.generateBox('water-levels-mimic','mimic');
 	
 	var i = 0;
 	for (i in this.precision)

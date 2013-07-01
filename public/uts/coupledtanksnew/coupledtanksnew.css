@@ -63,7 +63,7 @@
 }
 
 .windowheader {
-    height: 10px;
+    height: 15px;
     font-size: 24px;
     padding: 5px 10px;
     color: #525252;
@@ -71,12 +71,32 @@
 }
 
 .windowIcon{
-    height: 18px;
+    height: 24px;
+    width: 24px;
+    display: inline-block;
+    background-repeat: no-repeat;
+	background-image: url('/uts/coupledtanksnew/images/icons.png');
+}
+
+.icon_video{
+	background-position: 0px 0px;
+}
+
+.icon_settings{
+	background-position: -24px 0px;
+}
+
+.icon_mimic{
+	background-position: -48px 0px;
+}
+
+.icon_graph{
+	background-position: -72px 0px;
 }
 
 .windowtitle {
     position: relative;
-    top: -5px;
+    top: -7px;
     left: 10px;
     padding-right: 10px;
     color: #777;
