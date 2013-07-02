@@ -84,8 +84,11 @@
     float: left;
     background: #fafafa;
     border-radius: 10px;
-    border: 2px solid #dfdfdf;
+    border: 1px solid #aaa;
     margin: 4px;
+    -moz-box-shadow: 0 1px 3px #B5B5B5;
+    -webkit-box-shadow: 0 1px 3px #B5B5B5;
+    box-shadow: 0 1px 3px #B5B5B5;
 }
 
 .dragged {
@@ -157,7 +160,7 @@
     padding: 10px 10px 6px 10px;
     margin: 5px;
     background: #FFF;
-    border: solid 1px #E4E4E4;
+    border: solid 1px #C0C0C0;
     border-radius: 0 0 10px 10px;
     overflow: hidden;
 }.on
@@ -599,6 +602,6 @@
 	color: #AAAAAA;
 	font-size: 10pt;
 	text-align: center;
-	padding-top: 80px;
+	padding-top: 90px;
 }
 
