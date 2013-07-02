@@ -41,18 +41,18 @@ WaterLevelControl.prototype.setup = function() {
 
 	/* Graph to display tank levels. */
 	o = new GraphWidget(this.$container, "Tank Levels");
-	o.setDataVariable('l1', 'Level 1',  '#0C61b6', 0, 300);
-	o.setDataVariable('l2', 'Level 2',  '#92FF79', 0, 300);
-	o.setDataVariable('sp', 'Setpoint', '#EDDA7E', 0, 300);
+	o.setDataVariable('l1', 'Level 1',  '#1FA8DD', 0, 300);
+	o.setDataVariable('l2', 'Level 2',  '#9F88FF', 0, 300);
+	o.setDataVariable('sp', 'Setpoint', '#ECD563', 0, 300);
 	o.setAxisLabels('Time (s)', 'Level (mm)');
 	o.isPulling = false;
 	this.widgets.push(o);
 
 	/* Graph to display flow rates. */
 	o = new GraphWidget(this.$container, "Flow Rates", o);
-	o.setDataVariable('t1-in',    'Tank 1 In',    '#0C61b6', 0, 10);
-	o.setDataVariable('t1-to-t2', 'Tank 1 to 2',  '#92FF79', 0, 10);
-	o.setDataVariable('t2-out',   'Tank 2 Out',   '#EDDA7E', 0, 10);
+	o.setDataVariable('t1-in',    'Tank 1 In',    '#1FA8DD', 0, 10);
+	o.setDataVariable('t1-to-t2', 'Tank 1 to 2',  '#9F88FF', 0, 10);
+	o.setDataVariable('t2-out',   'Tank 2 Out',   '#ECD563', 0, 10);
 	o.setAxisLabels('Time (s)',   'Flow (L/min)');
 	this.widgets.push(o);	
 
@@ -957,7 +957,7 @@ GraphWidget.prototype.getHTML = function() {
 			(this.width / 2 - this.axis.y.length * 10)  + "px'>" + this.axis.y + "</div>";
 
 	/* Canvas element holding box. */
-	html += "<div id='" + this.id +  "-canvas' class='graph-canvas-box' style='height:" + this.height + "px'></div>";
+	html += "<div id='" + this.id +  "-canvas' class='graph-canvas-box gradient' style='height:" + this.height + "px'></div>";
 
 	/* Bottom scale. */
 	html += "<div class='graph-bottom-scales'>";
@@ -1052,8 +1052,8 @@ GraphWidget.prototype.drawScales = function() {
 
 	this.ctx.save();
 
-	this.ctx.strokeStyle = "#CCCCCC";
-	this.ctx.lineWidth = 0.2;
+	this.ctx.strokeStyle = "#093963";
+	this.ctx.lineWidth = 0.3;
 
 	for (i = 0; i < GraphWidget.NUM_VERT_SCALES; i++)
 	{
