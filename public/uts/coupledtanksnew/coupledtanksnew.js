@@ -1050,7 +1050,7 @@ GraphWidget.prototype.drawScales = function() {
 
 	this.ctx.save();
 
-	this.ctx.strokeStyle = "#093963";
+	this.ctx.strokeStyle = "#fff";
 	this.ctx.lineWidth = 0.3;
 
 	for (i = 0; i < GraphWidget.NUM_VERT_SCALES; i++)
