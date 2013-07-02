@@ -37,7 +37,7 @@ WaterLevelControl.prototype.setup = function() {
 	var o, t;
 
 	/* Mimic of the system. */
-	this.widgets.push(new WaterLevelsMimic(this.$container));
+//	this.widgets.push(new WaterLevelsMimic(this.$container));
 
 	/* Graph to display tank levels. */
 	o = new GraphWidget(this.$container, "Tank Levels");
@@ -57,10 +57,15 @@ WaterLevelControl.prototype.setup = function() {
 	this.widgets.push(o);	
 
 	/* Add camera to page. */
-	this.widgets.push(new CameraWidget(this.$container, 'Coupled Tanks', 'camera'));
+//	this.widgets.push(new CameraWidget(this.$container, 'Coupled Tanks', 'camera'));
 
 	/* Controls. */
-	this.widgets.push(new PIDControl(this.$container));
+	o = new SliderWidget(this.$container, 'Manual', 'manual', 'valve');
+	this.widgets.push(o);
+	
+	o = new SliderWidget(this.$container, 'Horiz', 'manual', 'valve');
+	o.setOrientation(false);
+	this.widgets.push(o);
 //	t = new TabbedWidget(this.$container, 'Control Tabs', [ new PIDControl(this.$container) ]);	
 //	this.widgets.push(t); 
 
@@ -477,9 +482,10 @@ PIDControl.prototype.guidance = function(id) {
  * 
  * @param $container a jQuery object that is the base where the widget is \ 
  * 				appended to
- * @param title the widget's title
+ * @param title the widgets title
+ * @param icon the widgets box icon 
  */
-function Widget($container, title) 
+function Widget($container, title, icon) 
 {
 	/** The jQuery object of the container the widget is attached to. */
 	this.$container = $container;
@@ -488,7 +494,7 @@ function Widget($container, title)
 	this.title = title;
 
 	/** The page icon. */
-	this.icon = undefined;
+	this.icon = icon;
 
 	/** The jQuery object of the outermost element of this widget. 
 	 *  This is not initialised until the 'init' method has been called. */
@@ -608,7 +614,7 @@ Widget.prototype.removeMessages = function() {
  * @return jQuery node of the generated box that has been appended to the page
  */
 Widget.prototype.generateBox = function(boxId, icon) {
-	this.icon = icon;
+	if (icon) this.icon = icon;
     return this.$container.append(
       "<div class='windowwrapper' id=" + boxId + ">" +
           "<div class='windowheader'><span class='windowIcon icon_"+ this.icon + "'></span>" +
@@ -1243,7 +1249,155 @@ TabbedWidget.prototype.init = function() {
 };
 
 /* ============================================================================
- * == Camera Widget                                                           ==
+ * == Slider Widget                                                          ==
+ * ============================================================================ */
+
+/**
+ * Slider widget that displays a slider that allows that provides a slidable
+ * scale over the specified range.
+ * 
+ * @param $container the container to add this widget to
+ * @param title the title of this widget
+ * @param icon the icon to display for the sliders box
+ * @param dataVar the data variable that this slider is manipulating
+ */
+function SliderWidget($container, title, icon, dataVar) 
+{
+    Widget.call(this, $container, title, icon);
+    
+    /** The identifer of this slider. */
+    this.id = "slider-" + title.toLowerCase().replace(' ', '-');
+    
+    /** The minimum value of this slider. */
+    this.min = 0;
+    
+    /** The maximum value of this slider. */
+    this.max = 100;
+    
+    /** Whether this widget is vertically or horizontally oriented. */
+    this.isVertical = true;
+    
+    /** Dimension of the slider, either height or width value depending 
+     *  on orientation in pixels. */
+    this.dimension = 250;
+    
+    /** The data variable this slider is manipulating. */
+    this.dataVar = dataVar;
+    
+    /** The current value of the data variable. */
+    this.val = undefined;
+    
+    /** Whether the value has changed due to user interaction. */
+    this.valueChanged = false;
+    
+    /** Knob holder. */
+    this.$knob = undefined;
+}
+SliderWidget.prototype = new Widget;
+
+/** The number of displayed scales. */
+SliderWidget.NUM_SCALES = 10;
+
+SliderWidget.prototype.init = function() {
+    this.$widget = this.generateBox(this.id);
+    this.$widget.find(".windowcontent").css({
+       width:  this.isVertical ? 80 : this.dimension + 25,
+       height: this.isVertical ? this.dimension + 40 : 100
+    });
+    
+    this.$knob = this.$widget.find(".slider-knob");
+    
+    this.enableDraggable();
+};
+
+SliderWidget.prototype.getHTML = function() {
+    var i, s = (Math.floor((this.max - this.min) / SliderWidget.NUM_SCALES)),
+        html = 
+        "<div class='slider-outer' style='" + (this.isVertical ? "height" : "width") + ":" + this.dimension + "px'>";
+            
+    /* Slider scale. */
+    html += "<div class='slider-scales slider-scales-" + (this.isVertical ? "vertical" : "horizontal") + "'>";
+    for (i = 0; i <= SliderWidget.NUM_SCALES; i++)
+    {
+        html += "<div class='slider-scale' style='" + (this.isVertical ? "top" : "left") + ":" + 
+                        (this.dimension / SliderWidget.NUM_SCALES * i) + "px'>" +
+                    "<span class='ui-icon ui-icon-arrowthick-1-" + (this.isVertical ? "w" : "n") + "'></span>" +
+                    "<span class='slider-scale-value'>" + (this.isVertical ? this.max - s * i : s * i) + "</span>" +
+                "</div>";
+    }
+    html += "</div>";
+    
+    /* Slider post. */
+    html += "<div class='slider-post slider-post-" + (this.isVertical ? "vertical" : "horizontal") + "'></div>";
+    
+    /* Slider knob. */
+    html += "<div class='slider-knob slider-knob-" + (this.isVertical ? "vertical" : "horizontal" ) + "'>" +
+                "<div class='slider-knob-slice slider-knob-back'></div>";
+    
+    for (i = 0; i < 9; i++)
+    {
+        html +=     "<div class='slider-knob-slice slider-knob-slice-" + i + "'></div>";
+    }
+    
+    html += "</div>";
+    
+    html += 
+        "</div>";
+    return html;
+};
+
+SliderWidget.prototype.consume = function(data) {
+    if (!(data[this.dataVar] == undefined || data[this.dataVar] == this.val || this.valueChanged))
+    {
+        this.val = data[this.dataVar];
+        this.moveTo(this.val);
+    }
+};
+
+/**
+ * Moves the slider to the specified value 
+ * 
+ * @param val value to move to 
+ */
+SliderWidget.prototype.moveTo = function(val) {
+    var p = this.val / (this.max - this.min) * this.dimension;
+    this.$knob.css(this.isVertical ? "top" : "left", this.isVertical ? this.dimension - p : p);
+};
+
+/**
+ * Sets the range of values this sliders scale has. The default range is 
+ * between 0 and 100.
+ * 
+ * @param min minimum value
+ * @param max maximum value
+ */
+SliderWidget.prototype.setRange = function(min, max) {
+    this.min = min;
+    this.max = max;
+};
+
+/**
+ * Sets the orientation of this slider, which is either vertical or 
+ * horizontal. The default orientation is vertical.
+ * 
+ * @param vertical true if vertical, false if horizontal
+ */
+SliderWidget.prototype.setOrientation = function(vertical) {
+    this.isVertical = vertical;
+};
+
+/**
+ * Sets the dimension of the slider which is either the height or width of the
+ * slider depending on the sliders orientation. The default dimension is 250px.  
+ * 
+ * @param dimension dimension of the slider in pixels
+ */
+SliderWidget.prototype.setDimension = function(dimension) {
+    this.dimension = dimension;
+};
+
+/* ============================================================================
+ * == Camera Widget                                                          ==
  * ============================================================================ */
 
 /**
