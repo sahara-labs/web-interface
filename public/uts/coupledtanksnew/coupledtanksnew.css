@@ -637,6 +637,12 @@
 
 .slider-outer {
 	position: absolute;
+	 -moz-user-select: none;
+    -webkit-user-select: none;
+    -ie-user-select: none;
+    user-select: none;
+    width: 100%;
+    height: 70px;
 }
 
 .slider-post {
@@ -676,6 +682,10 @@
 
 .slider-scale {
 	position: absolute;
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
 }
 
 .slider-scales-vertical .slider-scale {
@@ -855,4 +865,27 @@
     border-right: 0;
 }
 
+.slider-text {
 
+}
+
+.slider-text-vertical {
+	width: 80px;
+}
+
+.slider-text-horizontal {
+	margin-top: 70px;
+}
+
+.slider-text label {
+	width: 45px !important;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ie-user-select: none;
+    user-select: none;
+}
+
+.slider-text input {
+	width: 40px;
+	text-align: right;
+}
