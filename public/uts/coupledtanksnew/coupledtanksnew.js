@@ -61,10 +61,12 @@ WaterLevelControl.prototype.setup = function() {
 
 	/* Controls. */
 	o = new SliderWidget(this.$container, 'Manual', 'manual', 'valve');
+	o.setLabels('Valve', '%');
 	this.widgets.push(o);
-	
+
 	o = new SliderWidget(this.$container, 'Horiz', 'manual', 'valve');
 	o.setOrientation(false);
+	o.setLabels('Valve', '%');
 	this.widgets.push(o);
 //	t = new TabbedWidget(this.$container, 'Control Tabs', [ new PIDControl(this.$container) ]);	
 //	this.widgets.push(t); 
@@ -400,7 +402,7 @@ PIDControl.prototype.validate = function(pVar, val) {
     this.removeMessages();
     
     /* Add variables must be numbers. */
-    if (!val.match(/^\d+\.?\d*$/))
+    if (!val.match(/^-?\d+\.?\d*$/))
     {
         this.addMessage("pid-validation-" + pVar, "Value must be a number", "error", this.toolTopLeft, 
                 this.toolTipTop[pVar], "left");
@@ -1281,6 +1283,12 @@ function SliderWidget($container, title, icon, dataVar)
      *  on orientation in pixels. */
     this.dimension = 250;
     
+    /** Label for slider. */
+    this.label = '';
+    
+    /** Units for the display. */
+    this.units = '';
+    
     /** The data variable this slider is manipulating. */
     this.dataVar = dataVar;
     
@@ -1292,6 +1300,15 @@ function SliderWidget($container, title, icon, dataVar)
     
     /** Knob holder. */
     this.$knob = undefined;
+    
+    /** Value box. */
+    this.$input = undefined;
+    
+    /** Whether we are sliding. */
+    this.isSliding = false;
+    
+    /** Last coordinate in sliding orientation. */
+    this.lastCoordinate = undefined;
 }
 SliderWidget.prototype = new Widget;
 
@@ -1300,14 +1317,158 @@ SliderWidget.NUM_SCALES = 10;
 
 SliderWidget.prototype.init = function() {
     this.$widget = this.generateBox(this.id);
-    this.$widget.find(".windowcontent").css({
-       width:  this.isVertical ? 80 : this.dimension + 25,
-       height: this.isVertical ? this.dimension + 40 : 100
-    });
     
-    this.$knob = this.$widget.find(".slider-knob");
+    var thiz = this;
     
-    this.enableDraggable();
+    /* Slider events. */
+    this.$knob = this.$widget.find(".slider-knob")
+        .mousedown(function(e) { thiz.slideStart(e.pageX, e.pageY); });
+    
+    /* Slider position click. */
+    this.$widget.find(".slider-outer").bind("click." + this.id, function(e) { thiz.sliderClicked(e.pageX, e.pageY); });
+    
+    /* Value box events. */
+    this.$input = this.$widget.find(".slider-text input")
+        .focusin(formFocusIn)
+        .focusout(formFocusOut)
+        .change(function() { thiz.handleTextBoxChange($(this).val()); });
+};
+
+/**
+ * Handles a slider position click.
+ * 
+ * @param x coordinate of mouse
+ * @param y coordiante of mouse
+ */
+SliderWidget.prototype.sliderClicked = function(x, y) {
+    if (this.isSliding) return;
+    
+    var off = this.$widget.find(".slider-outer").offset(),
+        p = this.isVertical ? y - off.top - 7 : x - off.left - 7;
+    
+    /* Value scaling. */
+    this.valueChanged = true;
+    this.val = p * (this.max - this.min) / this.dimension;
+    
+    /* Range check. */
+    if (this.val < this.min) this.val = this.min;
+    if (this.val > this.max) this.val = this.max;
+    
+    /* Vertical sliders have the scale inverse to positioning. */
+    if (this.isVertical) this.val = this.max - this.val;
+    
+    /* Update display. */
+    this.moveTo();
+    this.$input.val(zeroPad(this.val, 1));
+    
+    /* Send results. */
+    this.send();
+};
+
+/**
+ * Handles slider start.
+ * 
+ * @param x x coordinate of mouse
+ * @param y y coordinate of mouse
+ */
+SliderWidget.prototype.slideStart = function(x, y) {
+    /* State management. */
+    this.isSliding = true;
+    this.valueChanged = true;
+    
+    /* Position tracking. */
+    this.lastCoordinate = (this.isVertical ? y : x);
+    
+    /* Event handlings. */
+    var thiz = this;
+    $(document)
+        .bind('mousemove.' + this.id, function(e) { thiz.slideMove (e.pageX, e.pageY); })
+        .bind('mouseup.' + this.id,   function(e) { thiz.slideStop (e.pageX, e.pageY); });
+    
+    /* Stop double handling. */
+    this.$widget.find(".slider-outer").unbind("click." + this.id);
+};
+
+/**
+ * Handles slider move.
+ *  
+ * @param x x coordinate of mouse
+ * @param y y coordinate of mouse
+ */
+SliderWidget.prototype.slideMove = function(x, y) {
+    if (!this.isSliding) return;
+    
+    /* Scaling to value. */
+    var dist = (this.isVertical ? y : x) - this.lastCoordinate;
+    this.val += (this.max - this.min) * dist / this.dimension * (this.isVertical ? -1 : 1);
+    
+    
+    /* Range check. */
+    if (this.val < this.min) this.val = this.min;
+    if (this.val > this.max) this.val = this.max;
+    
+    /* Display update. */
+    this.$input.val(zeroPad(this.val, 1));
+    this.moveTo();
+    
+    /* Position tracking. */
+    this.lastCoordinate = (this.isVertical ? y : x);
+};
+
+/**
+ * Handles slide stop.
+ * 
+ * @param x x coordinate of mouse
+ * @param y y coordinate of mouse
+ */
+SliderWidget.prototype.slideStop = function(x, y) {
+    if (!this.isSliding) return;
+    
+    $(document)
+        .unbind('mousemove.' + this.id)
+        .unbind('mouseup.' + this.id);
+    
+    this.isSliding = false;
+    this.send();
+    
+    var thiz = this;
+    this.$widget.find(".slider-outer").bind("click." + this.id, function(e) { thiz.sliderClicked(e.pageX, e.pageY); });
+};
+/**
+ * Moves the slider to the specified value 
+ */
+SliderWidget.prototype.moveTo = function() {
+    var p = this.val / (this.max - this.min) * this.dimension;
+    this.$knob.css(this.isVertical ? "top" : "left", this.isVertical ? this.dimension - p : p);
+};
+
+/**
+ * Handles a value text box change.
+ * 
+ * @param val new value
+ */
+SliderWidget.prototype.handleTextBoxChange = function(val) {
+    var ttLeft = this.isVertical ? 60 : this.dimension + 17,
+        ttTop  = this.isVertical ? this.dimension + 82 : 108, n;
+    
+    this.removeMessages();
+    if (!val.match(/^-?\d*\.?\d+$/))
+    {
+        this.addMessage("slider-validation-" + this.id, "Value must be a number.", "error", ttLeft, ttTop, "left");
+        return;
+    }
+    
+    n = parseFloat(val);
+    if (n < this.min || n > this.max)
+    {
+        this.addMessage("slider-validation-" + this.id, "Value out of range.", "error", ttLeft, ttTop, "left");
+        return;
+    }
+    
+    this.valueChanged = true;
+    this.val = n;
+    this.moveTo();
+    this.send();  
 };
 
 SliderWidget.prototype.getHTML = function() {
@@ -1343,25 +1504,33 @@ SliderWidget.prototype.getHTML = function() {
     
     html += 
         "</div>";
+    
+    /* Text box with numeric value. */
+    html +=
+        "<div class='slider-text slider-text-" + (this.isVertical ? "vertical" : "horizontal") +
+                " saharaform' style='margin-" + (this.isVertical ? "top" : "left") + ":" +
+                (this.dimension + (this.isVertical ? 20 : -90)) + "px'>" +                
+                "<label for='" + this.id + "-text' class='slider-text-label'>" + this.label + ":</label>" +
+            "<input id='" + this.id + "-text' type='text' /> " +
+            "<span>" + this.units + "</span>" +
+        "</div>";
+    
     return html;
+};
+
+
+
+SliderWidget.prototype.send = function() {
+    
 };
 
 SliderWidget.prototype.consume = function(data) {
     if (!(data[this.dataVar] == undefined || data[this.dataVar] == this.val || this.valueChanged))
     {
         this.val = data[this.dataVar];
-        this.moveTo(this.val);
+        this.moveTo();
+        this.$input.val(zeroPad(this.val, 1));
     }
-};
-
-/**
- * Moves the slider to the specified value 
- * 
- * @param val value to move to 
- */
-SliderWidget.prototype.moveTo = function(val) {
-    var p = this.val / (this.max - this.min) * this.dimension;
-    this.$knob.css(this.isVertical ? "top" : "left", this.isVertical ? this.dimension - p : p);
 };
 
 /**
@@ -1394,6 +1563,17 @@ SliderWidget.prototype.setOrientation = function(vertical) {
  */
 SliderWidget.prototype.setDimension = function(dimension) {
     this.dimension = dimension;
+};
+
+/**
+ * Sets the labels for graphed variables.
+ * 
+ * @param label label for value text box
+ * @param units units units of the sliders value 
+ */
+SliderWidget.prototype.setLabels = function(label, units) {
+    this.label = label;
+    this.units = units;
 };
 
 /* ============================================================================
