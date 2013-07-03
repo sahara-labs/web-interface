@@ -60,11 +60,11 @@ WaterLevelControl.prototype.setup = function() {
 //	this.widgets.push(new CameraWidget(this.$container, 'Coupled Tanks', 'camera'));
 
 	/* Controls. */
-	o = new SliderWidget(this.$container, 'Manual', 'manual', 'valve');
+	o = new SliderWidget(this.$container, 'Manual', 'manual', 'valve', 'setValue');
 	o.setLabels('Valve', '%');
 	this.widgets.push(o);
 
-	o = new SliderWidget(this.$container, 'Horiz', 'manual', 'valve');
+	o = new SliderWidget(this.$container, 'Horiz', 'manual', 'valve', 'setValve');
 	o.setOrientation(false);
 	o.setLabels('Valve', '%');
 	this.widgets.push(o);
@@ -1262,8 +1262,9 @@ TabbedWidget.prototype.init = function() {
  * @param title the title of this widget
  * @param icon the icon to display for the sliders box
  * @param dataVar the data variable that this slider is manipulating
+ * @param postAction the action to post to
  */
-function SliderWidget($container, title, icon, dataVar) 
+function SliderWidget($container, title, icon, dataVar, postAction) 
 {
     Widget.call(this, $container, title, icon);
     
@@ -1291,6 +1292,9 @@ function SliderWidget($container, title, icon, dataVar)
     
     /** The data variable this slider is manipulating. */
     this.dataVar = dataVar;
+    
+    /** The location to post data to. */
+    this.postAction = postAction;
     
     /** The current value of the data variable. */
     this.val = undefined;
@@ -1518,10 +1522,17 @@ SliderWidget.prototype.getHTML = function() {
     return html;
 };
 
-
-
+/** 
+ * Sends the updated value to the server.
+ */
 SliderWidget.prototype.send = function() {
-    
+    var thiz = this, params = { };
+    params[this.dataVar] = this.val;
+    this.postControl(this.postAction, params,
+        function(data) {
+            thiz.valueChanged = false;
+        }
+    );
 };
 
 SliderWidget.prototype.consume = function(data) {
