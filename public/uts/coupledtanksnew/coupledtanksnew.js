@@ -37,7 +37,7 @@ WaterLevelControl.prototype.setup = function() {
 	var o, t;
 
 	/* Mimic of the system. */
-//	this.widgets.push(new WaterLevelsMimic(this.$container));
+	this.widgets.push(new WaterLevelsMimic(this.$container));
 
 	/* Graph to display tank levels. */
 	o = new GraphWidget(this.$container, "Tank Levels");
@@ -57,19 +57,14 @@ WaterLevelControl.prototype.setup = function() {
 	this.widgets.push(o);	
 
 	/* Add camera to page. */
-//	this.widgets.push(new CameraWidget(this.$container, 'Coupled Tanks', 'camera'));
+	this.widgets.push(new CameraWidget(this.$container, 'Coupled Tanks', 'camera'));
 
 	/* Controls. */
-	o = new SliderWidget(this.$container, 'Manual', 'manual', 'valve', 'setValue');
+	o = new SliderWidget(this.$container, 'Manual', 'manual', 'valve', 'setValve');
 	o.setLabels('Valve', '%');
-	this.widgets.push(o);
-
-	o = new SliderWidget(this.$container, 'Horiz', 'manual', 'valve', 'setValve');
-	o.setOrientation(false);
-	o.setLabels('Valve', '%');
-	this.widgets.push(o);
-//	t = new TabbedWidget(this.$container, 'Control Tabs', [ new PIDControl(this.$container) ]);	
-//	this.widgets.push(t); 
+	
+	t = new TabbedWidget(this.$container, 'Controls', 'control-mode', [ o, new PIDControl(this.$container) ]);
+	this.widgets.push(t); 
 
 	/* Display manager to allow things to be shown / removed. */
 	this.display = new DisplayManager(this.$container, 'Display', this.widgets);
@@ -157,7 +152,7 @@ WaterLevelControl.prototype.errorData = function(msg) {
  */
 function WaterLevelsMimic($container) {
 
-	Widget.call(this, $container, 'Diagram');
+	Widget.call(this, $container, 'Diagram', 'mimic');
 
 	/** Variables that are displayed on the mimic. */
 	this.dataVars = { };
@@ -188,7 +183,7 @@ function WaterLevelsMimic($container) {
 WaterLevelsMimic.prototype = new Widget;
 
 WaterLevelsMimic.prototype.init = function() {
-	this.$widget = this.generateBox('water-levels-mimic','mimic');
+	this.$widget = this.generateBox('water-levels-mimic');
 
 	var i = 0;
 	for (i in this.precision)
@@ -268,7 +263,7 @@ WaterLevelsMimic.prototype.destroy = function() {
  */
 function PIDControl($container)
 {
-   Widget.call(this, $container, 'PID');
+   Widget.call(this, $container, 'PID', 'pid');
    
    /** Whether we have the settings loaded from the server. */
    this.hasSettings = false;
@@ -309,7 +304,7 @@ function PIDControl($container)
 PIDControl.prototype = new Widget;
 
 PIDControl.prototype.init = function() {	
-	this.$widget = this.generateBox('pid-control', 'pid');
+	this.$widget = this.generateBox('pid-control');
 
 	var thiz = this;
 	
@@ -571,7 +566,7 @@ Widget.prototype.dragged = function(xpos, ypos) { };
  * @param top top absolute coordinate
  * @param pos the arrow position, 'left', 'right', 'top', 'bottom'
  */
-Widget.prototype.addMessage = function(msgId,message,type,left,top,pos) {
+Widget.prototype.addMessage = function(msgId, message, type, left, top, pos) {
 	var $box, i, aniIn, bs = 1, up = true, html = 
 		"<div id='" + msgId + "' class='message-box message-box-" + type + " message-box-in1' style='left:" + left + "px; top:" + top + "px'>" +
 			"<div class='message-box-text'>" + message + "</div>" +
@@ -612,14 +607,13 @@ Widget.prototype.removeMessages = function() {
  * 
  * @param boxId ID of the box
  * @param title the title of the widget
- * @param icon the type of icon the box will display, 'settings', 'toggle', 'video'
  * @return jQuery node of the generated box that has been appended to the page
  */
-Widget.prototype.generateBox = function(boxId, icon) {
-	if (icon) this.icon = icon;
+Widget.prototype.generateBox = function(boxId) {
     return this.$container.append(
-      "<div class='windowwrapper' id=" + boxId + ">" +
-          "<div class='windowheader'><span class='windowIcon icon_"+ this.icon + "'></span>" +
+      "<div class='windowwrapper' id='" + boxId + "'>" +
+          "<div class='windowheader'>" +
+              "<span class='windowIcon icon_"+ this.icon + "'></span>" +
               "<span class='windowtitle'>" + this.title + "</span>" +
           "</div>" +
           "<div class='windowcontent'>" + 
@@ -727,13 +721,13 @@ Widget.prototype.postControl = function(action, params, responseCallback, errorC
  */
 function DisplayManager($container, title, widgets) 
 {	
-    Widget.call(this, $container, title);
+    Widget.call(this, $container, title, 'toggle');
     
     /** Widgets that are toggle able by this widget. */
     this.widgets = widgets;
     
     /** The states of each of the widgets. */
-    this.states = { };
+    this.states = [ ];
     
     /* Whether the displayed in is blurred state. */
     this.isBlurred = false;
@@ -751,7 +745,7 @@ DisplayManager.prototype.init = function() {
     }
 
     /* Generate our UI. */
-	this.$widget = this.generateBox('display-manager', 'toggle');
+	this.$widget = this.generateBox('display-manager');
     this.enableDraggable();
     
     this.$widget.find('.toggle').click(function() {    
@@ -824,6 +818,110 @@ DisplayManager.prototype.unblur = function() {
 	for (i in this.widgets) if (this.states[i]) this.widgets[i].unblur();
 };
 
+/* ============================================================================
+ * == Tabbed Container Widget                                                ==
+ * ============================================================================ */
+
+/**
+ * The 'tabbed' widget provides a container that holds other widgets within 
+ * its tabs. Only one widget is visible at a time 
+ */
+function TabbedWidget($container, title, modeVar, widgets) 
+{
+   DisplayManager.call(this, $container, title, widgets);
+   
+   /** Identifer of this widget. */
+   this.id = title.toLowerCase().replace(' ', '-') + '-tabs';
+   
+   /** Tab contents container. */
+   this.$tabContainer = undefined;
+   
+   /** Server mode variable the controls which tab is currently active. */ 
+   this.modeVar = modeVar;
+   
+   /** Current mode. */
+   this.currentMode = undefined;
+}
+TabbedWidget.prototype = new DisplayManager;
+
+TabbedWidget.prototype.init = function() {
+    /* Render the content box. */
+	this.$widget = this.generateBox(this.id);
+	this.$tabContainer = this.$widget.find(".windowcontent");
+	
+	var i = 0;
+	for (i in this.widgets)
+	{
+	    /* Replace default boxing with tab containment. */
+	    this.widgets[i].$container = this.$tabContainer;
+	    this.widgets[i].generateBox = function(boxId, icon) {
+	       return this.$container.append(
+	           "<div id='" + boxId + "' class='tab-containment'>" +
+	               this.getHTML() +
+	           "</div>"
+	       ).children().last();
+	    };
+	    this.widgets[i].enableDraggable = function() { /* No-op. */ };
+	    
+	    this.states[i] = false;
+	}
+	
+	this.enableDraggable();
+};
+
+TabbedWidget.prototype.generateBox = function(boxId) {
+    var i = 0, html = 
+      "<div class='windowwrapper' id='" + boxId + "'>" +
+         "<div class='tab-header'>";
+
+    for (i in this.widgets)
+    {
+        html += 
+              "<div class='tab-title'>" +
+                  "<span class='windowIcon icon_"+ this.widgets[i].icon + "'></span>" +
+                  "<span class='windowtitle'>" + this.widgets[i].title + "</span>" +
+              "</div>";
+    }
+
+    html += 
+         "</div>" + 
+         "<div class='windowcontent'></div>" +
+      "</div>";
+
+    return this.$container.append(html).children().last();
+};
+
+TabbedWidget.prototype.consume = function(data) {
+    if (data[this.modeVar] != undefined && data[this.modeVar] != this.currentMode)
+    {
+        /* Server state is different from the displayed state. */
+        this.currentMode = data[this.modeVar];
+        this.switchTab();
+    }
+    
+    DisplayManager.prototype.consume.call(this, data);
+};
+
+/**
+ * Switches tab.
+ */
+TabbedWidget.prototype.switchTab = function() {
+    var i = 0;
+    
+    /* Remove the displayed widget. */
+    for (i in this.states) 
+    {
+        if (this.states[i]) 
+        {
+            this.widgets[i].destroy();
+            this.states[i] = false;
+            break;
+        }
+    }
+    
+    this.states[this.currentMode] = true;
+    this.widgets[this.currentMode].init();
+};
 
 /* ============================================================================
  * == Graph Widget                                                           ==
@@ -840,7 +938,7 @@ DisplayManager.prototype.unblur = function() {
  */
 function GraphWidget($container, title, chained) 
 {
-	Widget.call(this, $container, title);
+	Widget.call(this, $container, title, 'graph');
 
 	/** ID of canvas. */
 	this.id = "graph-" + title.toLowerCase().replace(' ', '-');
@@ -898,7 +996,7 @@ function GraphWidget($container, title, chained)
 GraphWidget.prototype = new Widget;
 
 GraphWidget.prototype.init = function() {
-	this.$widget = this.generateBox(this.id + '-box', 'graph');
+	this.$widget = this.generateBox(this.id + '-box');
 
 	/* Add the canvas panel. */
 	var canvas = getCanvas(this.id, this.width, this.height);
@@ -1224,30 +1322,6 @@ GraphWidget.prototype.removeDataVariable = function(dvar) {
 GraphWidget.prototype.setAxisLabels = function(x, y) {
 	this.axis.x = x;
 	this.axis.y = y;
-};
-
-/* ============================================================================
- * == Tabbed Container Widget                                                ==
- * ============================================================================ */
-
-/**
- * The 'tabbed' widget provides a container that holds other widgets within 
- * its tabs. 
- */
-function TabbedWidget($container, title, widgets) 
-{
-   
-   DisplayManager.call(this, $container, title, widgets);
-   
-   /** Identifer of this widget. */
-   this.id = title.toLowerCase().replace(' ', '-');
-}
-TabbedWidget.prototype = new DisplayManager;
-
-TabbedWidget.prototype.init = function() { 
-	this.$widget = this.generateBox(this.id, 'settings');
-
-	this.enableDraggable();
 };
 
 /* ============================================================================
@@ -1601,7 +1675,7 @@ SliderWidget.prototype.setLabels = function(label, units) {
  */
 function CameraWidget($container, title, attr) 
 {
-    Widget.call(this, $container, title);
+    Widget.call(this, $container, title, 'video');
     
     /** The width of the camera stream. */
     this.width = 320;
@@ -1621,7 +1695,7 @@ function CameraWidget($container, title, attr)
 CameraWidget.prototype = new Widget;
 
 CameraWidget.prototype.init = function() {
-	this.$widget = this.generateBox('camera-' + this.id, 'video');
+	this.$widget = this.generateBox('camera-' + this.id);
 
 	this.enableDraggable();
 	this.enableResizable('16 / 9', 192, 340);
