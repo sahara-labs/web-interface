@@ -159,6 +159,7 @@
     color: #7c7c7c;
     left: 0;
     right: 0;
+    border-bottom: dashed 1px #68D7FA;
     padding: 5px;
     background: 0;
     background: 0 to(#eeedf5));
