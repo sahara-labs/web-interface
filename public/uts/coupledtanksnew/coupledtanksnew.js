@@ -41,9 +41,9 @@ WaterLevelControl.prototype.setup = function() {
 
 	/* Graph to display tank levels. */
 	o = new GraphWidget(this.$container, "Tank Levels");
-	o.setDataVariable('l1', 'Level 1',  '#1FA8DD', 0, 300);
-	o.setDataVariable('l2', 'Level 2',  '#9F88FF', 0, 300);
-	o.setDataVariable('sp', 'Setpoint', '#ECD563', 0, 300);
+	o.setDataVariable('l1', 'Level 1',  '#1FA8DD', 0, 350);
+	o.setDataVariable('l2', 'Level 2',  '#9F88FF', 0, 350);
+	o.setDataVariable('sp', 'Setpoint', '#ECD563', 0, 350);
 	o.setAxisLabels('Time (s)', 'Level (mm)');
 	o.isPulling = false;
 	this.widgets.push(o);
@@ -63,7 +63,12 @@ WaterLevelControl.prototype.setup = function() {
 	o = new SliderWidget(this.$container, 'Manual', 'manual', 'valve', 'setValve');
 	o.setLabels('Valve', '%');
 	
-	t = new TabbedWidget(this.$container, 'Controls', 'control-mode', [ o, new PIDControl(this.$container) ]);
+	t = new TabbedWidget(this.$container, 'Controls', [ o, new PIDControl(this.$container) ], 
+	        'control-mode', 'setManualMode');
+	t.setToolTips([
+	    'Manually set the flow rate by varying the percent the valve is open.',
+	    'Enable closed loop control using the proportional-integral-derivative (PID) controller.'
+	]);
 	this.widgets.push(t); 
 
 	/* Display manager to allow things to be shown / removed. */
@@ -165,7 +170,7 @@ function WaterLevelsMimic($container) {
 		't2-out': 1,
 		't1-to-t2': 1,
 		'pump-rpm': 0,
-		'valve': 1
+		'valve-actual': 1
 	};
 
 	/** Units for out data variables. */
@@ -176,7 +181,7 @@ function WaterLevelsMimic($container) {
 		't2-out': 'L/min',
 		't1-to-t2': 'L/min',
 		'pump-rpm': 'RPM',
-		'valve': '%',	
+		'valve-actual': '%',	
 	};
 };
 
@@ -304,9 +309,13 @@ function PIDControl($container)
 PIDControl.prototype = new Widget;
 
 PIDControl.prototype.init = function() {	
+    var thiz = this, i = 0;
+    
+    /* Reset values. */
+    for (i in this.pid) this.pid[i] = undefined;
+    this.isChanged = false;
+    
 	this.$widget = this.generateBox('pid-control');
-
-	var thiz = this;
 	
 	/* Input field handlers. */
 	this.$widget.find("input")
@@ -826,21 +835,37 @@ DisplayManager.prototype.unblur = function() {
  * The 'tabbed' widget provides a container that holds other widgets within 
  * its tabs. Only one widget is visible at a time 
  */
-function TabbedWidget($container, title, modeVar, widgets) 
+function TabbedWidget($container, title, widgets, modeVar, modeAction) 
 {
    DisplayManager.call(this, $container, title, widgets);
    
    /** Identifer of this widget. */
    this.id = title.toLowerCase().replace(' ', '-') + '-tabs';
    
+   /** Tab idenfitiers. */
+   this.tabIds = [ ];
+   
    /** Tab contents container. */
    this.$tabContainer = undefined;
+   
+   /** Tools tips of the tab. */
+   this.toolTips = undefined;
    
    /** Server mode variable the controls which tab is currently active. */ 
    this.modeVar = modeVar;
    
+   /** Action to post the mode change to. */
+   this.modeAction = modeAction;
+   
    /** Current mode. */
    this.currentMode = undefined;
+   
+   /** If a tab has been clicked to change current tab. */
+   this.tabChanged = false;
+
+   /* Initialise the tab indentifiers. */
+   var i = 0;
+   for (i in this.widgets) this.tabIds[i] = "tab-" + this.widgets[i].title.toLowerCase().replace(' ', '-');
 }
 TabbedWidget.prototype = new DisplayManager;
 
@@ -866,7 +891,8 @@ TabbedWidget.prototype.init = function() {
 	    this.states[i] = false;
 	}
 	
-	this.enableDraggable();
+	var thiz = this;
+	this.$widget.find(".tab-title").click(function() { thiz.tabClicked($(this).attr("id")); });
 };
 
 TabbedWidget.prototype.generateBox = function(boxId) {
@@ -877,13 +903,14 @@ TabbedWidget.prototype.generateBox = function(boxId) {
     for (i in this.widgets)
     {
         html += 
-              "<div class='tab-title'>" +
+              "<div id='" + this.tabIds[i] + "' class='tab-title'>" +
                   "<span class='windowIcon icon_"+ this.widgets[i].icon + "'></span>" +
                   "<span class='windowtitle'>" + this.widgets[i].title + "</span>" +
               "</div>";
     }
 
     html += 
+               "<div class='tab-clear'></div>" +
          "</div>" + 
          "<div class='windowcontent'></div>" +
       "</div>";
@@ -892,7 +919,7 @@ TabbedWidget.prototype.generateBox = function(boxId) {
 };
 
 TabbedWidget.prototype.consume = function(data) {
-    if (data[this.modeVar] != undefined && data[this.modeVar] != this.currentMode)
+    if (!this.tabChanged && data[this.modeVar] != undefined && data[this.modeVar] != this.currentMode)
     {
         /* Server state is different from the displayed state. */
         this.currentMode = data[this.modeVar];
@@ -903,9 +930,43 @@ TabbedWidget.prototype.consume = function(data) {
 };
 
 /**
+ * Handle a tab being clicked.
+ * 
+ * @param id identifer of clicked tab
+ */
+TabbedWidget.prototype.tabClicked = function(id) {
+    this.tabChanged = true;
+    this.destroyCurrentTab();
+    
+    var thiz = this, params = { }, i;
+    
+    /* Seach for the new tab index. */
+    for (i = 0; i < this.tabIds.length; i++) if (this.tabIds[i] == id) break; 
+    
+    /* Post the change to the server. */
+    params[this.modeVar] = i;
+    this.postControl(this.modeAction, params, function(data) {
+            thiz.tabChanged = false;
+            thiz.consume(data);
+    });
+};
+
+/**
  * Switches tab.
  */
 TabbedWidget.prototype.switchTab = function() {
+    this.destroyCurrentTab();
+    this.states[this.currentMode] = true;
+    this.widgets[this.currentMode].init();
+    
+    this.$widget.find(".tab-active").removeClass("tab-active");
+    $("#" + this.tabIds[this.currentMode]).addClass("tab-active");
+};
+
+/**
+ * Removes the current tab.
+ */
+TabbedWidget.prototype.destroyCurrentTab = function() {
     var i = 0;
     
     /* Remove the displayed widget. */
@@ -917,10 +978,17 @@ TabbedWidget.prototype.switchTab = function() {
             this.states[i] = false;
             break;
         }
-    }
-    
-    this.states[this.currentMode] = true;
-    this.widgets[this.currentMode].init();
+    }    
+};
+
+/**
+ * Sets the tool tips of the tabs of this container. These tooltips are 
+ * displayed when hovering over a tab.
+ * 
+ * @param toolTips list of tool tips
+ */
+TabbedWidget.prototype.setToolTips = function(toolTips) {
+    this.toolTips = toolTips;
 };
 
 /* ============================================================================
@@ -966,10 +1034,10 @@ function GraphWidget($container, title, chained)
 	this.dataFields = { };
 
 	/** The number of seconds this graph displays. */
-	this.duration = 600;
+	this.duration = 300;
 
 	/** The period in milliseconds. */
-	this.period = 1000;
+	this.period = 100;
 
 	/** The X and Y axis labels. */
 	this.axis = {
@@ -1092,11 +1160,11 @@ GraphWidget.prototype.acquireData = function() {
 		data: {
 			period: this.period,
 			duration: this.duration,
-			from: 1,     // For now we are just asked for the latest data
+			from: 0,     // For now we are just asked for the latest data
 		},
 		success: function(data) {
 			thiz.updateData(data);
-			if (thiz.isPulling) setTimeout(function() { thiz.acquireData(); }, 1000);
+			if (thiz.isPulling) setTimeout(function() { thiz.acquireData(); }, 500);
 		},
 		error: function(data) {
 			if (thiz.isPulling) setTimeout(function() { thiz.acquireData(); }, 30000);
@@ -1394,6 +1462,10 @@ SliderWidget.prototype = new Widget;
 SliderWidget.NUM_SCALES = 10;
 
 SliderWidget.prototype.init = function() {
+    /* Reset values. */
+    this.val = undefined;
+    this.valueChanged = false;
+    
     this.$widget = this.generateBox(this.id);
     
     var thiz = this;
@@ -1409,7 +1481,7 @@ SliderWidget.prototype.init = function() {
     this.$input = this.$widget.find(".slider-text input")
         .focusin(formFocusIn)
         .focusout(formFocusOut)
-        .change(function() { thiz.handleTextBoxChange($(this).val()); });
+        .change(function() { thiz.handleTextBoxChange($(this).val()); });    
 };
 
 /**
