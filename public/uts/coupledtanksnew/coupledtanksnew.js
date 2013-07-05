@@ -291,7 +291,7 @@ function PIDControl($container)
    
    /** Guidance messages. */
    this.guidanceMsgs = {
-       sp: 'Desired water level.',
+       sp: 'Desired water level in millimetres.',
        kp: 'Proportional gain, a tuning parameter.',
        ki: 'Integral gain, a tuning parameter.',
        kd: 'Derivative gain, a tuning parameter.'
@@ -299,18 +299,18 @@ function PIDControl($container)
    
    /** CSS left position for guidance and validation messages. */
    this.toolTopLeft = {
-       sp: 155,
+       sp: 135,
        kp: 100,
-       ki: 220,
-       kd: 320
+       ki: 210,
+       kd: 100
    };
    
    /** CSS top values for guidance and validation messages. */ 
    this.toolTipTop = {
-       sp: 13,
-       kp: 50,
-       ki: 50,
-       kd: 50
+       sp: 3,
+       kp: 40,
+       ki: 40,
+       kd: 80
    };
 }
 PIDControl.prototype = new Widget;
@@ -887,6 +887,9 @@ function TabbedWidget($container, title, widgets, modeVar, modeAction)
 TabbedWidget.prototype = new DisplayManager;
 
 TabbedWidget.prototype.init = function() {
+    /* Reset. */
+    this.currentMode = undefined;
+    
     /* Render the content box. */
 	this.$widget = this.generateBox(this.id);
 	this.$tabContainer = this.$widget.find(".tab-content");
@@ -914,8 +917,8 @@ TabbedWidget.prototype.init = function() {
 
 TabbedWidget.prototype.generateBox = function(boxId) {
     var i = 0, html = 
-      "<div class='windowwrapper' id='" + boxId + "'>" +
-         "<div class='tab-header'>";
+      "<div class='tab-wrapper' id='" + boxId + "'>" +
+         "<div class='tab-header' style='width:" + (this.widgets.length * 122) + "px'>";
 
     for (i in this.widgets)
     {
@@ -927,7 +930,6 @@ TabbedWidget.prototype.generateBox = function(boxId) {
     }
 
     html += 
-               "<div class='tab-clear'></div>" +
          "</div>" + 
          "<div class='tab-content' style='width:" + (this.width ? this.width + "px" : "inherit") + 
          		";height:" + (this.height ? this.height + "px" : "inherit") + "'></div>" +
@@ -1632,7 +1634,7 @@ SliderWidget.prototype.handleTextBoxChange = function(val) {
         ttTop  = this.isVertical ? this.dimension + 82 : 75, n;
     
     this.removeMessages();
-    if (!val.match(/^-?\d*\.?\d+$/))
+    if (!val.match(/^-?\d+\.?\d*$/))
     {
         this.addMessage("slider-validation-" + this.id, "Value must be a number.", "error", ttLeft, ttTop, "left");
         return;
