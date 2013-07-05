@@ -1629,7 +1629,7 @@ SliderWidget.prototype.moveTo = function() {
  */
 SliderWidget.prototype.handleTextBoxChange = function(val) {
     var ttLeft = this.isVertical ? 60 : this.dimension + 17,
-        ttTop  = this.isVertical ? this.dimension + 82 : 108, n;
+        ttTop  = this.isVertical ? this.dimension + 82 : 75, n;
     
     this.removeMessages();
     if (!val.match(/^-?\d*\.?\d+$/))
