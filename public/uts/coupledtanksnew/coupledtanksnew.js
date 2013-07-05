@@ -1824,14 +1824,14 @@ CameraWidget.prototype.consume = function(data) {
     /* Camera streams don't change. */
     if (this.isDeployed) return;
     
-    if (!(data['camera-swf'] == undefined && data['camera-swf'] == this.urls.swf)) 
+    if (data['camera-swf'] != undefined)
     {
-        this.urls.swf = data['camera-swf'];
+        this.urls.swf = decodeURIComponent(data['camera-swf']);
     }
     
-    if (!(data['camera-mjpeg'] == undefined && data['camera-mjpeg'] == this.urls.mjpeg)) 
+    if (data['camera-mjpeg'] != undefined)
     {
-        this.urls.mjpeg = data['camera-mjpeg'];
+        this.urls.mjpeg = decodeURIComponent(data['camera-mjpeg']);
     }
     
     this.defaultDeploy();
@@ -1870,7 +1870,7 @@ CameraWidget.prototype.getHTML = function() {
  */
 CameraWidget.prototype.getSwfHtml = function() {
 	return (!$.browser.msie ? // Firefox, Chrome, ...
-			'<object type="application/x-shockwave-flash" data="' + this.swf + '" ' +
+			'<object type="application/x-shockwave-flash" data="' + this.urls.swf + '" ' +
 	 				'width="' +  this.width  + '" height="' + this.height + '">' +
 		        '<param name="movie" value="' + 'this.urls.swf' + '"/>' +
 		        '<a href="http://www.adobe.com/go/getflash">' +
@@ -1880,7 +1880,7 @@ CameraWidget.prototype.getSwfHtml = function() {
 		    '</object>'
 		:                  // Internet Explorer
 			'<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000"  width="' + this.width + '" height="' + this.height + '"  id="camera-swf-movie">' +
-				'<param name="movie" value="' + this.swf + '" />' +
+				'<param name="movie" value="' + this.urls.swf + '" />' +
 				'<a href="http://www.adobe.com/go/getflash">' +
 					'<img src="http://www.adobe.com/images/shared/download_buttons/get_flash_player.gif" alt="Get Adobe Flash player"/>' +
 				'</a>' +
@@ -1895,11 +1895,11 @@ CameraWidget.prototype.getMjpegHtml = function() {
 	
 	return (!$.browser.msie ? // Firefox, Chrome, ...
 			 '<img style="width:' + this.width + 'px;height:' + this.height + 'px" ' +
-						'src="' + this.mjpeg + '?' + new Date().getTime() + ' alt="&nbsp;" />'
+						'src="' + this.urls.mjpeg + '?' + new Date().getTime() + ' alt="&nbsp;" />'
 		 :                 // Internet Explorer
 			 '<applet code="com.charliemouse.cambozola.Viewer" archive="/applets/cambozola.jar" ' + 
 					'width="' + this.width + '" height="' + this.height + '">' +
-				'<param name="url" value="' + this.mjpeg + '"/>' +
+				'<param name="url" value="' + this.urls.mjpeg + '"/>' +
 				'<param name="accessories" value="none"/>' +
 			'</applet>'
 	    );
