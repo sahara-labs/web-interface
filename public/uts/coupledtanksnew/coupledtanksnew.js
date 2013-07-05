@@ -352,7 +352,14 @@ PIDControl.prototype.init = function() {
 	                
 	
 	$("#pid-send")
-	        .click(function() { thiz.applyClick(); });
+	        .mousedown(function() {
+	            if (thiz.isChanged) $(this).addClass("click-button-active");
+	        })
+	        .mouseup(function() { $(this).removeClass("click-button-active") ; })
+	        .click(function() { thiz.applyClick(); })
+	        .keypress(function(e) {
+	            if (e.keyCode == 13) thiz.applyClick();
+	        });
 	
 	this.enableDraggable();
 };
