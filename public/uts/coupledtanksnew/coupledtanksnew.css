@@ -126,7 +126,7 @@
  ** Display Manager                                                          **
  ******************************************************************************/
 #display-manager {
-	left: -415px;
+	left: -220px;
 	top: 150px;
 }
 
@@ -700,8 +700,8 @@
  ******************************************************************************/
 #controls-tabs {
 	position: absolute;
-	left: -200px;
-	top: 140px;
+	left: -25px;
+	top: 305px;
 }
 
 /******************************************************************************
@@ -710,17 +710,27 @@
 
 #graph-tank-levels-box {
     left: 275px;
-    top: 475px;
+    top: 480px;
 } 
 
 #graph-flow-rates-box {
     left: -440px;
-    top: 475px;
+    top: 480px;
 } 
 
 /******************************************************************************
  ** PID settings                                                             **
  ******************************************************************************/
+#pid-settings-sp {
+	float: none !important;
+	margin: 7px !important;
+}
+ 
+#pid-settings div {
+	float: left;
+	margin: 5px 0 5px -30px;
+}
+ 
 #pid-settings label {
 	text-align: right;
 	width: 60px;

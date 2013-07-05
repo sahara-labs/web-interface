@@ -61,6 +61,7 @@ WaterLevelControl.prototype.setup = function() {
 
 	/* Controls. */
 	o = new SliderWidget(this.$container, 'Manual', 'manual', 'valve', 'setValve');
+	o.setOrientation(false);
 	o.setLabels('Valve', '%');
 	
 	t = new TabbedWidget(this.$container, 'Controls', [ o, new PIDControl(this.$container) ], 
@@ -296,14 +297,19 @@ function PIDControl($container)
    };
    
    /** CSS left position for guidance and validation messages. */
-   this.toolTopLeft = 155;
+   this.toolTopLeft = {
+       sp: 155,
+       kp: 100,
+       ki: 220,
+       kd: 320
+   };
    
    /** CSS top values for guidance and validation messages. */ 
    this.toolTipTop = {
-       sp: 45,
-       kp: 78,
-       ki: 111,
-       kd: 144
+       sp: 13,
+       kp: 50,
+       ki: 50,
+       kd: 50
    };
 }
 PIDControl.prototype = new Widget;
@@ -353,9 +359,10 @@ PIDControl.prototype.init = function() {
 PIDControl.prototype.getHTML = function() {	
 	return(
 		'<div id="pid-settings" class="saharaform">' +
-        	'<div>' + 
+        	'<div id="pid-settings-sp">' + 
         		'<label for="pid-sp">Setpoint:</label>' +
         		'<input id="pid-sp" type="text" name="setpoint" disabled="disabled" tabindex="1" />' +
+        		'&nbsp;&nbsp;mm' +
         	'</div>' +
         	'<div>' + 
         		'<label for="pid-kp">K<span>p</span>:</label>' +
@@ -408,7 +415,7 @@ PIDControl.prototype.validate = function(pVar, val) {
     /* Add variables must be numbers. */
     if (!val.match(/^-?\d+\.?\d*$/))
     {
-        this.addMessage("pid-validation-" + pVar, "Value must be a number", "error", this.toolTopLeft, 
+        this.addMessage("pid-validation-" + pVar, "Value must be a number", "error", this.toolTopLeft[pVar], 
                 this.toolTipTop[pVar], "left");
         return false;
     }
@@ -420,7 +427,7 @@ PIDControl.prototype.validate = function(pVar, val) {
         if (n < 0 || n > 300)
         {
             this.addMessage("pid-validation-" + pVar, "Setpoint out of range, must be between 0 and 300 mm.", 
-                    "error", this.toolTopLeft, this.toolTipTop[pVar], "left");
+                    "error", this.toolTopLeft[pVar], this.toolTipTop[pVar], "left");
             return false;
         }
         break;
@@ -474,7 +481,8 @@ PIDControl.prototype.applyClick = function() {
  */
 PIDControl.prototype.guidance = function(id) {
     this.removeMessages();
-    this.addMessage("pid-guidance-" + id, this.guidanceMsgs[id], "info", this.toolTopLeft, this.toolTipTop[id], "left");
+    this.addMessage("pid-guidance-" + id, this.guidanceMsgs[id], "info", this.toolTopLeft[id], 
+            this.toolTipTop[id], "left");
 };
 
 /* ============================================================================
