@@ -70,14 +70,17 @@
     color: #777;
 }
 
-.windowcontent {
+.windowcontent, .tab-content {
 	position: relative;
     padding: 10px 10px 6px 10px;
     margin: 5px;
     background: #FFF;
     border: solid 1px #C0C0C0;
     border-radius: 0 0 10px 10px;
-    overflow: hidden;
+}
+
+.windowcontent {
+	overflow: hidden;
 }
 
 .resizable {
@@ -113,10 +116,6 @@
     cursor: pointer;
 }
 
-.tab-title .windowtitle {
-	display: none;
-}
-
 .tab-active {
 	background-color: #333333;
 }
@@ -126,8 +125,8 @@
  ** Display Manager                                                          **
  ******************************************************************************/
 #display-manager {
-	left: -220px;
-	top: 150px;
+	left: -194px;
+	top: 139px;
 }
 
 #display-manager .button img {
@@ -376,7 +375,7 @@
 #camera-coupled-tanks {
 	position: absolute;
 	left: 5px;
-	top: 20px;
+	top: 1px;
 }
 
 #camera-coupled-tanks .windowcontent {
@@ -700,8 +699,8 @@
  ******************************************************************************/
 #controls-tabs {
 	position: absolute;
-	left: -25px;
-	top: 305px;
+	left: 26px;
+	top: 288px;
 }
 
 /******************************************************************************
@@ -710,12 +709,12 @@
 
 #graph-tank-levels-box {
     left: 275px;
-    top: 480px;
+    top: 465px;
 } 
 
 #graph-flow-rates-box {
-    left: -440px;
-    top: 480px;
+    left: -415px;
+    top: 465px;
 } 
 
 /******************************************************************************
@@ -755,7 +754,7 @@
  ******************************************************************************/
 #water-levels-mimic {
     left: 345px;
-    top: 20px;
+    top: 1px;
 }
 
 #mimic-bg {

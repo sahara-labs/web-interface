@@ -66,6 +66,7 @@ WaterLevelControl.prototype.setup = function() {
 	
 	t = new TabbedWidget(this.$container, 'Controls', [ o, new PIDControl(this.$container) ], 
 	        'control-mode', 'setManualMode');
+	t.setDimensions(280, 110);
 	t.setToolTips([
 	    'Manually set the flow rate by varying the percent the valve is open.',
 	    'Enable closed loop control using the proportional-integral-derivative (PID) controller.'
@@ -859,6 +860,14 @@ function TabbedWidget($container, title, widgets, modeVar, modeAction)
    /** Tools tips of the tab. */
    this.toolTips = undefined;
    
+   /** Width of the tab box. If this is undefined, the box takes the width
+    *  of its currently displayed contents. */
+   this.width = undefined;
+   
+   /** Height of the box. If this is undefinde, the box takes the height of
+    *  its currently displayed contents. */
+   this.height = undefined;
+   
    /** Server mode variable the controls which tab is currently active. */ 
    this.modeVar = modeVar;
    
@@ -880,7 +889,7 @@ TabbedWidget.prototype = new DisplayManager;
 TabbedWidget.prototype.init = function() {
     /* Render the content box. */
 	this.$widget = this.generateBox(this.id);
-	this.$tabContainer = this.$widget.find(".windowcontent");
+	this.$tabContainer = this.$widget.find(".tab-content");
 	
 	var i = 0;
 	for (i in this.widgets)
@@ -920,7 +929,8 @@ TabbedWidget.prototype.generateBox = function(boxId) {
     html += 
                "<div class='tab-clear'></div>" +
          "</div>" + 
-         "<div class='windowcontent'></div>" +
+         "<div class='tab-content' style='width:" + (this.width ? this.width + "px" : "inherit") + 
+         		";height:" + (this.height ? this.height + "px" : "inherit") + "'></div>" +
       "</div>";
 
     return this.$container.append(html).children().last();
@@ -997,6 +1007,18 @@ TabbedWidget.prototype.destroyCurrentTab = function() {
  */
 TabbedWidget.prototype.setToolTips = function(toolTips) {
     this.toolTips = toolTips;
+};
+
+/**
+ * Sets the dimension of the box. If the width and height are undefined,
+ * the box size is determined by its displayed contents.
+ * 
+ * @param width width of the box in pixels
+ * @param height height of the box in pixels
+ */
+TabbedWidget.prototype.setDimensions = function(width, height) {
+    this.width = width;
+    this.height = height;
 };
 
 /* ============================================================================
