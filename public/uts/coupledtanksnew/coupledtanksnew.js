@@ -327,7 +327,7 @@ PIDControl.prototype.init = function() {
 	/* Input field handlers. */
 	this.$widget.find("input")
 	        .focusin(formFocusIn)   // Input entered focus
-	        .focusout(formFocusOut) // Input exited focus
+	        .focusout(formFoczusOut) // Input exited focus
 	        .change(function() {    // Input value modified
 	            if (thiz.validate($(this).attr("id").substr(4), $(this).val()) && !thiz.isChanged)
 	            {
@@ -1799,22 +1799,66 @@ function CameraWidget($container, title, attr)
 
 	/** The list of address for the each of the camera formats. */
 	this.urls = {
-		swf: '',   // Flash format
-		mjpeg: ''  // MJPEG format
+		swf:   undefined, // Flash format
+		mjpeg: undefined  // MJPEG format
 	};  
+	
+	/** Whether the camera is deployed. */
+	this.isDeployed = false;
+	
+	/** Current format. */
+	this.currentFormat = undefined;
 };
 CameraWidget.prototype = new Widget;
 
 CameraWidget.prototype.init = function() {
+    /* Reset. */
+    this.isDeployed = false;
+    
 	this.$widget = this.generateBox('camera-' + this.id);
 
 	this.enableDraggable();
-	this.enableResizable('16 / 9', 192, 340);
+};
+
+CameraWidget.prototype.consume = function(data) {
+    /* Camera streams don't change. */
+    if (this.isDeployed) return;
+    
+    if (!(data['camera-swf'] == undefined && data['camera-swf'] == this.urls.swf)) 
+    {
+        this.urls.swf = data['camera-swf'];
+    }
+    
+    if (!(data['camera-mjpeg'] == undefined && data['camera-mjpeg'] == this.urls.mjpeg)) 
+    {
+        this.urls.mjpeg = data['camera-mjpeg'];
+    }
+    
+    this.defaultDeploy();
+};
+
+/**
+ * Deploys an appropriate camera stream for the platform.
+ */
+CameraWidget.prototype.defaultDeploy = function() {
+    var html;
+    
+    if ((this.currentFormat = /Mobile|mobi/i.test(navigator.userAgent) ? 'mjpeg' : 'swf') == 'swf')
+    {
+        html = this.getSwfHtml();
+    }
+    else
+    {
+        html = this.getMjpegHtml();
+    }
+    
+    this.isDeployed = true;
+    this.$widget.find(".video-player").html(html);
 };
 
 
 CameraWidget.prototype.getHTML = function() {	
-	return(
+	return (
 		'<div class="video-player" style="height:' + this.height + 'px;width:' + this.width + 'px">' +
 		'	<div class="video-placeholder">Please wait...' +
 		'</div>'
@@ -1825,9 +1869,7 @@ CameraWidget.prototype.getHTML = function() {
  * Gets the HTML to deploy a SWF stream format. 
  */
 CameraWidget.prototype.getSwfHtml = function() {
-	return 
-		(!$.browser.msie ? // Firefox, Chrome, ...
-
+	return (!$.browser.msie ? // Firefox, Chrome, ...
 			'<object type="application/x-shockwave-flash" data="' + this.swf + '" ' +
 	 				'width="' +  this.width  + '" height="' + this.height + '">' +
 		        '<param name="movie" value="' + 'this.urls.swf' + '"/>' +
@@ -1850,8 +1892,8 @@ CameraWidget.prototype.getSwfHtml = function() {
  * Gets the HTML to deploy a MJPEG stream.
  */
 CameraWidget.prototype.getMjpegHtml = function() {
-	return 
-		(!$.browser.msie ? // Firefox, Chrome, ...
+	
+	return (!$.browser.msie ? // Firefox, Chrome, ...
 			 '<img style="width:' + this.width + 'px;height:' + this.height + 'px" ' +
 						'src="' + this.mjpeg + '?' + new Date().getTime() + ' alt="&nbsp;" />'
 		 :                 // Internet Explorer
