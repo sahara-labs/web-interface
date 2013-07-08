@@ -166,6 +166,13 @@
     position: absolute;
 }
 
+.reset-button{
+	text-align: center !important;
+    font-size: 13px !important;
+    background: #F3F3F3 !important;
+    color: #555 !important;
+    text-shadow: 1px 1px 0px #FFFFFF;
+}
 /******************************************************************************
  ** Buttons                                                                  **
  ******************************************************************************/
