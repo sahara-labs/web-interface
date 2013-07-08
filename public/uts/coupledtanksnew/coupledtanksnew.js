@@ -166,8 +166,8 @@ function WaterLevelsMimic($container) {
 
 	/** Display precision for our data variables. */
 	this.precision = {
-		'l1': 0,
-		'l2': 0,
+		'l1': 1,
+		'l2': 1,
 		't1-in': 1,
 		't2-out': 1,
 		't1-to-t2': 1,
@@ -327,7 +327,7 @@ PIDControl.prototype.init = function() {
 	/* Input field handlers. */
 	this.$widget.find("input")
 	        .focusin(formFocusIn)   // Input entered focus
-	        .focusout(formFoczusOut) // Input exited focus
+	        .focusout(formFocusOut) // Input exited focus
 	        .change(function() {    // Input value modified
 	            if (thiz.validate($(this).attr("id").substr(4), $(this).val()) && !thiz.isChanged)
 	            {
@@ -1895,7 +1895,7 @@ CameraWidget.prototype.getMjpegHtml = function() {
 	
 	return (!$.browser.msie ? // Firefox, Chrome, ...
 			 '<img style="width:' + this.width + 'px;height:' + this.height + 'px" ' +
-						'src="' + this.urls.mjpeg + '?' + new Date().getTime() + ' alt="&nbsp;" />'
+						'src="' + this.urls.jpeg + '?' + new Date().getTime() + ' alt="&nbsp;" />'
 		 :                 // Internet Explorer
 			 '<applet code="com.charliemouse.cambozola.Viewer" archive="/applets/cambozola.jar" ' + 
 					'width="' + this.width + '" height="' + this.height + '">' +
