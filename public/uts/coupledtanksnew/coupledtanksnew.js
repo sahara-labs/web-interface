@@ -569,7 +569,7 @@ Widget.prototype.unblur = function() { };
  * @param width the new widget width
  * @param height the new widget height
  */
-Widget.prototype.resize = function(width, height) { };
+Widget.prototype.resized = function(width, height) { };
 
 /**
  * Event callback that is invoked when the widget has been dragged. 
@@ -700,19 +700,18 @@ Widget.prototype.enableDraggable = function() {
 /**
  * Enables this widget to be resizable. 
  * 
- * @param aspect the aspect resize the drag is restricted to
- * @param minHeight the minimum height the widget can be resized to
- * @param minWidth the minimum width the widget can be resized to
+ * @param minWidth the minimum width the widget can be resized to (optional)
+ * @param minHeight the minimum height the widget can be resized to (optional)
+ * @param preserveAspectRatio whether to preserve the widgets aspect ratio, default to not preserve 
  */
-Widget.prototype.enableResizable = function(aspect, minHeight, minWidth) {
-	this.minHeight = minHeight;
-	this.minWidth = minWidth;
-
-	this.$widget.find(".windowcontent").resizable({
-		 aspectRatio: aspect,
-         minHeight: this.minHeight,
-         minWidth: this.minWidth,
+Widget.prototype.enableResizable = function(minWidth, minHeight, preserveAspectRatio) {
+    var thiz = this;
+	this.$widget.resizable({
+         minWidth: minWidth,
+         minHeight: minHeight,
+         aspectRatio: preserveAspectRatio != undefined ? true : false,
          distance: 10,
+         resize: function(e, ui) { thiz.resized(ui.size.width, ui.size.height); }
 	});
 };
 
@@ -1125,6 +1124,9 @@ GraphWidget.prototype.init = function() {
 
 	/* Enable dragging. */
 	this.enableDraggable();
+	
+	/* Enable resizing. */
+	this.enableResizable(324, 212, true);
 };
 
 /** The number of vertical scales. */
@@ -1430,6 +1432,7 @@ GraphWidget.prototype.setAxisLabels = function(x, y) {
 	this.axis.x = x;
 	this.axis.y = y;
 };
+
 
 /* ============================================================================
  * == Slider Widget                                                          ==
