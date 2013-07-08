@@ -672,10 +672,19 @@ Widget.prototype.enableDraggable = function() {
         stack: '.windowwrapper',
         increaseZindexOnmousedown: true,
         distance: 10,
-        handle: 'draggable-header',
+        handle: '.draggable-header',
         stop: function() {
+            
+            /** Gets the widgets position */
         	var p = $(this).position();
         	thiz.dragged(p.left, p.top);
+        	
+        	/** Converts p into a JSON string */
+        	var pos = JSON.stringify(p);
+        	
+        	/** Stores position as cookie */
+        	document.cookie = this.id + '-position' + '=' + pos;
+
         }
     });
 
@@ -781,7 +790,8 @@ DisplayManager.prototype.init = function() {
 
 DisplayManager.prototype.getHTML = function() {	
 	var i = 0, html =
-		'<div class="buttonwrapper">';
+		'<div class="buttonwrapper">' +
+		'<div class="button reset-button" name="resetPos">Reset positions</div>';
 
 	for (i in this.widgets)
 	{
