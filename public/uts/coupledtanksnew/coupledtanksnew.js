@@ -709,7 +709,7 @@ Widget.prototype.enableResizable = function(minWidth, minHeight, preserveAspectR
 	this.$widget.resizable({
          minWidth: minWidth,
          minHeight: minHeight,
-         aspectRatio: preserveAspectRatio != undefined ? true : false,
+
          distance: 10,
          resize: function(e, ui) { thiz.resized(ui.size.width, ui.size.height); }
 	});
@@ -1048,14 +1048,21 @@ function GraphWidget($container, title, chained)
 
 	/** ID of canvas. */
 	this.id = "graph-" + title.toLowerCase().replace(' ', '-');
+	
+	/** The box width. The box is the outmost container of the widget. */
+	this.boxWidth = undefined;
+	
+	/** The box height. */
+	this.boxHeight = undefined;
+	
 
 	/** Width of the graph, including the padding whitespace but excluding the
 	 *  border width. */
-	this.width = 600;
+	this.width = 416;
 
 	/** Height of the graph, including the padding whitespace but excluding the
 	 *  border width and border title. */
-	this.height = 300;
+	this.height = 175;
 
 	/*(* The minimum expected graphed value. A value smaller than this will be
 	 *  clipped. */
@@ -1108,6 +1115,10 @@ GraphWidget.prototype.init = function() {
 	var canvas = getCanvas(this.id, this.width, this.height);
 	this.$widget.find("#" + this.id + "-canvas").append(canvas);
 	this.ctx = canvas.getContext("2d");
+	
+	/* Track size. */
+	this.boxWidth = parseInt(this.$widget.css("width"));
+	this.boxHeight = parseInt(this.$widget.css("height"));
 
 	/* Event handlers. */
 	var thiz = this;
@@ -1126,14 +1137,14 @@ GraphWidget.prototype.init = function() {
 	this.enableDraggable();
 	
 	/* Enable resizing. */
-	this.enableResizable(324, 212, true);
+	this.enableResizable(500, 300, false);
 };
 
 /** The number of vertical scales. */
 GraphWidget.NUM_VERT_SCALES = 5;
 
 /** The number of horizontal scales. */
-GraphWidget.NUM_HORIZ_SCALES = 10;
+GraphWidget.NUM_HORIZ_SCALES = 8;
 
 GraphWidget.prototype.getHTML = function() {
    
@@ -1359,6 +1370,52 @@ GraphWidget.prototype.showTrace = function(label, show) {
 	}
 
 	this.drawFrame();
+};
+
+/**
+ * Handles a resize event by resizing the graph.
+ * 
+ * @param width the new box width
+ * @param height the new box height
+ */
+GraphWidget.prototype.resized = function(width, height) {
+    this.width = this.width + (width - this.boxWidth);
+    this.height = this.height + (height - this.boxHeight);
+    
+    this.boxWidth = width;
+    this.boxHeight = height;
+    
+    /* Adjust dimensions of canvas, box and other stuff. */
+    this.$widget.find("canvas").attr({
+        width: this.width,
+        height: this.height
+    });
+    
+    this.$widget.find(".graph-canvas-box").css({
+        width: this.width,
+        height: this.height 
+    });
+    
+    var i, $s = this.$widget.find(".graph-left-scale-0");
+    
+    /* Left scales. */
+    for (i = 0; i <= GraphWidget.NUM_VERT_SCALES; i++)
+    {
+        $s.css("top", this.height / GraphWidget.NUM_VERT_SCALES * i);
+        $s = $s.next();
+    }
+    
+    /* Left label. */
+    this.$widget.find(".graph-left-axis-label").css("top", this.boxHeight / 2 - this.axis.y.length * 3);
+    
+    /* Bottom scales. */
+    for (i = 0, $s = this.$widget.find(".graph-bottom-scale-0"); i <= GraphWidget.NUM_HORIZ_SCALES; i++)
+    {
+        $s.css("left", this.width / GraphWidget.NUM_HORIZ_SCALES * i);
+        $s = $s.next();
+    }
+    
+    this.drawFrame();
 };
 
 /**

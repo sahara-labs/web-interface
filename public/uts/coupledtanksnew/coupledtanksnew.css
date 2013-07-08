@@ -369,8 +369,8 @@
 	margin-left: 10px;
 }
 
-.graph-bottom-scale-10 {
-	margin-left: -15px;
+.graph-bottom-scale-8 {
+	margin-left: -10px;
 }
 
 .graph-axis-label {
@@ -732,12 +732,14 @@ t.slider-scales-vertical {
  ******************************************************************************/
 
 #graph-tank-levels-box {
+	position: absolute;
     left: 275px;
     top: 475px;
 } 
 
 #graph-flow-rates-box {
-    left: -415px;
+	position: absolute;
+    left: -230px;
     top: 475px;
 } 
 
