@@ -883,12 +883,14 @@ t.slider-scales-vertical {
 
 #water-levels-mimic #mimic-l1 {
     top: 177px;
-    left: 85px;
+    left: 80px;
+    width: 54px;
 }
 
 #water-levels-mimic #mimic-l2 {
     top: 177px;
-    left: 230px;
+    left: 226px;
+    width: 54px;
 }
 
 #water-levels-mimic #mimic-t1-in {
