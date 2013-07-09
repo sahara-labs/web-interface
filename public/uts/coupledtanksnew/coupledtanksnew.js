@@ -563,13 +563,21 @@ Widget.prototype.blur = function() { };
 Widget.prototype.unblur = function() { };
 
 /** 
- * Event callback that is invoked when the widget is resized.  This is
- * provided in case the widget contents require rescaling. 
+ * Event callback that is invoked when the widget is resized. This is called 
+ * multiple times during resizing should be a speedy operation.
  * 
  * @param width the new widget width
  * @param height the new widget height
  */
 Widget.prototype.resized = function(width, height) { };
+
+/**
+ * Event callback that is invoked when the widget has finished resizing. 
+ * 
+ * @param width the final widget width
+ * @param height the final widget height
+ */
+Widget.prototype.resizeStopped = function(width, height) { };
 
 /**
  * Event callback that is invoked when the widget has been dragged. 
@@ -718,9 +726,10 @@ Widget.prototype.enableResizable = function(minWidth, minHeight, preserveAspectR
 	this.$widget.resizable({
          minWidth: minWidth,
          minHeight: minHeight,
-
+         aspectRatio: preserveAspectRatio,
          distance: 10,
-         resize: function(e, ui) { thiz.resized(ui.size.width, ui.size.height); }
+         resize: function(e, ui) { thiz.resized(ui.size.width, ui.size.height); },
+	     stop: function(e, ui) { thiz.resizeStop(ui.size.width, ui.size.height); }
 	});
 };
 
@@ -1147,7 +1156,7 @@ GraphWidget.prototype.init = function() {
 	this.enableDraggable();
 	
 	/* Enable resizing. */
-	this.enableResizable(500, 300, false);
+	this.enableResizable(500, 300);
 };
 
 /** The number of vertical scales. */
@@ -1382,12 +1391,7 @@ GraphWidget.prototype.showTrace = function(label, show) {
 	this.drawFrame();
 };
 
-/**
- * Handles a resize event by resizing the graph.
- * 
- * @param width the new box width
- * @param height the new box height
- */
+
 GraphWidget.prototype.resized = function(width, height) {
     this.width = this.width + (width - this.boxWidth);
     this.height = this.height + (height - this.boxHeight);
@@ -1424,7 +1428,10 @@ GraphWidget.prototype.resized = function(width, height) {
         $s.css("left", this.width / GraphWidget.NUM_HORIZ_SCALES * i);
         $s = $s.next();
     }
-    
+};
+
+GraphWidget.prototype.resizeStopped = function(width, height) {
+    this.resized(width, height);
     this.drawFrame();
 };
 
