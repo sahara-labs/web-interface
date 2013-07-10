@@ -37,7 +37,7 @@ WaterLevelControl.prototype.setup = function() {
 	var o, t;
 
 	/* Mimic of the system. */
-	this.widgets.push(new WaterLevelsMimic(this.$container));
+	this.widgets.push(new WaterLevelsMimic(this.$container,'Water Levels'));
 
 	/* Graph to display tank levels. */
 	o = new GraphWidget(this.$container, "Tank Levels");
@@ -157,10 +157,13 @@ WaterLevelControl.prototype.errorData = function(msg) {
 /**
  * Creates and controls the Water Levels Mimic widget.
  */
-function WaterLevelsMimic($container) {
+function WaterLevelsMimic($container, title) {
 
 	Widget.call(this, $container, 'Diagram', 'mimic');
-
+    
+    /** Identifier of the mimic. */
+	this.id = title.toLowerCase().replace(' ', '-');
+	
 	/** Variables that are displayed on the mimic. */
 	this.dataVars = { };
 
@@ -660,11 +663,51 @@ Widget.hasZIndexFix = false;
  * Enables this widget to be draggable.
  */
 Widget.prototype.enableDraggable = function() {
+		
     /* Adds the CSS for the draggable widgets */
     this.$widget.addClass('draggable');
     this.$widget.find('.windowheader').addClass('draggable-header');
+   
+    /** Set the cookie names */
+    var cookieNameP = this.id + '-pos';
+    var cookieNameZ = this.id + '-z';
+
+    /** if the position cookie exists */
+    if (document.cookie.indexOf(cookieNameP) != -1){
+             
+        /** function that retrieves cookie values*/              
+        function getCookie(c_name) {
+		    var c_value = document.cookie;
+		    var c_start = c_value.indexOf(" " + c_name + "=");
+		    if (c_start == -1) {
+		        c_start = c_value.indexOf(c_name + "=");
+		    }
+		    if (c_start == -1) {
+		    c_value = null;
+		    }
+		    else {
+		        c_start = c_value.indexOf("=", c_start) + 1;
+		        var c_end = c_value.indexOf(";", c_start);
+		        if (c_end == -1) {
+		            c_end = c_value.length;
+		        }
+		        c_value = unescape(c_value.substring(c_start,c_end));
+		    }
+		    return JSON.parse(c_value);
+		}   
+        
+        /** retrieves the values for position and zIndex */
+        var cookiePos = getCookie(cookieNameP);
+        var cookieZ = getCookie(cookieNameZ);
+        
+        /** update the widgets position */
+        this.$widget.css({left: cookiePos.left, top: cookiePos.top});
+           
+        /** update the widgets zIndex */
+        this.$widget.zIndex(cookieZ);        
+    }
     
-	/* Enables dragging on the widgets 'windowwrapper' class. */
+	/* Enables dragging on the widgets 'windowwrapper' class */
     var thiz = this;
 	this.$widget.draggable({
         snap: true,
@@ -679,12 +722,15 @@ Widget.prototype.enableDraggable = function() {
         	var p = $(this).position();
         	thiz.dragged(p.left, p.top);
         	
-        	/** Converts p into a JSON string */
-        	var pos = JSON.stringify(p);
+        	/** stores postion in a cookie as a JSON string */
+        	document.cookie = cookieNameP + '=' + JSON.stringify(p);       	
         	
-        	/** Stores position as cookie */
-        	document.cookie = this.id + '-position' + '=' + pos;
-
+        	/** Gets the widgets zIndex */
+            var z = $(this).zIndex();
+        	thiz.dragged(z.z);
+            
+            /** stores zIndex in a cookie as a JSON string */
+            document.cookie = cookieNameZ + '=' + JSON.stringify(z);
         }
     });
 
@@ -701,7 +747,7 @@ Widget.prototype.enableDraggable = function() {
 	            });
 	        }
 	    });
-
+	    
 	    Widget.hasZIndexFix = true;
 	}
 };
@@ -756,7 +802,10 @@ Widget.prototype.postControl = function(action, params, responseCallback, errorC
 function DisplayManager($container, title, widgets) 
 {	
     Widget.call(this, $container, title, 'toggle');
-    
+
+    /** Identifier of the display manager box. */
+    this.id = 'display-manager';
+
     /** Widgets that are toggle able by this widget. */
     this.widgets = widgets;
     
@@ -785,7 +834,7 @@ DisplayManager.prototype.init = function() {
     this.$widget.find('.toggle').click(function() {    
     	$(this).find('.switch .slide').toggleClass("on off");
     	thiz.toggleWidget($(this).find("span").html());
-    });    
+    });
 };
 
 DisplayManager.prototype.getHTML = function() {	
@@ -834,7 +883,6 @@ DisplayManager.prototype.toggleWidget = function(title) {
 		}
 	}
 };
-
 DisplayManager.prototype.consume = function(data) {
 	var i = 0;
 	for (i in this.widgets) if (this.states[i]) this.widgets[i].consume(data);
