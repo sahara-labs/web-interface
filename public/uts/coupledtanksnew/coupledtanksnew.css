@@ -307,7 +307,7 @@
 .graph-labels {
 	position: absolute;
 	right: 5px;
-	color:#777777;
+	color: #777777;
 }
 
 .graph-label {
@@ -318,6 +318,7 @@
 .graph-label-text{
 	float: left;
 	margin-right: 5px;
+	color: #777777;
 }
 
 .graph-label .switch{
@@ -360,9 +361,8 @@
 }
 
 .graph-bottom-scales {
-	position: absolute;	
-	left: 50px;
-	bottom: 44px;
+	position: relative;	
+	margin: -35px 0 40px 44px;
 }
 
 .graph-bottom-scales div {
@@ -395,9 +395,37 @@
 }
 
 .graph-bottom-axis-label {
+	position: relative;
 	left: 0;
+	top: 20px;
 	width: 100%;
-	margin: -14px auto;
+	margin: 0 auto;
+}
+
+.graph-controls-show {
+	float: right;
+	width: 100px;
+	margin-top: 20px;
+	z-index: 10;
+}
+
+.graph-controls-show label {
+	margin-top: 4px;
+}
+
+.graph-controls {
+	display: none;
+	height: 60px;
+	margin-top: 20px;
+}
+
+.graph-autoscale {
+	width: 110px;
+	margin: 15px 0 0 10px;
+}
+
+.graph-autoscale label {
+	margin-top: 5px;
 }
 
 /******************************************************************************

@@ -729,7 +729,7 @@ Widget.prototype.enableResizable = function(minWidth, minHeight, preserveAspectR
          aspectRatio: preserveAspectRatio,
          distance: 10,
          resize: function(e, ui) { thiz.resized(ui.size.width, ui.size.height); },
-	     stop: function(e, ui) { thiz.resizeStop(ui.size.width, ui.size.height); }
+	     stop: function(e, ui) { thiz.resizeStopped(ui.size.width, ui.size.height); }
 	});
 };
 
@@ -1074,7 +1074,6 @@ function GraphWidget($container, title, chained)
 	/** The box height. */
 	this.boxHeight = undefined;
 	
-
 	/** Width of the graph, including the padding whitespace but excluding the
 	 *  border width. */
 	this.width = 416;
@@ -1083,13 +1082,24 @@ function GraphWidget($container, title, chained)
 	 *  border width and border title. */
 	this.height = 175;
 
-	/*(* The minimum expected graphed value. A value smaller than this will be
+	/** The minimum expected graphed value. A value smaller than this will be
 	 *  clipped. */
 	this.minGraphedValue = undefined;
 
 	/** The maximum expected graphed value. A value greater than this will be 
 	 *  clipped. */
 	this.maxGraphedValue = undefined;
+	
+	/** Whether the graph is autoscaling. */
+	this.isAutoscaling = false;
+	
+	/** The range of values. If autoscaling, this is determined as the difference
+	 *  between the largest and smallest valuem, if not this is the difference 
+	 *  between the max and min graphed values. */
+	this.graphRange = undefined;
+	
+	/** The zero point offset of the graph in pixels. */
+	this.graphOffset = undefined;
 
 	/** Canvas context. */
 	this.ctx = null;
@@ -1124,6 +1134,10 @@ function GraphWidget($container, title, chained)
 
 	/** Graphs that are chained to this graph. */
 	this.chained = chained;
+	
+	/** Whether the controls are displayed. */
+	this.isControlsDisplayed = false;
+
 }
 GraphWidget.prototype = new Widget;
 
@@ -1144,6 +1158,14 @@ GraphWidget.prototype.init = function() {
 	this.$widget.find('.graph-label').click(function() {    
 		thiz.showTrace($(this).children(".graph-label-text").text(), 
 				$(this).find(".switch .slide").toggleClass("on off").hasClass("on"));
+	});
+	
+	this.$widget.find(".graph-controls-show").click(function() {
+	    thiz.showControls($(this).find(".switch .slide").toggleClass("on off").hasClass("on"));
+	});
+	
+	this.$widget.find(".graph-autoscale").click(function() {
+	   thiz.enableAutoscale($(this).find(".switch .slide").toggleClass("on off").hasClass("on")); 
 	});
 
 	/* Draw the first frame contents. */
@@ -1175,7 +1197,7 @@ GraphWidget.prototype.getHTML = function() {
 	{
 		html += "	<div class='graph-label'>" + 
 				"		<label for='graph-label-" + i + "' class='graph-label-text'>" + this.dataFields[i].label + "</label>" +  
-		        "       <div id='graph-label-" + i + "'class='switch graph-label-enable'>" +
+		        "       <div id='graph-label-" + i + "' class='switch graph-label-enable'>" +
         		"		    <div class='animated slide on'></div>" +
         		"       </div>" +
 				"		<div class='graph-label-color-box'>" +
@@ -1186,7 +1208,7 @@ GraphWidget.prototype.getHTML = function() {
 	html += "</div>";
 
 	/* Left scale. */
-	unitScale = Math.floor((this.maxGraphedValue - this.minGraphedValue) / GraphWidget.NUM_VERT_SCALES);
+	unitScale = Math.floor(this.graphRange / GraphWidget.NUM_VERT_SCALES);
 	styleScale = this.height / GraphWidget.NUM_VERT_SCALES;
 	html += "<div class='graph-left-scales'>";
 	for (i = 0; i <= GraphWidget.NUM_VERT_SCALES; i++)
@@ -1215,6 +1237,24 @@ GraphWidget.prototype.getHTML = function() {
 
 	/* Bottom axis label. */
 	html += "<div class='graph-axis-label graph-bottom-axis-label'>" + this.axis.x + "</div>";
+	
+	/* Controls show / hide button. */
+	html += "<div class='graph-controls-show'>" +
+        	"   <label for='" + this.id + "-graph-controls-show' class='graph-label-text'>Controls</label>" +  
+            "   <div id='" + this.id + "-graph-controls-show' class='switch graph-controls-show-enable'>" +
+            "       <div class='animated slide off'></div>" +
+            "   </div>" +
+	        "</div>";
+	
+	/* Controls. */
+	html += "<div class='graph-controls'>" +
+        	"   <div class='graph-autoscale'>" +
+            "       <label for='" + this.id + "-graph-autoscale' class='graph-label-text'>Autoscale</label>" +  
+            "       <div id='" + this.id + "-graph-autoscale' class='switch'>" +
+            "          <div class='animated slide off'></div>" +
+            "       </div>" +
+            "   </div>";
+	        "</div>";
 
 	return html;
 };
@@ -1238,7 +1278,7 @@ GraphWidget.prototype.acquireData = function() {
 			if (thiz.isPulling) setTimeout(function() { thiz.acquireData(); }, 500);
 		},
 		error: function(data) {
-			if (thiz.isPulling) setTimeout(function() { thiz.acquireData(); }, 30000);
+			if (thiz.isPulling) setTimeout(function() { thiz.acquireData(); }, 5000);
 		}
 	});
 };
@@ -1262,9 +1302,17 @@ GraphWidget.prototype.updateData = function(data) {
 		this.dataFields[i].seconds = data.duration;
 		this.displayedDuration = data.duration;
 	}
+	
+    if (this.isAutoscaling) 
+    {
+        /* Determine graph scaling for this frame and label it. */
+        this.adjustScaling();
+        this.updateDependantScale();
+    }
 
 	this.drawFrame();
 	this.updateTimeScale();
+
 
 	/* Forward data onto chained graph. */
 	if (this.chained != undefined) this.chained.updateData(data);
@@ -1275,14 +1323,35 @@ GraphWidget.prototype.updateData = function(data) {
  */
 GraphWidget.prototype.drawFrame = function() {
 	var i = 0;
-
+	
 	/* Clear old frame. */
 	this.ctx.clearRect(0, 0, this.width, this.height);
-
-	this.drawScales();
-
+	
+	/* Draw scales. */
+	this.drawDependantScales();
+	    
 	/* Draw the trace for all graphed variables. */
 	for (i in this.dataFields) this.drawTrace(this.dataFields[i]);
+};
+
+/**
+ * Adjusts the scaling and offset based on the range of values in the graphed
+ * datasets.
+ */
+GraphWidget.prototype.adjustScaling = function() {
+    var min = Number.POSITIVE_INFINITY, max = Number.NEGATIVE_INFINITY, j;
+
+    for (i in this.dataFields)
+    {
+        for (j = 0; j < this.dataFields[i].values.length; j++)
+        {
+            if (this.dataFields[i].values[j] < min) min = this.dataFields[i].values[j];
+            if (this.dataFields[i].values[j] > max) max = this.dataFields[i].values[j];
+        }
+    }
+
+    this.graphRange = max - min;
+    this.graphOffset = min / this.graphRange;    
 };
 
 /** The stipple width. */
@@ -1291,24 +1360,43 @@ GraphWidget.STIPPLE_WIDTH = 10;
 /**
  * Draws the scales on the interface.
  */
-GraphWidget.prototype.drawScales = function() {
+GraphWidget.prototype.drawDependantScales = function() {
 	var i, j,
-		dt = this.height / GraphWidget.NUM_VERT_SCALES;
+		dt = this.height / GraphWidget.NUM_VERT_SCALES,
+		off = Math.abs(this.graphOffset * this.height);
 
 	this.ctx.save();
-
-	this.ctx.strokeStyle = "#fff";
+	this.ctx.beginPath();
+	
+	this.ctx.strokeStyle = "#FFFFFF";
+	
+	/* Zero line. */
+	this.ctx.moveTo(0, off);
+	this.ctx.lineTo(this.width, off);
+	
 	this.ctx.lineWidth = 0.3;
 
-	for (i = 0; i < GraphWidget.NUM_VERT_SCALES; i++)
+	/* Below zero. */
+	for (i = off + dt; i < this.height; i += dt)
 	{
 		for (j = 0; j < this.width; j += GraphWidget.STIPPLE_WIDTH * 1.5)
 		{
-			this.ctx.moveTo(j, i * dt);
-			this.ctx.lineTo(j + GraphWidget.STIPPLE_WIDTH, i * dt);
+			this.ctx.moveTo(j, i + 0.25);
+			this.ctx.lineTo(j + GraphWidget.STIPPLE_WIDTH, i + 0.25);
+		}
+	}
+	
+	/* Above zero line. */
+	for (i = off - dt; i > 0; i -= dt)
+	{
+		for (j = 0; j < this.width; j += GraphWidget.STIPPLE_WIDTH * 1.5)
+		{
+			this.ctx.moveTo(j, i+ 0.25);
+			this.ctx.lineTo(j + GraphWidget.STIPPLE_WIDTH, i + 0.25);
 		}
 	}
 
+	this.ctx.closePath();
 	this.ctx.stroke();
 	this.ctx.restore();
 };
@@ -1321,9 +1409,8 @@ GraphWidget.prototype.drawScales = function() {
 GraphWidget.prototype.drawTrace = function(dObj) {
 	if (!dObj.visible) return;
 
-	var yScale = this.height / (this.maxGraphedValue - this.minGraphedValue),
-		xStep  = this.width / (dObj.seconds * 1000 / this.period),
-		i, yCoord;
+	var xStep  = this.width / (dObj.seconds * 1000 / this.period), 
+	    yScale = this.height / this.graphRange, i, yCoord;
 
 	this.ctx.save();
 	this.ctx.strokeStyle = dObj.color;
@@ -1337,10 +1424,10 @@ GraphWidget.prototype.drawTrace = function(dObj) {
 	this.ctx.beginPath();
 	for (i = 0; i < dObj.values.length; i++)
 	{
-		yCoord = this.height - dObj.values[i] * yScale;
+		yCoord = this.height - dObj.values[i] * yScale + this.graphOffset * this.height;
 		/* If value too large, clipping at the top of the graph. */
 		if (yCoord > this.height) yCoord = this.height;
-		/* If value too smale, clippling at the bottom of the graph. */
+		/* If value too small, clippling at the bottom of the graph. */
 		if (yCoord < 0) yCoord = 0;
 
 		if (i == 0)
@@ -1355,6 +1442,33 @@ GraphWidget.prototype.drawTrace = function(dObj) {
 
 	this.ctx.stroke();
 	this.ctx.restore();
+};
+
+/**
+ * Updates the dependant variable scale.
+ */
+GraphWidget.prototype.updateDependantScale = function() {
+    var i, n, $s = this.$widget.find(".graph-left-scales");
+    
+    if (this.graphOffset % GraphWidget.NUM_VERT_SCALES == 0)
+    {
+        $s.css("top", 33);
+        $s = $s.children(".graph-left-scale-0").show();
+        n = GraphWidget.NUM_VERT_SCALES;
+    }
+    else
+    {
+        $s.css("top", 33 + this.graphOffset * this.height / GraphWidget.NUM_VERT_SCALES);
+        $s = $s.children(".graph-left-scale-0").hide();
+        n = GraphWidget.NUM_VERT_SCALES + 1;
+    }
+    
+    for (i = 0; i <= GraphWidget.NUM_VERT_SCALES; i++)
+    {
+        $s.html(Math.round(this.graphRange + this.graphOffset * this.graphRange
+                - this.graphRange / n * i));
+        $s = $s.next();
+    }
 };
 
 /**
@@ -1428,11 +1542,38 @@ GraphWidget.prototype.resized = function(width, height) {
         $s.css("left", this.width / GraphWidget.NUM_HORIZ_SCALES * i);
         $s = $s.next();
     }
+    
+    this.$widget.css("height", "auto");
 };
 
 GraphWidget.prototype.resizeStopped = function(width, height) {
     this.resized(width, height);
     this.drawFrame();
+};
+
+/**
+ * Shows or hides the graph controls.
+ * 
+ * @param show whether to show the controls
+ */
+GraphWidget.prototype.showControls = function(show) {
+    var $n = this.$widget.find(".graph-controls");
+    $n.css("display", $n.css("display") == "none" ? "block" : "none");
+    this.$widget.css("height", "auto");
+};
+
+/**
+ * Enables or disables graph autoscaling. 
+ * 
+ * @param autoscale true if graph autoscales
+ */
+GraphWidget.prototype.enableAutoscale = function(autoscale) {
+    if (!(this.isAutoscaling = autoscale))
+    {
+        this.graphRange = this.maxGraphedValue - this.minGraphedValue;
+        this.graphOffset = this.minGraphedValue / this.graphRange;
+        this.updateDependantScale();
+    }
 };
 
 /**
@@ -1464,6 +1605,9 @@ GraphWidget.prototype.setDataVariable = function(dvar, label, color, min, max) {
 
 	if (this.minGraphedValue == undefined || min < this.minGraphedValue) this.minGraphedValue = min;
 	if (this.maxGraphedValue == undefined || max > this.maxGraphedValue) this.maxGraphedValue = max;
+	
+	this.graphRange = this.maxGraphedValue - this.minGraphedValue;
+	this.graphOffset = this.minGraphedValue / this.graphRange;
 };
 
 /**
@@ -1493,6 +1637,9 @@ GraphWidget.prototype.removeDataVariable = function(dvar) {
 			this.maxGraphedValue = this.dataFields[i].max;
 		}
 	}
+	
+	this.graphRange = this.maxGraphedValue - this.minGraphedValue;
+    this.graphOffset = this.minGraphedValue / this.graphRange;
 };
 
 /**
@@ -1911,6 +2058,7 @@ CameraWidget.prototype.consume = function(data) {
         this.urls.mjpeg = decodeURIComponent(data['camera-mjpeg']);
     }
     
+
     this.defaultDeploy();
 };
 
@@ -1920,7 +2068,7 @@ CameraWidget.prototype.consume = function(data) {
 CameraWidget.prototype.defaultDeploy = function() {
     var html;
     
-    if ((this.currentFormat = /Mobile|mobi/i.test(navigator.userAgent) ? 'mjpeg' : 'swf') == 'swf')
+    if ((this.currentFormat = /Mobile|mobi|Android|android/i.test(navigator.userAgent) ? 'mjpeg' : 'swf') == 'swf')
     {
         html = this.getSwfHtml();
     }
