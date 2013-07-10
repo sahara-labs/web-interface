@@ -1410,7 +1410,6 @@ GraphWidget.STIPPLE_WIDTH = 10;
  */
 GraphWidget.prototype.drawDependantScales = function() {
 	var i, j,
-		dt = this.height / GraphWidget.NUM_VERT_SCALES,
 		off = Math.abs(this.graphOffset * this.height);
 
 	this.ctx.save();
@@ -1419,27 +1418,20 @@ GraphWidget.prototype.drawDependantScales = function() {
 	this.ctx.strokeStyle = "#FFFFFF";
 	
 	/* Zero line. */
-	this.ctx.moveTo(0, off);
-	this.ctx.lineTo(this.width, off);
+	this.ctx.lineWidth = 3;
+	if (off > 0 && off < this.height)
+	{
+	    this.ctx.moveTo(0, off + 1.5);
+	    this.ctx.lineTo(this.width, off + 1.5);
+	}
 	
 	this.ctx.lineWidth = 0.3;
 
-	/* Below zero. */
-	for (i = off; i < this.height; i += dt)
+	for (i = 0; i < this.height; i += this.height / GraphWidget.NUM_VERT_SCALES)
 	{
 		for (j = 0; j < this.width; j += GraphWidget.STIPPLE_WIDTH * 1.5)
 		{
 			this.ctx.moveTo(j, i + 0.25);
-			this.ctx.lineTo(j + GraphWidget.STIPPLE_WIDTH, i + 0.25);
-		}
-	}
-	
-	/* Above zero line. */
-	for (i = off - dt; i > 0; i -= dt)
-	{
-		for (j = 0; j < this.width; j += GraphWidget.STIPPLE_WIDTH * 1.5)
-		{
-			this.ctx.moveTo(j, i+ 0.25);
 			this.ctx.lineTo(j + GraphWidget.STIPPLE_WIDTH, i + 0.25);
 		}
 	}
@@ -1496,24 +1488,12 @@ GraphWidget.prototype.drawTrace = function(dObj) {
  * Updates the dependant variable scale.
  */
 GraphWidget.prototype.updateDependantScale = function() {
-    var i, n, $s = this.$widget.find(".graph-left-scales");
-    
-    if (this.graphOffset % GraphWidget.NUM_VERT_SCALES == 0)
-    {
-        $s.css("top", 33);
-        $s = $s.children(".graph-left-scale-0").show();
-        n = GraphWidget.NUM_VERT_SCALES;
-    }
-    else
-    {
-        $s.css("top", 33 - Math.abs(this.graphOffset * this.height / GraphWidget.NUM_VERT_SCALES));
-        $s = $s.children(".graph-left-scale-0").hide();
-        n = GraphWidget.NUM_VERT_SCALES + 1;
-    }
+    var i, $s = this.$widget.find(".graph-left-scale-0");
     
     for (i = 0; i <= GraphWidget.NUM_VERT_SCALES; i++)
     {
-        $s.html(zeroPad(this.graphRange + this.graphOffset * this.graphRange - this.graphRange / n * i, 
+        $s.html(zeroPad(
+                this.graphRange + this.graphOffset * this.graphRange - this.graphRange / GraphWidget.NUM_VERT_SCALES * i, 
                 this.graphRange >= GraphWidget.NUM_VERT_SCALES * 2 ? 0 : 1));
         $s = $s.next();
     }
