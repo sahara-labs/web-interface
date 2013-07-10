@@ -1299,7 +1299,7 @@ GraphWidget.prototype.getHTML = function() {
         	"   <div class='graph-autoscale'>" +
             "       <label for='" + this.id + "-graph-autoscale' class='graph-label-text'>Autoscale</label>" +  
             "       <div id='" + this.id + "-graph-autoscale' class='switch'>" +
-            "          <div class='animated slide off'></div>" +
+            "          <div class='animated slide " + (this.isAutoscaling ? "on" : "off") + "'></div>" +
             "       </div>" +
             "   </div>";
 	        "</div>";
@@ -1425,7 +1425,7 @@ GraphWidget.prototype.drawDependantScales = function() {
 	this.ctx.lineWidth = 0.3;
 
 	/* Below zero. */
-	for (i = off + dt; i < this.height; i += dt)
+	for (i = off; i < this.height; i += dt)
 	{
 		for (j = 0; j < this.width; j += GraphWidget.STIPPLE_WIDTH * 1.5)
 		{
@@ -1506,15 +1506,15 @@ GraphWidget.prototype.updateDependantScale = function() {
     }
     else
     {
-        $s.css("top", 33 + this.graphOffset * this.height / GraphWidget.NUM_VERT_SCALES);
+        $s.css("top", 33 - Math.abs(this.graphOffset * this.height / GraphWidget.NUM_VERT_SCALES));
         $s = $s.children(".graph-left-scale-0").hide();
         n = GraphWidget.NUM_VERT_SCALES + 1;
     }
     
     for (i = 0; i <= GraphWidget.NUM_VERT_SCALES; i++)
     {
-        $s.html(Math.round(this.graphRange + this.graphOffset * this.graphRange
-                - this.graphRange / n * i));
+        $s.html(zeroPad(this.graphRange + this.graphOffset * this.graphRange - this.graphRange / n * i, 
+                this.graphRange >= GraphWidget.NUM_VERT_SCALES * 2 ? 0 : 1));
         $s = $s.next();
     }
 };
