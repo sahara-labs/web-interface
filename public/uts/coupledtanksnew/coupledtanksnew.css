@@ -82,7 +82,13 @@
 .windowcontent {
 	overflow: hidden;
 }
-
+.headerToggleIcons{
+    font-size: 10px;
+    cursor: pointer;
+    margin-right: 5px;
+    float: right;
+    color: #979797;
+}
 .resizable {
     min-width: 145px;
     min-height: 50px;

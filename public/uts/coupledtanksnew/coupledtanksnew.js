@@ -193,6 +193,7 @@ function WaterLevelsMimic($container, title) {
 WaterLevelsMimic.prototype = new Widget;
 
 WaterLevelsMimic.prototype.init = function() {
+	
 	this.$widget = this.generateBox('water-levels-mimic');
 
 	var i = 0;
@@ -228,6 +229,7 @@ WaterLevelsMimic.prototype.getHTML = function() {
         '</div>';
 
     return html;
+    
 };
 
 WaterLevelsMimic.prototype.consume = function(data) {
@@ -548,6 +550,9 @@ Widget.prototype.consume = function(data) { };
  * events handlers. 
  */
 Widget.prototype.destroy = function() { 
+	/** creates cookie to remember the state of the widget */
+    document.cookie = this.id + '-toggle' + '=' + 'off';
+    
     this.$widget.remove();
 };
 
@@ -646,11 +651,25 @@ Widget.prototype.removeMessages = function() {
  * @return jQuery node of the generated box that has been appended to the page
  */
 Widget.prototype.generateBox = function(boxId) {
+	
+    /** creates cookie to remember the state of the widget */
+	document.cookie = this.id + '-toggle' + '=' + 'on';
+	
+	/** does not show the toggle icons on the display manager */
+	var toggleIcons = function(id) {
+		if(id !== 'display-manager'){
+		    return	"<span class='headerToggleIcons'>shade | close</span>";
+		}else{
+			return "";
+		};
+	}
+	
     return this.$container.append(
       "<div class='windowwrapper' id='" + boxId + "'>" +
           "<div class='windowheader'>" +
               "<span class='windowIcon icon_"+ this.icon + "'></span>" +
               "<span class='windowtitle'>" + this.title + "</span>" +
+               toggleIcons(this.id) +
           "</div>" +
           "<div class='windowcontent'>" + 
           	  this.getHTML() +
@@ -989,6 +1008,7 @@ TabbedWidget.prototype.init = function() {
 };
 
 TabbedWidget.prototype.generateBox = function(boxId) {
+	document.cookie = this.id + '-toggle' + '=' + 'on';
     var i = 0, html = 
       "<div class='tab-wrapper' id='" + boxId + "'>" +
          "<div class='tab-header' style='width:" + (this.widgets.length * 122) + "px'>";
