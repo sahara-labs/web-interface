@@ -26,7 +26,7 @@
 /******************************************************************************
  ** Windows                                                                  **
  ******************************************************************************/
-.windowwrapper {
+.window-wrapper {
 	position: absolute;
     float: left;
     background: #fafafa;
@@ -38,6 +38,10 @@
     box-shadow: 0 1px 3px #B5B5B5;
 }
 
+.window-expanded {
+	box-shadow: 0 0 20px #666666;
+}
+
 .dragged {
     border: 2px dashed #8CE2FF;
 }
@@ -46,7 +50,7 @@
 	cursor: move;
 }
 
-.windowheader {
+.window-header {
     height: 15px;
     font-size: 24px;
     padding: 5px 10px;
@@ -54,7 +58,7 @@
     font-size: 15px;
 }
 
-.windowIcon{
+.window-icon {
     height: 24px;
     width: 26px;
     display: inline-block;
@@ -62,7 +66,7 @@
 	background-image: url('/uts/coupledtanksnew/images/icons.png');
 }
 
-.windowtitle {
+.window-title {
     position: relative;
     top: -7px;
     left: 10px;
@@ -70,7 +74,15 @@
     color: #777;
 }
 
-.windowcontent, .tab-content {
+.window-header .ui-icon {
+	float: right;
+	margin: 2px 6px;
+	border: 1px solid #CCCCCC;
+	box-shadow: 0 0 2px #CCCCCC;
+	cursor: pointer;
+}
+
+.window-content, .tab-content {
 	position: relative;
     padding: 10px 10px 6px 10px;
     margin: 5px;
@@ -79,7 +91,7 @@
     border-radius: 0 0 10px 10px;
 }
 
-.windowcontent {
+.window-content {
 	overflow: hidden;
 }
 
@@ -137,7 +149,7 @@
 	box-shadow: 0 -1px 4px #333333; 
 }
 
-.tab-active .windowtitle {
+.tab-active .window-title {
 	color: #CDCDCD;
 	font-weight: bold;
 }
@@ -437,7 +449,7 @@
 	top: 1px;
 }
 
-#camera-coupled-tanks .windowcontent {
+#camera-coupled-tanks .window-content {
 	padding: 0;
 	background-color: #333333;
 }

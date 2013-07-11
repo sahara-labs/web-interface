@@ -524,6 +524,16 @@ function Widget($container, title, icon)
 	/** The jQuery object of the outermost element of this widget. 
 	 *  This is not initialised until the 'init' method has been called. */
 	this.$widget = null;
+	
+	/** Whether the widget is in expanded state. */
+	this.isExpanded = false;
+	
+	/** Normal (unexpanded) coordinates and sizing. */
+	this.windowCSS = {
+	    top:  undefined,
+	    left: undefined,
+	    pos:  undefined
+	};
 };
 
 /* ----- WIDGET LIFE CYCLE ---------------------------------------------------- */
@@ -646,17 +656,77 @@ Widget.prototype.removeMessages = function() {
  * @return jQuery node of the generated box that has been appended to the page
  */
 Widget.prototype.generateBox = function(boxId) {
-    return this.$container.append(
-      "<div class='windowwrapper' id='" + boxId + "'>" +
-          "<div class='windowheader'>" +
-              "<span class='windowIcon icon_"+ this.icon + "'></span>" +
-              "<span class='windowtitle'>" + this.title + "</span>" +
+    var $w = this.$container.append(
+      "<div class='window-wrapper' id='" + boxId + "'>" +
+          "<div class='window-header'>" +
+              "<span class='window-icon icon_"+ this.icon + "'></span>" +
+              "<span class='window-title'>" + this.title + "</span>" +
+              "<span class='window-expand ui-icon ui-icon-arrow-4-diag'></span>" + 
           "</div>" +
-          "<div class='windowcontent'>" + 
+          "<div class='window-content'>" + 
           	  this.getHTML() +
           "</div>" +
       "</div>"
-  ).children().last();
+    ).children().last(), thiz = this;
+    
+    $w.find(".window-expand").click(function() { thiz.toggleWindowExpand(); });
+    return $w;
+};
+
+/** The expanded width of an expanded, resizable widget. */
+Widget.EXPANDED_WIDTH = 800;
+
+/**
+ * Toggles the window expand state which makes the widget take a prominent 
+ * position on the interface. 
+ */
+Widget.prototype.toggleWindowExpand = function() {
+    if (this.isExpanded)
+    {
+        if (this.$widget.hasClass("ui-resizable"))
+        {         
+            this.$widget.width(this.windowCSS.width);
+            this.$widget.height(this.windowCSS.height);
+            this.resized(this.windowCSS.width, this.windowCSS.height);
+            this.resizeStopped(this.windowCSS.width, this.windowCSS.height);
+        }
+
+        /* Moving the widget back to its original position. */
+        this.$widget.css({
+            left: this.windowCSS.pos.left,
+            top:  this.windowCSS.pos.top
+        });
+    }
+    else
+    {
+        var width = this.windowCSS.width = this.$widget.width(),
+            height = this.windowCSS.height = this.$widget.height();
+        
+        this.windowCSS.pos = this.$widget.position();
+        
+        if (this.$widget.hasClass("ui-resizable"))
+        {
+            /* We can resize the widget so we will make it larger. */
+            height = Widget.EXPANDED_WIDTH / width * height;
+            width = Widget.EXPANDED_WIDTH;
+            
+            this.$widget.width(width);
+            this.$widget.height(height);
+            this.resized(width, height);
+            this.resizeStopped(width, height);    
+        }
+        
+        /* Move the widget to a central position. */
+        this.$widget.css({
+            left: this.$container.width() / 2 - width / 2 - 60,
+            top: 100
+        });
+        
+        
+    }
+    
+    this.$widget.toggleClass("window-expanded");
+    this.isExpanded = !this.isExpanded;
 };
 
 /**
@@ -674,7 +744,7 @@ Widget.prototype.enableDraggable = function() {
 		
     /* Adds the CSS for the draggable widgets */
     this.$widget.addClass('draggable');
-    this.$widget.find('.windowheader').addClass('draggable-header');
+    this.$widget.find('.window-header').addClass('draggable-header');
    
     /** Set the cookie names */
     var cookieNameP = this.id + '-pos';
@@ -715,12 +785,12 @@ Widget.prototype.enableDraggable = function() {
         this.$widget.zIndex(cookieZ);        
     }
     
-	/* Enables dragging on the widgets 'windowwrapper' class */
+	/* Enables dragging on the widgets 'window-wrapper' class */
     var thiz = this;
 	this.$widget.draggable({
         snap: true,
         snapTolerance: 5,
-        stack: '.windowwrapper',
+        stack: '.window-wrapper',
         increaseZindexOnmousedown: true,
         distance: 10,
         handle: '.draggable-header',
@@ -820,7 +890,7 @@ function DisplayManager($container, title, widgets)
     /** The states of each of the widgets. */
     this.states = [ ];
     
-    /* Whether the displayed in is blurred state. */
+    /** Whether the displayed in is blurred state. */
     this.isBlurred = false;
 }
 DisplayManager.prototype = new Widget;
@@ -856,7 +926,7 @@ DisplayManager.prototype.getHTML = function() {
 		if (this.widgets[i] == this) continue;
 
 		html += '<div class="button toggle" name="video">' +
-					(this.icon != undefined ? '<div class="windowIcon icon_' + this.widgets[i].icon + '"></div>' : '') +  
+					(this.icon != undefined ? '<div class="window-icon icon_' + this.widgets[i].icon + '"></div>' : '') +  
 					'<span class="display-manager-title">' + this.widgets[i].title + '</span>' +
         			'<div class="switch">' +
         				'<div class="animated slide on"></div>' +
@@ -997,8 +1067,8 @@ TabbedWidget.prototype.generateBox = function(boxId) {
     {
         html += 
               "<div id='" + this.tabIds[i] + "' class='tab-title'>" +
-                  "<span class='windowIcon icon_"+ this.widgets[i].icon + "'></span>" +
-                  "<span class='windowtitle'>" + this.widgets[i].title + "</span>" +
+                  "<span class='window-icon icon_"+ this.widgets[i].icon + "'></span>" +
+                  "<span class='window-title'>" + this.widgets[i].title + "</span>" +
               "</div>";
     }
 
