@@ -559,11 +559,9 @@ Widget.prototype.consume = function(data) { };
  * Removes the widget from the page and cleans up all registered
  * events handlers. 
  */
-Widget.prototype.destroy = function() { 
-	/** creates cookie to remember the state of the widget */
-    document.cookie = this.id + '-toggle' + '=' + 'off';
-    
+Widget.prototype.destroy = function() {     
     this.$widget.remove();
+    $(document).unbind("keypress.widget-" + this.id);
 };
 
 /* ----- WIDGET EVENT CALLBACKS ----------------------------------------------- */
@@ -661,18 +659,14 @@ Widget.prototype.removeMessages = function() {
  * @return jQuery node of the generated box that has been appended to the page
  */
 Widget.prototype.generateBox = function(boxId) {
-	
-    /* Creates cookie to remember the state of the widget. */
-	document.cookie = this.id + '-toggle' + '=' + 'on';
-	
-    var $w = this.$container.append(
+	    var $w = this.$container.append(
       "<div class='window-wrapper' id='" + boxId + "'>" +
           "<div class='window-header'>" +
               "<span class='window-icon icon_"+ this.icon + "'></span>" +
               "<span class='window-title'>" + this.title + "</span>" +
               "<span class='window-close ui-icon ui-icon-close'></span>" +
-              "<span class='window-expand ui-icon ui-icon-arrow-4-diag'></span>" + 
-              "<span class='window-shade ui-icon ui-icon-arrowthickstop-1-n'></span>" + 
+              "<span class='window-shade ui-icon ui-icon-minus'></span>" + 
+              "<span class='window-expand ui-icon ui-icon-arrow-4-diag'></span>" +             
           "</div>" +
           "<div class='window-content'>" + 
           	  this.getHTML() +
@@ -680,17 +674,20 @@ Widget.prototype.generateBox = function(boxId) {
       "</div>"
     ).children().last(), thiz = this;
     
-    /* Event handlers for window controls. */
     $w.find(".window-expand").click(function() { thiz.toggleWindowExpand(); });
-    $w.find(".window-close").click(function() { thiz.toggleWindowClose(); });
-    $w.find(".window-shade").click(function() { thiz.toggleWindowShade(); });
-    $("body").bind("keyup", function(e) {
-        switch (e.keyCode) 
-        {
-        case 27:
-            if (thiz.isExpanded) thiz.toggleWindowExpand();
-            break;
-        }
+    $w.find(".window-close").dblclick(function() { 
+        /** creates cookie to remember the hidden state of the widget */
+        document.cookie = thiz.id + '-hidden' + '=' + 'true';
+        thiz.destroy();
+    });
+    
+    $(document).bind("keypress.widget-" + this.id, function(e) {
+       switch (e.keyCode) 
+       {
+           case 27:
+               if (thiz.isExpanded) thiz.toggleWindowExpand();
+               break;
+       }
     });
     
     return $w;
@@ -743,27 +740,13 @@ Widget.prototype.toggleWindowExpand = function() {
         this.$widget.css({
             left: this.$container.width() / 2 - width / 2 - 60,
             top: 100
-        });        
+        });
+        
+        
     }
     
     this.$widget.toggleClass("window-expanded");
     this.isExpanded = !this.isExpanded;
-};
-
-/**
- * Toggles close of the widget.
- */
-Widget.prototype.toggleWindowClose = function() {
-    // TODO Implement widget close
-    alert("Close clicked");
-};
-
-/**
- * Shades the widget which hides the widget contents only showing the title.
- */
-Widget.prototype.toggleWindowShade = function() {
-    // TODO Implement widget shading
-    alert("Shade clicked");
 };
 
 /**
@@ -944,6 +927,8 @@ DisplayManager.prototype.init = function() {
 
     /* Generate our UI. */
 	this.$widget = this.generateBox('display-manager');
+    this.$widget.find(".window-close").hide();
+
     this.enableDraggable();
     
     this.$widget.find('.toggle').click(function() {    
@@ -1015,9 +1000,6 @@ DisplayManager.prototype.unblur = function() {
 	this.isBlurred = false;
 	for (i in this.widgets) if (this.states[i]) this.widgets[i].unblur();
 };
-
-/* Disabling this events. */
-DisplayManager.prototype.toggleWindowClose = DisplayManager.prototype.toggleWindowExpand = function() { };
 
 /* ============================================================================
  * == Tabbed Container Widget                                                ==
@@ -1099,7 +1081,6 @@ TabbedWidget.prototype.init = function() {
 };
 
 TabbedWidget.prototype.generateBox = function(boxId) {
-	document.cookie = this.id + '-toggle' + '=' + 'on';
     var i = 0, html = 
       "<div class='tab-wrapper' id='" + boxId + "'>" +
          "<div class='tab-header' style='width:" + (this.widgets.length * 122) + "px'>";
@@ -2268,32 +2249,6 @@ CameraWidget.prototype.getMjpegHtml = function() {
 			'</applet>'
 	    );
 };
-
-/* ============================================================================
- * == Timeline Widget.                                                       ==
- * ============================================================================ */
-
-/**
- * The timeline widget 
- * 
- */
-function TimelineWidget($container, title) 
-{
-    Widget.call(this, $container, title);
-    
-    /** Timeline ID.  */
-    this.id = title.toLowerCase().replace(' ', '-');
-}
-TimelineWidget.prototype = new Widget;
-
-TimelineWidget.prototype.init = function() {
-    this.$widget = this.generateBox(this.id);
-};
-
-TimelineWidget.prototype.getHTML = function() {
-    
-};
-
 
 /* ============================================================================
  * == Utility functions                                                      ==

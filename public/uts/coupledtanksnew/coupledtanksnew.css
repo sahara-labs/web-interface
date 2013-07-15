@@ -76,10 +76,14 @@
 
 .window-header .ui-icon {
 	float: right;
-	margin: 2px 6px;
+	margin: 2px 3px;
 	border: 1px solid #CCCCCC;
 	box-shadow: 0 0 2px #CCCCCC;
 	cursor: pointer;
+}
+
+.window-header .ui-icon:hover{
+    box-shadow: 0 0 2px #999;
 }
 
 .window-content, .tab-content {
@@ -94,13 +98,7 @@
 .window-content {
 	overflow: hidden;
 }
-.headerToggleIcons{
-    font-size: 10px;
-    cursor: pointer;
-    margin-right: 5px;
-    float: right;
-    color: #979797;
-}
+
 .resizable {
     min-width: 145px;
     min-height: 50px;
