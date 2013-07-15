@@ -662,25 +662,17 @@ Widget.prototype.removeMessages = function() {
  */
 Widget.prototype.generateBox = function(boxId) {
 	
-    /** creates cookie to remember the state of the widget */
+    /* Creates cookie to remember the state of the widget. */
 	document.cookie = this.id + '-toggle' + '=' + 'on';
-	
-	/** does not show the toggle icons on the display manager */
-	var toggleIcons = function(id) {
-		if(id !== 'display-manager'){
-		    return	"<span class='headerToggleIcons'>shade | close</span>";
-		}else{
-			return "";
-		};
-	}
 	
     var $w = this.$container.append(
       "<div class='window-wrapper' id='" + boxId + "'>" +
           "<div class='window-header'>" +
               "<span class='window-icon icon_"+ this.icon + "'></span>" +
               "<span class='window-title'>" + this.title + "</span>" +
-               toggleIcons(this.id) +
+              "<span class='window-close ui-icon ui-icon-close'></span>" +
               "<span class='window-expand ui-icon ui-icon-arrow-4-diag'></span>" + 
+              "<span class='window-shade ui-icon ui-icon-arrowthickstop-1-n'></span>" + 
           "</div>" +
           "<div class='window-content'>" + 
           	  this.getHTML() +
@@ -688,7 +680,19 @@ Widget.prototype.generateBox = function(boxId) {
       "</div>"
     ).children().last(), thiz = this;
     
+    /* Event handlers for window controls. */
     $w.find(".window-expand").click(function() { thiz.toggleWindowExpand(); });
+    $w.find(".window-close").click(function() { thiz.toggleWindowClose(); });
+    $w.find(".window-shade").click(function() { thiz.toggleWindowShade(); });
+    $("body").bind("keyup", function(e) {
+        switch (e.keyCode) 
+        {
+        case 27:
+            if (thiz.isExpanded) thiz.toggleWindowExpand();
+            break;
+        }
+    });
+    
     return $w;
 };
 
@@ -739,13 +743,27 @@ Widget.prototype.toggleWindowExpand = function() {
         this.$widget.css({
             left: this.$container.width() / 2 - width / 2 - 60,
             top: 100
-        });
-        
-        
+        });        
     }
     
     this.$widget.toggleClass("window-expanded");
     this.isExpanded = !this.isExpanded;
+};
+
+/**
+ * Toggles close of the widget.
+ */
+Widget.prototype.toggleWindowClose = function() {
+    // TODO Implement widget close
+    alert("Close clicked");
+};
+
+/**
+ * Shades the widget which hides the widget contents only showing the title.
+ */
+Widget.prototype.toggleWindowShade = function() {
+    // TODO Implement widget shading
+    alert("Shade clicked");
 };
 
 /**
@@ -998,6 +1016,9 @@ DisplayManager.prototype.unblur = function() {
 	for (i in this.widgets) if (this.states[i]) this.widgets[i].unblur();
 };
 
+/* Disabling this events. */
+DisplayManager.prototype.toggleWindowClose = DisplayManager.prototype.toggleWindowExpand = function() { };
+
 /* ============================================================================
  * == Tabbed Container Widget                                                ==
  * ============================================================================ */
@@ -1214,7 +1235,7 @@ function GraphWidget($container, title, chained)
 	
 	/** Width of the graph, including the padding whitespace but excluding the
 	 *  border width. */
-	this.width = 416;
+	this.width = 400;
 
 	/** Height of the graph, including the padding whitespace but excluding the
 	 *  border width and border title. */
@@ -2247,6 +2268,32 @@ CameraWidget.prototype.getMjpegHtml = function() {
 			'</applet>'
 	    );
 };
+
+/* ============================================================================
+ * == Timeline Widget.                                                       ==
+ * ============================================================================ */
+
+/**
+ * The timeline widget 
+ * 
+ */
+function TimelineWidget($container, title) 
+{
+    Widget.call(this, $container, title);
+    
+    /** Timeline ID.  */
+    this.id = title.toLowerCase().replace(' ', '-');
+}
+TimelineWidget.prototype = new Widget;
+
+TimelineWidget.prototype.init = function() {
+    this.$widget = this.generateBox(this.id);
+};
+
+TimelineWidget.prototype.getHTML = function() {
+    
+};
+
 
 /* ============================================================================
  * == Utility functions                                                      ==
