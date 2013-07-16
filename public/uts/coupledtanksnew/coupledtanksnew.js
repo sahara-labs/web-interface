@@ -88,7 +88,6 @@ WaterLevelControl.prototype.run = function() {
 	this.acquireLoop();
 };
 
-
 WaterLevelControl.prototype.acquireLoop = function() {
 	var thiz = this;
 
@@ -674,13 +673,31 @@ Widget.prototype.generateBox = function(boxId) {
     ).children().last(), thiz = this;
     
     $w.find(".window-expand").click(function() { thiz.toggleWindowExpand(); });
+    $w.find(".window-shade").click(function() { thiz.toggleWindowShade(); });
     $w.find(".window-close").dblclick(function() { 
-        /** creates cookie to remember the hidden state of the widget */
+        $("span:contains(" + thiz.title + ")").next().children().toggleClass("on off");
         document.cookie = thiz.id + '-hidden' + '=' + 'true';
         thiz.destroy();
     });
    
     return $w;
+};
+/**
+ * Shades the widget which hides the widget contents only showing the title.
+ */
+Widget.prototype.toggleWindowShade = function() {
+	if (this.isShaded)
+	{
+	    document.cookie = this.id + '-shade' + '=;expires=Thu, 01 Jan 1970 00:00:01 GMT;';	    
+	}
+	else
+	{
+	    document.cookie = this.id + '-shade' + '=' + 'true';
+	}
+    
+	this.$widget.find(".window-content").slideToggle('fast');
+    this.$widget.find(".window-header").toggleClass("window-header-shade","slide");
+    this.isShaded = !this.isShaded;
 };
 
 /** The expanded width of an expanded, resizable widget. */
@@ -911,8 +928,14 @@ DisplayManager.prototype.init = function() {
     /* Enable all the other widgets. */
     for (i in this.widgets) 
     {    	
-    	this.widgets[i].init();
+        this.widgets[i].init();
     	this.states[i] = true;
+    	 
+    	/** hide widgets that have the hidden cookie */
+        if (document.cookie.indexOf(thiz.widgets[i].id + '-hidden') != -1) 
+        {
+            this.widgets[i].destroy();
+        }
     }
 
     /* Generate our UI. */
@@ -924,6 +947,28 @@ DisplayManager.prototype.init = function() {
     this.$widget.find('.toggle').click(function() {    
     	$(this).find('.switch .slide').toggleClass("on off");
     	thiz.toggleWidget($(this).find("span").html());
+    });
+    
+    this.$widget.find('.reset-button').click(function() {    
+	    var i = 0;
+	    for (i in thiz.widgets)
+	    {
+	    	/* identifier of the widget */
+	    	this.widgetId = thiz.widgets[i].id;
+	    	
+	    	/* the expiry date used to remove the cookies*/
+	    	this.expiryDate= '=;expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+	    	
+            document.cookie = this.widgetId + '-hidden' + this.expiryDate;
+            document.cookie = this.widgetId + '-z' + this.expiryDate;
+            document.cookie = this.widgetId + '-pos' + this.expiryDate;
+            document.cookie = this.widgetId + '-shade' + this.expiryDate;	    
+            $("#display-manager").find(".switch .slide").removeClass("off").addClass('on');
+            thiz.states[i] = false;
+            thiz.widgets[i].destroy();
+            thiz.widgets[i].init();
+	    }
+	       
     });
 };
 
@@ -956,23 +1001,28 @@ DisplayManager.prototype.getHTML = function() {
  * 
  * @param title the title of the widget to toggle
  */
-DisplayManager.prototype.toggleWidget = function(title) {
+Widget.prototype.toggleWidget = function(title) {
 	var i = 0;
 
 	for (i in this.widgets)
 	{
 		if (this.widgets[i].title == title)
 		{
-			if (this.states[i])  this.widgets[i].destroy();
+			if (this.states[i]) {
+				this.widgets[i].destroy();
+				document.cookie = this.widgets[i].id + '-hidden' + '=' + 'true';
+		    }
 			else 
 			{
 				this.widgets[i].init();
+				document.cookie = this.widgets[i].id + '-hidden' + '=;expires=Thu, 01 Jan 1970 00:00:01 GMT;';
 				if (this.isBlurred) this.widgets[i].blur();
 			}
 			this.states[i] = !this.states[i];
 		}
 	}
 };
+
 DisplayManager.prototype.consume = function(data) {
 	var i = 0;
 	for (i in this.widgets) if (this.states[i]) this.widgets[i].consume(data);
