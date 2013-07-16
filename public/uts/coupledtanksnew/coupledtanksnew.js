@@ -1368,7 +1368,7 @@ GraphWidget.prototype.init = function() {
 	this.enableDraggable();
 	
 	/* Enable resizing. */
-	this.enableResizable(500, 300);
+	this.enableResizable(484, 300);
 };
 
 /** The number of vertical scales. */
