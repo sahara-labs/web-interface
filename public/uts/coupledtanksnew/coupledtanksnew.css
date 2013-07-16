@@ -16,7 +16,7 @@
 }
 
 #coupled-tanks-anchor {
-	height: 1100px;
+	height: 1000px;
 }
 
 /* ----------------------------------------------------------------------------
@@ -180,20 +180,25 @@
 	padding: 3px 2px 0 0;
 }
 
-.display-manager-title{
+#display-manager .display-manager-title {
 	font-size: 13px;
     padding: 5px;
     top: 0px;
     position: absolute;
 }
 
-.reset-button{
+#display-manager .reset-button {
 	text-align: center !important;
     font-size: 13px !important;
     background: #F3F3F3 !important;
     color: #555 !important;
     text-shadow: 1px 1px 0px #FFFFFF;
 }
+
+#display-manager .window-close, #display-manager .window-expand {
+	display: none;
+}
+
 /******************************************************************************
  ** Buttons                                                                  **
  ******************************************************************************/
@@ -327,7 +332,7 @@
 
 .graph-labels {
 	position: absolute;
-	right: 5px;
+	right: 0px;
 	color: #777777;
 }
 
@@ -514,7 +519,7 @@
 	position: absolute;
 }
 
-t.slider-scales-vertical {
+.slider-scales-vertical {
     left: 35px;
     top: 0;
 }
@@ -789,13 +794,13 @@ t.slider-scales-vertical {
 
 #graph-tank-levels-box {
 	position: absolute;
-    left: 275px;
+    left: 290px;
     top: 475px;
 } 
 
 #graph-flow-rates-box {
 	position: absolute;
-    left: -230px;
+    left: -200px;
     top: 475px;
 } 
 
@@ -841,7 +846,7 @@ t.slider-scales-vertical {
  ******************************************************************************/
 #water-levels-mimic {
     left: 345px;
-    top: 1px;
+    top: 50px;
 }
 
 #mimic-bg {

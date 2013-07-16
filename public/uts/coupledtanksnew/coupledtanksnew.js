@@ -560,6 +560,7 @@ Widget.prototype.consume = function(data) { };
  */
 Widget.prototype.destroy = function() {     
     this.$widget.remove();
+    $(document).unbind("keypress.widget-" + this.id);
 };
 
 /* ----- WIDGET EVENT CALLBACKS ----------------------------------------------- */
@@ -679,7 +680,16 @@ Widget.prototype.generateBox = function(boxId) {
         document.cookie = thiz.id + '-hidden' + '=' + 'true';
         thiz.destroy();
     });
-   
+    
+    $(document).bind("keypress.widget-" + this.id, function(e) {
+       switch (e.keyCode) 
+       {
+           case 27:
+               if (thiz.isExpanded) thiz.toggleWindowExpand();
+               break;
+       }
+    });
+    
     return $w;
 };
 /**
@@ -1256,7 +1266,7 @@ function GraphWidget($container, title, chained)
 	
 	/** Width of the graph, including the padding whitespace but excluding the
 	 *  border width. */
-	this.width = 416;
+	this.width = 400;
 
 	/** Height of the graph, including the padding whitespace but excluding the
 	 *  border width and border title. */
