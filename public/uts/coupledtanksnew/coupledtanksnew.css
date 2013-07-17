@@ -470,9 +470,22 @@
 
 #camera-coupled-tanks .video-placeholder {
 	color: #AAAAAA;
-	font-size: 10pt;
+	font-size: 11pt;
 	text-align: center;
 	padding-top: 90px;
+}
+
+.format-select {
+    position: absolute;
+    bottom: 0px;
+    left: 0px;
+    padding: 2px;
+    font-size: 11px;
+    opacity: 0.4;
+}
+
+.format-select:hover {
+	opacity: 1;
 }
 
 /******************************************************************************
@@ -1010,4 +1023,18 @@
 
 @keyframes spin {
     to { transform: rotate(360deg); }
+}
+
+
+/******************************************************************************
+ ** Styles for Mobile devices                                                         **
+ ******************************************************************************/
+@media handheld, only screen and (max-width: 480px) {
+	.spin {
+	    -webkit-animation: none !important;
+	    -moz-animation: none !important;
+	    -ms-animation: none !important;
+	    -o-animation: none !important;
+	    animation: none !important;
+	}
 }
