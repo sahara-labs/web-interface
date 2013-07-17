@@ -475,17 +475,31 @@
 	padding-top: 90px;
 }
 
-.format-select {
-    position: absolute;
-    bottom: 0px;
-    left: 0px;
-    padding: 2px;
-    font-size: 11px;
-    opacity: 0.4;
+.format-select select {
+    background: rgba(0, 0, 0, 0);
+    color: #777;
+    width: 140px;
+    padding: 5px;
+    font-size: 12px;
+    line-height: 1;
+    border: 0;
+    border-radius: 0;
+    height: 25px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    -ie-appearance: none;
+    appearance:none;
+    cursor: pointer;
 }
 
-.format-select:hover {
-	opacity: 1;
+.format-select {
+    margin: 4px;
+    width: 110px;
+    height: 25px;
+    overflow: hidden;
+    background: url('/uts/coupledtanksnew/images/arrow-down.png') no-repeat right #F3F3F3;
+    border: 1px solid #ccc;
+    border-radius: 4px;
 }
 
 /******************************************************************************

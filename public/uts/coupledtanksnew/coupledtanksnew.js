@@ -2215,7 +2215,7 @@ CameraWidget.prototype.init = function() {
 
 	this.enableDraggable();
 	
-	this.$widget.find('.format-select').change(function() {
+	this.$widget.find('.format-select').find('select').change(function() {
         thiz.selectFormat($(this).val());
     });
 };
@@ -2274,13 +2274,16 @@ CameraWidget.prototype.defaultDeploy = function() {
 CameraWidget.prototype.getHTML = function() {	
 	return (
 		'<div class="video-player" style="height:' + this.height + 'px;width:' + this.width + 'px">' +
-	        '<select class="click-button format-select">' +
-		        '<option selected="selected" value="default">Format</option>' +
-                '<option value="Swf">Swf</option>' +
-                '<option value="Mjpeg">Mjpeg</option>' +
-            '</select>' +
 		    '<div class="video-placeholder">Please wait...' +
-		    '</div>'
+		    '</div>' +
+		'</div>' +
+		    '<div class="format-select">' +
+	            '<select>' +
+		            '<option selected="selected" value="default">Select Format</option>' +
+                    '<option value="Swf">SWF</option>' +
+                    '<option value="Mjpeg">MJEPG</option>' +
+                '</select>' +
+            '</div>'
 	);
 };
 
