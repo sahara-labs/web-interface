@@ -2206,12 +2206,31 @@ function CameraWidget($container, title, attr)
 CameraWidget.prototype = new Widget;
 
 CameraWidget.prototype.init = function() {
+	var thiz = this;
+	
     /* Reset. */
     this.isDeployed = false;
     
 	this.$widget = this.generateBox('camera-' + this.id);
 
 	this.enableDraggable();
+	
+	this.$widget.find('.format-select').change(function() {
+        thiz.selectFormat($(this).val());
+    });
+};
+
+/**
+ * Changes the video format.
+ */
+CameraWidget.prototype.selectFormat = function(format) {
+	this.format = format;
+	
+    if (this.format != 'default')
+    {   
+        /* change Video format */
+        $('.video-placeholder').html(this.format);
+    }
 };
 
 CameraWidget.prototype.consume = function(data) {
@@ -2255,8 +2274,13 @@ CameraWidget.prototype.defaultDeploy = function() {
 CameraWidget.prototype.getHTML = function() {	
 	return (
 		'<div class="video-player" style="height:' + this.height + 'px;width:' + this.width + 'px">' +
-		'	<div class="video-placeholder">Please wait...' +
-		'</div>'
+	        '<select class="click-button format-select">' +
+		        '<option selected="selected" value="default">Format</option>' +
+                '<option value="Swf">Swf</option>' +
+                '<option value="Mjpeg">Mjpeg</option>' +
+            '</select>' +
+		    '<div class="video-placeholder">Please wait...' +
+		    '</div>'
 	);
 };
 
