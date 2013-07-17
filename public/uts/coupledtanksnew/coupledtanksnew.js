@@ -2394,7 +2394,7 @@ function getCookie(cookie)
  */
 function setCookie(cookie, value)
 {
-    document.cookie = COOKIE_PREFIX + cookie + '=' + value + ';';
+    document.cookie = COOKIE_PREFIX + cookie + '=' + value + ';path=/;max-age=' + (60 * 60 * 24 * 365);
 }
 
 /**
