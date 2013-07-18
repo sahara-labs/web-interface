@@ -555,6 +555,10 @@ function Widget($container, title, icon)
 {
 	/** The jQuery object of the container the widget is attached to. */
 	this.$container = $container;
+	
+	/** State manager of this widget. This may be null if no parent widget is 
+	 *  directly managing the state of this widget. */
+	this.parentManager = undefined;
 
 	/** The page title. */
 	this.title = title;
@@ -566,14 +570,16 @@ function Widget($container, title, icon)
 	 *  This is not initialised until the 'init' method has been called. */
 	this.$widget = null;
 	
-	/** Whether the widget is in expanded state. */
-	this.isExpanded = false;
-	
-	/** Normal (unexpanded) coordinates and sizing. */
-	this.windowCSS = {
-	    top:  undefined,
-	    left: undefined,
-	    pos:  undefined
+	/** Window management properties. */
+	this.window = {
+	    shown:    undefined, // Whether the widget is being shown
+	    width:    undefined, // The width of this window
+	    height:   undefined, // The height of this window
+	    left:     undefined, // Left position of this window
+	    top:      undefined, // Top position of this window
+	    zin:      undefined, // Z-Index of this window 
+	    shaded:   undefined, // Whether this window is shaded
+	    expanded: undefined, // Whether this window is expanded
 	};
 };
 
@@ -599,7 +605,7 @@ Widget.prototype.consume = function(data) { };
  * events handlers. 
  */
 Widget.prototype.destroy = function() {     
-    this.$widget.remove();
+    if (this.$widget) this.$widget.remove();
     $(document).unbind("keypress.widget-" + this.id);
 };
 
@@ -698,7 +704,7 @@ Widget.prototype.removeMessages = function() {
  * @return jQuery node of the generated box that has been appended to the page
  */
 Widget.prototype.generateBox = function(boxId) {
-	    var $w = this.$container.append(
+    var $w = this.$container.append(
       "<div class='window-wrapper' id='" + boxId + "'>" +
           "<div class='window-header'>" +
               "<span class='window-icon icon_"+ this.icon + "'></span>" +
@@ -715,10 +721,9 @@ Widget.prototype.generateBox = function(boxId) {
     
     $w.find(".window-expand").click(function() { thiz.toggleWindowExpand(); });
     $w.find(".window-shade").click(function() { thiz.toggleWindowShade(); });
-    $w.find(".window-close").dblclick(function() { 
-        $("span:contains(" + thiz.title + ")").next().children().toggleClass("on off");
-        document.cookie = thiz.id + '-hidden' + '=' + 'true';
-        thiz.destroy();
+    $w.find(".window-close").click(function() {  
+        if   (thiz.parentManager) thiz.parentManager.toggleWidget(thiz.title);
+        else (thiz.destroy());
     });
     
     $(document).bind("keypress.widget-" + this.id, function(e) {
@@ -736,18 +741,11 @@ Widget.prototype.generateBox = function(boxId) {
  * Shades the widget which hides the widget contents only showing the title.
  */
 Widget.prototype.toggleWindowShade = function() {
-	if (this.isShaded)
-	{
-	    document.cookie = this.id + '-shade' + '=;expires=Thu, 01 Jan 1970 00:00:01 GMT;';	    
-	}
-	else
-	{
-	    document.cookie = this.id + '-shade' + '=' + 'true';
-	}
-    
 	this.$widget.find(".window-content").slideToggle('fast');
-    this.$widget.find(".window-header").toggleClass("window-header-shade","slide");
-    this.isShaded = !this.isShaded;
+    this.$widget.find(".window-header").toggleClass("window-header-shade", "slide");
+    this.$widget.css("width", this.$widget.width());
+    this.window.shaded = !this.window.shaded;
+    this.storeState();
 };
 
 /** The expanded width of an expanded, resizable widget. */
@@ -758,28 +756,30 @@ Widget.EXPANDED_WIDTH = 800;
  * position on the interface. 
  */
 Widget.prototype.toggleWindowExpand = function() {
-    if (this.isExpanded)
+    if (this.window.expanded)
     {
         if (this.$widget.hasClass("ui-resizable"))
         {         
-            this.$widget.width(this.windowCSS.width);
-            this.$widget.height(this.windowCSS.height);
-            this.resized(this.windowCSS.width, this.windowCSS.height);
-            this.resizeStopped(this.windowCSS.width, this.windowCSS.height);
+            this.$widget.width(this.window.width);
+            this.$widget.height(this.window.height);
+            this.resized(this.window.width, this.window.height);
+            this.resizeStopped(this.window.width, this.window.height);
         }
 
         /* Moving the widget back to its original position. */
         this.$widget.css({
-            left: this.windowCSS.pos.left,
-            top:  this.windowCSS.pos.top
+            left: this.window.left,
+            top:  this.window.top
         });
     }
     else
     {
-        var width = this.windowCSS.width = this.$widget.width(),
-            height = this.windowCSS.height = this.$widget.height();
+        var width = this.window.width = this.$widget.width(),
+            height = this.window.height = this.$widget.height(),
+            p = this.$widget.position();
         
-        this.windowCSS.pos = this.$widget.position();
+        this.window.left = p.left;
+        this.window.top = p.top;
         
         if (this.$widget.hasClass("ui-resizable"))
         {
@@ -798,12 +798,11 @@ Widget.prototype.toggleWindowExpand = function() {
             left: this.$container.width() / 2 - width / 2 - 60,
             top: 100
         });
-        
-        
     }
     
     this.$widget.toggleClass("window-expanded");
-    this.isExpanded = !this.isExpanded;
+    this.window.expanded = !this.window.expanded;
+    this.storeState();
 };
 
 /**
@@ -823,43 +822,16 @@ Widget.prototype.enableDraggable = function() {
     this.$widget.addClass('draggable');
     this.$widget.find('.window-header').addClass('draggable-header');
    
-    /** Set the cookie names */
-    var cookieNameP = this.id + '-pos';
-    var cookieNameZ = this.id + '-z';
-
-    /** if the position cookie exists */
-    if (document.cookie.indexOf(cookieNameP) != -1){
-             
-        /** function that retrieves cookie values*/              
-        function getCookie(c_name) {
-		    var c_value = document.cookie;
-		    var c_start = c_value.indexOf(" " + c_name + "=");
-		    if (c_start == -1) {
-		        c_start = c_value.indexOf(c_name + "=");
-		    }
-		    if (c_start == -1) {
-		    c_value = null;
-		    }
-		    else {
-		        c_start = c_value.indexOf("=", c_start) + 1;
-		        var c_end = c_value.indexOf(";", c_start);
-		        if (c_end == -1) {
-		            c_end = c_value.length;
-		        }
-		        c_value = unescape(c_value.substring(c_start,c_end));
-		    }
-		    return JSON.parse(c_value);
-		}   
-        
-        /** retrieves the values for position and zIndex */
-        var cookiePos = getCookie(cookieNameP);
-        var cookieZ = getCookie(cookieNameZ);
-        
-        /** update the widgets position */
-        this.$widget.css({left: cookiePos.left, top: cookiePos.top});
-           
-        /** update the widgets zIndex */
-        this.$widget.zIndex(cookieZ);        
+    if (this.window.left && this.window.top && this.window.zin) 
+    {
+        /* We have stored previously, dragged state so we will restore it. */
+        this.$widget
+                .css({
+                    left: this.window.left, 
+                    top: this.window.top,
+                    zIndex: this.window.zin
+                });
+        this.dragged(this.window.left, this.window.top);
     }
     
 	/* Enables dragging on the widgets 'window-wrapper' class */
@@ -872,20 +844,14 @@ Widget.prototype.enableDraggable = function() {
         distance: 10,
         handle: '.draggable-header',
         stop: function() {
-            
-            /** Gets the widgets position */
-        	var p = $(this).position();
+            var p = $(this).position();
+        	thiz.window.left = p.left;
+        	thiz.window.top = p.top;
+        	thiz.window.zin = $(this).zIndex();
+        	thiz.storeState();
+        	
+        	/* Invoke event handler. */
         	thiz.dragged(p.left, p.top);
-        	
-        	/** stores postion in a cookie as a JSON string */
-        	document.cookie = cookieNameP + '=' + JSON.stringify(p);       	
-        	
-        	/** Gets the widgets zIndex */
-            var z = $(this).zIndex();
-        	thiz.dragged(z.z);
-            
-            /** stores zIndex in a cookie as a JSON string */
-            document.cookie = cookieNameZ + '=' + JSON.stringify(z);
         }
     });
 
@@ -922,8 +888,27 @@ Widget.prototype.enableResizable = function(minWidth, minHeight, preserveAspectR
          aspectRatio: preserveAspectRatio,
          distance: 10,
          resize: function(e, ui) { thiz.resized(ui.size.width, ui.size.height); },
-	     stop: function(e, ui) { thiz.resizeStopped(ui.size.width, ui.size.height); }
+	     stop: function(e, ui) {
+	         /* Store sizing information. */
+	         thiz.window.width = ui.size.width;
+	         thiz.window.height = ui.size.height;
+	         thiz.storeState();
+	         
+	         /* Fire event. */
+	         thiz.resizeStopped(ui.size.width, ui.size.height); 
+	     }
 	});
+	
+	if (this.window.width && this.window.height)
+	{
+	    this.$widget.css({
+	        width: this.window.width,
+	        height: this.window.height
+	    });
+	    
+	    this.resized(this.window.width, this.window.height);
+	    this.resizeStopped(this.window.width, this.window.height);
+	}
 };
 
 /** 
@@ -945,6 +930,46 @@ Widget.prototype.postControl = function(action, params, responseCallback, errorC
             if (errorCallabck != null) errorCallback(data);
         }
     });
+};
+
+/**
+ * Stores the state of this widget in a cookie.
+ */
+Widget.prototype.storeState = function() {
+    var json;
+    
+    if (JSON.stringify)
+    {
+        /* Built JSON serialization. */
+        json = JSON.stringify(this.window);
+    }
+    else
+    {
+        /* Legacy browser, no built in JSON. */
+        var i = 0;
+        json = "{";
+        for (i in this.window) if (typeof this.window[i] != "undefined") json += '"' + i + '":' + this.window[i] + ",";
+        json = json.substring(0, json.length - 1);
+        json += "}";
+    }
+    
+    setCookie(this.id + '-win', json);
+};
+
+/**
+ * Loads the stored state from a store cookie.
+ */
+Widget.prototype.loadState = function() {
+    var state = getCookie(this.id + '-win');
+    
+    if (state && state.match(/^{.*}$/))
+    {
+        try
+        {
+            this.window = $.parseJSON(state);
+        }
+        catch (e) { /* Invalid JSON, not restoring layout. */ alert(e); }
+    }
 };
 
 /* ============================================================================
@@ -978,13 +1003,25 @@ DisplayManager.prototype.init = function() {
     /* Enable all the other widgets. */
     for (i in this.widgets) 
     {    	
-        this.widgets[i].init();
-    	this.states[i] = true;
-    	 
-    	/** hide widgets that have the hidden cookie */
-        if (document.cookie.indexOf(thiz.widgets[i].id + '-hidden') != -1) 
+        this.widgets[i].parentManager = this; 
+        this.widgets[i].loadState();
+    
+        if (this.widgets[i].window.shown = this.states[i] = !(this.widgets[i].window.shown === false))
         {
-            this.widgets[i].destroy();
+            this.widgets[i].init();
+            
+            /* Restore other states. */
+            if (this.widgets[i].window.expanded)
+            {
+                this.widgets[i].window.expanded = false;
+                this.widgets[i].toggleWindowExpand();
+            }
+            
+            if (this.widgets[i].window.shaded)
+            {
+                this.widgets[i].window.shaded = false;
+                this.widgets[i].toggleWindowShade();
+            }
         }
     }
 
@@ -995,53 +1032,45 @@ DisplayManager.prototype.init = function() {
     this.enableDraggable();
     
     this.$widget.find('.toggle').click(function() {    
-    	$(this).find('.switch .slide').toggleClass("on off");
-    	thiz.toggleWidget($(this).find("span").html());
+    	thiz.toggleWidget($(this).find("span").html(), this);
     });
     
     this.$widget.find('.reset-button').click(function() {    
 	    var i = 0;
 	    for (i in thiz.widgets)
-	    {
-	    	/* identifier of the widget */
-	    	this.widgetId = thiz.widgets[i].id;
-	    	
-	    	/* the expiry date used to remove the cookies*/
-	    	this.expiryDate= '=;expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-	    	
-            document.cookie = this.widgetId + '-hidden' + this.expiryDate;
-            document.cookie = this.widgetId + '-z' + this.expiryDate;
-            document.cookie = this.widgetId + '-pos' + this.expiryDate;
-            document.cookie = this.widgetId + '-shade' + this.expiryDate;	    
-            $("#display-manager").find(".switch .slide").removeClass("off").addClass('on');
-            thiz.states[i] = false;
+	    {	    
+            thiz.widgets[i].window = { };
+            thiz.widgets[i].storeState();
             thiz.widgets[i].destroy();
             thiz.widgets[i].init();
 	    }
-	       
+	    
+	    thiz.$widget.find(".button .animated")
+            .removeClass("off")
+            .addClass("on");
     });
 };
 
 DisplayManager.prototype.getHTML = function() {	
 	var i = 0, html =
-		'<div class="buttonwrapper">' +
-		'<div class="button reset-button" name="resetPos">Reset positions</div>';
-
+		'<div class="buttonwrapper">';
+	
 	for (i in this.widgets)
 	{
 		/* We should be adding this to be widgets that can be removed. */
 		if (this.widgets[i] == this) continue;
 
-		html += '<div class="button toggle" name="video">' +
+		html += '<div class="button toggle">' +
 					(this.icon != undefined ? '<div class="window-icon icon_' + this.widgets[i].icon + '"></div>' : '') +  
 					'<span class="display-manager-title">' + this.widgets[i].title + '</span>' +
         			'<div class="switch">' +
-        				'<div class="animated slide on"></div>' +
+        				'<div class="animated slide ' + (this.widgets[i].window.shown === false? "off" : "on") + '"></div>' +
         			'</div>' +
         		'</div>';
 	}
 
-    html += '</div>';
+    html += '<div class="button reset-button">Reset</div>' +
+        '</div>';
 
 	return html;
 };
@@ -1050,27 +1079,32 @@ DisplayManager.prototype.getHTML = function() {
  * Toggles a widget from either displaying or being invisible. 
  * 
  * @param title the title of the widget to toggle
+ * @param node switch node to toggle classes (optional)
  */
-Widget.prototype.toggleWidget = function(title) {
+Widget.prototype.toggleWidget = function(title, node) {
 	var i = 0;
 
 	for (i in this.widgets)
 	{
 		if (this.widgets[i].title == title)
 		{
-			if (this.states[i]) {
+			if (this.states[i])
+			{
 				this.widgets[i].destroy();
-				document.cookie = this.widgets[i].id + '-hidden' + '=' + 'true';
 		    }
 			else 
 			{
 				this.widgets[i].init();
-				document.cookie = this.widgets[i].id + '-hidden' + '=;expires=Thu, 01 Jan 1970 00:00:01 GMT;';
 				if (this.isBlurred) this.widgets[i].blur();
 			}
-			this.states[i] = !this.states[i];
+			
+			this.widgets[i].window.shown = this.states[i] = !this.states[i];
+			this.widgets[i].storeState();
 		}
 	}
+	
+	$node = node ? $(node) : this.$widget.find(".button:has(span:contains(" + title + "))");
+	$node.find('.switch .slide').toggleClass("on off");
 };
 
 DisplayManager.prototype.consume = function(data) {
@@ -1367,11 +1401,14 @@ function GraphWidget($container, title, chained)
 	
 	/** Whether the controls are displayed. */
 	this.isControlsDisplayed = false;
-
 }
 GraphWidget.prototype = new Widget;
 
 GraphWidget.prototype.init = function() {
+    /* Size reset. */
+    this.width = 400;
+    this.height = 175;
+    
 	this.$widget = this.generateBox(this.id + '-box');
 
 	/* Add the canvas panel. */
@@ -1408,7 +1445,7 @@ GraphWidget.prototype.init = function() {
 	this.enableDraggable();
 	
 	/* Enable resizing. */
-	this.enableResizable(500, 300);
+	this.enableResizable(484, 300);
 };
 
 /** The number of vertical scales. */
@@ -2287,7 +2324,6 @@ CameraWidget.prototype.consume = function(data) {
         this.urls.mjpeg = decodeURIComponent(data['camera-mjpeg']);
     }
     
-
     this.defaultDeploy();
 };
 
@@ -2370,6 +2406,36 @@ CameraWidget.prototype.getMjpegHtml = function() {
 /* ============================================================================
  * == Utility functions                                                      ==
  * ============================================================================ */
+
+/** @define {String} The prefix for Coupled Tanks cookies. */
+var COOKIE_PREFIX = "ct-";
+
+/**
+ * Gets the value of the specified cookie. 
+ * 
+ * @param {String} cookie the cookie to find the value of
+ * @return {mixed} cookies value or false if not found
+ */
+function getCookie(cookie)
+{
+    /* All cookies for the Coupled Tanks are prefixed. This is to differenate 
+     * with rig interfaces that may have the same identifiers but different layouts. */
+    cookie = COOKIE_PREFIX + cookie;
+    
+    var pos = document.cookie.indexOf(cookie);
+    return pos >= 0 ? document.cookie.substring(pos + cookie.length + 1, document.cookie.indexOf(';', pos + 1)) : false;
+}
+
+/**
+ * Sets a cookie for the Coupled Tanks interface.
+ * 
+ * @param {String} cookie name of cookie to set
+ * @param {String} value value of cookie to set
+ */
+function setCookie(cookie, value)
+{
+    document.cookie = COOKIE_PREFIX + cookie + '=' + value + ';path=/;max-age=' + (60 * 60 * 24 * 365);
+}
 
 /**
  * Gets a canvas element with an appropriate fallback for IE6 to IE8 which do

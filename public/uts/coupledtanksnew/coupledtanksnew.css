@@ -115,8 +115,7 @@
 	z-index: 100;
 }
 
-.window-header-shade{
-    width: 222px;
+.window-header-shade {
     height: 25px;
 }
 
@@ -338,7 +337,7 @@
 
 .graph-label {
 	float: left;
-	margin: 5px 10px;
+	margin: 5px 8px;
 }
 
 .graph-label-text{
