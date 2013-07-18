@@ -187,6 +187,13 @@ function WaterLevelsMimic($container, title) {
 		'pump-rpm': 'RPM',
 		'valve-actual': '%',	
 	};
+	
+	/** The box width. The box is the outmost container of the widget. */
+	this.boxWidth = undefined;
+	
+	/** The box height. */
+	this.boxHeight = undefined;
+	
 };
 
 WaterLevelsMimic.prototype = new Widget;
@@ -201,21 +208,38 @@ WaterLevelsMimic.prototype.init = function() {
 		this.dataVars[i] = this.$widget.find("#mimic-" + i + " span");
 	}
 
+	/* Enable resizing. */
+	this.enableResizable(326, 366, 73 / 78);
+
 	this.enableDraggable();
 };
 
 WaterLevelsMimic.prototype.getHTML = function() {	
 	var i = 0, html =
         '<div id="mimic-bg">' +
-        '	<div id="water-tube-t1" class="waterTube waterBackground">' +
-        '		<div class="level .gradient"></div>' +
-        '	</div>' +
-        '	<div id="water-tube-t2" class="waterTube waterBackground">' +
-        '		<div class="level .gradient"></div>' +
-        '	</div>' +
-        '	<div id="water-reservoir" class="waterBackground">' +
-        '		<div class="level .gradient"></div>' +
-        '	</div>';
+            '<div class="vertical-tube mimic-pipe-long"></div>' +
+            '<div class="vertical-tube mimic-pipe-short"></div>' +
+            '<div class="vertical-tube mimic-pipe-t2-out"></div>' +
+            '<div class="horizontal-tube mimic-pipe-t1-t2"></div>' +
+            '<div class="horizontal-tube mimic-pipe-t3"></div>' +
+            '<div class="horizontal-tube mimic-pipe-t1-in"></div>' +
+            '<div class="horizontal-tube mimic-elbow-top-right"></div>' +
+            '<div class="horizontal-tube mimic-cap-vertical mimic-cap-t1-t2-leftCap"></div>' +
+            '<div class="horizontal-tube mimic-cap-vertical mimic-cap-t1-t2-rightCap"></div>' +
+            '<div class="horizontal-tube mimic-cap-vertical mimic-cap-t3"></div>' +
+            '<div class="vertical-tube mimic-cap-horizontal mimic-cap-t1-in"></div>' +
+            '<div class="vertical-tube mimic-cap-horizontal mimic-cap-t2-out"></div>' +
+            '<div class="horizontal-tube mimic-elbow-top-left"></div>' +
+            '<div class="horizontal-tube mimic-elbow-bottom-left"></div>' +
+            '<div id="water-tube-t1" class="waterTube waterBackground">' +
+                '<div class="level .gradient"></div>' +
+            '</div>' +
+            '<div id="water-tube-t2" class="waterTube waterBackground">' +
+                '<div class="level .gradient"></div>' +
+            '</div>' +
+            '<div id="water-reservoir" class="waterBackground">' +
+                '<div class="level .gradient"></div>' +
+            '</div>';
 
 	for (i in this.precision)
 	{
@@ -224,7 +248,11 @@ WaterLevelsMimic.prototype.getHTML = function() {
 	}
         
 	html +=
-        '	<img src="/uts/coupledtanksnew/images/spinner.png" border="0" alt="spinner" class="spinner spin" />'+
+            '<img src="/uts/coupledtanksnew/images/mimic-arrow-green.png" border="0" alt="valve" class="mimic-green-arrow" />'+            
+            '<img src="/uts/coupledtanksnew/images/mimic-arrow-green-down.png" border="0" alt="valve" class="mimic-green-down-arrow" />'+            
+            '<img src="/uts/coupledtanksnew/images/mimic-arrow-red.png" border="0" alt="valve" class="mimic-red-arrow" />'+            
+            '<img src="/uts/coupledtanksnew/images/valve.png" border="0" alt="valve" class="mimic-valve" />'+
+            '<img src="/uts/coupledtanksnew/images/spinner.png" border="0" alt="spinner" class="spinner spin" />'+
         '</div>';
 
     return html;
@@ -261,6 +289,18 @@ WaterLevelsMimic.prototype.destroy = function() {
 	this.dataVars = { };
 
 	Widget.prototype.destroy.call(this);
+};
+
+WaterLevelsMimic.prototype.resized = function(width, height) {
+    this.width = this.width + (width - this.boxWidth);
+    this.height = this.height + (height - this.boxHeight);
+    
+    this.boxWidth = width;
+    this.boxHeight = height;
+}
+
+WaterLevelsMimic.prototype.resizeStopped = function(width, height) {
+    this.resized(width, height);
 };
 
 /* ============================================================================
@@ -371,7 +411,7 @@ PIDControl.prototype.init = function() {
 PIDControl.prototype.getHTML = function() {	
 	return(
 		'<div id="pid-settings" class="saharaform">' +
-        	'<div id="pid-settings-sp">' + 
+            '<div id="pid-settings-sp">' + 
         		'<label for="pid-sp">Setpoint:</label>' +
         		'<input id="pid-sp" type="text" name="setpoint" disabled="disabled" tabindex="1" />' +
         		'&nbsp;&nbsp;mm' +

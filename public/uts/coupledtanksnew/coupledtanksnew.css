@@ -878,10 +878,9 @@
 
 #mimic-bg {
 	position: relative;
-	background-image: url('/uts/coupledtanksnew/images/mimicBG.png');
-	background-repeat: no-repeat;
-	width: 292px;
-	height: 310px;
+	min-width: 292px;
+	min-height: 310px;
+	height: 100%;
 }	
 
 #water-levels-mimic .level {
@@ -899,30 +898,30 @@
 }
 
 #water-levels-mimic .waterTube {
-    width: 60px;
-    height: 170px;
+    width: 20.5%;
+    height: 55%;
     border: solid 1px #686868;
     margin: 5px;
     position: absolute;
 }
 
 #water-levels-mimic #water-tube-t1 {
-	left: 78px;
-	top: 23px;
+    right: 48.5%;
+    top: 7%;
 }
 
 #water-levels-mimic #water-tube-t2 {
-    left: 223px;
-    top: 23px;
+    left: 76.5%;
+    top: 7%;
 }
 
 #water-levels-mimic #water-reservoir {
-    width: 190px;
-    height: 60px;
+    width: 65%;
+    height: 19.5%;
     border: solid 1px #686868;
     position: absolute;
-    top: 248px;
-    left: 98px;
+    bottom: 0.5%;
+    left: 33.5%;
 }
 
 #water-levels-mimic #water-reservoir .level {
@@ -950,14 +949,147 @@
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#d0e4f7', endColorstr='#8be0ef',GradientType=0 ); /* IE6-9 */
 }
 
+/* digram background */
+
+.horizontal-tube {
+    background: #e4f5fc; /* Old browsers */
+    /* IE9 SVG, needs conditional override of 'filter' to 'none' */
+    background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2U0ZjVmYyIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjUwJSIgc3RvcC1jb2xvcj0iI2JmZThmOSIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjUxJSIgc3RvcC1jb2xvcj0iIzlmZDhlZiIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMyYWIwZWQiIHN0b3Atb3BhY2l0eT0iMSIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+);
+    background: -moz-linear-gradient(top, #e4f5fc 0%, #bfe8f9 50%, #9fd8ef 51%, #2ab0ed 100%); /* FF3.6+ */
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#e4f5fc), color-stop(50%,#bfe8f9), color-stop(51%,#9fd8ef), color-stop(100%,#2ab0ed)); /* Chrome,Safari4+ */
+    background: -webkit-linear-gradient(top, #e4f5fc 0%,#bfe8f9 50%,#9fd8ef 51%,#2ab0ed 100%); /* Chrome10+,Safari5.1+ */
+    background: -o-linear-gradient(top, #e4f5fc 0%,#bfe8f9 50%,#9fd8ef 51%,#2ab0ed 100%); /* Opera 11.10+ */
+    background: -ms-linear-gradient(top, #e4f5fc 0%,#bfe8f9 50%,#9fd8ef 51%,#2ab0ed 100%); /* IE10+ */
+    background: linear-gradient(to bottom, #e4f5fc 0%,#bfe8f9 50%,#9fd8ef 51%,#2ab0ed 100%); /* W3C */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e4f5fc', endColorstr='#2ab0ed',GradientType=0 ); /* IE6-8 */	
+    position: absolute;
+    border: solid 1px #666;
+}
+
+.vertical-tube {
+    background: #e4f5fc; /* Old browsers */
+    /* IE9 SVG, needs conditional override of 'filter' to 'none' */
+    background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2U0ZjVmYyIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjUwJSIgc3RvcC1jb2xvcj0iI2JmZThmOSIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjUxJSIgc3RvcC1jb2xvcj0iIzlmZDhlZiIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMyYWIwZWQiIHN0b3Atb3BhY2l0eT0iMSIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+);
+    background: -moz-linear-gradient(left,  #e4f5fc 0%, #bfe8f9 50%, #9fd8ef 51%, #2ab0ed 100%); /* FF3.6+ */
+    background: -webkit-gradient(linear, left top, right top, color-stop(0%,#e4f5fc), color-stop(50%,#bfe8f9), color-stop(51%,#9fd8ef), color-stop(100%,#2ab0ed)); /* Chrome,Safari4+ */
+    background: -webkit-linear-gradient(left,  #e4f5fc 0%,#bfe8f9 50%,#9fd8ef 51%,#2ab0ed 100%); /* Chrome10+,Safari5.1+ */
+    background: -o-linear-gradient(left,  #e4f5fc 0%,#bfe8f9 50%,#9fd8ef 51%,#2ab0ed 100%); /* Opera 11.10+ */
+    background: -ms-linear-gradient(left,  #e4f5fc 0%,#bfe8f9 50%,#9fd8ef 51%,#2ab0ed 100%); /* IE10+ */
+    background: linear-gradient(to right,  #e4f5fc 0%,#bfe8f9 50%,#9fd8ef 51%,#2ab0ed 100%); /* W3C */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e4f5fc', endColorstr='#2ab0ed',GradientType=1 ); /* IE6-8 */
+    position: absolute;
+    border: solid 1px #666;
+}
+
+.mimic-pipe-t1-t2 {
+	height: 3%;
+	width: 40%;
+	bottom: 38%;
+	right: 17%;
+}
+
+.mimic-pipe-t3 {
+   height: 3%;
+   width: 18%;
+   bottom: 2.5%;
+   right: 67%;
+}
+
+.mimic-pipe-t1-in {
+    height: 3%;
+    width: 28%;
+    bottom: 94%;
+    right: 67%;
+}
+
+.mimic-pipe-long {
+    height: 67%;
+    width: 2.5%;
+    bottom: 26%;
+    right: 95.5%;
+}
+
+.mimic-pipe-short {
+    height: 15%;
+    width: 2.5%;
+    bottom: 6%;
+    right: 85.5%;
+}
+
+.mimic-pipe-t2-out {
+    height: 20%;
+    width: 2.5%;
+    bottom: 17.5%;
+    right: 9.5%;
+}
+
+.mimic-cap-vertical {
+	height: 6%;
+	width: 3%;	
+}
+
+.mimic-cap-horizontal {
+    height: 4%;
+    width: 7%;
+}
+
+.mimic-cap-t1-in {
+    right: 62.5%;
+    bottom: 89%;
+}
+
+.mimic-cap-t2-out {
+    right: 7.2%;
+    bottom: 33%;	
+}
+
+.mimic-cap-t1-t2-leftCap {
+	bottom: 37%;
+	right: 47%;
+}
+
+.mimic-cap-t1-t2-rightCap {
+	bottom: 37%;
+	right: 21.5%;
+}
+
+.mimic-cap-t3 {
+    bottom: 1%;
+    right: 66%;
+}
+
+.mimic-elbow-top-left {
+    height: 6%;
+    bottom: 92%;
+    right: 94%;
+    width: 5%;
+    border-radius: 50% 0% 0% 0%;
+}
+
+.mimic-elbow-top-right {
+    height: 6%;
+    bottom: 92%;
+    right: 64%;
+    width: 5%;
+    border-radius: 0% 50% 0% 0%;
+}
+
+.mimic-elbow-bottom-left {
+    height: 5%;
+    bottom: 2%;
+    right: 84%;
+    width: 5%;
+    border-radius: 0% 0% 0% 50%;
+}
+
 /* Input Fields */
-#water-levels-mimic .diagramInfo{
+#water-levels-mimic .diagramInfo {
 	position: absolute;
 	text-align: center;
     font-size: 12px !important;
     color: #686868;
     line-height: 9px;
-    height: 9px;
+    height: 2.5%;
 	width: 46px;
 	background: #fff;
 	border: 1px solid #686868;
@@ -965,50 +1097,80 @@
 }
 
 #water-levels-mimic #mimic-l1 {
-    top: 177px;
-    left: 80px;
-    width: 54px;
+    top: 58%;
+    right: 50.4%;
+    width: 16.9%;
 }
 
 #water-levels-mimic #mimic-l2 {
-    top: 177px;
-    left: 226px;
-    width: 54px;
+    top: 58%;
+    left: 78.2%;
+    width: 16.9%;
 }
 
 #water-levels-mimic #mimic-t1-in {
-    top: 36px;
-    left: 14px;
-    width: 55px;
+    top: 12%;
+    left: 5%;
+    width: 18%;
 }
 
 #water-levels-mimic #mimic-t2-out {
-	left: 175px;
-    top: 224px;
-    width: 55px;
+    right: 17%;
+    bottom: 22%;
+    width: 20%;
 }
 
 #water-levels-mimic #mimic-t1-to-t2 {
-   left: 153px;
-   top: 154px;
-   width: 55px;
+    left: 52.5%;
+    top: 47%;
+    width: 19%;
 }
 
 #water-levels-mimic #mimic-pump-rpm {
-    top: 224px;
-    left: 60px;
-    width: 80px;
+    left: 22%;
+    bottom: 22%;
+    width: 27%;
 }
 
 #water-levels-mimic #mimic-valve-actual {
-    left: 19px;
-    top: 156px;
+    bottom: 44%;
+    left: 5%;
+    width: 18%;    
 }
 
 #water-levels-mimic .spinner {
     position: absolute;
-    top: 210px;
-    left: -6px;
+    left: -2%;
+    top: 68%;
+    width: 22%;
+}
+
+.mimic-valve {
+    position: absolute;
+    left: 0%;
+    top: 38%;
+    width: 11%;
+}
+
+.mimic-green-arrow {
+    position: absolute;
+    left: 9%;
+    top: 7.5%;
+    width: 16%;
+}
+
+.mimic-green-down-arrow {
+    position: absolute;
+    left: 84%;
+    top: 68.5%;
+    height: 10%;
+}
+
+.mimic-red-arrow {
+    position: absolute;
+    left: 56%;
+    top: 54.5%;
+    width: 16%;
 }
 
 .spin {
