@@ -603,10 +603,10 @@ PowerLab.prototype.requestData = function() {
 		url: "/primitive/json/pc/PowerController/pa/data",
 		cache: false,
 		success: function(packet) {
-			if (typeof packet!= "object") 
+			if (typeof packet != "object") 
 			{
 				/* User is probably logged out. */
-				window.location.reload();
+				setTimeout(function() { thiz.requestData(); }, 10000);
 				return;
 			}
 			
@@ -622,7 +622,7 @@ PowerLab.prototype.requestData = function() {
 			thiz.data = data;
 			for (i in thiz.widgets) thiz.widgets[i].update(data);
 			
-			setTimeout(function() { thiz.requestData(); }, 3000);
+			setTimeout(function() { thiz.requestData(); }, 2000);
 		},
 		error: function() {
 			setTimeout(function() { thiz.requestData(); }, 10000);
