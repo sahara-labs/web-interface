@@ -308,8 +308,8 @@ PowerLab.prototype.setMode = function(mode) {
 			else return true;
 		};
 		o.checkRange = function(val) {
-			if      (val < 200) return -1; // INTERLOCK: Value too small
-			else if (val > 260) return 1;  // INTERLOCK: Value too large     
+			if      (val < 230) return -1; // INTERLOCK: Value too small
+			else if (val > 250) return 1;  // INTERLOCK: Value too large     
 			else return 0; // Value in range
 		};
 		this.widgets.push(o);
@@ -330,7 +330,7 @@ PowerLab.prototype.setMode = function(mode) {
 		};
 		o.checkRange = function(val) {
 			if (val < 45) return -1;     // INTERLOCK: Value too small
-			else if (val > 53) return 1; // INTERLOCK: Value too large
+			else if (val > 55) return 1; // INTERLOCK: Value too large
 			else return 0;               // Value in range
 		};
 		this.widgets.push(o);
