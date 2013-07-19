@@ -170,6 +170,7 @@
 #display-manager {
 	left: -194px;
 	top: 139px;
+	width: 185px;
 }
 
 #display-manager .button img {
@@ -204,6 +205,7 @@
  ******************************************************************************/
 .buttonwrapper {
     margin: -11px;
+    width: 100%;
 }
 
 .button {
