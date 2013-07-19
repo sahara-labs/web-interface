@@ -97,6 +97,7 @@
 
 .window-content {
 	overflow: hidden;
+	height: 100%;
 }
 
 .resizable {
@@ -1058,26 +1059,26 @@
 }
 
 .mimic-elbow-top-left {
-    height: 6%;
-    bottom: 92%;
+    height: 4%;
+    bottom: 93%;
     right: 94%;
-    width: 5%;
+    width: 4%;
     border-radius: 50% 0% 0% 0%;
 }
 
 .mimic-elbow-top-right {
-    height: 6%;
-    bottom: 92%;
+    height: 4%;
+    bottom: 93%;
     right: 64%;
-    width: 5%;
+    width: 4%;
     border-radius: 0% 50% 0% 0%;
 }
 
 .mimic-elbow-bottom-left {
-    height: 5%;
-    bottom: 2%;
+    height: 4%;
+    bottom: 2.5%;
     right: 84%;
-    width: 5%;
+    width: 4%;
     border-radius: 0% 0% 0% 50%;
 }
 
@@ -1146,9 +1147,9 @@
 
 .mimic-valve {
     position: absolute;
-    left: 0%;
-    top: 38%;
-    width: 11%;
+    left: -1.5%;
+    bottom: 52%;
+    width: 19%;
 }
 
 .mimic-green-arrow {

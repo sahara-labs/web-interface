@@ -251,8 +251,8 @@ WaterLevelsMimic.prototype.getHTML = function() {
             '<img src="/uts/coupledtanksnew/images/mimic-arrow-green.png" border="0" alt="valve" class="mimic-green-arrow" />'+            
             '<img src="/uts/coupledtanksnew/images/mimic-arrow-green-down.png" border="0" alt="valve" class="mimic-green-down-arrow" />'+            
             '<img src="/uts/coupledtanksnew/images/mimic-arrow-red.png" border="0" alt="valve" class="mimic-red-arrow" />'+            
-            '<img src="/uts/coupledtanksnew/images/valve.png" border="0" alt="valve" class="mimic-valve" />'+
-            '<img src="/uts/coupledtanksnew/images/spinner.png" border="0" alt="spinner" class="spinner spin" />'+
+            '<img src="/uts/coupledtanksnew/images/mimic-valve.png" border="0" alt="valve" class="mimic-valve" />'+
+            '<img src="/uts/coupledtanksnew/images/mimic-spinner.png" border="0" alt="spinner" class="spinner spin" />'+
         '</div>';
 
     return html;
@@ -297,6 +297,9 @@ WaterLevelsMimic.prototype.resized = function(width, height) {
     
     this.boxWidth = width;
     this.boxHeight = height;
+    
+    /* realigns the bottom border */
+    this.$widget.css({"padding-bottom":"8%"});
 }
 
 WaterLevelsMimic.prototype.resizeStopped = function(width, height) {
