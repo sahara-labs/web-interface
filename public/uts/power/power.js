@@ -308,8 +308,8 @@ PowerLab.prototype.setMode = function(mode) {
 			else return true;
 		};
 		o.checkRange = function(val) {
-			if      (val < 200) return -1; // INTERLOCK: Value too small
-			else if (val > 260) return 1;  // INTERLOCK: Value too large     
+			if      (val < 230) return -1; // INTERLOCK: Value too small
+			else if (val > 250) return 1;  // INTERLOCK: Value too large     
 			else return 0; // Value in range
 		};
 		this.widgets.push(o);
@@ -329,8 +329,8 @@ PowerLab.prototype.setMode = function(mode) {
 			else return true;
 		};
 		o.checkRange = function(val) {
-			if (val < 45) return -1;     // INTERLOCK: Value too small
-			else if (val > 53) return 1; // INTERLOCK: Value too large
+			if (val < 48) return -1;     // INTERLOCK: Value too small
+			else if (val > 52) return 1; // INTERLOCK: Value too large
 			else return 0;               // Value in range
 		};
 		this.widgets.push(o);
@@ -603,10 +603,10 @@ PowerLab.prototype.requestData = function() {
 		url: "/primitive/json/pc/PowerController/pa/data",
 		cache: false,
 		success: function(packet) {
-			if (typeof packet!= "object") 
+			if (typeof packet != "object") 
 			{
 				/* User is probably logged out. */
-				window.location.reload();
+				setTimeout(function() { thiz.requestData(); }, 10000);
 				return;
 			}
 			
@@ -622,7 +622,7 @@ PowerLab.prototype.requestData = function() {
 			thiz.data = data;
 			for (i in thiz.widgets) thiz.widgets[i].update(data);
 			
-			setTimeout(function() { thiz.requestData(); }, 3000);
+			setTimeout(function() { thiz.requestData(); }, 2000);
 		},
 		error: function() {
 			setTimeout(function() { thiz.requestData(); }, 10000);
