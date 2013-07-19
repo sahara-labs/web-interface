@@ -300,7 +300,7 @@ WaterLevelsMimic.prototype.resized = function(width, height) {
     
     /* realigns the bottom border */
     this.$widget.css({"padding-bottom":"8%"});
-}
+};
 
 WaterLevelsMimic.prototype.resizeStopped = function(width, height) {
     this.resized(width, height);
@@ -2302,15 +2302,11 @@ CameraWidget.prototype.init = function() {
 
 /**
  * Changes the video format.
+ * 
+ * @param {String} format format that is to be selected
  */
 CameraWidget.prototype.selectFormat = function(format) {
-	this.format = format;
-	
-    if (this.format != 'default')
-    {   
-        /* change Video format */
-        $('.video-placeholder').html(this.format);
-    }
+	alert(format);
 };
 
 CameraWidget.prototype.consume = function(data) {
@@ -2356,13 +2352,14 @@ CameraWidget.prototype.getHTML = function() {
 		    '<div class="video-placeholder">Please wait...' +
 		    '</div>' +
 		'</div>' +
-		    '<div class="format-select">' +
-	            '<select>' +
-		            '<option selected="selected" value="default">Select Format</option>' +
-                    '<option value="Swf">SWF</option>' +
-                    '<option value="Mjpeg">MJEPG</option>' +
-                '</select>' +
-            '</div>'
+	    '<div class="format-select">' +   
+            '<select id="video-player-select">' +
+	            '<option selected="selected" value=" "> </option>' +
+                '<option value="swf">SWF</option>' +
+                '<option value="mjpeg">MJpeg</option>' +
+            '</select>' +
+        '</div>' +
+        '<div class="format-select-label">Format:</div>'
 	);
 };
 

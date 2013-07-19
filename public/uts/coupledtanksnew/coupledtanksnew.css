@@ -169,7 +169,7 @@
  ******************************************************************************/
 #display-manager {
 	left: -194px;
-	top: 139px;
+	top: 155px;
 	width: 185px;
 }
 
@@ -467,6 +467,9 @@
 
 #camera-coupled-tanks .window-content {
 	padding: 0;
+}
+
+#camera-coupled-tanks .video-player {
 	background-color: #333333;
 }
 
@@ -477,10 +480,18 @@
 	padding-top: 90px;
 }
 
-.format-select select {
+#camera-coupled-tanks .format-select-label {
+	float: right;
+	width: 40px;
+	margin: 10px 4px;
+	font-size: 0.8em;
+	color: #777777;
+}
+
+#camera-coupled-tanks .format-select select {
     background: rgba(0, 0, 0, 0);
-    color: #777;
-    width: 140px;
+    color: #777777;
+    width: 100px;
     padding: 5px;
     font-size: 12px;
     line-height: 1;
@@ -490,13 +501,14 @@
     -webkit-appearance: none;
     -moz-appearance: none;
     -ie-appearance: none;
-    appearance:none;
+    appearance: none;
     cursor: pointer;
 }
 
-.format-select {
+#camera-coupled-tanks .format-select {
+    float: right;
     margin: 4px;
-    width: 110px;
+    width: 75px;
     height: 25px;
     overflow: hidden;
     background: url('/uts/coupledtanksnew/images/arrow-down.png') no-repeat right #F3F3F3;
@@ -814,7 +826,7 @@
 #controls-tabs {
 	position: absolute;
 	left: 14px;
-	top: 320px;
+	top: 355px;
 }
 
 /******************************************************************************
@@ -824,13 +836,13 @@
 #graph-tank-levels-box {
 	position: absolute;
     left: 290px;
-    top: 475px;
+    top: 510px;
 } 
 
 #graph-flow-rates-box {
 	position: absolute;
     left: -200px;
-    top: 475px;
+    top: 510px;
 } 
 
 /******************************************************************************
@@ -1175,6 +1187,7 @@
     width: 16%;
 }
 
+/*
 .spin {
     -webkit-animation: spin 1.5s infinite linear;
     -moz-animation: spin 1.5s infinite linear;
@@ -1202,7 +1215,7 @@
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
-
+*/
 
 /******************************************************************************
  ** Styles for Mobile devices                                                         **
