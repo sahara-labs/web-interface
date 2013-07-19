@@ -329,8 +329,8 @@ PowerLab.prototype.setMode = function(mode) {
 			else return true;
 		};
 		o.checkRange = function(val) {
-			if (val < 45) return -1;     // INTERLOCK: Value too small
-			else if (val > 55) return 1; // INTERLOCK: Value too large
+			if (val < 48) return -1;     // INTERLOCK: Value too small
+			else if (val > 52) return 1; // INTERLOCK: Value too large
 			else return 0;               // Value in range
 		};
 		this.widgets.push(o);
