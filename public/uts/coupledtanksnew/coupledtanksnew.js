@@ -209,7 +209,7 @@ WaterLevelsMimic.prototype.init = function() {
 	}
 
 	/* Enable resizing. */
-	this.enableResizable(326, 366, 73 / 78);
+	this.enableResizable(326, 366, true);
 
 	this.enableDraggable();
 };
@@ -767,6 +767,9 @@ Widget.prototype.toggleWindowShade = function() {
 /** The expanded width of an expanded, resizable widget. */
 Widget.EXPANDED_WIDTH = 800;
 
+/** The maximum expanded height of an expanded, resizable widget. */
+Widget.MAX_EXPANDED_HEIGHT = 500;
+
 /**
  * Toggles the window expand state which makes the widget take a prominent 
  * position on the interface. 
@@ -785,14 +788,16 @@ Widget.prototype.toggleWindowExpand = function() {
         /* Moving the widget back to its original position. */
         this.$widget.css({
             left: this.window.left,
-            top:  this.window.top
+            top:  this.window.top,
+            zIndex: this.window.zin
         });
     }
     else
     {
         var width = this.window.width = this.$widget.width(),
             height = this.window.height = this.$widget.height(),
-            p = this.$widget.position();
+            p = this.$widget.position(), 
+            zin = this.window.zin = this.$widget.zIndex();
         
         this.window.left = p.left;
         this.window.top = p.top;
@@ -803,16 +808,29 @@ Widget.prototype.toggleWindowExpand = function() {
             height = Widget.EXPANDED_WIDTH / width * height;
             width = Widget.EXPANDED_WIDTH;
             
+            /* If the height is larger than the width, we want to scale the 
+             * widget so it first better. */
+            if (height > Widget.MAX_EXPANDED_HEIGHT)
+            {
+                height = Widget.MAX_EXPANDED_HEIGHT;
+                width = Widget.MAX_EXPANDED_HEIGHT / this.window.height * this.window.width;
+            }
+            
+            
             this.$widget.width(width);
             this.$widget.height(height);
             this.resized(width, height);
             this.resizeStopped(width, height);    
         }
         
+        /* We want the expanded widget to have the highest z-Index. */
+        this.$container.find(".window-wrapper").each(function(i) {if ($(this).zIndex() > zin) zin = $(this).zIndex(); });
+        
         /* Move the widget to a central position. */
         this.$widget.css({
             left: this.$container.width() / 2 - width / 2 - 60,
-            top: 100
+            top: 100,
+            zIndex: zin + 100
         });
     }
     
