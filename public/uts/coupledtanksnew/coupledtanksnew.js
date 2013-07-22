@@ -2293,12 +2293,6 @@ function CameraWidget($container, title, attr)
 {
     Widget.call(this, $container, title, 'video');
     
-    /** The width of the camera stream. */
-    this.width = 320;
-    
-    /** The height of the camera stream. */
-	this.height = 240;
-
 	/** Identifier of the camera box. */
 	this.id = title.toLowerCase().replace(' ', '-');
 
@@ -2313,8 +2307,17 @@ function CameraWidget($container, title, attr)
 	
 	/** Current format. */
 	this.currentFormat = undefined;
+	
+	/** Width of the video. */
+	this.videoWidth = 320;
+	
+	/** Height of the video. */
+	this.videoHeight = 240;
 };
 CameraWidget.prototype = new Widget;
+
+/** Cookie which stores the users chosen camera format. */
+CameraWidget.SELECTED_FORMAT_COOKIE = "camera-format";
 
 CameraWidget.prototype.init = function() {
 	var thiz = this;
@@ -2327,17 +2330,8 @@ CameraWidget.prototype.init = function() {
 	this.enableDraggable();
 	
 	this.$widget.find('.format-select').find('select').change(function() {
-        thiz.selectFormat($(this).val());
+        thiz.deploy($(this).val());
     });
-};
-
-/**
- * Changes the video format.
- * 
- * @param {String} format format that is to be selected
- */
-CameraWidget.prototype.selectFormat = function(format) {
-	alert(format);
 };
 
 CameraWidget.prototype.consume = function(data) {
@@ -2354,32 +2348,70 @@ CameraWidget.prototype.consume = function(data) {
         this.urls.mjpeg = decodeURIComponent(data['camera-mjpeg']);
     }
     
-    this.defaultDeploy();
+    if (this.urls.swf || this.urls.mjpeg) 
+    {
+        this.restoreDeploy();
+    }
 };
 
 /**
- * Deploys an appropriate camera stream for the platform.
+ * Restores a stored user chosen format choice, otherwise uses platform deploy
+ * to load the most appropriate choice. 
  */
-CameraWidget.prototype.defaultDeploy = function() {
-    var html;
+CameraWidget.prototype.restoreDeploy = function() {
+    var storedChoice = getCookie(CameraWidget.SELECTED_FORMAT_COOKIE);
     
-    if ((this.currentFormat = /Mobile|mobi|Android|android/i.test(navigator.userAgent) ? 'mjpeg' : 'swf') == 'swf')
+    if (storedChoice && this.urls[storedChoice])
     {
-        html = this.getSwfHtml();
+        this.deploy(storedChoice);
     }
     else
     {
+        this.platformDeploy();
+    }
+};
+
+/**
+ * Deploys a format most appropriate to the platform.
+ */
+CameraWidget.prototype.platformDeploy = function() {
+    this.deploy(/Mobile|mobi|Android|android/i.test(navigator.userAgent) ? 'mjpeg' : 'swf');  
+};
+
+/**
+ * Deploys the specified camera format. 
+ * 
+ * @param format format to deploy
+ */
+CameraWidget.prototype.deploy = function(format) {
+    var html;
+    
+    switch (format)
+    {
+    case 'swf':
+        html = this.getSwfHtml();
+        break;
+        
+    case 'mjpeg':
         html = this.getMjpegHtml();
+        break;
+        
+    default:
+        this.platformDeploy();
+        return;
     }
     
     this.isDeployed = true;
     this.$widget.find(".video-player").html(html);
+    this.$widget.find("#video-player-select").children(":selected").removeAttr("selected");
+    this.$widget.find("#video-player-select > option[value='" + format + "']").attr("selected", "selected");
+    setCookie(CameraWidget.SELECTED_FORMAT_COOKIE, this.currentFormat = format);
 };
 
 
 CameraWidget.prototype.getHTML = function() {	
 	return (
-		'<div class="video-player" style="height:' + this.height + 'px;width:' + this.width + 'px">' +
+		'<div class="video-player" style="height:' + this.videoHeight + 'px;width:' + this.videoWidth + 'px">' +
 		    '<div class="video-placeholder">Please wait...' +
 		    '</div>' +
 		'</div>' +
@@ -2400,7 +2432,7 @@ CameraWidget.prototype.getHTML = function() {
 CameraWidget.prototype.getSwfHtml = function() {
 	return (!$.browser.msie ? // Firefox, Chrome, ...
 			'<object type="application/x-shockwave-flash" data="' + this.urls.swf + '" ' +
-	 				'width="' +  this.width  + '" height="' + this.height + '">' +
+	 				'width="' +  this.videoWidth  + '" height="' + this.videoHeight + '">' +
 		        '<param name="movie" value="' + 'this.urls.swf' + '"/>' +
 		        '<a href="http://www.adobe.com/go/getflash">' +
 		        	'<img src="http://www.adobe.com/images/shared/download_buttons/get_flash_player.gif" ' +
@@ -2408,7 +2440,8 @@ CameraWidget.prototype.getSwfHtml = function() {
 		        '</a>' +
 		    '</object>'
 		:                  // Internet Explorer
-			'<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000"  width="' + this.width + '" height="' + this.height + '"  id="camera-swf-movie">' +
+			'<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000"  width="' + this.videoWidth + 
+			        '" height="' + this.videoHeight + '"  id="camera-swf-movie">' +
 				'<param name="movie" value="' + this.urls.swf + '" />' +
 				'<a href="http://www.adobe.com/go/getflash">' +
 					'<img src="http://www.adobe.com/images/shared/download_buttons/get_flash_player.gif" alt="Get Adobe Flash player"/>' +
@@ -2421,13 +2454,12 @@ CameraWidget.prototype.getSwfHtml = function() {
  * Gets the HTML to deploy a MJPEG stream.
  */
 CameraWidget.prototype.getMjpegHtml = function() {
-	
 	return (!$.browser.msie ? // Firefox, Chrome, ...
-			 '<img style="width:' + this.width + 'px;height:' + this.height + 'px" ' +
-						'src="' + this.urls.jpeg + '?' + new Date().getTime() + ' alt="&nbsp;" />'
+			 '<img style="width:' + this.videoWidth + 'px;height:' + this.videoHeight + 'px" ' +
+						'src="' + this.urls.mjpeg + '?' + new Date().getTime() + ' alt="&nbsp;" />'
 		 :                 // Internet Explorer
 			 '<applet code="com.charliemouse.cambozola.Viewer" archive="/applets/cambozola.jar" ' + 
-					'width="' + this.width + '" height="' + this.height + '">' +
+					'width="' + this.videoWidth + '" height="' + this.videoHeight + '">' +
 				'<param name="url" value="' + this.urls.mjpeg + '"/>' +
 				'<param name="accessories" value="none"/>' +
 			'</applet>'
@@ -2453,8 +2485,9 @@ function getCookie(cookie)
      * with rig interfaces that may have the same identifiers but different layouts. */
     cookie = COOKIE_PREFIX + cookie;
     
-    var pos = document.cookie.indexOf(cookie);
-    return pos >= 0 ? document.cookie.substring(pos + cookie.length + 1, document.cookie.indexOf(';', pos + 1)) : false;
+    var pos = document.cookie.indexOf(cookie), end = document.cookie.indexOf(';', pos + 1);
+    if (end < 0) end = document.cookie.length;
+    return pos >= 0 ? document.cookie.substring(pos + cookie.length + 1, end) : false;
 }
 
 /**
