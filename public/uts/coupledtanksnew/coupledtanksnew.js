@@ -246,13 +246,26 @@ WaterLevelsMimic.prototype.getHTML = function() {
 		html += '<div id="mimic-' + i + '" class="diagramInfo"><span>' + zeroPad(0, this.precision[i]) + '</span>&nbsp;' + 
 				this.units[i] + '</div>';
 	}
+    
+
+    if ( $.browser.msie && $.browser.version < 10)
+    {
+        this.spinner = 'mimic-ie-background-spinner';
+        this.spinGif = '<img src="/uts/coupledtanksnew/images/mimic-ie-spinner.gif" border="0" alt="spinner" class="spinner" />';
+    }
+    else 
+    {
+        this.spinner = 'mimic-spinner';   
+        this.spinGif = '';
+    }
         
 	html +=
             '<img src="/uts/coupledtanksnew/images/mimic-arrow-green.png" border="0" alt="valve" class="mimic-green-arrow" />'+            
             '<img src="/uts/coupledtanksnew/images/mimic-arrow-green-down.png" border="0" alt="valve" class="mimic-green-down-arrow" />'+            
             '<img src="/uts/coupledtanksnew/images/mimic-arrow-red.png" border="0" alt="valve" class="mimic-red-arrow" />'+            
             '<img src="/uts/coupledtanksnew/images/mimic-valve.png" border="0" alt="valve" class="mimic-valve" />'+
-            '<img src="/uts/coupledtanksnew/images/mimic-spinner.png" border="0" alt="spinner" class="spinner spin" />'+
+            '<img src="/uts/coupledtanksnew/images/' + this.spinner + '.png" border="0" alt="spinner" class="spinner spin" />'+
+            this.spinGif +
         '</div>';
 
     return html;
