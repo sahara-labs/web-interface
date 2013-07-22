@@ -1187,7 +1187,6 @@
     width: 16%;
 }
 
-/*
 .spin {
     -webkit-animation: spin 1.5s infinite linear;
     -moz-animation: spin 1.5s infinite linear;
@@ -1215,7 +1214,6 @@
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
-*/
 
 /******************************************************************************
  ** Styles for Mobile devices                                                         **
