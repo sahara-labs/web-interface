@@ -57,7 +57,7 @@ WaterLevelControl.prototype.setup = function() {
 	this.widgets.push(o);	
 
 	/* Add camera to page. */
-	this.widgets.push(new CameraWidget(this.$container, 'Coupled Tanks', 'camera'));
+	this.widgets.push(new CameraWidget(this.$container, 'Coupled Tanks', ''));
 
 	/* Controls. */
 	o = new SliderWidget(this.$container, 'Manual', 'manual', 'valve', 'setValve');
@@ -209,7 +209,7 @@ WaterLevelsMimic.prototype.init = function() {
 	}
 
 	/* Enable resizing. */
-	this.enableResizable(326, 366, 73 / 78);
+	this.enableResizable(326, 366, true);
 
 	this.enableDraggable();
 };
@@ -313,7 +313,7 @@ WaterLevelsMimic.prototype.resized = function(width, height) {
     
     /* realigns the bottom border */
     this.$widget.css({"padding-bottom":"8%"});
-}
+};
 
 WaterLevelsMimic.prototype.resizeStopped = function(width, height) {
     this.resized(width, height);
@@ -767,6 +767,9 @@ Widget.prototype.toggleWindowShade = function() {
 /** The expanded width of an expanded, resizable widget. */
 Widget.EXPANDED_WIDTH = 800;
 
+/** The maximum expanded height of an expanded, resizable widget. */
+Widget.MAX_EXPANDED_HEIGHT = 500;
+
 /**
  * Toggles the window expand state which makes the widget take a prominent 
  * position on the interface. 
@@ -785,14 +788,16 @@ Widget.prototype.toggleWindowExpand = function() {
         /* Moving the widget back to its original position. */
         this.$widget.css({
             left: this.window.left,
-            top:  this.window.top
+            top:  this.window.top,
+            zIndex: this.window.zin
         });
     }
     else
     {
         var width = this.window.width = this.$widget.width(),
             height = this.window.height = this.$widget.height(),
-            p = this.$widget.position();
+            p = this.$widget.position(), 
+            zin = this.window.zin = this.$widget.zIndex();
         
         this.window.left = p.left;
         this.window.top = p.top;
@@ -803,16 +808,29 @@ Widget.prototype.toggleWindowExpand = function() {
             height = Widget.EXPANDED_WIDTH / width * height;
             width = Widget.EXPANDED_WIDTH;
             
+            /* If the height is larger than the width, we want to scale the 
+             * widget so it first better. */
+            if (height > Widget.MAX_EXPANDED_HEIGHT)
+            {
+                height = Widget.MAX_EXPANDED_HEIGHT;
+                width = Widget.MAX_EXPANDED_HEIGHT / this.window.height * this.window.width;
+            }
+            
+            
             this.$widget.width(width);
             this.$widget.height(height);
             this.resized(width, height);
             this.resizeStopped(width, height);    
         }
         
+        /* We want the expanded widget to have the highest z-Index. */
+        this.$container.find(".window-wrapper").each(function(i) {if ($(this).zIndex() > zin) zin = $(this).zIndex(); });
+        
         /* Move the widget to a central position. */
         this.$widget.css({
             left: this.$container.width() / 2 - width / 2 - 60,
-            top: 100
+            top: 100,
+            zIndex: zin + 100
         });
     }
     
@@ -2283,18 +2301,12 @@ SliderWidget.prototype.setLabels = function(label, units) {
  * 
  * @param $container the container to add this camera to
  * @param title the camera box title
- * @param attr data attribute to request from the server
+ * @param suf data attribute suffix to load this cameras information
  */
-function CameraWidget($container, title, attr) 
+function CameraWidget($container, title, suf) 
 {
     Widget.call(this, $container, title, 'video');
     
-    /** The width of the camera stream. */
-    this.width = 320;
-    
-    /** The height of the camera stream. */
-	this.height = 240;
-
 	/** Identifier of the camera box. */
 	this.id = title.toLowerCase().replace(' ', '-');
 
@@ -2304,92 +2316,159 @@ function CameraWidget($container, title, attr)
 		mjpeg: undefined  // MJPEG format
 	};  
 	
+	/** The camera format data suffix. */
+	this.suf = suf;
+	
 	/** Whether the camera is deployed. */
 	this.isDeployed = false;
 	
 	/** Current format. */
 	this.currentFormat = undefined;
+	
+	/** Width of the video. */
+	this.videoWidth = 320;
+	
+	/** Height of the video. */
+	this.videoHeight = 240;
+	
+	/** SWF timer. */
+	this.swfTimer = undefined;
 };
 CameraWidget.prototype = new Widget;
+
+/** Cookie which stores the users chosen camera format. */
+CameraWidget.SELECTED_FORMAT_COOKIE = "camera-format";
 
 CameraWidget.prototype.init = function() {
 	var thiz = this;
 	
     /* Reset. */
     this.isDeployed = false;
+    this.videoWidth = 320;
+    this.videoHeight = 240;
     
 	this.$widget = this.generateBox('camera-' + this.id);
 
 	this.enableDraggable();
 	
 	this.$widget.find('.format-select').find('select').change(function() {
-        thiz.selectFormat($(this).val());
+	    thiz.undeploy();
+        thiz.deploy($(this).val());
     });
-};
-
-/**
- * Changes the video format.
- */
-CameraWidget.prototype.selectFormat = function(format) {
-	this.format = format;
 	
-    if (this.format != 'default')
-    {   
-        /* change Video format */
-        $('.video-placeholder').html(this.format);
-    }
+	this.enableResizable(this.videoWidth / 2, this.videoHeight / 2, true);
+	
+	/* Restore current format after reinit. */
+	if (this.currentFormat) this.deploy(this.currentFormat);
 };
 
 CameraWidget.prototype.consume = function(data) {
     /* Camera streams don't change. */
-    if (this.isDeployed) return;
+    if (this.urls.mjpeg && this.urls.swf) return;
     
-    if (data['camera-swf'] != undefined)
+    if (data['camera-swf' + this.suf] != undefined)
     {
         this.urls.swf = decodeURIComponent(data['camera-swf']);
     }
     
-    if (data['camera-mjpeg'] != undefined)
+    if (data['camera-mjpeg' + this.suf] != undefined)
     {
         this.urls.mjpeg = decodeURIComponent(data['camera-mjpeg']);
     }
     
-    this.defaultDeploy();
+    if (this.urls.swf || this.urls.mjpeg) 
+    {
+        this.restoreDeploy();
+    }
 };
 
 /**
- * Deploys an appropriate camera stream for the platform.
+ * Restores a stored user chosen format choice, otherwise uses platform deploy
+ * to load the most appropriate choice. 
  */
-CameraWidget.prototype.defaultDeploy = function() {
-    var html;
+CameraWidget.prototype.restoreDeploy = function() {
+    var storedChoice = getCookie(CameraWidget.SELECTED_FORMAT_COOKIE);
     
-    if ((this.currentFormat = /Mobile|mobi|Android|android/i.test(navigator.userAgent) ? 'mjpeg' : 'swf') == 'swf')
+    if (storedChoice && this.urls[storedChoice])
     {
-        html = this.getSwfHtml();
+        this.deploy(storedChoice);
     }
     else
     {
+        this.platformDeploy();
+    }
+};
+
+/**
+ * Deploys a format most appropriate to the platform.
+ */
+CameraWidget.prototype.platformDeploy = function() {
+    this.deploy(/Mobile|mobi|Android|android/i.test(navigator.userAgent) ? 'mjpeg' : 'swf');  
+};
+
+/**
+ * Deploys the specified camera format. 
+ * 
+ * @param format format to deploy
+ */
+CameraWidget.prototype.deploy = function(format) {
+    var html;
+    
+    switch (format)
+    {
+    case 'swf':
+        html = this.getSwfHtml();
+        break;
+        
+    case 'mjpeg':
         html = this.getMjpegHtml();
+        break;
+        
+    default:
+        this.platformDeploy();
+        return;
     }
     
     this.isDeployed = true;
     this.$widget.find(".video-player").html(html);
+    this.$widget.find("#video-player-select").children(":selected").removeAttr("selected");
+    this.$widget.find("#video-player-select > option[value='" + format + "']").attr("selected", "selected");
+    setCookie(CameraWidget.SELECTED_FORMAT_COOKIE, this.currentFormat = format);
+    
+    if (this.currentFormat == 'swf')
+    {
+        var thiz = this;
+        this.swfTimer = setTimeout(function() {
+            if (thiz.currentFormat == 'swf') thiz.deploy(thiz.currentFormat);
+        }, 360000);
+    }
 };
 
+CameraWidget.prototype.undeploy = function() {
+    this.$widget.find(".video-player").empty();
+    
+    if (this.swfTimer)
+    {
+        clearTimeout(this.swfTimer);
+        this.swfTimer = undefined;
+    }
+    
+    this.isDeployed = false;
+};
 
 CameraWidget.prototype.getHTML = function() {	
 	return (
-		'<div class="video-player" style="height:' + this.height + 'px;width:' + this.width + 'px">' +
-		    '<div class="video-placeholder">Please wait...' +
-		    '</div>' +
+		'<div class="video-player" style="height:' + this.videoHeight + 'px;width:' + this.videoWidth + 'px">' +
+		    '<div class="video-placeholder">Please wait...</div>' +
 		'</div>' +
-		    '<div class="format-select">' +
-	            '<select>' +
-		            '<option selected="selected" value="default">Select Format</option>' +
-                    '<option value="Swf">SWF</option>' +
-                    '<option value="Mjpeg">MJEPG</option>' +
-                '</select>' +
-            '</div>'
+	    '<div class="format-select">' +   
+            '<select id="video-player-select">' +
+	            '<option selected="selected" value=" "> </option>' +
+                '<option value="swf">SWF</option>' +
+                '<option value="mjpeg">MJpeg</option>' +
+            '</select>' +
+        '</div>' +
+        '<div class="format-select-label">Format:</div>'
 	);
 };
 
@@ -2399,7 +2478,7 @@ CameraWidget.prototype.getHTML = function() {
 CameraWidget.prototype.getSwfHtml = function() {
 	return (!$.browser.msie ? // Firefox, Chrome, ...
 			'<object type="application/x-shockwave-flash" data="' + this.urls.swf + '" ' +
-	 				'width="' +  this.width  + '" height="' + this.height + '">' +
+	 				'width="' +  this.videoWidth  + '" height="' + this.videoHeight + '">' +
 		        '<param name="movie" value="' + 'this.urls.swf' + '"/>' +
 		        '<a href="http://www.adobe.com/go/getflash">' +
 		        	'<img src="http://www.adobe.com/images/shared/download_buttons/get_flash_player.gif" ' +
@@ -2407,7 +2486,8 @@ CameraWidget.prototype.getSwfHtml = function() {
 		        '</a>' +
 		    '</object>'
 		:                  // Internet Explorer
-			'<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000"  width="' + this.width + '" height="' + this.height + '"  id="camera-swf-movie">' +
+			'<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000"  width="' + this.videoWidth + 
+			        '" height="' + this.videoHeight + '"  id="camera-swf-movie">' +
 				'<param name="movie" value="' + this.urls.swf + '" />' +
 				'<a href="http://www.adobe.com/go/getflash">' +
 					'<img src="http://www.adobe.com/images/shared/download_buttons/get_flash_player.gif" alt="Get Adobe Flash player"/>' +
@@ -2420,17 +2500,43 @@ CameraWidget.prototype.getSwfHtml = function() {
  * Gets the HTML to deploy a MJPEG stream.
  */
 CameraWidget.prototype.getMjpegHtml = function() {
-	
 	return (!$.browser.msie ? // Firefox, Chrome, ...
-			 '<img style="width:' + this.width + 'px;height:' + this.height + 'px" ' +
-						'src="' + this.urls.jpeg + '?' + new Date().getTime() + ' alt="&nbsp;" />'
+			 '<img style="width:' + this.videoWidth + 'px;height:' + this.videoHeight + 'px" ' +
+						'src="' + this.urls.mjpeg + '?' + new Date().getTime() + ' alt="&nbsp;" />'
 		 :                 // Internet Explorer
 			 '<applet code="com.charliemouse.cambozola.Viewer" archive="/applets/cambozola.jar" ' + 
-					'width="' + this.width + '" height="' + this.height + '">' +
+					'width="' + this.videoWidth + '" height="' + this.videoHeight + '">' +
 				'<param name="url" value="' + this.urls.mjpeg + '"/>' +
 				'<param name="accessories" value="none"/>' +
 			'</applet>'
 	    );
+};
+
+/** Difference between widget width and video width. */
+CameraWidget.VID_WIDTH_DIFF = 8;
+
+/** Difference between widget height and video height. */
+CameraWidget.VID_HEIGHT_DIFF = 72;
+
+CameraWidget.prototype.resized = function(width, height) {
+    if (this.isDeployed) this.undeploy();
+    
+    this.$widget.find(".video-player").css({
+       width: width - CameraWidget.VID_WIDTH_DIFF,
+       height: height - CameraWidget.VID_HEIGHT_DIFF
+    });
+};
+
+CameraWidget.prototype.resizeStopped = function(width, height) {
+    this.videoWidth = width - CameraWidget.VID_WIDTH_DIFF;
+    this.videoHeight = height - CameraWidget.VID_HEIGHT_DIFF;
+    
+    this.deploy(this.currentFormat);
+};
+
+CameraWidget.prototype.destroy = function() {
+    this.undeploy();
+    Widget.prototype.destroy.call(this);
 };
 
 /* ============================================================================
@@ -2452,8 +2558,9 @@ function getCookie(cookie)
      * with rig interfaces that may have the same identifiers but different layouts. */
     cookie = COOKIE_PREFIX + cookie;
     
-    var pos = document.cookie.indexOf(cookie);
-    return pos >= 0 ? document.cookie.substring(pos + cookie.length + 1, document.cookie.indexOf(';', pos + 1)) : false;
+    var pos = document.cookie.indexOf(cookie), end = document.cookie.indexOf(';', pos + 1);
+    if (end < 0) end = document.cookie.length;
+    return pos >= 0 ? document.cookie.substring(pos + cookie.length + 1, end) : false;
 }
 
 /**
