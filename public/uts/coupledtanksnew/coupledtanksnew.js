@@ -41,18 +41,18 @@ WaterLevelControl.prototype.setup = function() {
 
 	/* Graph to display tank levels. */
 	o = new GraphWidget(this.$container, "Tank Levels");
-	o.setDataVariable('l1', 'Level 1',  '#1FA8DD', 0, 350);
-	o.setDataVariable('l2', 'Level 2',  '#9F88FF', 0, 350);
-	o.setDataVariable('sp', 'Setpoint', '#ECD563', 0, 350);
+	o.setDataVariable('l1', 'Level 1',  '#fcff00', 0, 350);
+	o.setDataVariable('l2', 'Level 2',  '#ff3b3b', 0, 350);
+	o.setDataVariable('sp', 'Setpoint', '#8c42fb', 0, 350);
 	o.setAxisLabels('Time (s)', 'Level (mm)');
 	o.isPulling = false;
 	this.widgets.push(o);
 
 	/* Graph to display flow rates. */
 	o = new GraphWidget(this.$container, "Flow Rates", o);
-	o.setDataVariable('t1-in',    'Tank 1 In',    '#1FA8DD', 0, 10);
-	o.setDataVariable('t1-to-t2', 'Tank 1 to 2',  '#9F88FF', 0, 10);
-	o.setDataVariable('t2-out',   'Tank 2 Out',   '#ECD563', 0, 10);
+	o.setDataVariable('t1-in',    'Tank 1 In',    '#ff0084', 0, 10);
+	o.setDataVariable('t1-to-t2', 'Tank 1 to 2',  '#00bfff', 0, 10);
+	o.setDataVariable('t2-out',   'Tank 2 Out',   '#f7a516', 0, 10);
 	o.setAxisLabels('Time (s)',   'Flow (L/min)');
 	this.widgets.push(o);	
 
@@ -260,9 +260,9 @@ WaterLevelsMimic.prototype.getHTML = function() {
     }
         
 	html +=
-            '<img src="/uts/coupledtanksnew/images/mimic-arrow-green.png" border="0" alt="valve" class="mimic-green-arrow" />'+            
-            '<img src="/uts/coupledtanksnew/images/mimic-arrow-green-down.png" border="0" alt="valve" class="mimic-green-down-arrow" />'+            
-            '<img src="/uts/coupledtanksnew/images/mimic-arrow-red.png" border="0" alt="valve" class="mimic-red-arrow" />'+            
+            '<img src="/uts/coupledtanksnew/images/mimic-arrow-t1.png" border="0" alt="valve" class="mimic-arrow-t1" />'+            
+            '<img src="/uts/coupledtanksnew/images/mimic-arrow-t2.png" border="0" alt="valve" class="mimic-arrow-t2" />'+            
+            '<img src="/uts/coupledtanksnew/images/mimic-arrow-t3.png" border="0" alt="valve" class="mimic-arrow-t3" />'+            
             '<img src="/uts/coupledtanksnew/images/mimic-valve.png" border="0" alt="valve" class="mimic-valve" />'+
             '<img src="/uts/coupledtanksnew/images/' + this.spinner + '.png" border="0" alt="spinner" class="spinner spin" />'+
             this.spinGif +
@@ -1046,6 +1046,20 @@ DisplayManager.prototype.init = function() {
     this.$widget.find(".window-close").hide();
 
     this.enableDraggable();
+    
+    // Shade the display manager if shaded cookie is not set to false
+    /* TODO: Fix the if statement to check for cookie. */
+    
+    this.loadState();
+    
+    // Console log for testing purposes
+    console.log('this.window.shaded = ' + this.window.shaded);
+    
+    if (this.window.shaded != 'false')
+    {
+        console.log('this.window.shaded != false');
+    	this.toggleWindowShade();
+    }
     
     this.$widget.find('.toggle').click(function() {    
     	thiz.toggleWidget($(this).find("span").html(), this);
