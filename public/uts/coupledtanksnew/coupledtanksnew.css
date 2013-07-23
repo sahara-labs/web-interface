@@ -1167,7 +1167,7 @@
     width: 19%;
 }
 
-#water-levels-mimic ..mimic-arrow-t1 {
+#water-levels-mimic .mimic-arrow-t1 {
     position: absolute;
     left: 9%;
     top: 7.5%;
@@ -1176,9 +1176,9 @@
 
 #water-levels-mimic .mimic-arrow-t2 {
     position: absolute;
-    left: 84%;
-    top: 68.5%;
-    height: 10%;
+    left: 56%;
+    top: 54.5%;
+    width: 16%;
 }
 
 #water-levels-mimic .mimic-arrow-t3 {
