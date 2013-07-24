@@ -1065,20 +1065,9 @@ DisplayManager.prototype.init = function() {
 
     this.enableDraggable();
     
-    // Shade the display manager if shaded cookie is not set to false
-    /* TODO: Fix the if statement to check for cookie. */
-    
-    this.loadState();
-    
-    // Console log for testing purposes
-    console.log('this.window.shaded = ' + this.window.shaded);
-    
-    if (this.window.shaded != 'false')
-    {
-        console.log('this.window.shaded != false');
-    	this.toggleWindowShade();
-    }
-    
+    /* Shade the display manager if shaded cookie is undefined */
+    if(this.window.shaded === undefined) this.toggleWindowShade();
+
     this.$widget.find('.toggle').click(function() {    
     	thiz.toggleWidget($(this).find("span").html(), this);
     });
