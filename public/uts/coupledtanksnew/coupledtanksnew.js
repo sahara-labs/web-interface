@@ -141,9 +141,9 @@ WaterLevelControl.prototype.errorData = function(msg) {
 	{
 		this.dataError = true;
 		
-		/* TODO: There should be a global error display. */
+		/* TODO: Extend the object, then call the method */
         GlobalError.prototype.init.call(this,msg);
-		
+        
 		/* Tell the display manager to correctly tells the active displays to 
 		 * provide error information. */
 		this.display.blur();
@@ -2533,8 +2533,6 @@ CameraWidget.prototype.destroy = function() {
  * == Global Error Widget                                                    ==
  * ============================================================================ */
 
-/* TODO: Finsh the global error display. */
-
 /**
  * Creates and controls the Global Error widget.
  */
@@ -2548,17 +2546,17 @@ function GlobalError($container, title) {
 
 GlobalError.prototype = new Widget;
 
+/* TODO: Make Global Error an error box, should have text of what they shoud do, then error in small text
+ * Should only grey out the other widgets in the container */
+
 GlobalError.prototype.init = function(msg) {	
-    this.$container.append(
-		"<div id='global-error-dialog' title='Error'>" +
-        "<p style='font-weight:bold;'>" + msg +"</p>" +
-        "<br /> Please use the Contact Support button for help." +
+    var $w = this.$container.append(
+		"<div class='global-error-container'>" +
+		"<span class='ui-icon ui-icon-alert global-error-icon'></span>Error" +
+        "<br /><br /><p>Please use the Contact Support button for help</p><br />" +
+        "<p style='font-size:11px'>" + msg + "</p>" +
         "</div>"
 		);
-		
-    $( "#global-error-dialog" ).dialog({
-    	modal: true
-    });
 };
 
 /* ============================================================================

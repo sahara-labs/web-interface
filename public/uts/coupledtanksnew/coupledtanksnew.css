@@ -880,6 +880,28 @@
 	display: block;
 	float: right;
 }
+/******************************************************************************
+ ** Global Error                                                             **
+ ******************************************************************************/
+.global-error-container {
+    width: 290px;
+    display: block;
+    position: absolute;
+    padding: 15px;
+    color: #cd0a0a;
+    background: #fef1ec;
+    border-radius: 10px;
+    border: 1px solid #cd0a0a;
+    margin: 15% 25%;
+    -moz-box-shadow: 0 0 10px #aaa;
+    -webkit-box-shadow: 0 0 10px #aaa;
+    box-shadow: 0 0 10px #aaa;
+}
+
+.global-error-icon {
+    float: left;
+    margin-right: 5px;
+}
 
 /******************************************************************************
  ** The Mimic                                                                **
