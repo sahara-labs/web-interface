@@ -2550,10 +2550,14 @@ GlobalError.prototype = new Widget;
 
 GlobalError.prototype.init = function(msg) {	
     this.$container.append(
-        "<div class='ui-state-error ui-corner-all'>" +
-		"<span class='ui-icon ui-icon-alert'></span>" +
-		 msg+
-		"</div>");
+		"<div id='global-error-dialog' title='Error!'>" +
+        "<p>" + msg +"</p>" +
+        "</div>"
+		);
+		
+    $( "#global-error-dialog" ).dialog({
+    	modal: true
+    });
 };
 
 /* ============================================================================
