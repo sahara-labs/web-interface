@@ -2550,8 +2550,9 @@ GlobalError.prototype = new Widget;
 
 GlobalError.prototype.init = function(msg) {	
     this.$container.append(
-		"<div id='global-error-dialog' title='Error!'>" +
-        "<p>" + msg +"</p>" +
+		"<div id='global-error-dialog' title='Error'>" +
+        "<p style='font-weight:bold;'>" + msg +"</p>" +
+        "<br /> Please use the Contact Support button for help." +
         "</div>"
 		);
 		
