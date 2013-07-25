@@ -140,10 +140,10 @@ WaterLevelControl.prototype.errorData = function(msg) {
 	if (!this.dataError)
 	{
 		this.dataError = true;
-
+		
 		/* TODO: There should be a global error display. */
-        GlobalError.getHTML(msg);
-
+        GlobalError.prototype.init.call(this,msg);
+		
 		/* Tell the display manager to correctly tells the active displays to 
 		 * provide error information. */
 		this.display.blur();
@@ -2548,27 +2548,12 @@ function GlobalError($container, title) {
 
 GlobalError.prototype = new Widget;
 
-GlobalError.prototype.getHTML = function(msg) {	
+GlobalError.prototype.init = function(msg) {	
     this.$container.append(
-      "<div class='window-wrapper' id='" + this.id + "'>" +
-          "<div class='window-header'>" +
-              "<span class='window-icon icon_"+ this.icon + "'></span>" +
-              "<span class='window-title'>" + this.title + "</span>" +
-              "<span class='window-close ui-icon ui-icon-close'></span>" +
-          "</div>" +
-          "<div class='window-content'>" + 
-          	  msg +
-          "</div>" +
-      "</div>"
-    ).children().last(), thiz = this;
-    
-    $(this).find(".window-close").click(function() {  
-        this.destroy();
-    });
-};
-
-GlobalError.prototype.destroy = function() {
-	Widget.prototype.destroy.call(this);
+        "<div class='ui-state-error ui-corner-all'>" +
+		"<span class='ui-icon ui-icon-alert'></span>" +
+		 msg+
+		"</div>");
 };
 
 /* ============================================================================
