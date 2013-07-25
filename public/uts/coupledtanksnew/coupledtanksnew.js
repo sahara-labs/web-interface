@@ -35,7 +35,7 @@ function WaterLevelControl(id)
  */
 WaterLevelControl.prototype.setup = function() {
 	var o, t;
-
+	
 	/* Mimic of the system. */
 	this.widgets.push(new WaterLevelsMimic(this.$container,'Water Levels'));
 
@@ -142,6 +142,7 @@ WaterLevelControl.prototype.errorData = function(msg) {
 		this.dataError = true;
 
 		/* TODO: There should be a global error display. */
+        GlobalError.getHTML(msg);
 
 		/* Tell the display manager to correctly tells the active displays to 
 		 * provide error information. */
@@ -2498,7 +2499,7 @@ CameraWidget.prototype.getMjpegHtml = function() {
 				'<param name="url" value="' + this.urls.mjpeg + '"/>' +
 				'<param name="accessories" value="none"/>' +
 			'</applet>'
-	    );
+        );
 };
 
 /** Difference between widget width and video width. */
@@ -2526,6 +2527,48 @@ CameraWidget.prototype.resizeStopped = function(width, height) {
 CameraWidget.prototype.destroy = function() {
     this.undeploy();
     Widget.prototype.destroy.call(this);
+};
+
+/* ============================================================================
+ * == Global Error Widget                                                    ==
+ * ============================================================================ */
+
+/* TODO: Finsh the global error display. */
+
+/**
+ * Creates and controls the Global Error widget.
+ */
+function GlobalError($container, title) {
+
+	Widget.call(this, $container, 'Global Error', 'settings');
+    
+    /** Identifier of the Error widget. */
+	this.id = title.toLowerCase().replace(' ', '-');
+};
+
+GlobalError.prototype = new Widget;
+
+GlobalError.prototype.getHTML = function(msg) {	
+    this.$container.append(
+      "<div class='window-wrapper' id='" + this.id + "'>" +
+          "<div class='window-header'>" +
+              "<span class='window-icon icon_"+ this.icon + "'></span>" +
+              "<span class='window-title'>" + this.title + "</span>" +
+              "<span class='window-close ui-icon ui-icon-close'></span>" +
+          "</div>" +
+          "<div class='window-content'>" + 
+          	  msg +
+          "</div>" +
+      "</div>"
+    ).children().last(), thiz = this;
+    
+    $(this).find(".window-close").click(function() {  
+        this.destroy();
+    });
+};
+
+GlobalError.prototype.destroy = function() {
+	Widget.prototype.destroy.call(this);
 };
 
 /* ============================================================================
