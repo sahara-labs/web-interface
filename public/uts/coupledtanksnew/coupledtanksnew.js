@@ -141,9 +141,10 @@ WaterLevelControl.prototype.errorData = function(msg) {
 	{
 		this.dataError = true;
 		
-		/* TODO: Extend the object, then call the method */
-        GlobalError.prototype.init.call(this,msg);
-        
+		var $GlobalError = new GlobalError(this.$container,'GlobalError');
+		
+		$GlobalError.init(msg);
+		
 		/* Tell the display manager to correctly tells the active displays to 
 		 * provide error information. */
 		this.display.blur();
@@ -2546,17 +2547,41 @@ function GlobalError($container, title) {
 
 GlobalError.prototype = new Widget;
 
-/* TODO: Make Global Error an error box, should have text of what they shoud do, then error in small text
- * Should only grey out the other widgets in the container */
-
 GlobalError.prototype.init = function(msg) {	
+    this.$widget = this.generateBox(msg);
+};
+
+GlobalError.prototype.generateBox = function(msg) {
     var $w = this.$container.append(
-		"<div class='global-error-container'>" +
-		"<span class='ui-icon ui-icon-alert global-error-icon'></span>Error" +
-        "<br /><br /><p>Please use the Contact Support button for help</p><br />" +
-        "<p style='font-size:11px'>" + msg + "</p>" +
+    	"<div class='global-error-overlay'>" +
+            "<div class='global-error-container'>" +
+		        "<span class='ui-icon ui-icon-alert global-error-icon'></span>" +
+		        "<span class='global-error-heading'>Error</span>" +
+		        "<span class='window-close ui-icon ui-icon-close global-error-close'></span>" +
+                "<p class='global-error-message'>This web page has encountered an error.<br/><br/>" +
+                    "Please use the Contact Support button if further assistance is required.</p>" +
+                "<p class='global-error-log'>" + msg + "</p>" +
+            "</div>" +
         "</div>"
-		);
+    ).children().last(), thiz = this;
+    
+    $w.find(".window-close").click(function() {  
+    	/* Restores the opacity of the page widgets */	
+	    $('.window-wrapper').css('opacity', '1');
+	    $('.tab-wrapper').css('opacity', '1');
+        
+        thiz.destroy();
+    });
+    
+    /* Lowers the opacity of the page widgets */
+    $('.window-wrapper').css('opacity', '0.30');
+    $('.tab-wrapper').css('opacity', '0.30');
+    
+    return $w;
+};
+
+GlobalError.prototype.destroy = function() {
+	Widget.prototype.destroy.call(this);
 };
 
 /* ============================================================================
