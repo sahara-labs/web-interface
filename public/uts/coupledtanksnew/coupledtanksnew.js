@@ -28,6 +28,9 @@ function WaterLevelControl(id)
 
 	/** Occurs if there is a data error. */
 	this.dataError = false;
+	
+	/** Global error display. */
+	this.errorDisplay = undefined;
 };
 
 /** 
@@ -75,6 +78,9 @@ WaterLevelControl.prototype.setup = function() {
 
 	/* Display manager to allow things to be shown / removed. */
 	this.display = new DisplayManager(this.$container, 'Display', this.widgets);
+	
+	/* Error display triggered if error occurs. */
+	this.errorDisplay = new GlobalError(this.$container);
 };
 
 /** 
@@ -126,8 +132,9 @@ WaterLevelControl.prototype.processData = function(data) {
 	{
 		this.dataError = false;
 		this.display.unblur();
+		this.errorDisplay.destroy();
 	}
-
+	
 	this.display.consume(data);
 };
 
@@ -136,18 +143,22 @@ WaterLevelControl.prototype.processData = function(data) {
  * 
  * @param msg error message
  */
-WaterLevelControl.prototype.errorData = function(msg) {
+WaterLevelControl.prototype.errorData = function(msg) {    
 	if (!this.dataError)
 	{
+	    /* Going into errored state, display error message. */
 		this.dataError = true;
-		
-		var $GlobalError = new GlobalError(this.$container,'GlobalError');
-		
-		$GlobalError.init(msg);
-		
-		/* Tell the display manager to correctly tells the active displays to 
-		 * provide error information. */
 		this.display.blur();
+		
+		this.errorDisplay.error = msg;
+		this.errorDisplay.init();
+	}
+	else if (this.errorData && this.errorDisplay.error != msg)
+	{
+	    /* Error has changed, update the error display. */
+	    this.errorDisplay.error = msg;
+	    this.errorDisplay.destroy();
+	    this.errorDisplay.init();
 	}
 };
 
@@ -2436,6 +2447,13 @@ CameraWidget.prototype.deploy = function(format) {
 };
 
 CameraWidget.prototype.undeploy = function() {
+    if (this.currentFormat == 'mjpeg')
+    {
+        /* Reports in the wild indicate Firefox may continue to the download 
+         * the stream unless the source attribute is cleared. */
+        this.$widget.find(".video-player > img").attr("src", "#");
+    }
+
     this.$widget.find(".video-player").empty();
     
     if (this.swfTimer)
@@ -2535,54 +2553,54 @@ CameraWidget.prototype.destroy = function() {
  * ============================================================================ */
 
 /**
- * Creates and controls the Global Error widget.
+ * Display an error overlay on the page.
+ * 
+ * @param $container page container
  */
-function GlobalError($container, title) {
-
+function GlobalError($container) 
+{
 	Widget.call(this, $container, 'Global Error', 'settings');
-    
-    /** Identifier of the Error widget. */
-	this.id = title.toLowerCase().replace(' ', '-');
+	
+	/** Displayed error message. */
+	this.error = '';
 };
 
 GlobalError.prototype = new Widget;
 
-GlobalError.prototype.init = function(msg) {	
-    this.$widget = this.generateBox(msg);
-};
-
-GlobalError.prototype.generateBox = function(msg) {
-    var $w = this.$container.append(
-    	"<div class='global-error-overlay'>" +
+GlobalError.prototype.init = function() {	
+    this.$widget = this.$container.append(
+    	"<div id='global-error' class='global-error-overlay'>" +
             "<div class='global-error-container'>" +
 		        "<span class='ui-icon ui-icon-alert global-error-icon'></span>" +
-		        "<span class='global-error-heading'>Error</span>" +
+		        "<span class='global-error-heading'>Achtung!</span>" +
 		        "<span class='window-close ui-icon ui-icon-close global-error-close'></span>" +
-                "<p class='global-error-message'>This web page has encountered an error.<br/><br/>" +
-                    "Please use the Contact Support button if further assistance is required.</p>" +
-                "<p class='global-error-log'>" + msg + "</p>" +
+                "<p class='global-error-message'>This web page has encountered an error. This may be " +
+                "because you are no longer connected to the internet. To resolve this error, first " +
+                "check your internet connection, then refresh this page.<br/><br/>" +
+                "If further assistance is required, please use the 'Contact Support' button to the " +
+                "right of the page.</p>" +
+                "<p class='global-error-log'>" + this.error + "</p>" +
             "</div>" +
         "</div>"
-    ).children().last(), thiz = this;
+    ).children().last();
+
+    /* Add a error class to widget boxes. */
+    this.$container.find(".window-wrapper, .tab-wrapper").addClass("global-error-blur");
     
-    $w.find(".window-close").click(function() {  
-    	/* Restores the opacity of the page widgets */	
-	    $('.window-wrapper').css('opacity', '1');
-	    $('.tab-wrapper').css('opacity', '1');
-        
-        thiz.destroy();
+    var thiz = this;
+    this.$widget.find(".window-close").click(function() { thiz.destroy(); });
+    
+    $(document).bind("keydown.global-error", function(e) {
+        if (e.keyCode == 27) thiz.destroy();
     });
-    
-    /* Lowers the opacity of the page widgets */
-    $('.window-wrapper').css('opacity', '0.30');
-    $('.tab-wrapper').css('opacity', '0.30');
-    
-    return $w;
 };
 
 GlobalError.prototype.destroy = function() {
-	Widget.prototype.destroy.call(this);
+    $(document).unbind("keydown.global-error");
+    this.$container.find(".window-wrapper, .tab-wrapper").removeClass("global-error-blur");
+    Widget.prototype.destroy.call(this);
 };
+
 
 /* ============================================================================
  * == Utility functions                                                      ==
