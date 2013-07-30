@@ -28,6 +28,9 @@ function WaterLevelControl(id)
 
 	/** Occurs if there is a data error. */
 	this.dataError = false;
+	
+	/** Global error display. */
+	this.errorDisplay = undefined;
 };
 
 /** 
@@ -72,9 +75,15 @@ WaterLevelControl.prototype.setup = function() {
 	    'Enable closed loop control using the proportional-integral-derivative (PID) controller.'
 	]);
 	this.widgets.push(t); 
+	
+	/* Data file saving. */
+	this.widgets.push(new DataLogging(this.$container));
 
 	/* Display manager to allow things to be shown / removed. */
 	this.display = new DisplayManager(this.$container, 'Display', this.widgets);
+	
+	/* Error display triggered if error occurs. */
+	this.errorDisplay = new GlobalError(this.$container);
 };
 
 /** 
@@ -126,8 +135,9 @@ WaterLevelControl.prototype.processData = function(data) {
 	{
 		this.dataError = false;
 		this.display.unblur();
+		this.errorDisplay.destroy();
 	}
-
+	
 	this.display.consume(data);
 };
 
@@ -136,18 +146,22 @@ WaterLevelControl.prototype.processData = function(data) {
  * 
  * @param msg error message
  */
-WaterLevelControl.prototype.errorData = function(msg) {
+WaterLevelControl.prototype.errorData = function(msg) {    
 	if (!this.dataError)
 	{
+	    /* Going into errored state, display error message. */
 		this.dataError = true;
-		
-		var $GlobalError = new GlobalError(this.$container,'GlobalError');
-		
-		$GlobalError.init(msg);
-		
-		/* Tell the display manager to correctly tells the active displays to 
-		 * provide error information. */
 		this.display.blur();
+		
+		this.errorDisplay.error = msg;
+		this.errorDisplay.init();
+	}
+	else if (this.errorData && this.errorDisplay.error != msg)
+	{
+	    /* Error has changed, update the error display. */
+	    this.errorDisplay.error = msg;
+	    this.errorDisplay.destroy();
+	    this.errorDisplay.init();
 	}
 };
 
@@ -212,7 +226,6 @@ WaterLevelsMimic.prototype.init = function() {
 
 	/* Enable resizing. */
 	this.enableResizable(326, 366, true);
-
 	this.enableDraggable();
 };
 
@@ -1088,6 +1101,8 @@ DisplayManager.prototype.init = function() {
             .removeClass("off")
             .addClass("on");
     });
+    
+    if (this.window.shaded === undefined) this.toggleWindowShade();
 };
 
 DisplayManager.prototype.getHTML = function() {	
@@ -1349,6 +1364,47 @@ TabbedWidget.prototype.setToolTips = function(toolTips) {
 TabbedWidget.prototype.setDimensions = function(width, height) {
     this.width = width;
     this.height = height;
+};
+
+/* ============================================================================
+ * == Data Logging                                                           ==
+ * ============================================================================ */
+
+/**
+ * The data logging widget allows the enabling and disabling of data logging
+ * and selection of data files to download.
+ * 
+ * @param $container the container to add this widget to
+ */
+function DataLogging($container)
+{
+    Widget.call(this, $container, 'Data Logging', 'datafiles');
+    
+    /** Widget box ID. */
+    this.id = 'data-logging';
+}
+DataLogging.prototype = new Widget;
+
+DataLogging.prototype.init = function() {
+    this.$widget = this.generateBox(this.id);
+};
+
+DataLogging.prototype.getHTML = function() {
+    return (
+        "<div id='data-controls'>" +
+        "   <div id='data-enable'>" + 
+        "       <label for='data-enable-button'>Logging enabled: </label>" +  
+        "       <div id='data-enable-button' class='switch'>" +
+        "           <div class='animated slide'></div>" +
+        "       </div>" +
+        "   </div>" + 
+        "</div>" +
+        "<div id='data-files'>" +
+        "   <div id='data-no-data'>" +
+        "       Please wait..." +
+        "   </div>" +
+        "</div>"
+    );
 };
 
 /* ============================================================================
@@ -1940,6 +1996,70 @@ GraphWidget.prototype.setAxisLabels = function(x, y) {
 	this.axis.y = y;
 };
 
+/* ============================================================================
+ * == Timeline Widget                                                        ==
+ * ============================================================================ */
+
+/**
+ * Timeline widget that displays a time selection 
+ * 
+ * @param $container the location to add this widget to
+ * @param title timeline title
+ */
+function TimelineWidget($container, title) 
+{
+    Widget.call(this, $container, title, 'timeline');
+    
+    /** Timeline ID. */
+    this.id = title.toLowerCase().replace(' ', '-');
+    
+    /** The time at which the session started. */
+    this.start = undefined;
+    
+    /** Duration of session in seconds. */
+    this.duration = 0;
+    
+    /** The maximum duration of this timeline After the duration exceeds the
+     *  max duration, the timeline scrolls. */
+    this.maxDuration = 1800;
+    
+    /** How long the handle represents in seconds. */
+    this.handleDuration = 300;
+}
+TimelineWidget.prototype = new Widget;
+
+TimelineWidget.prototype.init = function() {
+    /* We need to work out how long we have been in session to determine
+     * start time. */
+    var $st = $("#sessiontime");
+    
+    this.duration = parseInt($st.children(".hour").html()) * 3600 + // Hours of session
+                    parseInt($st.children(".min").html()) * 60 +    // Minutes of session
+                    parseInt($st.children(".sec").html());          // Seconds of session
+    this.start = new Date();
+    this.start.setTime(this.start.getTime() - this.duration * 1000);
+    
+    this.$widget = this.generateBox(this.id);
+};
+
+TimelineWidget.prototype.getHTML = function() {
+    return (
+        "<div class='timeline-post'></div>" +
+        "<div class='timline-handle>" +
+            "<div class='timeline-handle-left'>" +
+                "<span class='ui-icon ui-icon-grip-solid-vertical'></span>" +
+            "</div>" +
+            "<div class='timeline-handle-right'>" +
+                "<span class='ui-icon ui-icon-grip-solid-vertical'></span>" +
+            "</div>" +
+        "</div>" +
+        "<div class=''>" + 
+            (this.duration > this.maxDuration ? this.duration - this.maxDuration : 0) + 
+            "</div>" +
+        "<div class=''>" + this.duration + "</div>"
+    );
+};
+
 
 /* ============================================================================
  * == Slider Widget                                                          ==
@@ -2436,6 +2556,13 @@ CameraWidget.prototype.deploy = function(format) {
 };
 
 CameraWidget.prototype.undeploy = function() {
+    if (this.currentFormat == 'mjpeg')
+    {
+        /* Reports in the wild indicate Firefox may continue to the download 
+         * the stream unless the source attribute is cleared. */
+        this.$widget.find(".video-player > img").attr("src", "#");
+    }
+
     this.$widget.find(".video-player").empty();
     
     if (this.swfTimer)
@@ -2537,54 +2664,54 @@ CameraWidget.prototype.destroy = function() {
  * ============================================================================ */
 
 /**
- * Creates and controls the Global Error widget.
+ * Display an error overlay on the page.
+ * 
+ * @param $container page container
  */
-function GlobalError($container, title) {
-
+function GlobalError($container) 
+{
 	Widget.call(this, $container, 'Global Error', 'settings');
-    
-    /** Identifier of the Error widget. */
-	this.id = title.toLowerCase().replace(' ', '-');
+	
+	/** Displayed error message. */
+	this.error = '';
 };
 
 GlobalError.prototype = new Widget;
 
-GlobalError.prototype.init = function(msg) {	
-    this.$widget = this.generateBox(msg);
-};
-
-GlobalError.prototype.generateBox = function(msg) {
-    var $w = this.$container.append(
-    	"<div class='global-error-overlay'>" +
+GlobalError.prototype.init = function() {	
+    this.$widget = this.$container.append(
+    	"<div id='global-error' class='global-error-overlay'>" +
             "<div class='global-error-container'>" +
 		        "<span class='ui-icon ui-icon-alert global-error-icon'></span>" +
-		        "<span class='global-error-heading'>Error</span>" +
+		        "<span class='global-error-heading'>Achtung!</span>" +
 		        "<span class='window-close ui-icon ui-icon-close global-error-close'></span>" +
-                "<p class='global-error-message'>This web page has encountered an error.<br/><br/>" +
-                    "Please use the Contact Support button if further assistance is required.</p>" +
-                "<p class='global-error-log'>" + msg + "</p>" +
+                "<p class='global-error-message'>This web page has encountered an error. This may be " +
+                "because you are no longer connected to the internet. To resolve this error, first " +
+                "check your internet connection, then refresh this page.<br/><br/>" +
+                "If further assistance is required, please use the 'Contact Support' button to the " +
+                "right of the page.</p>" +
+                "<p class='global-error-log'>" + this.error + "</p>" +
             "</div>" +
         "</div>"
-    ).children().last(), thiz = this;
+    ).children().last();
+
+    /* Add a error class to widget boxes. */
+    this.$container.find(".window-wrapper, .tab-wrapper").addClass("global-error-blur");
     
-    $w.find(".window-close").click(function() {  
-    	/* Restores the opacity of the page widgets */	
-	    $('.window-wrapper').css('opacity', '1');
-	    $('.tab-wrapper').css('opacity', '1');
-        
-        thiz.destroy();
+    var thiz = this;
+    this.$widget.find(".window-close").click(function() { thiz.destroy(); });
+    
+    $(document).bind("keydown.global-error", function(e) {
+        if (e.keyCode == 27) thiz.destroy();
     });
-    
-    /* Lowers the opacity of the page widgets */
-    $('.window-wrapper').css('opacity', '0.30');
-    $('.tab-wrapper').css('opacity', '0.30');
-    
-    return $w;
 };
 
 GlobalError.prototype.destroy = function() {
-	Widget.prototype.destroy.call(this);
+    $(document).unbind("keydown.global-error");
+    this.$container.find(".window-wrapper, .tab-wrapper").removeClass("global-error-blur");
+    Widget.prototype.destroy.call(this);
 };
+
 
 /* ============================================================================
  * == Utility functions                                                      ==

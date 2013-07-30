@@ -277,6 +277,7 @@
 /******************************************************************************
  ** Switches                                                                 **
  ******************************************************************************/
+ 
 .switch{
     height: 20px;
     width: 40px;
@@ -458,6 +459,7 @@
 /******************************************************************************
  ** Camera Widget                                                            **
  ******************************************************************************/
+ 
 #camera-coupled-tanks {
 	position: absolute;
 	left: 5px;
@@ -779,6 +781,19 @@
 	text-align: right;
 }
 
+/******************************************************************************
+ ** Data Logging Widget                                                      **
+ ******************************************************************************/
+#data-logging {
+	left: 70px;
+	top: 810px;
+	width: 550px;
+}
+
+/******************************************************************************
+ ** Timeline Widget                                                          **
+ ******************************************************************************/
+
 /* ----------------------------------------------------------------------------
  * --- Coupled Tanks specific styles                                        ---
  * ---------------------------------------------------------------------------- */
@@ -884,7 +899,7 @@
  ** Global Error                                                             **
  ******************************************************************************/
 .global-error-container {
-    width: 290px;
+    width: 350px;
     display: block;
     position: absolute;
     padding: 25px;
@@ -908,6 +923,9 @@
 
 .global-error-heading {
 	padding-left: 5px;
+	font-size: 20pt;
+	font-style: oblique;
+	font-weight: bold;
 }
 
 .global-error-message {
@@ -917,6 +935,11 @@
 
 .global-error-container .ui-icon {
 	background-image: url('/uts/coupledtanksnew/images/ui-icons-red.png') !important;
+	margin-top: 8px;
+}
+
+.global-error-container .window-close {
+	margin: -15px -13px 0;
 }
 
 .global-error-icon {
@@ -938,8 +961,11 @@
 	height: 100%;
 	position: absolute;
 	z-index: 1001;
-    background-color: rgba(0, 0, 0, 0.06);
     overflow: hidden;
+}
+
+.global-error-blur {
+	opacity: 0.3;
 }
 
 /******************************************************************************
