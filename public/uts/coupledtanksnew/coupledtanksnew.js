@@ -1387,17 +1387,28 @@ DataLogging.prototype = new Widget;
 
 DataLogging.prototype.init = function() {
     this.$widget = this.generateBox(this.id);
+    
+    this.enableDraggable();
+    this.enableResizable(400, 200);
 };
 
 DataLogging.prototype.getHTML = function() {
     return (
         "<div id='data-controls'>" +
-        "   <div id='data-enable'>" + 
-        "       <label for='data-enable-button'>Logging enabled: </label>" +  
-        "       <div id='data-enable-button' class='switch'>" +
+        "   <div id='data-enable-container'>" + 
+        "       <label for='data-enable'>Logging enabled: </label>" +  
+        "       <div id='data-enable' class='switch'>" +
         "           <div class='animated slide'></div>" +
         "       </div>" +
         "   </div>" + 
+        "   <div id='data-format-select'>" +
+        "       <label for='data-format-select'>File format: </label>" +  
+        "       <select id='data-format-select'>" +
+        "           <option value='CSV'>CSV</option>" +
+        "           <option value='XLSX'>XLSX</option>" +
+        "           <option value='XLS'>XLS</option>" +
+        "       </select>" +
+        "   </div>" +
         "</div>" +
         "<div id='data-files'>" +
         "   <div id='data-no-data'>" +
@@ -1995,71 +2006,6 @@ GraphWidget.prototype.setAxisLabels = function(x, y) {
 	this.axis.x = x;
 	this.axis.y = y;
 };
-
-/* ============================================================================
- * == Timeline Widget                                                        ==
- * ============================================================================ */
-
-/**
- * Timeline widget that displays a time selection 
- * 
- * @param $container the location to add this widget to
- * @param title timeline title
- */
-function TimelineWidget($container, title) 
-{
-    Widget.call(this, $container, title, 'timeline');
-    
-    /** Timeline ID. */
-    this.id = title.toLowerCase().replace(' ', '-');
-    
-    /** The time at which the session started. */
-    this.start = undefined;
-    
-    /** Duration of session in seconds. */
-    this.duration = 0;
-    
-    /** The maximum duration of this timeline After the duration exceeds the
-     *  max duration, the timeline scrolls. */
-    this.maxDuration = 1800;
-    
-    /** How long the handle represents in seconds. */
-    this.handleDuration = 300;
-}
-TimelineWidget.prototype = new Widget;
-
-TimelineWidget.prototype.init = function() {
-    /* We need to work out how long we have been in session to determine
-     * start time. */
-    var $st = $("#sessiontime");
-    
-    this.duration = parseInt($st.children(".hour").html()) * 3600 + // Hours of session
-                    parseInt($st.children(".min").html()) * 60 +    // Minutes of session
-                    parseInt($st.children(".sec").html());          // Seconds of session
-    this.start = new Date();
-    this.start.setTime(this.start.getTime() - this.duration * 1000);
-    
-    this.$widget = this.generateBox(this.id);
-};
-
-TimelineWidget.prototype.getHTML = function() {
-    return (
-        "<div class='timeline-post'></div>" +
-        "<div class='timline-handle>" +
-            "<div class='timeline-handle-left'>" +
-                "<span class='ui-icon ui-icon-grip-solid-vertical'></span>" +
-            "</div>" +
-            "<div class='timeline-handle-right'>" +
-                "<span class='ui-icon ui-icon-grip-solid-vertical'></span>" +
-            "</div>" +
-        "</div>" +
-        "<div class=''>" + 
-            (this.duration > this.maxDuration ? this.duration - this.maxDuration : 0) + 
-            "</div>" +
-        "<div class=''>" + this.duration + "</div>"
-    );
-};
-
 
 /* ============================================================================
  * == Slider Widget                                                          ==
