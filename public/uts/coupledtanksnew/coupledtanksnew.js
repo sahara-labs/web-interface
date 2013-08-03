@@ -67,7 +67,8 @@ WaterLevelControl.prototype.setup = function() {
 	o.setOrientation(false);
 	o.setLabels('Valve', '%');
 	
-	t = new TabbedWidget(this.$container, 'Controls', [ o, new PIDControl(this.$container) ], 
+	t = new TabbedWidget(this.$container, 'Controls', [ o, new PIDControl(this.$container),
+	        new InfoWidget(this.$container, 'Tank Drain', 'tank-drain', 'Tanks are draining...', 'loading') ], 
 	        'control-mode', 'setManualMode');
 	t.setDimensions(280, 110);
 	t.setToolTips([
@@ -2603,6 +2604,42 @@ CameraWidget.prototype.resizeStopped = function(width, height) {
 CameraWidget.prototype.destroy = function() {
     this.undeploy();
     Widget.prototype.destroy.call(this);
+};
+
+/* ============================================================================
+ * == Information Widget                                                     ==
+ * ============================================================================ */
+
+/**
+ * Information displaying widget. The information can be of type 'info' which
+ * shows an informational guiadance message, 'error' which shows an error message,
+ * '
+ * 
+ * @param 
+ */
+function InfoWidget($container, title, icon, message, type)
+{
+    Widget.call(this, $container, title, 'info');
+    
+    /** Identifer of this widget. */
+    this.id = "info-" + title.toLowerCase().replace(' ', '-');
+    
+    /** Message that is displayed by this widget. */
+    this.message = message;
+    
+    /** The information type of this widget; either 'info', 'error', or 
+     * 'loading'. */
+    this.type = type;
+}
+
+InfoWidget.prototype = new Widget;
+
+InfoWidget.prototype.init = function() {
+    this.$widget = this.generateBox(this.id);
+};
+
+InfoWidget.prototype.getHTML = function() {
+   return "<p>" + this.message + "</p>";
 };
 
 /* ============================================================================
