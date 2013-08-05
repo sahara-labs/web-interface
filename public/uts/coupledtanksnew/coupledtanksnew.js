@@ -68,7 +68,7 @@ WaterLevelControl.prototype.setup = function() {
 	o.setLabels('Valve', '%');
 	
 	t = new TabbedWidget(this.$container, 'Controls', [ o, new PIDControl(this.$container),
-	        new InfoWidget(this.$container, 'Tank Drain', 'tank-drain', 'Tanks are draining...', 'loading') ], 
+	        new PlaceHolderWidget(this.$container, 'Tank Drain', 'drain', 'Tanks are draining...', 'loading') ], 
 	        'control-mode', 'setManualMode');
 	t.setDimensions(280, 110);
 	t.setToolTips([
@@ -2617,12 +2617,12 @@ CameraWidget.prototype.destroy = function() {
  * 
  * @param 
  */
-function InfoWidget($container, title, icon, message, type)
+function PlaceHolderWidget($container, title, icon, message, type)
 {
-    Widget.call(this, $container, title, 'info');
+    Widget.call(this, $container, title, icon);
     
     /** Identifer of this widget. */
-    this.id = "info-" + title.toLowerCase().replace(' ', '-');
+    this.id = "place-holder-" + title.toLowerCase().replace(' ', '-');
     
     /** Message that is displayed by this widget. */
     this.message = message;
@@ -2632,14 +2632,33 @@ function InfoWidget($container, title, icon, message, type)
     this.type = type;
 }
 
-InfoWidget.prototype = new Widget;
+PlaceHolderWidget.prototype = new Widget;
 
-InfoWidget.prototype.init = function() {
+PlaceHolderWidget.prototype.init = function() {
     this.$widget = this.generateBox(this.id);
 };
 
-InfoWidget.prototype.getHTML = function() {
-   return "<p>" + this.message + "</p>";
+PlaceHolderWidget.prototype.getHTML = function() {
+    var html = '<div class="place-holder place-holder-' + this.type + '">';
+    
+    switch (this.type)
+    {
+    case 'info':
+        html += '<p>Guidance: <span class="place-holder-message">' + this.message + '</span></p>';
+        break;
+        
+    case 'error':
+        html += '<p>Error: <span class="place-holder-message">' + this.message + '</span></p>';
+        break;
+        
+    case 'loading':
+        html += '<img src="/uts/coupledtanksnew/images/loading.gif" alt=" " />' +
+                '<p>Please wait: <span class="place-holder-message">' + this.message + '</span></p>';
+        break;
+    }
+    
+    html +=    '</div>';
+    return html;
 };
 
 /* ============================================================================

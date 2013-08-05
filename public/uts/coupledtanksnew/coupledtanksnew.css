@@ -782,6 +782,107 @@
 }
 
 /******************************************************************************
+ ** Place holder                                                             **
+ ******************************************************************************/
+
+.place-holder {
+	margin: 10px;	
+	padding: 15px 10px;
+	text-align: center;
+}
+
+.place-holder p {
+	margin-top: 5px;
+	font-weight: bold;
+}
+
+.place-holder p span {
+	font-weight: normal;
+}
+
+.place-holder-error p span {
+	color: red;
+}
+
+.place-holder-loading p span {
+	color:  #777777;
+}
+
+/******************************************************************************
+ ** Global Error                                                             **
+ ******************************************************************************/
+ 
+.global-error-container {
+    width: 350px;
+    display: block;
+    position: absolute;
+    padding: 25px;
+    color: #cd0a0a;
+    background: #fafafa;
+    border-radius: 10px;
+    border: 2px solid #575757;
+    margin: 15% 25%;
+    -moz-box-shadow: 0 0 10px #aaa;
+    -webkit-box-shadow: 0 0 10px #aaa;
+    box-shadow: 0 0 10px #aaa;
+    z-index: 100;
+}
+
+.global-error-log {
+    font-size: 11px;
+    color: #7e7e7e;
+    border-top: 1px solid #E4D3B0;
+    padding-top: 5px;
+}
+
+.global-error-heading {
+    padding-left: 5px;
+    font-size: 20pt;
+    font-style: oblique;
+    font-weight: bold;
+}
+
+.global-error-message {
+    padding: 15px 0px 15px 0px;
+    font-size: 13px;
+}
+
+.global-error-container .ui-icon {
+    background-image: url('/uts/coupledtanksnew/images/ui-icons-red.png') !important;
+    margin-top: 8px;
+}
+
+.global-error-container .window-close {
+    margin: -15px -13px 0;
+}
+
+.global-error-icon {
+    float: left;
+    margin-right: 5px;
+}
+
+.global-error-close {
+    float: right;
+    cursor: pointer;
+    border: 1px solid #B1A3A3;
+    border-radius: 2px;
+    box-shadow: 1px 1px 1px #BEBDBD;
+    margin: -8px -8px 0px -1px;
+}
+
+.global-error-overlay {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    z-index: 1001;
+    overflow: hidden;
+}
+
+.global-error-blur {
+    opacity: 0.3;
+}
+
+/******************************************************************************
  ** Data Logging Widget                                                      **
  ******************************************************************************/
 #data-logging {
@@ -803,35 +904,39 @@
  ** Specific icons                                                           **
  ******************************************************************************/
  
-.icon_video{
+.icon_video {
 	background-position: 0px 0px;
 }
 
-.icon_pid{
+.icon_pid {
 	background-position: -26px 0px;
 }
 
-.icon_mimic{
+.icon_mimic {
 	background-position: -52px 0px;
 }
 
-.icon_graph{
+.icon_graph {
 	background-position: -78px 0px;
 }
 
-.icon_toggle{
+.icon_toggle {
 	background-position: -105px 0px;
 }
 
-.icon_manual{
+.icon_manual {
 	background-position: -131px 0px;
 }
 
-.icon_settings{
+.icon_settings {
 	background-position: -157px 0px;
 }
 
-.icon_datafiles{
+.icon_datafiles {
+	
+}
+
+.icon_drain {
 	background-position: -183px 0px;
 }
 
@@ -842,6 +947,18 @@
 	position: absolute;
 	left: 14px;
 	top: 355px;
+}
+
+#controls-tabs .tab-header {
+	width: auto !important;
+}
+
+#tab-tank-drain {
+	width: 40px;
+}
+
+#tab-tank-drain .window-title {
+	display: none;
 }
 
 /******************************************************************************
@@ -863,6 +980,7 @@
 /******************************************************************************
  ** PID settings                                                             **
  ******************************************************************************/
+ 
 #controls-tabs #pid-control {
 	position: relative;
 	top: -11px;
@@ -895,78 +1013,6 @@
 #pid-send {
 	display: block;
 	float: right;
-}
-/******************************************************************************
- ** Global Error                                                             **
- ******************************************************************************/
-.global-error-container {
-    width: 350px;
-    display: block;
-    position: absolute;
-    padding: 25px;
-    color: #cd0a0a;
-    background: #fafafa;
-    border-radius: 10px;
-    border: 2px solid #575757;
-    margin: 15% 25%;
-    -moz-box-shadow: 0 0 10px #aaa;
-    -webkit-box-shadow: 0 0 10px #aaa;
-    box-shadow: 0 0 10px #aaa;
-    z-index: 100;
-}
-
-.global-error-log {
-    font-size: 11px;
-    color: #7e7e7e;
-    border-top: 1px solid #E4D3B0;
-    padding-top: 5px;
-}
-
-.global-error-heading {
-	padding-left: 5px;
-	font-size: 20pt;
-	font-style: oblique;
-	font-weight: bold;
-}
-
-.global-error-message {
-    padding: 15px 0px 15px 0px;
-    font-size: 13px;
-}
-
-.global-error-container .ui-icon {
-	background-image: url('/uts/coupledtanksnew/images/ui-icons-red.png') !important;
-	margin-top: 8px;
-}
-
-.global-error-container .window-close {
-	margin: -15px -13px 0;
-}
-
-.global-error-icon {
-    float: left;
-    margin-right: 5px;
-}
-
-.global-error-close {
-    float: right;
-    cursor: pointer;
-    border: 1px solid #B1A3A3;
-    border-radius: 2px;
-    box-shadow: 1px 1px 1px #BEBDBD;
-    margin: -8px -8px 0px -1px;
-}
-
-.global-error-overlay {
-	width: 100%;
-	height: 100%;
-	position: absolute;
-	z-index: 1001;
-    overflow: hidden;
-}
-
-.global-error-blur {
-	opacity: 0.3;
 }
 
 /******************************************************************************
