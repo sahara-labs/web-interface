@@ -2685,7 +2685,7 @@ GlobalError.prototype.init = function() {
     	"<div id='global-error' class='global-error-overlay'>" +
             "<div class='global-error-container'>" +
 		        "<span class='ui-icon ui-icon-alert global-error-icon'></span>" +
-		        "<span class='global-error-heading'>Achtung!</span>" +
+		        "<span class='global-error-heading'>Alert!</span>" +
 		        "<span class='window-close ui-icon ui-icon-close global-error-close'></span>" +
                 "<p class='global-error-message'>This web page has encountered an error. This may be " +
                 "because you are no longer connected to the internet. To resolve this error, first " +
