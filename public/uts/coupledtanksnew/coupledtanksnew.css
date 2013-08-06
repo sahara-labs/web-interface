@@ -887,9 +887,93 @@
  ******************************************************************************/
 #data-logging {
 	position: absolute;
-	left: -250px;
-	top: 50px;
-	width: 250px;
+	left: -194px;
+	top: 215px;
+	width: 185px;
+}
+
+#camera-coupled-tanks .format-select-label {
+    float: right;
+    width: 40px;
+    margin: 10px 4px;
+    font-size: 0.8em;
+    color: #777777;
+}
+
+#data-controls {
+	margin-top: -8px;
+}
+
+#data-controls .data-control-line {
+	margin: 5px 0;
+}
+
+#data-controls .data-control-line label {
+	display: block;
+	width: 60px;
+	float: left;
+	text-align: right;
+	padding-right: 5px;
+}
+
+#data-enable-line label {
+	margin-top: 5px;
+}
+
+#data-format-line label {
+	margin-top: 9px;
+}
+
+#data-enable {
+	float: left;
+} 
+
+#data-format-outer {
+	float: left;
+    margin: 4px;
+    width: 75px;
+    height: 25px;
+    overflow: hidden;
+    background: url('/uts/coupledtanksnew/images/arrow-down.png') no-repeat right #F3F3F3;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#data-format {
+    background: rgba(0, 0, 0, 0);
+    color: #777777;
+    width: 100px;
+    padding: 5px;
+    font-size: 12px;
+    line-height: 1;
+    border: none;
+    outline: none;
+    outline-width: 0;
+    border-radius: 0;
+    height: 25px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    -ie-appearance: none;
+    appearance: none;
+    cursor: pointer;
+}
+
+#data-list-placeholder {
+	width: 100%;
+	font-size: 0.8em;
+	text-align: center;
+	color: #AAAAAA;
+}
+
+#data-logging .data-logger-blur {
+	opacity: 0.3;
+}
+
+#data-duration {
+	float: right;
+	margin-top: 6px;
+	text-align: center;
+	font-size: 0.9em;
 }
 
 /* ----------------------------------------------------------------------------

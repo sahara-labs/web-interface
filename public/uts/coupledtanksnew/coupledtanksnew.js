@@ -1379,44 +1379,151 @@ TabbedWidget.prototype.setDimensions = function(width, height) {
  */
 function DataLogging($container)
 {
-    Widget.call(this, $container, 'Data Logging', 'datafiles');
+    Widget.call(this, $container, 'Data', 'datafiles');
     
-    /** Widget box ID. */
+    /** @type {string} Widget box ID. */
     this.id = 'data-logging';
+    
+    /** @type {boolean} Whether a log is currently running. */
+    this.isLogging = undefined;
+    
+    /** @type {int} The duration of the current log file. */
+    this.duration = undefined;
+    
+    /** @type {object} The list of files that have been logged. */
+    this.files = undefined;
+
+    /** @type {int} Number of files. */
+    this.fileCount = 0;
+    
+    /** @type {object} The current file being logged to. */
+    this.currentFile = undefined;
 }
 DataLogging.prototype = new Widget;
 
 DataLogging.prototype.init = function() {
-    this.$widget = this.generateBox(this.id);
+    /* Clear to force UI redraw. */
+    this.files = this.isLogging = this.duration = undefined;
+
     
+    /* Draw UI. */
+    this.$widget = this.generateBox(this.id);
     this.enableDraggable();
-    this.enableResizable(400, 200);
+    this.enableResizable(185, 100);
+    
+    var thiz = this;
+    
+    /* Event handlers. */
+    this.$widget.find("#data-enable").click(function() { thiz.toggleLogging(); });
 };
 
 DataLogging.prototype.getHTML = function() {
     return (
         "<div id='data-controls'>" +
-        "   <div id='data-enable-container'>" + 
-        "       <label for='data-enable'>Logging enabled: </label>" +  
+        "   <div id='data-enable-line' class='data-control-line data-logger-blur'>" + 
+        "       <label for='data-enable'>Logging: </label>" +  
         "       <div id='data-enable' class='switch'>" +
         "           <div class='animated slide'></div>" +
         "       </div>" +
+        "       <div id='data-duration'></div>" +
+        "       <div style='clear:both'></div>" +
         "   </div>" + 
-        "   <div id='data-format-select'>" +
-        "       <label for='data-format-select'>File format: </label>" +  
-        "       <select id='data-format-select'>" +
-        "           <option value='CSV'>CSV</option>" +
-        "           <option value='XLSX'>XLSX</option>" +
-        "           <option value='XLS'>XLS</option>" +
-        "       </select>" +
+        "   <div id='data-format-line' class='data-control-line data-logger-blur'>" +
+        "       <label for='data-format'>Format: </label>" +  
+        "       <div id='data-format-outer'>" +
+        "          <select id='data-format'>" +
+        "               <option value='CSV'>CSV</option>" +
+        "               <option value='XLSX'>XLSX</option>" +
+        "               <option value='XLS'>XLS</option>" +
+        "          </select>" +
+        "       </div>" +
+        "      <div style='clear:both'></div>" +
         "   </div>" +
         "</div>" +
+       
         "<div id='data-files'>" +
-        "   <div id='data-no-data'>" +
+        "   <div id='data-list-placeholder'>" +
         "       Please wait..." +
         "   </div>" +
         "</div>"
     );
+};
+
+/**
+ * Toggle between logging and not logging.
+ */
+DataLogging.prototype.toggleLogging = function() {
+    /* We do not currently have a consistent state with the server so we will
+     * stop any changes until the state is consistent. */
+    if (this.isLogging === undefined) return;
+    
+    var thiz = this;
+    this.postControl(
+        "logging", 
+        {
+            enable: !this.isLogging,
+            format: this.$widget.find("#data-format :selected").val()
+        }, 
+        function(data) { thiz.consume(data); }
+    );
+    
+    this.isLogging = !this.isLogging;
+    this.$widget.find("#data-enable div").toggleClass("on");
+};
+
+DataLogging.prototype.consume = function(data) {
+    if (typeof data['is-logging'] != "undefined" && data['is-logging'] !== this.isLogging)
+    {
+        if (this.isLogging === undefined) 
+        {
+            /* Clear first load state. */
+            this.$widget.find("#data-controls .data-logger-blur").removeClass("data-logger-blur");
+        }
+        if (this.isLogging = data['is-logging']) this.$widget.find("#data-enable div").addClass("on");
+    }
+    
+    if (typeof data['log-duration'] != "undefined" && data['log-duration'] != this.duration)
+    {
+        this.duration = data['log-duration'];
+        this.$widget.find("#data-duration").html(this.duration > 0 ? this.duration + "s" : "");
+    }
+    
+    if (typeof data['log-files'] != "undefined")
+    {
+        if (this.files === undefined)
+        {
+            /* First load. */
+            if (data['log-files'].length == 0 ||
+                    (data['log-files'].length == 1 && data['log-files'][0] == "")) // Crap, but error in JSON generation server side 
+            {
+                this.$widget.find("#data-list-placeholder").html("No files.");
+            }
+            else
+            {
+                this.$widget.find("#data-files").html("<ul id='data-files-list'></ul>");
+            }
+
+            this.files = { };
+        }
+
+        var i = 0, f;
+        for (i in data['log-files'])
+        {
+            if (typeof this.files[f = data['log-files'][i]] == "undefined")
+            {
+                if (this.files)
+                
+                this.files[f] = {
+                    name: f
+                };
+                this.$widget.find("#data-files-list").prepend("<li>" + f + "</li>");
+            }
+        }
+    }
+};
+
+DataLogging.prototype.resized = function(width, height) {
+    this.$widget.children(".window-content").css("height", height - 53);
 };
 
 /* ============================================================================
