@@ -31,6 +31,12 @@ function WaterLevelControl(id)
 	
 	/** Global error display. */
 	this.errorDisplay = undefined;
+	
+	/** The number of seconds this graph displays. */
+    this.duration = 300;
+
+    /** The period in milliseconds. */
+    this.period = 100;
 };
 
 /** 
@@ -44,19 +50,20 @@ WaterLevelControl.prototype.setup = function() {
 
 	/* Graph to display tank levels. */
 	o = new GraphWidget(this.$container, "Tank Levels");
-	o.setDataVariable('l1', 'Level 1',  '#fcff00', 0, 350);
-	o.setDataVariable('l2', 'Level 2',  '#ff3b3b', 0, 350);
-	o.setDataVariable('sp', 'Setpoint', '#8c42fb', 0, 350);
+	o.setDataVariable('ts-l1', 'Level 1',  '#fcff00', 0, 350);
+	o.setDataVariable('ts-l2', 'Level 2',  '#ff3b3b', 0, 350);
+	o.setDataVariable('ts-sp', 'Setpoint', '#8c42fb', 0, 350);
 	o.setAxisLabels('Time (s)', 'Level (mm)');
 	o.isPulling = false;
 	this.widgets.push(o);
 
 	/* Graph to display flow rates. */
-	o = new GraphWidget(this.$container, "Flow Rates", o);
-	o.setDataVariable('t1-in',    'Tank 1 In',    '#ff0084', 0, 10);
-	o.setDataVariable('t1-to-t2', 'Tank 1 to 2',  '#00bfff', 0, 10);
-	o.setDataVariable('t2-out',   'Tank 2 Out',   '#f7a516', 0, 10);
+	o = new GraphWidget(this.$container, "Flow Rates");
+	o.setDataVariable('ts-t1-in',    'Tank 1 In',    '#ff0084', 0, 10);
+	o.setDataVariable('ts-t1-to-t2', 'Tank 1 to 2',  '#00bfff', 0, 10);
+	o.setDataVariable('ts-t2-out',   'Tank 2 Out',   '#f7a516', 0, 10);
 	o.setAxisLabels('Time (s)',   'Flow (L/min)');
+	o.isPulling = false;
 	this.widgets.push(o);	
 
 	/* Add camera to page. */
@@ -102,8 +109,12 @@ WaterLevelControl.prototype.acquireLoop = function() {
 	var thiz = this;
 
 	$.ajax({
-		url: "/primitive/mapjson/pc/CoupledTanksController/pa/data",
-		data: { },
+		url: "/primitive/mapjson/pc/CoupledTanksController/pa/dataAndGraph",
+		data: {
+		    period: this.period,
+			duration: this.duration,
+			from: 0,     // For now we are just asked for the latest data
+		},
 		success: function(data) {
 			thiz.processData(data);
 			setTimeout(function() { thiz.acquireLoop(); }, 1000);
@@ -1857,7 +1868,9 @@ GraphWidget.prototype.getHTML = function() {
 	return html;
 };
 
-GraphWidget.prototype.consume = function(data) { /* Does not consume. */ };
+GraphWidget.prototype.consume = function(data) { 
+    this.updateData(data);
+};
 
 /**
  * Periodically requests the server to provide graph data.
