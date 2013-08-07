@@ -1419,7 +1419,7 @@ DataLogging.prototype.init = function() {
     this.$widget.find("#data-enable").click(function() { thiz.toggleLogging(); });
     
     /* Check we can download files. */
-    this.pollSessionFiles();
+    setTimeout(function() { thiz.pollSessionFiles(); }, 2000);
 };
 
 DataLogging.prototype.getHTML = function() {
@@ -1568,7 +1568,7 @@ DataLogging.prototype.consume = function(data) {
                         "<li id='file-" + this.files[f].time + "'>" + 
                             "<a href='#'>" +
                                 "<span class='data-icon data-icon-" + this.files[f].format + "'></span>" +
-                                "Start: " + this.files[f].hour + ":" + this.files[f].min + ":" + this.files[f].sec +
+                                "From: " + this.files[f].hour + ":" + this.files[f].min + ":" + this.files[f].sec +
                             "</a>" +
                         "</li>");
                 this.resized(this.$widget.width(), this.$widget.height());
@@ -1618,7 +1618,7 @@ DataLogging.prototype.checkDownloadable = function(sessionFiles) {
             this.$widget.find("#file-" + this.files[f].time)
                 .addClass("data-file-downloadable")
                 .children("a")
-                    .attr("href", "/home/download/" + this.files[f].path);
+                    .attr("href", "/home/download" + this.files[f].path);
         }
     }
 };

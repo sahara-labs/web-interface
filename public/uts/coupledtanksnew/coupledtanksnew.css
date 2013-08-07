@@ -987,17 +987,18 @@
 }
 
 #data-files-list li {
-	padding: 4px;
-	margin: 5px;
+	margin: 5px 0;
 	border: 1px solid #DDDDDD;
 	border-radius: 4px;
 	background-color: #FEFEFE;
+	overflow-x: hidden;
 }
 
 #data-files-list li a {
 	display: block;
 	height: 100%;
 	width: 100%;
+	padding: 4px;
 	color: #AAAAAA;
 	text-decoration: none;
 	cursor: inherit;
@@ -1025,6 +1026,11 @@
     background-repeat: no-repeat;
     background-image: url('/uts/coupledtanksnew/images/csv-excel-icons.png');
     margin: 0 10px -3px 1px;
+    opacity: 0.4;
+}
+
+#data-logging .data-file-downloadable .data-icon {
+	opacity: 1;
 }
 
 #data-logging .data-icon-CSV{
