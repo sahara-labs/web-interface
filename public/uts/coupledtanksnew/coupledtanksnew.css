@@ -892,6 +892,25 @@
 	width: 250px;
 }
 
+.data-icon {
+    height: 16px;
+    width: 16px;
+    display: inline-block;
+    background-repeat: no-repeat;
+	background-image: url('/uts/coupledtanksnew/images/csv-excel-icons.png');
+}
+
+.data-icon-csv{
+	background-position: 0px 0px;
+}
+
+.data-icon-excel03 {
+	background-position: -20px 0px;
+}
+
+.data-icon-excel07 {
+	background-position: -39px 0px;
+}
 /******************************************************************************
  ** Timeline Widget                                                          **
  ******************************************************************************/
