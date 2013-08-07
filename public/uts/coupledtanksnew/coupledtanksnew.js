@@ -1387,6 +1387,9 @@ function DataLogging($container)
     /** @type {boolean} Whether a log is currently running. */
     this.isLogging = undefined;
     
+    /** @type {boolean} Whether a control action has been requested. */
+    this.isControlled = false;
+    
     /** @type {int} The duration of the current log file. */
     this.duration = undefined;
     
@@ -1407,6 +1410,8 @@ DataLogging.prototype = new Widget;
 DataLogging.prototype.init = function() {
     /* Clear to force UI redraw. */
     this.files = this.isLogging = this.duration = undefined;
+    this.isControlled = false;
+    this.fileCount = 0;
 
     /* Draw UI. */
     this.$widget = this.generateBox(this.id);
@@ -1463,27 +1468,30 @@ DataLogging.prototype.toggleLogging = function() {
     if (this.isLogging === undefined) return;
     
     var thiz = this;
+    this.isControlled = true;
     this.postControl(
         "logging", 
         {
             enable: !this.isLogging,
             format: this.$widget.find("#data-format :selected").val()
         }, 
-        function(data) { thiz.consume(data); }
+        function(data) { thiz.isControlled = false; thiz.consume(data); }
     );
     
+    if (this.currentFile) this.currentFile.isLogging = false;
     this.isLogging = !this.isLogging;
     this.$widget.find("#data-enable div").toggleClass("on");
 };
 
 DataLogging.prototype.consume = function(data) {
-    if (typeof data['is-logging'] != "undefined" && data['is-logging'] !== this.isLogging)
+    if (typeof data['is-logging'] != "undefined" && data['is-logging'] !== this.isLogging && !this.controlled)
     {
         if (this.isLogging === undefined) 
         {
             /* Clear first load state. */
             this.$widget.find("#data-controls .data-logger-blur").removeClass("data-logger-blur");
         }
+        
         if (this.isLogging = data['is-logging'])
         {
             this.$widget.find("#data-enable div").addClass("on");
@@ -1581,6 +1589,8 @@ DataLogging.prototype.resized = function(width, height) {
     this.$widget.children(".window-content")
         .css("height", height - 53)
         .children($("#data-files-list").css("height", height - 120));
+    
+    this.$widget.css("height", "auto");
 };
 
 /**
