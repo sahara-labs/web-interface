@@ -892,6 +892,10 @@
 	width: 185px;
 }
 
+#data-logging .window-content {
+	height: 200px;
+}
+
 #camera-coupled-tanks .format-select-label {
     float: right;
     width: 40px;
@@ -975,6 +979,66 @@
 	text-align: center;
 	font-size: 0.9em;
 }
+
+#data-files-list {
+	list-style: none;
+	height: 133px;
+	overflow-y: auto;
+}
+
+#data-files-list li {
+	padding: 4px;
+	margin: 5px;
+	border: 1px solid #DDDDDD;
+	border-radius: 4px;
+	background-color: #FEFEFE;
+}
+
+#data-files-list li a {
+	display: block;
+	height: 100%;
+	width: 100%;
+	color: #AAAAAA;
+	text-decoration: none;
+	cursor: inherit;
+}
+
+#data-files-list li.data-file-downloadable {
+	border: 1px solid #888888;
+	background-color: #FAFAFA;
+	box-shadow: 0 0 4px #EFEFEF;
+}
+
+#data-files-list .data-file-downloadable:hover {
+    box-shadow: 0 0 4px #AAAAAA;	
+}
+
+#data-files-list .data-file-downloadable a {
+	color: #333333;
+	cursor: pointer;
+}
+
+#data-logging .data-icon {
+    height: 16px;
+    width: 16px;
+    display: inline-block;
+    background-repeat: no-repeat;
+    background-image: url('/uts/coupledtanksnew/images/csv-excel-icons.png');
+    margin: 0 10px -3px 1px;
+}
+
+#data-logging .data-icon-CSV{
+    background-position: 0px 0px;
+}
+
+#data-logging .data-icon-XLS {
+    background-position: -20px 0px;
+}
+
+#data-logging .data-icon-XLSX {
+    background-position: -39px 0px;
+}
+
 
 /* ----------------------------------------------------------------------------
  * --- Coupled Tanks specific styles                                        ---

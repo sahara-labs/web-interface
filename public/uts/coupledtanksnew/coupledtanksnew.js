@@ -1398,6 +1398,9 @@ function DataLogging($container)
     
     /** @type {object} The current file being logged to. */
     this.currentFile = undefined;
+    
+    /** @type {int} The timeout handle for session file polling. */
+    this.filePollHandle = null;
 }
 DataLogging.prototype = new Widget;
 
@@ -1405,7 +1408,6 @@ DataLogging.prototype.init = function() {
     /* Clear to force UI redraw. */
     this.files = this.isLogging = this.duration = undefined;
 
-    
     /* Draw UI. */
     this.$widget = this.generateBox(this.id);
     this.enableDraggable();
@@ -1415,6 +1417,9 @@ DataLogging.prototype.init = function() {
     
     /* Event handlers. */
     this.$widget.find("#data-enable").click(function() { thiz.toggleLogging(); });
+    
+    /* Check we can download files. */
+    this.pollSessionFiles();
 };
 
 DataLogging.prototype.getHTML = function() {
@@ -1479,7 +1484,21 @@ DataLogging.prototype.consume = function(data) {
             /* Clear first load state. */
             this.$widget.find("#data-controls .data-logger-blur").removeClass("data-logger-blur");
         }
-        if (this.isLogging = data['is-logging']) this.$widget.find("#data-enable div").addClass("on");
+        if (this.isLogging = data['is-logging'])
+        {
+            this.$widget.find("#data-enable div").addClass("on");
+            
+        }
+        else
+        {
+            this.$widget.find("#data-enable div").removeClass("on");
+            
+            if (this.currentFile)
+            {
+                this.currentFile.isLogging = false;
+                this.currentFile = null;
+            }
+        }
     }
     
     if (typeof data['log-duration'] != "undefined" && data['log-duration'] != this.duration)
@@ -1488,7 +1507,7 @@ DataLogging.prototype.consume = function(data) {
         this.$widget.find("#data-duration").html(this.duration > 0 ? this.duration + "s" : "");
     }
     
-    if (typeof data['log-files'] != "undefined")
+    if (typeof data['log-files'] != "undefined" && $.isArray(data['log-files']))
     {
         if (this.files === undefined)
         {
@@ -1498,32 +1517,120 @@ DataLogging.prototype.consume = function(data) {
             {
                 this.$widget.find("#data-list-placeholder").html("No files.");
             }
-            else
-            {
-                this.$widget.find("#data-files").html("<ul id='data-files-list'></ul>");
-            }
 
             this.files = { };
         }
-
-        var i = 0, f;
-        for (i in data['log-files'])
+                
+        var i = 0, files = data['log-files'], f;
+        
+        /* Files may have some leading and trailing whitespace which may interfere with
+         * sorting, so this is being removed. */
+        for (i in files) files[i] = trim(files[i]);
+        
+        /* The files are named with a timestamp in the format YYYYMMDD_hhmmss.<format>
+         * so a direct lexographical sort will correctly sort the files from earliest 
+         * to latest. */
+        files.sort();
+        
+        for (i in files)
         {
-            if (typeof this.files[f = data['log-files'][i]] == "undefined")
+            if ((f = files[i]) != "" && typeof this.files[f] == "undefined")
             {
                 if (this.files)
                 
                 this.files[f] = {
-                    name: f
+                    name: f,
+                    time: f.substring(f.indexOf('_') + 1, f.indexOf('.')),
+                    format: f.substring(f.indexOf('.') + 1).toUpperCase(),
+                    path: undefined,
+                    isLogging: this.isLogging && i == files.length - 1 
                 };
-                this.$widget.find("#data-files-list").prepend("<li>" + f + "</li>");
+                
+                if (this.files[f].isLogging) 
+                {
+                    this.currentFile = this.files[f];
+                    
+                    if (this.files[f].format != this.$widget.find("#data-format :selected").val())
+                    {
+                        /* Update the UI to reflect to current logging format. */
+                        this.$widget.find("#data-format :selected").removeAttr("selected");
+                        this.$widget.find("#data-format option[value='" + this.files[f].format + "']")
+                                .attr("selected", "selected");
+                    }
+                }
+
+                this.files[f].hour = this.files[f].time.substring(0, 2);
+                this.files[f].min = this.files[f].time.substring(2, 4);
+                this.files[f].sec = this.files[f].time.substring(4);
+                
+                if (this.fileCount++ == 0) this.$widget.find("#data-files").html("<ul id='data-files-list'></ul>");
+                this.$widget.find("#data-files-list").prepend(
+                        "<li id='file-" + this.files[f].time + "'>" + 
+                            "<a href='#'>" +
+                                "<span class='data-icon data-icon-" + this.files[f].format + "'></span>" +
+                                "Start: " + this.files[f].hour + ":" + this.files[f].min + ":" + this.files[f].sec +
+                            "</a>" +
+                        "</li>");
+                this.resized(this.$widget.width(), this.$widget.height());
             }
         }
     }
 };
 
 DataLogging.prototype.resized = function(width, height) {
-    this.$widget.children(".window-content").css("height", height - 53);
+    this.$widget.children(".window-content")
+        .css("height", height - 53)
+        .children($("#data-files-list").css("height", height - 120));
+};
+
+/**
+ * Polls the files in the users home directory.
+ */
+DataLogging.prototype.pollSessionFiles = function() {
+    var thiz = this;
+    $.get(
+        "/home/listsession",
+        null,
+        function(resp) {
+            thiz.checkDownloadable(resp);
+            setTimeout(function() { thiz.pollSessionFiles(); }, 30000);
+        }
+    );
+};
+
+/**
+ * Checks whether we can download a file. To be able to download a file, the  
+ * file must be no longer being logged to and it must be listed in the users
+ * home directory contents.
+ * 
+ * @param {object} sessionFiles list of session files
+ */
+DataLogging.prototype.checkDownloadable = function(sessionFiles) {
+    if (!this.files) return;
+    
+    var f = 0;
+    for (f in sessionFiles) 
+    {
+        if (this.files[f] && !this.files[f].path && !this.files[f].isLogging)
+        {
+            /* File is avaliable for download, so the download can be made active. */
+            this.files[f].path = sessionFiles[f];
+            this.$widget.find("#file-" + this.files[f].time)
+                .addClass("data-file-downloadable")
+                .children("a")
+                    .attr("href", "/home/download/" + this.files[f].path);
+        }
+    }
+};
+
+DataLogging.prototype.destroy = function() {
+    Widget.prototype.destroy.call(this);
+    
+    if (this.filePollHandle)
+    {
+        clearTimeout(this.filePollHandle);
+        this.filePollHandle = null;
+    }
 };
 
 /* ============================================================================
@@ -2886,9 +2993,9 @@ function getCanvas(id, width, height)
 /**
  * Rounds of a number to a specified number of significant figures.
  * 
- * @param num number to round
- * @param places significant figures
- * @returns {Number} number to return
+ * @param {number} num number to round
+ * @param {int} places significant figures
+ * @returns {number} number to return
  */
 function mathRound(num, places) 
 {
@@ -2899,9 +3006,9 @@ function mathRound(num, places)
  * Adds '0' characters to a number so it correctly displays the specified 
  * decimal point characters.
  * 
- * @param num number to pad
- * @param places significant figures
- * @returns {String}
+ * @param {number} num number to pad
+ * @param {int} places significant figures
+ * @returns {string}
  */
 function zeroPad(num, places)
 {
@@ -2914,4 +3021,15 @@ function zeroPad(num, places)
 	}
 
 	return r;
+}
+
+/**
+ * Trims leading and trailing whitespace from a string.
+ * 
+ * @param {string} s the string to trim
+ * @return {string} the trimmed string
+ */
+function trim(s)
+{
+    return s.trim ? s.trim() : s.replace(/^\s+|\s+$/g);
 }
