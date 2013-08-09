@@ -67,7 +67,7 @@ WaterLevelControl.prototype.setup = function() {
 	this.widgets.push(o);	
 
 	/* Add camera to page. */
-	this.widgets.push(new CameraWidget(this.$container, 'Coupled Tanks', ''));
+	this.widgets.push(new CameraWidget(this.$container, 'Camera', ''));
 
 	/* Controls. */
 	o = new SliderWidget(this.$container, 'Manual', 'manual', 'valve', 'setValve');
@@ -2642,7 +2642,7 @@ CameraWidget.prototype.init = function() {
     this.videoWidth = 320;
     this.videoHeight = 240;
     
-	this.$widget = this.generateBox('camera-' + this.id);
+	this.$widget = this.generateBox('camera-coupled-tanks');
 
 	this.enableDraggable();
 	
@@ -2767,7 +2767,7 @@ CameraWidget.prototype.getHTML = function() {
             '<select id="video-player-select">' +
 	            '<option selected="selected" value=" "> </option>' +
                 '<option value="swf">SWF</option>' +
-                '<option value="mjpeg">MJpeg</option>' +
+                '<option value="mjpeg">M-JPEG</option>' +
             '</select>' +
         '</div>' +
         '<div class="format-select-label">Format:</div>'
