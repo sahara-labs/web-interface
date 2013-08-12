@@ -2651,7 +2651,7 @@ CameraWidget.prototype.init = function() {
         thiz.deploy($(this).val());
     });
 	
-	this.enableResizable(this.videoWidth / 2, this.videoHeight / 2, true);
+	this.enableResizable(185.5, 175, true);
 	
 	/* Restore current format after reinit. */
 	if (this.currentFormat) this.deploy(this.currentFormat);
