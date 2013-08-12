@@ -237,11 +237,26 @@ WaterLevelsMimic.prototype.init = function() {
 	}
 
 	/* Enable resizing. */
-	this.enableResizable(326, 366, true);
+	this.enableResizable(324, 309, true);
 	this.enableDraggable();
 };
 
-WaterLevelsMimic.prototype.getHTML = function() {	
+WaterLevelsMimic.prototype.getHTML = function() {
+	
+	if ($.browser.msie && $.browser.version < 10) 
+	{
+        var elbowTopRight = '<img src="/uts/coupledtanksnew/images/mimic-top-right-elbow.png" class="mimic-top-elbow-right-image" />';
+        var elbowTopLeft = '<img src="/uts/coupledtanksnew/images/mimic-top-left-elbow.png" class="mimic-top-elbow-left-image" />';
+        var elbowBottomLeft = '<img src="/uts/coupledtanksnew/images/mimic-bottom-left-elbow.png" class="mimic-bottom-elbow-left-image" />';
+    }
+    else 
+    {
+        var elbowTopRight = '<div class="horizontal-tube mimic-elbow-top-right"></div>';
+        var elbowTopLeft = '<div class="horizontal-tube mimic-elbow-top-left"></div>';
+        var elbowBottomLeft = '<div class="horizontal-tube mimic-elbow-bottom-left"></div>';   
+    }
+    
+    	
 	var i = 0, html =
         '<div id="mimic-bg">' +
             '<div class="vertical-tube mimic-pipe-long"></div>' +
@@ -250,14 +265,14 @@ WaterLevelsMimic.prototype.getHTML = function() {
             '<div class="horizontal-tube mimic-pipe-t1-t2"></div>' +
             '<div class="horizontal-tube mimic-pipe-t3"></div>' +
             '<div class="horizontal-tube mimic-pipe-t1-in"></div>' +
-            '<div class="horizontal-tube mimic-elbow-top-right"></div>' +
+            elbowTopLeft +
             '<div class="horizontal-tube mimic-cap-vertical mimic-cap-t1-t2-leftCap"></div>' +
             '<div class="horizontal-tube mimic-cap-vertical mimic-cap-t1-t2-rightCap"></div>' +
             '<div class="horizontal-tube mimic-cap-vertical mimic-cap-t3"></div>' +
             '<div class="vertical-tube mimic-cap-horizontal mimic-cap-t1-in"></div>' +
             '<div class="vertical-tube mimic-cap-horizontal mimic-cap-t2-out"></div>' +
-            '<div class="horizontal-tube mimic-elbow-top-left"></div>' +
-            '<div class="horizontal-tube mimic-elbow-bottom-left"></div>' +
+            elbowTopRight +
+            elbowBottomLeft +
             '<div id="water-tube-t1" class="waterTube waterBackground">' +
                 '<div class="level .gradient"></div>' +
             '</div>' +
@@ -1829,8 +1844,8 @@ GraphWidget.prototype.getHTML = function() {
 	html += "</div>";
 
 	/* Left axis label. */
-	html += "<div class='graph-axis-label graph-left-axis-label' style='top:" + 
-			(this.width / 2 - this.axis.y.length * 10)  + "px'>" + this.axis.y + "</div>";
+	html += "<div class='graph-axis-label graph-left-axis-label' style='top:40%'>" + 
+			this.axis.y + "</div>";
 
 	/* Canvas element holding box. */
 	html += "<div id='" + this.id +  "-canvas' class='graph-canvas-box gradient' style='height:" + this.height + "px'></div>";
@@ -2651,7 +2666,7 @@ CameraWidget.prototype.init = function() {
         thiz.deploy($(this).val());
     });
 	
-	this.enableResizable(this.videoWidth / 2, this.videoHeight / 2, true);
+	this.enableResizable(185.5, 175, true);
 	
 	/* Restore current format after reinit. */
 	if (this.currentFormat) this.deploy(this.currentFormat);
