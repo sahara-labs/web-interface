@@ -1209,6 +1209,7 @@
 #water-levels-mimic #water-tube-t1 {
     right: 48.5%;
     top: 7%;
+    z-index: 1;
 }
 
 #water-levels-mimic #water-tube-t2 {
@@ -1335,6 +1336,7 @@
 #water-levels-mimic .mimic-cap-t1-in {
     right: 62.5%;
     bottom: 89%;
+    z-index: 1;
 }
 
 #water-levels-mimic .mimic-cap-t2-out {
@@ -1393,6 +1395,7 @@
 	background: #fff;
 	border: 1px solid #686868;
 	padding: 5px;
+	z-index: 1;
 }
 
 #water-levels-mimic #mimic-l1 {
@@ -1470,6 +1473,33 @@
     left: 84%;
     top: 68.5%;
     height: 10%;
+}
+
+#water-levels-mimic .mimic-top-elbow-right-image {
+    position: absolute;
+    left: 30.5%;
+    top: 2%;
+    height: 5.5%;
+    border: 0;
+    z-index: 0;
+}
+
+#water-levels-mimic .mimic-top-elbow-left-image {
+    position: absolute;
+    left: 1%;
+    top: 2%;
+    height: 5.5%;
+    border: 0;
+    z-index: 0;
+}
+
+#water-levels-mimic .mimic-bottom-elbow-left-image {
+    position: absolute;
+    left: 11%;
+    top: 93%;
+    height: 5.5%;
+    border: 0;
+    z-index: 0;
 }
 
 #water-levels-mimic .spin {

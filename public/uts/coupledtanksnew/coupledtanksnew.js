@@ -241,7 +241,22 @@ WaterLevelsMimic.prototype.init = function() {
 	this.enableDraggable();
 };
 
-WaterLevelsMimic.prototype.getHTML = function() {	
+WaterLevelsMimic.prototype.getHTML = function() {
+	
+	if ($.browser.msie && $.browser.version < 10) 
+	{
+        var elbowTopRight = '<img src="/uts/coupledtanksnew/images/mimic-top-right-elbow.png" class="mimic-top-elbow-right-image" />';
+        var elbowTopLeft = '<img src="/uts/coupledtanksnew/images/mimic-top-left-elbow.png" class="mimic-top-elbow-left-image" />';
+        var elbowBottomLeft = '<img src="/uts/coupledtanksnew/images/mimic-bottom-left-elbow.png" class="mimic-bottom-elbow-left-image" />';
+    }
+    else 
+    {
+        var elbowTopRight = '<div class="horizontal-tube mimic-elbow-top-right"></div>';
+        var elbowTopLeft = '<div class="horizontal-tube mimic-elbow-top-left"></div>';
+        var elbowBottomLeft = '<div class="horizontal-tube mimic-elbow-bottom-left"></div>';   
+    }
+    
+    	
 	var i = 0, html =
         '<div id="mimic-bg">' +
             '<div class="vertical-tube mimic-pipe-long"></div>' +
@@ -250,14 +265,14 @@ WaterLevelsMimic.prototype.getHTML = function() {
             '<div class="horizontal-tube mimic-pipe-t1-t2"></div>' +
             '<div class="horizontal-tube mimic-pipe-t3"></div>' +
             '<div class="horizontal-tube mimic-pipe-t1-in"></div>' +
-            '<div class="horizontal-tube mimic-elbow-top-right"></div>' +
+            elbowTopLeft +
             '<div class="horizontal-tube mimic-cap-vertical mimic-cap-t1-t2-leftCap"></div>' +
             '<div class="horizontal-tube mimic-cap-vertical mimic-cap-t1-t2-rightCap"></div>' +
             '<div class="horizontal-tube mimic-cap-vertical mimic-cap-t3"></div>' +
             '<div class="vertical-tube mimic-cap-horizontal mimic-cap-t1-in"></div>' +
             '<div class="vertical-tube mimic-cap-horizontal mimic-cap-t2-out"></div>' +
-            '<div class="horizontal-tube mimic-elbow-top-left"></div>' +
-            '<div class="horizontal-tube mimic-elbow-bottom-left"></div>' +
+            elbowTopRight +
+            elbowBottomLeft +
             '<div id="water-tube-t1" class="waterTube waterBackground">' +
                 '<div class="level .gradient"></div>' +
             '</div>' +
