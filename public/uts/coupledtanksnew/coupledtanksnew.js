@@ -237,7 +237,7 @@ WaterLevelsMimic.prototype.init = function() {
 	}
 
 	/* Enable resizing. */
-	this.enableResizable(326, 366, true);
+	this.enableResizable(324, 309, true);
 	this.enableDraggable();
 };
 
