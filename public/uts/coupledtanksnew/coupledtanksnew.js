@@ -1829,8 +1829,8 @@ GraphWidget.prototype.getHTML = function() {
 	html += "</div>";
 
 	/* Left axis label. */
-	html += "<div class='graph-axis-label graph-left-axis-label' style='top:" + 
-			(this.width / 2 - this.axis.y.length * 10)  + "px'>" + this.axis.y + "</div>";
+	html += "<div class='graph-axis-label graph-left-axis-label' style='top:40%'>" + 
+			this.axis.y + "</div>";
 
 	/* Canvas element holding box. */
 	html += "<div id='" + this.id +  "-canvas' class='graph-canvas-box gradient' style='height:" + this.height + "px'></div>";
