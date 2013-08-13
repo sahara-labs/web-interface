@@ -517,6 +517,23 @@
     border-radius: 4px;
 }
 
+.metro-check {
+    position: relative;
+    top: 1px;
+    left: 7px;
+    height: 0px;
+    cursor: pointer;
+    font-size: 11px;
+    color: #3B8FDD;
+}
+
+.metro-icon{
+    height: 23px;
+    top: 6px;
+    padding-right: 5px;
+    position: relative;
+}
+
 /******************************************************************************
  ** Slider                                                                   **
  ******************************************************************************/

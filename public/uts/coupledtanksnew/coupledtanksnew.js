@@ -1108,7 +1108,7 @@ DisplayManager.prototype.init = function() {
     this.enableDraggable();
     
     /* Shade the display manager if shaded cookie is undefined */
-    if(this.window.shaded === undefined) this.toggleWindowShade();
+    if (this.window.shaded === undefined) this.toggleWindowShade();
 
     this.$widget.find('.toggle').click(function() {    
     	thiz.toggleWidget($(this).find("span").html(), this);
@@ -2666,6 +2666,12 @@ CameraWidget.prototype.init = function() {
         thiz.deploy($(this).val());
     });
 	
+	/* Loads Metro help window */
+	this.$widget.find(".metro-check").click(function() {
+	    //TODO launch the Metro help window
+	    alert('Launch metro help menu here.');
+	});
+	
 	this.enableResizable(185.5, 175, true);
 	
 	/* Restore current format after reinit. */
@@ -2774,10 +2780,29 @@ CameraWidget.prototype.undeploy = function() {
 };
 
 CameraWidget.prototype.getHTML = function() {	
+	
+	this.metroCheck = function(){
+	    /* Detect if user may be using IE Metro */
+		if ($.browser.msie && $.browser.version >= 10 && !window.screenTop && !window.screenY) 
+		{
+		    return (
+		        '<div class="metro-check">' +
+		            '<img class="metro-icon" src="/uts/coupledtanksnew/images/ie10-icon.png" alt="Using Metro?" />' +
+		            'Using Metro?' +
+		        '</div>'
+		    );
+		}
+		else
+		{
+			return '';
+		}
+	};
+	
 	return (
 		'<div class="video-player" style="height:' + this.videoHeight + 'px;width:' + this.videoWidth + 'px">' +
 		    '<div class="video-placeholder">Please wait...</div>' +
 		'</div>' +
+		this.metroCheck() +
 	    '<div class="format-select">' +   
             '<select id="video-player-select">' +
 	            '<option selected="selected" value=" "> </option>' +
