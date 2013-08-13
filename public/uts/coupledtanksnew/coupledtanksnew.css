@@ -527,11 +527,27 @@
     color: #3B8FDD;
 }
 
-.metro-icon{
+.metro-icon {
     height: 23px;
     top: 6px;
     padding-right: 5px;
     position: relative;
+}
+
+.metro-image {
+    background: url('/uts/coupledtanksnew/images/metro-help-menu.png') no-repeat	
+}
+
+.metro-image-settings {
+    width: 42px;
+    height: 42px;
+    background-position: -1px -1px;
+}
+
+.metro-image-desktop {
+    width: 184px;
+    height: 47px;
+    background-position: -45px 0px;
 }
 
 /******************************************************************************

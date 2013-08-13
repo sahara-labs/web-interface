@@ -2669,7 +2669,7 @@ CameraWidget.prototype.init = function() {
 	/* Loads Metro help window */
 	this.$widget.find(".metro-check").click(function() {
 	    //TODO launch the Metro help window
-	    alert('Launch metro help menu here.');
+	    alert('Launch the Metro help menu here.');
 	});
 	
 	this.enableResizable(185.5, 175, true);
