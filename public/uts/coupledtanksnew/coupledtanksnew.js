@@ -2668,8 +2668,7 @@ CameraWidget.prototype.init = function() {
 	
 	/* Loads Metro help window */
 	this.$widget.find(".metro-check").click(function() {
-	    //TODO launch the Metro help window
-	    alert('Launch the Metro help menu here.');
+	    $('.metro-container').fadeToggle();
 	});
 	
 	this.enableResizable(185.5, 175, true);
@@ -2801,6 +2800,13 @@ CameraWidget.prototype.getHTML = function() {
 	return (
 		'<div class="video-player" style="height:' + this.videoHeight + 'px;width:' + this.videoWidth + 'px">' +
 		    '<div class="video-placeholder">Please wait...</div>' +
+		'</div>' +
+		'<div class="metro-container">' +
+		    'Please click the settings icon found in the bottom right corner of your browser window.' + 
+		    '<p>(This menu can be accessed by right clicking in the browser window).</p>' +
+		    '<div class="metro-image metro-image-settings"></div>' +
+		    '<br /><br />Then select the "View on the desktop" option.' +
+		    '<div class="metro-image metro-image-desktop"></div>' +
 		'</div>' +
 		this.metroCheck() +
 	    '<div class="format-select">' +   

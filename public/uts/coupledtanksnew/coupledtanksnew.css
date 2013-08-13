@@ -542,14 +542,39 @@
     width: 42px;
     height: 42px;
     background-position: -1px -1px;
+    margin: 5px 0px -20px 100px;
 }
 
 .metro-image-desktop {
     width: 184px;
     height: 47px;
     background-position: -45px 0px;
+    margin: 10px 0px 0px 30px;
 }
 
+.metro-container {
+    background: #fff;
+    position: absolute;
+    top: 10px;
+    width: 85%;
+    left: 5%;
+    height: 70%;
+    border-radius: 10px;
+    padding-left: 5%;
+    padding-top: 5%;
+    font-size: 12px;
+    color: #383838;
+    overflow: hidden;
+    border: solid 1px #CCC;
+    -moz-box-shadow: 0 1px 3px #333333;
+    -webkit-box-shadow: 0 1px 3px #333;
+    box-shadow: 0 1px 3px #333;
+    display: none;
+}
+
+.metro-container p {
+    font-size: 11px;
+}
 /******************************************************************************
  ** Slider                                                                   **
  ******************************************************************************/
