@@ -371,11 +371,11 @@ WaterLevelsMimic.prototype.toggleWindowShade = function() {
     if (this.window.shaded === true)
     {
     	this.$widget.css('height', 'auto');
-        this.$widget.css({"padding-bottom":"0%"});
+        this.$widget.css("padding-bottom", "0%");
     }
     else
     {
-        this.$widget.css({"padding-bottom":"8.5%"});
+        this.$widget.css("padding-bottom", "8.5%");
         this.$widget.css('height', this.boxHeight);
     }
 };
