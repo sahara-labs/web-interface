@@ -361,6 +361,20 @@ WaterLevelsMimic.prototype.resizeStopped = function(width, height) {
     this.resized(width, height);
 };
 
+WaterLevelsMimic.prototype.toggleWindowShade = function() {
+	this.$widget.find(".window-content").slideToggle('fast');
+    this.$widget.find(".window-header").toggleClass("window-header-shade", "slide");
+    this.$widget.css("width", this.$widget.width());
+    this.window.shaded = !this.window.shaded;
+    this.storeState();
+    
+    if (this.window.shaded === true)
+    {
+    	this.$widget.css('height', 'auto');
+        this.$widget.css({"padding-bottom":"0%"});
+    }
+};
+
 /* ============================================================================
  * == PID Controls                                                           ==
  * ============================================================================ */
@@ -779,6 +793,7 @@ Widget.prototype.generateBox = function(boxId) {
     
     $w.find(".window-expand").click(function() { thiz.toggleWindowExpand(); });
     $w.find(".window-shade").click(function() { thiz.toggleWindowShade(); });
+    $w.find(".window-header").dblclick(function() { thiz.toggleWindowShade(); });
     $w.find(".window-close").click(function() {  
         if   (thiz.parentManager) thiz.parentManager.toggleWidget(thiz.title);
         else (thiz.destroy());

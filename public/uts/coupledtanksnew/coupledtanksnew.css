@@ -51,7 +51,7 @@
 }
 
 .window-header {
-    height: 15px;
+    height: 19px;
     font-size: 24px;
     padding: 5px 10px;
     color: #525252;
@@ -286,10 +286,11 @@
     border: solid 1px #ddd;
     border-radius: 20px;
     float: right;
+    cursor: pointer;
 }
 .slide{
-    height: 15px;
-    width: 15px;
+    height: 14px;
+    width: 14px;
     background: #ccc;
     margin: 2px;
     border-radius: 10px;
@@ -301,13 +302,14 @@
     transition:all 0.3s ease-in-out;
 }
 .on{
-    background-color: #555555;
+    background-color: #757575;
     box-shadow: 0 0 2px #999999;
     float:right; 
-    
+    border: 1px solid #4d4c4c;   
 }
 .off{
-    background: #dfdfdf;
+    background: #e0e0e0;
+    border: 1px solid #d1d1d1;
     float:left;
 }
 
