@@ -354,7 +354,7 @@ WaterLevelsMimic.prototype.resized = function(width, height) {
     this.boxHeight = height;
     
     /* realigns the bottom border */
-    this.$widget.css({"padding-bottom":"8%"});
+    this.$widget.css({"padding-bottom":"8.5%"});
 };
 
 WaterLevelsMimic.prototype.resizeStopped = function(width, height) {
@@ -372,6 +372,11 @@ WaterLevelsMimic.prototype.toggleWindowShade = function() {
     {
     	this.$widget.css('height', 'auto');
         this.$widget.css({"padding-bottom":"0%"});
+    }
+    else
+    {
+        this.$widget.css({"padding-bottom":"8.5%"});
+        this.$widget.css('height', this.boxHeight);
     }
 };
 
