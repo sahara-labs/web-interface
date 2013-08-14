@@ -344,11 +344,30 @@ WaterLevelsMimic.prototype.resized = function(width, height) {
     this.boxHeight = height;
     
     /* realigns the bottom border */
-    this.$widget.css({"padding-bottom":"8%"});
+    this.$widget.css({"padding-bottom":"8.5%"});
 };
 
 WaterLevelsMimic.prototype.resizeStopped = function(width, height) {
     this.resized(width, height);
+};
+
+WaterLevelsMimic.prototype.toggleWindowShade = function() {
+	this.$widget.find(".window-content").slideToggle('fast');
+    this.$widget.find(".window-header").toggleClass("window-header-shade", "slide");
+    this.$widget.css("width", this.$widget.width());
+    this.window.shaded = !this.window.shaded;
+    this.storeState();
+    
+    if (this.window.shaded === true)
+    {
+    	this.$widget.css('height', 'auto');
+        this.$widget.css("padding-bottom", "0%");
+    }
+    else
+    {
+        this.$widget.css("padding-bottom", "8.5%");
+        this.$widget.css('height', this.boxHeight);
+    }
 };
 
 /* ============================================================================
@@ -769,6 +788,7 @@ Widget.prototype.generateBox = function(boxId) {
     
     $w.find(".window-expand").click(function() { thiz.toggleWindowExpand(); });
     $w.find(".window-shade").click(function() { thiz.toggleWindowShade(); });
+    $w.find(".window-header").dblclick(function() { thiz.toggleWindowShade(); });
     $w.find(".window-close").click(function() {  
         if   (thiz.parentManager) thiz.parentManager.toggleWidget(thiz.title);
         else (thiz.destroy());
@@ -2791,7 +2811,7 @@ CameraWidget.prototype.getHTML = function() {
 		    '<div class="video-placeholder">Please wait...</div>' +
 		'</div>' +
 		'<div class="metro-container">' +
-		    'Please click the settings icon found in the bottom right corner of your browser window.' + 
+		    'Please click the settings icon found at the bottom right corner of your browser window.' + 
 		    '<p>(This menu can be accessed by right clicking in the browser window).</p>' +
 		    '<div class="metro-image metro-image-settings"></div>' +
 		    '<br /><br />Then select the "View on the desktop" option.' +
@@ -2876,6 +2896,19 @@ CameraWidget.prototype.resizeStopped = function(width, height) {
 CameraWidget.prototype.destroy = function() {
     this.undeploy();
     Widget.prototype.destroy.call(this);
+};
+
+CameraWidget.prototype.toggleWindowShade = function() {
+	this.$widget.find(".window-content").slideToggle('fast');
+    this.$widget.find(".window-header").toggleClass("window-header-shade", "slide");
+    this.$widget.css("width", this.$widget.width());
+    this.window.shaded = !this.window.shaded;
+    this.storeState();
+    
+    if (this.window.shaded === true)
+    {
+    	this.$widget.css("height", 'auto');
+    }
 };
 
 /* ============================================================================
