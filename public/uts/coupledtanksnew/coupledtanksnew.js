@@ -241,22 +241,7 @@ WaterLevelsMimic.prototype.init = function() {
 	this.enableDraggable();
 };
 
-WaterLevelsMimic.prototype.getHTML = function() {
-	
-	if ($.browser.msie && $.browser.version < 10) 
-	{
-        var elbowTopRight = '<img src="/uts/coupledtanksnew/images/mimic-top-right-elbow.png" class="mimic-top-elbow-right-image" />';
-        var elbowTopLeft = '<img src="/uts/coupledtanksnew/images/mimic-top-left-elbow.png" class="mimic-top-elbow-left-image" />';
-        var elbowBottomLeft = '<img src="/uts/coupledtanksnew/images/mimic-bottom-left-elbow.png" class="mimic-bottom-elbow-left-image" />';
-    }
-    else 
-    {
-        var elbowTopRight = '<div class="horizontal-tube mimic-elbow-top-right"></div>';
-        var elbowTopLeft = '<div class="horizontal-tube mimic-elbow-top-left"></div>';
-        var elbowBottomLeft = '<div class="horizontal-tube mimic-elbow-bottom-left"></div>';   
-    }
-    
-    	
+WaterLevelsMimic.prototype.getHTML = function() {    	
 	var i = 0, html =
         '<div id="mimic-bg">' +
             '<div class="vertical-tube mimic-pipe-long"></div>' +
@@ -265,14 +250,19 @@ WaterLevelsMimic.prototype.getHTML = function() {
             '<div class="horizontal-tube mimic-pipe-t1-t2"></div>' +
             '<div class="horizontal-tube mimic-pipe-t3"></div>' +
             '<div class="horizontal-tube mimic-pipe-t1-in"></div>' +
-            elbowTopLeft +
+            ($.browser.msie && $.browser.version < 10 ? 
+            '<img src="/uts/coupledtanksnew/images/mimic-top-left-elbow.png" class="mimic-top-elbow-left-image" />' : 
+            '<div class="horizontal-tube mimic-elbow-top-left"></div>' ) +
             '<div class="horizontal-tube mimic-cap-vertical mimic-cap-t1-t2-leftCap"></div>' +
             '<div class="horizontal-tube mimic-cap-vertical mimic-cap-t1-t2-rightCap"></div>' +
             '<div class="horizontal-tube mimic-cap-vertical mimic-cap-t3"></div>' +
             '<div class="vertical-tube mimic-cap-horizontal mimic-cap-t1-in"></div>' +
             '<div class="vertical-tube mimic-cap-horizontal mimic-cap-t2-out"></div>' +
-            elbowTopRight +
-            elbowBottomLeft +
+            ($.browser.msie && $.browser.version < 10 ?
+            '<img src="/uts/coupledtanksnew/images/mimic-top-right-elbow.png" class="mimic-top-elbow-right-image" />' +
+            '<img src="/uts/coupledtanksnew/images/mimic-bottom-left-elbow.png" class="mimic-bottom-elbow-left-image" />' :
+            '<div class="horizontal-tube mimic-elbow-top-right"></div>' +
+            '<div class="horizontal-tube mimic-elbow-bottom-left"></div>' ) +
             '<div id="water-tube-t1" class="waterTube waterBackground">' +
                 '<div class="level .gradient"></div>' +
             '</div>' +
@@ -1877,8 +1867,7 @@ GraphWidget.prototype.getHTML = function() {
 	html += "</div>";
 
 	/* Left axis label. */
-	html += "<div class='graph-axis-label graph-left-axis-label' style='top:40%'>" + 
-			this.axis.y + "</div>";
+	html += "<div class='graph-axis-label graph-left-axis-label' style='top:40%'>" + this.axis.y + "</div>";
 
 	/* Canvas element holding box. */
 	html += "<div id='" + this.id +  "-canvas' class='graph-canvas-box gradient' style='height:" + this.height + "px'></div>";
@@ -2811,25 +2800,7 @@ CameraWidget.prototype.undeploy = function() {
     this.isDeployed = false;
 };
 
-CameraWidget.prototype.getHTML = function() {	
-	
-	this.metroCheck = function(){
-	    /* Detect if user may be using IE Metro */
-		if ($.browser.msie && $.browser.version >= 10 && !window.screenTop && !window.screenY) 
-		{
-		    return (
-		        '<div class="metro-check">' +
-		            '<img class="metro-icon" src="/uts/coupledtanksnew/images/ie10-icon.png" alt="Using Metro?" />' +
-		            'Using Metro?' +
-		        '</div>'
-		    );
-		}
-		else
-		{
-			return '';
-		}
-	};
-	
+CameraWidget.prototype.getHTML = function() {
 	return (
 		'<div class="video-player" style="height:' + this.videoHeight + 'px;width:' + this.videoWidth + 'px">' +
 		    '<div class="video-placeholder">Please wait...</div>' +
@@ -2841,7 +2812,11 @@ CameraWidget.prototype.getHTML = function() {
 		    '<br /><br />Then select the "View on the desktop" option.' +
 		    '<div class="metro-image metro-image-desktop"></div>' +
 		'</div>' +
-		this.metroCheck() +
+		($.browser.msie && $.browser.version >= 10 && !window.screenTop && !window.screenY ? 
+		    '<div class="metro-check">' +
+                '<img class="metro-icon" src="/uts/coupledtanksnew/images/ie10-icon.png" alt="Using Metro?" />' +
+                'Using Metro?' +
+            '</div>' : '' ) +
 	    '<div class="format-select">' +   
             '<select id="video-player-select">' +
 	            '<option selected="selected" value=" "> </option>' +
