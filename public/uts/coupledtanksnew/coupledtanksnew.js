@@ -1145,7 +1145,12 @@ DisplayManager.prototype.init = function() {
     this.$widget.find('.reset-button').click(function() {    
 	    var i = 0;
 	    for (i in thiz.widgets)
-	    {	    
+	    {
+            if (thiz.widgets[i].window.shown === false)
+            {
+	            thiz.widgets[i].parentManager.toggleWidget(thiz.widgets[i].title);
+	        }
+
             thiz.widgets[i].window = { };
             thiz.widgets[i].storeState();
             thiz.widgets[i].destroy();
