@@ -365,8 +365,16 @@ WaterLevelsMimic.prototype.toggleWindowShade = function() {
     }
     else
     {
-        this.$widget.css("padding-bottom", "8.5%");
-        this.$widget.css('height', this.boxHeight);
+        if (typeof this.boxHeight != "undefined")
+        {
+            this.$widget.css('height', this.boxHeight);
+            this.$widget.css("padding-bottom", "8.5%");
+        }
+        else
+        {
+            this.$widget.css('height', 'auto');
+            this.$widget.css("padding-bottom", "0%");
+        }
     }
 };
 
