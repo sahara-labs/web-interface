@@ -835,68 +835,74 @@ Widget.MAX_EXPANDED_HEIGHT = 500;
  * position on the interface. 
  */
 Widget.prototype.toggleWindowExpand = function() {
-    if (this.window.expanded)
-    {
-        if (this.$widget.hasClass("ui-resizable"))
-        {         
-            this.$widget.width(this.window.width);
-            this.$widget.height(this.window.height);
-            this.resized(this.window.width, this.window.height);
-            this.resizeStopped(this.window.width, this.window.height);
-        }
-
-        /* Moving the widget back to its original position. */
-        this.$widget.css({
-            left: this.window.left,
-            top:  this.window.top,
-            zIndex: this.window.zin
-        });
+    /* Prevents expanding of a shaded widget */
+    if (this.window.shaded === true) {
+        this.toggleWindowShade();
     }
     else
     {
-        var width = this.window.width = this.$widget.width(),
-            height = this.window.height = this.$widget.height(),
-            p = this.$widget.position(), 
-            zin = this.window.zin = this.$widget.zIndex();
-        
-        this.window.left = p.left;
-        this.window.top = p.top;
-        
-        if (this.$widget.hasClass("ui-resizable"))
+        if (this.window.expanded)
         {
-            /* We can resize the widget so we will make it larger. */
-            height = Widget.EXPANDED_WIDTH / width * height;
-            width = Widget.EXPANDED_WIDTH;
-            
-            /* If the height is larger than the width, we want to scale the 
-             * widget so it first better. */
-            if (height > Widget.MAX_EXPANDED_HEIGHT)
+            if (this.$widget.hasClass("ui-resizable"))
             {
-                height = Widget.MAX_EXPANDED_HEIGHT;
-                width = Widget.MAX_EXPANDED_HEIGHT / this.window.height * this.window.width;
+                this.$widget.width(this.window.width);
+                this.$widget.height(this.window.height);
+                this.resized(this.window.width, this.window.height);
+                this.resizeStopped(this.window.width, this.window.height);
             }
-            
-            
-            this.$widget.width(width);
-            this.$widget.height(height);
-            this.resized(width, height);
-            this.resizeStopped(width, height);    
+
+            /* Moving the widget back to its original position. */
+            this.$widget.css({
+                left: this.window.left,
+                top:  this.window.top,
+                zIndex: this.window.zin
+            });
         }
-        
-        /* We want the expanded widget to have the highest z-Index. */
-        this.$container.find(".window-wrapper").each(function(i) {if ($(this).zIndex() > zin) zin = $(this).zIndex(); });
-        
-        /* Move the widget to a central position. */
-        this.$widget.css({
-            left: this.$container.width() / 2 - width / 2 - 60,
-            top: 100,
-            zIndex: zin + 100
-        });
+        else
+        {
+            var width = this.window.width = this.$widget.width(),
+                height = this.window.height = this.$widget.height(),
+                p = this.$widget.position(),
+                zin = this.window.zin = this.$widget.zIndex();
+
+            this.window.left = p.left;
+            this.window.top = p.top;
+
+            if (this.$widget.hasClass("ui-resizable"))
+            {
+                /* We can resize the widget so we will make it larger. */
+                height = Widget.EXPANDED_WIDTH / width * height;
+                width = Widget.EXPANDED_WIDTH;
+
+                /* If the height is larger than the width, we want to scale the 
+                * widget so it first better. */
+                if (height > Widget.MAX_EXPANDED_HEIGHT)
+                {
+                    height = Widget.MAX_EXPANDED_HEIGHT;
+                    width = Widget.MAX_EXPANDED_HEIGHT / this.window.height * this.window.width;
+                }
+
+                this.$widget.width(width);
+                this.$widget.height(height);
+                this.resized(width, height);
+                this.resizeStopped(width, height);
+            }
+
+            /* We want the expanded widget to have the highest z-Index. */
+            this.$container.find(".window-wrapper").each(function(i) {if ($(this).zIndex() > zin) zin = $(this).zIndex(); });
+
+            /* Move the widget to a central position. */
+            this.$widget.css({
+                left: this.$container.width() / 2 - width / 2 - 60,
+                top: 100,
+                zIndex: zin + 100
+            });
+        }
+
+        this.$widget.toggleClass("window-expanded");
+        this.window.expanded = !this.window.expanded;
+        this.storeState();
     }
-    
-    this.$widget.toggleClass("window-expanded");
-    this.window.expanded = !this.window.expanded;
-    this.storeState();
 };
 
 /**
