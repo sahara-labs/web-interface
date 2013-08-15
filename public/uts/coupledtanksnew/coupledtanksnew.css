@@ -77,12 +77,15 @@
 .window-header .ui-icon {
 	float: right;
 	margin: 2px 3px;
+}
+
+.window-header .ui-icon, .tab-wrapper-controls .ui-icon {
 	border: 1px solid #CCCCCC;
 	box-shadow: 0 0 2px #CCCCCC;
 	cursor: pointer;
 }
 
-.window-header .ui-icon:hover{
+.window-header .ui-icon:hover, .tab-wrapper-controls .ui-icon:hover {
     box-shadow: 0 0 2px #999;
 }
 
@@ -135,6 +138,27 @@
     -webkit-box-shadow: 0 1px 3px #333333;
     box-shadow: 0 1px 3px #333333;
 }
+
+.tab-wrapper-controls {
+	position: absolute;
+	left: -38px;
+	top: 8px;
+	width: 22px;
+	padding: 10px 5px;
+	border-radius: 10px 0 0 10px;
+	background-color: #FAFAFA;
+	border: 1px solid #AAAAAA;
+	box-shadow: 0 0 3px #B5B5B5; 
+}
+
+.tab-wrapper-controls .ui-icon {
+	margin: 0 3px;
+}
+
+.tab-wrapper-height {
+	height: 40px;
+}
+
 
 .tab-header {
 	position: relative;
@@ -1160,8 +1184,8 @@
  ******************************************************************************/
 #controls-tabs {
 	position: absolute;
-	left: 14px;
-	top: 355px;
+	left: 30px;
+	top: 357px;
 }
 
 #controls-tabs .tab-header {
@@ -1234,7 +1258,7 @@
  ** The Mimic                                                                **
  ******************************************************************************/
 #water-levels-mimic {
-    left: 345px;
+    left: 353px;
     top: 50px;
 }
 

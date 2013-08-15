@@ -79,8 +79,11 @@ WaterLevelControl.prototype.setup = function() {
 	        'control-mode', 'setManualMode');
 	t.setDimensions(280, 110);
 	t.setToolTips([
-	    'Manually set the flow rate by varying the percent the valve is open.',
-	    'Enable closed loop control using the proportional-integral-derivative (PID) controller.'
+	    'Open loop control, control the inlet valve percentage to regulate the flow of water into ' +
+	            'the tanks.',
+	    'Closed loop control, set proportional-integral-derivative (PID) controller variables to implement a closed' +
+	            ' loop feedback system.',
+	    'Opens an extra tank orifice allowing quick draining of the tanks and a reset of the rig.'
 	]);
 	this.widgets.push(t); 
 	
@@ -733,7 +736,7 @@ Widget.prototype.dragged = function(xpos, ypos) { };
  * @param type the message type, 'error', 'info', 'backing'
  * @param left left absolute coordinate
  * @param top top absolute coordinate
- * @param pos the arrow position, 'left', 'right', 'top', 'bottom'
+ * @param pos the arrow position, 'left', 'right', 'right-bottom', 'top-left', 'top-center'
  */
 Widget.prototype.addMessage = function(msgId, message, type, left, top, pos) {
 	var $box, i, aniIn, bs = 1, up = true, html = 
@@ -799,7 +802,7 @@ Widget.prototype.generateBox = function(boxId) {
     $w.find(".window-header").dblclick(function() { thiz.toggleWindowShade(); });
     $w.find(".window-close").click(function() {  
         if   (thiz.parentManager) thiz.parentManager.toggleWidget(thiz.title);
-        else (thiz.destroy());
+        else thiz.destroy();
     });
     
     $(document).bind("keypress.widget-" + this.id, function(e) {
@@ -1278,6 +1281,9 @@ function TabbedWidget($container, title, widgets, modeVar, modeAction)
    
    /** If a tab has been clicked to change current tab. */
    this.tabChanged = false;
+   
+   /** Tool tips hover states. */
+   this.toolTipsHovers = { };
 
    /* Initialise the tab indentifiers. */
    var i = 0;
@@ -1305,18 +1311,39 @@ TabbedWidget.prototype.init = function() {
 	           "</div>"
 	       ).children().last();
 	    };
-	    this.widgets[i].enableDraggable = function() { /* No-op. */ };
-	    
+	    this.widgets[i].enableDraggable = function() { /* No-op. */ };   
 	    this.states[i] = false;
 	}
 	
 	var thiz = this;
-	this.$widget.find(".tab-title").click(function() { thiz.tabClicked($(this).attr("id")); });
+	this.$widget.find(".tab-title")
+	    .click(function() { thiz.tabClicked($(this).attr("id")); })
+	    .mouseenter(function() {
+	        var id = $(this).attr("id");
+	        thiz.toolTipsHovers[id] = true;
+	        setTimeout(function() {
+	            if (thiz.toolTipsHovers[id]) thiz.showToolTip(id);
+	        }, 2000);
+	    })
+	    .mouseleave(function() {
+	        thiz.toolTipsHovers[$(this).attr("id")] = false;
+	    });
+	
+	this.$widget.find(".window-close").click(function() {
+	    if   (thiz.parentManager) thiz.parentManager.toggleWidget(thiz.title);
+        else  thiz.destroy();
+	});
+	
+	this.enableDraggable();
 };
 
 TabbedWidget.prototype.generateBox = function(boxId) {
     var i = 0, html = 
       "<div class='tab-wrapper' id='" + boxId + "'>" +
+          "<div class='tab-wrapper-controls draggable-header'>" +
+              "<span class='window-close ui-icon ui-icon-close'></span>" +    
+              "<div class='tab-wrapper-height'></div>" +
+          "</div>" +
          "<div class='tab-header' style='width:" + (this.widgets.length * 122) + "px'>";
 
     for (i in this.widgets)
@@ -1398,6 +1425,22 @@ TabbedWidget.prototype.destroyCurrentTab = function() {
             break;
         }
     }    
+};
+
+/**
+ * Shows a tooltip of a tab.
+ * 
+ * @param {string} id ID of a tab to show
+ */
+TabbedWidget.prototype.showToolTip = function(id) {
+    if ($("#" + id + "-tooltip").size() == 0)
+    {
+        this.removeMessages();
+        
+        var message = "", i = 0;
+        for (i in this.tabIds) if (this.tabIds[i] == id) message = this.toolTips[i];
+        this.addMessage(id + "-tooltip", message, "info", $("#" + id).position().left - 10, -3, "top-left");
+    }
 };
 
 /**
