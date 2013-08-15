@@ -802,7 +802,7 @@ Widget.prototype.generateBox = function(boxId) {
     $w.find(".window-header").dblclick(function() { thiz.toggleWindowShade(); });
     $w.find(".window-close").click(function() {  
         if   (thiz.parentManager) thiz.parentManager.toggleWidget(thiz.title);
-        else (thiz.destroy());
+        else thiz.destroy();
     });
     
     $(document).bind("keypress.widget-" + this.id, function(e) {
@@ -1317,11 +1317,22 @@ TabbedWidget.prototype.init = function() {
 	    .mouseleave(function() {
 	        thiz.toolTipsHovers[$(this).attr("id")] = false;
 	    });
+	
+	this.$widget.find(".window-close").click(function() {
+	    if   (thiz.parentManager) thiz.parentManager.toggleWidget(thiz.title);
+        else  thiz.destroy();
+	});
+	
+	this.enableDraggable();
 };
 
 TabbedWidget.prototype.generateBox = function(boxId) {
     var i = 0, html = 
       "<div class='tab-wrapper' id='" + boxId + "'>" +
+          "<div class='tab-wrapper-controls draggable-header'>" +
+              "<span class='window-close ui-icon ui-icon-close'></span>" +    
+              "<div class='tab-wrapper-height'></div>" +
+          "</div>" +
          "<div class='tab-header' style='width:" + (this.widgets.length * 122) + "px'>";
 
     for (i in this.widgets)
