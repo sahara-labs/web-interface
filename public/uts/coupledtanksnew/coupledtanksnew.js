@@ -2787,25 +2787,7 @@ CameraWidget.prototype.undeploy = function() {
     this.isDeployed = false;
 };
 
-CameraWidget.prototype.getHTML = function() {	
-	
-	this.metroCheck = function(){
-	    /* Detect if user may be using IE Metro */
-		if ($.browser.msie && $.browser.version >= 10 && !window.screenTop && !window.screenY) 
-		{
-		    return (
-		        '<div class="metro-check">' +
-		            '<img class="metro-icon" src="/uts/coupledtanksnew/images/ie10-icon.png" alt="Using Metro?" />' +
-		            'Using Metro?' +
-		        '</div>'
-		    );
-		}
-		else
-		{
-			return '';
-		}
-	};
-	
+CameraWidget.prototype.getHTML = function() {
 	return (
 		'<div class="video-player" style="height:' + this.videoHeight + 'px;width:' + this.videoWidth + 'px">' +
 		    '<div class="video-placeholder">Please wait...</div>' +
@@ -2817,7 +2799,11 @@ CameraWidget.prototype.getHTML = function() {
 		    '<br /><br />Then select the "View on the desktop" option.' +
 		    '<div class="metro-image metro-image-desktop"></div>' +
 		'</div>' +
-		this.metroCheck() +
+		($.browser.msie && $.browser.version >= 10 && !window.screenTop && !window.screenY ? 
+		    '<div class="metro-check">' +
+                '<img class="metro-icon" src="/uts/coupledtanksnew/images/ie10-icon.png" alt="Using Metro?" />' +
+                'Using Metro?' +
+            '</div>' : '' ) +
 	    '<div class="format-select">' +   
             '<select id="video-player-select">' +
 	            '<option selected="selected" value=" "> </option>' +
