@@ -360,7 +360,7 @@ WaterLevelsMimic.prototype.resizeStopped = function(width, height) {
  * @param shadeCallback runs a callback function after the shade animation has completed
  */
 WaterLevelsMimic.prototype.toggleWindowShade = function(shadeCallback) {
-	if(shadeCallback && typeof(shadeCallback) === "function") {
+	if (shadeCallback && typeof(shadeCallback) === "function") {
 	    this.$widget.find(".window-content").slideToggle('fast');
 	    this.$widget.find(".window-header").toggleClass("window-header-shade", "slide",function(){
             shadeCallback();
@@ -838,7 +838,7 @@ Widget.prototype.generateBox = function(boxId) {
  * @param shadeCallback runs a callback function after the shade animation has completed
  */
 Widget.prototype.toggleWindowShade = function(shadeCallback) {
-	if(shadeCallback && typeof(shadeCallback) === "function") {
+	if (shadeCallback && typeof(shadeCallback) === "function") {
 	    this.$widget.find(".window-content").slideToggle('fast');
 	    this.$widget.find(".window-header").toggleClass("window-header-shade", "slide",function(){
             shadeCallback();
@@ -2983,7 +2983,7 @@ CameraWidget.prototype.destroy = function() {
  * @param shadeCallback runs a callback function after the shade animation has completed
  */
 CameraWidget.prototype.toggleWindowShade = function(shadeCallback) {
-	if(shadeCallback && typeof(shadeCallback) === "function") {
+	if (shadeCallback && typeof(shadeCallback) === "function") {
 	    this.$widget.find(".window-content").slideToggle('fast');
 	    this.$widget.find(".window-header").toggleClass("window-header-shade", "slide",function(){
             shadeCallback();
