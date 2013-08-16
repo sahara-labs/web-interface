@@ -123,7 +123,7 @@
 }
 
 .ui-resizable-se {
-	z-index: -1 !important;
+	z-index: 0 !important;
 }
 /******************************************************************************
  ** Tab Windows                                                              **
