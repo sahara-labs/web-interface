@@ -354,10 +354,26 @@ WaterLevelsMimic.prototype.resizeStopped = function(width, height) {
     this.resized(width, height);
 };
 
-WaterLevelsMimic.prototype.toggleWindowShade = function() {
-	this.$widget.find(".window-content").slideToggle('fast');
-    this.$widget.find(".window-header").toggleClass("window-header-shade", "slide");
-    this.$widget.css("width", this.$widget.width());
+/**
+ * Shades the Mimic widget which hides the widget contents only showing the title.
+ *
+ * @param shadeCallback runs a callback function after the shade animation has completed
+ */
+WaterLevelsMimic.prototype.toggleWindowShade = function(shadeCallback) {
+	if(shadeCallback && typeof(shadeCallback) === "function") {
+	    this.$widget.find(".window-content").slideToggle('fast');
+	    this.$widget.find(".window-header").toggleClass("window-header-shade", "slide",function(){
+            shadeCallback();
+	    });
+	    this.$widget.css("width", this.$widget.width());
+    }
+    else
+    {
+	    this.$widget.find(".window-content").slideToggle('fast');
+	    this.$widget.find(".window-header").toggleClass("window-header-shade", "slide");
+        this.$widget.css("width", this.$widget.width());
+    }
+
     this.window.shaded = !this.window.shaded;
     this.storeState();
     
@@ -818,11 +834,23 @@ Widget.prototype.generateBox = function(boxId) {
 };
 /**
  * Shades the widget which hides the widget contents only showing the title.
+ *
+ * @param shadeCallback runs a callback function after the shade animation has completed
  */
-Widget.prototype.toggleWindowShade = function() {
-	this.$widget.find(".window-content").slideToggle('fast');
-    this.$widget.find(".window-header").toggleClass("window-header-shade", "slide");
-    this.$widget.css("width", this.$widget.width());
+Widget.prototype.toggleWindowShade = function(shadeCallback) {
+	if(shadeCallback && typeof(shadeCallback) === "function") {
+	    this.$widget.find(".window-content").slideToggle('fast');
+	    this.$widget.find(".window-header").toggleClass("window-header-shade", "slide",function(){
+            shadeCallback();
+	    });
+	    this.$widget.css("width", this.$widget.width());
+    }
+    else
+    {
+	    this.$widget.find(".window-content").slideToggle('fast');
+	    this.$widget.find(".window-header").toggleClass("window-header-shade", "slide");
+        this.$widget.css("width", this.$widget.width());
+    }
     this.window.shaded = !this.window.shaded;
     this.storeState();
 };
@@ -838,9 +866,12 @@ Widget.MAX_EXPANDED_HEIGHT = 500;
  * position on the interface. 
  */
 Widget.prototype.toggleWindowExpand = function() {
+    thiz = this;
     /* Prevents expanding of a shaded widget */
     if (this.window.shaded === true) {
-        this.toggleWindowShade();
+        this.toggleWindowShade(function() {
+            thiz.toggleWindowExpand();
+        });
     }
     else
     {
@@ -2946,10 +2977,25 @@ CameraWidget.prototype.destroy = function() {
     Widget.prototype.destroy.call(this);
 };
 
-CameraWidget.prototype.toggleWindowShade = function() {
-	this.$widget.find(".window-content").slideToggle('fast');
-    this.$widget.find(".window-header").toggleClass("window-header-shade", "slide");
-    this.$widget.css("width", this.$widget.width());
+/**
+ * Shades the Camera widget which hides the widget contents only showing the title.
+ *
+ * @param shadeCallback runs a callback function after the shade animation has completed
+ */
+CameraWidget.prototype.toggleWindowShade = function(shadeCallback) {
+	if(shadeCallback && typeof(shadeCallback) === "function") {
+	    this.$widget.find(".window-content").slideToggle('fast');
+	    this.$widget.find(".window-header").toggleClass("window-header-shade", "slide",function(){
+            shadeCallback();
+	    });
+	    this.$widget.css("width", this.$widget.width());
+    }
+    else
+    {
+	    this.$widget.find(".window-content").slideToggle('fast');
+	    this.$widget.find(".window-header").toggleClass("window-header-shade", "slide");
+        this.$widget.css("width", this.$widget.width());
+    }
     this.window.shaded = !this.window.shaded;
     this.storeState();
     
