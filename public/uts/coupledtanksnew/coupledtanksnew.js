@@ -866,7 +866,7 @@ Widget.MAX_EXPANDED_HEIGHT = 500;
  * position on the interface. 
  */
 Widget.prototype.toggleWindowExpand = function() {
-    thiz = this;
+    var thiz = this;
     /* Prevents expanding of a shaded widget */
     if (this.window.shaded === true) {
         this.toggleWindowShade(function() {
