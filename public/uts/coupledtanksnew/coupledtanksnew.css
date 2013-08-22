@@ -19,6 +19,9 @@
 	height: 1000px;
 }
 
+.ui-icon-gripsmall-diagonal-se {
+    background-position: -34px -179px !important;
+}
 /* ----------------------------------------------------------------------------
  * --- Common Styling                                                       ---
  * ---------------------------------------------------------------------------- */                        
@@ -71,7 +74,7 @@
     top: -7px;
     left: 10px;
     padding-right: 10px;
-    color: #777;
+    color: #666;
 }
 
 .window-header .ui-icon {
@@ -125,6 +128,7 @@
 .ui-resizable-se {
 	z-index: 0 !important;
 }
+
 /******************************************************************************
  ** Tab Windows                                                              **
  ******************************************************************************/
@@ -190,7 +194,6 @@
 	color: #CDCDCD;
 	font-weight: bold;
 }
-
 
 /******************************************************************************
  ** Display Manager                                                          **
@@ -374,13 +377,51 @@
 	margin: 5px 8px;
 }
 
-.graph-label-text{
+.graph-label .slide {
+    margin: 2px;
+    height: 12px;
+    width: 12px;
+    border-radius: 15px;	
+}
+
+.graph-label .switch {
+    height: 17px;
+    width: 35px;
+}
+
+.graph-label-text {
 	float: left;
 	margin-right: 5px;
 	color: #777777;
+    font-size: 12px;
+    cursor: pointer;
 }
 
-.graph-label .switch{
+#graph-label-ts-t1-in .on {
+    background-color: #FF67E1;
+}
+
+#graph-label-ts-t1-to-t2 .on {
+    background-color: #00C5E0;
+}
+
+#graph-label-ts-t2-out .on {
+    background-color: #FF9C1F;
+}
+
+#graph-label-ts-l1 .on {
+    background-color: #F8EF10;	
+}
+
+#graph-label-ts-l2 .on {
+    background-color: #FC4141;
+}
+
+#graph-label-ts-sp .on {
+    background-color: #7B67E2;
+}
+
+.graph-label .switch {
     float: left !important;
     margin-top: -3px !important;	
 }
@@ -450,7 +491,7 @@
     transform: rotate(270deg);
     -ms-transform: rotate(270deg);
     -webkit-transform: rotate(270deg);
-    left: -24px;
+    left: -20px;
 }
 
 .graph-bottom-axis-label {
@@ -606,6 +647,60 @@
 .metro-container p {
     font-size: 11px;
 }
+
+.no-flash-container {
+    height: 100%;
+    background: #2B2B2B;
+    border: solid 1px #C0C0C0;
+    border-top: none;
+    text-align: center;
+}
+
+.no-flash-button {
+    width: 60%;
+    height: 20%;
+    text-align: left;
+    cursor: pointer;
+}
+
+.no-flash-button-text {
+    position: absolute;
+    top: 32%;
+    left: 24%;
+    color: #e4e4e4;
+    font-size: 15px;
+    text-shadow: 1px 1px 1px #000;
+}
+
+.no-flash-button-text:hover {
+    color: #fff;
+}
+
+.no-flash-image {
+    height: 98%;
+    padding: 0% 2%;
+    margin: 1%;
+    position: relative;
+    background-color: #B81519;
+    border: solid 1px #999;
+    top: 140%;
+    left: 7%;
+    border-radius: 4px;
+}
+
+.no-flash-image:hover {
+    background-color: #CF181D;   
+}
+
+.no-flash-substring {
+    color: #a7a7a7;
+    font-size: 10px;
+    padding: 5%;
+    text-align: justify;
+    position: absolute;
+    bottom: 28px;
+}
+
 /******************************************************************************
  ** Slider                                                                   **
  ******************************************************************************/
@@ -1133,7 +1228,6 @@
 #data-logging .data-icon-XLSX {
     background-position: -39px 0px;
 }
-
 
 /* ----------------------------------------------------------------------------
  * --- Coupled Tanks specific styles                                        ---

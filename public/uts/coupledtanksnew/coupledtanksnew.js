@@ -11,7 +11,7 @@
  * ============================================================================ */
 
 /**
- * This object that controls the interface.
+ * This object controls the interface.
  * 
  * @param id container to add this interface to
  */
@@ -239,9 +239,11 @@ WaterLevelsMimic.prototype.init = function() {
 		this.dataVars[i] = this.$widget.find("#mimic-" + i + " span");
 	}
 
+	/* Enable dragging. */
+	this.enableDraggable();
+
 	/* Enable resizing. */
 	this.enableResizable(324, 309, true);
-	this.enableDraggable();
 };
 
 WaterLevelsMimic.prototype.getHTML = function() {    	
@@ -381,6 +383,12 @@ WaterLevelsMimic.prototype.toggleWindowShade = function(shadeCallback) {
     {
     	this.$widget.css('height', 'auto');
         this.$widget.css("padding-bottom", "0%");
+
+        /* Changing shaded icon */
+        this.$widget.find(".window-shade").toggleClass('ui-icon-minus ui-icon-triangle-1-s');
+
+        /* Disable resizing when shaded */
+        this.$widget.find('.ui-resizable-handle').css('display', 'none');
     }
     else
     {
@@ -394,6 +402,11 @@ WaterLevelsMimic.prototype.toggleWindowShade = function(shadeCallback) {
             this.$widget.css('height', 'auto');
             this.$widget.css("padding-bottom", "0%");
         }
+        /* Changing shaded icon */
+        this.$widget.find(".window-shade").toggleClass('ui-icon-minus ui-icon-triangle-1-s');
+
+        /* Enable resizing */
+        this.$widget.find('.ui-resizable-handle').css('display', 'block');
     }
 };
 
@@ -498,7 +511,8 @@ PIDControl.prototype.init = function() {
 	        .keypress(function(e) {
 	            if (e.keyCode == 13) thiz.applyClick();
 	        });
-	
+
+	/* Enable dragging. */
 	this.enableDraggable();
 };
 
@@ -851,6 +865,26 @@ Widget.prototype.toggleWindowShade = function(shadeCallback) {
 	    this.$widget.find(".window-header").toggleClass("window-header-shade", "slide");
         this.$widget.css("width", this.$widget.width());
     }
+
+    if (this.window.shaded != true)
+    {
+    	this.$widget.css("height", 'auto');
+    	
+    	/* Changing shaded icon */
+        this.$widget.find(".window-shade").toggleClass('ui-icon-minus ui-icon-triangle-1-s');
+
+        /* Disable resizing when shaded */
+        this.$widget.find('.ui-resizable-handle').css('display', 'none');
+    }
+    else
+    {
+    	/* Changing shaded icon */
+        this.$widget.find(".window-shade").toggleClass('ui-icon-minus ui-icon-triangle-1-s');
+
+        /* Enable resizing */
+        this.$widget.find('.ui-resizable-handle').css('display', 'block');
+    }
+
     this.window.shaded = !this.window.shaded;
     this.storeState();
 };
@@ -866,7 +900,8 @@ Widget.MAX_EXPANDED_HEIGHT = 500;
  * position on the interface. 
  */
 Widget.prototype.toggleWindowExpand = function() {
-    thiz = this;
+
+    var thiz = this;
     /* Prevents expanding of a shaded widget */
     if (this.window.shaded === true) {
         this.toggleWindowShade(function() {
@@ -890,7 +925,10 @@ Widget.prototype.toggleWindowExpand = function() {
                 left: this.window.left,
                 top:  this.window.top,
                 zIndex: this.window.zin
-            });
+            });	
+
+            /* Changing expanded icon */
+            this.$widget.find(".window-expand").toggleClass('ui-icon-arrow-4-diag ui-icon-newwin'); 
         }
         else
         {
@@ -931,6 +969,9 @@ Widget.prototype.toggleWindowExpand = function() {
                 top: 100,
                 zIndex: zin + 100
             });
+
+            /* Changing expanded icon */
+            this.$widget.find(".window-expand").toggleClass('ui-icon-arrow-4-diag ui-icon-newwin');
         }
 
         this.$widget.toggleClass("window-expanded");
@@ -973,7 +1014,7 @@ Widget.prototype.enableDraggable = function() {
 	this.$widget.draggable({
         snap: true,
         snapTolerance: 5,
-        stack: '.window-wrapper',
+        stack: '.window-wrapper, .tab-wrapper',
         increaseZindexOnmousedown: true,
         distance: 10,
         handle: '.draggable-header',
@@ -1163,8 +1204,9 @@ DisplayManager.prototype.init = function() {
 	this.$widget = this.generateBox('display-manager');
     this.$widget.find(".window-close").hide();
 
-    this.enableDraggable();
-    
+	/* Enable dragging. */
+	this.enableDraggable();
+
     /* Shade the display manager if shaded cookie is undefined */
     if (this.window.shaded === undefined) this.toggleWindowShade();
 
@@ -1190,6 +1232,13 @@ DisplayManager.prototype.init = function() {
 	    thiz.$widget.find(".button .animated")
             .removeClass("off")
             .addClass("on");
+            
+        thiz.$widget.css({
+            'top': 155,
+            'left': -194
+        });
+
+        thiz.toggleWindowShade();
     });
     
     if (this.window.shaded === undefined) this.toggleWindowShade();
@@ -1364,7 +1413,8 @@ TabbedWidget.prototype.init = function() {
 	    if   (thiz.parentManager) thiz.parentManager.toggleWidget(thiz.title);
         else  thiz.destroy();
 	});
-	
+
+	/* Enable dragging. */
 	this.enableDraggable();
 };
 
@@ -1411,8 +1461,10 @@ TabbedWidget.prototype.consume = function(data) {
  * 
  * @param id identifer of clicked tab
  */
+
 TabbedWidget.prototype.tabClicked = function(id) {
     this.tabChanged = true;
+
     this.destroyCurrentTab();
     
     var thiz = this, params = { }, i;
@@ -1544,11 +1596,15 @@ DataLogging.prototype.init = function() {
 
     /* Draw UI. */
     this.$widget = this.generateBox(this.id);
-    this.enableDraggable();
+
+	/* Enable dragging. */
+	this.enableDraggable();
+
+    /* Enable resizing */
     this.enableResizable(185, 100);
-    
+
     var thiz = this;
-    
+
     /* Event handlers. */
     this.$widget.find("#data-enable").click(function() { thiz.toggleLogging(); });
     
@@ -1903,7 +1959,7 @@ GraphWidget.prototype.init = function() {
 
 	/* Enable dragging. */
 	this.enableDraggable();
-	
+
 	/* Enable resizing. */
 	this.enableResizable(484, 300);
 };
@@ -1927,9 +1983,6 @@ GraphWidget.prototype.getHTML = function() {
 		        "       <div id='graph-label-" + i + "' class='switch graph-label-enable'>" +
         		"		    <div class='animated slide on'></div>" +
         		"       </div>" +
-				"		<div class='graph-label-color-box'>" +
-				"			<div class='graph-label-color-line' style='background-color:" + this.dataFields[i].color + "'></div>" +
-				"		</div>" +
 				"	</div>";
 	}
 	html += "</div>";
@@ -2761,8 +2814,9 @@ CameraWidget.prototype.init = function() {
     
 	this.$widget = this.generateBox('camera-coupled-tanks');
 
+	/* Enable dragging. */
 	this.enableDraggable();
-	
+
 	this.$widget.find('.format-select').find('select').change(function() {
 	    thiz.undeploy();
         thiz.deploy($(this).val());
@@ -2917,19 +2971,34 @@ CameraWidget.prototype.getSwfHtml = function() {
 	 				'width="' +  this.videoWidth  + '" height="' + this.videoHeight + '">' +
 		        '<param name="movie" value="' + 'this.urls.swf' + '"/>' +
 		        '<param name="wmode" value="opaque" />' +
-		        '<a href="http://www.adobe.com/go/getflash">' +
-		        	'<img src="http://www.adobe.com/images/shared/download_buttons/get_flash_player.gif" ' +
-		        			'alt="Get Adobe Flash player"/>' +
-		        '</a>' +
+		        '<div class="no-flash-container">' +
+                    '<div class="no-flash-button">' +
+		                '<a href="http://www.adobe.com/go/getflash">' +
+		        	        '<img class="no-flash-image" src="/uts/coupledtanksnew/images/flash-icon.png"' +
+		        			    'alt="Get Adobe Flash player"/>' +
+		        			'<span class="no-flash-button-text">Video requires Adobe Flash Player</span>' +
+		                '</a>' +
+                    '</div>' +
+                    '<p class="no-flash-substring">If you do not wish to install Adobe flash player ' +
+                        'you can try another video format using the drop down box labeled "Format".</p>' +
+		        '</div>' +
 		    '</object>'
 		:                  // Internet Explorer
 			'<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000"  width="' + this.videoWidth + 
 			        '" height="' + this.videoHeight + '"  id="camera-swf-movie">' +
 				'<param name="movie" value="' + this.urls.swf + '" />' +
 				'<param name="wmode" value="opaque" />' +
-				'<a href="http://www.adobe.com/go/getflash">' +
-					'<img src="http://www.adobe.com/images/shared/download_buttons/get_flash_player.gif" alt="Get Adobe Flash player"/>' +
-				'</a>' +
+		        '<div class="no-flash-container">' +
+                    '<div class="no-flash-button">' +
+		                '<a href="http://www.adobe.com/go/getflash">' +
+		        	        '<img class="no-flash-image" src="/uts/coupledtanksnew/images/flash-icon.png"' +
+		        			    'alt="Get Adobe Flash player"/>' +
+		        			'<span class="no-flash-button-text">Video requires Adobe Flash Player</span>' +
+		                '</a>' +
+                    '</div>' +
+                    '<p class="no-flash-substring">If you do not wish to install Adobe flash player ' +
+                        'you can try another video format using the drop down box labeled "Format".</p>' +
+		        '</div>' +
 			'</object>'
 		);
 };
@@ -2993,8 +3062,10 @@ CameraWidget.prototype.toggleWindowShade = function(shadeCallback) {
     else
     {
 	    this.$widget.find(".window-content").slideToggle('fast');
-	    this.$widget.find(".window-header").toggleClass("window-header-shade", "slide");
         this.$widget.css("width", this.$widget.width());
+
+        /* Changing shaded icon */
+	    this.$widget.find(".window-header").toggleClass("window-header-shade", "slide");
     }
     this.window.shaded = !this.window.shaded;
     this.storeState();
@@ -3002,6 +3073,20 @@ CameraWidget.prototype.toggleWindowShade = function(shadeCallback) {
     if (this.window.shaded === true)
     {
     	this.$widget.css("height", 'auto');
+        
+        /* Changing shaded icon */
+        this.$widget.find(".window-shade").toggleClass('ui-icon-minus ui-icon-triangle-1-s');
+        
+        /* Disable resizing when shaded */
+        this.$widget.find('.ui-resizable-handle').css('display', 'none');
+    }
+    else
+    {
+        /* Changing shaded icon */
+        this.$widget.find(".window-shade").toggleClass('ui-icon-minus ui-icon-triangle-1-s');
+
+        /* Enable resizing */
+        this.$widget.find('.ui-resizable-handle').css('display', 'block');
     }
 };
 
