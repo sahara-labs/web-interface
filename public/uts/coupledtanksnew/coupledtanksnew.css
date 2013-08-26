@@ -67,6 +67,7 @@
     display: inline-block;
     background-repeat: no-repeat;
 	background-image: url('/uts/coupledtanksnew/images/icons.png');
+    opacity: 0.8;
 }
 
 .window-title {
@@ -83,8 +84,8 @@
 }
 
 .window-header .ui-icon, .tab-wrapper-controls .ui-icon {
-	border: 1px solid #CCCCCC;
-	box-shadow: 0 0 2px #CCCCCC;
+	border: 1px solid #ddd;
+	box-shadow: 0 0 2px #ddd;
 	cursor: pointer;
 }
 
@@ -541,10 +542,13 @@
 
 #camera-coupled-tanks .window-content {
 	padding: 0;
+    background: #242424;
+    border-bottom: solid 1px #868686;
 }
 
 #camera-coupled-tanks .video-player {
-	background-color: #333333;
+	background-color: #333;
+    border-bottom: 1px solid #858585;
 }
 
 #camera-coupled-tanks .video-placeholder {
@@ -552,14 +556,6 @@
 	font-size: 11pt;
 	text-align: center;
 	padding-top: 90px;
-}
-
-#camera-coupled-tanks .format-select-label {
-	float: right;
-	width: 40px;
-	margin: 10px 4px;
-	font-size: 0.8em;
-	color: #777777;
 }
 
 #camera-coupled-tanks .format-select select {
@@ -586,7 +582,7 @@
     height: 25px;
     overflow: hidden;
     background: url('/uts/coupledtanksnew/images/arrow-down.png') no-repeat right #F3F3F3;
-    border: 1px solid #ccc;
+    border: 1px solid #ddd;
     border-radius: 4px;
 }
 
@@ -1086,7 +1082,7 @@
     width: 40px;
     margin: 10px 4px;
     font-size: 0.8em;
-    color: #777777;
+    color: #ddd;
 }
 
 #data-controls {

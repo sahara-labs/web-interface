@@ -243,7 +243,7 @@ WaterLevelsMimic.prototype.init = function() {
 	this.enableDraggable();
 
 	/* Enable resizing. */
-	this.enableResizable(324, 309, true);
+	this.enableResizable(286, 259, true);
 };
 
 WaterLevelsMimic.prototype.getHTML = function() {    	
@@ -348,6 +348,11 @@ WaterLevelsMimic.prototype.resized = function(width, height) {
     this.boxWidth = width;
     this.boxHeight = height;
     
+    this.$widget.find("#mimic-bg").css({
+                'min-height': 0,
+                'min-width': 0
+           });
+      
     /* realigns the bottom border */
     this.$widget.css({"padding-bottom":"8.5%"});
 };
@@ -392,15 +397,17 @@ WaterLevelsMimic.prototype.toggleWindowShade = function(shadeCallback) {
     }
     else
     {
-        if (typeof this.boxHeight != "undefined")
-        {
-            this.$widget.css('height', this.boxHeight);
-            this.$widget.css("padding-bottom", "8.5%");
-        }
-        else
+
+        if (typeof this.boxHeight === 'undefined')
         {
             this.$widget.css('height', 'auto');
             this.$widget.css("padding-bottom", "0%");
+        }
+        else
+        {
+        	this.$widget.css('height', this.boxHeight);
+            this.$widget.css("padding-bottom", "8.5%");
+            console.log('It exists: ' + this.boxheight);
         }
         /* Changing shaded icon */
         this.$widget.find(".window-shade").toggleClass('ui-icon-minus ui-icon-triangle-1-s');
@@ -1221,7 +1228,8 @@ DisplayManager.prototype.init = function() {
             {
 	            thiz.widgets[i].parentManager.toggleWidget(thiz.widgets[i].title);
 	        }
-
+	        
+            delete thiz.widgets[i].boxHeight;
             thiz.widgets[i].window = { };
             thiz.widgets[i].storeState();
             thiz.widgets[i].destroy();
@@ -3031,6 +3039,7 @@ CameraWidget.prototype.resized = function(width, height) {
        width: width - CameraWidget.VID_WIDTH_DIFF,
        height: height - CameraWidget.VID_HEIGHT_DIFF
     });
+    this.$widget.css("padding-bottom","0.8%");
 };
 
 CameraWidget.prototype.resizeStopped = function(width, height) {
