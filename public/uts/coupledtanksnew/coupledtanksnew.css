@@ -548,7 +548,7 @@
 
 #camera-coupled-tanks .video-player {
 	background-color: #333;
-    border-bottom: 1px solid #858585;
+    border-bottom: 1px solid #464646;
 }
 
 #camera-coupled-tanks .video-placeholder {
@@ -561,7 +561,7 @@
 #camera-coupled-tanks .format-select select {
     color: #777777;
     text-shadow: 1px 1px 1px #FFF;
-    width: 110px;
+    width: 150px;
     padding: 5px;
     font-size: 12px;
     line-height: 1.2;
@@ -1397,6 +1397,7 @@
     border: solid 1px #686868;
     margin: 5px;
     position: absolute;
+    box-shadow: 0px 2px 4px #ccc;
 }
 
 #water-levels-mimic #water-tube-t1 {
@@ -1417,6 +1418,7 @@
     position: absolute;
     bottom: 0.5%;
     left: 33.5%;
+    box-shadow: 0px 2px 4px #BDBDBD;
 }
 
 #water-levels-mimic #water-reservoir .level {
@@ -1457,6 +1459,7 @@
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e4f5fc', endColorstr='#2ab0ed',GradientType=0 ); /* IE6-8 */	
     position: absolute;
     border: solid 1px #467fa5;
+    box-shadow: 0px 2px 4px #CCC;
 }
 
 #water-levels-mimic .vertical-tube {
@@ -1472,6 +1475,7 @@
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e4f5fc', endColorstr='#2ab0ed',GradientType=1 ); /* IE6-8 */
     position: absolute;
     border: solid 1px #467fa5;
+    box-shadow: 2px 0px 4px #CCC;    
 }
 
 #water-levels-mimic .mimic-pipe-t1-t2 {
@@ -1496,7 +1500,7 @@
 }
 
 #water-levels-mimic .mimic-pipe-long {
-    height: 67%;
+    height: 66.7%;
     width: 2.5%;
     bottom: 26%;
     right: 95.5%;
@@ -1589,18 +1593,21 @@
 	border: 1px solid #686868;
 	padding: 5px;
 	z-index: 1;
+	box-shadow: 0px 2px 1px #DDD;
 }
 
 #water-levels-mimic #mimic-l1 {
     top: 58%;
     right: 50.4%;
     width: 16.9%;
+    box-shadow: none;
 }
 
 #water-levels-mimic #mimic-l2 {
     top: 58%;
     left: 78.2%;
     width: 16.9%;
+    box-shadow: none;
 }
 
 #water-levels-mimic #mimic-t1-in {

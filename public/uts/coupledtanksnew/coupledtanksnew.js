@@ -249,7 +249,6 @@ WaterLevelsMimic.prototype.init = function() {
 WaterLevelsMimic.prototype.getHTML = function() {    	
 	var i = 0, html =
         '<div id="mimic-bg">' +
-            '<div class="vertical-tube mimic-pipe-long"></div>' +
             '<div class="vertical-tube mimic-pipe-short"></div>' +
             '<div class="vertical-tube mimic-pipe-t2-out"></div>' +
             '<div class="horizontal-tube mimic-pipe-t1-t2"></div>' +
@@ -268,6 +267,7 @@ WaterLevelsMimic.prototype.getHTML = function() {
             '<img src="/uts/coupledtanksnew/images/mimic-bottom-left-elbow.png" class="mimic-bottom-elbow-left-image" />' :
             '<div class="horizontal-tube mimic-elbow-top-right"></div>' +
             '<div class="horizontal-tube mimic-elbow-bottom-left"></div>' ) +
+            '<div class="vertical-tube mimic-pipe-long"></div>' +
             '<div id="water-tube-t1" class="waterTube waterBackground">' +
                 '<div class="level gradient"></div>' +
             '</div>' +
