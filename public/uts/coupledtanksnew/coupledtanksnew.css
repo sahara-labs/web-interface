@@ -1323,17 +1323,54 @@
 /******************************************************************************
  ** PID settings                                                             **
  ******************************************************************************/
- 
+#controls-tabs .tab-content {
+    background: #F7F7F7;
+}
+
 #controls-tabs #pid-control {
 	position: relative;
 	top: -11px;
 }
- 
+
+.pid-sp-input {
+    position: absolute;
+    top: 25px;
+    left: -5px;
+    border: 1px solid #AAA;	
+}
+
+.pid-sp-mm {
+    position: absolute;
+    top: 53px;
+    left: 50px;
+    font-size: 11px;
+}
+
 #pid-settings-sp {
-	float: none !important;
+    position: absolute;
+    top: 10px;
+    left: 0px;
 	margin: 7px !important;
 }
- 
+
+.pid-kp-div {
+    position: absolute;
+    top: 15px;
+    left: 90px;	
+}
+
+.pid-ki-div {
+    position: absolute;
+    top: 50px;
+    left: 90px;
+}
+
+.pid-kd-div {
+    position: absolute;
+    top: 85px;
+    left: 90px;
+}
+
 #pid-settings div {
 	float: left;
 	margin: 5px 0 5px -30px;
@@ -1355,7 +1392,9 @@
 
 #pid-send {
 	display: block;
-	float: right;
+    position: absolute;
+    right: -5px;
+    top: 85px;
 }
 
 /******************************************************************************

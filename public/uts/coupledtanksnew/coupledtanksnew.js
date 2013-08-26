@@ -527,18 +527,18 @@ PIDControl.prototype.getHTML = function() {
 		'<div id="pid-settings" class="saharaform">' +
             '<div id="pid-settings-sp">' + 
         		'<label for="pid-sp">Setpoint:</label>' +
-        		'<input id="pid-sp" type="text" name="setpoint" disabled="disabled" tabindex="1" />' +
-        		'&nbsp;&nbsp;mm' +
+        		'<input id="pid-sp" class="pid-sp-input" type="text" name="setpoint" disabled="disabled" tabindex="1" />' +
+        		'<span class="pid-sp-mm">(mm)</span>' +
         	'</div>' +
-        	'<div>' + 
+        	'<div class="pid-kp-div">' + 
         		'<label for="pid-kp">K<span>p</span>:</label>' +
         		'<input id="pid-kp" type="text" name="kp" disabled="disabled" tabindex="2" />' +
         	'</div>' +
-        	'<div>' + 
+        	'<div class="pid-ki-div">' + 
         		'<label for="pid-ki">K<span>i</span>:</label>' +
         		'<input id="pid-ki" type="text" name="ki" disabled="disabled" tabindex="3" />' +
         	'</div>' +
-        	'<div>' + 
+        	'<div class="pid-kd-div">' + 
         		'<label>K<span>d</span>:</label>' +
         		'<input id="pid-kd" type="text" name="kd" disabled="disabled" tabindex="4" />' +
         	'</div>' +
