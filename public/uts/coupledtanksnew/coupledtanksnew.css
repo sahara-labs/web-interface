@@ -1368,6 +1368,7 @@
 
 #water-levels-mimic .window-content {
 	height: 100%;
+    background: #f7f7f7;
 }
 
 #mimic-bg {
