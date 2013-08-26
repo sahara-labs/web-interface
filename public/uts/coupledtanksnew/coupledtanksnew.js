@@ -407,7 +407,6 @@ WaterLevelsMimic.prototype.toggleWindowShade = function(shadeCallback) {
         {
         	this.$widget.css('height', this.boxHeight);
             this.$widget.css("padding-bottom", "8.5%");
-            console.log('It exists: ' + this.boxheight);
         }
         /* Changing shaded icon */
         this.$widget.find(".window-shade").toggleClass('ui-icon-minus ui-icon-triangle-1-s');
