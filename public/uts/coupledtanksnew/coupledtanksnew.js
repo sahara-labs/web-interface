@@ -269,13 +269,13 @@ WaterLevelsMimic.prototype.getHTML = function() {
             '<div class="horizontal-tube mimic-elbow-top-right"></div>' +
             '<div class="horizontal-tube mimic-elbow-bottom-left"></div>' ) +
             '<div id="water-tube-t1" class="waterTube waterBackground">' +
-                '<div class="level .gradient"></div>' +
+                '<div class="level gradient"></div>' +
             '</div>' +
             '<div id="water-tube-t2" class="waterTube waterBackground">' +
-                '<div class="level .gradient"></div>' +
+                '<div class="level gradient"></div>' +
             '</div>' +
             '<div id="water-reservoir" class="waterBackground">' +
-                '<div class="level .gradient"></div>' +
+                '<div class="level gradient"></div>' +
             '</div>';
 
 	for (i in this.precision)
@@ -2958,13 +2958,12 @@ CameraWidget.prototype.getHTML = function() {
                 'Using Metro?' +
             '</div>' : '' ) +
 	    '<div class="format-select">' +   
-            '<select id="video-player-select">' +
-	            '<option selected="selected" value=" "> </option>' +
+            '<select id="video-player-select" class="gradient">' +
+	            '<option selected="selected" value=" ">Select Format</option>' +
                 '<option value="swf">SWF</option>' +
                 '<option value="mjpeg">M-JPEG</option>' +
             '</select>' +
-        '</div>' +
-        '<div class="format-select-label">Format:</div>'
+        '</div>'
 	);
 };
 
@@ -2986,7 +2985,7 @@ CameraWidget.prototype.getSwfHtml = function() {
 		                '</a>' +
                     '</div>' +
                     '<p class="no-flash-substring">If you do not wish to install Adobe flash player ' +
-                        'you can try another video format using the drop down box labeled "Format".</p>' +
+                        'you can try another video format using the drop down box below.</p>' +
 		        '</div>' +
 		    '</object>'
 		:                  // Internet Explorer
@@ -3003,7 +3002,7 @@ CameraWidget.prototype.getSwfHtml = function() {
 		                '</a>' +
                     '</div>' +
                     '<p class="no-flash-substring">If you do not wish to install Adobe flash player ' +
-                        'you can try another video format using the drop down box labeled "Format".</p>' +
+                        'you can try another video format using the drop down box below.</p>' +
 		        '</div>' +
 			'</object>'
 		);
