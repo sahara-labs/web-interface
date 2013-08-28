@@ -1483,21 +1483,23 @@ TabbedWidget.prototype.consume = function(data) {
  */
 
 TabbedWidget.prototype.tabClicked = function(id) {
-    this.tabChanged = true;
+    if (!$('#' + id).hasClass('tab-active')){
+        this.tabChanged = true;
 
-    this.destroyCurrentTab();
+        this.destroyCurrentTab();
     
-    var thiz = this, params = { }, i;
+        var thiz = this, params = { }, i;
     
-    /* Seach for the new tab index. */
-    for (i = 0; i < this.tabIds.length; i++) if (this.tabIds[i] == id) break; 
+        /* Seach for the new tab index. */
+        for (i = 0; i < this.tabIds.length; i++) if (this.tabIds[i] == id) break; 
     
-    /* Post the change to the server. */
-    params[this.modeVar] = i;
-    this.postControl(this.modeAction, params, function(data) {
+        /* Post the change to the server. */
+        params[this.modeVar] = i;
+        this.postControl(this.modeAction, params, function(data) {
             thiz.tabChanged = false;
             thiz.consume(data);
-    });
+        });
+    }
 };
 
 /**
