@@ -549,6 +549,7 @@
 #camera-coupled-tanks .video-player {
 	background-color: #333;
     border-bottom: 1px solid #464646;
+    box-shadow: 1px 3px 10px #0C0C0C;
 }
 
 #camera-coupled-tanks .video-placeholder {
@@ -729,10 +730,11 @@
 }
 
 .slider-post {
-	position: absolute;
-	border: 1px solid #AAAAAA;
-	background-color: #EEEEEE;
-	border-radius: 5px;
+    position: absolute;
+    border: 1px solid #666;
+    box-shadow: inset 0px 2px 4px #C7C7C7;
+    background-color: #fff;
+    border-radius: 5px;
 }
 
 .slider-post-vertical {
@@ -744,8 +746,8 @@
 
 .slider-post-horizontal {
     left: 6px;
-	top: 25px;
-	height: 10px;
+	top: 23px;
+	height: 12px;
 	width: 100%;
 }
 
@@ -889,8 +891,9 @@
 
 .slider-knob-horizontal .slider-knob-back {
 	width: 15px;
-	height: 20px;
+	height: 17px;
 	border-radius: 5px 5px 0 0;
+	border-top: 3px solid #7C7C7C;
 }
 
 .slider-knob-horizontal .slider-knob-slice-0 {
@@ -957,7 +960,7 @@
 }
 
 .slider-text-horizontal {
-	margin-top: 70px;
+	margin-top: 80px;
 }
 
 .slider-text label {
@@ -1740,34 +1743,6 @@
     height: 5.5%;
     border: 0;
     z-index: 0;
-}
-
-#water-levels-mimic .spin {
-    -webkit-animation: spin 1.5s infinite linear;
-    -moz-animation: spin 1.5s infinite linear;
-    -ms-animation: spin 1.5s infinite linear;
-    -o-animation: spin 1.5s infinite linear;
-    animation: spin 1.5s infinite linear;
-}
-
-@-webkit-keyframes spin {
-    to { -webkit-transform: rotate(360deg); }
-}
-
-@-moz-keyframes spin {
-    to { -moz-transform: rotate(360deg); }
-}
-
-@-ms-keyframes spin {
-    to { -ms-transform: rotate(360deg); }
-}
-
-@-o-keyframes spin {
-    to { -o-transform: rotate(360deg); }
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
 }
 
 /******************************************************************************

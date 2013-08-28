@@ -285,15 +285,29 @@ WaterLevelsMimic.prototype.getHTML = function() {
 	}
     
 
-    if ( $.browser.msie && $.browser.version < 10)
+    if ($.browser.msie)
     {
         this.spinner = 'mimic-ie-background-spinner';
         this.spinGif = '<img src="/uts/coupledtanksnew/images/mimic-ie-spinner.gif" border="0" alt="spinner" class="spinner" />';
     }
     else 
     {
-        this.spinner = 'mimic-spinner';   
+        this.spinner = 'mimic-spinner';
         this.spinGif = '';
+        
+        var degree = 0, timer;
+        rotate();
+
+        function rotate() {
+            $(".spin").css({ 'WebkitTransform': 'rotate(' + degree + 'deg)'});  
+            $(".spin").css({ '-moz-transform': 'rotate(' + degree + 'deg)'}); 
+            $(".spin").css({ '-o-animation': 'rotate(' + degree + 'deg)'}); 
+            $(".spin").css({ 'animation': 'rotate(' + degree + 'deg)'});                          
+            timer = setTimeout(function() {
+                ++degree; rotate();
+            },5);
+        }
+        rotate();
     }
         
 	html +=
@@ -3203,7 +3217,6 @@ GlobalError.prototype.destroy = function() {
     this.$container.find(".window-wrapper, .tab-wrapper").removeClass("global-error-blur");
     Widget.prototype.destroy.call(this);
 };
-
 
 /* ============================================================================
  * == Utility functions                                                      ==
