@@ -2165,7 +2165,7 @@ GraphWidget.STIPPLE_WIDTH = 10;
  */
 GraphWidget.prototype.drawDependantScales = function() {
 	var i, j,
-		off = Math.abs(this.graphOffset * this.height);
+		off = this.height - Math.abs(this.graphOffset * this.height);
 
 	this.ctx.save();
 	this.ctx.beginPath();
