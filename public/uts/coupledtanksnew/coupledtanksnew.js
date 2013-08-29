@@ -225,6 +225,8 @@ function WaterLevelsMimic($container, title) {
 	/** The box height. */
 	this.boxHeight = undefined;
 	
+	/** Handle from setInterval animation. */
+	this.animationInterval = undefined; 
 };
 
 WaterLevelsMimic.prototype = new Widget;
@@ -244,6 +246,17 @@ WaterLevelsMimic.prototype.init = function() {
 
 	/* Enable resizing. */
 	this.enableResizable(286, 259, true);
+
+	/* Animation for pump image. */
+    var angle = 0;
+    this.animationInterval = setInterval(function() {
+        angle += 5;
+        $(".spin").css({ '-webkit-transform': 'rotate(' + angle + 'deg)'});  
+        $(".spin").css({ '-moz-transform': 'rotate(' + angle + 'deg)'}); 
+        $(".spin").css({ '-o-transform': 'rotate(' + angle + 'deg)'}); 
+        $(".spin").css({ 'transform': 'rotate(' + angle + 'deg)'});                          
+    }, 50);
+	
 };
 
 WaterLevelsMimic.prototype.getHTML = function() {    	
@@ -255,18 +268,22 @@ WaterLevelsMimic.prototype.getHTML = function() {
             '<div class="horizontal-tube mimic-pipe-t3"></div>' +
             '<div class="horizontal-tube mimic-pipe-t1-in"></div>' +
             ($.browser.msie && $.browser.version < 10 ? 
-            '<img src="/uts/coupledtanksnew/images/mimic-top-left-elbow.png" class="mimic-top-elbow-left-image" />' : 
-            '<div class="horizontal-tube mimic-elbow-top-left"></div>' ) +
+                    '<img src="/uts/coupledtanksnew/images/mimic-top-left-elbow.png" class="mimic-top-elbow-left-image" />' 
+                : 
+                    '<div class="horizontal-tube mimic-elbow-top-left"></div>' 
+            ) +
             '<div class="horizontal-tube mimic-cap-vertical mimic-cap-t1-t2-leftCap"></div>' +
             '<div class="horizontal-tube mimic-cap-vertical mimic-cap-t1-t2-rightCap"></div>' +
             '<div class="horizontal-tube mimic-cap-vertical mimic-cap-t3"></div>' +
             '<div class="vertical-tube mimic-cap-horizontal mimic-cap-t1-in"></div>' +
             '<div class="vertical-tube mimic-cap-horizontal mimic-cap-t2-out"></div>' +
             ($.browser.msie && $.browser.version < 10 ?
-            '<img src="/uts/coupledtanksnew/images/mimic-top-right-elbow.png" class="mimic-top-elbow-right-image" />' +
-            '<img src="/uts/coupledtanksnew/images/mimic-bottom-left-elbow.png" class="mimic-bottom-elbow-left-image" />' :
-            '<div class="horizontal-tube mimic-elbow-top-right"></div>' +
-            '<div class="horizontal-tube mimic-elbow-bottom-left"></div>' ) +
+                    '<img src="/uts/coupledtanksnew/images/mimic-top-right-elbow.png" class="mimic-top-elbow-right-image" />' +
+                    '<img src="/uts/coupledtanksnew/images/mimic-bottom-left-elbow.png" class="mimic-bottom-elbow-left-image" />' 
+                :
+                    '<div class="horizontal-tube mimic-elbow-top-right"></div>' +
+                    '<div class="horizontal-tube mimic-elbow-bottom-left"></div>' 
+            ) +
             '<div class="vertical-tube mimic-pipe-long"></div>' +
             '<div id="water-tube-t1" class="waterTube waterBackground">' +
                 '<div class="level gradient"></div>' +
@@ -283,44 +300,19 @@ WaterLevelsMimic.prototype.getHTML = function() {
 		html += '<div id="mimic-' + i + '" class="diagramInfo"><span>' + zeroPad(0, this.precision[i]) + '</span>&nbsp;' + 
 				this.units[i] + '</div>';
 	}
-    
-
-    if ($.browser.msie)
-    {
-        this.spinner = 'mimic-ie-background-spinner';
-        this.spinGif = '<img src="/uts/coupledtanksnew/images/mimic-ie-spinner.gif" border="0" alt="spinner" class="spinner" />';
-    }
-    else 
-    {
-        this.spinner = 'mimic-spinner';
-        this.spinGif = '';
-        
-        var degree = 0, timer;
-
-
-        function rotate() {
-            $(".spin").css({ 'WebkitTransform': 'rotate(' + degree + 'deg)'});  
-            $(".spin").css({ '-moz-transform': 'rotate(' + degree + 'deg)'}); 
-            $(".spin").css({ '-o-animation': 'rotate(' + degree + 'deg)'}); 
-            $(".spin").css({ 'animation': 'rotate(' + degree + 'deg)'});                          
-            timer = setTimeout(function() {
-                ++degree; rotate();
-            },5);
-        }
-        rotate();
-    }
         
 	html +=
             '<img src="/uts/coupledtanksnew/images/mimic-arrow-t1.png" border="0" alt="valve" class="mimic-arrow-t1" />'+            
             '<img src="/uts/coupledtanksnew/images/mimic-arrow-t2.png" border="0" alt="valve" class="mimic-arrow-t2" />'+            
             '<img src="/uts/coupledtanksnew/images/mimic-arrow-t3.png" border="0" alt="valve" class="mimic-arrow-t3" />'+            
             '<img src="/uts/coupledtanksnew/images/mimic-valve.png" border="0" alt="valve" class="mimic-valve" />'+
-            '<img src="/uts/coupledtanksnew/images/' + this.spinner + '.png" border="0" alt="spinner" class="spinner spin" />'+
-            this.spinGif +
+            '<img src="/uts/coupledtanksnew/images/' + ($.browser.msie ? 'mimic-ie-background-spinner' : 'mimic-spinner') + '.png" border="0" alt="spinner" class="spinner spin" />'+
+            ($.browser.msie ? 
+                    '<img src="/uts/coupledtanksnew/images/mimic-ie-spinner.gif" border="0" alt="spinner" class="spinner" />' 
+                : '') +
         '</div>';
 
     return html;
-    
 };
 
 WaterLevelsMimic.prototype.consume = function(data) {
@@ -428,6 +420,11 @@ WaterLevelsMimic.prototype.toggleWindowShade = function(shadeCallback) {
         /* Enable resizing */
         this.$widget.find('.ui-resizable-handle').css('display', 'block');
     }
+};
+
+WaterLevelsMimic.prototype.destroy = function() {
+    clearInterval(this.animationInterval);
+    Widget.prototype.destroy.call(this);
 };
 
 /* ============================================================================
