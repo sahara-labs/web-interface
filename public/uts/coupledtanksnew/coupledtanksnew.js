@@ -296,7 +296,7 @@ WaterLevelsMimic.prototype.getHTML = function() {
         this.spinGif = '';
         
         var degree = 0, timer;
-        rotate();
+
 
         function rotate() {
             $(".spin").css({ 'WebkitTransform': 'rotate(' + degree + 'deg)'});  
