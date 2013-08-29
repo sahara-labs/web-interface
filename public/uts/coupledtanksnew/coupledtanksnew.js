@@ -225,6 +225,8 @@ function WaterLevelsMimic($container, title) {
 	/** The box height. */
 	this.boxHeight = undefined;
 	
+	/** Handle from setInterval animation. */
+	this.animationInterval = undefined; 
 };
 
 WaterLevelsMimic.prototype = new Widget;
@@ -244,6 +246,17 @@ WaterLevelsMimic.prototype.init = function() {
 
 	/* Enable resizing. */
 	this.enableResizable(286, 259, true);
+
+	/* Animation for pump image. */
+    var angle = 0;
+    this.animationInterval = setInterval(function() {
+        angle += 5;
+        $(".spin").css({ '-webkit-transform': 'rotate(' + angle + 'deg)'});  
+        $(".spin").css({ '-moz-transform': 'rotate(' + angle + 'deg)'}); 
+        $(".spin").css({ '-o-transform': 'rotate(' + angle + 'deg)'}); 
+        $(".spin").css({ 'transform': 'rotate(' + angle + 'deg)'});                          
+    }, 50);
+	
 };
 
 WaterLevelsMimic.prototype.getHTML = function() {    	
@@ -294,20 +307,6 @@ WaterLevelsMimic.prototype.getHTML = function() {
     {
         this.spinner = 'mimic-spinner';
         this.spinGif = '';
-        
-        var degree = 0, timer;
-
-
-        function rotate() {
-            $(".spin").css({ 'WebkitTransform': 'rotate(' + degree + 'deg)'});  
-            $(".spin").css({ '-moz-transform': 'rotate(' + degree + 'deg)'}); 
-            $(".spin").css({ '-o-animation': 'rotate(' + degree + 'deg)'}); 
-            $(".spin").css({ 'animation': 'rotate(' + degree + 'deg)'});                          
-            timer = setTimeout(function() {
-                ++degree; rotate();
-            },5);
-        }
-        rotate();
     }
         
 	html +=
@@ -428,6 +427,11 @@ WaterLevelsMimic.prototype.toggleWindowShade = function(shadeCallback) {
         /* Enable resizing */
         this.$widget.find('.ui-resizable-handle').css('display', 'block');
     }
+};
+
+WaterLevelsMimic.prototype.destroy = function() {
+    clearInterval(this.animationInterval);
+    Widget.prototype.destroy.call(this);
 };
 
 /* ============================================================================
