@@ -470,18 +470,18 @@ function PIDControl($container)
    
    /** CSS left position for guidance and validation messages. */
    this.toolTopLeft = {
-       sp: 135,
-       kp: 100,
-       ki: 210,
-       kd: 100
+       sp: 75,
+       kp: 195,
+       ki: 195,
+       kd: 195
    };
    
    /** CSS top values for guidance and validation messages. */ 
    this.toolTipTop = {
-       sp: 3,
-       kp: 40,
-       ki: 40,
-       kd: 80
+       sp: 40,
+       kp: 18,
+       ki: 50,
+       kd: 86
    };
 }
 PIDControl.prototype = new Widget;
