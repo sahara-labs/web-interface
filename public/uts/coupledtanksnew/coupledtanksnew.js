@@ -704,7 +704,7 @@ function Widget($container, title, icon)
 	    top:      undefined, // Top position of this window
 	    zin:      undefined, // Z-Index of this window 
 	    shaded:   undefined, // Whether this window is shaded
-	    expanded: undefined, // Whether this window is expanded
+	    expanded: undefined // Whether this window is expanded
 	};
 };
 
@@ -2051,7 +2051,7 @@ GraphWidget.prototype.getHTML = function() {
             "       <div id='" + this.id + "-graph-autoscale' class='switch'>" +
             "          <div class='animated slide " + (this.isAutoscaling ? "on" : "off") + "'></div>" +
             "       </div>" +
-            "   </div>";
+            "   </div>" +
 	        "</div>";
 
 	return html;
