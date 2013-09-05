@@ -1,43 +1,28 @@
 <?php
-$cams = new Sahara_Session_Element_Cameras($this->rigClient);
-echo $cams;
 
-$rdpApplet = new Sahara_Session_Element_RdpApplet($this->rigClient, array(
-	'cl1' => 'SP',
-	'cl2' => 'LO'
-));
-echo $rdpApplet;
+/* Coupled Tanks interface implementation. */
+$this->headScript()->appendFile($this->baseUrl('uts/coupledtanksnew/coupledtanksnew.js'));
+$this->headLink()->appendStylesheet($this->baseUrl('uts/coupledtanksnew/coupledtanksnew.css'));
 
-$files = new Sahara_Session_Element_HomeFile($this->rigClient);
-echo $files;
+/* Canvas compatability implementation for Internet Explorer 8 and earlier. */
+$this->headScript()->appendFile($this->baseUrl('js/excanvas.js'),
+        'text/javascript',
+        array('conditional' => 'lt IE 9')
+);
 
+/* Touch events punching to mouse events. */
+$this->headScript()->appendFile($this->baseUrl('uts/coupledtanksnew/jquery.ui.touch-punch.js'));
 ?>
 
-<div style="margin: 10px auto 0; width: 550px; padding:20px">
-   Please be aware that due to an irreparable hardware fault - that the following 
-   limitations exist for the level sensors:
-   <ul style="margin: 10px 0 10px 20px">
-   <?php if ($this->rig == 'Coupled Tanks 1'): ?>
-       <li>Maximum Level Tank 1:  261mm</li>
-       <li>Maximum Level Tank 2:  250mm</li>
-   <?php else: ?>
-       <li>Maximum Level Tank 1:  130mm</li>
-       <li>Maximum Level Tank 2:  200mm</li>
-   <?php endif; ?>
-   </ul>
-
-
-   Also, as a reminder, the pumps have a minimum flow rate that is required for
-   the head to overcome the effect of gravity, this is normal and not a fault:
-   <ul style="margin: 10px 0 10px 20px">
-   <?php if ($this->rig == 'Coupled Tanks 1'): ?>
-       <li>Minimum Pump Flow: 1.3 L/min (initially), can then be decreased to 1.0 L/min.</li>
-   <?php else: ?>
-       <li>Minimum Pump Flow: 1.4 L/min (initially), can then be decreased to 1.2 L/min.</li>
-   <?php endif; ?>
-   </ul>
+<div id="coupled-tanks-anchor">
+    <!-- Interface goes here! -->
 </div>
 
-<div style="height:50px">
-</div>
 
+<script type="text/javascript">
+$(document).ready(function() {
+	var inter = new WaterLevelControl("coupled-tanks-anchor");
+	inter.setup();
+	inter.run();
+});
+</script>

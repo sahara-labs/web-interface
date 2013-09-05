@@ -47,7 +47,7 @@ switch ($this->userRole)
         
     case Sahara_Acl::RESEARCH:
         $menu = array(
-            'Research' => array('controller' => 'research', 'action' => 'index'),
+            'Research Projects' => array('controller' => 'research', 'action' => 'index'),
             'Rig Selection' => array('controller' => 'queue', 'action' => 'index'),
             'Existing Reservations' => array('controller' => 'bookings', 'action' => 'existing')
         );

@@ -263,7 +263,7 @@ PowerLab.prototype.setMode = function(mode) {
 		this.widgets.push(new LCD(this, "active-power-2",   "Active Power",   "W",   1, "teal-color"));
 		this.widgets.push(new LCD(this, "apparent-power-2", "Apparent Power", "VA",  1, "green-color"));
 		this.widgets.push(new LCD(this, "ln-voltage-2",     "L - N Voltage",  "V",   1, "teal-color"));
-		this.widgets.push(new LCD(this, "reactive-power-2", "Reactive Power", "Var", 2, "red-color"));
+		this.widgets.push(new LCD(this, "reactive-power-2", "Reactive Power", "Var", 1, "red-color"));
 		this.widgets.push(new LCD(this, "line-current-2",   "Line Current",   "A",   3, "red-color"));
 		
 		o = new LCD(this, "active-factor",    "Active Factor",  "Lg",   2, "yellow-color");
@@ -308,8 +308,8 @@ PowerLab.prototype.setMode = function(mode) {
 			else return true;
 		};
 		o.checkRange = function(val) {
-			if      (val < 200) return -1; // INTERLOCK: Value too small
-			else if (val > 260) return 1;  // INTERLOCK: Value too large     
+			if      (val < 230) return -1; // INTERLOCK: Value too small
+			else if (val > 250) return 1;  // INTERLOCK: Value too large     
 			else return 0; // Value in range
 		};
 		this.widgets.push(o);
@@ -329,8 +329,8 @@ PowerLab.prototype.setMode = function(mode) {
 			else return true;
 		};
 		o.checkRange = function(val) {
-			if (val < 45) return -1;     // INTERLOCK: Value too small
-			else if (val > 53) return 1; // INTERLOCK: Value too large
+			if (val < 48) return -1;     // INTERLOCK: Value too small
+			else if (val > 52) return 1; // INTERLOCK: Value too large
 			else return 0;               // Value in range
 		};
 		this.widgets.push(o);
@@ -603,10 +603,10 @@ PowerLab.prototype.requestData = function() {
 		url: "/primitive/json/pc/PowerController/pa/data",
 		cache: false,
 		success: function(packet) {
-			if (typeof packet!= "object") 
+			if (typeof packet != "object") 
 			{
 				/* User is probably logged out. */
-				window.location.reload();
+				setTimeout(function() { thiz.requestData(); }, 10000);
 				return;
 			}
 			
@@ -622,7 +622,7 @@ PowerLab.prototype.requestData = function() {
 			thiz.data = data;
 			for (i in thiz.widgets) thiz.widgets[i].update(data);
 			
-			setTimeout(function() { thiz.requestData(); }, 3000);
+			setTimeout(function() { thiz.requestData(); }, 2000);
 		},
 		error: function() {
 			setTimeout(function() { thiz.requestData(); }, 10000);
@@ -1386,6 +1386,13 @@ UpDownButton.prototype.changeVal = function() {
  */
 UpDownButton.prototype.checkPreconditions = function() { return true; };
 
+/**
+ * Checks if there are any preconditions preventing this buttons values 
+ * being changed. Returns true if the value can successfully be changed,
+ * false otherwise.
+ */
+UpDownButton.prototype.checkPreconditions = function() { return true; };
+
 /** 
  * Checks a value to ensure it is in an acceptable range. Returns 0 if the value 
  * is in range, -1 if the value is less than or at the low limit or 1 if the value
@@ -1658,7 +1665,7 @@ Graphics.prototype.init = function()  {
 			"<div id='graphics-busbar-to-gcb-2' class='graphics v-line'></div>" +
 			"<div id='graphics-busbar-mcb-gcb-2' class='graphics h-line'></div>" +
 			
-			"<div id='graphics-pm1-label-2' class='graphics label-box label-head'>Power Meter 1</div>" +
+			"<div id='graphics-pm1-label-2' class='graphics label-box label-head'>Genset Controller</div>" +
 			"<div id='graphics-pm1-lower-2' class='graphics h-line'></div>" +
 			"<div id='graphics-pm1-lower-to-higher-2' class='graphics v-line'></div>" +
 			"<div id='graphics-pm1-higher-2' class='graphics h-line'></div>" +

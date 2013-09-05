@@ -1564,6 +1564,68 @@
 
 #alarm-list .alarm-led {
 	float: left;
+	margin-right: 10px;
+}
+
+/* ----------------------------------------------------------------------------
+ * -- Alarm indicator.                                                       --
+ * ---------------------------------------------------------------------------- */
+#alarm-indicator {
+	position: absolute;
+	top: 870px;
+	right: 15px;
+	width: 100px;
+}
+
+#alarm-indicator div {
+	float: left;
+}
+
+#alarm-indicator .alarm-text {
+	margin: 0 auto;
+	font-family: ‘Lucida Console’,Monaco,'Bitstream Vera Sans Mono',monospace;
+}
+
+#alarm-indicator .alarm-led {
+	margin: 1px 5px 0 5px;
+}
+
+.alarm-led {
+	position: relative;
+	width: 15px;
+	height: 15px;
+	border-radius: 9px;
+	box-shadow: 0 0 2px #AAA;
+	border: 1px solid #AAA;
+}
+
+.alarm-off {
+	background-color: #CCCCCC;
+	background-image: radial-gradient(circle, #EFEFEF 25%, #AAA);
+	background-image: -moz-radial-gradient(circle, #EFEFEF 25%, #AAA);
+	background-image: -webkit-radial-gradient(circle, #EFEFEF 25%, #AAA);
+	background-image: -o-radial-gradient(circle, #EFEFEF 25%, #AAA);
+	background-image: -ms-radial-gradient(circle, #EFEFEF 25%, #AAA);
+}
+
+.alarm-on {
+	background-color: #F75C5C;
+	border: 1px solid #BB1E1E;	
+}
+
+#alarm-list {
+	list-style: none;
+	padding: 5px;
+}
+
+#alarm-list li {
+	display: block;
+	clear: both;
+	height: 24px;
+}
+
+#alarm-list .alarm-led {
+	float: left;
 	margin-right: 5px;
 }
 

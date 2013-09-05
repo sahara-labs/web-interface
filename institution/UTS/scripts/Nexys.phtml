@@ -1,0 +1,285 @@
+<?php
+/**
+ * SAHARA Web Interface
+ *
+ * User interface to Sahara Remote Laboratory system.
+ *
+ * @license See LICENSE in the top level directory for complete license terms.
+ *
+ * Copyright (c) 2010, University of Technology, Sydney
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of the University of Technology, Sydney nor the names
+ *    of its contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * @author Michael Diponio (mdiponio)
+ * @date 21st February 2010
+ */
+
+$this->headScript()->appendFile($this->baseUrl('uts/nexys/nexys.js'));
+$this->headLink()->appendStylesheet($this->baseUrl('uts/nexys/nexys.css'));
+
+$cam = new Sahara_Session_Element_Cameras($this->rigClient);
+$cam->setDraggable(false);
+
+/* Code upload buttons. */
+$code = new Sahara_Session_Element_MultiButtons($this->rigClient, 'codebutton',
+    array(
+        array(
+        	'title' => 'Program FPGA',
+            'tooltip' => 'Program the FPGA with an uploaded bitstream file.',
+			'icon' => '/uts/nexys/images/program.png',
+            'click' => "$('#bitstreamupload').dialog('open');"
+        ),
+        array(
+        	'title' => 'Program Demo',
+            'tooltip' => 'Program the FPGA with a demonstration program (binary to hexadecimal converter).',
+            'icon' => '/uts/fpga/images/rundemo.png',
+            'click' => "disableFPGAButtons();" .
+                       "resetIO();" .
+            		   "performPrimitiveJSON('NexysController', 'loadDemo', null, checkDemoLoadedStart, 'Loading demo...', false)"
+        )
+    ),
+    array(
+        'orientation' => Sahara_Session_Element_MultiButtons::VERTICAL,
+        'top'         => -45,
+        'left'        => 60,
+        'width'       => 60,
+        'height'      => 60
+    )
+);
+
+/* IO buttons. */
+$io = new Sahara_Session_Element_MultiButtons($this->rigClient, 'io',
+    array(
+        array(
+        	'title'      => '7',
+        	'icon'       => '/uts/nexys/images/push-off.png',
+            'mousedown'  => 'setIO(7)',
+			'mouseup'    => 'setIO(7)',
+            'mouseleave' => 'clearIO(7)'
+        ),
+        array(
+        	'title'      => '6',
+        	'icon'       => '/uts/nexys/images/push-off.png',
+            'mousedown'  => 'setIO(6)',
+			'mouseup'    => 'setIO(6)',
+			'mouseleave' => 'clearIO(6)'
+        ),
+        array(
+        	'title' => '5',
+            'icon'  => '/uts/nexys/images/off.png',
+            'click' => 'setIO(5)'
+        ),
+        array(
+        	'title' => '4',
+        	'icon'  => '/uts/nexys/images/off.png',
+            'click' => 'setIO(4)'
+        ),
+        array(
+        	'title' => '3',
+            'icon'  => '/uts/nexys/images/off.png',
+            'click' => 'setIO(3)'
+        ),
+        array(
+        	'title' => '2',
+        	'icon'  => '/uts/nexys/images/off.png',
+            'click' => 'setIO(2)'
+        ),
+        array(
+        	'title' => '1',
+        	'icon'  => '/uts/nexys/images/off.png',
+            'click' => 'setIO(1)'
+        ),
+        array(
+        	'title' => '0',
+        	'icon'  => '/uts/nexys/images/off.png',
+            'click' => 'setIO(0)'
+        )
+    ),
+    array(
+        'orientation' => Sahara_Session_Element_MultiButtons::HORIZONTAL,
+        'top'         => 0,
+        'left'        => 165,
+        'width'       => 45,
+        'height'      => 60
+    )
+);
+?>
+
+<!-- Information specifying address of button. -->
+<div id='ioaddr' class='overlayelementhide'>Virtual buttons are address 0x00</div>
+
+<!-- Register send form to the board -->
+<div id="registerpanel" class="sessionpanel ui-corner-all leftpush overlayelementhide">
+	<div class="sessionpanelheader">
+		<p>
+			<span class="ui-icon ui-icon-transfer-e-w sessionpanelheadericon"></span>
+			Registers
+		</p>
+	</div>
+	<div id="registercontents">
+		<form id='registerform' onsubmit='registerSubmit();return false;' class='saharaform'>
+			<div>
+				<label for='registeraddr'>Address: </label>
+        		<select id="registeraddr" name="registeraddr">
+        			<option value="0">0x00</option>
+        			<option value="1">0x01</option>
+        			<option value="2">0x02</option>
+        			<option value="3">0x03</option>
+        			<option value="4">0x04</option>
+        			<option value="5">0x05</option>
+        			<option value="6">0x06</option>
+        			<option value="7">0x07</option>
+        			<option value="8">0x08</option>
+        			<option value="9">0x09</option>
+        			<option value="10">0x10</option>
+        			<option value="11">0x11</option>
+        			<option value="12">0x12</option>
+        			<option value="13">0x13</option>
+        			<option value="14">0x14</option>
+        			<option value="15">0x15</option>
+        		</select>
+    		</div>
+    		<div>
+    			<label for='registerval'>Value: </label>
+    			<input type='text' id='registerval' name='registerval' />
+    		</div>
+    		<div>
+    			<button id='registersub' name='registersub' type='submit'>Send</button>
+    		</div>
+    		<div id='registervalidation'></div>
+    	</form>
+	</div>
+</div>
+
+<!-- Operation log. -->
+<div id="operationpanel" class="sessionpanel ui-corner-all leftpush overlayelementhide">
+	<div class="sessionpanelheader">
+		<p>
+			<span class="ui-icon ui-icon-script sessionpanelheadericon"></span>
+			Operations List
+		</p>
+	</div>
+	<div id="operationpanelcontents">
+		<ul id="operationpanellist">
+		</ul>
+	</div>
+</div>
+
+<!--Resources. -->
+<div id="resourcespanel" class="sessionpanel ui-corner-all leftpush overlayelementhide">
+	<div class="sessionpanelheader">
+		<p>
+			<span class="ui-icon ui-icon-folder-open sessionpanelheadericon"></span>
+			Resources
+		</p>
+	</div>
+	<div>
+		<ul>
+			<li><a href='/uts/nexys/resources/Nexys_UserGuide.pdf' target='_blank' class='plaina'>
+					<span class="ui-icon ui-icon-circle-arrow-e sessionpanelheadericon"></span>
+					User Guide
+			</a></li>
+			<li><a href='/uts/nexys/resources/nexys.ucf' target='_blank' class='plaina'>
+				<span class="ui-icon ui-icon-circle-arrow-e sessionpanelheadericon"></span>
+				User Contraints File
+			</a></li>
+		</ul>
+	</div>
+</div>
+
+<?php
+echo $io;
+echo $code;
+echo $cam;
+?>
+
+<!-- Upload form. -->
+<div id="bitstreamupload">
+	<p>Please select the JTAG Bitstream (.bit) file you wish to upload.</p>
+	<ul id="bitstreamuploadinfo" >
+		<li>Compressed bitstreams in .zip and .bit.gz format are also acceptable.</li>
+		<li>Bitstreams must be less than 2Mb in size (2097152 bytes).</li>
+		<li>Do not refresh the page when uploading a bitstream because programming the
+		FPGA will fail.</li>
+	</ul>
+
+	<div id="bitstreamuploaderror" class="ui-state-error ui-corner-all" style="display:none">
+		<p>
+			<span class="ui-icon ui-icon-alert bitstreamuploadicon"></span>
+			<span id="bitstreamuploaderrormessage"></span>
+		</p>
+	</div>
+
+	<div id="bitstreamuploadformdiv">
+		<form id="bitstreamuploadform" method="post" enctype="multipart/form-data"
+		  		action="<?=$this->baseUrl('/batch/torigclient')?>" target="uploadtarget">
+			<input type="hidden" name="MAX_FILE_SIZE" value="2097152" />
+			<input id="bitstreamuploadformfile" name="file" id="file" size="27" type="file" />
+		</form>
+	</div>
+</div>
+
+<iframe id="uploadtarget" name="uploadtarget" src=""></iframe>
+
+
+<script type="text/javascript">
+$(document).ready(function() {
+	/* Programming form. */
+	$("#bitstreamupload").dialog({
+		autoOpen: false,
+		buttons: {
+			'Program': function() {
+				uploadBitStream();
+			},
+			'Cancel': function() {
+				$(this).dialog('close');
+				enableFPGAButtons();
+			}
+		},
+		modal: true,
+		title: 'Program FPGA',
+		width: 400,
+		resizable: false,
+		open: function() {
+			$(".camera object, .camera embed").css("margin-left", "10000px");
+		},
+		close: function() {
+			$(".camera object, .camera embed").css("margin-left", "0px");
+		}
+	});
+
+	/* Init IO form. */
+	initIO('PPSSSSSS');
+
+	/* Register form. */
+	$("#registersub").button();
+
+	/* Initial activity tickle. */
+	initTickle();
+});
+</script>
+
+<div style="height:120px">
+</div>

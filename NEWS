@@ -1,0 +1,4 @@
+2013-05-02 Michael Diponio <michael.diponio@uts.edu.au>
+
+    * The Sahara Labs RDP applet in 'public/applets' has been updated and now
+    correctly works with Java 7 update 21 and Java 6 update 45.
