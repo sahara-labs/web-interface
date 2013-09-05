@@ -1,13 +1,25 @@
 /**
- * Coupled Tanks web interface.
+ * Shake Table web interface.
  * 
  * @author Michael Diponio <michael.diponio@uts.edu.au>
  * @author Jesse Charlton <jesse.charlton@uts.edu.au>
  * @date 1/6/2013
  */
 
+/* ============================================================================ 
+ * == Global variables namespace.                                           ==
+ * ============================================================================ */
+
+function Globals() { };
+
+/** {String} Name of the Rig Client controller this page users. */
+Globals.RC_CONTROLLER = "ShakeTableController";
+
+/** {String} Cookie prefix. */
+Globals.COOKIE_PREFIX = "shake-";
+
 /* ============================================================================
- * == WaterLevelControl.                                                     ==
+ * == Shake Table page control.                                              ==
  * ============================================================================ */
 
 /**
@@ -15,7 +27,7 @@
  * 
  * @param id container to add this interface to
  */
-function WaterLevelControl(id) 
+function ShakeTableControl(id) 
 { 
 	/** Display Manager. */
 	this.display = undefined;
@@ -33,7 +45,7 @@ function WaterLevelControl(id)
 	this.errorDisplay = undefined;
 	
 	/** The number of seconds this graph displays. */
-    this.duration = 300;
+    this.duration = 60;
 
     /** The period in milliseconds. */
     this.period = 100;
@@ -42,52 +54,39 @@ function WaterLevelControl(id)
 /** 
  * Sets up this interface.
  */
-WaterLevelControl.prototype.setup = function() {
-	var o, t;
+ShakeTableControl.prototype.setup = function() {
+	var o;
 	
-	/* Mimic of the system. */
-	this.widgets.push(new WaterLevelsMimic(this.$container,'Water Levels'));
-
 	/* Graph to display tank levels. */
-	o = new GraphWidget(this.$container, "Tank Levels");
-	o.setDataVariable('ts-l1', 'Level 1',  '#fcff00', 0, 350);
-	o.setDataVariable('ts-l2', 'Level 2',  '#ff3b3b', 0, 350);
-	o.setDataVariable('ts-sp', 'Setpoint', '#8c42fb', 0, 350);
-	o.setAxisLabels('Time (s)', 'Level (mm)');
+	o = new GraphWidget(this.$container, "Displacements");
+	o.setDataVariable('disp-graph-1', 'Level 1',  '#fcff00', -60, 60);
+	o.setDataVariable('disp-graph-2', 'Level 2',  '#ff3b3b', -60, 60);
+	o.setDataVariable('disp-graph-3', 'Level 3', '#8c42fb', -60, 60);
+	o.setAxisLabels('Time (s)', 'Displacement (mm)');
 	o.isPulling = false;
 	this.widgets.push(o);
-
-	/* Graph to display flow rates. */
-	o = new GraphWidget(this.$container, "Flow Rates");
-	o.setDataVariable('ts-t1-in',    'Tank 1 In',    '#ff0084', 0, 10);
-	o.setDataVariable('ts-t1-to-t2', 'Tank 1 to 2',  '#00bfff', 0, 10);
-	o.setDataVariable('ts-t2-out',   'Tank 2 Out',   '#f7a516', 0, 10);
-	o.setAxisLabels('Time (s)',   'Flow (L/min)');
-	o.isPulling = false;
-	this.widgets.push(o);	
 
 	/* Add camera to page. */
 	this.widgets.push(new CameraWidget(this.$container, 'Camera', ''));
 
 	/* Controls. */
-	o = new SliderWidget(this.$container, 'Manual', 'manual', 'valve', 'setValve');
-	o.setOrientation(false);
-	o.setLabels('Valve', '%');
+	o = new SwitchWidget(this.$container, "Motor On", "motor", "motor-on", "setMotor");
+	o.setDraggable(true);
+	this.widgets.push(o);
 	
-	t = new TabbedWidget(this.$container, 'Controls', [ o, new PIDControl(this.$container),
-	        new PlaceHolderWidget(this.$container, 'Tank Drain', 'drain', 'Tanks are draining...', 'loading') ], 
-	        'control-mode', 'setManualMode');
-	t.setDimensions(280, 110);
-	t.setToolTips([
-	    'Open loop control, control the inlet valve percentage to regulate the flow of water into ' +
-	            'the tanks.',
-	    'Closed loop control, set proportional-integral-derivative (PID) controller variables to implement a closed' +
-	            ' loop feedback system.',
-	    'Opens an extra tank orifice allowing quick draining of the tanks and a reset of the rig.'
-	]);
-	this.widgets.push(t); 
+	o = new SwitchWidget(this.$container, "Dampening", "coils", "coils-on", "setCoils");
+	o.setDraggable(true);
+	this.widgets.push(o);
 	
-	/* Data file saving. */
+	o = new SliderWidget(this.$container, "Motor", "motor", "motor-speed", "setMotor");
+	o.setOrientation(true);
+	o.setRange(0, 8);
+	o.setPrecision(2);
+	o.setLabels("Freq", "Hz");
+	o.setDimension(167);
+	o.setDraggable(true);
+	this.widgets.push(o);
+	
 	this.widgets.push(new DataLogging(this.$container));
 
 	/* Display manager to allow things to be shown / removed. */
@@ -100,7 +99,7 @@ WaterLevelControl.prototype.setup = function() {
 /** 
  * Runs the interface. 
  */
-WaterLevelControl.prototype.run = function() {
+ShakeTableControl.prototype.run = function() {
 	/* Render the page. */
 	this.display.init();
 
@@ -108,11 +107,11 @@ WaterLevelControl.prototype.run = function() {
 	this.acquireLoop();
 };
 
-WaterLevelControl.prototype.acquireLoop = function() {
+ShakeTableControl.prototype.acquireLoop = function() {
 	var thiz = this;
 
 	$.ajax({
-		url: "/primitive/mapjson/pc/CoupledTanksController/pa/dataAndGraph",
+		url: "/primitive/mapjson/pc/" + Globals.RC_CONTROLLER + "/pa/dataAndGraph",
 		data: {
 		    period: this.period,
 			duration: this.duration,
@@ -134,7 +133,7 @@ WaterLevelControl.prototype.acquireLoop = function() {
  * 
  * @param data data packet
  */
-WaterLevelControl.prototype.processData = function(data) {
+ShakeTableControl.prototype.processData = function(data) {
 	/* A data packet may specify an error so we make need to make this into an 
 	 * error message. */
 
@@ -161,7 +160,7 @@ WaterLevelControl.prototype.processData = function(data) {
  * 
  * @param msg error message
  */
-WaterLevelControl.prototype.errorData = function(msg) {    
+ShakeTableControl.prototype.errorData = function(msg) {    
 	if (!this.dataError)
 	{
 	    /* Going into errored state, display error message. */
@@ -181,488 +180,6 @@ WaterLevelControl.prototype.errorData = function(msg) {
 };
 
 /* ============================================================================
- * == Water Level Mimic                                                      ==
- * ============================================================================ */
-
-/**
- * Creates and controls the Water Levels Mimic widget.
- */
-function WaterLevelsMimic($container, title) {
-
-	Widget.call(this, $container, 'Diagram', 'mimic');
-    
-    /** Identifier of the mimic. */
-	this.id = title.toLowerCase().replace(' ', '-');
-	
-	/** Variables that are displayed on the mimic. */
-	this.dataVars = { };
-
-	/** Display precision for our data variables. */
-	this.precision = {
-		'l1': 1,
-		'l2': 1,
-		't1-in': 1,
-		't2-out': 1,
-		't1-to-t2': 1,
-		'pump-rpm': 0,
-		'valve-actual': 1
-	};
-
-	/** Units for out data variables. */
-	this.units = {
-		'l1': 'mm',
-		'l2': 'mm',
-		't1-in': 'L/min',
-		't2-out': 'L/min',
-		't1-to-t2': 'L/min',
-		'pump-rpm': 'RPM',
-		'valve-actual': '%',	
-	};
-	
-	/** The box width. The box is the outmost container of the widget. */
-	this.boxWidth = undefined;
-	
-	/** The box height. */
-	this.boxHeight = undefined;
-	
-	/** Handle from setInterval animation. */
-	this.animationInterval = undefined; 
-};
-
-WaterLevelsMimic.prototype = new Widget;
-
-WaterLevelsMimic.prototype.init = function() {
-	
-	this.$widget = this.generateBox('water-levels-mimic');
-
-	var i = 0;
-	for (i in this.precision)
-	{
-		this.dataVars[i] = this.$widget.find("#mimic-" + i + " span");
-	}
-
-	/* Enable dragging. */
-	this.enableDraggable();
-
-	/* Enable resizing. */
-	this.enableResizable(286, 259, true);
-
-	/* Animation for pump image. */
-    var angle = 0;
-    this.animationInterval = setInterval(function() {
-        angle += 5;
-        $(".spin").css({ '-webkit-transform': 'rotate(' + angle + 'deg)'});  
-        $(".spin").css({ '-moz-transform': 'rotate(' + angle + 'deg)'}); 
-        $(".spin").css({ '-o-transform': 'rotate(' + angle + 'deg)'}); 
-        $(".spin").css({ 'transform': 'rotate(' + angle + 'deg)'});                          
-    }, 50);
-	
-};
-
-WaterLevelsMimic.prototype.getHTML = function() {    	
-	var i = 0, html =
-        '<div id="mimic-bg">' +
-            '<div class="vertical-tube mimic-pipe-short"></div>' +
-            '<div class="vertical-tube mimic-pipe-t2-out"></div>' +
-            '<div class="horizontal-tube mimic-pipe-t1-t2"></div>' +
-            '<div class="horizontal-tube mimic-pipe-t3"></div>' +
-            '<div class="horizontal-tube mimic-pipe-t1-in"></div>' +
-            ($.browser.msie && $.browser.version < 10 ? 
-                    '<img src="/uts/coupledtanksnew/images/mimic-top-left-elbow.png" class="mimic-top-elbow-left-image" />' 
-                : 
-                    '<div class="horizontal-tube mimic-elbow-top-left"></div>' 
-            ) +
-            '<div class="horizontal-tube mimic-cap-vertical mimic-cap-t1-t2-leftCap"></div>' +
-            '<div class="horizontal-tube mimic-cap-vertical mimic-cap-t1-t2-rightCap"></div>' +
-            '<div class="horizontal-tube mimic-cap-vertical mimic-cap-t3"></div>' +
-            '<div class="vertical-tube mimic-cap-horizontal mimic-cap-t1-in"></div>' +
-            '<div class="vertical-tube mimic-cap-horizontal mimic-cap-t2-out"></div>' +
-            ($.browser.msie && $.browser.version < 10 ?
-                    '<img src="/uts/coupledtanksnew/images/mimic-top-right-elbow.png" class="mimic-top-elbow-right-image" />' +
-                    '<img src="/uts/coupledtanksnew/images/mimic-bottom-left-elbow.png" class="mimic-bottom-elbow-left-image" />' 
-                :
-                    '<div class="horizontal-tube mimic-elbow-top-right"></div>' +
-                    '<div class="horizontal-tube mimic-elbow-bottom-left"></div>' 
-            ) +
-            '<div class="vertical-tube mimic-pipe-long"></div>' +
-            '<div id="water-tube-t1" class="waterTube waterBackground">' +
-                '<div class="level gradient"></div>' +
-            '</div>' +
-            '<div id="water-tube-t2" class="waterTube waterBackground">' +
-                '<div class="level gradient"></div>' +
-            '</div>' +
-            '<div id="water-reservoir" class="waterBackground">' +
-                '<div class="level gradient"></div>' +
-            '</div>';
-
-	for (i in this.precision)
-	{
-		html += '<div id="mimic-' + i + '" class="diagramInfo"><span>' + zeroPad(0, this.precision[i]) + '</span>&nbsp;' + 
-				this.units[i] + '</div>';
-	}
-        
-	html +=
-            '<img src="/uts/coupledtanksnew/images/mimic-arrow-t1.png" border="0" alt="valve" class="mimic-arrow-t1" />'+            
-            '<img src="/uts/coupledtanksnew/images/mimic-arrow-t2.png" border="0" alt="valve" class="mimic-arrow-t2" />'+            
-            '<img src="/uts/coupledtanksnew/images/mimic-arrow-t3.png" border="0" alt="valve" class="mimic-arrow-t3" />'+            
-            '<img src="/uts/coupledtanksnew/images/mimic-valve.png" border="0" alt="valve" class="mimic-valve" />'+
-            '<img src="/uts/coupledtanksnew/images/' + ($.browser.msie ? 'mimic-ie-background-spinner' : 'mimic-spinner') + '.png" border="0" alt="spinner" class="spinner spin" />'+
-            ($.browser.msie ? 
-                    '<img src="/uts/coupledtanksnew/images/mimic-ie-spinner.gif" border="0" alt="spinner" class="spinner" />' 
-                : '') +
-        '</div>';
-
-    return html;
-};
-
-WaterLevelsMimic.prototype.consume = function(data) {
-	var i = 0, t1, t2;
-
-	/* Update labels. */
-	for (i in this.dataVars)  
-	{
-		if (data[i] != undefined) this.dataVars[i].html(zeroPad(data[i], this.precision[i]));
-	}
-
-	/* Animations of water levels. */
-	if (!(data['l1'] == undefined || data['l2'] == undefined))
-	{
-		t1 = data['l1'] / 300 * 100;
-		t2 = data['l2'] / 300 * 100;
-
-		/* A negative tank level might occur if the sensors are out of 
-		 * calibration. */
-		if (t1 < 0) t1 = 0;
-		if (t2 < 0) t2 = 0; 
-
-		this.$widget.find("#water-tube-t1 .level").animate({"height": (100 - t1) + "%"}, 1000);
-		this.$widget.find("#water-tube-t2 .level").animate({"height": (100 - t2) + "%"}, 1000);
-		this.$widget.find("#water-reservoir .level").animate({"height": ((t1 + t2) / 2) + "%"}, 1000);
-	}
-};
-
-WaterLevelsMimic.prototype.destroy = function() {
-	this.dataVars = { };
-
-	Widget.prototype.destroy.call(this);
-};
-
-WaterLevelsMimic.prototype.resized = function(width, height) {
-    this.width = this.width + (width - this.boxWidth);
-    this.height = this.height + (height - this.boxHeight);
-    
-    this.boxWidth = width;
-    this.boxHeight = height;
-    
-    this.$widget.find("#mimic-bg").css({
-                'min-height': 0,
-                'min-width': 0
-           });
-      
-    /* realigns the bottom border */
-    this.$widget.css({"padding-bottom":"8.5%"});
-};
-
-WaterLevelsMimic.prototype.resizeStopped = function(width, height) {
-    this.resized(width, height);
-};
-
-/**
- * Shades the Mimic widget which hides the widget contents only showing the title.
- *
- * @param shadeCallback runs a callback function after the shade animation has completed
- */
-WaterLevelsMimic.prototype.toggleWindowShade = function(shadeCallback) {
-	if (shadeCallback && typeof(shadeCallback) === "function") {
-	    this.$widget.find(".window-content").slideToggle('fast');
-	    this.$widget.find(".window-header").toggleClass("window-header-shade", "slide",function(){
-            shadeCallback();
-	    });
-	    this.$widget.css("width", this.$widget.width());
-    }
-    else
-    {
-	    this.$widget.find(".window-content").slideToggle('fast');
-	    this.$widget.find(".window-header").toggleClass("window-header-shade", "slide");
-        this.$widget.css("width", this.$widget.width());
-    }
-
-    this.window.shaded = !this.window.shaded;
-    this.storeState();
-    
-    if (this.window.shaded === true)
-    {
-    	this.$widget.css('height', 'auto');
-        this.$widget.css("padding-bottom", "0%");
-
-        /* Changing shaded icon */
-        this.$widget.find(".window-shade").toggleClass('ui-icon-minus ui-icon-triangle-1-s');
-
-        /* Disable resizing when shaded */
-        this.$widget.find('.ui-resizable-handle').css('display', 'none');
-    }
-    else
-    {
-
-        if (typeof this.boxHeight === 'undefined')
-        {
-            this.$widget.css('height', 'auto');
-            this.$widget.css("padding-bottom", "0%");
-        }
-        else
-        {
-        	this.$widget.css('height', this.boxHeight);
-            this.$widget.css("padding-bottom", "8.5%");
-        }
-        /* Changing shaded icon */
-        this.$widget.find(".window-shade").toggleClass('ui-icon-minus ui-icon-triangle-1-s');
-
-        /* Enable resizing */
-        this.$widget.find('.ui-resizable-handle').css('display', 'block');
-    }
-};
-
-WaterLevelsMimic.prototype.destroy = function() {
-    clearInterval(this.animationInterval);
-    Widget.prototype.destroy.call(this);
-};
-
-/* ============================================================================
- * == PID Controls                                                           ==
- * ============================================================================ */
-
-/**
- * Creates and controls the PID variables. 
- * 
- * @param $container the container to add this widget to
- */
-function PIDControl($container)
-{
-   Widget.call(this, $container, 'PID', 'pid');
-   
-   /** Whether we have the settings loaded from the server. */
-   this.hasSettings = false;
-   
-   /** Whether the values have been changed and not sent to the server. */
-   this.isChanged = false;
-   
-   /** PID variables. */
-   this.pid = {
-       sp: undefined,  // Set point
-       kp: undefined,  // Kp 
-       ki: undefined,  // Ki
-       kd: undefined   // Kd
-   };
-   
-   /** Input hover state for input hover track. */
-   this.inputHovers = { };
-   
-   /** Guidance messages. */
-   this.guidanceMsgs = {
-       sp: 'Desired water level in millimetres.',
-       kp: 'Proportional gain, a tuning parameter.',
-       ki: 'Integral gain, a tuning parameter.',
-       kd: 'Derivative gain, a tuning parameter.'
-   };
-   
-   /** CSS left position for guidance and validation messages. */
-   this.toolTopLeft = {
-       sp: 75,
-       kp: 195,
-       ki: 195,
-       kd: 195
-   };
-   
-   /** CSS top values for guidance and validation messages. */ 
-   this.toolTipTop = {
-       sp: 40,
-       kp: 18,
-       ki: 50,
-       kd: 86
-   };
-}
-PIDControl.prototype = new Widget;
-
-PIDControl.prototype.init = function() {	
-    var thiz = this, i = 0;
-    
-    /* Reset values. */
-    for (i in this.pid) this.pid[i] = undefined;
-    this.isChanged = false;
-    
-	this.$widget = this.generateBox('pid-control');
-	
-	/* Input field handlers. */
-	this.$widget.find("input")
-	        .focusin(formFocusIn)   // Input entered focus
-	        .focusout(formFocusOut) // Input exited focus
-	        .change(function() {    // Input value modified
-	            if (thiz.validate($(this).attr("id").substr(4), $(this).val()) && !thiz.isChanged)
-	            {
-	                /* Enable the send button. */
-	                thiz.isChanged = true;
-	                $("#pid-send").removeClass("click-button-disabled");
-	            }  
-	        })
-	        .keypress(function(e){
-	            /* Enter pressed. */
-	            if (e.keyCode == 13)  thiz.applyClick();
-	        })      
-	        .hover(function() {     // Mouse hover over field in
-	            var id = $(this).attr("id");
-	            thiz.inputHovers[id] = true;
-	            setTimeout(function() {
-	                if (thiz.inputHovers[id]) thiz.guidance(id.substr(4));
-	            }, 3000);
-	        }, function() {         // Mouse hover over field out
-	            thiz.inputHovers[$(this).attr("id")] = false;
-	        });
-	                
-	
-	$("#pid-send")
-	        .mousedown(function() {
-	            if (thiz.isChanged) $(this).addClass("click-button-active");
-	        })
-	        .mouseup(function() { $(this).removeClass("click-button-active") ; })
-	        .click(function() { thiz.applyClick(); })
-	        .keypress(function(e) {
-	            if (e.keyCode == 13) thiz.applyClick();
-	        });
-
-	/* Enable dragging. */
-	this.enableDraggable();
-};
-
-PIDControl.prototype.getHTML = function() {	
-	return(
-		'<div id="pid-settings" class="saharaform">' +
-            '<div id="pid-settings-sp">' + 
-        		'<label for="pid-sp">Setpoint:</label>' +
-        		'<input id="pid-sp" class="pid-sp-input" type="text" name="setpoint" disabled="disabled" tabindex="1" />' +
-        		'<span class="pid-sp-mm">(mm)</span>' +
-        	'</div>' +
-        	'<div class="pid-kp-div">' + 
-        		'<label for="pid-kp">K<span>p</span>:</label>' +
-        		'<input id="pid-kp" type="text" name="kp" disabled="disabled" tabindex="2" />' +
-        	'</div>' +
-        	'<div class="pid-ki-div">' + 
-        		'<label for="pid-ki">K<span>i</span>:</label>' +
-        		'<input id="pid-ki" type="text" name="ki" disabled="disabled" tabindex="3" />' +
-        	'</div>' +
-        	'<div class="pid-kd-div">' + 
-        		'<label>K<span>d</span>:</label>' +
-        		'<input id="pid-kd" type="text" name="kd" disabled="disabled" tabindex="4" />' +
-        	'</div>' +
-        '</div>' +
-        '<a id="pid-send" class="click-button click-button-disabled" tabindex="5" >Apply</a>' +
-        '<div class="data-blur"></div>' 
-	);
-};
-
-PIDControl.prototype.consume = function(data) {
-	var i = 0;
-	for (i in this.pid)
-	{
-	    /* All packets should have all PID variables. */
-	    if (data[i] == undefined) return;
-	    
-	    if (this.pid[i] != data[i])
-	    {
-	        this.pid[i] = data[i];
-	        $("#pid-" + i).val(data[i]);
-	    }
-	}
-	
-	if (!this.hasSettings)
-	{
-	    this.$widget.find("input").attr("disabled", "");
-	    this.$widget.find(".data-blur").hide();
-	}
-};
-
-/**
- * Validates an entered value. 
- * 
- * @param pVar variable to validate
- * @param val value
- */
-PIDControl.prototype.validate = function(pVar, val) {
-    this.removeMessages();
-    
-    /* Add variables must be numbers. */
-    if (!val.match(/^-?\d+\.?\d*$/))
-    {
-        this.addMessage("pid-validation-" + pVar, "Value must be a number", "error", this.toolTopLeft[pVar], 
-                this.toolTipTop[pVar], "left");
-        return false;
-    }
-
-    var n = parseFloat(val);
-    switch (pVar)
-    {
-    case 'sp':
-        if (n < 0 || n > 300)
-        {
-            this.addMessage("pid-validation-" + pVar, "Setpoint out of range, must be between 0 and 300 mm.", 
-                    "error", this.toolTopLeft[pVar], this.toolTipTop[pVar], "left");
-            return false;
-        }
-        break;
-        
-    case 'kp':
-        /* No validation rules. */
-        break;
-        
-    case 'ki':
-        /* No validation rules. */
-        break;
-        
-    case 'kd':
-        /* No validation rules. */
-        break;
-    }
-
-    return true;
-};
-
-/**
- * Sends PID values if they correctly validate. 
- */
-PIDControl.prototype.applyClick = function() {
-    /* Nothing changed, nothing to send. */
-    if (!this.isChanged) return;
-    
-    /* Validate values. */
-    var data = { }, i = 0, val;
-    for (i in this.pid)
-    {
-        val = $("#pid-" + i).val();
-        if (!this.validate(i, val)) return;
-        
-        data[i] = parseFloat(val);
-    }
-    
-    var thiz = this;
-    this.postControl("setPID", data, function() {
-        thiz.isChanged = false;
-        $("#pid-send").addClass("click-button-disabled");
-    }, function() {
-        
-    });
-};
-
-/**
- * Provides a guidance tooltip.
- * 
- * @param id identifer
- */
-PIDControl.prototype.guidance = function(id) {
-    this.removeMessages();
-    this.addMessage("pid-guidance-" + id, this.guidanceMsgs[id], "info", this.toolTopLeft[id], 
-            this.toolTipTop[id], "left");
-};
-
-/* ============================================================================
  * == Base widget                                                            ==
  * ============================================================================ */
 
@@ -676,7 +193,7 @@ PIDControl.prototype.guidance = function(id) {
  * @param title the widgets title
  * @param icon the widgets box icon 
  */
-function Widget($container, title, icon) 
+function Widget($container, title, icon)
 {
 	/** The jQuery object of the container the widget is attached to. */
 	this.$container = $container;
@@ -826,11 +343,12 @@ Widget.prototype.removeMessages = function() {
  * 
  * @param boxId ID of the box
  * @param title the title of the widget
+ * @param classes additional classes to add to the box
  * @return jQuery node of the generated box that has been appended to the page
  */
-Widget.prototype.generateBox = function(boxId) {
+Widget.prototype.generateBox = function(boxId, classes) {
     var $w = this.$container.append(
-      "<div class='window-wrapper' id='" + boxId + "'>" +
+      "<div class='window-wrapper " + (classes ? classes : "") + "' id='" + boxId + "'>" +
           "<div class='window-header'>" +
               "<span class='window-icon icon_"+ this.icon + "'></span>" +
               "<span class='window-title'>" + this.title + "</span>" +
@@ -1112,7 +630,7 @@ Widget.prototype.enableResizable = function(minWidth, minHeight, preserveAspectR
  */
 Widget.prototype.postControl = function(action, params, responseCallback, errorCallback) {
     $.ajax({
-        url: "/primitive/mapjson/pc/CoupledTanksController/pa/" + action,
+        url: "/primitive/mapjson/pc/" + Globals.RC_CONTROLLER + "/pa/" + action,
         data: params,
         success: function(data) {
             if (responseCallback != null) responseCallback(data);
@@ -1875,11 +1393,11 @@ function GraphWidget($container, title, chained)
 	
 	/** Width of the graph, including the padding whitespace but excluding the
 	 *  border width. */
-	this.width = 400;
+	this.width = 580;
 
 	/** Height of the graph, including the padding whitespace but excluding the
 	 *  border width and border title. */
-	this.height = 175;
+	this.height = 300;
 
 	/** The minimum expected graphed value. A value smaller than this will be
 	 *  clipped. */
@@ -1907,7 +1425,7 @@ function GraphWidget($container, title, chained)
 	this.dataFields = { };
 
 	/** The number of seconds this graph displays. */
-	this.duration = 300;
+	this.duration = 60;
 
 	/** The period in milliseconds. */
 	this.period = 100;
@@ -1941,8 +1459,8 @@ GraphWidget.prototype = new Widget;
 
 GraphWidget.prototype.init = function() {
     /* Size reset. */
-    this.width = 400;
-    this.height = 175;
+    this.width = 580;
+    this.height = 300;
     
 	this.$widget = this.generateBox(this.id + '-box');
 
@@ -2468,6 +1986,15 @@ function SliderWidget($container, title, icon, dataVar, postAction)
      *  on orientation in pixels. */
     this.dimension = 250;
     
+    /** Whether the slider is draggable. */
+    this.isDraggable = false;
+    
+    /** Whether the slider is resizable. */
+    this.isResizable = false;
+    
+    /** Precision of label. */
+    this.precision = 1;
+    
     /** Label for slider. */
     this.label = '';
     
@@ -2524,6 +2051,9 @@ SliderWidget.prototype.init = function() {
         .focusin(formFocusIn)
         .focusout(formFocusOut)
         .change(function() { thiz.handleTextBoxChange($(this).val()); });    
+    
+    if (this.isDraggable) this.enableDraggable();
+    if (this.isResizable) this.enableResizable();
 };
 
 /**
@@ -2551,7 +2081,7 @@ SliderWidget.prototype.sliderClicked = function(x, y) {
     
     /* Update display. */
     this.moveTo();
-    this.$input.val(zeroPad(this.val, 1));
+    this.$input.val(zeroPad(this.val, this.precision));
     
     /* Send results. */
     this.send();
@@ -2600,7 +2130,7 @@ SliderWidget.prototype.slideMove = function(x, y) {
     if (this.val > this.max) this.val = this.max;
     
     /* Display update. */
-    this.$input.val(zeroPad(this.val, 1));
+    this.$input.val(zeroPad(this.val, this.precision));
     this.moveTo();
     
     /* Position tracking. */
@@ -2664,16 +2194,17 @@ SliderWidget.prototype.handleTextBoxChange = function(val) {
 };
 
 SliderWidget.prototype.getHTML = function() {
-    var i, s = (Math.floor((this.max - this.min) / SliderWidget.NUM_SCALES)),
+    var numScales =  this.max - this.min > 10 ? SliderWidget.NUM_SCALES : this.max - this.min,
+        i, s = (Math.floor((this.max - this.min) / numScales)),
         html = 
         "<div class='slider-outer' style='" + (this.isVertical ? "height" : "width") + ":" + this.dimension + "px'>";
             
     /* Slider scale. */
     html += "<div class='slider-scales slider-scales-" + (this.isVertical ? "vertical" : "horizontal") + "'>";
-    for (i = 0; i <= SliderWidget.NUM_SCALES; i++)
+    for (i = 0; i <= numScales; i++)
     {
         html += "<div class='slider-scale' style='" + (this.isVertical ? "top" : "left") + ":" + 
-                        (this.dimension / SliderWidget.NUM_SCALES * i) + "px'>" +
+                        (this.dimension / numScales * i) + "px'>" +
                     "<span class='ui-icon ui-icon-arrowthick-1-" + (this.isVertical ? "w" : "n") + "'></span>" +
                     "<span class='slider-scale-value'>" + (this.isVertical ? this.max - s * i : s * i) + "</span>" +
                 "</div>";
@@ -2728,7 +2259,7 @@ SliderWidget.prototype.consume = function(data) {
     {
         this.val = data[this.dataVar];
         this.moveTo();
-        this.$input.val(zeroPad(this.val, 1));
+        this.$input.val(zeroPad(this.val, this.precision));
     }
 };
 
@@ -2764,6 +2295,14 @@ SliderWidget.prototype.setDimension = function(dimension) {
     this.dimension = dimension;
 };
 
+/** Sets the precision of the text input of the slider.
+ * 
+ * @param precision number digits after decimal point
+ */
+SliderWidget.prototype.setPrecision = function(precision) {
+    this.precision = precision;
+};
+
 /**
  * Sets the labels for graphed variables.
  * 
@@ -2773,6 +2312,134 @@ SliderWidget.prototype.setDimension = function(dimension) {
 SliderWidget.prototype.setLabels = function(label, units) {
     this.label = label;
     this.units = units;
+};
+
+/**
+ * Sets whether the slider is draggable.
+ * 
+ * @param draggable true if draggable
+ */
+SliderWidget.prototype.setDraggable = function(draggable) {
+    this.isDraggable = draggable;
+};
+
+/**
+ * Sets whether the slider is resizable. 
+ * 
+ * @param resizable true if resizable
+ */
+SliderWidget.prototype.setResizable = function(resizable) {
+    this.isResizable = resizable;
+};
+
+/* ============================================================================
+ * == Switch Widget.                                                         ==
+ * ============================================================================ */
+
+/**
+ * Switch widget which provides a toggable switch.
+ * 
+ * @param {jQuery} $container the container to add this widget to
+ * @param {String} label the label of the switch
+ * @param {String} icon box icon
+ * @param {String} dataVar data variable that this switch is toggling
+ * @param {String} postAction the action to post to 
+ */
+function SwitchWidget($container, label, icon, dataVar, postAction)
+{
+    Widget.call(this, $container, '', icon);
+    
+    /** {String} The identifier of this slider. */
+    this.id = "switch-" + label.toLowerCase().replace(' ', '-');
+    
+    /** {String} The label of the switch. */
+    this.label = label;
+    
+    /** {String} The data variable this slider is manipulating. */
+    this.dataVar = dataVar;
+    
+    /** {String} Action to send request to. */
+    this.postAction = postAction;
+    
+    /** {boolean} The state of the switch. */
+    this.val = undefined;
+    
+    /** {boolean} Whether the value has been changed by user action. */
+    this.isChanged = false;
+    
+    /** {boolean} Whether this widget is to be draggable. */
+    this.isDraggable = false;
+}
+SwitchWidget.prototype = new Widget;
+
+SwitchWidget.prototype.init = function() {
+    this.$widget = this.generateBox(this.id, "switch-box");
+    
+    var thiz = this;
+    this.$widget.find(".switch-label, .switch").click(function() { thiz.clicked(); });
+    
+    if (this.isDraggable) this.enableDraggable();
+};
+
+SwitchWidget.prototype.getHTML = function() {
+    return '<div class="switch-container">' +
+               '<label class="switch-label">' + this.label + ':</label>' +
+               '<div class="switch">' +
+                   '<div class="animated slide"></div>' +
+               '</div>' +
+            '</div>';
+};
+
+SwitchWidget.prototype.consume = function(data) {
+    if (!(data[this.dataVar] === undefined || data[this.dataVar] === this.val || this.isChanged))
+    {
+        this.val = data[this.dataVar];
+        this.setDisplay(this.val);
+    }
+};
+
+/**
+ * Event handler to be called when the switch is clicked.
+ */
+SwitchWidget.prototype.clicked = function() {
+    this.isChanged = true;
+    this.val = !this.val;
+    this.setDisplay(this.val);
+    
+    var thiz = this, params = { };
+    params[this.dataVar] = this.val ? 'true' : 'false';
+    this.postControl(
+        this.postAction,
+        params,
+        function() {
+            thiz.isChanged = false;
+        }
+     );
+};
+
+/**
+ * Sets the display value. 
+ * 
+ * @param on whether the display should be on or off
+ */
+SwitchWidget.prototype.setDisplay = function(on) {
+    if (on)
+    {
+        this.$widget.find(".switch .slide").addClass("on");
+    }
+    else
+    {
+        this.$widget.find(".switch .slide").removeClass("on");
+    }
+};
+
+/**
+ * Whether this widget is draggable.
+ * 
+ * @param draggable true if is draggable
+ */
+SwitchWidget.prototype.setDraggable = function(draggable) {
+    this.isDraggable = draggable;
 };
 
 /* ============================================================================
@@ -3221,9 +2888,6 @@ GlobalError.prototype.destroy = function() {
  * == Utility functions                                                      ==
  * ============================================================================ */
 
-/** @define {String} The prefix for Coupled Tanks cookies. */
-var COOKIE_PREFIX = "ct-";
-
 /**
  * Gets the value of the specified cookie. 
  * 
@@ -3234,7 +2898,7 @@ function getCookie(cookie)
 {
     /* All cookies for the Coupled Tanks are prefixed. This is to differenate 
      * with rig interfaces that may have the same identifiers but different layouts. */
-    cookie = COOKIE_PREFIX + cookie;
+    cookie = Globals.COOKIE_PREFIX + cookie;
     
     var pos = document.cookie.indexOf(cookie), end = document.cookie.indexOf(';', pos + 1);
     if (end < 0) end = document.cookie.length;
@@ -3249,7 +2913,7 @@ function getCookie(cookie)
  */
 function setCookie(cookie, value)
 {
-    document.cookie = COOKIE_PREFIX + cookie + '=' + value + ';path=/;max-age=' + (60 * 60 * 24 * 365);
+    document.cookie = Globals.COOKIE_PREFIX + cookie + '=' + value + ';path=/;max-age=' + (60 * 60 * 24 * 365);
 }
 
 /**
