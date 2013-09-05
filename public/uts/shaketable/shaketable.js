@@ -45,7 +45,7 @@ function ShakeTableControl(id)
 	this.errorDisplay = undefined;
 	
 	/** The number of seconds this graph displays. */
-    this.duration = 300;
+    this.duration = 60;
 
     /** The period in milliseconds. */
     this.period = 100;
@@ -59,9 +59,9 @@ ShakeTableControl.prototype.setup = function() {
 	
 	/* Graph to display tank levels. */
 	o = new GraphWidget(this.$container, "Displacements");
-	o.setDataVariable('disp-graph-1', 'Level 1',  '#fcff00', -80, 80);
-	o.setDataVariable('disp-graph-2', 'Level 2',  '#ff3b3b', -80, 80);
-	o.setDataVariable('disp-graph-3', 'Level 3', '#8c42fb', -80, 80);
+	o.setDataVariable('disp-graph-1', 'Level 1',  '#fcff00', -60, 60);
+	o.setDataVariable('disp-graph-2', 'Level 2',  '#ff3b3b', -60, 60);
+	o.setDataVariable('disp-graph-3', 'Level 3', '#8c42fb', -60, 60);
 	o.setAxisLabels('Time (s)', 'Displacement (mm)');
 	o.isPulling = false;
 	this.widgets.push(o);
@@ -81,6 +81,7 @@ ShakeTableControl.prototype.setup = function() {
 	o = new SliderWidget(this.$container, "Motor", "motor", "motor-speed", "setMotor");
 	o.setOrientation(true);
 	o.setRange(0, 8);
+	o.setPrecision(2);
 	o.setLabels("Freq", "Hz");
 	o.setDimension(167);
 	o.setDraggable(true);
@@ -1424,7 +1425,7 @@ function GraphWidget($container, title, chained)
 	this.dataFields = { };
 
 	/** The number of seconds this graph displays. */
-	this.duration = 300;
+	this.duration = 60;
 
 	/** The period in milliseconds. */
 	this.period = 100;
@@ -1991,6 +1992,9 @@ function SliderWidget($container, title, icon, dataVar, postAction)
     /** Whether the slider is resizable. */
     this.isResizable = false;
     
+    /** Precision of label. */
+    this.precision = 1;
+    
     /** Label for slider. */
     this.label = '';
     
@@ -2077,7 +2081,7 @@ SliderWidget.prototype.sliderClicked = function(x, y) {
     
     /* Update display. */
     this.moveTo();
-    this.$input.val(zeroPad(this.val, 1));
+    this.$input.val(zeroPad(this.val, this.precision));
     
     /* Send results. */
     this.send();
@@ -2126,7 +2130,7 @@ SliderWidget.prototype.slideMove = function(x, y) {
     if (this.val > this.max) this.val = this.max;
     
     /* Display update. */
-    this.$input.val(zeroPad(this.val, 1));
+    this.$input.val(zeroPad(this.val, this.precision));
     this.moveTo();
     
     /* Position tracking. */
@@ -2255,7 +2259,7 @@ SliderWidget.prototype.consume = function(data) {
     {
         this.val = data[this.dataVar];
         this.moveTo();
-        this.$input.val(zeroPad(this.val, 1));
+        this.$input.val(zeroPad(this.val, this.precision));
     }
 };
 
@@ -2289,6 +2293,14 @@ SliderWidget.prototype.setOrientation = function(vertical) {
  */
 SliderWidget.prototype.setDimension = function(dimension) {
     this.dimension = dimension;
+};
+
+/** Sets the precision of the text input of the slider.
+ * 
+ * @param precision number digits after decimal point
+ */
+SliderWidget.prototype.setPrecision = function(precision) {
+    this.precision = precision;
 };
 
 /**
