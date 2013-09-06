@@ -74,7 +74,7 @@ ShakeTableControl.prototype.setup = function() {
 	o.setDraggable(true);
 	this.widgets.push(o);
 	
-	o = new SwitchWidget(this.$container, "Dempening", "Dampening", "coils", "coils-on", "setCoils");
+	o = new SwitchWidget(this.$container, "Dampening", "Dampening", "coils", "coils-on", "setCoils");
 	o.setDraggable(true);
 	this.widgets.push(o);
 	
