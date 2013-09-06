@@ -70,11 +70,11 @@ ShakeTableControl.prototype.setup = function() {
 	this.widgets.push(new CameraWidget(this.$container, 'Camera', ''));
 
 	/* Controls. */
-	o = new SwitchWidget(this.$container, "Motor On", "motor", "motor-on", "setMotor");
+	o = new SwitchWidget(this.$container, "Motor Switch", "Motor On", "motor", "motor-on", "setMotor");
 	o.setDraggable(true);
 	this.widgets.push(o);
 	
-	o = new SwitchWidget(this.$container, "Dampening", "coils", "coils-on", "setCoils");
+	o = new SwitchWidget(this.$container, "Dempening", "Dampening", "coils", "coils-on", "setCoils");
 	o.setDraggable(true);
 	this.widgets.push(o);
 	
@@ -2345,9 +2345,9 @@ SliderWidget.prototype.setResizable = function(resizable) {
  * @param {String} dataVar data variable that this switch is toggling
  * @param {String} postAction the action to post to 
  */
-function SwitchWidget($container, label, icon, dataVar, postAction)
+function SwitchWidget($container, title, label, icon, dataVar, postAction)
 {
-    Widget.call(this, $container, '', icon);
+    Widget.call(this, $container, title, icon);
     
     /** {String} The identifier of this slider. */
     this.id = "switch-" + label.toLowerCase().replace(' ', '-');
@@ -2377,6 +2377,7 @@ SwitchWidget.prototype.init = function() {
     
     var thiz = this;
     this.$widget.find(".switch-label, .switch").click(function() { thiz.clicked(); });
+    this.$widget.find(".window-title").html('');
     
     if (this.isDraggable) this.enableDraggable();
 };
