@@ -34,26 +34,104 @@
  *
  * @author Michael Diponio (mdiponio)
  * @date 10th Janurary 2013.
- */ 
+ */
 
 $this->headLink()->appendStylesheet($this->baseUrl('/css/projects.css'));
 $this->headScript()->appendFile($this->baseUrl('/js/projects.js'));
 ?>
 
-<?php if (!$this->project->auto_publish_collections): ?>
-<div id="add-collection-button" class="common-button">
-    <img src='/images/project-add.png' alt='add' /><br />Collate Datasets
+<?php if (!$this->project->auto_publish_collections):
+           if (count($this->project->getSessions())): ?>
+<div id='session-list-container' class='common-box'>
+    <div id='session-list-title' class='common-title'>
+        <span class='ui-icon ui-icon-gear'></span>
+        Sessions for Activity: <?=$this->project->activity?>
+    </div>
+    <div id='session-list'>
+        <ul><?php foreach ($this->project->getSessions() as $ses): ?>
+            <li class='collection-item'>
+                <div class='collection-item-title'>
+                    <span class='ui-icon ui-icon-circle-arrow-e'></span>
+                    Session from <?=$ses->assignment_time->format('d-M-Y') . ' at ' .
+                            $ses->assignment_time->format('H:i:s');?>.
+                </div>
+                <div class='collection-contents'>
+                    <div class='collection-details'>
+                       <div class='collection-details-title'>Details</div>
+                       <div>Duration: <strong><?=$ses->removal_time->getTimestamp() -
+                               $ses->assignment_time->getTimestamp()?></strong> seconds</div>
+                       <div>Apparatus:
+                           <div><strong><?=$this->stringTransform($ses->rig->name, '_', ' ')?></strong> of type
+                           <strong><?=$this->stringTransform($ses->rig->type->name, '_', ' ')?></strong></div>
+                        </div>
+                    </div>
+                    <div class='collection-data'>
+                       <div class='collection-data-title'>Data Files</div>
+                       <?php
+                           $this->session = $ses;
+                           $this->historical = false;
+                           echo $this->render('research/_filelist.phtml');
+                           $this->session = null;
+                       ?>
+                    </div>
+                    <div style='clear:both'></div>
+                </div>
+           </li>
+        <?php endforeach; ?></ul>
+    </div>
 </div>
-<?php endif; ?>
 
 <script type="text/javascript">
 $(document).ready(function() {
-    $("#add-collection-button").click(addCollection);
+    $("#session-list .collection-item-title").click(function() {
+        var $contents = $(this).siblings(".collection-contents");
+        if ($contents.css("display") == "none")
+        {
+            /* Opening closed contents. */
+            $("#session-list .collection-contents").slideUp();
+            $("#session-list .collection-contents-open")
+                .removeClass("collection-contents-open")
+                .children(".ui-icon")
+                    .removeClass("ui-icon-circle-arrow-s")
+                    .addClass("ui-icon-circle-arrow-e");
+
+            $(this)
+                .addClass("collection-contents-open")
+                .children(".ui-icon")
+                    .removeClass("ui-icon-circle-arrow-e")
+                    .addClass("ui-icon-circle-arrow-s");
+            $contents.slideDown();
+        }
+        else
+        {
+            /* Closing open contents. */
+            $contents.slideUp();
+
+            $(this).removeClass(".collection-contents-open")
+                   .children(".ui-icon")
+                       .removeClass("ui-icon-circle-arrow-s")
+                       .addClass("ui-icon-circle-arrow-e");
+        }
+    });
+
+    $("#session-list .file-delete").click(function() { deleteFile(this); });
 });
 </script>
 
+           <?php else: ?>
+<div id='no-sessions' class='ui-state-error'>
+    <span class='ui-icon ui-icon-alert'></span>
+    This activity has no sessions to collate as a dataset. Generate more data by going to
+    <a href='/queue#userClass<?=$this->project->userClass->id?>'>'Group:
+    <?=$this->stringTransform($this->project->userClass->name, '_', ' ')?>'</a> on the 'Research
+    Apparatuses' page and using a research apparatus to save data files.
+</div>
+           <?php endif; ?>
+<?php endif; ?>
+
 <?php if (count($this->project->collections)): ?>
-<div id='collection-list-container' class='common-box'>
+<div id='collection-list-container' class='common-box <?=$this->project->auto_publish_collections ? 'auto-collections' :
+            'manual-collections' ?>'>
     <div id='collection-list-title' class='common-title'>
         <span class='ui-icon ui-icon-folder-open'></span>
         Datasets for Activity: <?=$this->project->activity?>
@@ -63,7 +141,7 @@ $(document).ready(function() {
             <li class='collection-item'>
                 <div class='collection-item-title'>
                     <span class='ui-icon ui-icon-circle-arrow-e'></span>
-                    <span>    
+                    <span>
                     <?php if ($collection->publish_time): ?>
                         Published on <?=$collection->publish_time->format('d-M-Y') . ' at ' . $collection->publish_time->format('H:i:s');?>.
                     <?php else: ?>
@@ -76,12 +154,12 @@ $(document).ready(function() {
                        <div class='collection-details-title'>Details</div>
                        <div>Started:&nbsp;&nbsp;&nbsp;<strong><?=$collection->getStartTime()->format('d-M-Y H:i:s')?></strong></div>
                        <div>Finished:&nbsp;<strong><?=$collection->getEndTime()->format('d-M-Y H:i:s')?></strong></div>
-                       <div>Apparatus(es): 
+                       <div>Apparatus(es):
                            <ul>
                            <?php foreach ($collection->getApparatuses() as $rigType => $rigs):
                                      foreach ($rigs as $rig): ?>
-                               <li><strong><?=implode(' ', explode('_', $rig))?></strong> of type 
-                               <strong><?=implode(' ', explode('_', $rigType))?></strong></li>                            
+                               <li><strong><?=implode(' ', explode('_', $rig))?></strong> of type
+                               <strong><?=implode(' ', explode('_', $rigType))?></strong></li>
                            <?php     endforeach;
                                  endforeach; ?>
                            </ul>
@@ -89,15 +167,12 @@ $(document).ready(function() {
                     </div>
                     <div class='collection-data'>
                        <div class='collection-data-title'>Data Files</div>
-                       <ul>
-                       <?php foreach ($collection->sessions as $session):
-                                 foreach ($session->files as $file): ?>
-                           <li>
-                               <?=$file->name?>
-                           </li>
-                       <?php     endforeach;
-                             endforeach; ?>
-                       </ul>
+                       <?php
+                           $this->collection = $collection;
+                           $this->historical = true;
+                           echo $this->render('research/_filelist.phtml');
+                           $this->collection = null;
+                        ?>
                     </div>
                     <div style='clear:both'></div>
                 </div>
@@ -131,7 +206,7 @@ $(document).ready(function() {
         {
             /* Closing open contents. */
             $contents.slideUp();
-            
+
             $(this).removeClass(".collection-contents-open")
                    .children(".ui-icon")
                        .removeClass("ui-icon-circle-arrow-s")
@@ -142,7 +217,8 @@ $(document).ready(function() {
 </script>
 
 <?php else: ?>
-<div id='no-collections' class='ui-state-error'>
+<div id='no-collections' class='ui-state-error <?=$this->project->auto_publish_collections ? 'auto-collections' :
+            'manual-collections' ?>'>
     <span class='ui-icon ui-icon-alert'></span>
     This activity has no datasets.
 </div>

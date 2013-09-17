@@ -33,36 +33,41 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 17th Janurary 2013
+ * @date 10th Janurary 2013.
  */
 
-/**
- * Entity for session records.
- */
-class Sahara_Database_Record_Session extends Sahara_Database_Record
+if ($this->collection)
 {
-    /** String name of table. */
-    protected $_name = 'session';
-
-    /** @var array Relationships with other tables. */
-    protected $_relationships = array(
-        'user' => array(
-            'table' => 'users',
-            'entity' => 'User',
-            'join' => 'local',
-            'foreign_key' => 'user_id'
-        ),
-        'rig' => array(
-            'table' => 'rig',
-            'entity' => 'Rig',
-            'join' => 'local',
-            'foreign_key' => 'assigned_rig_id'
-        ),
-        'files' => array(
-            'table' => 'session_file',
-            'entity' => 'SessionFile',
-            'join' => 'foreign',
-            'foreign_key' => 'session_id'
-        )
-    );
+    /* A whole bunch of sessions from a collection. */
+    $sessions = $this->collection->sessions;
 }
+else if ($this->session)
+{
+    /* One session to display. */
+    $sessions = array();
+    array_push($sessions, $this->session);
+}
+else
+{
+    /* No session files to display. */
+    $sessions = array();
+}
+?>
+
+<ul class='files-list'>
+<?php foreach ($sessions as $session):
+         foreach ($session->files as $file): ?>
+   <li class='file-<?php if ($file->isDownloadable()): ?>is-downloadable'>
+       <span class='ui-icon ui-icon-arrowthickstop-1-s'></span>
+       <a href="/datafile/download/file/<?=$file->id?>" target="_blank"><?=$file->name?></a>
+   <?php else: ?>not-downloadable'>
+       <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?=$file->name?></span>
+   <?php endif; ?>
+
+   <?php if (!$this->historical): ?>
+       <a id="file-delete-<?=$file->id?>" class='file-delete'><span class='ui-icon ui-icon-trash'></span></a>
+   <?php endif;?>
+   </li>
+<?php     endforeach;
+     endforeach; ?>
+</ul>

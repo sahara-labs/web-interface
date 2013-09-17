@@ -47,22 +47,22 @@ class ResearchController extends Sahara_Controller_Action_Acl
     public function indexAction()
     {
         $this->view->headTitle($this->_headPrefix . 'Research Projects');
-        
+
         /* Metadata definitions. */
         $this->view->definitions = Sahara_Database_Record_ProjectMetadataTypes::load(NULL, NULL, 'is_optional');
 
         /* Load the users and their class. */
         $this->view->user = Sahara_Database_Record_User::getLoginUser();
     }
-    
+
     /**
-     * Action which checks whether an activity identifer is unique.      
+     * Action which checks whether an activity identifer is unique.
      */
     public function checkactivityAction()
     {
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout()->disableLayout();
-        
+
         if ($param = $this->_request->getParam('activityID'))
         {
             echo $this->view->json(array(
@@ -74,7 +74,7 @@ class ResearchController extends Sahara_Controller_Action_Acl
                 'error'  => 'Missing parameter.'
         ));
     }
-    
+
     /**
      * Action that adds a new project.
      */
@@ -82,19 +82,19 @@ class ResearchController extends Sahara_Controller_Action_Acl
     {
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout()->disableLayout();
-        
+
         $project = new Sahara_Database_Record_Project();
-        
+
         $success = true;
         $reason = '';
-        
+
         /* Activity ID. */
         if (!($project->activity = $this->_request->getParam('activityID')))
         {
             $success = false;
             $reason = 'Parameter not supplied';
         }
-        
+
         /* The Activity ID must be unique. */
         if (count(Sahara_Database_Record_Project::load(array('activity' => $project->activity))) != 0)
         {
@@ -104,7 +104,7 @@ class ResearchController extends Sahara_Controller_Action_Acl
             ));
             return;
         }
-        
+
         /* User. */
         list($ns, $name) = explode(':', $this->_auth->getIdentity());
         if (!($project->user = Sahara_Database_Record_User::getLoginUser()))
@@ -112,24 +112,24 @@ class ResearchController extends Sahara_Controller_Action_Acl
             $success = false;
             $reason = 'User not found.';
         }
-        
+
         /* User class. */
-        if (!($this->_request->getParam('userClass') && 
+        if (!($this->_request->getParam('userClass') &&
                 $project->userClass = Sahara_Database_Record_UserClass::load($this->_request->getParam('userClass'))))
         {
             $success = false;
             $reason = 'Parameter not supplied or invalid.';
         }
-    
+
         /* Project modifiers. */
         $project->is_open = $this->_request->getParam('openAccess') == 'true';
         $project->is_shared = $this->_request->getParam('shareCollection') == 'true';
         $project->auto_publish_collections = $this->_request->getParam('autoPublish') == 'true';
-        
+
         /* Timestamps. */
         $project->creation_time = new DateTime();
         $project->last_update = new DateTime();
-        
+
         /* Other metadata. */
         $definitions = Sahara_Database_Record_ProjectMetadataTypes::load();
         if (count($definitions) > 0)
@@ -142,7 +142,7 @@ class ResearchController extends Sahara_Controller_Action_Acl
                     $metadata->type = $def;
                     $metadata->value = $this->_request->getParam($def->name);
                     $project->metadata = $metadata;
-                    
+
                     /* If a metadata value validationr regex is stored, make sure the
                      * value match the regex. */
                     if ($def->regex && preg_match('/' . $def->regex . '/', $metadata->value) === 0)
@@ -159,11 +159,11 @@ class ResearchController extends Sahara_Controller_Action_Acl
                 }
             }
         }
-        
+
         /* Actually save the record. */
-        if ($success) 
+        if ($success)
         {
-            try 
+            try
             {
                 $project->save();
             }
@@ -174,10 +174,10 @@ class ResearchController extends Sahara_Controller_Action_Acl
                 $reason = $ex->getMessage();
             }
         }
-        
+
         echo $this->view->json(array('success' => $success, 'reason' => $reason));
     }
-    
+
     /**
      * Actions that updates a project.
      */
@@ -185,16 +185,16 @@ class ResearchController extends Sahara_Controller_Action_Acl
     {
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout()->disableLayout();
-        
+
         if (!($activity = $this->_request->getParam('activityID')))
         {
             echo $this->view->json(array(
                     'success' => false,
-                    'reason' => 'Required parameter missing.' 
+                    'reason' => 'Required parameter missing.'
             ));
             return;
         }
-        
+
         $project = Sahara_Database_Record_Project::load(array('activity' => $activity));
         if (count($project) != 1)
         {
@@ -204,11 +204,11 @@ class ResearchController extends Sahara_Controller_Action_Acl
             ));
             return;
         }
-        
-        /* Only one project can be loaded because of the unique constraint on 
+
+        /* Only one project can be loaded because of the unique constraint on
          * the activity identifier. */
         $project = $project[0];
-        
+
         if (!Sahara_Database_Record_User::getLoginUser()->equals($project->user))
         {
             /* The logged in user is not authorised to modified the project. */
@@ -218,18 +218,18 @@ class ResearchController extends Sahara_Controller_Action_Acl
             ));
             return;
         }
-        
+
         if ($project->publish_time)
         {
-            /* The project has been published and is therefore finalished from 
-             * changes. */ 
+            /* The project has been published and is therefore finalished from
+             * changes. */
             echo $this->view->json(array(
                      'success' => false,
                      'reason' => 'Not authorised'
             ));
             return;
         }
-        
+
         /* User class. */
         if ($this->_request->getParam('userClass'))
         {
@@ -239,23 +239,23 @@ class ResearchController extends Sahara_Controller_Action_Acl
                 $project->userClass = $userClass;
             }
         }
-        
+
         /* Behavioural parameters. */
         if ($this->_request->getParam('shareCollection'))
         {
             $project->is_shared = $this->_request->getParam('shareCollection') == 't';
         }
-        
+
         if ($this->_request->getParam('openAccess'))
         {
             $project->is_open = $this->_request->getParam('openAccess') == 't';
         }
-        
+
         if ($this->_request->getParam('autoPublish'))
         {
             $project->auto_publish_collections = $this->_request->getParam('autoPublish') == 't';
         }
-        
+
         /* Metadata. */
         foreach (Sahara_Database_Record_ProjectMetadataTypes::load() as $metadata)
         {
@@ -269,7 +269,7 @@ class ResearchController extends Sahara_Controller_Action_Acl
                 ));
                 return;
             }
-            
+
             if ($mdRecord = $project->getMetadata($metadata))
             {
                 $mdRecord->value = $val;
@@ -282,7 +282,7 @@ class ResearchController extends Sahara_Controller_Action_Acl
                 $project->metadata = $mdRecord;
             }
         }
-        
+
         try
         {
             $project->save();
@@ -299,15 +299,15 @@ class ResearchController extends Sahara_Controller_Action_Acl
             ));
         }
     }
-    
+
     /**
-     * Action that publishs a project. 
+     * Action that publishs a project.
      */
     public function publishprojectAction()
     {
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout()->disableLayout();
-        
+
         if (!$this->_request->getParam('activityID'))
         {
             echo $this->view->json(array(
@@ -316,7 +316,7 @@ class ResearchController extends Sahara_Controller_Action_Acl
             ));
             return;
         }
-        
+
         $project = Sahara_Database_Record_Project::load(array('activity' => $this->_request->getParam('activityID')));
         if (count($project) == 0)
         {
@@ -328,7 +328,7 @@ class ResearchController extends Sahara_Controller_Action_Acl
         }
 
         $project = $project[0];
-        
+
         /* Check the project being deleted is actually owned by the logged
          * in user. */
         if (!Sahara_Database_Record_User::getLoginUser()->equals($project->user))
@@ -339,7 +339,7 @@ class ResearchController extends Sahara_Controller_Action_Acl
         	));
         	return;
         }
-        
+
         /* Check the project has not already been published. */
         if ($project->publish_time)
         {
@@ -349,9 +349,9 @@ class ResearchController extends Sahara_Controller_Action_Acl
             ));
         }
 
-        // TODO Properly implement this. 
+        // TODO Properly implement this.
         $project->publish_time = new DateTime();
-        
+
         try
         {
             $project->save();
@@ -364,17 +364,17 @@ class ResearchController extends Sahara_Controller_Action_Acl
                     'success' => false,
                     'error' => 'Failed publishing project.'
             ));
-        }       
+        }
     }
-    
+
     /**
-     * Action that remove a project. 
+     * Action that remove a project.
      */
     public function removeprojectAction()
     {
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout()->disableLayout();
-        
+
         if (!$this->_request->getParam('activityID'))
         {
             echo $this->view->json(array(
@@ -383,7 +383,7 @@ class ResearchController extends Sahara_Controller_Action_Acl
             ));
             return;
         }
-        
+
         $project = Sahara_Database_Record_Project::load(array('activity' => $this->_request->getParam('activityID')));
         if (count($project) == 0)
         {
@@ -393,12 +393,12 @@ class ResearchController extends Sahara_Controller_Action_Acl
             ));
             return;
         }
-        
-        /* There can only be one project as the activity ID has a unique 
+
+        /* There can only be one project as the activity ID has a unique
          * constraint. */
         $project = $project[0];
-        
-        /* Check the project being deleted is actually owned by the logged 
+
+        /* Check the project being deleted is actually owned by the logged
          * in user. */
         if (!Sahara_Database_Record_User::getLoginUser()->equals($project->user))
         {
@@ -408,7 +408,7 @@ class ResearchController extends Sahara_Controller_Action_Acl
             ));
             return;
         }
-        
+
         try
         {
             $project->delete();
@@ -423,7 +423,7 @@ class ResearchController extends Sahara_Controller_Action_Acl
             ));
         }
     }
-    
+
     /**
      * Action that display the view for collections and collection creation.
      */
@@ -434,29 +434,46 @@ class ResearchController extends Sahara_Controller_Action_Acl
             /* We need the activity indentifier to show collection information. */
             $this->_redirectTo('index', 'research');
         }
-        
+
         $project = Sahara_Database_Record_Project::load(array('activity' => $this->_request->getParam('activityID')));
         if (count($project) != 1)
         {
             /* Project not found. */
             $this->_redirectTo('index', 'research');
         }
-        
+
         $project = $project[0];
-        
+
         if (!$project->user->equals(Sahara_Database_Record_User::getLoginUser()))
         {
             /* Login user does not own the specified project. */
             $this->_redirectTo('index', 'research');
         }
-        
+
         if (!$project->publish_time)
         {
             /* Only published projects have collections. */
             $this->_redirectTO('index', 'research');
         }
 
+        if (!$project->auto_publish_collections)
+        {
+            /* For projects that are not auto publishing, we need to find all
+             * the sessions that were potientially generated from the project
+             * and list them out to have their session files modified before
+             * publishing. */
+            $this->view->sessions = $project->getSessions();
+        }
+
         $this->view->headTitle($this->_headPrefix . ' Datasets for Activity: ' . $project->activity);
         $this->view->project = $project;
+    }
+
+    /**
+     * Action to download a research file.
+     */
+    public function download()
+    {
+
     }
 }

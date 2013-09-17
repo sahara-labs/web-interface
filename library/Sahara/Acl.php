@@ -37,7 +37,7 @@
  */
 
 /**
- * Access control list definitions for user roles. 
+ * Access control list definitions for user roles.
  * <br />
  * Roles work in an inheritance structure will the following roles defined:
  * <ol>
@@ -58,7 +58,7 @@ class Sahara_Acl extends Zend_Acl
 
     /** Normal users. */
     const USER = 'USER';
-    
+
     /** Research users. */
     const RESEARCH = 'RESEARCH';
 
@@ -90,10 +90,11 @@ class Sahara_Acl extends Zend_Acl
                                   'home' => array('index', 'list', 'listsession', 'download',
                                   				  'delete', 'deletesession')
                             );
-    
+
     /** @var assoc array Pages a research user may access. */
-    protected $_researchPages  = array('research' => array('index', 'checkactivity', 'addproject', 'publishproject', 
-                                                           'updateproject', 'removeproject', 'collections'));
+    protected $_researchPages  = array('research' => array('index', 'checkactivity', 'addproject', 'publishproject',
+                                                           'updateproject', 'removeproject', 'collections'),
+                                       'datafile' => array('download', 'upload', 'delete'));
 
     /** @var assoc array Pages an academic user may access. */
     protected $_academicPages = array('reports' => array('index','getvalue','accessreport',

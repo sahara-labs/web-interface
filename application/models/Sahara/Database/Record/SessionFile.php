@@ -35,7 +35,7 @@
  * @author Michael Diponio (mdiponio)
  * @date 17th Janurary 2013
  */
- 
+
 /**
  * Entity for session file records.
  */
@@ -43,7 +43,7 @@ class Sahara_Database_Record_SessionFile extends Sahara_Database_Record
 {
     /** @var String Name of table. */
     protected $_name = 'session_file';
-    
+
     /** @var array Relationships with other records. */
     protected $_relationships = array(
         'session' => array(
@@ -53,4 +53,41 @@ class Sahara_Database_Record_SessionFile extends Sahara_Database_Record
              'foreign_key' => 'session_id'
          )
     );
+
+    /**
+     * Checks whether this session file can be downloaded.
+     *
+     * @return boolean true if the file can be downloaded
+     */
+    public function isDownloadable()
+    {
+        return is_readable($this->getAbsolutePath());
+    }
+
+    /**
+     * Returns the absolute path of the session file. The absolute path includes the
+     * mount point and the stored file path.
+     *
+     * @return string absolute file path
+     */
+    public function getAbsolutePath()
+    {
+        return realpath($this->getResearchMountPoint() . $this->path . '/' . $this->name);
+    }
+
+    /**
+     * Gets the configured directory mount point of the research shared directory.
+     *
+     * @return string mount point
+     */
+    private function getResearchMountPoint()
+    {
+        $conf = Zend_Registry::get('config')->research;
+        if (!$conf) return '/';
+
+        $mount = $conf->mount;
+        if (!$mount) return '/';
+
+        return substr($mount, -1) == '/' ? $mount : $mount . '/';
+    }
 }

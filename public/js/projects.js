@@ -537,5 +537,66 @@ function removeProject()
  */
 function addCollection()
 {
-	alert("TODO: Add collection")
+	alert("TODO: Add collection");
+}
+
+/**
+ * Deletes a file. 
+ * 
+ * @param node delete button click
+ */
+function deleteFile(node) 
+{
+    $("body").append(
+         "<div id='remove-file-dialog' class='confirm-dialog' title='Remove Confirmation'>" +
+            "<p>Are you sure want to remove the file <strong>'" + strtrim($(node).parent().text()) + "'</strong>?</p>" + 
+            "<p class='ui-priority-secondary'>" +
+                "<span class='ui-icon ui-icon-info'></span>This deletes the file and cannot be undone." +
+            "</p>" +
+            "</div>"
+    );
+    
+    var id = $(node).attr("id");
+    $("#remove-file-dialog").dialog({
+        closeOnEscape: true,
+        width: 400,
+        resizable: false,
+        modal: true,
+        buttons: {
+            'Remove': function() {
+                $.post(
+                    "/datafile/delete",
+                    { file: id.substr(id.lastIndexOf("-") + 1) },
+                    function(resp) {
+                        if (typeof resp == "object")
+                        {
+                            $("#remove-file-dialog").dialog("close");
+                            
+                            if (resp.success) $(node).parent().remove();
+                            else alert("Error: " + resp.reason);
+                        }
+                        else
+                        {
+                            window.location.reload();
+                        }
+                    }
+                );
+            },
+            'Cancel': function() { $(this).dialog("close"); }
+        },
+        close: function() { $(this).dialog("destroy"); $(this).remove(); }
+    });
+
+
+}
+
+/**
+ * Trims a strings whitespace
+ * 
+ * @param str string to trim
+ * @return trimmed string
+ */
+function strtrim(str)
+{
+    return str.replace(/^\s+|\s+$/, '');
 }

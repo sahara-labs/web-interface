@@ -35,12 +35,12 @@
  * @author Michael Diponio (mdiponio)
  * @date 4th Janurary 2013
  */
- 
+
 class Sahara_Database_Record_Project extends Sahara_Database_Record
 {
     /** @var String Name of database table. */
     protected $_name = 'project';
-    
+
     /** @var array Relationship information for joined tables. */
     protected $_relationships = array(
         'metadata' => array(
@@ -68,11 +68,14 @@ class Sahara_Database_Record_Project extends Sahara_Database_Record
             'foreign_key' => 'project_id'
          )
     );
-    
+
+    /** @var array List of previously loaded sessions. */
+    private $_sessions = null;
+
     /**
      * Gets value of the specified metadata type. If the type has no
      * value NULL is returned.
-     * 
+     *
      * @param Sahara_Database_Record_ProjectMetadataType $type metadata type
      * @return Sahara_Database_Record_ProjectMetadata | NULL metadata type
      */
@@ -82,7 +85,45 @@ class Sahara_Database_Record_Project extends Sahara_Database_Record
         {
             if ($type->equals($metadata->type)) return $metadata;
         }
-        
+
         return NULL;
+    }
+
+    /**
+     * Gets the list of sessions that were generated from this project.
+     *
+     * @return array list of session records
+     */
+    public function getSessions()
+    {
+        if ($this->_sessions !== null) return $this->_sessions;
+
+        $sql = 'SELECT ses.* FROM session AS ses ' .
+                    'JOIN resource_permission AS rp ON ses.resource_permission_id = rp.id ' .
+                    'JOIN user_class AS uc ON rp.user_class_id = uc.id ' .
+
+               'WHERE ses.user_id = ' . $this->users_id .
+               ' AND uc.id = ' . $this->user_class_id .
+               ' AND ses.assignment_time > "' . self::_convertForSQL($this->publish_time) . '"' .
+               ' AND ses.id NOT IN ( SELECT session_id FROM collection_sessions )';
+
+        $qu = $this->_db->prepare($sql);
+        if (!$qu->execute())
+        {
+            /* An error occurred executing the statement. */
+            throw new Sahara_Database_Exception($qu);
+        }
+
+        $this->_sessions = array();
+        if ($qu->rowCount())
+        {
+            foreach ($qu->fetchAll() as $r)
+            {
+                $ses = new Sahara_Database_Record_Session($r);
+                array_push($this->_sessions, $ses);
+            }
+        }
+
+        return $this->_sessions;
     }
 }

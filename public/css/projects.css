@@ -35,7 +35,7 @@
  * @date 31st October 2012
  */
 
-#add-project-button, #add-collection-button {
+#add-project-button {
 	position: absolute;
 	width: 70px;
 	height: 70px;
@@ -70,13 +70,15 @@
 
 #add-project-error .ui-icon, 
 #no-projects .ui-icon,
-#no-collections .ui-icon {
+#no-collections .ui-icon,
+#no-sessions .ui-icon {
 	float: left;
 	margin-right: 5px;
 }
 
 #no-projects,
-#no-collections {
+#no-collections,
+#no-sessions {
 	margin: 20px auto;
 	padding: 8px;
 	border-radius: 4px;
@@ -90,12 +92,37 @@
 	width: 250px;
 }
 
+#no-collections.manual-collections {
+	position: absolute;
+	right: 180px;
+}
+
+#no-sessions {
+	width: 350px;
+	position: absolute;
+	left: 40px;
+}
+
+#no-sessions a {
+	font-weight: bold;
+}
+
 #project-list-container,
-#collection-list-container {
+#collection-list-container,
+#session-list-container {
 	position: absolute;
 	top: 127px;
-	left: 90px;
+	right: 98px;
 	width: 770px;
+}
+
+#collection-list-container.manual-collections {
+	width: 420px !important;
+}
+
+#session-list-container {
+	width: 430px !important;
+	left: 0;
 }
 
 #project-list-title,
@@ -114,24 +141,25 @@
 }
 
 #project-list ul,
-#collection-list ul {
+#collection-list ul, 
+#session-list ul {
 	list-style: none;
 }
 
 #project-list .project-item-title, 
-#collection-list .collection-item-title {
+.collection-item-title { 
 	padding: 8px;
 	border-bottom: 1px solid #B5B5B5;
 	border-top: 1px solid #B5B5B5;
 	color: #606060;
 }
 
-#collection-list .collection-item-title {
+.collection-item-title {
 	cursor: pointer;
 }
 
 #project-list .project-item-title:hover,
-#collection-list .collection-item-title:hover { 
+.collection-item-title:hover { 
 	box-shadow: 0 0 4px #B5B5B5;
 	color: #000000;
 	background-color: #FCFCFC;
@@ -143,7 +171,8 @@
 }
 
 #project-list .ui-icon,
-#collection-list .ui-icon {
+#collection-list .ui-icon,
+#session-list .ui-icon {
 	float: left;
 	margin-right: 5px;
 }
@@ -152,8 +181,8 @@
 #project-list .project-buttons div, 
 #project-list .project-contents-title,
 #project-list .project-content-save,
-#collection-list .collection-details-title,
-#collection-list .collection-data-title {
+.collection-details-title,
+.collection-data-title {
 	border: 1px solid #B5B5B5;
 	border-radius: 5px;
 	box-shadow: 0 0 2px #B5B5B5;
@@ -177,7 +206,7 @@
 }
 
 #project-list .project-contents-open,
-#collection-list .collection-contents-open {
+.collection-contents-open {
 	color: #000000;
 	box-shadow: 0 2px 3px #B5B5B5;
 	font-weight: bold; 
@@ -188,7 +217,8 @@
 }
 
 #remove-project-dialog .ui-priority-secondary, 
-#publish-project-dialog .ui-priority-secondary {
+#publish-project-dialog .ui-priority-secondary,
+.confirm-dialog .ui-priority-secondary {
 	padding: 5px;
 	border: 1px dashed #B5B5B5;
 	border-radius: 4px;
@@ -201,15 +231,15 @@
 }
 
 #project-list .project-contents,
-#collection-list .collection-contents {
+.collection-contents {
 	display: none;
 	position: relative;
 }
 
 #add-project-dialog .project-contents-title,
 #project-list .project-contents-title,
-#collection-list .collection-details-title,
-#collection-list .collection-data-title {
+.collection-details-title,
+.collection-data-title {
 	border-radius: 0 0 4px 4px;
 	width: 100px;
 	padding: 4px 20px;
@@ -304,29 +334,94 @@
 	opacity: 1;
 }
 
-#collection-list .collection-details,
-#collection-list .collection-data {
+.collection-details,
+.collection-data {
 	float: left;
 	padding: 10px;
 }
 
 
 
-#collection-list .collection-details-title,
-#collection-list .collection-data-title {
+.collection-details-title,
+.collection-data-title {
 	margin: 10px auto;
 }
 
-#collection-list .collection-details div {
+.collection-details div {
 	padding: 5px;
 }
 
-#collection-list .collection-details ul {
+.collection-details ul {
 	list-style: inside;
 	margin-top: 5px;
 }
 
-#collection-list .collection-details li {
+.collection-details li {
 	padding: 5px;
 }
+
+#session-list .collection-data {
+	width: 200px;
+}
+
+#session-list .collection-data-title {
+	position: relative;
+	left: 20px;
+}
+
+.files-list li {
+	position: relative;
+	width: 100%;
+	padding: 5px 10px;
+	border-top: 1px dashed #AAAAAA;
+}
+
+.files-list li:last-child {
+	border-bottom: 1px dashed #AAAAAA;
+}
+
+.file-is-downloadable:hover {
+	box-shadow: 0 0 3px #AAAAAA;
+}
+
+.files-list a {
+	display: block;
+	width: 100%;
+	height: 100%;
+	text-decoration: none;
+    font-weight: bold;
+    color: black;
+    cursor: pointer;
+}
+
+.file-not-downloadable {
+	color: #888888;
+}
+
+.file-delete {
+	position: absolute;
+	top: 3px;
+	right: 15px;
+	height: 18px !important;
+	width: 18px !important;
+	border: 1px solid #AAAAAA;
+	background-color: #F87878;
+	box-shadow: 0 0 2px #AAAAAA;
+	border-radius: 2px;
+}
+
+.file-delete:hover {
+	box-shadow: 0 0 4px #666666;
+}
+
+.confirm-dialog p {
+	padding-bottom: 10px;
+}
+
+.confirm-dialog .ui-icon {
+	float: left;
+	margin-right: 5px;
+}
+
+
 
