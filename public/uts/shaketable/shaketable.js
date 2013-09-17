@@ -2525,6 +2525,10 @@ MimicWidget.prototype.init = function() {
     this.massBg = '#428AE9';
     this.massStroke = '#282828';
 
+    /* Settings for the shadows. */
+    this.shadowH = this.massH / 8;
+    this.shadowBg = '#3571c1';
+
     /* Settings for the guide rail. */
     this.guideH = this.massH - (this.massH / 1.3);
     this.guideBg = '#dadada';
@@ -2638,13 +2642,13 @@ MimicWidget.prototype.drawFrame = function() {
                     this.mass1X = this.mass1X + this.counter;
                     if (this.baseX < this.axis.x)
                     {
-                        this.baseX = this.baseX++;
+                        this.baseX = this.baseX + 2;
                         this.leftHandleX = this.leftHandleX + 2;
                         this.rightHandleX = this.rightHandleX + 2;
                     }
                     else
                     {
-                        this.baseX = this.baseX--;
+                        this.baseX = this.baseX - 2;
                         this.leftHandleX = this.leftHandleX - 3;
                         this.rightHandleX = this.rightHandleX - 3;
                     }
@@ -2692,11 +2696,20 @@ MimicWidget.prototype.drawFrame = function() {
     /* Draw the Base. */
     this.drawBox(this.baseX, this.axis.y, this.massW, this.massH, this.massBg, this.massStroke, 'Base');
 
+    /* Draw the Base's shadow. */
+    this.drawBox(this.baseX, (this.axis.y - this.massH / 8), this.massW, this.shadowH, this.shadowBg, this.massStroke,'');
+
     /* Draw Mass One. */
     this.drawBox(this.mass1X, this.mass1Y, this.massW, this.massH, this.massBg, this.massStroke, 'M1');
 
+    /* Draw Mass One's shadow. */
+    this.drawBox(this.mass1X, (this.mass1Y - this.massH / 8), this.massW, this.shadowH, this.shadowBg, this.massStroke,'');
+
     /* Draw Mass Two. */
     this.drawBox(this.mass2X, this.mass2Y, this.massW, this.massH, this.massBg, this.massStroke, 'M2');
+
+    /* Draw Mass Two's shadow. */
+    this.drawBox(this.mass2X, (this.mass2Y + this.massH), this.massW, this.shadowH, this.shadowBg, this.massStroke,'');
 
     /* Draw the guide rail. */
     this.drawBox(this.axis.x, this.guideY, this.massW, this.guideH, this.guideBg, this.massStroke, '');
