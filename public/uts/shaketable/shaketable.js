@@ -2490,9 +2490,6 @@ function MimicWidget($container, title)
     /** The interval rate of the graph animation in milliseconds. */
     this.intervalRate = 12;
 
-    /** {boolean} Whether this widget is to be draggable. */
-    this.isDraggable = true;
-
     /** Whether this widget is pulling data, i.e. polling the server for new
      *  graphing information. */
     this.isPulling = true;
