@@ -2557,8 +2557,6 @@ MimicWidget.prototype.init = function() {
         $('.mimic-damper').fadeToggle('fast');
     });
 
-    if (this.isDraggable) this.enableDraggable();
-
     //TODO Set up dampers to use live settings.
     /* Initialise the selected damper. */
     $( ".mimic-damper" ).change(function(){
