@@ -573,6 +573,58 @@
 }
 
 /******************************************************************************
+ ** Mimic Widget                                                            **
+ ******************************************************************************/
+#mimic-box .window-content{
+    background: #F7F7F7;
+}
+
+.mimic-damper {
+    background: url('/uts/shaketable/images/damper-pressure.png');
+    background-repeat: repeat-y;
+	padding: 12px;
+	width: 30px;
+	border: 1px solid #5F5F5F;
+	cursor: pointer;
+	position: absolute;
+	border-radius: 6px;
+	right: 8px;
+}
+
+.mimic-damperInfo {
+    height: 24px;
+    width: 32px;
+    background: #FFF;
+    border: 1px solid #5F5F5F;
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    text-align: center;
+    line-height: 26px;
+    font-size: 13px;
+    border-radius: 6px 0px 0px 6px;
+}
+
+#mimic-damperOne {
+    top: 22px;
+}
+
+#mimic-damperTwo {
+    top: 142px;
+}
+
+#mimic-damperThree {
+    top: 263px;
+}
+
+.mimic-toggle-dampers {
+    color: #333;
+    width: 78px;
+    font-size: 10px;
+    float: right;
+}
+
+/******************************************************************************
  ** Camera Widget                                                            **
  ******************************************************************************/
  

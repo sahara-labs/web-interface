@@ -66,6 +66,9 @@ ShakeTableControl.prototype.setup = function() {
 	o.isPulling = false;
 	this.widgets.push(o);
 
+    /* Add mimic to page. */
+    this.widgets.push(new MimicWidget(this.$container, 'Diagram', ''));
+
 	/* Add camera to page. */
 	this.widgets.push(new CameraWidget(this.$container, 'Camera', ''));
 
@@ -2440,6 +2443,393 @@ SwitchWidget.prototype.setDisplay = function(on) {
  * @param draggable true if is draggable
  */
 SwitchWidget.prototype.setDraggable = function(draggable) {
+    this.isDraggable = draggable;
+};
+
+/* ============================================================================
+ * == Mimic Widget.                                                          ==
+ * ============================================================================ */
+
+/**
+ * Mimic Widget. This widget creates and controls the Shake Table Mimic.
+ *
+ * @param $container the container to append the mimic to
+ * @param title the mimic title
+ */
+function MimicWidget($container, title)
+{
+    Widget.call(this, $container, title, 'mimic');
+
+    /** {String} The identifier of the Mimic. */
+    this.id = 'mimic';
+
+    /** The box width. The box is the outmost container of the widget. */
+    this.boxWidth = undefined;
+
+    /** The box height. */
+    this.boxHeight = undefined;
+
+    /** Width of the mimic. */
+    this.width = 420;
+
+    /** Height of the mimic. */
+    this.height = 300;
+
+    /** The X and Y axis labels. */
+    this.axis = {
+        x: 95,
+        y: 250
+    };
+
+    /** Canvas context. */
+    this.ctx = null;
+
+    /** Data fields. */
+    this.dataFields = { };
+
+    /** The interval rate of the graph animation in milliseconds. */
+    this.intervalRate = 12;
+
+    /** {boolean} Whether this widget is to be draggable. */
+    this.isDraggable = true;
+
+    /** Whether this widget is pulling data, i.e. polling the server for new
+     *  graphing information. */
+    this.isPulling = true;
+}
+MimicWidget.prototype = new Widget;
+
+MimicWidget.prototype.init = function() {
+    /* Size reset. */
+    this.width = 420;
+    this.height = 300;
+
+    this.$widget = this.generateBox(this.id + '-box');
+
+    /* Add the canvas panel. */
+    this.canvas = getCanvas(this.id, this.width, this.height);
+    this.$widget.find("#" + this.id).append(this.canvas);
+    this.ctx = this.canvas.getContext("2d");
+
+    /* Add styles to canvas */
+    this.ctx.translate(0.5, 0.5);
+    this.ctx.shadowColor = "rgba( 0, 0, 0, 0.2 )";
+    this.ctx.shadowOffsetX = 1;
+    this.ctx.shadowOffsetY = 1;
+    this.ctx.shadowBlur = 3;
+
+    /* Track size. */
+    this.boxWidth = parseInt(this.$widget.css("width"));
+    this.boxHeight = parseInt(this.$widget.css("height"));
+
+    /* Settings for the masses */
+    this.massW = 200;
+    this.massH = 30;
+    this.massBg = '#428AE9';
+    this.massStroke = '#282828';
+
+    /* Settings for the guide rail. */
+    this.guideH = this.massH - (this.massH / 1.3);
+    this.guideBg = '#dadada';
+    this.handleH = this.guideH * 2;
+    this.handleW = this.massW - (this.massW / 1.25);
+    this.handleBg = '#aaa';
+    this.handleStroke = '#666';
+
+    /* Calculates the Y axes of various mimic elements. */
+    this.mass1Y = this.axis.y - (this.massH * 4);
+    this.mass2Y = this.axis.y - (this.massH * 8);
+    this.guideY = this.axis.y + (this.massH * 1.10);
+    this.handleY = this.axis.y + this.massH;
+
+    //TODO Remove these variables as they will not be needed once the mimic is updated with live data.
+    this.toggle = true;
+    this.counter = 0;
+
+    /* Event handlers. */
+    var thiz = this;
+    this.$widget.find('.mimic-label').click(function() {
+        thiz.showTrace($(this).children(".mimic-label-text").text(),
+                $(this).find(".switch .slide").toggleClass("on off").hasClass("on"));
+	});
+
+    this.$widget.find('.mimic-toggle-dampers').click(function() {
+        $('.mimic-damper').fadeToggle('fast');
+    });
+
+    if (this.isDraggable) this.enableDraggable();
+
+    //TODO Set up dampers to use live settings.
+    /* Initialise the selected damper. */
+    $( ".mimic-damper" ).change(function(){
+        this.val = $(this).find('input').val();
+        if (this.val >= 0 && this.val <= 100)
+        {
+            $(this).css('box-shadow', 'none');
+            thiz.initDamper(this,this.val);
+        }
+        else
+        {
+            $(this).css('box-shadow', '0px 0px 5px #F00');
+        };
+    });
+
+    /* Enable dragging. */
+    this.enableDraggable();
+
+    /* Enable resizing. */
+    this.enableResizable(340,395);
+
+    /* Draw the first frame contents. */
+    this.drawFrame();
+};
+
+MimicWidget.prototype.getHTML = function() {
+    /* Canvas Element. */
+    var html = "<div class='mimic'>" +
+    "               <div id='mimic'></div>" +
+    "               <div class='mimic-damper' id='mimic-damperOne'>" +
+    "                   <input class='mimic-damperInfo' value='C'/>" +
+    "               </div>" +
+    "               <div class='mimic-damper' id='mimic-damperTwo'>" +
+    "                   <input class='mimic-damperInfo' value='C'/>" +
+    "               </div>" +
+    "               <div class='mimic-damper' id='mimic-damperThree'>" +
+    "                   <input class='mimic-damperInfo' value='C'/>" +
+    "               </div>" +
+    "            </div><div class='click-button mimic-toggle-dampers'>Toggle Dampers</div>";
+
+    return html;
+};
+
+MimicWidget.prototype.consume = function(data) {
+    this.updateData(data);
+};
+
+/**
+ * Updates mimic with data received from the server.
+ *
+ * @param data data object
+ */
+MimicWidget.prototype.updateData = function(data) {
+
+    //TODO Replace with live data.
+    /* Gets the data for the mimic */
+    this.baseX = this.axis.x;
+    this.mass1X = this.axis.x;
+    this.mass2X = this.axis.x;
+}
+
+/**
+ * Animates the mimic.
+ */
+MimicWidget.prototype.drawFrame = function() {
+    var thiz = this;
+
+    this.updateData();
+
+    /* Calculate new positon for base handle's. */
+    this.leftHandleX = this.baseX + (this.massW / 4.5);
+    this.rightHandleX = this.baseX + this.massW - (this.massW / 2.5);
+
+    //TODO Remove animation and pass real data to the mimic.
+    /* Moves masses in increments to created animated effect. */
+
+        if (this.toggle === true)
+        {
+            if (this.counter < 10)
+                {
+                    this.mass2X = this.mass2X - this.counter;
+                    this.mass1X = this.mass1X + this.counter;
+                    if (this.baseX < this.axis.x)
+                    {
+                        this.baseX = this.baseX++;
+                        this.leftHandleX = this.leftHandleX + 2;
+                        this.rightHandleX = this.rightHandleX + 2;
+                    }
+                    else
+                    {
+                        this.baseX = this.baseX--;
+                        this.leftHandleX = this.leftHandleX - 3;
+                        this.rightHandleX = this.rightHandleX - 3;
+                    }
+                    this.counter = this.counter + 1;
+                }
+                else
+                {
+                   this.mass2X = this.mass2X - this.counter;
+                   this.mass1X = this.mass1X + this.counter;
+                   this.toggle = false;
+                }
+        }
+        else
+        {
+            if (this.counter > -10)
+            {
+                this.mass2X = this.mass2X - this.counter;
+                this.mass1X = this.mass1X + this.counter;
+                this.counter = this.counter - 1;
+            }
+            else
+            {
+                this.mass2X = this.mass2X - this.counter;
+                this.mass1X = this.mass1X + this.counter;
+                this.toggle = true;
+            }
+        }
+
+
+    /* Clear old frame. */
+    this.ctx.clearRect(0, 0, this.width, this.height);
+
+    /* Draw the bases left arm. */
+    this.drawArm(this.mass1X, this.mass1Y, 0, this.massH, this.baseX, this.axis.y);
+
+    /* Draw the bases right arm. */
+    this.drawArm(this.mass1X, this.mass1Y, this.massW, this.massH, this.baseX, this.axis.y);
+
+    /* Draw Mass Ones's left arm. */
+    this.drawArm(this.mass2X, this.mass2Y, 0, this.massH, this.mass1X, this.mass1Y);
+
+    /* Draw Mass Ones's right arm. */
+    this.drawArm(this.mass2X, this.mass2Y, this.massW, this.massH, this.mass1X, this.mass1Y);
+
+    /* Draw the Base. */
+    this.drawBox(this.baseX, this.axis.y, this.massW, this.massH, this.massBg, this.massStroke, 'Base');
+
+    /* Draw Mass One. */
+    this.drawBox(this.mass1X, this.mass1Y, this.massW, this.massH, this.massBg, this.massStroke, 'M1');
+
+    /* Draw Mass Two. */
+    this.drawBox(this.mass2X, this.mass2Y, this.massW, this.massH, this.massBg, this.massStroke, 'M2');
+
+    /* Draw the guide rail. */
+    this.drawBox(this.axis.x, this.guideY, this.massW, this.guideH, this.guideBg, this.massStroke, '');
+
+    /* Draw the guide handles. */
+    this.drawBox(this.leftHandleX, this.handleY, this.handleW, this.handleH, this.guideBg, this.handleStroke, '');
+    this.drawBox(this.rightHandleX, this.handleY, this.handleW, this.handleH, this.guideBg, this.handleStroke, '');
+    this.drawBox(this.leftHandleX, this.guideY, this.handleW, this.guideH, this.handleBg, this.handleStroke, '');
+    this.drawBox(this.rightHandleX, this.guideY, this.handleW, this.guideH, this.handleBg, this.handleStroke, '');
+
+    setTimeout(function() { thiz.drawFrame(); }, this.intervalRate);
+};
+
+/**
+ * Draws a box.
+ *
+ * @param x the box's x axis.
+ * @param y the box's y axis.
+ * @param mw the box's width.
+ * @param mh the box's height.
+ * @param bg the box's background colour.
+ * @param label the box's label.
+ */
+MimicWidget.prototype.drawBox = function(x,y,bw,bh,bg,stroke,label) {
+
+    /* Draws the box. */
+    this.ctx.beginPath();
+    this.ctx.rect(x,y,bw,bh);
+    this.ctx.fillStyle = bg;
+    this.ctx.fill();
+    this.ctx.lineWidth = 1;
+    this.ctx.strokeStyle = stroke;
+    this.ctx.stroke();
+
+    /* Draws the box's label. */
+    this.ctx.fillStyle = '#fff';
+    this.ctx.font = "9pt arial";
+    this.ctx.textAlign = 'center';
+    this.ctx.lineWidth = 1;
+    this.ctx.strokeStyle = '#1256B1';
+    this.ctx.strokeText(label, x + (bw / 2 + 1), y + 19);
+    this.ctx.fillText(label, x + (bw / 2), y + 18);
+};
+
+/**
+ * Draws an arm.
+ *
+ * @param x the arm's x axis.
+ * @param y the arm's y axis.
+ * @param mw width of the mass.
+ * @param mh height of the mass.
+ * @param endX the arms end X axis.
+ * @param endY the arms end Y axis.
+ */
+MimicWidget.prototype.drawArm = function(x,y,mw,mh,endX,endY) {
+    /* Get the start point of the arm. */
+    mw > 0 ? this.xPos = x + mw - 2 + '.5':
+    this.xPos = x + 1 + '.5';
+    this.yPos = y + mh;
+
+    /* Get the end point of the arm. */
+    mw > 0 ? this.xEnd = endX + mw - 2 + '.5':
+    this.xEnd = endX + 1 + '.5';
+    this.yEnd = endY;
+
+    /* Get the control point's Y axis. */
+    this.yCon = y + (y / 4.5);
+
+    /* Draws the arm's border. */
+    this.ctx.beginPath();
+    this.ctx.moveTo(this.xPos,this.yPos);
+    this.ctx.quadraticCurveTo(this.xPos, this.yCon, this.xEnd, this.yEnd);
+    this.ctx.lineWidth = 4;
+    this.ctx.strokeStyle = '#808080';
+    this.ctx.stroke();
+
+    /* Draws the arm. */
+    this.ctx.beginPath();
+    this.ctx.moveTo(this.xPos,this.yPos);
+    this.ctx.quadraticCurveTo(this.xPos, this.yCon, this.xEnd, this.yEnd);
+    this.ctx.lineWidth = 2;
+    this.ctx.strokeStyle = '#dadada';
+    this.ctx.stroke();
+}
+
+//TODO replace damper function to use actual damper value.
+/**
+ * Initiates the damper.
+ *
+ * @param thiz the selected damper
+ */
+MimicWidget.prototype.initDamper = function(thiz,val) {
+
+    /* Gets the damper's values */
+    this.damperPressure = val;
+
+    /* Check for correct parameters. */
+    if (this.damperPressure<= 100 && this.damperPressure>= 0)
+    {
+        $(thiz).find('.mimic-damperInfo').html(this.damperPressure+ '%');
+        $(thiz).animate({
+            'background-position-x': this.damperPressure+ '%',
+        }, 1000 );
+    }
+};
+
+/**
+ * Sets the display value.
+ *
+ * @param on whether the display should be on or off
+ */
+MimicWidget.prototype.setDisplay = function(on) {
+    if (on)
+    {
+        this.$widget.find(".switch .slide").addClass("on");
+    }
+    else
+    {
+        this.$widget.find(".switch .slide").removeClass("on");
+    }
+};
+
+/**
+ * Whether this widget is draggable.
+ *
+ * @param draggable true if is draggable
+ */
+MimicWidget.prototype.setDraggable = function(draggable) {
     this.isDraggable = draggable;
 };
 
