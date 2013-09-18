@@ -588,7 +588,7 @@
 	cursor: pointer;
 	position: absolute;
 	border-radius: 6px;
-	right: 8px;
+	right: 35px;
 }
 
 .mimic-damperInfo {
@@ -605,23 +605,33 @@
     border-radius: 6px 0px 0px 6px;
 }
 
-#mimic-damperOne {
-    top: 22px;
+.damper-arm {
+    position: absolute;
+    right: -26px;
 }
 
-#mimic-damperTwo {
-    top: 142px;
+.damper-arm-base {
+    top: 1px;
 }
 
-#mimic-damperThree {
+.damper-arm-one {
+    top: 1px;
+}
+
+.damper-arm-two {
+    top: 1px;
+}
+
+#mimic-damper-base {
     top: 263px;
 }
 
-.mimic-toggle-dampers {
-    color: #333;
-    width: 78px;
-    font-size: 10px;
-    float: right;
+#mimic-damper-one {
+    top: 142px;
+}
+
+#mimic-damper-two {
+    top: 22px;
 }
 
 /******************************************************************************

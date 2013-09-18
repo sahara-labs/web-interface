@@ -2542,6 +2542,7 @@ MimicWidget.prototype.init = function() {
     this.mass2Y = this.axis.y - (this.massH * 8);
     this.guideY = this.axis.y + (this.massH * 1.10);
     this.handleY = this.axis.y + this.massH;
+    this.circleY = (this.axis.y + (this.massH / 2));
 
     //TODO Remove these variables as they will not be needed once the mimic is updated with live data.
     this.toggle = true;
@@ -2576,9 +2577,6 @@ MimicWidget.prototype.init = function() {
     /* Enable dragging. */
     this.enableDraggable();
 
-    /* Enable resizing. */
-    this.enableResizable(340,395);
-
     /* Draw the first frame contents. */
     this.drawFrame();
 };
@@ -2586,17 +2584,20 @@ MimicWidget.prototype.init = function() {
 MimicWidget.prototype.getHTML = function() {
     /* Canvas Element. */
     var html = "<div class='mimic'>" +
+    "               <div class='mimic-damper' id='mimic-damper-two'>" +
+    "               <img class='damper-arm damper-arm-two' src='/uts/shaketable/images/damper-arm.png'/>" +
+    "                   <input class='mimic-damperInfo' value='C'/>" +
+    "               </div>" +
+    "               <div class='mimic-damper' id='mimic-damper-one'>" +
+    "               <img class='damper-arm damper-arm-one' src='/uts/shaketable/images/damper-arm.png'/>" +
+    "                   <input class='mimic-damperInfo' value='C'/>" +
+    "               </div>" +
+    "               <div class='mimic-damper' id='mimic-damper-base'>" +
+    "               <img class='damper-arm damper-arm-base' src='/uts/shaketable/images/damper-arm.png'/>" +
+    "                   <input class='mimic-damperInfo' value='C'/>" +
+    "               </div>" +
     "               <div id='mimic'></div>" +
-    "               <div class='mimic-damper' id='mimic-damperOne'>" +
-    "                   <input class='mimic-damperInfo' value='C'/>" +
-    "               </div>" +
-    "               <div class='mimic-damper' id='mimic-damperTwo'>" +
-    "                   <input class='mimic-damperInfo' value='C'/>" +
-    "               </div>" +
-    "               <div class='mimic-damper' id='mimic-damperThree'>" +
-    "                   <input class='mimic-damperInfo' value='C'/>" +
-    "               </div>" +
-    "            </div><div class='click-button mimic-toggle-dampers'>Toggle Dampers</div>";
+    "            </div>";
 
     return html;
 };
@@ -2624,7 +2625,6 @@ MimicWidget.prototype.updateData = function(data) {
  */
 MimicWidget.prototype.drawFrame = function() {
     var thiz = this;
-
     this.updateData();
 
     /* Calculate new positon for base handle's. */
@@ -2677,7 +2677,6 @@ MimicWidget.prototype.drawFrame = function() {
             }
         }
 
-
     /* Clear old frame. */
     this.ctx.clearRect(0, 0, this.width, this.height);
 
@@ -2694,31 +2693,40 @@ MimicWidget.prototype.drawFrame = function() {
     this.drawArm(this.mass2X, this.mass2Y, this.massW, this.massH, this.mass1X, this.mass1Y);
 
     /* Draw the Base. */
-    this.drawBox(this.baseX, this.axis.y, this.massW, this.massH, this.massBg, this.massStroke, 'Base');
+    this.drawBox(this.baseX, this.axis.y, this.massW, this.massH, this.massBg, this.massStroke, 'Base', true);
 
     /* Draw the Base's shadow. */
-    this.drawBox(this.baseX, (this.axis.y - this.massH / 8), this.massW, this.shadowH, this.shadowBg, this.massStroke,'');
+    this.drawBox(this.baseX, (this.axis.y - this.massH / 8), this.massW, this.shadowH, this.shadowBg, this.massStroke,'', false);
 
     /* Draw Mass One. */
-    this.drawBox(this.mass1X, this.mass1Y, this.massW, this.massH, this.massBg, this.massStroke, 'M1');
+    this.drawBox(this.mass1X, this.mass1Y, this.massW, this.massH, this.massBg, this.massStroke, 'M1', true);
 
     /* Draw Mass One's shadow. */
-    this.drawBox(this.mass1X, (this.mass1Y - this.massH / 8), this.massW, this.shadowH, this.shadowBg, this.massStroke,'');
+    this.drawBox(this.mass1X, (this.mass1Y - this.massH / 8), this.massW, this.shadowH, this.shadowBg, this.massStroke,'', false);
 
     /* Draw Mass Two. */
-    this.drawBox(this.mass2X, this.mass2Y, this.massW, this.massH, this.massBg, this.massStroke, 'M2');
+    this.drawBox(this.mass2X, this.mass2Y, this.massW, this.massH, this.massBg, this.massStroke, 'M2', true);
 
     /* Draw Mass Two's shadow. */
-    this.drawBox(this.mass2X, (this.mass2Y + this.massH), this.massW, this.shadowH, this.shadowBg, this.massStroke,'');
+    this.drawBox(this.mass2X, (this.mass2Y + this.massH), this.massW, this.shadowH, this.shadowBg, this.massStroke,'', false);
 
     /* Draw the guide rail. */
-    this.drawBox(this.axis.x, this.guideY, this.massW, this.guideH, this.guideBg, this.massStroke, '');
+    this.drawBox(this.axis.x, this.guideY, this.massW, this.guideH, this.guideBg, this.massStroke, '', false);
 
     /* Draw the guide handles. */
-    this.drawBox(this.leftHandleX, this.handleY, this.handleW, this.handleH, this.guideBg, this.handleStroke, '');
-    this.drawBox(this.rightHandleX, this.handleY, this.handleW, this.handleH, this.guideBg, this.handleStroke, '');
-    this.drawBox(this.leftHandleX, this.guideY, this.handleW, this.guideH, this.handleBg, this.handleStroke, '');
-    this.drawBox(this.rightHandleX, this.guideY, this.handleW, this.guideH, this.handleBg, this.handleStroke, '');
+    this.drawBox(this.leftHandleX, this.handleY, this.handleW, this.handleH, this.guideBg, this.handleStroke, '', false);
+    this.drawBox(this.rightHandleX, this.handleY, this.handleW, this.handleH, this.guideBg, this.handleStroke, '', false);
+    this.drawBox(this.leftHandleX, this.guideY, this.handleW, this.guideH, this.handleBg, this.handleStroke, '', false);
+    this.drawBox(this.rightHandleX, this.guideY, this.handleW, this.guideH, this.handleBg, this.handleStroke, '', false);
+
+    /* Draw the motor outter circle. */
+    this.drawCircle((this.axis.x - (this.axis.x / 1.4)), this.circleY, (this.massH / 1.2), "#999", 1.3, "#333");
+
+    /* Animate the motor. */
+    this.animateMotor(this.baseX, this.axis.y, this.massH);
+
+    /* Draw the motor inner circle. */
+    this.drawCircle((this.baseX - (this.baseX / 1.4)), this.circleY, (this.massH / 6), "#999", 1, "#333");
 
     setTimeout(function() { thiz.drawFrame(); }, this.intervalRate);
 };
@@ -2733,7 +2741,7 @@ MimicWidget.prototype.drawFrame = function() {
  * @param bg the box's background colour.
  * @param label the box's label.
  */
-MimicWidget.prototype.drawBox = function(x,y,bw,bh,bg,stroke,label) {
+MimicWidget.prototype.drawBox = function(x,y,bw,bh,bg,stroke,label,damper) {
 
     /* Draws the box. */
     this.ctx.beginPath();
@@ -2752,6 +2760,15 @@ MimicWidget.prototype.drawBox = function(x,y,bw,bh,bg,stroke,label) {
     this.ctx.strokeStyle = '#1256B1';
     this.ctx.strokeText(label, x + (bw / 2 + 1), y + 19);
     this.ctx.fillText(label, x + (bw / 2), y + 18);
+
+    if (damper === true)
+    {
+        this.ctx.beginPath();
+        this.ctx.moveTo((x + bw), (y + (bh / 2)));
+        this.ctx.lineTo((x + (bw * 1.4)), (y + (bh / 2)));
+        this.ctx.strokeStyle = '#000';
+        this.ctx.stroke();
+    }
 };
 
 /**
@@ -2795,6 +2812,67 @@ MimicWidget.prototype.drawArm = function(x,y,mw,mh,endX,endY) {
     this.ctx.stroke();
 }
 
+/**
+ * Draws a circle.
+ *
+ * @param x the circle's x axis.
+ * @param y the circle's y axis.
+ * @param radius the radius of the circle.
+ * @param fill the fill style of the circle.
+ * @param lw the circle's line width
+ * @param stroke the circle's stroke style
+ */
+MimicWidget.prototype.drawCircle = function(x,y,radius,fill,lw,stroke) {
+      this.ctx.beginPath();
+      this.ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
+      this.ctx.fillStyle = fill;
+      this.ctx.fill();
+      this.ctx.lineWidth = lw;
+      this.ctx.strokeStyle = stroke;
+      this.ctx.stroke();
+}
+
+/**
+ * Draws the motor animations.
+ *
+ * @param x the x axis of the base.
+ * @param y the default y axis.
+ * @param mh the height of the mass.
+ */
+MimicWidget.prototype.animateMotor = function(x,y,mh) {
+
+    // x axis positions
+    var x1 = (x - (x / 1.25));
+    var x2 = (x - (x / 1.55));
+    var x3 = x;
+
+    // x axis positions
+    var y1 = (y - (mh / 15));
+    var y2 = (y + 10);
+    var y3 = (y + 20);
+    var y4 = (y + (mh + (mh / 15)));
+
+    // Draw the motor arm path
+    this.ctx.beginPath();
+    this.ctx.moveTo(x1, y1);
+    this.ctx.lineTo(x2, y1);
+    this.ctx.lineTo(x2, y2);
+    this.ctx.lineTo(x3, y2);
+    this.ctx.lineTo(x3, y3);
+    this.ctx.lineTo(x2, y3);
+    this.ctx.lineTo(x2, y4);
+    this.ctx.lineTo(x1, y4);
+    this.ctx.lineTo(x1, y1);
+
+    // complete motor arm shape
+    this.ctx.closePath();
+    this.ctx.lineWidth = 1;
+    this.ctx.fillStyle = '#ccc';
+    this.ctx.fill();
+    this.ctx.strokeStyle = '#333';
+    this.ctx.stroke();
+}
+
 //TODO replace damper function to use actual damper value.
 /**
  * Initiates the damper.
@@ -2811,7 +2889,7 @@ MimicWidget.prototype.initDamper = function(thiz,val) {
     {
         $(thiz).find('.mimic-damperInfo').html(this.damperPressure+ '%');
         $(thiz).animate({
-            'background-position-x': this.damperPressure+ '%',
+            'background-position': '0' + this.damperPressure+ '%',
         }, 1000 );
     }
 };
