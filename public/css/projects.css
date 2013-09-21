@@ -423,5 +423,13 @@
 	margin-right: 5px;
 }
 
+.file-add {
+	width: 80px;
+	left: 325px;
+	bottom: 20px;
+}
 
-
+#upload-target {
+	width: 0;
+	height: 0;
+}

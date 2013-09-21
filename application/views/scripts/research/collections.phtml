@@ -49,7 +49,7 @@ $this->headScript()->appendFile($this->baseUrl('/js/projects.js'));
     </div>
     <div id='session-list'>
         <ul><?php foreach ($this->project->getSessions() as $ses): ?>
-            <li class='collection-item'>
+            <li id="session-<?=$ses->id?>" class='collection-item'>
                 <div class='collection-item-title'>
                     <span class='ui-icon ui-icon-circle-arrow-e'></span>
                     Session from <?=$ses->assignment_time->format('d-M-Y') . ' at ' .
@@ -75,11 +75,17 @@ $this->headScript()->appendFile($this->baseUrl('/js/projects.js'));
                        ?>
                     </div>
                     <div style='clear:both'></div>
+                    <div id="file-add-<?=$ses->id?>" class='file-add common-button'>
+                        <span class='ui-icon ui-icon-arrowthickstop-1-n'></span>
+                        Add File
+                    </div>
                 </div>
            </li>
         <?php endforeach; ?></ul>
     </div>
 </div>
+
+<iframe id="upload-target" name="upload-target" src=""></iframe>
 
 <script type="text/javascript">
 $(document).ready(function() {
@@ -114,6 +120,7 @@ $(document).ready(function() {
         }
     });
 
+    $("#session-list .file-add").click(function() { addFile(this); });
     $("#session-list .file-delete").click(function() { deleteFile(this); });
 });
 </script>

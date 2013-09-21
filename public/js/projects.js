@@ -541,6 +541,87 @@ function addCollection()
 }
 
 /**
+ * Adds a file.
+ * 
+ * @param id session id to add
+ */
+function addFile(id)
+{
+    id = $(id).attr("id");
+    id = id.substr(id.lastIndexOf("-") + 1); 
+    
+    $("body").append(
+        "<div id='add-file-dialog' class='confirm-dialog' title='Add File'>" +
+            "<p>Add a file to the session which will then form part of a dataset when the session is " +
+            "collated as a dataset.</p> " +
+            "<div>" +
+                "<form id='add-file-form' method='POST' enctype='multipart/form-data' " + 
+		  		        "action='/datafile/upload' target='upload-target'>" +
+		  		    "<input type='hidden' name='MAX_FILE_SIZE' value='2097152' />" +
+		  		    "<input type='hidden' name='session-id' value='" + id + "'>" + 
+		  		    "<input id='upload-file' name='file' id='file' size='27' type='file' />" +
+		  	    "</form>" +
+            "</div>" +
+        "</div>"
+    );
+
+    $("#add-file-dialog").dialog({
+        closeOnEscape: true,
+        width: 400,
+        resizable: false,
+        modal: true,
+        buttons: {
+            'Upload' : function() {
+                uploadFile();
+            },
+            'Close': function() { $(this).dialog("close"); }
+        },
+        close: function() { $(this).dialog("destroy"); $(this).remove(); }
+    });
+}
+
+function uploadFile(id)
+{
+    var width = $("body").width();
+    var height = $("body").height();
+    
+    $("#add-file-form").dialog('close');
+    $("body").append(
+        '<div class="ui-widget-overlay" style="width:' + width + 'px;height:' + height + 'px">' +
+        '</div>' +
+        '<div class="bitstreamuploadoverlaydialog ui-corner-all" style="left:' + Math.floor(width / 2 - 125) + 'px;top:' + 
+                + Math.floor(height / 2 - 40) + 'px">' +
+            '<img src="/images/ajax-loading.gif" alt="Loading" />' +
+            '<h3>Uploading file...</h3>' +
+        '</div>'
+    );
+    
+    setTimeout(checkFileUploaded, 2000);
+}
+
+function checkFileUploaded()
+{
+var response = $("#uploadtarget").contents().text();
+    
+    if (response == undefined || response == "") // Still waiting for the post response
+    {
+        setTimeout(checkFileUploaded, 2000);
+        return;
+    }
+    else if (response == "true") // Correct response
+    {
+        setTimeout(checkUploadStatus, 2000);
+    }
+    else // Failed response
+    {
+      
+        $("#bitstreamuploaderrormessage").html(response.substr(response.indexOf(';') + 2));
+        $("#bitstreamuploaderror").css('display', 'block');
+        $("#bitstreamupload").dialog('open');
+    }
+}
+
+/**
  * Deletes a file. 
  * 
  * @param node delete button click
@@ -586,8 +667,6 @@ function deleteFile(node)
         },
         close: function() { $(this).dialog("destroy"); $(this).remove(); }
     });
-
-
 }
 
 /**
