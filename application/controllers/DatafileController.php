@@ -90,7 +90,114 @@ class DatafileController extends Sahara_Controller_Action_Acl
      */
     public function uploadAction()
     {
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();
+        
+        /* Load the session the file is being attached too. */
+        if (!($sID = $this->_getParam('session-id')) || !($session = Sahara_Database_Record_Session::load($sID)))
+        {
+            echo 'FAILED: Session not found.';
+            return;
+        }
+        
+        /* Make sure the user is the person who ran the session. */
+        list($ns, $user) = explode(':', $this->_auth->getIdentity(), 2);
+        if (!($session->user->namespace == $ns && $session->user->name == $user))
+        {
+            echo 'FAILED: Not authorised to add file.';
+            return;
+        }
+        
+        /* Upload the file. */
+        if (!($dest = $this->_config->upload->dir))        
+        {
+        	$this->_logger->error("Download directory not configured, 'upload.dir' property.");
+        	throw new Exception('Download directory not configured.');
+        }
+        
+        /* Configure the file uploader. */
+        $adapter = new Zend_File_Transfer_Adapter_Http();        
+        $adapter->setDestination($dest);
+        if ($size = $this->_config->upload->size)
+        {
+        	$adapter->addValidator('FilesSize', false, $size);
+        }
+        
+        /* Receive the files. */        
+        if (!$adapter->receive())
+        {
+        	$error = 'File validation has failed.';
+        	foreach ($adapter->getMessages() as $k => $v)
+        	{
+        		switch ($k)
+        		{
+        			case 'fileUploadErrorIniSize':
+        			case 'fileUploadErrorFormSize':
+        				$error .= ' The file size was too large.';
+        				break;
+        			default:
+        				$error .= ' ' . $v;
+        				break;
+        		}
+        	}
+        
+        	echo "FAILED: $error";
+        	return;
+        }
+        
+        /* Stores the files. */
+        $names = array();
+        foreach ($adapter->getFileInfo() as $file => $info)
+        {
+            $sf = new Sahara_Database_Record_SessionFile();
+            $sf->session = $session;
 
+            $sf->transferred = true;
+            $sf->transfer = 'UPLOAD';
+            $sf->timestamp = new DateTime();
+
+            $path = $adapter->getFileName($file);
+            $sf->name = implode('_', explode(' ', substr($path, strrpos($path, '/') + 1)));
+
+            if (!($this->_config->ands && ($script = $this->_config->ands->fileops) && 
+                    ($mounter = $this->_config->ands->mountuser) && $mount = $this->_config->ands->mountpoint))
+            {
+            	$this->_logger->warn('ANDS file operations script or mount user not configured.');
+            	$response['reason'] = 'Incorrect configuration.';
+            	echo $this->view->json($response);
+            	return;
+            }
+            
+            if (substr($mount, -1) != '/') $mount .= '/';
+            $sf->path = "/$session->id";
+            
+            exec("sudo -u $mounter $script cp '$path' '$mount$session->id/$sf->name'", $output, $code);
+            if ($code == 0)
+            {
+            	$response['success'] = true;
+            }
+            else
+            {
+            	$this->_logger->warn("Failed to copy '$path' to '$sf->path'. Code: $code, line: " . $output[0]);
+            	$response['reason'] = "File copy file to shared directory. Code: $code";
+            }
+            
+            unlink($path);
+            
+            try
+            {
+            	$sf->save();
+                array_push($names, "$sf->name=$sf->id");
+            }
+            catch (Sahara_Database_Exception $ex)
+            {
+            	$this->_logger->error("Failed to add file to session '$session->id':" . $ex->getMessage());
+            	echo 'FAILED: Failed to add record: ' . $ex->getMessage();
+            	return;
+            }
+        }
+        
+        echo "SUCCESS: " . implode(',', $names);
     }
 
     /**
@@ -113,7 +220,7 @@ class DatafileController extends Sahara_Controller_Action_Acl
 
         /* Check the user actually generated the file. */
         list($ns, $user) = explode(':', $this->_auth->getIdentity(), 2);
-        if (!($file->session->user->namespace == $ns && $file->session->user->name))
+        if (!($file->session->user->namespace == $ns && $file->session->user->name == $user))
         {
             $response['message'] = 'Not authorised to access file.';
             echo $this->view->json($response);
@@ -133,7 +240,25 @@ class DatafileController extends Sahara_Controller_Action_Acl
             return;
         }
 
-        // TODO: Actually delete file
+        if (is_file($path))
+        {
+            if (!($this->_config->ands && ($script = $this->_config->ands->fileops) && ($mounter = $this->_config->ands->mountuser)))
+            {
+                $this->_logger->warn('ANDS file operations script or mount user not configured.');
+                $response['reason'] = 'Incorrect configuration.';
+                echo $this->view->json($response);
+                return;
+            }
+            
+            exec("sudo -u $mounter $script del '$path'", $output, $code);
+            if ($code != 0)
+            {
+                $this->_logger->warn("Failed to delete '$path'. Code: $code, line: " . $output[0]);
+                $response['reason'] = "File delete failed. Code: $code";
+                echo $this->view->json($response);
+                return;
+            }
+        }
 
         $response['success'] = true;
         echo $this->view->json($response);

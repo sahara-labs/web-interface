@@ -93,7 +93,8 @@ class Sahara_Acl extends Zend_Acl
 
     /** @var assoc array Pages a research user may access. */
     protected $_researchPages  = array('research' => array('index', 'checkactivity', 'addproject', 'publishproject',
-                                                           'updateproject', 'removeproject', 'collections'),
+                                                           'updateproject', 'removeproject', 'collections', 'removesession',
+                                                           'addcollection'),
                                        'datafile' => array('download', 'upload', 'delete'));
 
     /** @var assoc array Pages an academic user may access. */

@@ -349,7 +349,6 @@ class ResearchController extends Sahara_Controller_Action_Acl
             ));
         }
 
-        // TODO Properly implement this.
         $project->publish_time = new DateTime();
 
         try
@@ -470,10 +469,133 @@ class ResearchController extends Sahara_Controller_Action_Acl
     }
 
     /**
-     * Action to download a research file.
+     * Action that removes a session form a collection by disassociating the
+     * user from the session.
      */
-    public function download()
+    public function removesessionAction()
     {
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();
+        
+        $response = array('success' => false, 'reason' => '');
+        
+        if (!($sID = $this->_getParam('session')) || !($session = Sahara_Database_Record_Session::load($sID)))
+        {
+            $response['reason'] = 'Session not found.';
+            echo $this->view->json($response);
+            return;
+        }
+        
+        list($ns, $user) = explode(':', $this->_auth->getIdentity(), 2);        
+        if (!($session->user->namespace == $ns && $session->user->name == $user))
+        {
+            $response['reason'] = 'Not authorised to delete session.';
+            echo $this->view->json($response);
+            return;
+        }
+        
+        try
+        {
+            $session->user = NULL;
+            $session->save();
+            $response['success'] = true;
+        }
+        catch (Sahara_Database_Exception $ex)
+        {
+            $this->_logger->error("Failed removing user from session $session->id: " . $ex->getMessage());
+            $response['reason'] = 'Database error.';            
+        }
+        
+        echo $this->view->json($response);
+    }
+    
+    /**
+     * Action that adds a collection.
+     */
+    public function addcollectionAction()
+    {
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();
+        
+        $response = array('success' => false, 'reason' => '');
+        
+        if (!($pID = $this->_getParam('project')) || !($project = Sahara_Database_Record_Project::load($pID)))
+        {
+            $response['reason'] = 'Project not found.';
+            echo $this->view->json($response);
+            return;
+        }
+        
+        if (!($user = Sahara_Database_Record_User::getLoginUser()))
+        {
+            $response['reason'] = 'No user logged in.';
+            echo $this->view->json($response);
+            return;
+        }
+        
+        /* Make sure the project is owned by the user. */
+        if (!($user->namespace == $project->user->namespace && $user->name == $project->user->name))
+        {
+            $response['reason'] = 'Not authorised to add collection for project.';
+            echo $this->view->json($response);
+            return;
+        }
+        
+        /* Add collection. */
+        $collection = new Sahara_Database_Record_Collection();
+        $collection->user_managed = true;
+        $collection->project = $project;
+        
+        /* Add sessions to collection. */
+        if (!($ses = $this->_getParam('sessions')))
+        {
+            $response['reason'] = 'Param not provided.';
+            echo $this->view->json($response);
+            return;
+        }
+        
+        foreach (explode(',', $ses) as $sID)
+        {
+            if (!($session = Sahara_Database_Record_Session::load($sID)))
+            {
+                $response['reason'] = "Session $sID not found.";
+                echo $this->view->json($response);
+                return;
+            }
+            
+            if (!($user->namespace == $session->user->namespace && $user->name == $session->user->name))
+            {
+                $response['reason'] = 'Not authorised to add session to collection.';
+                echo $this->view->json($response);
+                return;
+            }
+            
+            $collection->sessions = $session;
+        }
+        
+        try
+        {
+            $collection->save();
+        }
+        catch (Sahara_Database_Exception $ex)
+        {
+            throw $ex;
+            $this->_logger->error('Failed to add colletion: ' . $ex->getMessage());
+            $response['reason'] = 'Failed to add collection.';
+            echo $this->view->json($response);
+            return;
+        }
+        
+        /* Call the Scheduling Server to trigger metadata generation. */
+        $context  = stream_context_create(array(
+        		'http' => array(
+        				'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
+        				'method'  => 'POST',
+        				'content' => http_build_query(array('collection' => $collection->id)),
+        		),
+        ));
 
+        echo file_get_contents('http://' . $this->_config->SchedulingServer->hostname . ':' . 
+                $this->_config->SchedulingServer->port . '/SchedulingServer-ANDS/publish', false, $context);
     }
 }

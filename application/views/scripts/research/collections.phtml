@@ -42,6 +42,8 @@ $this->headScript()->appendFile($this->baseUrl('/js/projects.js'));
 
 <?php if (!$this->project->auto_publish_collections):
            if (count($this->project->getSessions())): ?>
+
+<!-- Session list. -->        
 <div id='session-list-container' class='common-box'>
     <div id='session-list-title' class='common-title'>
         <span class='ui-icon ui-icon-gear'></span>
@@ -54,6 +56,13 @@ $this->headScript()->appendFile($this->baseUrl('/js/projects.js'));
                     <span class='ui-icon ui-icon-circle-arrow-e'></span>
                     Session from <?=$ses->assignment_time->format('d-M-Y') . ' at ' .
                             $ses->assignment_time->format('H:i:s');?>.
+                    <div id="session-delete-<?=$ses->id?>" class='session-delete common-button'>
+                        <span class='ui-icon ui-icon-trash'></span>
+                    </div>
+                    <div id="session-select-<?=$ses->id?>" class='session-select common-button'>
+                        <input type='checkbox' />
+                    </div>
+                    
                 </div>
                 <div class='collection-contents'>
                     <div class='collection-details'>
@@ -82,10 +91,14 @@ $this->headScript()->appendFile($this->baseUrl('/js/projects.js'));
                 </div>
            </li>
         <?php endforeach; ?></ul>
-    </div>
+    </div>    
 </div>
 
-<iframe id="upload-target" name="upload-target" src=""></iframe>
+<!-- Collation button. -->
+<div id='collate-dataset-<?=$this->project->id?>' class='common-button collate-dataset-button'>
+        <img src='/images/collate-dataset.png' alt='' />
+        <span>Collate Dataset</span>
+</div>
 
 <script type="text/javascript">
 $(document).ready(function() {
@@ -120,8 +133,11 @@ $(document).ready(function() {
         }
     });
 
+    $("#session-list .session-select").click(function() { selectSession(this); });
+    $("#session-list .session-delete").click(function() { deleteSession(this); });
     $("#session-list .file-add").click(function() { addFile(this); });
     $("#session-list .file-delete").click(function() { deleteFile(this); });
+    $(".collate-dataset-button").click(function() { collateDataset(this); });
 });
 </script>
 
@@ -130,8 +146,8 @@ $(document).ready(function() {
     <span class='ui-icon ui-icon-alert'></span>
     This activity has no sessions to collate as a dataset. Generate more data by going to
     <a href='/queue#userClass<?=$this->project->userClass->id?>'>'Group:
-    <?=$this->stringTransform($this->project->userClass->name, '_', ' ')?>'</a> on the 'Research
-    Apparatuses' page and using a research apparatus to save data files.
+    <?=$this->stringTransform($this->project->userClass->name, '_', ' ')?>'</a> on the 
+    'Apparatuses' page and saving data files.
 </div>
            <?php endif; ?>
 <?php endif; ?>

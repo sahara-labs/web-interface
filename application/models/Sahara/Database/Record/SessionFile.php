@@ -82,10 +82,10 @@ class Sahara_Database_Record_SessionFile extends Sahara_Database_Record
      */
     private function getResearchMountPoint()
     {
-        $conf = Zend_Registry::get('config')->research;
+        $conf = Zend_Registry::get('config')->ands;
         if (!$conf) return '/';
 
-        $mount = $conf->mount;
+        $mount = $conf->mountpoint;
         if (!$mount) return '/';
 
         return substr($mount, -1) == '/' ? $mount : $mount . '/';

@@ -108,10 +108,16 @@
 }
 
 #project-list-container,
-#collection-list-container,
-#session-list-container {
+#collection-list-container {
 	position: absolute;
 	top: 127px;
+	right: 98px;
+	width: 770px;
+}
+
+#session-list-container {
+	position: absolute;
+	top: 170px;
 	right: 98px;
 	width: 770px;
 }
@@ -144,6 +150,7 @@
 #collection-list ul, 
 #session-list ul {
 	list-style: none;
+	overflow: hidden;
 }
 
 #project-list .project-item-title, 
@@ -340,7 +347,9 @@
 	padding: 10px;
 }
 
-
+.collection-details {
+	width: 180px;
+}
 
 .collection-details-title,
 .collection-data-title {
@@ -386,7 +395,7 @@
 
 .files-list a {
 	display: block;
-	width: 100%;
+	width: 180px;
 	height: 100%;
 	text-decoration: none;
     font-weight: bold;
@@ -401,7 +410,7 @@
 .file-delete {
 	position: absolute;
 	top: 3px;
-	right: 15px;
+	right: 22px;
 	height: 18px !important;
 	width: 18px !important;
 	border: 1px solid #AAAAAA;
@@ -426,10 +435,86 @@
 .file-add {
 	width: 80px;
 	left: 325px;
-	bottom: 20px;
+	bottom: 5px;
 }
 
 #upload-target {
 	width: 0;
 	height: 0;
 }
+
+#uploading-file {
+	position:absolute;
+	width:250px;
+	background-color: #FFFFFF;
+	height:60px;
+	border: 1px solid #AAAAAA;
+	padding: 10px;
+	text-align: center;
+	z-index: 1002;
+	color: #606060;
+	-moz-box-shadow: 0 0 10px #AAAAAA; 
+	-webkit-box-shadow: 0 0 10px #AAAAAA; 
+	box-shadow: 0 0 10px #AAAAAA; 
+}
+
+.session-select, .session-delete {
+	float: right;
+	margin: -3px 5px 0;
+	height: 17px;
+	padding: 3px !important;
+}
+
+.session-select {
+	width: 25px;
+	background-color: #ABEAAA !important;
+}
+
+.session-is-selected {
+	background-color: #ABEAAA;
+}
+
+.session-delete {
+	width: 17px;
+	background-color: #F87878 !important;
+}
+
+.session-to-delete {
+	background-color: #F87878;
+}
+
+#session-list {
+	position: relative;	
+}
+
+.collate-dataset-button {
+	position: absolute !important;
+	left: 270px;
+	top: 116px;
+	width: 140px;
+	height: 24px;
+	margin: 10px;
+	opacity: 0.5;
+	cursor: default !important;
+}
+
+.collate-dataset-button span {
+	display: block;
+	float: right;
+	margin: 4px 4px 0 4px;
+}
+
+.collate-dataset-button:hover {
+	box-shadow: 0 0 4px  #B5B5B5 !important;
+	color: #606060 !important;
+}
+
+.collate-dataset-enabled {
+	cursor: pointer !important;
+	opacity: 1;
+}
+
+.collate-dataset-enable:hover {
+	box-shadow: 0 0 4px #606060;
+}
+

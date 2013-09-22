@@ -464,7 +464,7 @@ function updateProject()
 			function(resp) {
 				if (typeof resp != "object") 
 				{
-//					window.location.reload();
+					window.location.reload();
 					return;
 				}
 				
@@ -533,14 +533,6 @@ function removeProject()
 }
 
 /**
- * Adds a collection.
- */
-function addCollection()
-{
-	alert("TODO: Add collection");
-}
-
-/**
  * Adds a file.
  * 
  * @param id session id to add
@@ -551,6 +543,7 @@ function addFile(id)
     id = id.substr(id.lastIndexOf("-") + 1); 
     
     $("body").append(
+        '<iframe id="upload-target" name="upload-target" src=""></iframe>' +
         "<div id='add-file-dialog' class='confirm-dialog' title='Add File'>" +
             "<p>Add a file to the session which will then form part of a dataset when the session is " +
             "collated as a dataset.</p> " +
@@ -559,7 +552,7 @@ function addFile(id)
 		  		        "action='/datafile/upload' target='upload-target'>" +
 		  		    "<input type='hidden' name='MAX_FILE_SIZE' value='2097152' />" +
 		  		    "<input type='hidden' name='session-id' value='" + id + "'>" + 
-		  		    "<input id='upload-file' name='file' id='file' size='27' type='file' />" +
+		  		    "<input id='upload-file-1' name='file' id='file' size='27' type='file' />" +
 		  	    "</form>" +
             "</div>" +
         "</div>"
@@ -572,7 +565,7 @@ function addFile(id)
         modal: true,
         buttons: {
             'Upload' : function() {
-                uploadFile();
+                uploadFile(id);
             },
             'Close': function() { $(this).dialog("close"); }
         },
@@ -582,42 +575,62 @@ function addFile(id)
 
 function uploadFile(id)
 {
-    var width = $("body").width();
-    var height = $("body").height();
+	if ($("#upload-file-1").val() == "") return;
+
+    var width = $("body").width(), height = $("body").height();
     
-    $("#add-file-form").dialog('close');
+    $("#add-file-form").submit();
+    $("#add-file-dialog").dialog('close');
+    
     $("body").append(
-        '<div class="ui-widget-overlay" style="width:' + width + 'px;height:' + height + 'px">' +
+        '<div id="uploading-overlay" class="ui-widget-overlay" style="width:' + width + 'px;height:' + height + 'px">' +
         '</div>' +
-        '<div class="bitstreamuploadoverlaydialog ui-corner-all" style="left:' + Math.floor(width / 2 - 125) + 'px;top:' + 
-                + Math.floor(height / 2 - 40) + 'px">' +
+        '<div id="uploading-file" class="ui-corner-all" style="left:' + Math.floor(width / 2 - 125) + 'px;top:' + 
+                + Math.floor(height / 2 - 40) + 'px;z-index:1001">' +
             '<img src="/images/ajax-loading.gif" alt="Loading" />' +
             '<h3>Uploading file...</h3>' +
         '</div>'
     );
     
-    setTimeout(checkFileUploaded, 2000);
+    setTimeout(function() { checkFileUploaded(id); }, 2000);
 }
 
-function checkFileUploaded()
+function checkFileUploaded(session)
 {
-var response = $("#uploadtarget").contents().text();
+	var response = $("#upload-target").contents().text();
     
     if (response == undefined || response == "") // Still waiting for the post response
     {
-        setTimeout(checkFileUploaded, 2000);
+        setTimeout(function() { checkFileUploaded(id); }, 2000);
         return;
     }
-    else if (response == "true") // Correct response
+    else 
     {
-        setTimeout(checkUploadStatus, 2000);
-    }
-    else // Failed response
-    {
-      
-        $("#bitstreamuploaderrormessage").html(response.substr(response.indexOf(';') + 2));
-        $("#bitstreamuploaderror").css('display', 'block');
-        $("#bitstreamupload").dialog('open');
+    	/* Upload complete. */
+    	$("#upload-target, #uploading-file, #uploading-overlay").remove();
+    	
+    	if (response.indexOf("SUCCESS:") == 0)
+    	{    		
+    		var i = 0, files = response.substr("SUCCESS:".length).split(","), id, html = "", sel = "";
+    		for (i in files)
+    	    {
+    			id = files[i].substr(files[i].indexOf("=") + 1);
+    			sel += "#file-delete-" + id + ", ";
+    			html += "<li class='is-downloadable'>" +
+    						"<span class='ui-icon ui-icon-arrowthickstop-1-s'></span>" +
+    						"<a href='/datafile/download/file/" + id + "' target='_blank'>" + files[i].substr(0, files[i].indexOf("=") - 1) + "</a>" +
+    						"<a id='file-delete-" + id + "' class='file-delete'><span class='ui-icon ui-icon-trash'></span></a>" + 
+    				   "</li>";
+    	    }
+    		
+    		$("#session-" + session + " .files-list").append(html);
+    		$(sel.substr(0, sel.length - 2)).click(function() { deleteFile(this); });
+    	}
+    	else
+    	{
+    		/* Something failed. */
+    		alert(response);
+    	}
     }
 }
 
@@ -667,6 +680,126 @@ function deleteFile(node)
         },
         close: function() { $(this).dialog("destroy"); $(this).remove(); }
     });
+}
+
+function deleteSession(node)
+{
+	$("body").append(
+			"<div id='remove-session-dialog' class='confirm-dialog' title='Remove Confirmation'>" +
+				"<p>Are you sure want to remove this session?</p>" + 
+			"</div>"
+	);
+	
+	$(node).parent().addClass("session-to-delete");
+
+	var id = $(node).attr("id");
+	$("#remove-session-dialog").dialog({
+		closeOnEscape: true,
+		width: 400,
+		resizable: false,
+		modal: true,
+		buttons: {
+			'Remove': function() {
+				$.post(
+						"/research/removesession",
+						{ session: id.substr(id.lastIndexOf("-") + 1) },
+						function(resp) {
+							if (typeof resp == "object")
+							{
+								$("#remove-session-dialog").dialog("close");
+
+								if (resp.success)
+								{
+									$(node).parent().parent().remove();
+									if ($("#session-list ul").children().length == 0)
+									{
+										window.location.reload();								
+									}
+								}
+								else alert("Error: " + resp.reason);
+							}
+							else
+							{
+								window.location.reload();
+							}
+						}
+				);
+			},
+			'Cancel': function() { $(this).dialog("close"); }
+		},
+		close: function() { 
+			$(this).dialog("destroy"); 
+			$(this).remove();
+			$(node).parent().removeClass("session-to-delete");
+		}
+	});
+}
+
+function selectSession(node)
+{
+	var $parent = $(node).parent();
+	if ($parent.hasClass("session-is-selected"))
+	{
+		$parent.removeClass("session-is-selected");
+		$parent.find("input").removeAttr("checked");
+	}
+	else
+	{
+		$parent.addClass("session-is-selected");
+		$parent.find("input").attr("checked", "checked");		
+	}
+	
+	if ($("#session-list .session-select input:checked").length > 0)
+	{
+		$(".collate-dataset-button").addClass("collate-dataset-enabled");
+	}
+	else
+	{
+		$(".collate-dataset-button").removeClass("collate-dataset-enabled");
+	}
+}
+
+function collateDataset(node)
+{
+	if ($("#session-list .session-select input:checked").length == 0) return;
+	
+	$("body").append(
+		"<div id='collate-dialog' title='Collate Dataset'>" +
+			"<p>Are you sure you want to collate the selected sessions as a dataset?</p>" + 
+			"<p class='ui-priority-secondary' style='padding:10px 5px 0;'>" +
+				"<span class='ui-icon ui-icon-info' style='float:left; margin-right: 5px;'></span>This publishes metadata to ANDS." +
+			"</p>" +
+		"</div>"
+	);
+	
+	$("#collate-dialog").dialog({
+		closeOnEscape: true,
+		width: 400,
+		resizable: false,
+		modal: true,
+		buttons: {
+			'Collate': function() {
+				var $checks = $("#session-list .session-select input:checked"), 
+					pid = $(node).attr("id"), ses = '', sid;
+			
+				if ($checks.length == 0) return;
+				
+				$checks.each(function() {
+					sid = $(this).parent().attr("id");
+					ses += sid.substr(sid.lastIndexOf("-") + 1) + ',';
+				});
+				ses = ses.substr(0, ses.length - 1);
+					
+				$.post(
+						"/research/addcollection",
+						{ project: pid.substr(pid.lastIndexOf("-") + 1), sessions: ses },
+						function(resp) { window.location.reload(); }
+				);
+			},
+			'Cancel': function() { $(this).dialog("close"); }
+		},
+		close: function() { $(this).dialog("destroy"); $(this).remove(); }
+	});
 }
 
 /**
