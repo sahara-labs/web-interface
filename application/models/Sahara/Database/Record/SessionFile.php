@@ -6,7 +6,7 @@
  *
  * @license See LICENSE in the top level directory for complete license terms.
  *
- * Copyright (c) 2012, University of Technology, Sydney
+ * Copyright (c) 2010, University of Technology, Sydney
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,53 +33,61 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 18th December 2012
+ * @date 17th Janurary 2013
  */
 
 /**
- * Users table record.
+ * Entity for session file records.
  */
-class Sahara_Database_Record_User extends Sahara_Database_Record
+class Sahara_Database_Record_SessionFile extends Sahara_Database_Record
 {
     /** @var String Name of table. */
-    protected $_name = 'users';
-    
-    /** @var array Relationships with other tables. */
-    protected $_relationships = array(
-            'userClasses' => array(
-                'table' => 'user_class',
-                'entity' => 'UserClass',
-                'join'  => 'table',
-                'join_table'  => 'user_association',
-                'join_table_source' => 'users_id',
-                'join_table_dest' => 'user_class_id'
-            ),
-            'projects' => array(
-                'table' => 'project',
-                'entity' => 'Project',
-                'join' => 'foreign',
-                'foreign_key' => 'users_id' 
-            )
-    );
-    
-    /**
-     * Gets the user record of the logged is user. If no user is logged in,
-     * NULL is returned.
-     * 
-     * @return Sahara_Database_Table_User logged in user
-     */
-    public static function getLoginUser()
-    {    
-        $name = Zend_Auth::getInstance()->getIdentity();
-        if (!$name)
-        {
-            /* No user logged in. */
-            return NULL;
-        }
+    protected $_name = 'session_file';
 
-        $name = explode(':', $name, 2);
-        $users = self::load(array('namespace' => $name[0], 'name' => $name[1]));
-        return count($users) == 1 ? $users[0] : NULL;
+    /** @var array Relationships with other records. */
+    protected $_relationships = array(
+        'session' => array(
+             'table' => 'session',
+             'entity' => 'Session',
+             'join' => 'local',
+             'foreign_key' => 'session_id'
+         )
+    );
+
+    /**
+     * Checks whether this session file can be downloaded.
+     *
+     * @return boolean true if the file can be downloaded
+     */
+    public function isDownloadable()
+    {
+        return is_readable($this->getAbsolutePath());
+    }
+
+    /**
+     * Returns the absolute path of the session file. The absolute path includes the
+     * mount point and the stored file path.
+     *
+     * @return string absolute file path
+     */
+    public function getAbsolutePath()
+    {
+        return realpath($this->getResearchMountPoint() . $this->path . '/' . $this->name);
+    }
+
+    /**
+     * Gets the configured directory mount point of the research shared directory.
+     *
+     * @return string mount point
+     */
+    private function getResearchMountPoint()
+    {
+        $conf = Zend_Registry::get('config')->ands;
+        if (!$conf) return '/';
+
+        $mount = $conf->mountpoint;
+        if (!$mount) return '/';
+
+        return substr($mount, -1) == '/' ? $mount : $mount . '/';
     }
 }
- 

@@ -38,3 +38,253 @@
 
 $this->headLink()->appendStylesheet($this->baseUrl('/css/projects.css'));
 $this->headScript()->appendFile($this->baseUrl('/js/projects.js'));
+?>
+
+<script type='text/javascript'>
+var definitions = [
+<?php foreach($this->definitions as $def): ?>
+      {
+          rid:         <?=$def->id?>,
+          id:          '<?=strtolower(implode('_', explode(' ', $def->name)))?>',
+          name:        '<?=$def->name?>',	
+          description: '<?=$def->description?>',	
+          hint:        '<?=$def->hint?>',	
+          optional:     <?=$def->is_optional ? 'true' : 'false' ?>,	
+          regex:       '<?=str_replace('\\', '\\\\', $def->regex)?>',	
+      },
+<?php endforeach; ?>
+];
+
+var userClasses = [
+<?php foreach($this->user->userClasses as $uc): ?> 
+      {
+          id: <?=$uc->id?>,
+          name: '<?=$uc->name?>',
+      },
+<?php endforeach; ?>
+];
+
+$(document).ready(function() {
+	/* Event handlers. */
+	$("#add-project-button").click(displayAddProjectDialog);
+});
+</script>
+
+<div id="add-project-button" class="common-button">
+    <img src='/images/project-add.png' alt='add' /><br />Add Activity
+</div>
+
+<!-- Project list. -->
+<?php if (count($this->user->projects) > 0): ?>
+<div id='project-list-container' class='common-box'>
+    <div id='project-list-title' class='common-title sahara-form'>
+        <span class='ui-icon ui-icon-folder-collapsed'></span>
+        Activities
+        <div id='project-list-filter-container'>
+            <label for='project-list-filter'>Filter:</label>
+            <input id='project-list-filter' name='project-list-filter' type='text' />
+        </div>
+    </div>
+    <div id='project-list'>
+        <ul>
+        <?php foreach ($this->user->projects as $project):
+              $pid = strtolower(implode('', explode(' ', $project->activity))); ?>
+            <li class='project-item'>
+                <div class='project-item-title'>
+                    <span class='ui-icon ui-icon-circle-arrow-e'></span>
+                    <span class='project-activity-id'><?=$project->activity?></span>
+                </div>
+                <div class='project-buttons'>
+                    <div class='project-button-remove'><span class='ui-icon ui-icon-minus'></span> Remove</div>
+                <?php if ($project->publish_time && !$project->auto_publish_collections): ?>
+                    <div class='project-button-create-collection'><span class='ui-icon ui-icon-plus'></span> Collate Datasets</div>
+                <?php endif; ?>
+                <?php if ($project->publish_time && $project->auto_publish_collections): ?>
+                    <div class='project-button-view-collection'><span class='ui-icon ui-icon-search'></span> View Datasets</div>
+                <?php endif; ?>
+                <?php if (!$project->publish_time): ?>
+                    <div class='project-button-publish'><span class='ui-icon ui-icon-arrowthick-1-e'></span>Publish</div>
+                <?php endif; ?>
+                </div>
+                <div class='project-contents'>
+                   <div class='project-behaviour-title project-contents-title'>Behaviour</div>
+                   <div class='project-behaviour'>
+                       <form id='<?=$pid?>-behaviour-form' class='sahara-form'>
+                           <div class='form-line'>
+                               <label for='<?=$pid?>-permissions'>Permissions:</label>
+                               <select id='<?=$pid?>-permissions' class='permissions-select'>
+                                   <?php foreach ($this->user->userClasses as $uc): ?>
+                                       <option value='<?=$uc->id?>'><?=implode(' ', explode('_', $uc->name));?></option>
+                                   <?php endforeach; ?>
+                               </select>
+                               <div class='guidance-button'>
+    					           <span class='ui-icon ui-icon-help'></span>
+						           <p>Selects the permission that allows access to research instruments this activity is to use.</p>
+					           </div>
+                           </div>
+                           <div class='form-line'>
+                               <label for='<?=$pid?>-share-collection'>Share Collection:</label>
+                               <input id='<?=$pid?>-share-collection' type='checkbox' name='<?=$pid?>-share-collection'  class='share-collection'
+                                       <?php if($project->is_shared): ?>checked='checked'<?php endif; ?> />
+                               <div class='guidance-button'>
+            				       <span class='ui-icon ui-icon-help'></span>
+            					   <p>Whether to share the activity and it's datasets with ANDS.</p>
+            					</div>
+                           </div>
+                           <div class='form-line'>
+                               <label for='<?=$pid?>-open-access'>Open Access:</label>
+                               <input id='<?=$pid?>-open-access' type='checkbox' name='<?=$pid?>-open-access' class='open-access'
+                                       <?php if($project->is_open): ?>checked='checked'<?php endif; ?> />
+                               <div class='guidance-button'>
+            				       <span class='ui-icon ui-icon-help'></span>
+            					   <p>Whether the datasets generated by this activity are openly accessible.</p>
+            					</div>
+                           </div>
+                           <div class='form-line'>
+                               <label for='<?=$pid?>-auto-publish'>Auto Publish:</label>
+                               <input id='<?=$pid?>-auto-publish' type='checkbox' name='<?=$pid?>-auto-publish' class='auto-publish'
+                                       <?php if($project->auto_publish_collections): ?>checked='checked'<?php endif; ?> />
+                               <div class='guidance-button'>
+            				       <span class='ui-icon ui-icon-help'></span>
+            					   <p>Whether datasets are automatically published as they are generated by using the
+						            research equipment. If they are not automatically published, datasets
+						            need to manually collated.</p>
+            					</div>
+                           </div>
+                       </form>
+                   </div>
+
+                   <div class='project-metadata-title project-contents-title'>Metadata</div>
+                   <div class='project-metadata'>
+                       <form id='<?=$pid?>-metadata-form' class='sahara-form'>
+                       <?php foreach ($this->definitions as $def): 
+                                 $val = $project->getMetadata($def); ?>
+                           <div class='form-line'>
+                           <?php if ($def->is_optional): ?>
+                               <input id='<?=$pid . '_' . $def->id?>-enable' type='checkbox' class='metadata-enable metadata-enable-<?=$def->id?>' 
+                                       <?php if ($val) echo "checked='checked'"; ?> />
+                           <?php endif; ?>
+                               <label for='<?=$pid . '-' . $def->id?>-input'><?=$def->name?>:</label>
+                               <input id='<?=$pid . '-' . $def->id?>-input' type='text' class='metadata-<?=$def->id?>' <?php if ($val) echo "value='$val->value'"; ?> 
+                                       <?php if ($def->is_optional && !$val) echo "disabled='disabled'" ?> />
+                               <div class='guidance-button'>
+                                   <span class='ui-icon ui-icon-help'></span>
+                                   <p><?=$def->description?></p>
+                               </div>
+                           </div>
+                       <?php endforeach; ?>    
+                       </form>
+                   </div>           
+                   
+                   <?php if ($project->publish_time): ?>
+                       <div class='project-content-published'>
+                           <p>Published activities cannot be modified.</p>
+                       </div>
+                   <?php else: ?>
+                       <div class='project-content-save'>
+                           <img src='/images/project-save.png' alt='Save' /><br />
+                           Save
+                       </div>
+                   <?php endif; ?>      
+                </div>
+            </li>
+        <?php endforeach; ?>
+        </ul>
+    </div>
+</div>
+
+<script type="text/javascript">
+$(document).ready(function() {
+	/* Events for buttons. */
+	$("#project-list .project-button-publish").click(publishProject);
+	$("#project-list .project-button-create-collection").click(collectionsForProject);
+	$("#project-list .project-button-view-collection").click(collectionsForProject);
+	$("#project-list .project-button-remove").click(removeProject);
+
+	/* Project list accordian. */
+	$("#project-list .project-item-title").click(function() {
+	    var $contents = $(this).siblings(".project-contents");
+	    if ($contents.css("display") == "none")
+	    {
+		    /* Closed so needs to be opened. */
+		    $("#project-list .project-contents").slideUp();
+		    $("#project-list .project-contents-open")
+		            .removeClass("project-contents-open")
+		            .children(".ui-icon")
+		                .removeClass("ui-icon-circle-arrow-s")
+		                .addClass("ui-icon-circle-arrow-e");
+		   
+		    $(this).addClass("project-contents-open")
+		            .children(".ui-icon")
+		                .removeClass("ui-icon-circle-arrow-e")
+		                .addClass("ui-icon-circle-arrow-s");
+		    $contents.slideDown();
+	    }
+	    else
+	    {
+		    /* Opened so will be closed. */
+		    $contents.slideUp();
+		    $("#project-list .project-contents-open")
+		            .removeClass("project-contents-open")
+		            .children(".ui-icon")
+		                .removeClass("ui-icon-circle-arrow-s")
+		                .addClass("ui-icon-circle-arrow-e");
+	    }
+	});
+
+	/* Metadata enable check boxes. */
+	$("#project-list .metadata-enable").click(function() {
+		if ($(this).parent().has(":checked").length == 1)
+		{
+			$(this).siblings("input").removeAttr("disabled");
+		}
+		else
+		{
+			$(this).siblings("input").attr("disabled", "disabled").val("");
+		}
+	});
+			
+	/* Save. */
+	$("#project-list input, #project-list select").change(function() {
+		$(this).parents(".project-item").find(".project-content-save").addClass("project-content-save-active");
+	});
+
+	$("#project-list .project-content-save").click(function() {
+		if ($(this).hasClass("project-content-save-active")) updateProject.call(this);
+	});
+
+	/* Filter box. */
+	$("#project-list-filter").keyup(function() {
+		var filter = $(this).val();
+
+		if (filter == "")
+		{
+			/* Display all proejcts. */
+			$("#project-list .project-item").show();
+		}
+		else
+		{
+			/* Only display projects that begin with filter. */
+			$("#project-list .project-item").each(function() {
+				if (!$(this).find(".project-activity-id").text().startsWith(filter))
+				{
+					$(this).hide();
+				}
+				else $(this).show();
+			});
+		}
+	});
+
+    /* Help buttons. */
+	new GuidanceBubble("#project-list", "info", "left", 20, -20).initButtons();
+});
+</script>
+
+
+<?php endif; ?>
+
+<div id='no-projects' class='ui-state-error' style='display:<?=count($this->user->projects) > 0 ? 'none' : 'block'?>'>
+    <span class='ui-icon ui-icon-alert'></span>
+    You have no activities.
+</div>
+

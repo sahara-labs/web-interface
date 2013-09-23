@@ -6,7 +6,7 @@
  *
  * @license See LICENSE in the top level directory for complete license terms.
  *
- * Copyright (c) 2012, University of Technology, Sydney
+ * Copyright (c) 2010, University of Technology, Sydney
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,53 +33,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 18th December 2012
+ * @date 1st November 2012
  */
 
-/**
- * Users table record.
- */
-class Sahara_Database_Record_User extends Sahara_Database_Record
+
+class Project
 {
-    /** @var String Name of table. */
-    protected $_name = 'users';
     
-    /** @var array Relationships with other tables. */
-    protected $_relationships = array(
-            'userClasses' => array(
-                'table' => 'user_class',
-                'entity' => 'UserClass',
-                'join'  => 'table',
-                'join_table'  => 'user_association',
-                'join_table_source' => 'users_id',
-                'join_table_dest' => 'user_class_id'
-            ),
-            'projects' => array(
-                'table' => 'project',
-                'entity' => 'Project',
-                'join' => 'foreign',
-                'foreign_key' => 'users_id' 
-            )
-    );
-    
-    /**
-     * Gets the user record of the logged is user. If no user is logged in,
-     * NULL is returned.
-     * 
-     * @return Sahara_Database_Table_User logged in user
-     */
-    public static function getLoginUser()
-    {    
-        $name = Zend_Auth::getInstance()->getIdentity();
-        if (!$name)
-        {
-            /* No user logged in. */
-            return NULL;
-        }
-
-        $name = explode(':', $name, 2);
-        $users = self::load(array('namespace' => $name[0], 'name' => $name[1]));
-        return count($users) == 1 ? $users[0] : NULL;
-    }
 }
- 

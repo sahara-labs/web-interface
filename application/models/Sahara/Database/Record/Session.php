@@ -43,14 +43,14 @@ class Sahara_Database_Record_Session extends Sahara_Database_Record
 {
     /** String name of table. */
     protected $_name = 'session';
-    
+
     /** @var array Relationships with other tables. */
     protected $_relationships = array(
         'user' => array(
             'table' => 'users',
             'entity' => 'User',
             'join' => 'local',
-            'foreign_key' => 'users_id'
+            'foreign_key' => 'user_id'
         ),
         'rig' => array(
             'table' => 'rig',
@@ -61,7 +61,7 @@ class Sahara_Database_Record_Session extends Sahara_Database_Record
         'files' => array(
             'table' => 'session_file',
             'entity' => 'SessionFile',
-            'join' => 'foreign', 
+            'join' => 'foreign',
             'foreign_key' => 'session_id'
         )
     );
