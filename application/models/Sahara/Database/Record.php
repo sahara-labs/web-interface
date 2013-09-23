@@ -232,16 +232,16 @@ abstract class Sahara_Database_Record
             {
                 if ($this->_relationships[$rel]['join'] == 'local')
                 {
-                    $stm .= count($this->_updatedData) == 0 && $i++ == 0 ? '' : ', '; 
-                    
+                    $stm .= count($this->_updatedData) == 0 && $i++ == 0 ? '' : ', ';
+
                     if ($ref)
                     {
                         /* Reference is being stored / updated. */
                         if (!$ref->isPersistent()) throw new Sahara_Database_Exception('Reference entity is not persistent.');
-    
+
                         $stm .= $this->_relationships[$rel]['foreign_key'] . ' = ? ';
                         array_push($values, $ref->__get($ref->getIdentityColumn()));
-    
+
                         $this->_data[$this->_relationships[$rel]['foreign_key']] = $ref->__get($ref->getIdentityColumn());
                         $this->_loadedRelationships[$rel] = $ref;
                     }
@@ -249,11 +249,11 @@ abstract class Sahara_Database_Record
                     {
                         /* Previously stored referenced is being cleared. */
                         $stm .= $this->_relationships[$rel]['foreign_key'] . ' = NULL ';
-                        
+
                         $this->_data[$this->_relationships[$rel]['foreign_key']] = NULL;
                         unset($this->_loadedRelationships[$rel]);
                     }
-                  
+
                     unset($this->_updatedRelationships[$rel]);
                 }
             }
@@ -261,7 +261,7 @@ abstract class Sahara_Database_Record
             /* Constraint to update the correct record. */
             $stm .= ' WHERE ' . $this->_idColumn . ' = ?';
             array_push($values, $this->_data[$this->_idColumn]);
-            
+
             /* Update the record. */
             $qu = $this->_db->prepare($stm);
             if (!$qu->execute($values))
@@ -361,10 +361,10 @@ abstract class Sahara_Database_Record
                         $qu = $this->_db->prepare($stm);
                         if (!$qu->execute(array($this->_data[$this->_idColumn], $record->__get($record->getIdentityColumn()))));
                         {
-                            /* There seems to be an issue where the execute call indicates a failure, but the error code indicates 
+                            /* There seems to be an issue where the execute call indicates a failure, but the error code indicates
                              * no failure. The records are however successfully added to the database. */
                             if ($qu->errorCode() != '00000')
-                            {                                
+                            {
                                 throw new Sahara_Database_Exception($qu);
                             }
                         }
@@ -442,14 +442,14 @@ abstract class Sahara_Database_Record
                     }
                     break;
             }
+        }
 
-            /* Delete this record. */
-            $stm = 'DELETE FROM ' . $this->_name . ' WHERE ' . $this->_idColumn . ' = ?';
-            $qu = $this->_db->prepare($stm);
-            if (!$qu->execute(array($this->_data[$this->_idColumn])))
-            {
-                throw new Sahara_Database_Exception($qu);
-            }
+        /* Delete this record. */
+        $stm = 'DELETE FROM ' . $this->_name . ' WHERE ' . $this->_idColumn . ' = ?';
+        $qu = $this->_db->prepare($stm);
+        if (!$qu->execute(array($this->_data[$this->_idColumn])))
+        {
+            throw new Sahara_Database_Exception($qu);
         }
     }
 
