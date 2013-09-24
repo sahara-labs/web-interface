@@ -657,20 +657,20 @@
     position: absolute;
     color: #2E2E2E;
     font-size: 11px;
-    background: #CCC;
-    padding-right: 10px;
-    border: solid 1px #555;
+    background: #fafafa;
+    padding: 1px 8px 1px 1px;
+    border: solid 1px #666;
 }
 
 .mimic-input-motor {
     width: 40px;
+    margin: 1px;
     margin-right: 5px;
     font-size: 13px;
     text-align: right;
     padding-right: 10px;
     color: #666;
     border: 1px solid #333;
-    margin: 1px;
 }
 
 .mimic-label-base {

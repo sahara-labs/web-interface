@@ -2576,12 +2576,12 @@ MimicWidget.prototype.getHTML = function() {
     "               <div class='mimic-label mimic-label-m2'>M2<span class='mimic-disp'></span></div>" +
     "               <div class='mimic-damper' id='mimic-damper-two'>" +
     "               <img class='damper-arm damper-arm-two' src='/uts/shaketable/images/damper-arm.png'/>" +
-    "                   <input class='mimic-damperInfo' value='0%'/>" +
+    "                   <input class='mimic-damperInfo' value='Off'/>" +
     "               </div>" +
     "               <div class='mimic-label mimic-label-m1'>M1<span class='mimic-disp'></span></div>" +
     "               <div class='mimic-damper' id='mimic-damper-one'>" +
     "               <img class='damper-arm damper-arm-one' src='/uts/shaketable/images/damper-arm.png'/>" +
-    "                   <input class='mimic-damperInfo' value='0%'/>" +
+    "                   <input class='mimic-damperInfo' value='Off'/>" +
     "               </div>" +
     "               <div class='mimic-label mimic-label-base'>Base<span class='mimic-disp'></span></div>" +
     "               <span class='mimic-label-motor'><input class='mimic-input-motor' value='-'/>RPM</span>" +
@@ -2687,12 +2687,12 @@ MimicWidget.prototype.updateCoils = function() {
     else
     {
         /* Change the input values of the coils to 0%. */
-        $('#mimic-damper-one').find('input').val('0%');
-        $('#mimic-damper-two').find('input').val('0%');
+        $('#mimic-damper-one').find('input').val('Off');
+        $('#mimic-damper-two').find('input').val('Off');
 
         /* Change the coil's colour indicators to 0%. */
-        $('#mimic-damper-one').animate({'background-position': '0%',}, 40 );
-        $('#mimic-damper-two').animate({'background-position': '0%',}, 40 );
+        $('#mimic-damper-one').animate({'background-position': '-15%',}, 40 );
+        $('#mimic-damper-two').animate({'background-position': '-15%',}, 40 );
     }
 }
 
