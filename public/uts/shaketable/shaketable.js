@@ -2610,7 +2610,7 @@ MimicWidget.prototype.acquireData = function() {
 		},
 		success: function(data) {
 			thiz.updateData(data);
-			if (thiz.isPulling) setTimeout(function() { thiz.acquireData(); }, 40);
+			if (thiz.isPulling) setTimeout(function() { thiz.acquireData(); }, 0.5);
 		},
 		error: function(data) {
 			if (thiz.isPulling) setTimeout(function() { thiz.acquireData(); }, 5000);
@@ -2654,7 +2654,7 @@ MimicWidget.prototype.updateData = function(data) {
 
     /* Change the Motor label to display the Motor's RPM. */
     this.motorSpeed = (data['motor-on'] === true) ? data['motor-speed'] : '-';
-    $('.mimic-label-motor').find('.mimic-input-motor').val(this.motorSpeed);
+    $('.mimic-label-motor').find('.mimic-input-motor').val(Math.floor(this.motorSpeed * 100)/100);
 
     /* Change the Mass labels to display the mass positions rounded to two decimals. */
     $('.mimic-label-base').find('.mimic-disp').html(Math.round(data['disp-1']*100)/100);
@@ -2821,6 +2821,7 @@ MimicWidget.prototype.drawArm = function(x,y,mw,mh,endX,endY) {
     this.xEnd = endX + 1 + '.5';
     this.yEnd = endY;
 
+    //TODO fix control point prevent arm bending. */
     /* Get the control point's Y axis. */
     this.yCon = y + (y / 4.5);
 
