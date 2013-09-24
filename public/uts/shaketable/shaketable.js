@@ -2653,13 +2653,13 @@ MimicWidget.prototype.updateData = function(data) {
     this.mass2X = (this.disp.three >= 0) ? this.axis.x + this.disp.three : this.axis.x - Math.abs(this.disp.three);
 
     /* Change the Motor label to display the Motor's RPM. */
-    this.motorSpeed = (data['motor-on'] === true) ? data['motor-speed'] : '-';
-    $('.mimic-label-motor').find('.mimic-input-motor').val(Math.floor(this.motorSpeed * 100)/100);
+    this.motorSpeed = (data['motor-on'] === true) ? Math.floor(data['motor-speed'] * 100)/100 : '-';
+    $('.mimic-label-motor').find('.mimic-input-motor').val(this.motorSpeed);
 
-    /* Change the Mass labels to display the mass positions rounded to two decimals. */
-    $('.mimic-label-base').find('.mimic-disp').html(Math.round(data['disp-1']*100)/100);
-    $('.mimic-label-m1').find('.mimic-disp').html(Math.round(data['disp-2']*100)/100);
-    $('.mimic-label-m2').find('.mimic-disp').html(Math.round(data['disp-3']*100)/100);
+    /* Change the Mass labels to display the mass positions up to two decimals. */
+    $('.mimic-label-base').find('.mimic-disp').html(Math.floor(data['disp-1']*100)/100);
+    $('.mimic-label-m1').find('.mimic-disp').html(Math.floor(data['disp-2']*100)/100);
+    $('.mimic-label-m2').find('.mimic-disp').html(Math.floor(data['disp-3']*100)/100);
 
     /* Update the coil values. */
     this.updateCoils();
