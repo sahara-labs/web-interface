@@ -2584,7 +2584,7 @@ MimicWidget.prototype.getHTML = function() {
     "                   <input class='mimic-damperInfo' value='0%'/>" +
     "               </div>" +
     "               <div class='mimic-label mimic-label-base'>Base<span class='mimic-disp'></span></div>" +
-    "               <span class='mimic-label-motor'><input class='mimic-input-motor' value='0'/>RPM</span>" +
+    "               <span class='mimic-label-motor'><input class='mimic-input-motor' value='-'/>RPM</span>" +
     "               <div id='mimic'></div>" +
     "            </div>";
 
@@ -2653,8 +2653,8 @@ MimicWidget.prototype.updateData = function(data) {
     this.mass2X = (this.disp.three >= 0) ? this.axis.x + this.disp.three : this.axis.x - Math.abs(this.disp.three);
 
     /* Change the Motor label to display the Motor's RPM. */
-    this.motorSpeed = (data['motor-speed']) ? data['motor-speed'] : 0;
-    $('.mimic-label-motor').find('.mimic-input-motor').html(this.motorSpeed);
+    this.motorSpeed = (data['motor-on'] === true) ? data['motor-speed'] : '-';
+    $('.mimic-label-motor').find('.mimic-input-motor').val(this.motorSpeed);
 
     /* Change the Mass labels to display the mass positions rounded to two decimals. */
     $('.mimic-label-base').find('.mimic-disp').html(Math.round(data['disp-1']*100)/100);
@@ -2790,13 +2790,11 @@ MimicWidget.prototype.drawBox = function(x,y,bw,bh,bg,stroke,damper) {
     this.ctx.strokeStyle = stroke;
     this.ctx.stroke();
 
-    //TODO Attatch the end point of the damper arm to the damper positions.
-
     if (damper === true)
     {
         this.ctx.beginPath();
-        this.ctx.moveTo((x + bw), (y + (bh / 2)));
-        this.ctx.lineTo((x + (bw * 1.4)), (y + (bh / 2)));
+        this.ctx.moveTo((x + bw) + 1, (y + (bh / 2)));
+        this.ctx.lineTo((this.width - 20), (y + (bh / 2)));
         this.ctx.strokeStyle = '#000';
         this.ctx.stroke();
     }
