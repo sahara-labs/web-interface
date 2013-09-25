@@ -2584,7 +2584,7 @@ MimicWidget.prototype.getHTML = function() {
     "                   <input class='mimic-damperInfo' value='Off'/>" +
     "               </div>" +
     "               <div class='mimic-label mimic-label-base'>Base<span class='mimic-disp'></span></div>" +
-    "               <span class='mimic-label-motor'><input class='mimic-input-motor' value='-'/>RPM</span>" +
+    "               <span class='mimic-label-motor'><input class='mimic-input-motor' value='-'/>Hz</span>" +
     "               <div id='mimic'></div>" +
     "            </div>";
 
@@ -2652,7 +2652,7 @@ MimicWidget.prototype.updateData = function(data) {
     /* Adds or subtracts the second masses position from the starting axis. */
     this.mass2X = (this.disp.three >= 0) ? this.axis.x + this.disp.three : this.axis.x - Math.abs(this.disp.three);
 
-    /* Change the Motor label to display the Motor's RPM. */
+    /* Change the Motor label to display the Motor's Hz. */
     this.motorSpeed = (data['motor-on'] === true) ? Math.floor(data['motor-speed'] * 100)/100 : '-';
     $('.mimic-label-motor').find('.mimic-input-motor').val(this.motorSpeed);
 
@@ -2823,7 +2823,9 @@ MimicWidget.prototype.drawArm = function(x,y,mw,mh,endX,endY) {
 
     //TODO fix control point prevent arm bending. */
     /* Get the control point's Y axis. */
-    this.yCon = y + (y / 4.5);
+
+    /* Sets the control point's Y axis depending on the arms Y axis in relation to the canvas size. */
+    this.yCon = (this.yPos < this.height - (this.height / 2)) ? y + (y / 1.5) : y + (y / 4.5);
 
     /* Draws the arm's border. */
     this.ctx.beginPath();
