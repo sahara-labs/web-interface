@@ -34,3 +34,487 @@
  * @author Michael Diponio (mdiponio)
  * @date 31st October 2012
  */
+
+#add-project-button {
+	position: absolute;
+	width: 70px;
+	height: 70px;
+	margin: 10px 10px 0 0;
+	top: 118px;
+	left: 0px;
+}
+
+#add-project-dialog .form-line, 
+#project-list .form-line {
+	clear: both;
+}
+
+#add-project-dialog label, 
+#project-list label {
+	width: 120px;
+}
+
+#add-project-dialog .metadata-enable {
+	margin: 0 10px 0 -28px;
+}
+
+#add-project-submitting {
+	text-align: center;
+}
+
+#add-project-error {
+	border-radius: 4px;
+	margin-top: 15px;
+	padding: 8px;
+}
+
+#add-project-error .ui-icon, 
+#no-projects .ui-icon,
+#no-collections .ui-icon,
+#no-sessions .ui-icon {
+	float: left;
+	margin-right: 5px;
+}
+
+#no-projects,
+#no-collections,
+#no-sessions {
+	margin: 20px auto;
+	padding: 8px;
+	border-radius: 4px;
+}
+
+#no-projects {
+	width: 200px;
+}
+
+#no-collections {
+	width: 250px;
+}
+
+#no-collections.manual-collections {
+	position: absolute;
+	right: 180px;
+}
+
+#no-sessions {
+	width: 350px;
+	position: absolute;
+	left: 40px;
+}
+
+#no-sessions a {
+	font-weight: bold;
+}
+
+#project-list-container,
+#collection-list-container {
+	position: absolute;
+	top: 127px;
+	right: 98px;
+	width: 770px;
+}
+
+#session-list-container {
+	position: absolute;
+	top: 170px;
+	right: 98px;
+	width: 770px;
+}
+
+#collection-list-container.manual-collections {
+	width: 420px !important;
+}
+
+#session-list-container {
+	width: 430px !important;
+	left: 0;
+}
+
+#project-list-title,
+#collection-list-title {
+	height: 20px;
+}
+
+#project-list-filter-container {
+	float: right;
+	margin: -5px -5px 0 0;
+	height: 20px;
+}
+
+#project-list-filter-container label {
+	width: 40px;
+}
+
+#project-list ul,
+#collection-list ul, 
+#session-list ul {
+	list-style: none;
+	overflow: hidden;
+}
+
+#project-list .project-item-title, 
+.collection-item-title { 
+	padding: 8px;
+	border-bottom: 1px solid #B5B5B5;
+	border-top: 1px solid #B5B5B5;
+	color: #606060;
+}
+
+.collection-item-title {
+	cursor: pointer;
+}
+
+#project-list .project-item-title:hover,
+.collection-item-title:hover { 
+	box-shadow: 0 0 4px #B5B5B5;
+	color: #000000;
+	background-color: #FCFCFC;
+}
+
+#project-list .project-buttons {
+	margin: -31px 10px 0 0;
+	float: right;
+}
+
+#project-list .ui-icon,
+#collection-list .ui-icon,
+#session-list .ui-icon {
+	float: left;
+	margin-right: 5px;
+}
+
+#add-project-dialog .project-contents-title,
+#project-list .project-buttons div, 
+#project-list .project-contents-title,
+#project-list .project-content-save,
+.collection-details-title,
+.collection-data-title {
+	border: 1px solid #B5B5B5;
+	border-radius: 5px;
+	box-shadow: 0 0 2px #B5B5B5;
+	background-color: #EFEFEF;
+	padding: 3px 10px 3px 5px;
+	color: #606060;
+}
+
+#project-list .project-buttons div {
+	float: right;
+	margin-right: 10px;
+	height: 100%;
+}
+
+#project-list .project-buttons div:hover,
+#project-list .project-content-save-active:hover {
+	box-shadow: 0 0 4px #B5B5B5;
+	color: #000000;
+	cursor: pointer;	
+	z-index: 10;
+}
+
+#project-list .project-contents-open,
+.collection-contents-open {
+	color: #000000;
+	box-shadow: 0 2px 3px #B5B5B5;
+	font-weight: bold; 
+}
+
+#remove-project-dialog p, #publish-project-dialog p {
+	margin: 5px 0px;
+}
+
+#remove-project-dialog .ui-priority-secondary, 
+#publish-project-dialog .ui-priority-secondary,
+.confirm-dialog .ui-priority-secondary {
+	padding: 5px;
+	border: 1px dashed #B5B5B5;
+	border-radius: 4px;
+}
+
+#remove-project-dialog .ui-icon, 
+#publish-project-dialog .ui-icon {
+	float: left;
+	margin-right: 5px;
+}
+
+#project-list .project-contents,
+.collection-contents {
+	display: none;
+	position: relative;
+}
+
+#add-project-dialog .project-contents-title,
+#project-list .project-contents-title,
+.collection-details-title,
+.collection-data-title {
+	border-radius: 0 0 4px 4px;
+	width: 100px;
+	padding: 4px 20px;
+	text-align: center;
+}
+
+#add-project-dialog .project-contents-title {
+	margin: 10px auto;	
+}
+
+#project-list .project-contents-title {
+	position: relative;
+	top: 16px;
+}
+
+#project-list .project-behaviour-title {
+	left: 120px;
+	top: 16px;
+}
+
+#project-list .project-metadata-title {
+	left: 440px;
+	top: -148px;
+}
+
+#project-list .project-behaviour {
+	position: relative;
+	width: 285px;
+	top: 25px;
+	left: 25px;
+}
+
+#project-list .project-metadata {
+	position: relative;
+	left: 325px;
+	top: -139px;
+	width: 315px;
+}
+
+#project-list .project-metadata label {
+	width: 80px;
+}
+
+#project-list .project-metadata input {
+	width: 170px;
+}
+
+#project-list .metadata-enable {
+	margin: 0 10px 0 -33px;
+}
+
+#project-list .project-content-save {
+	position: absolute;
+	right: 40px;
+	top: 15px;
+	width: 50px;
+	height: 50px;
+	text-align: center;
+	padding: 5px;
+	opacity: 0.3;
+	cursor: default;
+}
+
+#project-list .project-content-save-active {
+	opacity: 1;
+	cursor: default;
+}
+
+#project-list .project-content-save span {
+	float: none;
+	margin: 10px auto 0;
+}
+
+#project-list .project-content-published {
+	z-index: 100;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 103%;
+	background-color: #AAAAAA;
+	opacity: 0.4;
+}
+
+#project-list .project-content-published p {
+	position: absolute;
+	bottom: 30px;
+	width: 100%;
+	text-align: center;
+	color: #000000;
+	padding: 5px;
+	opacity: 1;
+}
+
+.collection-details,
+.collection-data {
+	float: left;
+	padding: 10px;
+}
+
+.collection-details {
+	width: 180px;
+}
+
+.collection-details-title,
+.collection-data-title {
+	margin: 10px auto;
+}
+
+.collection-details div {
+	padding: 5px;
+}
+
+.collection-details ul {
+	list-style: inside;
+	margin-top: 5px;
+}
+
+.collection-details li {
+	padding: 5px;
+}
+
+#session-list .collection-data {
+	width: 200px;
+}
+
+#session-list .collection-data-title {
+	position: relative;
+	left: 20px;
+}
+
+.files-list li {
+	position: relative;
+	width: 100%;
+	padding: 5px 10px;
+	border-top: 1px dashed #AAAAAA;
+}
+
+.files-list li:last-child {
+	border-bottom: 1px dashed #AAAAAA;
+}
+
+.file-is-downloadable:hover {
+	box-shadow: 0 0 3px #AAAAAA;
+}
+
+.files-list a {
+	display: block;
+	width: 180px;
+	height: 100%;
+	text-decoration: none;
+    font-weight: bold;
+    color: black;
+    cursor: pointer;
+}
+
+.file-not-downloadable {
+	color: #888888;
+}
+
+.file-delete {
+	position: absolute;
+	top: 3px;
+	right: 22px;
+	height: 18px !important;
+	width: 18px !important;
+	border: 1px solid #AAAAAA;
+	background-color: #F87878;
+	box-shadow: 0 0 2px #AAAAAA;
+	border-radius: 2px;
+}
+
+.file-delete:hover {
+	box-shadow: 0 0 4px #666666;
+}
+
+.confirm-dialog p {
+	padding-bottom: 10px;
+}
+
+.confirm-dialog .ui-icon {
+	float: left;
+	margin-right: 5px;
+}
+
+.file-add {
+	width: 80px;
+	left: 325px;
+	bottom: 5px;
+}
+
+#upload-target {
+	width: 0;
+	height: 0;
+}
+
+#uploading-file {
+	position:absolute;
+	width:250px;
+	background-color: #FFFFFF;
+	height:60px;
+	border: 1px solid #AAAAAA;
+	padding: 10px;
+	text-align: center;
+	z-index: 1002;
+	color: #606060;
+	-moz-box-shadow: 0 0 10px #AAAAAA; 
+	-webkit-box-shadow: 0 0 10px #AAAAAA; 
+	box-shadow: 0 0 10px #AAAAAA; 
+}
+
+.session-select, .session-delete {
+	float: right;
+	margin: -3px 5px 0;
+	height: 17px;
+	padding: 3px !important;
+}
+
+.session-select {
+	width: 25px;
+	background-color: #ABEAAA !important;
+}
+
+.session-is-selected {
+	background-color: #ABEAAA;
+}
+
+.session-delete {
+	width: 17px;
+	background-color: #F87878 !important;
+}
+
+.session-to-delete {
+	background-color: #F87878;
+}
+
+#session-list {
+	position: relative;	
+}
+
+.collate-dataset-button {
+	position: absolute !important;
+	left: 270px;
+	top: 116px;
+	width: 140px;
+	height: 24px;
+	margin: 10px;
+	opacity: 0.5;
+	cursor: default !important;
+}
+
+.collate-dataset-button span {
+	display: block;
+	float: right;
+	margin: 4px 4px 0 4px;
+}
+
+.collate-dataset-button:hover {
+	box-shadow: 0 0 4px  #B5B5B5 !important;
+	color: #606060 !important;
+}
+
+.collate-dataset-enabled {
+	cursor: pointer !important;
+	opacity: 1;
+}
+
+.collate-dataset-enable:hover {
+	box-shadow: 0 0 4px #606060;
+}
+

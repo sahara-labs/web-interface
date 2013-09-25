@@ -1,5 +1,4 @@
-@CHARSET "UTF-8";
-
+<?php
 /**
  * SAHARA Web Interface
  *
@@ -34,84 +33,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @author Michael Diponio (mdiponio)
- * @date 4th August 2010
+ * @date 1st November 2012
  */
- 
-#bitstreamuploadinfo {
-	margin: 10px 20px 0;
-}
 
-#bitstreamuploadinfo li {
-	padding-bottom: 10px;
-}
 
-#bitstreamuploadformdiv {
-	text-align: center;
-	padding: 10px;
+class Project
+{
+    
 }
-
-#uploadtarget {
-	display: none;
-	height: 0;
-	width: 0;
-	border: 0;
-}
-
-#operationpanel {
-	position: absolute;
-	left: -185px;
-	top: 210px;
-}
-
-#operationpanelcontents {
-	height: 155px;
-	overflow-y: hidden;
-}
-
-#operationpanellist {
-	list-style-position: inside;
-	color: #606060;
-	font-size: 0.8em;
-}
-
-#operationpanellist li {
-	padding: 2px 5px;	
-}
-
-.oplisteven {
-	background-color: #FFFFFF;
-}
-
-.oplistodd {
-	background-color: #EFEFEF;
-}
-
-.bitstreamuploadicon {
-	float: left;
-	margin: 0 5px;
-}
-
-.bitstreamuploadoverlay {
- 	z-index: 1001;
-}
-
-.bitstreamuploadoverlaydialog {
-	position:absolute;
-	width:250px;
-	background-color: #FFFFFF;
-	height:60px;
-	border: 1px solid #606060;
-	padding: 10px;
-	text-align: center;
-	z-index: 1002;
-	color: #606060;
-	-moz-box-shadow: 0 0 10px black; 
-	-webkit-box-shadow: 0 0 10px black; 
-	box-shadow: 0 0 10px black; 
-	filter: progid:DXImageTransform.Microsoft.Shadow(color=#969696, Strength=4); 
-}
-
-#bitstreamuploaderror p {
-	padding: 5px;
-}
-	
