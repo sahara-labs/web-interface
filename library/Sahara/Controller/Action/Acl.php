@@ -176,6 +176,9 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
                     case Sahara_Acl::USER:
                         $this->_redirectTo('index', 'queue');
                         break;
+                    case Sahara_Acl::RESEARCH:
+                        $this->_redirectTo('index', 'research');
+                        break;
                     case Sahara_Acl::ACADEMIC:
                         $this->_redirectTo('index', 'queue');
                         break;

@@ -1,0 +1,249 @@
+<?php
+/**
+ * SAHARA Web Interface
+ *
+ * User interface to Sahara Remote Laboratory system.
+ *
+ * @license See LICENSE in the top level directory for complete license terms.
+ *
+ * Copyright (c) 2010, University of Technology, Sydney
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of the University of Technology, Sydney nor the names
+ *    of its contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * @author Michael Diponio (mdiponio)
+ * @date 10th Janurary 2013.
+ */
+
+$this->headLink()->appendStylesheet($this->baseUrl('/css/projects.css'));
+$this->headScript()->appendFile($this->baseUrl('/js/projects.js'));
+?>
+
+<?php if (!$this->project->auto_publish_collections):
+           if (count($this->project->getSessions())): ?>
+
+<!-- Session list. -->        
+<div id='session-list-container' class='common-box'>
+    <div id='session-list-title' class='common-title'>
+        <span class='ui-icon ui-icon-gear'></span>
+        Sessions for Activity: <?=$this->project->activity?>
+    </div>
+    <div id='session-list'>
+        <ul><?php foreach ($this->project->getSessions() as $ses): ?>
+            <li id="session-<?=$ses->id?>" class='collection-item'>
+                <div class='collection-item-title'>
+                    <span class='ui-icon ui-icon-circle-arrow-e'></span>
+                    Session from <?=$ses->assignment_time->format('d-M-Y') . ' at ' .
+                            $ses->assignment_time->format('H:i:s');?>.
+                    <div id="session-delete-<?=$ses->id?>" class='session-delete common-button'>
+                        <span class='ui-icon ui-icon-trash'></span>
+                    </div>
+                    <div id="session-select-<?=$ses->id?>" class='session-select common-button'>
+                        <input type='checkbox' />
+                    </div>
+                    
+                </div>
+                <div class='collection-contents'>
+                    <div class='collection-details'>
+                       <div class='collection-details-title'>Details</div>
+                       <div>Duration: <strong><?=$ses->removal_time->getTimestamp() -
+                               $ses->assignment_time->getTimestamp()?></strong> seconds</div>
+                       <div>Apparatus:
+                           <div><strong><?=$this->stringTransform($ses->rig->name, '_', ' ')?></strong> of type
+                           <strong><?=$this->stringTransform($ses->rig->type->name, '_', ' ')?></strong></div>
+                        </div>
+                    </div>
+                    <div class='collection-data'>
+                       <div class='collection-data-title'>Data Files</div>
+                       <?php
+                           $this->session = $ses;
+                           $this->historical = false;
+                           echo $this->render('research/_filelist.phtml');
+                           $this->session = null;
+                       ?>
+                    </div>
+                    <div style='clear:both'></div>
+                    <div id="file-add-<?=$ses->id?>" class='file-add common-button'>
+                        <span class='ui-icon ui-icon-arrowthickstop-1-n'></span>
+                        Add File
+                    </div>
+                </div>
+           </li>
+        <?php endforeach; ?></ul>
+    </div>    
+</div>
+
+<!-- Collation button. -->
+<div id='collate-dataset-<?=$this->project->id?>' class='common-button collate-dataset-button'>
+        <img src='/images/collate-dataset.png' alt='' />
+        <span>Collate Dataset</span>
+</div>
+
+<script type="text/javascript">
+$(document).ready(function() {
+    $("#session-list .collection-item-title").click(function() {
+        var $contents = $(this).siblings(".collection-contents");
+        if ($contents.css("display") == "none")
+        {
+            /* Opening closed contents. */
+            $("#session-list .collection-contents").slideUp();
+            $("#session-list .collection-contents-open")
+                .removeClass("collection-contents-open")
+                .children(".ui-icon")
+                    .removeClass("ui-icon-circle-arrow-s")
+                    .addClass("ui-icon-circle-arrow-e");
+
+            $(this)
+                .addClass("collection-contents-open")
+                .children(".ui-icon")
+                    .removeClass("ui-icon-circle-arrow-e")
+                    .addClass("ui-icon-circle-arrow-s");
+            $contents.slideDown();
+        }
+        else
+        {
+            /* Closing open contents. */
+            $contents.slideUp();
+
+            $(this).removeClass(".collection-contents-open")
+                   .children(".ui-icon")
+                       .removeClass("ui-icon-circle-arrow-s")
+                       .addClass("ui-icon-circle-arrow-e");
+        }
+    });
+
+    $("#session-list .session-select").click(function() { selectSession(this); });
+    $("#session-list .session-delete").click(function() { deleteSession(this); });
+    $("#session-list .file-add").click(function() { addFile(this); });
+    $("#session-list .file-delete").click(function() { deleteFile(this); });
+    $(".collate-dataset-button").click(function() { collateDataset(this); });
+});
+</script>
+
+           <?php else: ?>
+<div id='no-sessions' class='ui-state-error'>
+    <span class='ui-icon ui-icon-alert'></span>
+    This activity has no sessions to collate as a dataset. Generate more data by going to
+    <a href='/queue#userClass<?=$this->project->userClass->id?>'>'Group:
+    <?=$this->stringTransform($this->project->userClass->name, '_', ' ')?>'</a> on the 
+    'Apparatuses' page and saving data files.
+</div>
+           <?php endif; ?>
+<?php endif; ?>
+
+<?php if (count($this->project->collections)): ?>
+<div id='collection-list-container' class='common-box <?=$this->project->auto_publish_collections ? 'auto-collections' :
+            'manual-collections' ?>'>
+    <div id='collection-list-title' class='common-title'>
+        <span class='ui-icon ui-icon-folder-open'></span>
+        Datasets for Activity: <?=$this->project->activity?>
+    </div>
+    <div id='collection-list'>
+        <ul><?php foreach($this->project->collections as $collection): ?>
+            <li class='collection-item'>
+                <div class='collection-item-title'>
+                    <span class='ui-icon ui-icon-circle-arrow-e'></span>
+                    <span>
+                    <?php if ($collection->publish_time): ?>
+                        Published on <?=$collection->publish_time->format('d-M-Y') . ' at ' . $collection->publish_time->format('H:i:s');?>.
+                    <?php else: ?>
+                        Not yet published
+                    <?php endif; ?>
+                    </span>
+                </div>
+                <div class='collection-contents'>
+                    <div class='collection-details'>
+                       <div class='collection-details-title'>Details</div>
+                       <div>Started:&nbsp;&nbsp;&nbsp;<strong><?=$collection->getStartTime()->format('d-M-Y H:i:s')?></strong></div>
+                       <div>Finished:&nbsp;<strong><?=$collection->getEndTime()->format('d-M-Y H:i:s')?></strong></div>
+                       <div>Apparatus(es):
+                           <ul>
+                           <?php foreach ($collection->getApparatuses() as $rigType => $rigs):
+                                     foreach ($rigs as $rig): ?>
+                               <li><strong><?=implode(' ', explode('_', $rig))?></strong> of type
+                               <strong><?=implode(' ', explode('_', $rigType))?></strong></li>
+                           <?php     endforeach;
+                                 endforeach; ?>
+                           </ul>
+                       </div>
+                    </div>
+                    <div class='collection-data'>
+                       <div class='collection-data-title'>Data Files</div>
+                       <?php
+                           $this->collection = $collection;
+                           $this->historical = true;
+                           echo $this->render('research/_filelist.phtml');
+                           $this->collection = null;
+                        ?>
+                    </div>
+                    <div style='clear:both'></div>
+                </div>
+           </li>
+        <?php endforeach; ?></ul>
+    </div>
+</div>
+
+<script type="text/javascript">
+$(document).ready(function() {
+    $("#collection-list .collection-item-title").click(function() {
+        var $contents = $(this).siblings(".collection-contents");
+        if ($contents.css("display") == "none")
+        {
+            /* Opening closed contents. */
+            $("#collection-list .collection-contents").slideUp();
+            $("#collection-list .collection-contents-open")
+                .removeClass("collection-contents-open")
+                .children(".ui-icon")
+                    .removeClass("ui-icon-circle-arrow-s")
+                    .addClass("ui-icon-circle-arrow-e");
+
+            $(this)
+                .addClass("collection-contents-open")
+                .children(".ui-icon")
+                    .removeClass("ui-icon-circle-arrow-e")
+                    .addClass("ui-icon-circle-arrow-s");
+            $contents.slideDown();
+        }
+        else
+        {
+            /* Closing open contents. */
+            $contents.slideUp();
+
+            $(this).removeClass(".collection-contents-open")
+                   .children(".ui-icon")
+                       .removeClass("ui-icon-circle-arrow-s")
+                       .addClass("ui-icon-circle-arrow-e");
+        }
+    });
+});
+</script>
+
+<?php else: ?>
+<div id='no-collections' class='ui-state-error <?=$this->project->auto_publish_collections ? 'auto-collections' :
+            'manual-collections' ?>'>
+    <span class='ui-icon ui-icon-alert'></span>
+    This activity has no datasets.
+</div>
+
+<?php endif; ?>

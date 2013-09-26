@@ -120,7 +120,7 @@ class Sahara_Database_Record_Collection extends  Sahara_Database_Record
             if ($rig = $session->rig)
             {
                 if (!array_key_exists($rig->type->name, $apparatuses)) $apparatuses[$rig->type->name] = array();
-                array_push($apparatuses[$rig->type->name], $rig->name);
+                if (!in_array($rig->name, $apparatuses[$rig->type->name])) array_push($apparatuses[$rig->type->name], $rig->name);
             }
         }
         

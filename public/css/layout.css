@@ -123,18 +123,22 @@ legend {
 	filter: alpha(opacity=70); 
 }
 
-.commonpanel {
+.commonpanel, .common-box {
 	border: 1px solid #B5B5B5;
 	box-shadow: 0 0 4px #B5B5B5;
 }
 
-.commonpanel .commonpanelheader {
+.common-box {
+	border-radius: 4px;
+}
+
+.commonpanel .commonpanelheader, .common-title {
 	background-color: #EFEFEF;
-	padding: 5px;
+	padding: 8px;
 	border-bottom: 1px solid #B5B5B5;
 }
 
-.commonpanel .commonpanelheader span {
+.commonpanel .commonpanelheader span, .common-title .ui-icon {
 	float: left;
 	margin-right: 5px;
 }
@@ -148,25 +152,291 @@ legend {
  ** Form styling.                                                            **
  ******************************************************************************/
 
-.saharaform div {
+.saharaform div, .sahara-form div {
 	margin: 7px 5px;
 }
 
-.saharaform label {
+.saharaform label, .sahara-form label {
 	display: inline-block;
 	float: left;
 	margin-top: 5px;
 	width: 72px;
 }
 
-.saharaform input, .saharaform textarea, .saharaform select {
+.saharaform input, .saharaform textarea, .saharaform select,
+.sahara-form input, .sahara-form textarea, .sahara-form select {
 	border: 1px solid #AAAAAA;
 	border-radius: 3px;
 	padding: 5px;
 	background: url("../images/linear_grad.png") repeat-x scroll 0 0 #FDFDFD;
 }
 
+.saharaform input:disabled, .sahara-form input:disabled {
+	opacity: 0.4;
+}
 
+/******************************************************************************
+ ** Guidance bubbles.                                                        **
+ ******************************************************************************/
+ 
+.guidance-button {
+	float: right;
+	width: 16px;
+	height: 16px;
+	background-color: #EFEFEF;
+	border: 1px solid #B5B5B5;
+	box-shadow: 0 0 2px #B5B5B5;
+	border-radius: 3px;
+}
+
+.guidance-button:hover {
+	box-shadow: 0 0 2px #606060;
+	cursor: pointer;
+}
+
+.guidance-button p {
+	display:none;
+}
+
+.guidance-bubble {
+	position: absolute;
+	width: 200px;
+	border: 2px solid #EEEEEE;
+	text-align: left;
+	z-index: 100;
+	opacity: 0.9;
+	border-radius: 4px;
+	cursor: pointer;
+}
+
+.guidance-bubble-error {
+	background-color: #BA5454;
+}
+
+.guidance-bubble-info {
+	background-color: #F8EC86;
+}
+
+.guidance-bubble-text {
+	padding: 3px;
+	color: #EEEEEE;
+	font-size: 10pt;
+	opacity: 1;
+}
+
+.guidance-bubble-info .guidance-bubble-text {
+	color: #000000;
+}
+
+.guidance-bubble-arrow {
+	position: absolute;
+	width: 12px;
+	height: 12px;
+}
+
+.guidance-bubble-arrow-line {
+	position: absolute;
+}
+
+.guidance-bubble-error .guidance-bubble-arrow-line  {
+	background-color: #BA5454;
+}
+
+.guidance-bubble-info .guidance-bubble-arrow-line {
+	background-color: #F8EC86;
+}
+
+.guidance-bubble-arrow-left .guidance-bubble-arrow-line, 
+.guidance-bubble-arrow-right .guidance-bubble-arrow-line {
+	border-top: 2px solid #EEEEEE;
+	border-bottom: 2px solid #EEEEEE;
+	width: 1px;
+}
+
+.guidance-bubble-arrow-left {
+	left: -10px;
+	top: 5px;
+}
+
+.guidance-bubble-arrow-left .guidance-bubble-arrow-line0 {
+	height: 12px;
+	right: 2px;
+	top: -1px;
+}
+
+.guidance-bubble-arrow-left .guidance-bubble-arrow-line1 {
+	height: 10px;
+	right: 3px;
+	top: 0;
+}
+
+.guidance-bubble-arrow-left .guidance-bubble-arrow-line2 {
+	height: 8px;
+	right: 4px;
+	top: 1px;
+}
+
+.guidance-bubble-arrow-left .guidance-bubble-arrow-line3 {
+	height: 6px;
+	right: 5px;
+	top: 2px;
+}
+
+.guidance-bubble-arrow-left .guidance-bubble-arrow-line4 {
+	height: 4px;
+	right: 6px;
+	top: 3px;
+}
+
+.guidance-bubble-arrow-left .guidance-bubble-arrow-line5 {
+	height: 2px;
+	right: 7px;
+	top: 4px;
+}
+
+.guidance-bubble-arrow-left .guidance-bubble-arrow-line6 {
+	height: 0px;
+	right: 8px;
+	top: 5px;
+}
+
+.guidance-bubble-arrow-left .guidance-bubble-arrow-line7 {
+	height: 0px;
+	right: 9px;
+	top: 6px;
+	border-bottom: none;
+}
+
+.guidance-bubble-arrow-right {
+	right: -10px;
+	top: 5px;
+}
+
+.guidance-bubble-arrow-right .guidance-bubble-arrow-line0 {
+	height: 12px;
+	left: 2px;
+	top: -1px;
+}
+
+.guidance-bubble-arrow-right .guidance-bubble-arrow-line1 {
+	height: 10px;
+	left: 3px;
+	top: 0;
+}
+
+.guidance-bubble-arrow-right .guidance-bubble-arrow-line2 {
+	height: 8px;
+	left: 4px;
+	top: 1px;
+}
+
+.guidance-bubble-arrow-right .guidance-bubble-arrow-line3 {
+	height: 6px;
+	left: 5px;
+	top: 2px;
+}
+
+.guidance-bubble-arrow-right .guidance-bubble-arrow-line4 {
+	height: 4px;
+	left: 6px;
+	top: 3px;
+}
+
+.guidance-bubble-arrow-right .guidance-bubble-arrow-line5 {
+	height: 2px;
+	left: 7px;
+	top: 4px;
+}
+
+.guidance-bubble-arrow-right .guidance-bubble-arrow-line6 {
+	height: 0px;
+	left: 8px;
+	top: 5px;
+}
+
+.guidance-bubble-arrow-right .guidance-bubble-arrow-line7 {
+	height: 0px;
+	left: 9px;
+	top: 6px;
+	border-bottom: none;
+}
+
+
+.guidance-bubble-arrow-top-left .guidance-bubble-arrow-line, 
+.guidance-bubble-arrow-top-center .guidance-bubble-arrow-line {
+	border-left: 2px solid #EEEEEE;
+	border-right: 2px solid #EEEEEE;
+	height: 1px;
+}
+
+.guidance-bubble-arrow-top-center {
+	left: 90px;
+	top: -10px;
+}
+
+.guidance-bubble-arrow-top-left {
+	left: 20px;
+	top: -10px;
+}
+
+.guidance-bubble-arrow-top-left .guidance-bubble-arrow-line0,
+.guidance-bubble-arrow-top-center .guidance-bubble-arrow-line0 {
+	width: 12px;
+	bottom: 2px;
+	left: -1px;
+}
+
+.guidance-bubble-arrow-top-left .guidance-bubble-arrow-line1,
+.guidance-bubble-arrow-top-center .guidance-bubble-arrow-line1 {
+	width: 10px;
+	bottom: 3px;
+	left: 0;
+}
+
+.guidance-bubble-arrow-top-left .guidance-bubble-arrow-line2,
+.guidance-bubble-arrow-top-center .guidance-bubble-arrow-line2 {
+	width: 8px;
+	bottom: 4px;
+	left: 1px;
+}
+
+.guidance-bubble-arrow-top-left .guidance-bubble-arrow-line3,
+.guidance-bubble-arrow-top-center .guidance-bubble-arrow-line3 {
+	width: 6px;
+	bottom: 5px;
+	left: 2px;
+}
+
+.guidance-bubble-arrow-top-left .guidance-bubble-arrow-line4,
+.guidance-bubble-arrow-top-center .guidance-bubble-arrow-line4 {
+	width: 4px;
+	bottom: 6px;
+	left: 3px;
+}
+
+.guidance-bubble-arrow-top-left .guidance-bubble-arrow-line5,
+.guidance-bubble-arrow-top-center .guidance-bubble-arrow-line5 {
+
+	width: 2px;
+	bottom: 7px;
+	left: 4px;
+}
+
+.guidance-bubble-arrow-top-left .guidance-bubble-arrow-line6,
+.guidance-bubble-arrow-top-center .guidance-bubble-arrow-line6 {
+
+	width: 0px;
+	bottom: 8px;
+	left: 5px;
+}
+
+.guidance-bubble-arrow-top-left .guidance-bubble-arrow-line7,
+.guidance-bubble-arrow-top-center .guidance-bubble-arrow-line7 {
+	width: 0px;
+	bottom: 9px;
+	left: 6px;
+	border-right: none;
+}
 
 /******************************************************************************
  ** Page blocks                                                              **
