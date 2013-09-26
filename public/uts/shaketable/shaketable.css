@@ -594,15 +594,15 @@
 }
 
 .mimic-damperInfo {
-    height: 24px;
-    width: 30px;
+    height: 18px;
+    width: 33px;
     background: #FFF;
     border: 1px solid #5F5F5F;
     position: absolute;
-    top: -1px;
+    top: 2px;
     left: -1px;
     text-align: center;
-    line-height: 26px;
+    line-height: 20px;
     font-size: 11px;
 }
 
@@ -640,7 +640,7 @@
     margin-left: 5px;
     font-size: 13px;
     background: #FFF;
-    border: 1px solid #000;
+    border: 1px solid #0033A0;
     height: 16px;
     width: 40px;
     display: inline-block;
@@ -652,26 +652,23 @@
 }
 
 .mimic-label-motor {
-    top: 90%;
+    top: 91%;
     left: 10px;
     position: absolute;
-    color: #2E2E2E;
+    color: #8a8a8a;
     font-size: 11px;
     background: #fafafa;
-    padding: 1px 8px 1px 1px;
-    border: solid 1px #666;
 }
 
 .mimic-input-motor {
-    width: 40px;
+    width: 45px;
     margin: 1px;
-    margin-right: 5px;
+    margin-right: 2px;
     font-size: 13px;
     text-align: right;
     padding-right: 10px;
     padding-left: 5px;
-    color: #666;
-    border: 1px solid #333;
+    color: #333;
 }
 
 .mimic-label-base {

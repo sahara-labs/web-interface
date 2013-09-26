@@ -48,7 +48,7 @@ function ShakeTableControl(id)
     this.duration = 60;
 
     /** The period in milliseconds. */
-    this.period = 100;
+    this.period = 50;
 };
 
 /** 
@@ -2502,6 +2502,7 @@ function MimicWidget($container, title)
     /** Whether this widget is pulling data, i.e. polling the server for new
      *  graphing information. */
     this.isPulling = true;
+
 }
 MimicWidget.prototype = new Widget;
 
@@ -2541,6 +2542,9 @@ MimicWidget.prototype.init = function() {
     this.handleW = this.massW - (this.massW / 1.25);
     this.handleBg = '#aaa';
     this.handleStroke = '#666';
+
+    /* Motor scotch yoke position. */
+    this.scotchPos = false;
 
     /* Calculates the Y axes of various mimic elements. */
     this.mass1Y = this.axis.y - (this.massH * 4);
@@ -2599,7 +2603,6 @@ MimicWidget.prototype.consume = function(data) {
  * Periodically requests the server to provide mimic data.
  */
 MimicWidget.prototype.acquireData = function() {
-	//TODO Increase animation speed.
 	var thiz = this;
 	$.ajax({
 		url: "/primitive/mapjson/pc/ShakeTableController/pa/dataAndGraph",
@@ -2760,13 +2763,13 @@ MimicWidget.prototype.drawFrame = function() {
     this.drawBox(this.rightHandleX, this.guideY, this.handleW, this.guideH, this.handleBg, this.handleStroke, false);
 
     /* Draw the motor outter circle. */
-    this.drawCircle((this.axis.x - (this.axis.x / 1.5)), this.circleY, (this.massH / 1.45), "#999", 1.3, "#333");
+    this.drawCircle((this.axis.x - (this.axis.x / 1.6)), this.circleY, (Math.floor(this.massH / 1.35)), "#999", 1.3, "#333");
 
     /* Animate the motor. */
-    this.animateMotor(this.baseX, this.axis.y, this.massH);
+    this.animateMotor(this.axis.y, this.massH);
 
-    /* Draw the motor inner circle. */
-    this.drawCircle((this.baseX - (this.baseX / 1.5)), this.circleY, (this.massH / 6), "#999", 1, "#333");
+    /* Draw the scotch yolk circle. */
+    this.drawCircle(this.yokeX, this.yokeY, 4, "#e5e5e5", 1, "#444");
 };
 
 /**
@@ -2821,11 +2824,8 @@ MimicWidget.prototype.drawArm = function(x,y,mw,mh,endX,endY) {
     this.xEnd = endX + 1 + '.5';
     this.yEnd = endY;
 
-    //TODO fix control point prevent arm bending. */
-    /* Get the control point's Y axis. */
-
-    /* Sets the control point's Y axis depending on the arms Y axis in relation to the canvas size. */
-    this.yCon = (this.yPos < this.height - (this.height / 2)) ? y + (y / 1.5) : y + (y / 4.5);
+    /* Sets the control point's Y axis depending on the arms position in relation to the canvas height. */
+    this.yCon = (this.yPos < this.height - (this.height / 2)) ? y + (y - 1) : y + (y / 4.5);
 
     /* Draws the arm's border. */
     this.ctx.beginPath();
@@ -2855,13 +2855,13 @@ MimicWidget.prototype.drawArm = function(x,y,mw,mh,endX,endY) {
  * @param stroke the circle's stroke style
  */
 MimicWidget.prototype.drawCircle = function(x,y,radius,fill,lw,stroke) {
-      this.ctx.beginPath();
-      this.ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
-      this.ctx.fillStyle = fill;
-      this.ctx.fill();
-      this.ctx.lineWidth = lw;
-      this.ctx.strokeStyle = stroke;
-      this.ctx.stroke();
+    this.ctx.beginPath();
+    this.ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
+    this.ctx.fillStyle = fill;
+    this.ctx.fill();
+    this.ctx.lineWidth = lw;
+    this.ctx.strokeStyle = stroke;
+    this.ctx.stroke();
 }
 
 /**
@@ -2871,13 +2871,25 @@ MimicWidget.prototype.drawCircle = function(x,y,radius,fill,lw,stroke) {
  * @param y the default y axis.
  * @param mh the height of the mass.
  */
-MimicWidget.prototype.animateMotor = function(x,y,mh) {
-    //TODO finish scotch yolk animation.
+MimicWidget.prototype.animateMotor = function(y,mh) {
+
+    /* get the X axis movement ranges*/
+    this.xPos = {
+        left: this.axis.x - this.baseX,
+        right: this.baseX - this.axis.x
+    };
+
+    /* The movement range of the scotch yoke. */
+    this.yokeRange = 5;
+
+    /* Gets the X axis of the scotch yoke. */
+    this.yokeX = this.axis.x - (this.axis.x / 1.6);
+    this.yokeX = (this.baseX < this.axis.x) ? this.yokeX - (this.xPos.left) : this.yokeX + (this.xPos.right);
 
     /* x axis positions. */
-    var x1 = (x - (x / 1.3));
-    var x2 = (x1 + 12);
-    var x3 = x;
+    var x1 = (this.yokeX - 6);
+    var x2 = (this.yokeX + 6);
+    var x3 = this.baseX;
 
     /* y axis positions. */
     var y1 = (y - (mh / 15));
@@ -2904,6 +2916,54 @@ MimicWidget.prototype.animateMotor = function(x,y,mh) {
     this.ctx.fill();
     this.ctx.strokeStyle = '#333';
     this.ctx.stroke();
+
+    /* Draws the box. */
+    this.ctx.beginPath();
+    this.ctx.rect((x1 + 4.5),(y1 + 4.5),3,19);
+    this.ctx.fillStyle = '#808080';
+    this.ctx.fill();
+    this.ctx.lineWidth = 1;
+    this.ctx.strokeStyle = '#555';
+    this.ctx.stroke();
+
+    /* Check if the yoke's x axis is far left. */
+    if (this.xPos.left === this.yokeRange)
+    {
+        /* Set Y axis to the center of parent circle. */
+        this.yokeY = this.circleY;
+
+        /* Set scotch yoke position to bottom. */
+        this.scotchPos = true;
+    }
+    /* Check if the yoke's x axis is far right. */
+    else if(this.xPos.right === (this.yokeRange))
+    {
+        /* Set Y axis to the center of parent circle. */
+        this.yokeY = this.circleY;
+
+        /* Set scotch yoke position to top. */
+        this.scotchPos = false;
+    }
+    else
+    {
+        /* Check if yoke's X axis is one away from either the left or right side of the yokeRange. */
+        if (this.xPos.left === (this.yokeRange - 1) || this.xPos.right === (this.yokeRange - 1))
+        {
+            /* Set the scotch yoke position to four from either the top or bottom. */
+            this.yokeY = (this.scotchPos === false) ? this.circleY + 3 : this.circleY - 3;
+        }
+        /* Check if yoke's X axis is two away from either the left or right side of the yokeRange. */
+        else if (this.xPos.left === (this.yokeRange - 2) || this.xPos.right === (this.yokeRange - 2))
+        {
+            /* Set the scotch yoke position to two from either the top or bottom. */
+            this.yokeY = (this.scotchPos === false) ? this.circleY + 5 : this.circleY - 5;
+        }
+	    else // If x axis is near the center of the circle
+        {
+            /* Set y axis to either the top or bottom of the circle. */
+            this.yokeY = (this.scotchPos === false) ? this.circleY + 7 : this.circleY - 7;
+	    }
+    }
 }
 
 /**
@@ -2920,15 +2980,6 @@ MimicWidget.prototype.setDisplay = function(on) {
     {
         this.$widget.find(".switch .slide").removeClass("on");
     }
-};
-
-/**
- * Whether this widget is draggable.
- *
- * @param draggable true if is draggable
- */
-MimicWidget.prototype.setDraggable = function(draggable) {
-    this.isDraggable = draggable;
 };
 
 /* ============================================================================
