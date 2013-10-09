@@ -133,13 +133,17 @@ if (!$this->noPermissions)
 <?php if (!$perm['active']): ?>
 
 <!-- Inactive permission dialog -->
-<div class="ui-state-error ui-corner-all alertdiv centercontent" style="width:400px">
+<div class="ui-state-error ui-corner-all alertdiv centercontent">
 	<p class="alertp">
    		<span class="ui-icon ui-icon-alert alertspan"></span>
-   		Sorry, the permission for <?=$this->stringTransform($perm['display'], '_', ' ')?> is not valid.
+   		<?php if (Sahara_DateTimeUtil::isBeforeNow($perm['expiry'])):?>
+        	This permission has expired.
+        <?php else: ?>
+        	This permission has yet to start.
+        <?php endif; ?>
    	</p>
 </div>
-<div class="ui-priority-secondary ui-corner-all" style="width:400px;margin-top:10px">
+<div class="ui-priority-secondary ui-corner-all" style="margin-top:10px">
   	<span class="ui-icon ui-icon-info alertspan"></span>
    <?php if (Sahara_DateTimeUtil::isBeforeNow($perm['expiry'])):?>
     	This permission expired on <?=date('l, \t\h\e jS \o\f F o \a\t H:i', Sahara_DateTimeUtil::getTsFromISO8601($perm['expiry']))?>.
@@ -208,8 +212,8 @@ $(document).ready(function() {
 <?php if (!$perm['active']): ?>
 
 		/* Inactive permission script. */
-		width: 420,
-		height: 210,
+		width: 360,
+
 		buttons: {
 		<?php if ($perm['canBook'] && Sahara_DateTimeUtil::isAfterNow($perm['start'])): ?>
 			'Reserve': function() { window.location.replace("/bookings/index/pid/<?=$perm['permissionId']?>"); },

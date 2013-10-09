@@ -44,7 +44,12 @@ function loadPermissionInfo(pid)
 			
 			/* Check in case the response isn't JSON indicated the session
 			 * has timed out. */
-			if (typeof p != "object") window.location.reload(); 
+			if (typeof p != "object") 
+			{
+			    /* Reloading the page will return the user back to the login page. */
+			    window.location.reload();
+			    return;
+			}
 			
 			var diagDiv = "div[aria-labelledby=ui-dialog-title-permission" + pid + "]";
 			var conDiv = "#permission" + pid;
@@ -139,10 +144,7 @@ function loadPermissionInfo(pid)
 				$("#bookbutton" + pid).hover(
 						function() { $(this).addClass("ui-state-hover"); },
 						function() { $(this).removeClass("ui-state-hover"); }
-				);
-				$("#bookbutton" + pid).click(function() {
-					window.location.replace("/bookings/index/pid/" + pid);
-				});
+				).click(function() { window.location.replace("/bookings/index/pid/" + pid); });
 			}
 			
 			if (p.isQueueable || !p.isQueueable && !p.isBookable && p.viable && p.hasFree)
@@ -151,20 +153,14 @@ function loadPermissionInfo(pid)
 				$("#queuebutton" + pid).hover(
 						function() { $(this).addClass("ui-state-hover"); },
 						function() { $(this).removeClass("ui-state-hover"); }
-				);
-				$("#queuebutton" + pid).click(function() {
-					queueResourceRequest(pid);
-				});
+				).click(function() { queueResourceRequest(pid); });
 			}
 			
 			/* Cancel button. */
 			$("#queuecancelbutton" + pid).hover(
 					function() { $(this).addClass("ui-state-hover"); },
 					function() { $(this).removeClass("ui-state-hover"); }
-			);
-			$("#queuecancelbutton" + pid).click(function() {
-				$("#permission" + pid).dialog('close');
-			});
+			).click(function() { $("#permission" + pid).dialog('close'); });
 		}
 	);
 }
