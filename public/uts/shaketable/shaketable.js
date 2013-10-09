@@ -2478,11 +2478,11 @@ function MimicWidget($container, title)
     /** Height of the mimic. */
     this.height = Math.floor(360 / this.sizeRatio);
 
-	/** The number of seconds this graph displays. */
-	this.duration = 40;
+	/** The number of seconds the mimic displays. */
+	this.duration = 100;
 
 	/** The period in milliseconds. */
-	this.period = 100;
+	this.period = 50;
 
     /** The X and Y axis labels. */
     this.axis = {
@@ -2490,19 +2490,26 @@ function MimicWidget($container, title)
         y: Math.floor(270 / this.sizeRatio)
     };
 
+    /** Starting X axis postions of the masses. */
+    this.baseX = this.axis.x;
+    this.mass1X = this.axis.x;
+    this.mass2X = Math.floor(63 / this.sizeRatio);
+
     /** Canvas context. */
     this.ctx = null;
 
-    /** Data fields. */
-    this.dataFields = { };
+    /** Data Values. */
+    this.dataValues = {};
 
-    /** The interval rate of the graph animation in milliseconds. */
-    this.intervalRate = 12;
+    /** Dataset Index */
+    this.datasetIndex = 0;
+
+    /** Frame Index */
+    this.frameIndex = 0;
 
     /** Whether this widget is pulling data, i.e. polling the server for new
      *  graphing information. */
     this.isPulling = true;
-
 }
 MimicWidget.prototype = new Widget;
 
@@ -2564,6 +2571,10 @@ MimicWidget.prototype.init = function() {
         $('.mimic-damper').fadeToggle('fast');
     });
 
+    this.$widget.find('.mimic-resonant-button').click(function() {
+        $('.mimic-resonant').fadeToggle('fast');
+    });
+
     /* Enable dragging. */
     this.enableDraggable();
 
@@ -2571,7 +2582,7 @@ MimicWidget.prototype.init = function() {
     this.drawFrame();
 
 	/* Pull data if we are setup to pull. */
-	if (this.isPulling) this.acquireData();
+	//if (this.isPulling) this.acquireData();
 };
 
 MimicWidget.prototype.getHTML = function() {
@@ -2589,6 +2600,19 @@ MimicWidget.prototype.getHTML = function() {
     "               </div>" +
     "               <div class='mimic-label mimic-label-base'>Base<span class='mimic-disp'></span></div>" +
     "               <span class='mimic-label-motor'><input class='mimic-input-motor' value='-'/>Hz</span>" +
+    "               <span class='click-button mimic-resonant-button'>Resonant Display</span>" +
+    "               <div class='mimic-resonant mimic-resonant-legend'>" +
+    "                   <div class='res40 res-value'>40mm</div>" +
+    "                   <div class='res15 res-value'>15mm</div>" +
+    "                   <div class='res20 res-value'>20mm</div>" +
+    "                   <div class='res75 res-value'>7.5mm</div>" +
+    "               </div>" +
+    "               <div class='mimic-resonant mimic-resonant-pos'>+</div>" +
+    "               <div class='mimic-resonant mimic-resonant-neg'>_</div>" +
+    "               <div class='mimic-resonant mimic-resonant-40'></div>" +
+    "               <div class='mimic-resonant mimic-resonant-20'></div>" +
+    "               <div class='mimic-resonant mimic-resonant-15'></div>" +
+    "               <div class='mimic-resonant mimic-resonant-75'></div>" +
     "               <div id='mimic'></div>" +
     "            </div>";
 
@@ -2596,6 +2620,38 @@ MimicWidget.prototype.getHTML = function() {
 };
 
 MimicWidget.prototype.consume = function(data) {
+    console.log('Consume');
+
+    /* Clears previous data values. */
+    this.dataValues = {
+        one: [''],
+        two: [''],
+        three: ['']
+    };
+
+    //TODO Get appropriate data values.
+    /* Stores the data values as an array. */
+    this.dataValues.one = String(data['disp-graph-1']).split(",");
+    this.dataValues.two = String(data['disp-graph-2']).split(",");
+    this.dataValues.three = String(data['disp-graph-3']).split(",");
+
+    /* log the latest values to the console. */
+    for (var i in this.dataValues)
+    {
+        /* Log the latest value in the array. */
+        console.log('Data ' + [i] + ' Value: '+ this.dataValues[i][((this.dataValues.one).length - 1)]);
+
+        /* Log the length of the array. */
+        console.log('Data ' + [i] + ' Length: ' + (this.dataValues[i]).length);
+    }
+
+    /* Reset the dataset Index. */
+    this.datasetIndex = 0;
+
+    /* Get the start time. */
+    this.startTime = new Date();
+
+    /* Update mimic data. */
     this.updateData(data);
 };
 
@@ -2627,6 +2683,38 @@ MimicWidget.prototype.acquireData = function() {
  * @param data data object
  */
 MimicWidget.prototype.updateData = function(data) {
+    var thiz = this;
+
+    //TODO Finish the set timeout function and remove the console logs.
+    setTimeout(function() {
+
+        /* Get the end time. */
+        thiz.endTime = new Date();
+
+        /* Get the time difference between the last poll to the current poll. */
+        thiz.timeDifference = (thiz.endTime && thiz.startTime) ? thiz.endTime.getTime() - thiz.startTime.getTime() : 0;
+
+        /* Increment the dataset index. */
+        thiz.datasetIndex++;
+
+        /* Counter incremented every frame. */
+        thiz.frameIndex++;
+
+        /* Get the index value. */ //TODO Index Value.
+        thiz.indexValue = (thiz.dataValues.one.length - 1) - (thiz.timeDifference / thiz.period);
+        console.log('IndexValue: ' + thiz.indexValue);
+
+        /* Look up values for M1, M2 and the base. */
+        thiz.disp = {
+            one: thiz.dataValues.one[thiz.indexValue],
+            two: thiz.dataValues.two[thiz.indexValue],
+            three: thiz.dataValues.three[thiz.indexValue]
+        };
+
+        /* Update the frame contents. */
+        thiz.drawFrame();
+
+    }, 50);
 
     /* get the positions of the masses and divides it by the 'sizeRatio' to keep proportions. */
     this.disp = {
@@ -2635,13 +2723,13 @@ MimicWidget.prototype.updateData = function(data) {
         three: Math.floor(data['disp-3'] / this.sizeRatio)
     };
 
-    /* get the coil's states and percentages. */
+    /* Get the coil's states and percentages. */
     this.coil = {
         on1: data['coil-on-1'],
         on2: data['coil-on-2'],
         percent1: data['coil-percent-1'],
         percent2: data['coil-percent-2']
-    };
+    }
 
     /* Restricts the bases movement range to 7 by dividing it by 7. */
     this.baseRange = Math.abs(Math.floor(this.disp.one / 7));
@@ -2666,9 +2754,6 @@ MimicWidget.prototype.updateData = function(data) {
 
     /* Update the coil values. */
     this.updateCoils();
-
-    /* Update the frame contents. */
-    this.drawFrame();
 }
 
 /**
@@ -2703,11 +2788,6 @@ MimicWidget.prototype.updateCoils = function() {
  * Animates the mimic.
  */
 MimicWidget.prototype.drawFrame = function() {
-	/* Add canvas shadow. */
-    this.ctx.shadowColor = "rgba( 0, 0, 0, 0.2 )";
-    this.ctx.shadowOffsetX = 1;
-    this.ctx.shadowOffsetY = 1;
-    this.ctx.shadowBlur = 3;
 
     /* Store the current transformation matrix. */
     this.ctx.save();

@@ -682,6 +682,100 @@
 .mimic-label-m2 {
     top: 12.3%;
 }
+
+.mimic-resonant-button {
+    position: absolute;
+    left: 60%;
+    right: 0;
+    bottom: 0;
+    font-size: 10px;
+    color: #727272;
+    border: 1px solid #CCC;
+}
+
+.mimic-resonant {
+    position: absolute;
+    top: 7%;
+    height: 65%;
+    display: none;
+}
+
+.mimic-resonant-legend {
+    width: 14%;
+    border: solid 1px #000;
+    box-shadow: 1px 1px 6px #383737;
+    background: #3D3D3D;
+    border-radius: 6px;
+    height: 30%;
+    right: 2%;
+    top: 56%;
+}
+
+.mimic-resonant-legend .res-value{
+    font-size: 10px;
+    color: #fdfdfd;
+    padding-left: 5px;
+    margin-left: 4px;
+    margin-top: 8px;
+}
+
+.mimic-resonant-legend .res40{
+    border-left: 1px solid #FF6464;
+}
+
+.mimic-resonant-legend .res20{
+    border-left: 1px solid #10C509;
+}
+
+.mimic-resonant-legend .res15{
+    border-left: 1px dashed #FF6464;
+}
+
+.mimic-resonant-legend .res75{
+    border-left: 1px dashed #10C509;
+}
+
+.mimic-resonant-pos {
+    left: 77%;
+    top: 0;
+    font-size: 16px;
+    color: #555;
+}
+
+.mimic-resonant-neg {
+    left: 12%;
+    top: -2.4%;
+    font-size: 16px;
+    color: #555;
+}
+
+.mimic-resonant-40 {
+    left: 8.7%;
+    right: 18.2%;
+    border-left: solid 1px #FF6464;
+    border-right: solid 1px #FF6464;
+}
+
+.mimic-resonant-20 {
+    left: 14%;
+    right: 23.4%;
+    border-left: solid 1px #49E043;
+    border-right: solid 1px #49E043;
+}
+
+.mimic-resonant-15 {
+    left: 15.4%;
+    right: 24.7%;
+    border-left: dashed 1px #FD3A3A;
+    border-right: dashed 1px #FD3A3A;
+}
+
+.mimic-resonant-75 {
+    left: 17.2%;
+    right: 26.6%;
+    border-left: dashed 1px #49E043;
+    border-right: dashed 1px #49E043;
+}
 /******************************************************************************
  ** Camera Widget                                                            **
  ******************************************************************************/
