@@ -2630,7 +2630,14 @@ MimicWidget.prototype.consume = function(data) {
     };
 
     //TODO Get appropriate data values.
-    /* Stores the data values as an array. */
+    /* 
+     * This should get the latest data values and puts them into arrays.
+     * I am currently using the 'disp-graph' values and splitting them into arrays,
+     * 
+     * The dataSet index is also reset to 0 and then the updateData method is called.
+     * 
+     */
+
     this.dataValues.one = String(data['disp-graph-1']).split(",");
     this.dataValues.two = String(data['disp-graph-2']).split(",");
     this.dataValues.three = String(data['disp-graph-3']).split(",");
@@ -2685,7 +2692,23 @@ MimicWidget.prototype.acquireData = function() {
 MimicWidget.prototype.updateData = function(data) {
     var thiz = this;
 
-    //TODO Finish the set timeout function and remove the console logs.
+    //TODO Iterate through an array of the correct values and call the draw method accordingly.
+    /*
+     * This set time out gets the time difference between the consume method and the setTimout, I have then attempted
+     * to use the formula I had written down from our discussion to get the appropriate index value, however this seems
+     * to be incorrect and only returns '1200'
+     * 
+     * The values are then set using the arrays created in the consume method with the indexValue used to set the position in
+     * the array.
+     * 
+     * The variables are getting incorrect values and the animation is still not smooth, I will need to iterate through the
+     * array values in the setTimeout to draw the animation accordingly. This will currently not work as my values are incorrect.
+     * 
+     * I also increment the datasetIndex and the frameIndex, although I am currently unsure how to incorporate them into the animation,
+     * I'm sure I will have a better understanding once the consume method is returning the right values.
+     * 
+     */
+    
     setTimeout(function() {
 
         /* Get the end time. */
@@ -2704,7 +2727,7 @@ MimicWidget.prototype.updateData = function(data) {
         thiz.indexValue = (thiz.dataValues.one.length - 1) - (thiz.timeDifference / thiz.period);
         console.log('IndexValue: ' + thiz.indexValue);
 
-        /* Look up values for M1, M2 and the base. */
+        /* Set the values for M1, M2 and the base. */
         thiz.disp = {
             one: thiz.dataValues.one[thiz.indexValue],
             two: thiz.dataValues.two[thiz.indexValue],
@@ -2716,6 +2739,7 @@ MimicWidget.prototype.updateData = function(data) {
 
     }, 50);
 
+    /* TODO Remove the following code which sets the mass positions as this will not be required. */
     /* get the positions of the masses and divides it by the 'sizeRatio' to keep proportions. */
     this.disp = {
         one: Math.floor(data['disp-1'] / this.sizeRatio),
