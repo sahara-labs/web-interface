@@ -2572,7 +2572,23 @@ MimicWidget.prototype.init = function() {
     });
 
     this.$widget.find('.mimic-resonant-button').click(function() {
-        $('.mimic-resonant').fadeToggle('fast');
+        $('.mimic-resonant-legend').fadeToggle('fast');
+        $('.mimic-resonant-upper, .mimic-resonant-lower').hide();
+        $('.res-lower, .res-upper').css('color','#acacac');
+    });
+
+    this.$widget.find('.res-upper').click(function(){
+        $('.mimic-resonant-upper').fadeIn();
+        $('.mimic-resonant-lower').hide();
+        $(this).css('color','#fff');
+        $('.res-lower').css('color','#acacac');
+    });
+
+    this.$widget.find('.res-lower').click(function(){
+        $('.mimic-resonant-lower').fadeIn();
+        $('.mimic-resonant-upper').hide();
+        $(this).css('color','#fff');
+        $('.res-upper').css('color','#acacac');
     });
 
     /* Enable dragging. */
@@ -2602,17 +2618,13 @@ MimicWidget.prototype.getHTML = function() {
     "               <span class='mimic-label-motor'><input class='mimic-input-motor' value='-'/>Hz</span>" +
     "               <span class='click-button mimic-resonant-button'>Resonant Display</span>" +
     "               <div class='mimic-resonant mimic-resonant-legend'>" +
-    "                   <div class='res40 res-value'>40mm</div>" +
-    "                   <div class='res15 res-value'>15mm</div>" +
-    "                   <div class='res20 res-value'>20mm</div>" +
-    "                   <div class='res75 res-value'>7.5mm</div>" +
+    "                   <div class='res-upper res-value'>Upper</div>" +
+    "                   <div class='res-lower res-value'>Lower</div>" +
     "               </div>" +
-    "               <div class='mimic-resonant mimic-resonant-pos'>+</div>" +
-    "               <div class='mimic-resonant mimic-resonant-neg'>_</div>" +
-    "               <div class='mimic-resonant mimic-resonant-40'></div>" +
-    "               <div class='mimic-resonant mimic-resonant-20'></div>" +
-    "               <div class='mimic-resonant mimic-resonant-15'></div>" +
-    "               <div class='mimic-resonant mimic-resonant-75'></div>" +
+    "               <div class='mimic-resonant mimic-resonant-40 mimic-resonant-upper'></div>" +
+    "               <div class='mimic-resonant mimic-resonant-20 mimic-resonant-lower'></div>" +
+    "               <div class='mimic-resonant mimic-resonant-15 mimic-resonant-upper'></div>" +
+    "               <div class='mimic-resonant mimic-resonant-75 mimic-resonant-lower'></div>" +
     "               <div id='mimic'></div>" +
     "            </div>";
 
@@ -2620,7 +2632,6 @@ MimicWidget.prototype.getHTML = function() {
 };
 
 MimicWidget.prototype.consume = function(data) {
-    console.log('Consume');
 
     /* Clears previous data values. */
     this.dataValues = {
@@ -2638,19 +2649,9 @@ MimicWidget.prototype.consume = function(data) {
      * 
      */
 
-    this.dataValues.one = String(data['disp-graph-1']).split(",");
-    this.dataValues.two = String(data['disp-graph-2']).split(",");
-    this.dataValues.three = String(data['disp-graph-3']).split(",");
-
-    /* log the latest values to the console. */
-    for (var i in this.dataValues)
-    {
-        /* Log the latest value in the array. */
-        console.log('Data ' + [i] + ' Value: '+ this.dataValues[i][((this.dataValues.one).length - 1)]);
-
-        /* Log the length of the array. */
-        console.log('Data ' + [i] + ' Length: ' + (this.dataValues[i]).length);
-    }
+    this.dataValues.one = String(data['disp-graph-1']).split(",").slice(0,20);
+    this.dataValues.two = String(data['disp-graph-2']).split(",").slice(0,20);
+    this.dataValues.three = String(data['disp-graph-3']).split(",").slice(0,20);
 
     /* Reset the dataset Index. */
     this.datasetIndex = 0;
@@ -2708,7 +2709,7 @@ MimicWidget.prototype.updateData = function(data) {
      * I'm sure I will have a better understanding once the consume method is returning the right values.
      * 
      */
-    
+
     setTimeout(function() {
 
         /* Get the end time. */
@@ -2723,61 +2724,55 @@ MimicWidget.prototype.updateData = function(data) {
         /* Counter incremented every frame. */
         thiz.frameIndex++;
 
-        /* Get the index value. */ //TODO Index Value.
-        thiz.indexValue = (thiz.dataValues.one.length - 1) - (thiz.timeDifference / thiz.period);
-        console.log('IndexValue: ' + thiz.indexValue);
+        /* Get the index value. */
+        thiz.indexValue = (thiz.dataValues.one.length - 1) - Math.floor(thiz.timeDifference / thiz.period);
 
-        /* Set the values for M1, M2 and the base. */
-        thiz.disp = {
-            one: thiz.dataValues.one[thiz.indexValue],
-            two: thiz.dataValues.two[thiz.indexValue],
-            three: thiz.dataValues.three[thiz.indexValue]
-        };
+        /* Iterate through the arrays and update the mass values. */
+        for(i = 0; i <20; i++)
+        {
+            /* Set the values for M1, M2 and the base. */
+            thiz.disp = {
+                one: Math.floor(thiz.dataValues.one[i] / thiz.sizeRatio),
+                two: Math.floor(thiz.dataValues.two[i] / thiz.sizeRatio),
+                three: Math.floor(thiz.dataValues.three[i] / thiz.sizeRatio)
+            };
 
-        /* Update the frame contents. */
-        thiz.drawFrame();
+            /* Restricts the bases movement range to 7 by dividing it by 7. */
+            thiz.baseRange = Math.abs(Math.floor(thiz.disp.one / 7));
 
+            /* Adds or subtracts the restricted base position from the starting axis. */
+            thiz.baseX = (thiz.disp.one <= 0) ? thiz.axis.x - thiz.baseRange : thiz.axis.x + thiz.baseRange;
+
+            /* Adds or subtracts the first masses position from the starting axis. */
+            thiz.mass1X = (thiz.disp.two >= 0) ? thiz.axis.x + thiz.disp.two : thiz.axis.x - Math.abs(thiz.disp.two);
+
+            /* Adds or subtracts the second masses position from the starting axis. */
+            thiz.mass2X = (thiz.disp.three >= 0) ? thiz.axis.x + thiz.disp.three : thiz.axis.x - Math.abs(thiz.disp.three);
+
+            /* Update the frame contents. */
+            thiz.drawFrame();
+
+            /* Get the coil's states and percentages. */
+            thiz.coil = {
+                on1: data['coil-on-1'],
+                on2: data['coil-on-2'],
+                percent1: data['coil-percent-1'],
+                percent2: data['coil-percent-2']
+            }
+
+            /* Change the Motor label to display the Motor's Hz. */
+            thiz.motorSpeed = (data['motor-on'] === true) ? Math.floor(data['motor-speed'] * 100)/100 : '-';
+            $('.mimic-label-motor').find('.mimic-input-motor').val(thiz.motorSpeed);
+
+            /* Change the Mass labels to display the mass positions up to two decimals. */
+            $('.mimic-label-base').find('.mimic-disp').html(Math.floor(data['disp-1']*100)/100);
+            $('.mimic-label-m1').find('.mimic-disp').html(Math.floor(data['disp-2']*100)/100);
+            $('.mimic-label-m2').find('.mimic-disp').html(Math.floor(data['disp-3']*100)/100);
+
+            /* Update the coil values. */
+            thiz.updateCoils();
+        }
     }, 50);
-
-    /* TODO Remove the following code which sets the mass positions as this will not be required. */
-    /* get the positions of the masses and divides it by the 'sizeRatio' to keep proportions. */
-    this.disp = {
-        one: Math.floor(data['disp-1'] / this.sizeRatio),
-        two: Math.floor(data['disp-2'] / this.sizeRatio),
-        three: Math.floor(data['disp-3'] / this.sizeRatio)
-    };
-
-    /* Get the coil's states and percentages. */
-    this.coil = {
-        on1: data['coil-on-1'],
-        on2: data['coil-on-2'],
-        percent1: data['coil-percent-1'],
-        percent2: data['coil-percent-2']
-    }
-
-    /* Restricts the bases movement range to 7 by dividing it by 7. */
-    this.baseRange = Math.abs(Math.floor(this.disp.one / 7));
-
-    /* Adds or subtracts the restricted base position from the starting axis. */
-    this.baseX = (this.disp.one <= 0) ? this.axis.x - this.baseRange : this.axis.x + this.baseRange;
-
-    /* Adds or subtracts the first masses position from the starting axis. */
-    this.mass1X = (this.disp.two >= 0) ? this.axis.x + this.disp.two : this.axis.x - Math.abs(this.disp.two);
-
-    /* Adds or subtracts the second masses position from the starting axis. */
-    this.mass2X = (this.disp.three >= 0) ? this.axis.x + this.disp.three : this.axis.x - Math.abs(this.disp.three);
-
-    /* Change the Motor label to display the Motor's Hz. */
-    this.motorSpeed = (data['motor-on'] === true) ? Math.floor(data['motor-speed'] * 100)/100 : '-';
-    $('.mimic-label-motor').find('.mimic-input-motor').val(this.motorSpeed);
-
-    /* Change the Mass labels to display the mass positions up to two decimals. */
-    $('.mimic-label-base').find('.mimic-disp').html(Math.floor(data['disp-1']*100)/100);
-    $('.mimic-label-m1').find('.mimic-disp').html(Math.floor(data['disp-2']*100)/100);
-    $('.mimic-label-m2').find('.mimic-disp').html(Math.floor(data['disp-3']*100)/100);
-
-    /* Update the coil values. */
-    this.updateCoils();
 }
 
 /**
