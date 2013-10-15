@@ -2643,12 +2643,13 @@ MimicWidget.prototype.consume = function(data) {
     //TODO Get appropriate data values.
     /* 
      * This should get the latest data values and puts them into arrays.
-     * I am currently using the 'disp-graph' values and splitting them into arrays,
+     * I am currently using the 'disp-graph' values and splitting them into arrays.
      * 
      * The dataSet index is also reset to 0 and then the updateData method is called.
      * 
      */
 
+    //TODO Need to replace arrays with appropriate data.
     this.dataValues.one = String(data['disp-graph-1']).split(",").slice(0,20);
     this.dataValues.two = String(data['disp-graph-2']).split(",").slice(0,20);
     this.dataValues.three = String(data['disp-graph-3']).split(",").slice(0,20);
@@ -2697,17 +2698,15 @@ MimicWidget.prototype.updateData = function(data) {
     /*
      * This set time out gets the time difference between the consume method and the setTimout, I have then attempted
      * to use the formula I had written down from our discussion to get the appropriate index value, however this seems
-     * to be incorrect and only returns '1200'
+     * to be returning the incorrect value.
      * 
      * The values are then set using the arrays created in the consume method with the indexValue used to set the position in
      * the array.
      * 
-     * The variables are getting incorrect values and the animation is still not smooth, I will need to iterate through the
-     * array values in the setTimeout to draw the animation accordingly. This will currently not work as my values are incorrect.
-     * 
      * I also increment the datasetIndex and the frameIndex, although I am currently unsure how to incorporate them into the animation,
      * I'm sure I will have a better understanding once the consume method is returning the right values.
      * 
+     * Then I use a for statement to iterate through the data arrays updating the mass positions and then calling the drawframe method.
      */
 
     setTimeout(function() {
@@ -2724,6 +2723,7 @@ MimicWidget.prototype.updateData = function(data) {
         /* Counter incremented every frame. */
         thiz.frameIndex++;
 
+        //TODO Need to get the correct index value.
         /* Get the index value. */
         thiz.indexValue = (thiz.dataValues.one.length - 1) - Math.floor(thiz.timeDifference / thiz.period);
 
@@ -2749,6 +2749,7 @@ MimicWidget.prototype.updateData = function(data) {
             /* Adds or subtracts the second masses position from the starting axis. */
             thiz.mass2X = (thiz.disp.three >= 0) ? thiz.axis.x + thiz.disp.three : thiz.axis.x - Math.abs(thiz.disp.three);
 
+            //TODO need to create a smooth animation.
             /* Update the frame contents. */
             thiz.drawFrame();
 
