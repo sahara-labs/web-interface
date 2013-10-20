@@ -632,26 +632,10 @@
 
 .mimic-label {
     position: absolute;
-    right: 49%;
+    right: 52%;
     color: #fff;
     text-shadow: 1px 1px 2px #000;
     font-size: 12px;
-}
-
-.mimic-disp {
-    text-align: right;
-    margin-left: 5px;
-    font-size: 13px;
-    background: #FFF;
-    border: 1px solid #0033A0;
-    height: 16px;
-    width: 40px;
-    display: inline-block;
-    color: #333;
-    text-shadow: none;
-    -moz-box-shadow: inset 0 0 5px #777;
-    -webkit-box-shadow: inset 0 0 5px #777;
-    box-shadow: inset 0 0 5px #777;
 }
 
 .mimic-label-motor {
@@ -661,6 +645,20 @@
     color: #8a8a8a;
     font-size: 11px;
     background: #fafafa;
+}
+
+.mimic-label-toggle {
+    position: absolute;
+    bottom: 11%;
+    right: 2.5%;
+    font-size: 10px;
+    color: #797979;
+}
+
+.mimic-label-checkbox {
+    position: relative;
+    top: 3px;
+    left: 1px;
 }
 
 .mimic-input-motor {
@@ -676,6 +674,7 @@
 
 .mimic-label-base {
     top: 75%;
+    right: 50%
 }
 
 .mimic-label-m1 {
@@ -706,12 +705,12 @@
 .mimic-resonant-legend {
     width: 14%;
     border: solid 1px #000;
-    box-shadow: 1px 1px 6px #383737;
+    box-shadow: 1px 1px 3px #383737;
     background: #3D3D3D;
     border-radius: 6px;
     height: 30%;
     right: 2%;
-    top: 56%;
+    top: 53%;
 }
 
 .mimic-resonant-legend .res-value{

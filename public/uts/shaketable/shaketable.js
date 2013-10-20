@@ -2419,6 +2419,11 @@ SwitchWidget.prototype.clicked = function() {
             thiz.isChanged = false;
         }
      );
+
+     if (this.postAction === "setMotor" && this.val == false)
+     {
+         this.postControl('setCoils','coils-on=true');
+     }
 };
 
 /**
@@ -2567,6 +2572,10 @@ MimicWidget.prototype.init = function() {
                 $(this).find(".switch .slide").toggleClass("on off").hasClass("on"));
 	});
 
+    this.$widget.find(".mimic-label-checkbox").click(function() {
+        $(".mimic-label").fadeToggle('fast');
+    });
+
     this.$widget.find('.mimic-toggle-dampers').click(function() {
         $('.mimic-damper').fadeToggle('fast');
     });
@@ -2604,19 +2613,20 @@ MimicWidget.prototype.init = function() {
 MimicWidget.prototype.getHTML = function() {
     /* Canvas Element. */
     var html = "<div class='mimic'>" +
-    "               <div class='mimic-label mimic-label-m2'>M2<span class='mimic-disp'></span></div>" +
+    "               <div class='mimic-label mimic-label-m2'>M2</div>" +
     "               <div class='mimic-damper' id='mimic-damper-two'>" +
     "               <img class='damper-arm damper-arm-two' src='/uts/shaketable/images/damper-arm.png'/>" +
     "                   <input class='mimic-damperInfo' value='Off'/>" +
     "               </div>" +
-    "               <div class='mimic-label mimic-label-m1'>M1<span class='mimic-disp'></span></div>" +
+    "               <div class='mimic-label mimic-label-m1'>M1</div>" +
     "               <div class='mimic-damper' id='mimic-damper-one'>" +
     "               <img class='damper-arm damper-arm-one' src='/uts/shaketable/images/damper-arm.png'/>" +
     "                   <input class='mimic-damperInfo' value='Off'/>" +
     "               </div>" +
-    "               <div class='mimic-label mimic-label-base'>Base<span class='mimic-disp'></span></div>" +
+    "               <div class='mimic-label mimic-label-base'>Base</div>" +
     "               <span class='mimic-label-motor'><input class='mimic-input-motor' value='-'/>Hz</span>" +
     "               <span class='click-button mimic-resonant-button'>Resonant Display</span>" +
+    "               <div class='mimic-label-toggle'>Labels <input type='checkbox' class='mimic-label-checkbox' checked/></div>" +
     "               <div class='mimic-resonant mimic-resonant-legend'>" +
     "                   <div class='res-upper res-value'>Upper</div>" +
     "                   <div class='res-lower res-value'>Lower</div>" +
@@ -2764,11 +2774,6 @@ MimicWidget.prototype.updateData = function(data) {
             /* Change the Motor label to display the Motor's Hz. */
             thiz.motorSpeed = (data['motor-on'] === true) ? Math.floor(data['motor-speed'] * 100)/100 : '-';
             $('.mimic-label-motor').find('.mimic-input-motor').val(thiz.motorSpeed);
-
-            /* Change the Mass labels to display the mass positions up to two decimals. */
-            $('.mimic-label-base').find('.mimic-disp').html(Math.floor(data['disp-1']*100)/100);
-            $('.mimic-label-m1').find('.mimic-disp').html(Math.floor(data['disp-2']*100)/100);
-            $('.mimic-label-m2').find('.mimic-disp').html(Math.floor(data['disp-3']*100)/100);
 
             /* Update the coil values. */
             thiz.updateCoils();
