@@ -2657,15 +2657,6 @@ MimicWidget.prototype.consume = function(data) {
         three: ['']
     };
 
-    //TODO Get appropriate data values.
-    /* 
-     * This should get the latest data values and puts them into arrays.
-     * I am currently using the 'disp-graph' values and splitting them into arrays.
-     * 
-     * The dataSet index is also reset to 0 and then the updateData method is called.
-     * 
-     */
-
     //TODO Need to replace arrays with appropriate data.
     this.dataValues.one = String(data['disp-graph-1']).split(",").slice(0,20);
     this.dataValues.two = String(data['disp-graph-2']).split(",").slice(0,20);
@@ -2711,21 +2702,7 @@ MimicWidget.prototype.acquireData = function() {
 MimicWidget.prototype.updateData = function(data) {
     var thiz = this;
 
-    //TODO Iterate through an array of the correct values and call the draw method accordingly.
-    /*
-     * This set time out gets the time difference between the consume method and the setTimout, I have then attempted
-     * to use the formula I had written down from our discussion to get the appropriate index value, however this seems
-     * to be returning the incorrect value.
-     * 
-     * The values are then set using the arrays created in the consume method with the indexValue used to set the position in
-     * the array.
-     * 
-     * I also increment the datasetIndex and the frameIndex, although I am currently unsure how to incorporate them into the animation,
-     * I'm sure I will have a better understanding once the consume method is returning the right values.
-     * 
-     * Then I use a for statement to iterate through the data arrays updating the mass positions and then calling the drawframe method.
-     */
-
+    //TODO Need to change to different animation method.
     setTimeout(function() {
 
         /* Get the end time. */
@@ -2955,7 +2932,21 @@ MimicWidget.prototype.drawArm = function(x,y,mw,mh,endX,endY) {
     this.yEnd = endY;
 
     /* Sets the control point's Y axis depending on the arms position in relation to the canvas height. */
-    this.yCon = (this.yPos < this.height - (this.height / 1.5)) ? y + (y - 1) : y + (y / 4.5);
+    if (this.yPos < this.height - (this.height / 1.5))
+    {
+        /* Sets the Y axis for the arm between mass 2 and 3. */
+        this.yCon = y + (y / 0.5);
+    }
+    else if (this.yPos < this.height - (this.height / 2))
+    {
+        /* Sets the Y axis for the arm between mass 1 and 2. */
+        this.yCon = y + (y / 4.5);
+    }
+    else
+    {
+        /* Sets the Y axis for the arm between the base and mass 1. */
+        this.yCon = y + (y / 5.5);
+    }
 
     /* Draws the arm's border. */
     this.ctx.beginPath();
@@ -3022,10 +3013,10 @@ MimicWidget.prototype.animateMotor = function(y,mh) {
     var x3 = this.baseX;
 
     /* y axis positions. */
-    var y1 = (y - (mh / 15));
+    var y1 = (y - (mh / 7));
     var y2 = (y + 5);
     var y3 = (y + 14);
-    var y4 = (y + (mh + (mh / 15)));
+    var y4 = (y + (mh + (mh / 7)));
 
     /* Draw the motor arm path. */
     this.ctx.beginPath();
@@ -3053,7 +3044,7 @@ MimicWidget.prototype.animateMotor = function(y,mh) {
     this.ctx.fillStyle = '#808080';
     this.ctx.fill();
     this.ctx.lineWidth = 1;
-    this.ctx.strokeStyle = '#555';
+    this.ctx.strokeStyle = '#333';
     this.ctx.stroke();
 
     /* Check if the yoke's x axis is far left. */
