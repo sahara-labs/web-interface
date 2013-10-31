@@ -2559,6 +2559,9 @@ MimicWidget.prototype.init = function() {
     /* Motor scotch yoke position. */
     this.scotchPos = false;
 
+    /* Counter for the peak function. */
+    this.peakCounter = {};
+
     /* Calculates the Y axes of various mimic elements. */
     this.mass1Y = this.axis.y - (this.massH * 4);
     this.mass2Y = this.axis.y - (this.massH * 8);
@@ -2657,16 +2660,46 @@ MimicWidget.prototype.consume = function(data) {
         three: ['']
     };
 
-    //TODO Need to replace arrays with appropriate data.
-    this.dataValues.one = String(data['disp-graph-1']).split(",").slice(0,20);
-    this.dataValues.two = String(data['disp-graph-2']).split(",").slice(0,20);
-    this.dataValues.three = String(data['disp-graph-3']).split(",").slice(0,20);
+    /* Gets the data values and puts them into an array. */
+    this.dataValues = {
+        one: String(data['disp-graph-1']).split(",").slice(0,20),
+        two: String(data['disp-graph-2']).split(",").slice(0,20),
+        three: String(data['disp-graph-3']).split(",").slice(0,20)
+    }
 
-    /* Reset the dataset Index. */
-    this.datasetIndex = 0;
+    /* Get each levels peak values. */
+    this.peakValues = {
+        one: this.filterPeaks(this.dataValues.one,'one'),
+        two: this.filterPeaks(this.dataValues.two,'two'),
+        three: this.filterPeaks(this.dataValues.three,'three')
+    }
 
-    /* Get the start time. */
-    this.startTime = new Date();
+    /* Get the rig's angular frequency. */
+    this.w = 2 * Math.PI * data['motor-speed'];
+
+    /* Get the peak displacements for each of the mimic's levels. */
+    this.a = {
+        base: 0.7,
+        one: this.peakValues.one[this.peakValues.one.length -1],
+        two: this.peakValues.two[this.peakValues.two.length -1],
+        three: this.peakValues.three[this.peakValues.three.length -1]
+    };
+
+    //TODO Get the correct phase values.
+
+    /* Get the number of indexes between cycles */
+    this.nc = this.peakCounter.one[this.peakCounter.one.length -1];
+
+    /* Get the number of indexes between level n and level 1. */
+    this.c2 = this.peakCounter.two[this.peakCounter.two.length -1];
+    this.c3 = this.peakCounter.three[this.peakCounter.three.length -1];
+
+    /* Set the phases offset for where peaks occur in relative to other peak levels. */
+    this.o = {
+        one: 0,
+        two: this.c2 / this.nc * 2 * Math.PI,
+        three: this.c3 / this.nc * 2 * Math.PI
+    };
 
     /* Update mimic data. */
     this.updateData(data);
@@ -2702,69 +2735,55 @@ MimicWidget.prototype.acquireData = function() {
 MimicWidget.prototype.updateData = function(data) {
     var thiz = this;
 
-    //TODO Need to change to different animation method.
     setTimeout(function() {
-
-        /* Get the end time. */
-        thiz.endTime = new Date();
-
-        /* Get the time difference between the last poll to the current poll. */
-        thiz.timeDifference = (thiz.endTime && thiz.startTime) ? thiz.endTime.getTime() - thiz.startTime.getTime() : 0;
-
-        /* Increment the dataset index. */
-        thiz.datasetIndex++;
 
         /* Counter incremented every frame. */
         thiz.frameIndex++;
 
-        //TODO Need to get the correct index value.
-        /* Get the index value. */
-        thiz.indexValue = (thiz.dataValues.one.length - 1) - Math.floor(thiz.timeDifference / thiz.period);
+        /* Get the time for the mimic animation. */
+        thiz.t = (1 / thiz.period) * thiz.frameIndex;
 
-        /* Iterate through the arrays and update the mass values. */
-        for(i = 0; i <20; i++)
-        {
-            /* Set the values for M1, M2 and the base. */
-            thiz.disp = {
-                one: Math.floor(thiz.dataValues.one[i] / thiz.sizeRatio),
-                two: Math.floor(thiz.dataValues.two[i] / thiz.sizeRatio),
-                three: Math.floor(thiz.dataValues.three[i] / thiz.sizeRatio)
-            };
+        /* Set the displacement values for the mass levels. */
+        //TODO Make sure the formula for displacement is correct.
+        thiz.disp = {
+            one: thiz.a.one + Math.round((Math.sin((thiz.w * thiz.t) + thiz.o.one)) / thiz.sizeRatio),
+            two: thiz.a.two + Math.round((Math.sin((thiz.w * thiz.t) + thiz.o.two)) / thiz.sizeRatio),
+            three: thiz.a.three + Math.round((Math.sin((thiz.w * thiz.t) + thiz.o.three)) / thiz.sizeRatio)
+        };
 
-            /* Restricts the bases movement range to 7 by dividing it by 7. */
-            thiz.baseRange = Math.abs(Math.floor(thiz.disp.one / 7));
+        /* Restricts the bases movement range to 7 by dividing it by 7. */
+        thiz.baseRange = Math.abs(Math.floor(thiz.disp.one / 7));
 
-            /* Adds or subtracts the restricted base position from the starting axis. */
-            thiz.baseX = (thiz.disp.one <= 0) ? thiz.axis.x - thiz.baseRange : thiz.axis.x + thiz.baseRange;
+        /* Adds or subtracts the restricted base position from the starting axis. */
+        thiz.baseX = (thiz.disp.one <= 0) ? thiz.axis.x - thiz.baseRange : thiz.axis.x + thiz.baseRange;
 
-            /* Adds or subtracts the first masses position from the starting axis. */
-            thiz.mass1X = (thiz.disp.one >= 0) ? thiz.axis.x + thiz.disp.one : thiz.axis.x - Math.abs(thiz.disp.one);
+        /* Adds or subtracts the first masses position from the starting axis. */
+        thiz.mass1X = (thiz.disp.one >= 0) ? thiz.axis.x + thiz.disp.one : thiz.axis.x - Math.abs(thiz.disp.one);
 
-            /* Adds or subtracts the second masses position from the starting axis. */
-            thiz.mass2X = (thiz.disp.two >= 0) ? thiz.axis.x + thiz.disp.two : thiz.axis.x - Math.abs(thiz.disp.two);
+        /* Adds or subtracts the second masses position from the starting axis. */
+        thiz.mass2X = (thiz.disp.two >= 0) ? thiz.axis.x + thiz.disp.two : thiz.axis.x - Math.abs(thiz.disp.two);
 
-            /* Adds or subtracts the third masses position from the starting axis. */
-            thiz.mass3X = (thiz.disp.three >= 0) ? thiz.axis.x + thiz.disp.three : thiz.axis.x - Math.abs(thiz.disp.three);
+        /* Adds or subtracts the third masses position from the starting axis. */
+        thiz.mass3X = (thiz.disp.three >= 0) ? thiz.axis.x + thiz.disp.three : thiz.axis.x - Math.abs(thiz.disp.three);
 
-            //TODO need to create a smooth animation.
-            /* Update the frame contents. */
-            thiz.drawFrame();
+        /* Update the frame contents. */
+        thiz.drawFrame();
 
-            /* Get the coil's states and percentages. */
-            thiz.coil = {
-                on1: data['coil-on-1'],
-                on2: data['coil-on-2'],
-                percent1: data['coil-percent-1'],
-                percent2: data['coil-percent-2']
-            }
-
-            /* Change the Motor label to display the Motor's Hz. */
-            thiz.motorSpeed = (data['motor-on'] === true) ? Math.floor(data['motor-speed'] * 100)/100 : '-';
-            $('.mimic-label-motor').find('.mimic-input-motor').val(thiz.motorSpeed);
-
-            /* Update the coil values. */
-            thiz.updateCoils();
+        /* Get the coil's states and percentages. */
+        thiz.coil = {
+            on1: data['coil-on-1'],
+            on2: data['coil-on-2'],
+            percent1: data['coil-percent-1'],
+            percent2: data['coil-percent-2']
         }
+
+        /* Change the Motor label to display the Motor's Hz. */
+        thiz.motorSpeed = (data['motor-on'] === true) ? Math.floor(data['motor-speed'] * 100)/100 : '-';
+        $('.mimic-label-motor').find('.mimic-input-motor').val(thiz.motorSpeed);
+
+        /* Update the coil values. */
+        thiz.updateCoils();
+
     }, 50);
 }
 
@@ -2797,6 +2816,46 @@ MimicWidget.prototype.updateCoils = function() {
         $('#mimic-damper-two').animate({'background-position': '-15%',}, 40 );
         $('#mimic-damper-three').animate({'background-position': '-15%',}, 40 );
     }
+}
+
+/**
+ * Get the peak values from an array.
+ * 
+ * @param arrayVal the array that will be filtered.
+ * @param lvl the level that the peakCounter will update to.
+ * 
+ */
+MimicWidget.prototype.filterPeaks = function(arrayVal,lvl) {
+    /* Reset the arrays and index counter. */
+    var peaks = [];
+    var counter = [];
+    var count = 0;
+
+    /* Iterate through the arrayVal and push peaks to the 'peaks' array. */
+    for (val in arrayVal)
+    {
+        /* Get the previous and next values. */
+        var p = arrayVal[Number(val) - 1],
+            c = arrayVal[Number(val)],
+            n = arrayVal[Number(val) + 1];
+
+        /* Push the peak values into the 'peaks' array. */
+        if (c > p & c > n || c < p & c < n)
+        {
+            peaks.push(c);
+            counter.push(count);
+            count = 0;
+        }
+        else
+        {
+        	/* Increment the counter. */
+            count++;
+        }
+    }
+    
+    this.peakCounter[lvl] = counter;
+    
+    return peaks;
 }
 
 /**
