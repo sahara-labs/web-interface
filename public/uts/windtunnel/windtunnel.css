@@ -13,6 +13,10 @@
     top: 10px;
 }
 
+#slider-fan .window-content {
+	margin-top: 30px;
+}
+
 #switch-fan-on {
 	left: 520px;
 	top: 10px;
@@ -87,6 +91,14 @@
     margin: 0;
     background: #242424;
     border-bottom: solid 1px #868686;
+}
+
+#cameras-tabs img {
+   margin-top: -33px;
+}
+ 
+#cameras-tabs object { 
+    margin-top: -31px; 
 }
 
 #graph-air-velocity-box, #graph-temperaturerelative-humidity-box, 

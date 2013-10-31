@@ -2593,12 +2593,12 @@ CameraWidget.prototype.consume = function(data) {
     
     if (data['camera-swf' + this.suf] != undefined)
     {
-        this.urls.swf = decodeURIComponent(data['camera-swf']);
+        this.urls.swf = decodeURIComponent(data['camera-swf' + this.suf]);
     }
     
     if (data['camera-mjpeg' + this.suf] != undefined)
     {
-        this.urls.mjpeg = decodeURIComponent(data['camera-mjpeg']);
+        this.urls.mjpeg = decodeURIComponent(data['camera-mjpeg' + this.suf]);
     }
     
     if (this.urls.swf || this.urls.mjpeg) 
