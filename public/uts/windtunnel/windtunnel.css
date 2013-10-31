@@ -4,18 +4,74 @@
  ** Wind Tunnel specific styles.                                             **
  ******************************************************************************/
 #wind-tunnel-anchor {
-    height: 1000px;
+    height: 1020px;
 }
  
 #slider-fan {
     width: 104px;
-    left: 460px;
-    top: 105px;
+    left: 400px;
+    top: 10px;
 }
 
 #switch-fan-on {
-	left: 450px;
-	top: 5px;
+	left: 520px;
+	top: 10px;
+}
+
+#graph-air-velocity-box {
+	left: -75px;
+	top: 350px;
+}
+
+#graph-label-graph-wind-speed .on {
+	background-color: blue;
+}
+
+#graph-air-velocity-box .graph-left-axis-label {
+    left: -31px;
+}
+
+#graph-temperaturerelative-humidity-box {
+	left: 300px;
+	top: 350px;
+}
+
+#graph-label-graph-relative-humidity .on {
+	background-color: green;
+}
+
+#graph-label-graph-air-temp .on {
+	background-color: yellow;
+}
+
+#graph-temperaturerelative-humidity-box .graph-left-axis-label {
+    left: -50px;
+}
+
+#graph-differential-pressure-box {
+	left: -75px;
+	top: 665px;
+}
+
+#graph-label-graph-diff-pressure .on {
+	background-color: red;
+}
+
+#graph-differential-pressure-box .graph-left-axis-label {
+	left: -55px;
+}
+
+#graph-barometric-pressure-box {
+	left: 300px;
+	top: 665px;
+}
+
+#graph-label-graph-barometric-pressure .on {
+	background-color: orange;
+}
+
+#graph-barometric-pressure-box .graph-left-axis-label {
+    left: -65px;
 }
 
 #cameras-tabs {

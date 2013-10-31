@@ -79,7 +79,7 @@ WindTunnel.prototype.setup = function() {
 	/* Graphs ----------------------------------------------------------------- */
 	o = new GraphWidget(this.$container, "Air Velocity");
 	o.isPulling = false;
-	o.setDataVariable("graph-wind-speed", "Wind Speed", "blue", 0, 15);
+	o.setDataVariable("graph-wind-speed", "Air Velocity", "blue", 0, 15);
 	o.setAxisLabels("Time (s)", "Air Velocity (m/s)");
 	this.widgets.push(o);
 	
