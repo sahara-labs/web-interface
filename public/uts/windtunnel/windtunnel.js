@@ -81,6 +81,7 @@ WindTunnel.prototype.setup = function() {
 	o.isPulling = false;
 	o.setDataVariable("graph-wind-speed", "Air Velocity", "blue", 0, 15);
 	o.setAxisLabels("Time (s)", "Air Velocity (m/s)");
+	o.icon = "velocity";
 	this.widgets.push(o);
 	
 	o = new GraphWidget(this.$container, "Temperature/Relative Humidity");
@@ -88,18 +89,21 @@ WindTunnel.prototype.setup = function() {
     o.setDataVariable("graph-relative-humidity", "Relative Humidity", "green", 0, 100);
     o.setDataVariable("graph-air-temp", "Temperature", "yellow", 0, 100);
     o.setAxisLabels("Time (s)", "Humidity (%)/Temp (&deg;C");
+    o.icon = "temp";
     this.widgets.push(o);
 	
 	o = new GraphWidget(this.$container, "Differential Pressure");
     o.isPulling = false;    
     o.setDataVariable("graph-diff-pressure", "Differential Pressure", "red", 0, 200);
     o.setAxisLabels("Time (s)", "Differential Pressure (Pa)");
+    o.icon = "diff-pressure";
     this.widgets.push(o);
 
     o = new GraphWidget(this.$container, "Barometric Pressure");
     o.isPulling = false;
     o.setDataVariable("graph-barometric-pressure", "Barometric Pressure", "orange", 900, 1100);
     o.setAxisLabels("Time (s)", "Barometric Pressure (mBar)");
+    o.icon = "pressure";
     this.widgets.push(o);
      
 	/* Display manager to allow things to be shown / removed. */

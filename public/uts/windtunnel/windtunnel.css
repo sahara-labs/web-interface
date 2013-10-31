@@ -156,7 +156,7 @@
     width: 26px;
     display: inline-block;
     background-repeat: no-repeat;
-	background-image: url('/uts/coupledtanksnew/images/icons.png');
+	background-image: url('/uts/windtunnel/images/icons.png');
     opacity: 0.8;
 }
 
@@ -1381,6 +1381,25 @@
 
 .icon_datafiles{
 	background-position: -208px 0px;
+}
+
+.icon_fan {
+    background-position: 0px -24px;
+}
+
+.icon_velocity {
+    background-position: -26px -24px;
+}
+
+.icon_temp {
+    background-position: -52px -24px;
+}
+.icon_pressure {
+    background-position: -78px -24px;
+}
+
+.icon_diff-pressure {
+    background-position: -105px -24px;
 }
 
 /******************************************************************************
