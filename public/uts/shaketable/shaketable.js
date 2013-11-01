@@ -2680,9 +2680,9 @@ MimicWidget.prototype.consume = function(data) {
     /* Get the latest peak displacements for each of the mimic's levels. */
     this.a = {
         base: 0.7,
-        one: this.peakValues.one[this.peakValues.one.length -1],
-        two: this.peakValues.two[this.peakValues.two.length -1],
-        three: this.peakValues.three[this.peakValues.three.length -1]
+        one: this.peakValues.one[0],
+        two: this.peakValues.two[0],
+        three: this.peakValues.three[0]
     };
 
     //TODO Get the correct phase values.
