@@ -2660,11 +2660,11 @@ MimicWidget.prototype.consume = function(data) {
         three: ['']
     };
 
-    /* Gets the data values and puts them into an array. */
+    /* Get the latest data values. */
     this.dataValues = {
-        one: String(data['disp-graph-1']).split(",").slice(0,20),
-        two: String(data['disp-graph-2']).split(",").slice(0,20),
-        three: String(data['disp-graph-3']).split(",").slice(0,20)
+        one: data['disp-graph-1'],
+        two: data['disp-graph-2'],
+        three: data['disp-graph-3']
     }
 
     /* Get each levels peak values. */
@@ -2831,13 +2831,13 @@ MimicWidget.prototype.filterPeaks = function(arrayVal,lvl) {
     var counter = [];
     var count = 0;
 
-    /* Iterate through the arrayVal and push peaks to the 'peaks' array. */
-    for (val in arrayVal)
+    /* Iterate backwards through arrayVal. */
+    for (i = arrayVal.length -1; i > -1; i--)
     {
         /* Get the previous and next values. */
-        var p = arrayVal[Number(val) - 1],
-            c = arrayVal[Number(val)],
-            n = arrayVal[Number(val) + 1];
+        var p = arrayVal[Number(i)-1],
+            c = arrayVal[Number(i)],
+            n = arrayVal[Number(i)+1];
 
         /* Push the peak values into the 'peaks' array. */
         if (c > p & c > n || c < p & c < n)
@@ -2851,10 +2851,15 @@ MimicWidget.prototype.filterPeaks = function(arrayVal,lvl) {
         	/* Increment the counter. */
             count++;
         }
+
+        /* Break the loop once it has found the two most recent peaks. */
+        if (peaks.length >= 2) break;
     }
     
+    /* Store the difference of indexes in both peaks. */
     this.peakCounter[lvl] = counter;
     
+    /* Return the two latest peak values. */
     return peaks;
 }
 
