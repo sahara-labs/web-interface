@@ -2677,7 +2677,7 @@ MimicWidget.prototype.consume = function(data) {
     /* Get the rig's angular frequency. */
     this.w = 2 * Math.PI * data['motor-speed'];
 
-    /* Get the peak displacements for each of the mimic's levels. */
+    /* Get the latest peak displacements for each of the mimic's levels. */
     this.a = {
         base: 0.7,
         one: this.peakValues.one[this.peakValues.one.length -1],
@@ -2687,12 +2687,12 @@ MimicWidget.prototype.consume = function(data) {
 
     //TODO Get the correct phase values.
 
-    /* Get the number of indexes between cycles */
-    this.nc = this.peakCounter.one[this.peakCounter.one.length -1];
+    /* Get the number of indexes between the first peak found and the preceding peak. */
+    this.nc = this.peakCounter.one[1];
 
     /* Get the number of indexes between level n and level 1. */
-    this.c2 = this.peakCounter.two[this.peakCounter.two.length -1];
-    this.c3 = this.peakCounter.three[this.peakCounter.three.length -1];
+    this.c2 = this.peakCounter.two[1];
+    this.c3 = this.peakCounter.three[1];
 
     /* Set the phases offset for where peaks occur in relative to other peak levels. */
     this.o = {
