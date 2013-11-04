@@ -60,7 +60,8 @@ WindTunnel.prototype.setup = function() {
 	o = new TabbedWidget(this.$container, "Cameras", [ new CameraWidget(this.$container, "Cam 1", "-c1"),
 	          new CameraWidget(this.$container, "Cam 2", "-c2") ], "camera", "camera");
 	o.setResizable(true, true);
-	o.setDimensions(320, 275);
+	o.setExpandable(true);
+	o.setDimensions(384, 216 + 35);
 	this.widgets.push(o);
 	
 	/* -- Fan controls -------------------------------------------------------- */
@@ -899,16 +900,25 @@ function TabbedWidget($container, title, widgets, modeVar, modeAction)
    /** Tools tips of the tab. */
    this.toolTips = undefined;
    
-   /** Width of the tab box. If this is undefined, the box takes the width
+   /** Default width of the tab box. If this is undefined, the box takes the width
     *  of its currently displayed contents. */
+   this.defWidth = undefined;
+   
+   /** Current width of the tab box. */
    this.width = undefined;
    
-   /** Height of the box. If this is undefinde, the box takes the height of
+   /** Default height of the box. If this is undefinde, the box takes the height of
     *  its currently displayed contents. */
+   this.defHeight = undefined;
+   
+   /** Current height of the tab box. */
    this.height = undefined;
    
    /** Whether this widget is resizable. */
    this.isResizable = false;
+   
+   /** Whether this widget is expandable. */
+   this.isExpandable = false;
    
    /** Whether to keep aspect ratio if resizable. */
    this.keepAspect = false;
@@ -937,6 +947,8 @@ TabbedWidget.prototype = new DisplayManager;
 TabbedWidget.prototype.init = function() {
     /* Reset. */
     this.currentMode = undefined;
+    this.height = this.defHeight;
+    this.width = this.defWidth;
     
     /* Render the content box. */
 	this.$widget = this.generateBox(this.id);
@@ -976,6 +988,11 @@ TabbedWidget.prototype.init = function() {
 	    if   (thiz.parentManager) thiz.parentManager.toggleWidget(thiz.title);
         else  thiz.destroy();
 	});
+	
+	if (this.isExpandable)
+	{
+		this.$widget.find(".window-expand").click(function() { thiz.toggleWindowExpand(); });
+	}
 
 	/* Enable dragging. */
 	this.enableDraggable();
@@ -986,9 +1003,11 @@ TabbedWidget.prototype.init = function() {
 
 TabbedWidget.prototype.generateBox = function(boxId) {
     var i = 0, html = 
-      "<div class='tab-wrapper' id='" + boxId + "'>" +
+      "<div class='tab-wrapper' id='" + boxId + "' style='width:" + (this.width ? this.width + "px" : "auto") + 
+      				"; height:" + (this.height ? this.height + "px" : "auto") + "'>" +
           "<div class='tab-wrapper-controls draggable-header'>" +
-              "<span class='window-close ui-icon ui-icon-close'></span>" +    
+              "<span class='window-close ui-icon ui-icon-close'></span>" +
+              (this.isExpandable ? "<span class='window-expand ui-icon ui-icon-arrow-4-diag'></span>" : "") +
               "<div class='tab-wrapper-height'></div>" +
           "</div>" +
          "<div class='tab-header' style='width:" + (this.widgets.length * 122) + "px'>";
@@ -1139,8 +1158,8 @@ TabbedWidget.prototype.setToolTips = function(toolTips) {
  * @param height height of the box in pixels
  */
 TabbedWidget.prototype.setDimensions = function(width, height) {
-    this.width = width;
-    this.height = height;
+    this.defWidth = width;
+    this.defHeight = height;
 };
 
 /**
@@ -1152,6 +1171,15 @@ TabbedWidget.prototype.setDimensions = function(width, height) {
 TabbedWidget.prototype.setResizable = function(resizable, keepAspect) {
     this.isResizable = resizable;
     this.keepAspect = keepAspect;
+};
+
+/**
+ * Enables or disables window expand. 
+ * 
+ * @param expand whether the tabbed widget is expandable
+ */
+TabbedWidget.prototype.setExpandable = function(expandable) {
+	this.isExpandable = expandable;
 };
 
 /* ============================================================================
@@ -1574,7 +1602,7 @@ GraphWidget.prototype.init = function() {
 GraphWidget.NUM_VERT_SCALES = 5;
 
 /** The number of horizontal scales. */
-GraphWidget.NUM_HORIZ_SCALES = 8;
+GraphWidget.NUM_HORIZ_SCALES = 6;
 
 GraphWidget.prototype.getHTML = function() {
    

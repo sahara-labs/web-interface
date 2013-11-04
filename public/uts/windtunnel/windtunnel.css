@@ -9,7 +9,7 @@
  
 #slider-fan {
     width: 104px;
-    left: 400px;
+    left: 425px;
     top: 10px;
 }
 
@@ -18,7 +18,7 @@
 }
 
 #switch-fan-on {
-	left: 520px;
+	left: 540px;
 	top: 10px;
 }
 
@@ -79,7 +79,7 @@
 }
 
 #cameras-tabs {
-	left: 50px;
+	left: 25px;
 	top:40px;
 	width: 320px;
 	height: 275px;
@@ -259,7 +259,7 @@
 }
 
 .tab-wrapper-controls .ui-icon {
-	margin: 0 3px;
+	margin: 0 3px 4px;
 }
 
 .tab-wrapper-height {
@@ -415,6 +415,7 @@
  ******************************************************************************/
 .switch-container {
 	height: 30px;
+	width: 100px;
 }
  
 .switch-label {
@@ -595,7 +596,7 @@
 	margin-left: 10px;
 }
 
-.graph-bottom-scale-8 {
+.graph-bottom-scale-6 {
 	margin-left: -10px;
 }
 
