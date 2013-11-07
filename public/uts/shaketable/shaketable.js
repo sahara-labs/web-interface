@@ -2504,9 +2504,6 @@ function MimicWidget($container, title)
     /** Canvas context. */
     this.ctx = null;
 
-    /** Data Values. */
-    this.dataValues = {};
-
     /** Dataset Index */
     this.datasetIndex = 0;
 
@@ -2653,53 +2650,60 @@ MimicWidget.prototype.getHTML = function() {
 
 MimicWidget.prototype.consume = function(data) {
 
-    /* Clears previous data values. */
-    this.dataValues = {
-        one: [''],
-        two: [''],
-        three: ['']
-    };
-
-    /* Get the latest data values. */
-    this.dataValues = {
-        one: data['disp-graph-1'],
-        two: data['disp-graph-2'],
-        three: data['disp-graph-3']
-    }
-
-    /* Get each levels peak values. */
-    this.peakValues = {
-        one: this.filterPeaks(this.dataValues.one,'one'),
-        two: this.filterPeaks(this.dataValues.two,'two'),
-        three: this.filterPeaks(this.dataValues.three,'three')
-    }
-
-    /* Get the rig's angular frequency. */
+    /* Get the motor's angular frequency. */
     this.w = 2 * Math.PI * data['motor-speed'];
 
-    /* Get the latest peak displacements for each of the mimic's levels. */
+    /* Clears the previous peak counters. */
+    this.peakCounter = {
+        one: [ ],
+        two: [ ],
+        three: [ ]
+    }
+
+    /* Get the two latest peaks for each mass level. */
+    this.peakValues = {
+        one: this.filterPeaks(data['disp-graph-1'],'one'),
+        two: this.filterPeaks(data['disp-graph-2'],'two'),
+        three: this.filterPeaks(data['disp-graph-3'],'three')
+    }
+
+    /* Get the latest peak displacement for each of the mimic's levels. */
     this.a = {
-        base: 0.7,
         one: this.peakValues.one[0],
         two: this.peakValues.two[0],
         three: this.peakValues.three[0]
     };
 
-    //TODO Get the correct phase values.
-
     /* Get the number of indexes between the first peak found and the preceding peak. */
-    this.nc = this.peakCounter.one[1];
+    this.nc = {
+        one: this.peakCounter.one[1],
+        two: this.peakCounter.two[1],
+        three: this.peakCounter.three[1]
+    }
 
-    /* Get the number of indexes between level n and level 1. */
-    this.c2 = this.peakCounter.two[1];
-    this.c3 = this.peakCounter.three[1];
+    /* Get the number of indexes between level two and level 1. */
+    this.c = {
+        one: Number(this.peakCounter.one[2] + this.peakCounter.one[1]),
+        two: Number(this.peakCounter.two[2] + this.peakCounter.one[1]),
+        three: Number(this.peakCounter.three[2] + this.peakCounter.one[1])
+    }
 
     /* Set the phases offset for where peaks occur in relative to other peak levels. */
     this.o = {
-        one: 0,
-        two: this.c2 / this.nc * 2 * Math.PI,
-        three: this.c3 / this.nc * 2 * Math.PI
+        one: Math.round(this.c.one) / (this.nc.one * 2 * Math.PI),
+        two: Math.round(this.c.one) / (this.nc.two * 2 * Math.PI),
+        three: Math.round(this.c3) / (this.nc.three * 2 * Math.PI)
     };
+
+    //TODO Remove console logs (currently used to check values).
+    console.log('one: ' + this.o.one);
+    console.log('two: ' + this.o.two);
+    console.log('three: ' + this.o.three);
+
+    //TODO Get appropriate values (should not return 'NaN' or 'Infinity').
+    this.o.one = isNaN(this.o.one) || this.o.one == Infinity ? 0 : this.o.one;
+    this.o.two = isNaN(this.o.two) || this.o.two == Infinity ? 0 : this.o.two;
+    this.o.three = isNaN(this.o.three) || this.o.three == Infinity ? 0 : this.o.three;
 
     /* Update mimic data. */
     this.updateData(data);
@@ -2746,9 +2750,9 @@ MimicWidget.prototype.updateData = function(data) {
         /* Set the displacement values for the mass levels. */
         //TODO Make sure the formula for displacement is correct.
         thiz.disp = {
-            one: thiz.a.one + Math.round((Math.sin((thiz.w * thiz.t) + thiz.o.one)) / thiz.sizeRatio),
-            two: thiz.a.two + Math.round((Math.sin((thiz.w * thiz.t) + thiz.o.two)) / thiz.sizeRatio),
-            three: thiz.a.three + Math.round((Math.sin((thiz.w * thiz.t) + thiz.o.three)) / thiz.sizeRatio)
+            one: Math.round(thiz.a.one + Math.round((Math.sin((thiz.w * thiz.t) + thiz.o.one)) / thiz.sizeRatio)),
+            two: Math.round(thiz.a.two + Math.round((Math.sin((thiz.w * thiz.t) + thiz.o.two)) / thiz.sizeRatio)),
+            three: Math.round(thiz.a.three + Math.round((Math.sin((thiz.w * thiz.t) + thiz.o.three)) / thiz.sizeRatio))
         };
 
         /* Restricts the bases movement range to 7 by dividing it by 7. */
@@ -2827,9 +2831,9 @@ MimicWidget.prototype.updateCoils = function() {
  */
 MimicWidget.prototype.filterPeaks = function(arrayVal,lvl) {
     /* Reset the arrays and index counter. */
-    var peaks = [];
-    var counter = [];
-    var count = 0;
+    var peaks = [],
+        counter = [],
+        count = 0;
 
     /* Iterate backwards through arrayVal. */
     for (i = arrayVal.length -1; i > -1; i--)
@@ -2853,7 +2857,7 @@ MimicWidget.prototype.filterPeaks = function(arrayVal,lvl) {
         }
 
         /* Break the loop once it has found the two most recent peaks. */
-        if (peaks.length >= 2) break;
+        if (peaks.length >= 3) break;
     }
     
     /* Store the difference of indexes in both peaks. */
