@@ -2653,13 +2653,6 @@ MimicWidget.prototype.consume = function(data) {
     /* Get the motor's angular frequency. */
     this.w = 2 * Math.PI * data['motor-speed'];
 
-    /* Clears the previous peak counters. */
-    this.peakCounter = {
-        one: [ ],
-        two: [ ],
-        three: [ ]
-    }
-
     /* Get the two latest peaks for each mass level. */
     this.peakValues = {
         one: this.filterPeaks(data['disp-graph-1'],'one'),
@@ -2674,36 +2667,47 @@ MimicWidget.prototype.consume = function(data) {
         three: this.peakValues.three[0]
     };
 
-    /* Get the number of indexes between the first peak found and the preceding peak. */
+    /* The number of indexes between the first peak found and the preceding peak. */
     this.nc = {
         one: this.peakCounter.one[1],
-        two: this.peakCounter.two[1],
-        three: this.peakCounter.three[1]
+    	two: this.peakCounter.two[1],
+    	three: this.peakCounter.three[1]
     }
 
-    /* Get the number of indexes between level two and level 1. */
-    this.c = {
-        one: Number(this.peakCounter.one[2] + this.peakCounter.one[1]),
-        two: Number(this.peakCounter.two[2] + this.peakCounter.one[1]),
-        three: Number(this.peakCounter.three[2] + this.peakCounter.one[1])
+    /* The number of indexes between the first peak found and the peak for phase two. */
+    this.levelTwo = {
+        one: (this.peakCounter.one[2] + this.peakCounter.one[1]),
+        two: (this.peakCounter.two[2] + this.peakCounter.two[1]),
+        three: (this.peakCounter.three[2] + this.peakCounter.three[1])
     }
 
-    /* Set the phases offset for where peaks occur in relative to other peak levels. */
-    this.o = {
-        one: Math.round(this.c.one) / (this.nc.one * 2 * Math.PI),
-        two: Math.round(this.c.one) / (this.nc.two * 2 * Math.PI),
-        three: Math.round(this.c3) / (this.nc.three * 2 * Math.PI)
-    };
+    /* The number of indexes between the first peak found and peak for phase three. */
+    this.levelThree = {
+        one:(this.peakCounter.one[3] + this.peakCounter.one[2] + this.peakCounter.one[1]),
+    	two:(this.peakCounter.one[3] + this.peakCounter.two[2] + this.peakCounter.two[1]),
+    	three:(this.peakCounter.one[3] + this.peakCounter.three[2] + this.peakCounter.three[1])
+    }
 
-    //TODO Remove console logs (currently used to check values).
-    console.log('one: ' + this.o.one);
-    console.log('two: ' + this.o.two);
-    console.log('three: ' + this.o.three);
+    /* Phase one. */
+    this.phaseOne = {
+        one: this.nc.one,
+        two: this.levelTwo.one / this.nc.one * 2 * Math.PI,
+        three: this.levelThree.one /this.nc.one * 2 * Math.PI
+    }
 
-    //TODO Get appropriate values (should not return 'NaN' or 'Infinity').
-    this.o.one = isNaN(this.o.one) || this.o.one == Infinity ? 0 : this.o.one;
-    this.o.two = isNaN(this.o.two) || this.o.two == Infinity ? 0 : this.o.two;
-    this.o.three = isNaN(this.o.three) || this.o.three == Infinity ? 0 : this.o.three;
+    /* Phase two. */
+    this.phaseTwo = {
+        one: this.nc.two,
+        two: this.levelTwo.two / this.nc.two * 2 * Math.PI,
+        three: this.levelThree.two / this.nc.two * 2 * Math.PI
+    }
+
+    /* Phase three. */
+    this.phaseThree = {
+        one: this.nc.three,
+        two: this.levelTwo.three / this.nc.three * 2 * Math.PI,
+        three: this.levelThree.three / this.nc.three * 2 * Math.PI
+    }
 
     /* Update mimic data. */
     this.updateData(data);
@@ -2744,30 +2748,57 @@ MimicWidget.prototype.updateData = function(data) {
         /* Counter incremented every frame. */
         thiz.frameIndex++;
 
+        //TODO In the animation method work out time and displacement, then draw the mimic.
+
         /* Get the time for the mimic animation. */
-        thiz.t = (1 / thiz.period) * thiz.frameIndex;
+        thiz.time = (1 / thiz.period) * thiz.frameIndex;
 
         /* Set the displacement values for the mass levels. */
-        //TODO Make sure the formula for displacement is correct.
         thiz.disp = {
-            one: Math.round(thiz.a.one + Math.round((Math.sin((thiz.w * thiz.t) + thiz.o.one)) / thiz.sizeRatio)),
-            two: Math.round(thiz.a.two + Math.round((Math.sin((thiz.w * thiz.t) + thiz.o.two)) / thiz.sizeRatio)),
-            three: Math.round(thiz.a.three + Math.round((Math.sin((thiz.w * thiz.t) + thiz.o.three)) / thiz.sizeRatio))
+            one: Math.round(thiz.a.one + Math.round((Math.sin((thiz.w * thiz.time) + thiz.phaseOne.one)) / thiz.sizeRatio)),
+            two: Math.round(thiz.a.two + Math.round((Math.sin((thiz.w * thiz.time) + thiz.phaseTwo.one)) / thiz.sizeRatio)),
+            three: Math.round(thiz.a.three + Math.round((Math.sin((thiz.w * thiz.time) + thiz.phaseThree.one)) / thiz.sizeRatio))
         };
 
-        /* Restricts the bases movement range to 7 by dividing it by 7. */
+        /* Calculate the masses positions. */
         thiz.baseRange = Math.abs(Math.floor(thiz.disp.one / 7));
-
-        /* Adds or subtracts the restricted base position from the starting axis. */
         thiz.baseX = (thiz.disp.one <= 0) ? thiz.axis.x - thiz.baseRange : thiz.axis.x + thiz.baseRange;
-
-        /* Adds or subtracts the first masses position from the starting axis. */
         thiz.mass1X = (thiz.disp.one >= 0) ? thiz.axis.x + thiz.disp.one : thiz.axis.x - Math.abs(thiz.disp.one);
-
-        /* Adds or subtracts the second masses position from the starting axis. */
         thiz.mass2X = (thiz.disp.two >= 0) ? thiz.axis.x + thiz.disp.two : thiz.axis.x - Math.abs(thiz.disp.two);
+        thiz.mass3X = (thiz.disp.three >= 0) ? thiz.axis.x + thiz.disp.three : thiz.axis.x - Math.abs(thiz.disp.three);
 
-        /* Adds or subtracts the third masses position from the starting axis. */
+        /* Update the frame contents. */
+        thiz.drawFrame();
+
+        /* Set the displacement values for the mass levels. */
+        thiz.disp = {
+            one: Math.round(thiz.a.one + Math.round((Math.sin((thiz.w * thiz.time) + thiz.phaseOne.two)) / thiz.sizeRatio)),
+            two: Math.round(thiz.a.two + Math.round((Math.sin((thiz.w * thiz.time) + thiz.phaseTwo.two)) / thiz.sizeRatio)),
+            three: Math.round(thiz.a.three + Math.round((Math.sin((thiz.w * thiz.time) + thiz.phaseThree.two)) / thiz.sizeRatio))
+        };
+
+        /* Recalculate the masses positions. */
+        thiz.baseRange = Math.abs(Math.floor(thiz.disp.one / 7));
+        thiz.baseX = (thiz.disp.one <= 0) ? thiz.axis.x - thiz.baseRange : thiz.axis.x + thiz.baseRange;
+        thiz.mass1X = (thiz.disp.one >= 0) ? thiz.axis.x + thiz.disp.one : thiz.axis.x - Math.abs(thiz.disp.one);
+        thiz.mass2X = (thiz.disp.two >= 0) ? thiz.axis.x + thiz.disp.two : thiz.axis.x - Math.abs(thiz.disp.two);
+        thiz.mass3X = (thiz.disp.three >= 0) ? thiz.axis.x + thiz.disp.three : thiz.axis.x - Math.abs(thiz.disp.three);
+
+        /* Update the frame contents. */
+        thiz.drawFrame();
+
+        /* Set the displacement values for the mass levels phase three. */
+        thiz.disp = {
+            one: Math.round(thiz.a.one + Math.round((Math.sin((thiz.w * thiz.time) + thiz.phaseOne.three)) / thiz.sizeRatio)),
+            two: Math.round(thiz.a.two + Math.round((Math.sin((thiz.w * thiz.time) + thiz.phaseTwo.three)) / thiz.sizeRatio)),
+            three: Math.round(thiz.a.three + Math.round((Math.sin((thiz.w * thiz.time) + thiz.phaseThree.three)) / thiz.sizeRatio))
+        };
+
+        /* Recalculate the masses positions. */
+        thiz.baseRange = Math.abs(Math.floor(thiz.disp.one / 7));
+        thiz.baseX = (thiz.disp.one <= 0) ? thiz.axis.x - thiz.baseRange : thiz.axis.x + thiz.baseRange;
+        thiz.mass1X = (thiz.disp.one >= 0) ? thiz.axis.x + thiz.disp.one : thiz.axis.x - Math.abs(thiz.disp.one);
+        thiz.mass2X = (thiz.disp.two >= 0) ? thiz.axis.x + thiz.disp.two : thiz.axis.x - Math.abs(thiz.disp.two);
         thiz.mass3X = (thiz.disp.three >= 0) ? thiz.axis.x + thiz.disp.three : thiz.axis.x - Math.abs(thiz.disp.three);
 
         /* Update the frame contents. */
@@ -2857,10 +2888,10 @@ MimicWidget.prototype.filterPeaks = function(arrayVal,lvl) {
         }
 
         /* Break the loop once it has found the two most recent peaks. */
-        if (peaks.length >= 3) break;
+        if (peaks.length >= 4) break;
     }
     
-    /* Store the difference of indexes in both peaks. */
+    /* Store the difference of indexes between peaks. */
     this.peakCounter[lvl] = counter;
     
     /* Return the two latest peak values. */
