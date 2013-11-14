@@ -2653,60 +2653,23 @@ MimicWidget.prototype.consume = function(data) {
     /* Get the motor's angular frequency. */
     this.w = 2 * Math.PI * data['motor-speed'];
 
-    /* Get the two latest peaks for each mass level. */
+    /* Get the high peaks for each mass level. */
     this.peakValues = {
-        one: this.filterPeaks(data['disp-graph-1'],'one'),
-        two: this.filterPeaks(data['disp-graph-2'],'two'),
-        three: this.filterPeaks(data['disp-graph-3'],'three')
+        one: this.filterPeaks(data['disp-graph-1']),
+        two: this.filterPeaks(data['disp-graph-2']),
+        three: this.filterPeaks(data['disp-graph-3'])
     }
 
-    /* Get the latest peak displacement for each of the mimic's levels. */
-    this.a = {
-        one: this.peakValues.one[0],
-        two: this.peakValues.two[0],
-        three: this.peakValues.three[0]
-    };
+    //TODO Get the difference between levels.
+    /* Difference in index between level 2/3 and level one. */
+    this.c2 = 0;
+    this.c3 = 0;
 
-    /* The number of indexes between the first peak found and the preceding peak. */
-    this.nc = {
-        one: this.peakCounter.one[1],
-    	two: this.peakCounter.two[1],
-    	three: this.peakCounter.three[1]
-    }
-
-    /* The number of indexes between the first peak found and the peak for phase two. */
-    this.levelTwo = {
-        one: (this.peakCounter.one[2] + this.peakCounter.one[1]),
-        two: (this.peakCounter.two[2] + this.peakCounter.two[1]),
-        three: (this.peakCounter.three[2] + this.peakCounter.three[1])
-    }
-
-    /* The number of indexes between the first peak found and peak for phase three. */
-    this.levelThree = {
-        one:(this.peakCounter.one[3] + this.peakCounter.one[2] + this.peakCounter.one[1]),
-    	two:(this.peakCounter.one[3] + this.peakCounter.two[2] + this.peakCounter.two[1]),
-    	three:(this.peakCounter.one[3] + this.peakCounter.three[2] + this.peakCounter.three[1])
-    }
-
-    /* Phase one. */
-    this.phaseOne = {
-        one: this.nc.one,
-        two: this.levelTwo.one / this.nc.one * 2 * Math.PI,
-        three: this.levelThree.one /this.nc.one * 2 * Math.PI
-    }
-
-    /* Phase two. */
-    this.phaseTwo = {
-        one: this.nc.two,
-        two: this.levelTwo.two / this.nc.two * 2 * Math.PI,
-        three: this.levelThree.two / this.nc.two * 2 * Math.PI
-    }
-
-    /* Phase three. */
-    this.phaseThree = {
-        one: this.nc.three,
-        two: this.levelTwo.three / this.nc.three * 2 * Math.PI,
-        three: this.levelThree.three / this.nc.three * 2 * Math.PI
+    /* Determine the phase offsets. */
+    this.phaseOffset = {
+        one: this.peakValues.one,
+        two: this.c2 / (this.peakIndex * 2 * Math.PI),
+        three: this.c3 / (this.peakIndex * 2 * Math.PI)
     }
 
     /* Update mimic data. */
@@ -2748,53 +2711,19 @@ MimicWidget.prototype.updateData = function(data) {
         /* Counter incremented every frame. */
         thiz.frameIndex++;
 
-        //TODO In the animation method work out time and displacement, then draw the mimic.
-
         /* Get the time for the mimic animation. */
         thiz.time = (1 / thiz.period) * thiz.frameIndex;
 
+        //TODO get displacement and scale by pixels per mm
+        //pxValue = mmValue * 3.7795275593333;
         /* Set the displacement values for the mass levels. */
         thiz.disp = {
-            one: Math.round(thiz.a.one + Math.round((Math.sin((thiz.w * thiz.time) + thiz.phaseOne.one)) / thiz.sizeRatio)),
-            two: Math.round(thiz.a.two + Math.round((Math.sin((thiz.w * thiz.time) + thiz.phaseTwo.one)) / thiz.sizeRatio)),
-            three: Math.round(thiz.a.three + Math.round((Math.sin((thiz.w * thiz.time) + thiz.phaseThree.one)) / thiz.sizeRatio))
+            one: thiz.peakValues.one + Math.sin((thiz.w * thiz.time) + thiz.phaseOffset.one) / thiz.sizeRatio,
+            two: thiz.peakValues.two + Math.sin((thiz.w * thiz.time) + thiz.phaseOffset.two) / thiz.sizeRatio,
+            three: thiz.peakValues.three + Math.sin((thiz.w * thiz.time) + thiz.phaseOffset.three) / thiz.sizeRatio
         };
 
         /* Calculate the masses positions. */
-        thiz.baseRange = Math.abs(Math.floor(thiz.disp.one / 7));
-        thiz.baseX = (thiz.disp.one <= 0) ? thiz.axis.x - thiz.baseRange : thiz.axis.x + thiz.baseRange;
-        thiz.mass1X = (thiz.disp.one >= 0) ? thiz.axis.x + thiz.disp.one : thiz.axis.x - Math.abs(thiz.disp.one);
-        thiz.mass2X = (thiz.disp.two >= 0) ? thiz.axis.x + thiz.disp.two : thiz.axis.x - Math.abs(thiz.disp.two);
-        thiz.mass3X = (thiz.disp.three >= 0) ? thiz.axis.x + thiz.disp.three : thiz.axis.x - Math.abs(thiz.disp.three);
-
-        /* Update the frame contents. */
-        thiz.drawFrame();
-
-        /* Set the displacement values for the mass levels. */
-        thiz.disp = {
-            one: Math.round(thiz.a.one + Math.round((Math.sin((thiz.w * thiz.time) + thiz.phaseOne.two)) / thiz.sizeRatio)),
-            two: Math.round(thiz.a.two + Math.round((Math.sin((thiz.w * thiz.time) + thiz.phaseTwo.two)) / thiz.sizeRatio)),
-            three: Math.round(thiz.a.three + Math.round((Math.sin((thiz.w * thiz.time) + thiz.phaseThree.two)) / thiz.sizeRatio))
-        };
-
-        /* Recalculate the masses positions. */
-        thiz.baseRange = Math.abs(Math.floor(thiz.disp.one / 7));
-        thiz.baseX = (thiz.disp.one <= 0) ? thiz.axis.x - thiz.baseRange : thiz.axis.x + thiz.baseRange;
-        thiz.mass1X = (thiz.disp.one >= 0) ? thiz.axis.x + thiz.disp.one : thiz.axis.x - Math.abs(thiz.disp.one);
-        thiz.mass2X = (thiz.disp.two >= 0) ? thiz.axis.x + thiz.disp.two : thiz.axis.x - Math.abs(thiz.disp.two);
-        thiz.mass3X = (thiz.disp.three >= 0) ? thiz.axis.x + thiz.disp.three : thiz.axis.x - Math.abs(thiz.disp.three);
-
-        /* Update the frame contents. */
-        thiz.drawFrame();
-
-        /* Set the displacement values for the mass levels phase three. */
-        thiz.disp = {
-            one: Math.round(thiz.a.one + Math.round((Math.sin((thiz.w * thiz.time) + thiz.phaseOne.three)) / thiz.sizeRatio)),
-            two: Math.round(thiz.a.two + Math.round((Math.sin((thiz.w * thiz.time) + thiz.phaseTwo.three)) / thiz.sizeRatio)),
-            three: Math.round(thiz.a.three + Math.round((Math.sin((thiz.w * thiz.time) + thiz.phaseThree.three)) / thiz.sizeRatio))
-        };
-
-        /* Recalculate the masses positions. */
         thiz.baseRange = Math.abs(Math.floor(thiz.disp.one / 7));
         thiz.baseX = (thiz.disp.one <= 0) ? thiz.axis.x - thiz.baseRange : thiz.axis.x + thiz.baseRange;
         thiz.mass1X = (thiz.disp.one >= 0) ? thiz.axis.x + thiz.disp.one : thiz.axis.x - Math.abs(thiz.disp.one);
@@ -2860,11 +2789,10 @@ MimicWidget.prototype.updateCoils = function() {
  * @param lvl the level that the peakCounter will update to.
  * 
  */
-MimicWidget.prototype.filterPeaks = function(arrayVal,lvl) {
+MimicWidget.prototype.filterPeaks = function(arrayVal) {
     /* Reset the arrays and index counter. */
     var peaks = [],
-        counter = [],
-        count = 0;
+        peakIndex = 0;
 
     /* Iterate backwards through arrayVal. */
     for (i = arrayVal.length -1; i > -1; i--)
@@ -2874,26 +2802,21 @@ MimicWidget.prototype.filterPeaks = function(arrayVal,lvl) {
             c = arrayVal[Number(i)],
             n = arrayVal[Number(i)+1];
 
-        /* Push the peak values into the 'peaks' array. */
-        if (c > p & c > n || c < p & c < n)
+        /* Push the high peak values into the 'peaks' array. */
+        if (c > p && c > n)
         {
             peaks.push(c);
-            counter.push(count);
-            count = 0;
         }
         else
         {
-        	/* Increment the counter. */
-            count++;
+        	/* Increment the number of indexes between peaks. */
+            if (peaks.length === 2) peakIndex++;
         }
-
-        /* Break the loop once it has found the two most recent peaks. */
-        if (peaks.length >= 4) break;
     }
-    
+
     /* Store the difference of indexes between peaks. */
-    this.peakCounter[lvl] = counter;
-    
+    this.peakIndex = peakIndex;
+
     /* Return the two latest peak values. */
     return peaks;
 }
