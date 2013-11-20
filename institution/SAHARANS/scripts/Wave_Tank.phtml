@@ -1,4 +1,22 @@
 <?php
 
+/* UI Library. */
+$this->headLink()->appendStylesheet($this->baseUrl('/webui/webui.css'));
+$this->headLink()->appendStylesheet($this->baseUrl('/webui/webui-flat.css'));
+//$this->headLink()->appendStylesheet($this->baseUrl('/webui/webui-skeuo.css'));
+
+$this->headScript()->appendFile($this->baseUrl('/webui/webui.js'));
+
+/* Wave Tank UI. */
 $this->headLink()->appendStylesheet($this->baseUrl('/uts/wavetank/wavetank.css'));
 $this->headScript()->appendFile($this->baseUrl('/uts/wavetank/wavetank.js'));
+
+?>
+
+<div id='wave-tank'></div>
+
+<script type="text/javascript">
+var wt = new WaveTank('wave-tank');
+wt.setup();
+wt.run();
+</script>
