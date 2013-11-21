@@ -52,6 +52,7 @@ Globals.THEMES = {
  * @config {boolean} [preserveAspectRatio] whether aspect ratio should be kept if resizable
  * @config {boolean} [expandable] whether this widget should be expandable
  * @config {boolean} [draggable] whether this widget should be draggable
+ * @config {string}  [tooltip] tooltip to show on hover
  */
 function Widget(id, config)
 {
@@ -386,8 +387,40 @@ Widget.prototype._generate = function($container, html) {
     
     if (this.config.draggable) this._makeDraggable($w);
     if (this.config.resizable) this._makeResizable($w);
+    if (this.config.tooltip) this._addTooltip($w);
     
     return $w;
+};
+
+/** @global Tooltip timeout period. */
+Widget.TOOLTIP_TIMEOUT = 2000;
+
+/** @static {boolean} Whether to show tooltips. */
+Widget.showTooltips = true;
+
+/**
+ * Adds a widget tooltip.
+ * 
+ * @param {jQuery} $w widget
+ */
+Widget.prototype._addTooltip = function($w) {
+    var mousein = false, thiz = this;
+    
+    $w.mouseenter(function(e) {
+        if (!Widget.showTooltips) return;
+
+        mousein = true;
+        if (thiz.$widget.children(".message-box").length == 0) setTimeout(function() {
+            if (mousein)
+            {
+                display = true;
+                thiz.addMessage(thiz.config.tooltip, Widget.MESSAGE_TYPE.info, 
+                        $w.width() - 40, $w.height() - 10, Widget.MESSAGE_INDICATOR.topLeft);
+            }
+        }, Widget.TOOLTIP_TIMEOUT);
+    }).mouseleave(function() {
+        mousein = false;
+    });
 };
 
 /** Whether the z-index fix has been applied. */
@@ -396,7 +429,7 @@ Widget._hasZIndexFix = false;
 /**
  * Enables this widget to be draggable.
  * 
- * @param {jQuery} widget to make draggable
+ * @param {jQuery} $w widget
  */
 Widget.prototype._makeDraggable = function($w) {
         

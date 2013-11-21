@@ -46,6 +46,7 @@ WaveTank.prototype.setup = function() {
         label: "Pump",
         icon: "pump",
         draggable: true,
+        tooltip: "Turn on pump",
     });
     this.widgets.push(o);
    
