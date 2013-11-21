@@ -50,6 +50,11 @@ WaveTank.prototype.setup = function() {
     });
     this.widgets.push(o);
    
+    this.widgets.push(new LED("led-1", {
+        field: "pump-on",
+        label: "Pump",
+        draggable: true,
+    }));
 };
 
 /** 
@@ -96,6 +101,8 @@ WaveTank.prototype.acquireLoop = function() {
  * @param data data packet
  */
 WaveTank.prototype.processData = function(data) {
+    var i = 0;
+    for (i in this.widgets) this.widgets[i].consume(data);
 //    /* A data packet may specify an error so we make need to make this into an 
 //     * error message. */
 //

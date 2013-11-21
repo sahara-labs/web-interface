@@ -42,12 +42,8 @@
 /******************************************************************************
  ** Switch                                                                   **
  ******************************************************************************/
- .switch-container {
-    height: 30px;
-    width: 100px;
-}
  
-.switch-label {
+.switch-label, .led-adjacent .led-label {
     display: block;
     float: left;
     margin: 3px 5px 0 0;
@@ -85,4 +81,44 @@
     box-shadow: 0 0 2px #999999;
     float:right; 
     border: 1px solid #4d4c4c;   
+}
+
+/******************************************************************************
+ ** LED                                                                      **
+ ******************************************************************************/
+.led-below .led-label {
+	display: block;
+	text-align: center;
+}
+ 
+.led {
+	height: 20px;
+	width: 20px;
+	border-radius: 11px;
+}
+
+.led-below .led {
+	margin: 5px auto;
+}
+
+.led-adjacent .led {
+	float: right;
+}
+
+.led-novalue {
+	border: 1px solid #959595;
+	background-color: #DDDDDD;
+	box-shadow: 0 0 2px #B4B4B4;
+}
+
+.led-on {
+	border: 1px solid #79B864;
+    background-color: #A2DEA7;
+    box-shadow: 0 0 2px #B4B4B4;
+}
+
+.led-off {
+	border: 1px solid #A01D1D;
+    background-color: #D76666;
+    box-shadow: 0 0 2px #B4B4B4;
 }
