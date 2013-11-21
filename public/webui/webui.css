@@ -1,0 +1,91 @@
+/**
+ * Web User Interface Widget Library.
+ * 
+ * @author Michael Diponio
+ * @date 18th Novermber 2013
+ */
+
+/******************************************************************************
+ ** Windows                                                                  **
+ ******************************************************************************/
+.window-wrapper {
+    position: absolute;
+   
+}
+
+.window-expanded {
+    box-shadow: 0 0 20px #666666;
+}
+
+.dragged {
+    border: 2px dashed #8CE2FF;
+}
+
+.draggable-header {
+    cursor: move;
+}
+
+.window-header {
+    height: 19px;
+    font-size: 24px;
+    padding: 5px 10px;
+    color: #525252;
+    font-size: 15px;
+}
+
+.window-icon {
+	float: left;
+    height: 24px;
+    width: 26px;
+    display: inline-block;
+    background-repeat: no-repeat;
+}
+
+.window-title {
+    position: relative;
+    left: 10px;
+    padding-right: 10px;
+    color: #666;
+    top: 2px;
+    margin: 0 5px 0 -4px;
+}
+
+.window-header .ui-icon {
+    float: right;
+    margin: 2px 3px;
+}
+
+.window-content, .tab-content {
+    position: relative;
+    padding: 10px 10px 6px 10px;
+    margin: 5px;
+    background: #FFF;
+}
+
+.window-content {
+    overflow: hidden;
+}
+
+.resizable {
+    min-width: 145px;
+    min-height: 50px;
+}
+
+.data-blur {
+    background-color: #F0F0F0;
+    opacity: 0.6;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+}
+
+.window-header-shade {
+    height: 25px !important;
+}
+
+.ui-resizable-se {
+    z-index: 0 !important;
+}

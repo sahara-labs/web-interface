@@ -1,0 +1,62 @@
+/**
+ * Skeuomorphic theme for WebUI widget library.
+ *
+ * @author Michael Diponio <michael.diponio@uts.edu.au>
+ * @author Jesse Charlton <jesse.charlton@uts.edu.au>
+ * @date 20th November 2013
+ */
+ 
+.window-wrapper {
+	background: #000000;
+	border: 1px solid #000000;
+}
+
+.window-content, .tab-content {
+	
+}
+
+.window-title {
+	color: #FFFFFF;
+}
+
+.window-icon {
+	background-image: url('/webui/images/skeuo-icons.png');
+}
+
+.window-header .ui-icon, .tab-wrapper-controls .ui-icon {
+    border: 1px solid #FFF;
+    box-shadow: 0 0 2px #FFF;
+    cursor: pointer;
+}
+
+.window-header .ui-icon:hover, .tab-wrapper-controls .ui-icon:hover {
+    box-shadow: 0 0 2px #FFF;
+}
+
+
+/******************************************************************************
+ ** Switch                                                                   **
+ ******************************************************************************/
+.switch-container {
+    
+}
+ 
+.switch-label {
+   
+}
+ 
+.switch {
+    
+}
+
+.switch-slide {
+   
+}
+
+.switch-animated {
+   
+}
+
+.switch-on {
+   
+}
