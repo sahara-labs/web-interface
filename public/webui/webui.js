@@ -12,23 +12,23 @@
 
 /** Global definitions. */
 Globals = {
-    /** {string} Prefix for cookies. */
+    /** @global Theme enumeration. */
+    THEMES: {
+       /** Flat theme, grey and black; clean and functional. */
+       flat: 'flat',
+       
+       /** Skeuomorphic design, designed from real world. */
+       skeuo: 'skeuo',
+    },
+        
+    /** @static {string} Prefix for cookies. */
     COOKIE_PREFIX: undefined, 
     
-    /** {string} Rig Client controller. */
+    /** @static {string} Rig Client controller. */
     CONTROLLER: undefined,
     
-    /** Default theme is flat. */
+    /** @static {string} Default theme is flat. */
     THEME: 'flat'
-};
-
-/** Theme enumeration. */
-Globals.THEMES = {
-   /** Flat theme, grey and black; clean and functional. */
-   flat: 'flat',
-   
-   /** Skeuomorphic design, designed from real world. */
-   skeuo: 'skeuo',
 };
 
 /* ============================================================================
@@ -46,13 +46,13 @@ Globals.THEMES = {
  * @config {array}   [classes] list of classes to add for the container of this box
  * @config {integer} [width] width of widget in px
  * @config {integer} [height] height of widget in px
- * @config {boolean} [resizable] whether this widget should be resizable
+ * @config {boolean} [resizable] whether this widget should be resizable (default false)
  * @config {integer} [minWidth] minimum width of widget if resizable
  * @config {integer} [minHeight] minimum height of widget if resizable
- * @config {boolean} [preserveAspectRatio] whether aspect ratio should be kept if resizable
+ * @config {boolean} [preserveAspectRatio] whether aspect ratio should be kept if resizable (default false)
  * @config {boolean} [expandable] whether this widget should be expandable
- * @config {boolean} [draggable] whether this widget should be draggable
- * @config {string}  [tooltip] tooltip to show on hover
+ * @config {boolean} [draggable] whether this widget should be draggable (default false)
+ * @config {string}  [tooltip] tooltip to show on hover (optional)
  */
 function Widget(id, config)
 {
@@ -592,24 +592,20 @@ Widget.prototype._postControl = function(action, params, responseCallback, error
  * ============================================================================ */
 
 /**
- * Switch widget which provides a toggable switch.
+ * The switch widget which provides a toggable switch.
  *
  * @constructor
- * @param {String} id the identifier of this switch
- * @param {options} config configuration of widget
- * @config {String} [field] which server data variable is being switched
- * @config {String} [action] which server action to call when the switched is changed1
- * @config {String} [label] switch label (optional)
- * @config {String} [tooltip] tooltip from hover (optional)
+ * @param {string} id the identifier of widget
+ * @param {object} config configuration of widget
+ * @config {string} [field] server data variable that is being switched
+ * @config {string} [action] server action to call when the switched is changed1
+ * @config {string} [label] switch label (optional)
  */
 function Switch(id, config)
 {
     if (!(config.field || config.action)) throw "Options not supplied."; 
     
-    Widget.call(this, this, config);
-    
-    /** @private {String} The identifier of this slider. */
-    this.id = id;
+    Widget.call(this, id, config);
 
     /** @private {boolean} The state of the switch. */
     this.val = undefined;
@@ -679,14 +675,64 @@ Switch.prototype._setDisplay = function(on) {
     }
 };
 
+/* ============================================================================
+ * == LED widget                                                             ==
+ * ============================================================================ */
+
+/** 
+ * The LED widget displays a binary field with three displayed states, 
+ * undefined, on, and off.
+ * 
+ * @constructor
+ * @param {string} id the identifer of widget
+ * @param {object} config configuration of widget
+ * @config {string} [field] server data variable that is being displayed
+ * @config {string} [label] label to display
+ * @config {boolean} [ledBelow] whether the LED is below the label (default: false, adjacent to label)
+ */
+function LED(id, config)
+{
+    if (!config.field) throw "Option not supplied.";
+    
+    Widget.call(this, id, config);
+    
+    /** @private {boolean} The displayed value of the field. */
+    this.val = undefined;
+}
+LED.prototype = new Widget;
+
+LED.prototype.init = function($container) {
+    this.$widget = this._generate($container,
+        '<div class="led-container led-' + (this.config.ledBelow ? 'below' : 'adjacent') + '">' +
+            (this.config.label ? '<label class="led-label">' + this.config.label + 
+                    (this.config.ledBelow ? '' : ':') + '</label>' : '') +
+            '<div class="led led-novalue"></div>' +
+        '</div>'
+    );
+};
+
+LED.prototype.consume = function(data) {
+    if (!(data[this.config.field] === undefined || data[this.config.field] == this.val))
+    {
+        this.val = data[this.config.field];
+        this.$widget.find(".led").removeClass("led-novalue led-on led-off").addClass(this.val ? 'led-on' : 'led-off');
+    }
+};
+
+
 /* ============================================================================ 
  * == Utility functions namespace                                            ==
  * ============================================================================ */
+
+/** 
+ * Utility namespace
+ */
 function Util() { };
 
 /**
  * Gets the value of the specified cookie. 
  * 
+ * @static
  * @param {string} cookie the cookie to find the value of
  * @return {mixed} cookies value or false if not found
  */
@@ -702,6 +748,7 @@ Util.getCookie = function(cookie) {
 /**
  * Sets a cookie for this interface.
  * 
+ * @static
  * @param {string} cookie name of cookie to set
  * @param {string} value value of cookie to set
  */
@@ -713,6 +760,7 @@ Util.setCookie = function(cookie, value) {
 /**
  * Rounds of a number to a specified number of significant figures.
  * 
+ * @static
  * @param {number} num number to round
  * @param {int} places significant figures
  * @returns {number} number to return
@@ -725,6 +773,7 @@ Util.round = function(num, places) {
  * Adds '0' characters to a number so it correctly displays the specified 
  * decimal point characters.
  * 
+ * @static
  * @param {number} num number to pad
  * @param {int} places significant figures
  * @returns {string} padded string
@@ -744,6 +793,7 @@ Util.zeroPad = function(num, places) {
 /**
  * Trims leading and trailing whitespace from a string.
  * 
+ * @static
  * @param {string} s the string to trim
  * @return {string} the trimmed string
  */
@@ -755,6 +805,7 @@ Util.trim = function(s) {
  * Gets a canvas element with an appropriate fallback for IE6 to IE8 which do
  * not natively support canvas.
  * 
+ * @static
  * @param {string} id the ID of the element
  * @param {integer} width the width of the canvas element
  * @param {integer} height the height of the canvas element
