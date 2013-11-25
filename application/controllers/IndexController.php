@@ -233,7 +233,7 @@ class IndexController extends Sahara_Controller_Action_Acl
          * employed, making sure the user agent starts with 'Mozilla' & making sure
          * the honeypot field is not set. */
         if ((isset($params['botsfu']) && $params['botsfu'] != '') || // Bot honey pot
-            (!isset($params['useragent']) || $params['useragent'] != '' || // User agent must be set
+            (!isset($params['useragent']) || $params['useragent'] == '' || // User agent must be set
                     strpos(trim($params['useragent']), 'Mozilla/') !== 0)) // User agent must start with Mozilla, GG Opera
         {
             echo $this->view->json(array('success' => 'false'));
