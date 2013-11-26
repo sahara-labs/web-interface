@@ -82,14 +82,27 @@
     border-radius: 20px;
     box-shadow: inset 3px 3px 2px #292929;
     background: #575757;
-    background-image: url('/webui/images/skeuo/button-bg.png');
     cursor: pointer;
+}
+
+.switch:before {
+    display: block;
+    height: 3px;
+    background: #313131;
+    content: '';
+    position: relative;
+    top: 10px;
+    left: 7px;
+    margin-right: 12px;
+    border-bottom: 1px solid #7A7A7A;
+    border-radius: 10px;
 }
 
 .switch-slide {
     height: 19px;
     width: 19px;
     position: relative;
+    top: -3px;
     left: 1px;
     border: 1px solid #313131;
     border-radius: 20px;
