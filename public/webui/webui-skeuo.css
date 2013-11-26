@@ -106,11 +106,26 @@
     left: 1px;
     border: 1px solid #313131;
     border-radius: 20px;
-    box-shadow: 1px 6px 7px rgba(43, 43, 43, 0.6);
-    background: #969696;
-    background-image: url('/webui/images/skeuo/button-knob.png');
-    background-position-x: -1px;
-    background-position-y: -1px;
+    box-shadow: 1px 5px 7px rgba(43, 43, 43, 0.6);
+    background: #d1d1d1;
+    background-image: -webkit-radial-gradient( 50% 0%, 30% 55%, rgba(71, 71, 71, 0.69) 10%, rgba(255, 255, 255, 0.23) 90%),
+        -webkit-radial-gradient( 100% 52%, 49% 21%, rgba(36, 36, 36, 0.69) 10%, rgba(255, 255, 255, 0.13) 90%),
+        -webkit-radial-gradient( 52% 86%, 20% 40%, rgba(36, 36, 36, 0.69) 10%, rgba(255, 255, 255, 0.11) 90%),
+        -webkit-radial-gradient( 0% 50%, 69% -16%, rgba(36, 36, 36, 0.69) 10%, rgba(202, 202, 202, 0) 90%),
+        -webkit-repeating-radial-gradient( 50% 50%, 100% 100%, rgba(255, 255, 255, 0.58) 0%, rgba(255, 255, 255, 0) 3%, #FFF 3.5%);
+}
+
+.switch-slide:after {
+    border: solid 1px #CCC;
+    border-top: solid 1px #FFF;
+    border-radius: 18px;
+    height: 18px;
+    width: inherit;
+    content: '';
+    display: block;
+    position: absolute;
+    left: -1px;
+    top: 0px;
 }
 
 .switch-animated {
