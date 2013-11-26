@@ -236,7 +236,7 @@ class IndexController extends Sahara_Controller_Action_Acl
             (!isset($params['useragent']) || $params['useragent'] == '' || // User agent must be set
                     strpos(trim($params['useragent']), 'Mozilla/') !== 0)) // User agent must start with Mozilla, GG Opera
         {
-            $this->_logger->warn('Rejecting support message from IP: ' . $this->_remoteIP() . ', name: ' .
+            $this->_logger->warn('Rejecting support message from IP: ' . $this->_getRemoteIP() . ', name: ' .
                     $params['name'] . ', email: ' . $params['email']);
             echo $this->view->json(array('success' => 'false'));
             return;
