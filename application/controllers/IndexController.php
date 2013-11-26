@@ -236,6 +236,8 @@ class IndexController extends Sahara_Controller_Action_Acl
             (!isset($params['useragent']) || $params['useragent'] == '' || // User agent must be set
                     strpos(trim($params['useragent']), 'Mozilla/') !== 0)) // User agent must start with Mozilla, GG Opera
         {
+            $this->_logger->warn('Rejecting support message from IP: ' . $this->_remoteIP() . ', name: ' .
+                    $params['name'] . ', email: ' . $params['email']);
             echo $this->view->json(array('success' => 'false'));
             return;
         }
@@ -305,7 +307,7 @@ class IndexController extends Sahara_Controller_Action_Acl
         $body .= $params['feedback'] . "\n\n";
 
         $body .= "## Diagnostics:\n";
-        $body .= "IP: " . $_SERVER['REMOTE_ADDR'] . "\n";
+        $body .= "IP: " . $this->_getRemoteIP() . "\n";
         $body .= "User Agent: " . urldecode($params['useragent']) . "\n";
         $body .= "Java enabled: " . $params['javaenabled'] . "\n";
         $body .= "UTC Offset: " . $params['utcoffset'] . "\n";
@@ -355,6 +357,16 @@ class IndexController extends Sahara_Controller_Action_Acl
     }
 
     /**
+     * Returns the remote IP of the client.
+     *
+     * @return string the remote IP
+     */
+    private function _getRemoteIP()
+    {
+        return isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
+    }
+
+    /**
      * Help page.
      */
     public function requirementsAction()
@@ -373,7 +385,5 @@ class IndexController extends Sahara_Controller_Action_Acl
         $ac = new Sahara_AccessKey();
         echo $this->view->json($ac->keyActivate($this->_getParam('pkey')));
     }
-
-
 }
 
