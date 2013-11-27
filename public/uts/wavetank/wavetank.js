@@ -8,7 +8,7 @@
 /* Globals overrides. */
 Globals.COOKIE_PREFIX = "wavetank";
 Globals.CONTROLLER    = "WaveTankController";
-Globals.THEME         = Globals.THEMES.flat;
+Globals.THEME         = Globals.THEMES.skeuo;
 
 function WaveTank(id) 
 { 
