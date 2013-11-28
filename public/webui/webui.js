@@ -609,6 +609,8 @@ function Graph()
  * @config {string} [field] server data variable that is being switched
  * @config {string} [action] server action to call when the switched is changed1
  * @config {string} [label] switch label (optional)
+ * @config {string} [stickColor] sets the color of the switches stick (silver, black, red)
+ * @config {boolean} [vertical] set button vertical or horizontal (default horizontal)
  */
 function Switch(id, config)
 {
@@ -629,16 +631,22 @@ Switch.prototype = new Widget;
 
 Switch.prototype.init = function($container) {
     this.$widget = this._generate($container, 
-        '<div class="switch-container">' +
-            (this.config.label ? '<label class="switch-label">' + this.config.label + ':</label>' : '') +
-            '<div class="switch">' +
-                '<div class="switch-animated switch-slide"></div>' +
-            '</div>' +
-        '</div>'
+        this.config.vertical ? // Vertical orientation
+            '<div class="switch-vertical-container">' +
+                (this.config.label ? '<label class="switch-vertical-label">' + this.config.label + ':</label>' : '') +
+                '<div class="switch-vertical switch-' + this.config.stickColor + '-down"></div>' +
+            '</div>'
+        : // Horizontal orientation
+            '<div class="switch-container">' +
+                (this.config.label ? '<label class="switch-label">' + this.config.label + ':</label>' : '') +
+                '<div class="switch">' +
+                    '<div class="switch-animated switch-slide"></div>' +
+                '</div>' +
+            '</div>'
     );
     
     var thiz = this;
-    this.$widget.find(".switch-label, .switch").click(function() { thiz._clicked(); });
+    this.$widget.find(".switch-label, .switch, .switch-vertical").click(function() { thiz._clicked(); });
 };
 
 Switch.prototype.consume = function(data) {
@@ -674,13 +682,29 @@ Switch.prototype._clicked = function() {
  * @param on whether the display should be on or off
  */
 Switch.prototype._setDisplay = function(on) {
-    if (on)
+    if (this.config.vertical)
     {
-        this.$widget.find(".switch .switch-slide").addClass("switch-on");
+        if (on)
+        {
+            this.$widget.find(".switch-vertical").removeClass("switch-" + this.config.stickColor + "-down");
+            this.$widget.find(".switch-vertical").addClass("switch-" + this.config.stickColor + "-up");
+        }
+        else
+        {
+            this.$widget.find(".switch-vertical").addClass("switch-" + this.config.stickColor + "-down");
+            this.$widget.find(".switch-vertical").removeClass("switch-" + this.config.stickColor + "-up");
+        }     
     }
     else
     {
-        this.$widget.find(".switch .switch-slide").removeClass("switch-on");
+        if (on)
+        {
+            this.$widget.find(".switch .switch-slide").addClass("switch-on");
+        }
+        else
+        {
+            this.$widget.find(".switch .switch-slide").removeClass("switch-on");
+        }
     }
 };
 

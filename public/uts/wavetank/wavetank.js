@@ -8,7 +8,7 @@
 /* Globals overrides. */
 Globals.COOKIE_PREFIX = "wavetank";
 Globals.CONTROLLER    = "WaveTankController";
-Globals.THEME         = Globals.THEMES.flat;
+Globals.THEME         = Globals.THEMES.skeuo;
 
 function WaveTank(id) 
 { 
@@ -43,10 +43,47 @@ WaveTank.prototype.setup = function() {
     o = new Switch("switch-1", {
         field: "pump-on",
         action: "setPump",
+        label: "Pump 1",
+        icon: "pump",
+        draggable: true,
+        tooltip: "Turn on pump",
+        stickColor: "silver",
+        vertical: true
+    });
+    this.widgets.push(o);
+
+    o = new Switch("switch-2", {
+        field: "pump-on",
+        action: "setPump",
+        label: "Pump 2",
+        icon: "pump",
+        draggable: true,
+        tooltip: "Turn on pump",
+        stickColor: "black",
+        vertical: true
+    });
+    this.widgets.push(o);
+    
+    o = new Switch("switch-3", {
+        field: "pump-on",
+        action: "setPump",
+        label: "Pump 3",
+        icon: "pump",
+        draggable: true,
+        tooltip: "Turn on pump",
+        stickColor: "red",
+        vertical: true
+    });
+    this.widgets.push(o);
+
+    o = new Switch("switch-4", {
+        field: "pump-on",
+        action: "setPump",
         label: "Pump",
         icon: "pump",
         draggable: true,
         tooltip: "Turn on pump",
+        vertical: false
     });
     this.widgets.push(o);
    
@@ -54,6 +91,7 @@ WaveTank.prototype.setup = function() {
         field: "pump-on",
         label: "Pump",
         draggable: true,
+        ledBelow: true
     }));
 };
 
