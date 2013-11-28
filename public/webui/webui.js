@@ -712,10 +712,39 @@ Switch.prototype._setDisplay = function(on) {
  * == Rotary Switch widget                                                   ==
  * ============================================================================ */
 
-function RotarySwitch()
+/**
+ * A rotary switch allows the selection of a limited number of options.
+ *
+ * @constructor
+ * @param {string} id the identifier of widget
+ * @param {object} config configuration of widget
+ * @config {string} [field] server data variable that is being switched
+ * @config {string} [action] server action to call when the switched is changed
+ * @config {array}  [values] the list of potential 
+ * @config {string} [label] switch label (optional)
+ */
+function RotarySwitch(id, config)
 {
-    // TODO Rotary switch
+    if (!(config.field || config.action || config.values)) throw "Options not supplied."; 
+    
+    Widget.call(this, id, config);
+
+    /** @private {boolean} The state of the switch. */
+    this.val = undefined;
+    
+    /** @private {boolean} Whether the value has been changed by user action. */
+    this.isChanged = false;  
 }
+
+RotartSwtich.prototype = new Widget;
+
+RotarySwitch.prototype.init = function($container) {
+    
+};
+
+RotarySwitch.prototype.consume = function(data) {
+    
+};
 
 /* ============================================================================
  * == Button widget                                                          ==
