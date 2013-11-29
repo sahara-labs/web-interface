@@ -100,7 +100,14 @@ class Sahara_Feedback_Form extends Zend_Form
                  ->setDecorators(Sahara_Decorator_Table::$ELEMENT);
         $this->addElement($feedback);
 
-        $this->addDisplayGroup(array('name', 'email', 'type', 'purpose', 'feedback'), 'feedback_form');
+        /** Bots fuck off! */
+        $bots = new Zend_Form_Element_Text('botsfu');
+        $bots->setAllowEmpty(true)
+             ->setRequired(false)
+             ->setAttrib('id', 'botsfu');
+        $this->addElement($bots);
+
+        $this->addDisplayGroup(array('name', 'email', 'type', 'purpose', 'feedback', 'botsfu'), 'feedback_form');
         $dg = $this->getDisplayGroup('feedback_form');
         $dg->setDecorators(Sahara_Decorator_Table::$DISPLAYGROUP);
     }

@@ -219,15 +219,30 @@ class IndexController extends Sahara_Controller_Action_Acl
     }
 
     /**
-     * Receives a feedback request.
+     * Receives a support request.
      */
-    public function feedbackAction()
+    public function supportAction()
     {
         /* Disable view renderer and layout. */
         $this->_helper->viewRenderer->setNoRender();
         $this->_helper->layout()->disableLayout();
 
         $params = $this->_request->getParams();
+
+        /* Try to detect bots auto-submitting the form. Two methods are currently
+         * employed, making sure the user agent starts with 'Mozilla' & making sure
+         * the honeypot field is not set. */
+        if ((isset($params['botsfu']) && $params['botsfu'] != '') || // Bot honey pot
+            (!isset($params['useragent']) || $params['useragent'] == '' || // User agent must be set
+                    strpos(trim($params['useragent']), 'Mozilla/') !== 0)) // User agent must start with Mozilla, GG Opera
+        {
+            $this->_logger->warn('Rejecting support message from IP: ' . $this->_getRemoteIP() . ', name: ' .
+                    $params['name'] . ', email: ' . $params['email']);
+            echo $this->view->json(array('success' => 'false'));
+            return;
+        }
+
+
         /* Make sure the fields are populated. */
         if (!(isset($params['name']) && isset($params['email']) && isset($params['type']) &&
               isset($params['purpose']) && isset($params['feedback'])))
@@ -292,7 +307,7 @@ class IndexController extends Sahara_Controller_Action_Acl
         $body .= $params['feedback'] . "\n\n";
 
         $body .= "## Diagnostics:\n";
-        $body .= "IP: " . $_SERVER['REMOTE_ADDR'] . "\n";
+        $body .= "IP: " . $this->_getRemoteIP() . "\n";
         $body .= "User Agent: " . urldecode($params['useragent']) . "\n";
         $body .= "Java enabled: " . $params['javaenabled'] . "\n";
         $body .= "UTC Offset: " . $params['utcoffset'] . "\n";
@@ -342,6 +357,16 @@ class IndexController extends Sahara_Controller_Action_Acl
     }
 
     /**
+     * Returns the remote IP of the client.
+     *
+     * @return string the remote IP
+     */
+    private function _getRemoteIP()
+    {
+        return isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
+    }
+
+    /**
      * Help page.
      */
     public function requirementsAction()
@@ -360,7 +385,5 @@ class IndexController extends Sahara_Controller_Action_Acl
         $ac = new Sahara_AccessKey();
         echo $this->view->json($ac->keyActivate($this->_getParam('pkey')));
     }
-
-
 }
 
