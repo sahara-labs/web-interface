@@ -5,7 +5,12 @@
  * @author Jesse Charlton <jesse.charlton@uts.edu.au>
  * @date 20th November 2013
  */
- 
+
+@font-face {
+	font-family: 'impact-label';
+	src: url('/webui/images/impact-label.ttf')  format('truetype');
+	}
+
 .window-wrapper {
     background: #FAFAFA;
     border-radius: 10px;
@@ -50,6 +55,21 @@
 	color: #666666;
 }
 
+label {
+    display: block;
+    text-align: center;
+    padding: 0px 8px;
+    border-left: 1px dashed #6B6B6B;
+    border-right: 1px dashed #6B6B6B;
+    font-family: "impact-label", "Lucida Console", Monaco, monospace;
+    box-shadow: 1px 1px 1px #A3A3A3;
+    font-size: 18px;
+    line-height: 23px;
+    text-shadow: 0px 1px 2px #B9B9B9;
+    color: #E7E7E7;
+    background: url('/webui/images/skeuo/label-texture.png');
+}
+
 /******************************************************************************
  ** Switch                                                                   **
  ******************************************************************************/
@@ -59,17 +79,8 @@
 }
  
 .switch-label {
-    height: 25px;
-    display: block;
-    float: left;
-    margin: 2px 5px 0 0;
-    padding: 0px 8px;
-    font-family: calibri;
-    font-size: 15px;
-    line-height: 23px;
-    text-align: right;
-    text-shadow: 0px 2px 1px #BBBABA;
-    color: #504F4F;
+	float: left;
+    padding: 0 4px;
 }
  
 .switch {
@@ -106,7 +117,8 @@
     border: 1px solid #313131;
     border-radius: 20px;
     box-shadow: 1px 5px 7px rgba(43, 43, 43, 0.6);
-    content: url('/webui/images/skeuo/switch-knob.png');
+    background-image: url('/webui/images/skeuo/switch-knob.png');
+    background-size: 100% 100%;
 }
 
 .switch-animated {
@@ -120,19 +132,6 @@
     left: 22px;
 }
 
-.switch-vertical-label {
-	display: block;
-	text-align: center;
-    padding: 0px 8px;
-    border: solid 1px #000;
-    font-family: calibri;
-    font-size: 15px;
-    line-height: 23px;
-    text-shadow: 0px 1px 2px #b9b9b9;
-    color: #e7e7e7;
-    background: #222;
-}
-
 .switch-vertical {
     background-repeat: no-repeat;
     margin: auto;
@@ -143,45 +142,39 @@
 }
 
 .switch-silver-up {
-	content: url('/webui/images/skeuo/switch-silver-up.png');
+	background-image: url('/webui/images/skeuo/switch-silver-up.png');
+	background-size: 100% 100%;
 }
 
 .switch-black-up {
-	content: url('/webui/images/skeuo/switch-black-up.png');
+	background-image: url('/webui/images/skeuo/switch-black-up.png');
+	background-size: 100% 100%;
 }
 
 .switch-red-up {
-	content: url('/webui/images/skeuo/switch-red-up.png');
+	background-image: url('/webui/images/skeuo/switch-red-up.png');
+	background-size: 100% 100%;
 }
 
 .switch-silver-down {
-	content: url('/webui/images/skeuo/switch-silver-down.png');
+	background-image: url('/webui/images/skeuo/switch-silver-down.png');
+	background-size: 100% 100%;
 }
 
 .switch-black-down {
-	content: url('/webui/images/skeuo/switch-black-down.png');
+	background-image: url('/webui/images/skeuo/switch-black-down.png');
+	background-size: 100% 100%;
 }
 
 .switch-red-down {
-	content: url('/webui/images/skeuo/switch-red-down.png');
+	background-image: url('/webui/images/skeuo/switch-red-down.png');
+	background-size: 100% 100%;
 }
 
 /******************************************************************************
  ** LED                                                                      **
  ******************************************************************************/
-.led-below .led-label {
-	display: block;
-	text-align: center;
-    padding: 0px 8px;
-    border: solid 1px #000;
-    font-family: calibri;
-    font-size: 15px;
-    line-height: 23px;
-    text-shadow: 0px 1px 2px #b9b9b9;
-    color: #e7e7e7;
-    background: #222;
-}
- 
+
 .led {
 	height: 11px;
 	width: 11px;
