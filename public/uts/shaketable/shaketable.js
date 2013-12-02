@@ -2467,181 +2467,96 @@ function MimicWidget($container, title)
 
     /** {String} The identifier of the Mimic. */
     this.id = 'mimic';
+    
+    /** Whether this mimic represents a 2DOF or a 3DOF widget. */
+    this.is3DOF = true;
+    
+    /** Number of levels in the model. */
+    this.numberLevels = this.is3DOF ? 4 : 3;
 
-    /** The box width. The box is the outmost container of the widget. */
-    this.boxWidth = undefined;
+    /** The width of the diagram in pixels. */
+    this.width = undefined;
 
-    /** The box height. */
-    this.boxHeight = undefined;
+    /** The height of the diagram in pixels. */
+    this.height = undefined;
 
-	/** The number used to make the mimic smaller. */
-	this.sizeRatio = 1.2;
-
-    /** Width of the mimic. */
-    this.width = Math.floor(360 / this.sizeRatio);
-
-    /** Height of the mimic. */
-    this.height = Math.floor(380 / this.sizeRatio);
-
-	/** The number of seconds the mimic displays. */
-	this.duration = 100;
+	/** Millimeters per pixel. */
+    this.mmPerPx = 1;
 
 	/** The period in milliseconds. */
 	this.period = 50;
-
-    /** The X and Y axis labels. */
-    this.axis = {
-        x: Math.floor(80 / this.sizeRatio),
-        y: Math.floor(300 / this.sizeRatio)
-    };
-
-    /** Starting X axis postions of the masses. */
-    this.baseX = this.axis.x;
-    this.mass1X = this.axis.x;
-    this.mass2X = this.axis.x;
-    this.mass3X = this.axis.x;
-
+	
     /** Canvas context. */
     this.ctx = null;
 
-    /** Dataset Index */
-    this.datasetIndex = 0;
-
-    /** Frame Index */
-    this.frameIndex = 0;
-
-    /** Whether this widget is pulling data, i.e. polling the server for new
-     *  graphing information. */
-    this.isPulling = true;
+    /** Amplitude of displacement in mm. */
+    this.amp = [ 0, 0, 0, 0 ];
+    
+    /** Angular frequency r/s. */
+    this.w = 0;
+    
+    /** Offsets of levels. */
+    this.o = [ 0, 0, 0, 0 ];
+        
+    /** Frame count. */
+    this.fr = 0;
+    
+    /** Center line. */
+    this.cx = undefined;
+    
+    /** Model dimensions in mm. */
+    this.model = {
+        levelWidth: 200,      // Width of the model
+        armWidth: 70,         // Width of the stroke arm connecting the motor to the model
+        motorRadius: 10,      // Radius of the motor
+        wallHeight: 120,      // Height of the walls
+        levelHeight: 30,      // Height of the levels
+        trackHeight: 20,      // Height of the track
+        trackWidth: 300,      // Width of track
+        carHeight: 20,        // Height of carriage
+        carWidth: 120,        // Width of carriage
+        maxDisp: 60,          // Maximum displacement of the diagram
+    };
+    
+    /** Animation interval. */
+    this.animateInterval = undefined;
 }
 MimicWidget.prototype = new Widget;
 
 MimicWidget.prototype.init = function() {
-    /* Size reset. */
-    this.width = Math.floor(360 / this.sizeRatio);
-    this.height = Math.floor(380 / this.sizeRatio);
-
+    var canvas, thiz = this;
+    
+    /* The width of the canvas diagram is the width of the building model plus 
+     * the maximum possible displacement. */
+    this.width = this.px(this.model.levelWidth + this.model.maxDisp * 2) + 100;
+    this.cx = this.width / 2;
+    
+    /* The height is the height of building model. */
+    this.height = this.px(this.model.levelHeight * (this.is3DOF ? 4 : 3) + 
+            this.model.wallHeight * (this.is3DOF ? 3: 2) + this.model.trackHeight + this.model.carHeight);
+    
+    /* Box. */
     this.$widget = this.generateBox(this.id + '-box');
-
-    /* Add the canvas panel. */
-    this.canvas = getCanvas(this.id, this.width, this.height);
-    this.$widget.find("#" + this.id).append(this.canvas);
-    this.ctx = this.canvas.getContext("2d");
-
-    /* Disable antialiasing. */
+    
+    /* Canvas to draw display. */
+    canvas = getCanvas(this.id, this.width, this.height);
+    this.$widget.find("#" + this.id).append(canvas);
+    this.ctx = canvas.getContext("2d");
     this.ctx.translate(0.5, 0.5);
 
-    /* Track size. */
-    this.boxWidth = parseInt(this.$widget.css("width"));
-    this.boxHeight = parseInt(this.$widget.css("height"));
-
-    /* Settings for the masses */
-    this.massW = Math.floor(170 / this.sizeRatio);
-    this.massH = Math.floor(25 / this.sizeRatio);
-    this.massBg = '#428AE9';
-    this.massStroke = '#282828';
-
-    /* Settings for the shadows. */
-    this.shadowH = this.massH / 8;
-    this.shadowBg = '#3571c1';
-
-    /* Settings for the guide rail. */
-    this.guideH = this.massH - (this.massH / 1.3);
-    this.guideBg = '#dadada';
-    this.handleH = this.guideH * 2;
-    this.handleW = this.massW - (this.massW / 1.25);
-    this.handleBg = '#aaa';
-    this.handleStroke = '#666';
-
-    /* Motor scotch yoke position. */
-    this.scotchPos = false;
-
-    /* Counter for the peak function. */
-    this.peakCounter = {};
-
-    /* Calculates the Y axes of various mimic elements. */
-    this.mass1Y = this.axis.y - (this.massH * 4);
-    this.mass2Y = this.axis.y - (this.massH * 8);
-    this.mass3Y = this.axis.y - (this.massH * 12);
-    this.guideY = this.axis.y + (this.massH * 1.10);
-    this.handleY = this.axis.y + this.massH;
-    this.circleY = (this.axis.y + (this.massH / 2));
-
-    /* Event handlers. */
-    var thiz = this;
-    this.$widget.find('.mimic-label').click(function() {
-        thiz.showTrace($(this).children(".mimic-label-text").text(),
-                $(this).find(".switch .slide").toggleClass("on off").hasClass("on"));
-	});
-
-    this.$widget.find(".mimic-label-checkbox").click(function() {
-        $(".mimic-label").fadeToggle('fast');
-    });
-
-    this.$widget.find('.mimic-toggle-dampers').click(function() {
-        $('.mimic-damper').fadeToggle('fast');
-    });
-
-    this.$widget.find('.mimic-resonant-button').click(function() {
-        $('.mimic-resonant-legend').fadeToggle('fast');
-        $('.mimic-resonant-upper, .mimic-resonant-lower').hide();
-        $('.res-lower, .res-upper').css('color','#acacac');
-    });
-
-    this.$widget.find('.res-upper').click(function(){
-        $('.mimic-resonant-upper').fadeIn();
-        $('.mimic-resonant-lower').hide();
-        $(this).css('color','#fff');
-        $('.res-lower').css('color','#acacac');
-    });
-
-    this.$widget.find('.res-lower').click(function(){
-        $('.mimic-resonant-lower').fadeIn();
-        $('.mimic-resonant-upper').hide();
-        $(this).css('color','#fff');
-        $('.res-upper').css('color','#acacac');
-    });
-
+    /* Draw inital frame of zero position. */
+    this.drawFrame([0, 0, 0, 0]);
+   
+    /* Start animation. */
+    this.animateInterval = setInterval(function() { thiz.animationFrame(); }, 25);
+    
     /* Enable dragging. */
     this.enableDraggable();
-
-    /* Draw the first frame contents. */
-    this.drawFrame();
-
-	/* Pull data if we are setup to pull. */
-	//if (this.isPulling) this.acquireData();
 };
 
 MimicWidget.prototype.getHTML = function() {
     /* Canvas Element. */
     var html = "<div class='mimic'>" +
-    "               <div class='mimic-label mimic-label-m3'>M3</div>" +
-    "               <div class='mimic-damper' id='mimic-damper-three'>" +
-    "               <img class='damper-arm damper-arm-two' src='/uts/shaketable/images/damper-arm.png'/>" +
-    "                   <input class='mimic-damperInfo' value='Off'/>" +
-    "               </div>" +
-    "               <div class='mimic-label mimic-label-m2'>M2</div>" +
-    "               <div class='mimic-damper' id='mimic-damper-two'>" +
-    "               <img class='damper-arm damper-arm-two' src='/uts/shaketable/images/damper-arm.png'/>" +
-    "                   <input class='mimic-damperInfo' value='Off'/>" +
-    "               </div>" +
-    "               <div class='mimic-label mimic-label-m1'>M1</div>" +
-    "               <div class='mimic-damper' id='mimic-damper-one'>" +
-    "               <img class='damper-arm damper-arm-one' src='/uts/shaketable/images/damper-arm.png'/>" +
-    "                   <input class='mimic-damperInfo' value='Off'/>" +
-    "               </div>" +
-    "               <div class='mimic-label mimic-label-base'>Base</div>" +
-    "               <span class='mimic-label-motor'><input class='mimic-input-motor' value='-'/>Hz</span>" +
-    "               <span class='click-button mimic-resonant-button'>Resonant Display</span>" +
-    "               <div class='mimic-label-toggle'>Labels <input type='checkbox' class='mimic-label-checkbox' checked/></div>" +
-    "               <div class='mimic-resonant mimic-resonant-legend'>" +
-    "                   <div class='res-upper res-value'>Upper</div>" +
-    "                   <div class='res-lower res-value'>Lower</div>" +
-    "               </div>" +
-    "               <div class='mimic-resonant mimic-resonant-40 mimic-resonant-upper'></div>" +
-    "               <div class='mimic-resonant mimic-resonant-20 mimic-resonant-lower'></div>" +
-    "               <div class='mimic-resonant mimic-resonant-15 mimic-resonant-upper'></div>" +
-    "               <div class='mimic-resonant mimic-resonant-75 mimic-resonant-lower'></div>" +
     "               <div id='mimic'></div>" +
     "            </div>";
 
@@ -2649,182 +2564,30 @@ MimicWidget.prototype.getHTML = function() {
 };
 
 MimicWidget.prototype.consume = function(data) {
-
-    /* Get the motor's angular frequency. */
-    this.w = 2 * Math.PI * data['motor-speed'];
-
-    /* Get the high peaks for each mass level. */
-    this.peakValues = {
-        one: this.filterPeaks(data['disp-graph-1']),
-        two: this.filterPeaks(data['disp-graph-2']),
-        three: this.filterPeaks(data['disp-graph-3'])
-    }
-
-    //TODO Get the difference between levels.
-    /* Difference in index between level 2/3 and level one. */
-    this.c2 = 0;
-    this.c3 = 0;
-
-    /* Determine the phase offsets. */
-    this.phaseOffset = {
-        one: this.peakValues.one,
-        two: this.c2 / (this.peakIndex * 2 * Math.PI),
-        three: this.c3 / (this.peakIndex * 2 * Math.PI)
-    }
-
-    /* Update mimic data. */
-    this.updateData(data);
+    this.w = 2 * Math.PI * 1;
+    this.amp = [ 0.7, 20, 20, 20 ];
+    this.o = [ 0, 0, Math.PI , Math.PI * 2];
 };
 
-/**
- * Periodically requests the server to provide mimic data.
- */
-MimicWidget.prototype.acquireData = function() {
-	var thiz = this;
-	$.ajax({
-		url: "/primitive/mapjson/pc/ShakeTableController/pa/dataAndGraph",
-		data: {
-			period: this.period,
-			duration: this.duration,
-			from: 0,     // For now we are just asked for the latest data
-		},
-		success: function(data) {
-			thiz.updateData(data);
-			if (thiz.isPulling) setTimeout(function() { thiz.acquireData(); }, 0.5);
-		},
-		error: function(data) {
-			if (thiz.isPulling) setTimeout(function() { thiz.acquireData(); }, 5000);
-		}
-	});
+MimicWidget.prototype.animationFrame = function() {
+    var disp = [], i;
+    
+    this.fr++;
+    for (i = 0; i < this.numberLevels; i++)
+    {
+        disp[i] = this.amp[i] * Math.sin(this.w * 0.025 * this.fr + this.o[i]);
+    }
+    
+    this.drawFrame(disp);
+    
 };
-
-/**
- * Updates mimic with data received from the server.
- *
- * @param data data object
- */
-MimicWidget.prototype.updateData = function(data) {
-    var thiz = this;
-
-    setTimeout(function() {
-
-        /* Counter incremented every frame. */
-        thiz.frameIndex++;
-
-        /* Get the time for the mimic animation. */
-        thiz.time = (1 / thiz.period) * thiz.frameIndex;
-
-        //TODO get displacement and scale by pixels per mm
-        //pxValue = mmValue * 3.7795275593333;
-        /* Set the displacement values for the mass levels. */
-        thiz.disp = {
-            one: thiz.peakValues.one + Math.sin((thiz.w * thiz.time) + thiz.phaseOffset.one) / thiz.sizeRatio,
-            two: thiz.peakValues.two + Math.sin((thiz.w * thiz.time) + thiz.phaseOffset.two) / thiz.sizeRatio,
-            three: thiz.peakValues.three + Math.sin((thiz.w * thiz.time) + thiz.phaseOffset.three) / thiz.sizeRatio
-        };
-
-        /* Calculate the masses positions. */
-        thiz.baseRange = Math.abs(Math.floor(thiz.disp.one / 7));
-        thiz.baseX = (thiz.disp.one <= 0) ? thiz.axis.x - thiz.baseRange : thiz.axis.x + thiz.baseRange;
-        thiz.mass1X = (thiz.disp.one >= 0) ? thiz.axis.x + thiz.disp.one : thiz.axis.x - Math.abs(thiz.disp.one);
-        thiz.mass2X = (thiz.disp.two >= 0) ? thiz.axis.x + thiz.disp.two : thiz.axis.x - Math.abs(thiz.disp.two);
-        thiz.mass3X = (thiz.disp.three >= 0) ? thiz.axis.x + thiz.disp.three : thiz.axis.x - Math.abs(thiz.disp.three);
-
-        /* Update the frame contents. */
-        thiz.drawFrame();
-
-        /* Get the coil's states and percentages. */
-        thiz.coil = {
-            on1: data['coil-on-1'],
-            on2: data['coil-on-2'],
-            percent1: data['coil-percent-1'],
-            percent2: data['coil-percent-2']
-        }
-
-        /* Change the Motor label to display the Motor's Hz. */
-        thiz.motorSpeed = (data['motor-on'] === true) ? Math.floor(data['motor-speed'] * 100)/100 : '-';
-        $('.mimic-label-motor').find('.mimic-input-motor').val(thiz.motorSpeed);
-
-        /* Update the coil values. */
-        thiz.updateCoils();
-
-    }, 50);
-}
-
-/**
- * Updates the colour indicators and values of the coils.
- */
-MimicWidget.prototype.updateCoils = function() {
-    /* Checks to see if coils are activated */
-    if (this.coil.on1 === true || this.coil.on2 === true)
-    {
-        /* Change the input values to match the values of the coils. */
-        $('#mimic-damper-one').find('input').val(this.coil.percent1 + '%');
-        $('#mimic-damper-two').find('input').val(this.coil.percent2 + '%');
-        $('#mimic-damper-three').find('input').val(this.coil.percent2 + '%');
-
-        /* Change the coil's colour indicators to match their percentages. */
-        $('#mimic-damper-one').animate({'background-position': '0' + this.coil.percent1 + '%',}, 40 ); 
-        $('#mimic-damper-two').animate({'background-position': '0' + this.coil.percent2 + '%',}, 40 );
-        $('#mimic-damper-three').animate({'background-position': '0' + this.coil.percent2 + '%',}, 40 );
-    }
-    else
-    {
-        /* Change the input values of the coils to 0%. */
-        $('#mimic-damper-one').find('input').val('Off');
-        $('#mimic-damper-two').find('input').val('Off');
-        $('#mimic-damper-three').find('input').val('Off');
-
-        /* Change the coil's colour indicators to 0%. */
-        $('#mimic-damper-one').animate({'background-position': '-15%',}, 40 );
-        $('#mimic-damper-two').animate({'background-position': '-15%',}, 40 );
-        $('#mimic-damper-three').animate({'background-position': '-15%',}, 40 );
-    }
-}
-
-/**
- * Get the peak values from an array.
- * 
- * @param arrayVal the array that will be filtered.
- * @param lvl the level that the peakCounter will update to.
- * 
- */
-MimicWidget.prototype.filterPeaks = function(arrayVal) {
-    /* Reset the arrays and index counter. */
-    var peaks = [],
-        peakIndex = 0;
-
-    /* Iterate backwards through arrayVal. */
-    for (i = arrayVal.length -1; i > -1; i--)
-    {
-        /* Get the previous and next values. */
-        var p = arrayVal[Number(i)-1],
-            c = arrayVal[Number(i)],
-            n = arrayVal[Number(i)+1];
-
-        /* Push the high peak values into the 'peaks' array. */
-        if (c > p && c > n)
-        {
-            peaks.push(c);
-        }
-        else
-        {
-        	/* Increment the number of indexes between peaks. */
-            if (peaks.length === 2) peakIndex++;
-        }
-    }
-
-    /* Store the difference of indexes between peaks. */
-    this.peakIndex = peakIndex;
-
-    /* Return the two latest peak values. */
-    return peaks;
-}
 
 /**
  * Animates the mimic.
+ * 
+ * @param disp displacements of each level in mm
  */
-MimicWidget.prototype.drawFrame = function() {
+MimicWidget.prototype.drawFrame = function(disp) {
 
     /* Store the current transformation matrix. */
     this.ctx.save();
@@ -2835,294 +2598,166 @@ MimicWidget.prototype.drawFrame = function() {
 
     /* Restore the transform. */
     this.ctx.restore();
+    
+    this.drawGrid();
+    this.drawTrackCarriage(disp[0]);
+    
+    var l, xVert = [], yVert = [];
 
-    /* Draw the bases left arm. */
-    this.drawArm(this.mass1X, this.mass1Y, 0, this.massH, this.baseX, this.axis.y);
-
-    /* Draw the bases right arm. */
-    this.drawArm(this.mass1X, this.mass1Y, this.massW, this.massH, this.baseX, this.axis.y);
-
-    /* Draw Mass Two's left arm. */
-    this.drawArm(this.mass3X, this.mass3Y, 0, this.massH, this.mass2X, this.mass2Y);
-
-    /* Draw Mass Two's right arm. */
-    this.drawArm(this.mass3X, this.mass3Y, this.massW, this.massH, this.mass2X, this.mass2Y);
-
-    /* Draw Mass Ones's left arm. */
-    this.drawArm(this.mass2X, this.mass2Y, 0, this.massH, this.mass1X, this.mass1Y);
-
-    /* Draw Mass Ones's right arm. */
-    this.drawArm(this.mass2X, this.mass2Y, this.massW, this.massH, this.mass1X, this.mass1Y);
-
-    /* Draw the Base. */
-    this.drawBox(this.baseX, this.axis.y, this.massW, this.massH, this.massBg, this.massStroke, false);
-
-    /* Draw the Base's shadow. */
-    this.drawBox(this.baseX, (this.axis.y - this.massH / 8), this.massW, this.shadowH, this.shadowBg, this.massStroke,false);
-
-    /* Draw Mass One. */
-    this.drawBox(this.mass1X, this.mass1Y, this.massW, this.massH, this.massBg, this.massStroke, true);
-
-    /* Draw Mass One's shadow. */
-    this.drawBox(this.mass1X, (this.mass1Y - this.massH / 8), this.massW, this.shadowH, this.shadowBg, this.massStroke, false);
-
-    /* Draw Mass Two. */
-    this.drawBox(this.mass2X, this.mass2Y, this.massW, this.massH, this.massBg, this.massStroke, true);
-
-    /* Draw Mass Two's shadow. */
-    this.drawBox(this.mass2X, (this.mass2Y + this.massH), this.massW, this.shadowH, this.shadowBg, this.massStroke,false);
-
-    /* Draw Mass Three. */
-    this.drawBox(this.mass3X, this.mass3Y, this.massW, this.massH, this.massBg, this.massStroke, true);
-
-    /* Draw Mass Three's shadow. */
-    this.drawBox(this.mass3X, (this.mass3Y + this.massH), this.massW, this.shadowH, this.shadowBg, this.massStroke,false);
-
-    /* Draw the guide rail. */
-    this.drawBox(this.axis.x, this.guideY, this.massW, this.guideH, this.guideBg, this.massStroke, false);
-
-    /* Get positon for the guide handles that are relative to the position of the base. */
-    this.leftHandleX = this.baseX + (this.massW / 4.5);
-    this.rightHandleX = this.baseX + this.massW - (this.massW / 2.5);
-
-    /* Draw the guide handles. */
-    this.drawBox(this.leftHandleX, this.handleY, this.handleW, this.handleH, this.guideBg, this.handleStroke, false);
-    this.drawBox(this.rightHandleX, this.handleY, this.handleW, this.handleH, this.guideBg, this.handleStroke, false);
-    this.drawBox(this.leftHandleX, this.guideY, this.handleW, this.guideH, this.handleBg, this.handleStroke, false);
-    this.drawBox(this.rightHandleX, this.guideY, this.handleW, this.guideH, this.handleBg, this.handleStroke, false);
-
-    /* Draw the motor outter circle. */
-    this.drawCircle((this.axis.x - (this.axis.x / 1.6)), this.circleY, (Math.floor(this.massH / 1.35)), "#999", 1.3, "#333");
-
-    /* Animate the motor. */
-    this.animateMotor(this.axis.y, this.massH);
-
-    /* Draw the scotch yolk circle. */
-    this.drawCircle(this.yokeX, this.yokeY, 3.5, "#e5e5e5", 1, "#444");
-};
-
-/**
- * Draws a box.
- *
- * @param x the box's x axis.
- * @param y the box's y axis.
- * @param mw the box's width.
- * @param mh the box's height.
- * @param bg the box's background colour.
- * @param label the box's label.
- */
-MimicWidget.prototype.drawBox = function(x,y,bw,bh,bg,stroke,damper) {
-
-    /* Draws the box. */
-    this.ctx.beginPath();
-    this.ctx.rect(x,y,bw,bh);
-    this.ctx.fillStyle = bg;
-    this.ctx.fill();
-    this.ctx.lineWidth = 1;
-    this.ctx.strokeStyle = stroke;
-    this.ctx.stroke();
-
-    if (damper === true)
+    /* Levels. */
+    for (l = 0; l < this.numberLevels; l++)
     {
-        this.ctx.beginPath();
-        this.ctx.moveTo((x + bw) + 1, (y + (bh / 2)));
-        this.ctx.lineTo((this.width - 20), (y + (bh / 2)));
-        this.ctx.strokeStyle = '#000';
-        this.ctx.stroke();
+        xVert.push(this.cx - this.px(this.model.levelWidth / 2 + disp[l]));
+        yVert.push(this.height - this.px(this.model.trackHeight + this.model.carHeight) - 
+                this.px(this.model.levelHeight * (l + 1)) - this.px(this.model.wallHeight * l));
+        
+        this.drawLevel(xVert[l], yVert[l]);
+    }
+    
+    /* Arm vertices. */
+    for (l = 0; l < xVert.length - 1; l++)
+    {
+        this.drawVertex(xVert[l], yVert[l], xVert[l + 1], yVert[l + 1] + this.px(this.model.levelHeight));
+        this.drawVertex(xVert[l] + this.px(this.model.levelWidth), yVert[l], 
+                xVert[l + 1] + this.px(this.model.levelWidth), yVert[l + 1] + this.px(this.model.levelHeight));
     }
 };
 
-/**
- * Draws an arm.
- *
- * @param x the arm's x axis.
- * @param y the arm's y axis.
- * @param mw width of the mass.
- * @param mh height of the mass.
- * @param endX the arms end X axis.
- * @param endY the arms end Y axis.
- */
-MimicWidget.prototype.drawArm = function(x,y,mw,mh,endX,endY) {
-    /* Get the start point of the arm. */
-    mw > 0 ? this.xPos = x + mw - 2 + '.5':
-    this.xPos = x + 1 + '.5';
-    this.yPos = y + mh;
-
-    /* Get the end point of the arm. */
-    mw > 0 ? this.xEnd = endX + mw - 2 + '.5':
-    this.xEnd = endX + 1 + '.5';
-    this.yEnd = endY;
-
-    /* Sets the control point's Y axis depending on the arms position in relation to the canvas height. */
-    if (this.yPos < this.height - (this.height / 1.5))
-    {
-        /* Sets the Y axis for the arm between mass 2 and 3. */
-        this.yCon = y + (y / 0.5);
-    }
-    else if (this.yPos < this.height - (this.height / 2))
-    {
-        /* Sets the Y axis for the arm between mass 1 and 2. */
-        this.yCon = y + (y / 4.5);
-    }
-    else
-    {
-        /* Sets the Y axis for the arm between the base and mass 1. */
-        this.yCon = y + (y / 5.5);
-    }
-
-    /* Draws the arm's border. */
+MimicWidget.prototype.drawVertex = function(x0, y0, x1, y1) {
+    this.ctx.strokeStyle = "#333333";
+    this.ctx.lineWidth = 1.5;
     this.ctx.beginPath();
-    this.ctx.moveTo(this.xPos,this.yPos);
-    this.ctx.quadraticCurveTo(this.xPos, this.yCon, this.xEnd, this.yEnd);
-    this.ctx.lineWidth = 4;
-    this.ctx.strokeStyle = '#808080';
-    this.ctx.stroke();
-
-    /* Draws the arm. */
-    this.ctx.beginPath();
-    this.ctx.moveTo(this.xPos,this.yPos);
-    this.ctx.quadraticCurveTo(this.xPos, this.yCon, this.xEnd, this.yEnd);
-    this.ctx.lineWidth = 2;
-    this.ctx.strokeStyle = '#dadada';
-    this.ctx.stroke();
-}
-
-/**
- * Draws a circle.
- *
- * @param x the circle's x axis.
- * @param y the circle's y axis.
- * @param radius the radius of the circle.
- * @param fill the fill style of the circle.
- * @param lw the circle's line width
- * @param stroke the circle's stroke style
- */
-MimicWidget.prototype.drawCircle = function(x,y,radius,fill,lw,stroke) {
-    this.ctx.beginPath();
-    this.ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
-    this.ctx.fillStyle = fill;
-    this.ctx.fill();
-    this.ctx.lineWidth = lw;
-    this.ctx.strokeStyle = stroke;
-    this.ctx.stroke();
-}
-
-/**
- * Draws the motor animations.
- *
- * @param x the x axis of the base.
- * @param y the default y axis.
- * @param mh the height of the mass.
- */
-MimicWidget.prototype.animateMotor = function(y,mh) {
-
-    /* get the X axis movement ranges*/
-    this.xPos = {
-        left: this.axis.x - this.baseX,
-        right: this.baseX - this.axis.x
-    };
-
-    /* The movement range of the scotch yoke. */
-    this.yokeRange = 5;
-
-    /* Gets the X axis of the scotch yoke. */
-    this.yokeX = this.axis.x - (this.axis.x / 1.6);
-    this.yokeX = (this.baseX < this.axis.x) ? this.yokeX - (this.xPos.left) : this.yokeX + (this.xPos.right);
-
-    /* x axis positions. */
-    var x1 = (this.yokeX - 6);
-    var x2 = (this.yokeX + 6);
-    var x3 = this.baseX;
-
-    /* y axis positions. */
-    var y1 = (y - (mh / 7));
-    var y2 = (y + 5);
-    var y3 = (y + 14);
-    var y4 = (y + (mh + (mh / 7)));
-
-    /* Draw the motor arm path. */
-    this.ctx.beginPath();
-    this.ctx.moveTo(x1, y1);
-    this.ctx.lineTo(x2, y1);
-    this.ctx.lineTo(x2, y2);
-    this.ctx.lineTo(x3, y2);
-    this.ctx.lineTo(x3, y3);
-    this.ctx.lineTo(x2, y3);
-    this.ctx.lineTo(x2, y4);
-    this.ctx.lineTo(x1, y4);
+    this.ctx.moveTo(x0, y0);
     this.ctx.lineTo(x1, y1);
-
-    /* Complete motor arm shape. */
-    this.ctx.closePath();
-    this.ctx.lineWidth = 1;
-    this.ctx.fillStyle = '#ccc';
-    this.ctx.fill();
-    this.ctx.strokeStyle = '#333';
     this.ctx.stroke();
-
-    /* Draws the box. */
-    this.ctx.beginPath();
-    this.ctx.rect((x1 + 4.5),(y1 + 4.5),3,13);
-    this.ctx.fillStyle = '#808080';
-    this.ctx.fill();
-    this.ctx.lineWidth = 1;
-    this.ctx.strokeStyle = '#333';
-    this.ctx.stroke();
-
-    /* Check if the yoke's x axis is far left. */
-    if (this.xPos.left === this.yokeRange)
-    {
-        /* Set Y axis to the center of parent circle. */
-        this.yokeY = this.circleY;
-
-        /* Set scotch yoke position to bottom. */
-        this.scotchPos = true;
-    }
-    /* Check if the yoke's x axis is far right. */
-    else if(this.xPos.right === (this.yokeRange))
-    {
-        /* Set Y axis to the center of parent circle. */
-        this.yokeY = this.circleY;
-
-        /* Set scotch yoke position to top. */
-        this.scotchPos = false;
-    }
-    else
-    {
-        /* Check if yoke's X axis is one away from either the left or right side of the yokeRange. */
-        if (this.xPos.left === (this.yokeRange - 1) || this.xPos.right === (this.yokeRange - 1))
-        {
-            /* Set the scotch yoke position to four from either the top or bottom. */
-            this.yokeY = (this.scotchPos === false) ? this.circleY + 3 : this.circleY - 3;
-        }
-        /* Check if yoke's X axis is two away from either the left or right side of the yokeRange. */
-        else if (this.xPos.left === (this.yokeRange - 2) || this.xPos.right === (this.yokeRange - 2))
-        {
-            /* Set the scotch yoke position to two from either the top or bottom. */
-            this.yokeY = (this.scotchPos === false) ? this.circleY + 5 : this.circleY - 5;
-        }
-	    else // If x axis is near the center of the circle
-        {
-            /* Set y axis to either the top or bottom of the circle. */
-            this.yokeY = (this.scotchPos === false) ? this.circleY + 7 : this.circleY - 7;
-	    }
-    }
-}
+};
 
 /**
- * Sets the display value.
- *
- * @param on whether the display should be on or off
+ * Draws a level box from the top left position. 
+ * 
+ * @param x x coordinate
+ * @param y y coordinate
  */
-MimicWidget.prototype.setDisplay = function(on) {
-    if (on)
+MimicWidget.prototype.drawLevel = function(x, y) {
+    this.ctx.fillStyle = "#548DD4";
+    this.ctx.fillRect(x, y, this.px(this.model.levelWidth), this.px(this.model.levelHeight));
+    
+    this.ctx.strokeStyle = "#333333";
+    this.ctx.lineWidth = 1.5;
+    this.ctx.strokeRect(x, y, this.px(this.model.levelWidth), this.px(this.model.levelHeight));
+};
+
+MimicWidget.prototype.drawTrackCarriage = function(d0) {
+    var tx = this.cx - this.px(this.model.trackWidth / 2), ty = this.height - this.px(this.model.trackHeight);
+    
+    /* Track. */
+    this.ctx.fillStyle = "#AAAAAA";
+    this.ctx.fillRect(tx, ty, this.px(this.model.trackWidth), this.px(this.model.trackHeight));
+    
+    this.ctx.strokeStyle = "#666666";
+    this.ctx.lineWidth = 1;
+    this.ctx.strokeRect(tx, ty, this.px(this.model.trackWidth), this.px(this.model.trackHeight));
+    
+    this.ctx.beginPath();
+    this.ctx.moveTo(tx, ty + this.px(this.model.trackHeight) / 2 - 1);
+    this.ctx.lineTo(tx + this.px(this.model.trackWidth), ty + this.px(this.model.trackHeight) / 2 - 1);
+    this.ctx.lineWidth = 2;
+    this.ctx.stroke();
+    
+    /* Carriage. */
+    // TODO
+    
+    /* Arm to motor. */
+    // TODO 
+};
+
+MimicWidget.GRID_WIDTH = 50;
+
+/**
+ * Draws a grid.
+ */
+MimicWidget.prototype.drawGrid = function() {
+    var d, dt = this.px(MimicWidget.GRID_WIDTH);
+    
+    this.ctx.save();
+   
+    /* Grid lines. */
+    this.ctx.strokeStyle = "#AAAAAA";
+    this.ctx.lineWidth = 1;
+    
+    this.ctx.beginPath();
+    for (d = this.cx - dt; d > 0; d -= dt) this.stippleLine(d, 0, d, this.height);
+    for (d = this.cx + dt; d < this.width - dt; d+= dt) this.stippleLine(d, 0, d, this.height);    
+    for (d = dt; d < this.height; d += dt) this.stippleLine(0, d, this.width, d);
+    this.ctx.stroke();
+    
+    /* Center line. */
+    this.ctx.beginPath();
+    this.ctx.strokeStyle = "#555555";
+    this.ctx.lineWidth = 1.5;
+    this.ctx.moveTo(this.cx, 0);
+    this.ctx.lineTo(this.cx, this.height);
+    this.ctx.moveTo(0, this.height / 2);
+    this.ctx.stroke();
+
+    this.ctx.restore();
+};
+
+MimicWidget.STIPPLE_WIDTH = 10;
+
+/**
+ * Draws a stippled line. 
+ * 
+ * @param x0 begin x coordinate
+ * @param y0 begin y coordinate
+ * @param x1 end x coordinate 
+ * @param y1 end y coordinate
+ */
+MimicWidget.prototype.stippleLine = function(x0, y0, x1, y1) {
+    var p;
+    
+    if (x0 == x1) // Horizontal line
     {
-        this.$widget.find(".switch .slide").addClass("on");
+        p = y0 - MimicWidget.STIPPLE_WIDTH;
+        while (p < y1)
+        {
+            this.ctx.moveTo(x0, p += MimicWidget.STIPPLE_WIDTH);
+            this.ctx.lineTo(x0, p += MimicWidget.STIPPLE_WIDTH);
+        }
     }
-    else
+    else if (y0 == y1) // Vertical line
     {
-        this.$widget.find(".switch .slide").removeClass("on");
+        p = x0 - MimicWidget.STIPPLE_WIDTH;
+        while (p < x1)
+        {
+            this.ctx.moveTo(p += MimicWidget.STIPPLE_WIDTH, y0);
+            this.ctx.lineTo(p += MimicWidget.STIPPLE_WIDTH, y0);
+        }
     }
+    else // Diagonal
+    {
+        // TODO draw diagonal.
+    }
+};
+
+/**
+ * Converts a pixel dimension to a millimetre dimension.
+ * 
+ * @param px pixel dimension
+ * @return millimetre dimension
+ */
+MimicWidget.prototype.mm = function(px) {
+    return px * this.mmPerPx;
+};
+
+/**
+ * Converts a millimetre dimension to a pixel dimension.
+ * 
+ * @param mm millimetre dimension
+ * @return pixel dimension
+ */
+MimicWidget.prototype.px = function(mm) {
+    return mm / this.mmPerPx;
 };
 
 /* ============================================================================
