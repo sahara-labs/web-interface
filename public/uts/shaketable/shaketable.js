@@ -45,10 +45,10 @@ function ShakeTableControl(id)
 	this.errorDisplay = undefined;
 	
 	/** The number of seconds this graph displays. */
-    this.duration = 60;
+    this.duration = 10;
 
     /** The period in milliseconds. */
-    this.period = 50;
+    this.period = 100;
 };
 
 /** 
@@ -2484,7 +2484,7 @@ function MimicWidget($container, title)
     this.mmPerPx = 1;
 
 	/** The period in milliseconds. */
-	this.period = 50;
+	this.period = 100;
 	
     /** Canvas context. */
     this.ctx = null;
@@ -2564,9 +2564,68 @@ MimicWidget.prototype.getHTML = function() {
 };
 
 MimicWidget.prototype.consume = function(data) {
-    this.w = 2 * Math.PI * 1;
-    this.amp = [ 0.7, 20, 20, 20 ];
-    this.o = [ 0, 0, Math.PI , Math.PI * 2];
+    var i, l, peaks = [], level, range;
+    
+    /* We need to find a list of peaks for each of the levels. */
+    for (l = 1; l <= this.numberLevels; l++)
+    {
+        if (!$.isArray(data["disp-graph-" + l])) continue;
+
+        /* To find peaks we are searching for the values where the preceding value is
+         * not larger than the subsequent value. */
+        level = [ ];
+        for (i = data["disp-graph-" + l].length - 2; i > 1; i--)
+        {
+            if (data["disp-graph-" + l][i] > data["disp-graph-" + l][i + 1] && 
+                    data["disp-graph-" + l][i] >= data["disp-graph-" + l][i - 1])
+            {
+                level.push(i);
+                
+                /* We only require a maximum of 5 peaks. */
+                if (level.length == 5) break;
+            }
+        }
+        
+        /* If we don't have the requiste number of peaks, don't update data. */ 
+        while (level.length < 5) return;
+        
+        peaks.push(level);
+        
+        /* Amplitude is a peak value. The amplitude we are using will the median
+         * of the last 3 peaks. */
+        this.amp[l] = this.medianFilter([ data["disp-graph-" + l][level[0]], 
+                                          data["disp-graph-" + l][level[1]], 
+                                          data["disp-graph-" + l][level[2]] ]); 
+    }
+    
+    /* Amplitude for the base is fixed at 0.7 mm but only applies if the motor
+     * is active. */
+    this.amp[0] = data['motor-on'] ? 0.7 : 0;
+    
+    /* Angular frequency is derived by the periodicity of peaks. */
+    range =  this.medianFilter([ peaks[0][0] - peaks[0][1],
+                                 peaks[0][1] - peaks[0][2],
+                                 peaks[0][2] - peaks[0][3],
+                                 peaks[0][3] - peaks[0][4] ]);
+    this.w = isFinite(i = 2 * Math.PI * 1 / (0.1 * range)) != Number.Infinity ? i : 0;
+    
+    /* Phase if determined based on the difference in peaks between the level
+     * one and upper levels. */
+    for (l = 2; l <= this.numberLevels - 1; l++)
+    {
+        this.o[l] = 2 * Math.PI * this.medianFilter([ peaks[l - 1][0] - peaks[0][0],
+                                                      peaks[l - 1][1] - peaks[0][1],
+                                                      peaks[l - 1][2] - peaks[0][2],
+                                                      peaks[l - 1][3] - peaks[0][3] ]) / range;
+    }
+};
+
+/**
+ * Runs a median filter on the algorithm.
+ */
+MimicWidget.prototype.medianFilter = function(data) {
+    data = data.sort(function(a, b) { return a - b; });
+    return data[Math.round(data.length / 2)];
 };
 
 MimicWidget.prototype.animationFrame = function() {
@@ -2579,7 +2638,6 @@ MimicWidget.prototype.animationFrame = function() {
     }
     
     this.drawFrame(disp);
-    
 };
 
 /**
@@ -2736,7 +2794,7 @@ MimicWidget.prototype.stippleLine = function(x0, y0, x1, y1) {
     }
     else // Diagonal
     {
-        // TODO draw diagonal.
+        throw "Diagonal lines not implemented.";
     }
 };
 
