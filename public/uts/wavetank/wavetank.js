@@ -39,11 +39,44 @@ function WaveTank(id)
  */
 WaveTank.prototype.setup = function() {
     var o;
-    
+
+    o = new RotarySwitch("rotary-Label", {
+        field: "pump-on",
+        action: "setPump",
+        label: "Rotary Switch",
+        icon: "pump",
+        draggable: true,
+        values: ['one','two','three','four','five','six','seven','eight','nine','ten'],
+        radius: 70
+    });
+    this.widgets.push(o);
+
+    o = new RotarySwitch("rotary-Larger", {
+        field: "pump-on",
+        action: "setPump",
+        icon: "pump",
+        draggable: true,
+        values: ['ON','OFF'],
+        radius: 70,
+        colour: "white"
+    });
+    this.widgets.push(o);
+
+    o = new RotarySwitch("rotary-small", {
+        field: "pump-on",
+        action: "setPump",
+        icon: "pump",
+        draggable: true,
+        values: ['1','2','3','4','5','6'],
+        radius: 50,
+        colour: 'white'
+    });
+    this.widgets.push(o);
+
     o = new Switch("switch-1", {
         field: "pump-on",
         action: "setPump",
-        label: "Pump 1",
+        label: "Silver",
         icon: "pump",
         draggable: true,
         tooltip: "Turn on pump",
@@ -55,7 +88,7 @@ WaveTank.prototype.setup = function() {
     o = new Switch("switch-2", {
         field: "pump-on",
         action: "setPump",
-        label: "Pump 2",
+        label: "Black",
         icon: "pump",
         draggable: true,
         tooltip: "Turn on pump",
@@ -67,7 +100,7 @@ WaveTank.prototype.setup = function() {
     o = new Switch("switch-3", {
         field: "pump-on",
         action: "setPump",
-        label: "Pump 3",
+        label: "Red",
         icon: "pump",
         draggable: true,
         tooltip: "Turn on pump",

@@ -720,8 +720,10 @@ Switch.prototype._setDisplay = function(on) {
  * @param {object} config configuration of widget
  * @config {string} [field] server data variable that is being switched
  * @config {string} [action] server action to call when the switched is changed
- * @config {array}  [values] the list of potential 
+ * @config {array}  [values] the list of potential
+ * @config {number} [radius] the radius of the switch
  * @config {string} [label] switch label (optional)
+ * @config {string} [colour] set the switch colour (default black)
  */
 function RotarySwitch(id, config)
 {
@@ -729,22 +731,101 @@ function RotarySwitch(id, config)
     
     Widget.call(this, id, config);
 
-    /** @private {boolean} The state of the switch. */
+    /** @private {boolean} The selected value. */
     this.val = undefined;
     
     /** @private {boolean} Whether the value has been changed by user action. */
     this.isChanged = false;  
 }
 
-RotartSwtich.prototype = new Widget;
+RotarySwitch.prototype = new Widget;
 
 RotarySwitch.prototype.init = function($container) {
-    
+	var r = this.config.radius,
+        v = this.config.values;
+	
+    this.$widget = this._generate($container,
+    	(this.config.label ? "<label>" + this.config.label + "</label>" : '') +
+        "<div id='rotary-container-" + this.id + "' class='rotary-switch-container' " + 
+            "style='width:" + r * 2 +"px;height:" + r * 2 + "px;'>" +
+                "<div id='rotary-switch-" + this.id + "' class='rotary-switch rotary-" + 
+                (this.config.colour ? this.config.colour : 'black') + "'></div>" +
+        "</div>"
+    );
+
+    /* Generates the positions of the switches' points. */
+    for(var i = 0; i < v.length; i++) {
+
+    	/* Calculate the X and Y axes of the current point.  */
+        var x = (r - 5) - (r + 10) * Math.cos(2 * Math.PI * i / v.length),
+            y = (r - 5) - (r + 10) * Math.sin(2 * Math.PI * i / v.length),
+            p = v[(v.length - i)];
+
+        //TODO Fix Label positioning
+
+        $("#rotary-container-" + this.id).append(
+            "<div class='rotary-switch-val " +
+            ( y <= 55 ? y = (y - ( p ? p.length : '')) - 8 : 0) + "' id='" + this.id + "-" + i + "' " + 
+            "style='left:" + Math.round(y) + "px;top:" + Math.round(x) + "px' " + "value=" + 
+            ( p ? p : v[0]) + ">" + ( p ? p : v[0]) + "</div>"
+        );
+    }
+
+    var thiz = this;
+    this.$widget.find(".rotary-switch-val").click(function() { thiz._clicked(this); });	
 };
 
 RotarySwitch.prototype.consume = function(data) {
-    
+
 };
+
+/**
+ * Event handler to be called when a value is clicked.
+ */
+RotarySwitch.prototype._clicked = function(point) {
+	//TODO Add code to update rig with the selected value.
+	
+    this.val = undefined;
+    this.isChanged = true;
+    this._animateSwitch(point);
+
+    var thiz = this, params = { };
+    params[this.config.field] = this.val;
+    this._postControl(
+        this.config.action,
+        params,
+        function() {
+            thiz.isChanged = false;
+        }
+     );
+};
+
+/**
+ * Animates the switch to point to the selected label. 
+ * 
+ * @param point the selected label
+ */
+RotarySwitch.prototype._animateSwitch = function(point) {
+    /* Get the position of the point and sets the X and Y axes used for calculating the value positions. */
+    var pos = $(point).position(),
+        x0 = (this.config.radius - 5),
+        y0 = (this.config.radius - 5);
+
+    //TODO Fix issue with some labels making the switch fully rotate to get to the closest one.
+
+    /* Calculate the switches degree in relation to the point. */
+    var deg = Math.atan((pos.left-x0)/(y0-pos.top))*180/Math.PI,
+        deg = x0 < pos.top ? Math.round(deg + 180) : Math.round(deg);
+
+    /* Rotates the switch. */
+    $(point).parent().find('.rotary-switch').css({
+        '-webkit-transform' : 'rotate('+ deg +'deg)',
+        '-moz-transform' : 'rotate('+ deg +'deg)',
+        '-ms-transform' : 'rotate('+ deg +'deg)',
+        '-o-transform' : 'rotate('+ deg +'deg)',
+        'transform' : 'rotate('+ deg +'deg)'
+    });
+}
 
 /* ============================================================================
  * == Button widget                                                          ==
