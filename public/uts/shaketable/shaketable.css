@@ -31,6 +31,7 @@
 }
 
 #mimic-box{
+	position: absolute;
     left: 343px;
     top: 35px;
 }

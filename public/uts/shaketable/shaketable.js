@@ -2479,6 +2479,9 @@ function MimicWidget($container, title)
 
     /** The height of the diagram in pixels. */
     this.height = undefined;
+    
+    /** The box width. */
+    this.boxWidth = undefined;
 
 	/** Millimeters per pixel. */
     this.mmPerPx = 1;
@@ -2501,6 +2504,9 @@ function MimicWidget($container, title)
     /** Frame count. */
     this.fr = 0;
     
+    /** Coil power percentages. */
+    this.coils = [ undefined, undefined, undefined ];
+    
     /** Center line. */
     this.cx = undefined;
     
@@ -2513,7 +2519,7 @@ function MimicWidget($container, title)
         levelHeight: 30,      // Height of the levels
         trackHeight: 20,      // Height of the track
         trackWidth: 300,      // Width of track
-        carHeight: 20,        // Height of carriage
+        carHeight: 10,        // Height of carriage
         carWidth: 120,        // Width of carriage
         maxDisp: 60,          // Maximum displacement of the diagram
     };
@@ -2522,6 +2528,9 @@ function MimicWidget($container, title)
     this.animateInterval = undefined;
 }
 MimicWidget.prototype = new Widget;
+
+
+MimicWidget.ANIMATE_PERIOD = 50;
 
 MimicWidget.prototype.init = function() {
     var canvas, thiz = this;
@@ -2546,12 +2555,14 @@ MimicWidget.prototype.init = function() {
 
     /* Draw inital frame of zero position. */
     this.drawFrame([0, 0, 0, 0]);
+    
+    this.boxWidth = this.$widget.width();
    
     /* Start animation. */
-    this.animateInterval = setInterval(function() { thiz.animationFrame(); }, 25);
-    
-    /* Enable dragging. */
+    this.animateInterval = setInterval(function() { thiz.animationFrame(); }, MimicWidget.ANIMATE_PERIOD);
+
     this.enableDraggable();
+    this.enableResizable(this.width / 2, this.height / 2, true);
 };
 
 MimicWidget.prototype.getHTML = function() {
@@ -2618,6 +2629,17 @@ MimicWidget.prototype.consume = function(data) {
                                                       peaks[l - 1][2] - peaks[0][2],
                                                       peaks[l - 1][3] - peaks[0][3] ]) / range;
     }
+    
+    /** Coil states. */
+    if (this.is3DOF)
+    {
+        /* The 3DOF is either on or off. */
+        for (i = 0; i < this.coils.length; i++) this.coils[i] = data['coils-on'] ? 100 : 0;
+    }
+    else
+    {
+        // TODO 2DOF coils
+    }
 };
 
 /**
@@ -2634,7 +2656,7 @@ MimicWidget.prototype.animationFrame = function() {
     this.fr++;
     for (i = 0; i < this.numberLevels; i++)
     {
-        disp[i] = this.amp[i] * Math.sin(this.w * 0.025 * this.fr + this.o[i]);
+        disp[i] = this.amp[i] * Math.sin(this.w * MimicWidget.ANIMATE_PERIOD / 1000 * this.fr + this.o[i]);
     }
     
     this.drawFrame(disp);
@@ -2659,6 +2681,7 @@ MimicWidget.prototype.drawFrame = function(disp) {
     
     this.drawGrid();
     this.drawTrackCarriage(disp[0]);
+    this.drawMotor();
     
     var l, xVert = [], yVert = [];
 
@@ -2669,7 +2692,11 @@ MimicWidget.prototype.drawFrame = function(disp) {
         yVert.push(this.height - this.px(this.model.trackHeight + this.model.carHeight) - 
                 this.px(this.model.levelHeight * (l + 1)) - this.px(this.model.wallHeight * l));
         
-        this.drawLevel(xVert[l], yVert[l]);
+        /* Coil. */
+        if (l > 0) this.drawCoil(yVert[l] + this.px(this.model.levelHeight / 2), this.coils[l - 1]);
+        
+        /* Mass. */
+        this.drawLevel(xVert[l], yVert[l], l);
     }
     
     /* Arm vertices. */
@@ -2679,11 +2706,60 @@ MimicWidget.prototype.drawFrame = function(disp) {
         this.drawVertex(xVert[l] + this.px(this.model.levelWidth), yVert[l], 
                 xVert[l + 1] + this.px(this.model.levelWidth), yVert[l + 1] + this.px(this.model.levelHeight));
     }
+    
+    
+    
+};
+
+/** The widget of the coil box in mm. */
+MimicWidget.COIL_BOX_WIDTH = 26;
+
+/**
+ * Draws a coil. 
+ * 
+ * @param y the vertical position of coil
+ * @param pw coil power
+ */
+MimicWidget.prototype.drawCoil = function(y, pw) {
+    var gx = this.width - this.px(20), gy;
+    
+    this.ctx.strokeStyle = "#888888";
+    this.ctx.lineWidth = 1;
+
+    this.ctx.beginPath();
+    this.ctx.moveTo(this.cx, y);
+    this.ctx.lineTo(gx, y);
+    
+    this.ctx.moveTo(gx, y - this.px(this.model.levelHeight) / 2);
+    this.ctx.lineTo(gx, y + this.px(this.model.levelHeight / 2));
+    
+    for (gy = y - this.px(this.model.levelHeight) / 2; 
+            gy <= y + this.px(this.model.levelHeight) / 2; gy += this.px(this.model.levelHeight) / 4)            
+    {
+        this.ctx.moveTo(gx, gy);
+        this.ctx.lineTo(this.width, gy + this.px(5));
+    }
+    
+    this.ctx.stroke();
+    
+    
+    this.ctx.fillStyle = pw === undefined ? "#CCCCCC" : pw > 0 ? "#50C878" : "#ED2939";
+    this.ctx.fillRect(this.width - this.px(55), y - this.px(MimicWidget.COIL_BOX_WIDTH / 2), 
+            this.px(MimicWidget.COIL_BOX_WIDTH), this.px(MimicWidget.COIL_BOX_WIDTH));
+    this.ctx.strokeRect(this.width - this.px(55), y - this.px(MimicWidget.COIL_BOX_WIDTH / 2), 
+            this.px(MimicWidget.COIL_BOX_WIDTH), this.px(MimicWidget.COIL_BOX_WIDTH));
+    
+    this.ctx.fillStyle = "#000000";
+    this.ctx.font = this.px(13) + "px sans-serif";
+    this.ctx.textAlign = "center";
+    this.ctx.textBaseline = "middle";
+    this.ctx.fillText("C", this.width - this.px(55 - this.px(MimicWidget.COIL_BOX_WIDTH / 2)), y);
+    
 };
 
 MimicWidget.prototype.drawVertex = function(x0, y0, x1, y1) {
     this.ctx.strokeStyle = "#333333";
-    this.ctx.lineWidth = 1.5;
+    this.ctx.lineWidth = 2;
     this.ctx.beginPath();
     this.ctx.moveTo(x0, y0);
     this.ctx.lineTo(x1, y1);
@@ -2695,16 +2771,52 @@ MimicWidget.prototype.drawVertex = function(x0, y0, x1, y1) {
  * 
  * @param x x coordinate
  * @param y y coordinate
+ * @param l level number
  */
-MimicWidget.prototype.drawLevel = function(x, y) {
+MimicWidget.prototype.drawLevel = function(x, y, l) {
     this.ctx.fillStyle = "#548DD4";
     this.ctx.fillRect(x, y, this.px(this.model.levelWidth), this.px(this.model.levelHeight));
     
     this.ctx.strokeStyle = "#333333";
     this.ctx.lineWidth = 1.5;
     this.ctx.strokeRect(x, y, this.px(this.model.levelWidth), this.px(this.model.levelHeight));
+    
+    if (l > 0)
+    {
+        this.ctx.fillStyle = "#000000";
+        this.ctx.font = this.px(13) + "px sans-serif";
+        this.ctx.textAlign = "center";
+        this.ctx.textBaseline = "middle";
+        this.ctx.fillText("M" + l, x + this.px(this.model.levelWidth) / 2, y + this.px(this.model.levelHeight / 2));
+    }
 };
 
+/**
+ * Draws the motor.
+ */
+MimicWidget.prototype.drawMotor = function() {
+    
+    this.ctx.beginPath();
+    this.ctx.arc(this.px(40), this.height - this.px(44), this.px(16), 0, 2 * Math.PI);
+    
+    this.ctx.fillStyle = "#666666";
+    this.ctx.fill();
+    this.ctx.strokeStyle = "#333333";
+    this.ctx.stroke();
+    
+    /* Arm. */
+    this.ctx.fillStyle = "#AAAAAA";
+    this.ctx.fillRect(this.px(40), this.height - this.px(49), this.width / 2 - this.px(50), this.px(10));
+    this.ctx.lineWidth = 1;
+    this.ctx.strokeStyle = "#333333";
+    this.ctx.strokeRect(this.px(40), this.height - this.px(49), this.width / 2 - this.px(50), this.px(10));
+};
+
+/**
+ * Draws the track and carriage.
+ *  
+ * @param d0 displacement of base level
+ */
 MimicWidget.prototype.drawTrackCarriage = function(d0) {
     var tx = this.cx - this.px(this.model.trackWidth / 2), ty = this.height - this.px(this.model.trackHeight);
     
@@ -2712,7 +2824,7 @@ MimicWidget.prototype.drawTrackCarriage = function(d0) {
     this.ctx.fillStyle = "#AAAAAA";
     this.ctx.fillRect(tx, ty, this.px(this.model.trackWidth), this.px(this.model.trackHeight));
     
-    this.ctx.strokeStyle = "#666666";
+    this.ctx.strokeStyle = "#333333";
     this.ctx.lineWidth = 1;
     this.ctx.strokeRect(tx, ty, this.px(this.model.trackWidth), this.px(this.model.trackHeight));
     
@@ -2723,10 +2835,12 @@ MimicWidget.prototype.drawTrackCarriage = function(d0) {
     this.ctx.stroke();
     
     /* Carriage. */
-    // TODO
-    
-    /* Arm to motor. */
-    // TODO 
+    this.ctx.fillStyle = "#666666";
+    this.ctx.fillRect(this.cx - this.px(this.model.levelWidth / 4 + 10) - this.px(d0), ty - this.px(10), this.px(20), this.px(20));
+    this.ctx.fillRect(this.cx + this.px(this.model.levelWidth / 4 - 10) - this.px(d0), ty - this.px(10), this.px(20), this.px(20));
+    this.ctx.strokeStyle = "#222222";
+    this.ctx.strokeRect(this.cx - this.px(this.model.levelWidth / 4 + 10) - this.px(d0), ty - this.px(10), this.px(20), this.px(20));
+    this.ctx.strokeRect(this.cx + this.px(this.model.levelWidth / 4 - 10) - this.px(d0), ty - this.px(10), this.px(20), this.px(20));
 };
 
 MimicWidget.GRID_WIDTH = 50;
@@ -2736,29 +2850,66 @@ MimicWidget.GRID_WIDTH = 50;
  */
 MimicWidget.prototype.drawGrid = function() {
     var d, dt = this.px(MimicWidget.GRID_WIDTH);
-    
-    this.ctx.save();
-   
+       
     /* Grid lines. */
-    this.ctx.strokeStyle = "#AAAAAA";
-    this.ctx.lineWidth = 1;
-    
     this.ctx.beginPath();
     for (d = this.cx - dt; d > 0; d -= dt) this.stippleLine(d, 0, d, this.height);
     for (d = this.cx + dt; d < this.width - dt; d+= dt) this.stippleLine(d, 0, d, this.height);    
     for (d = dt; d < this.height; d += dt) this.stippleLine(0, d, this.width, d);
+    this.ctx.strokeStyle = "#AAAAAA";
+    this.ctx.lineWidth = 1;
     this.ctx.stroke();
+    
+    /* Units. */    
+    this.ctx.beginPath();
+    this.ctx.moveTo(this.px(22), 0);
+    this.ctx.lineTo(this.px(22), dt);
+    
+    this.ctx.moveTo(this.px(10), this.px(10));
+    this.ctx.lineTo(dt + this.px(10), this.px(10));
+    this.ctx.strokeStyle = "#555555";
+    this.ctx.stroke();
+    
+    this.ctx.beginPath();
+    this.ctx.moveTo(this.px(22), 0);
+    this.ctx.lineTo(this.px(22 + 2.5), this.px(5));
+    this.ctx.lineTo(this.px(22 - 2.5), this.px(5));
+    this.ctx.closePath();
+    this.ctx.fillStyle = "#555555";
+    this.ctx.fill();
+    
+    this.ctx.beginPath();
+    this.ctx.moveTo(this.px(22), dt);
+    this.ctx.lineTo(this.px(22 + 2.5), dt - this.px(5));
+    this.ctx.lineTo(this.px(22 - 2.5), dt - this.px(5));
+    this.ctx.closePath();
+    this.ctx.fill();
+    
+    this.ctx.beginPath();
+    this.ctx.moveTo(this.px(10), this.px(10));
+    this.ctx.lineTo(this.px(15), this.px(7.5));
+    this.ctx.lineTo(this.px(15), this.px(12.5));
+    this.ctx.closePath();
+    this.ctx.fill();
+    
+    this.ctx.beginPath();
+    this.ctx.moveTo(this.px(10) + dt, this.px(10));
+    this.ctx.lineTo(this.px(5) + dt, this.px(7.5));
+    this.ctx.lineTo(this.px(5) + dt, this.px(12.5));
+    this.ctx.closePath();
+    this.ctx.fill();
+    
+    this.ctx.font = this.px(10) + "px sans-serif";
+    this.ctx.fillText(MimicWidget.GRID_WIDTH + "mm", this.px(40), this.px(20));
     
     /* Center line. */
     this.ctx.beginPath();
-    this.ctx.strokeStyle = "#555555";
-    this.ctx.lineWidth = 1.5;
     this.ctx.moveTo(this.cx, 0);
     this.ctx.lineTo(this.cx, this.height);
     this.ctx.moveTo(0, this.height / 2);
+    this.ctx.strokeStyle = "#555555";
+    this.ctx.lineWidth = 1.5;
     this.ctx.stroke();
-
-    this.ctx.restore();
 };
 
 MimicWidget.STIPPLE_WIDTH = 10;
@@ -2816,6 +2967,54 @@ MimicWidget.prototype.mm = function(px) {
  */
 MimicWidget.prototype.px = function(mm) {
     return mm / this.mmPerPx;
+};
+
+MimicWidget.prototype.resized = function(width, height) {
+    if (this.animateInterval)
+    {
+        clearInterval(this.animateInterval);
+        this.animateInterval = undefined;
+    }
+
+    height -= 63;
+    this.$widget.find("canvas").attr({
+        width: width,
+        height: height
+    });
+    
+    this.ctx.fillStyle = "#FAFAFA";
+    this.ctx.fillRect(0, 0, width, height);
+};
+
+MimicWidget.prototype.resizeStopped = function(width, height) {
+    this.mmPerPx *= this.boxWidth / width;
+    
+    this.width = this.px(this.model.levelWidth + this.model.maxDisp * 2) + this.px(100);
+    this.cx = this.width / 2;
+
+    this.height = this.px(this.model.levelHeight * (this.is3DOF ? 4 : 3) + 
+            this.model.wallHeight * (this.is3DOF ? 3: 2) + this.model.trackHeight + this.model.carHeight);
+
+    this.boxWidth = width;
+
+    this.$widget.find("canvas").attr({
+        width: this.width,
+        height: this.height
+    });
+    this.$widget.css("height", "auto");
+
+    if (!this.animateInterval) 
+    {
+        var thiz = this;
+        this.animateInterval = setInterval(function() { thiz.animationFrame(); }, MimicWidget.ANIMATE_PERIOD);
+    }
+};
+
+MimicWidget.prototype.destroy = function() {
+    clearInterval(this.animateInterval);
+    this.animateInterval = undefined;
+    
+    Widget.prototype.destroy.call(this);
 };
 
 /* ============================================================================
