@@ -6,7 +6,7 @@
 
 
 #shake-table-anchor {
-    height: 900px;
+    height: 950px;
 }
 
 #graph-displacements-box {
@@ -21,19 +21,19 @@
 }
 
 #switch-motor-on {
-	left: 17px;
+	left: 5px;
 	top: 325px;
 }
 
 #switch-dampening {
-	left: 171px;
+	left: 160px;
 	top: 325px;
 }
 
 #mimic-box{
 	position: absolute;
-    left: 343px;
-    top: 35px;
+    left: 355px;
+    top: 5px;
 }
 
 /******************************************************************************

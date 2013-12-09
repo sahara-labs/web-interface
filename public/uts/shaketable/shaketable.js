@@ -45,7 +45,7 @@ function ShakeTableControl(id)
 	this.errorDisplay = undefined;
 	
 	/** The number of seconds this graph displays. */
-    this.duration = 10;
+    this.duration = 30;
 
     /** The period in milliseconds. */
     this.period = 100;
@@ -2484,7 +2484,7 @@ function MimicWidget($container, title)
     this.boxWidth = undefined;
 
 	/** Millimeters per pixel. */
-    this.mmPerPx = 1;
+    this.mmPerPx = 1.475;
 
 	/** The period in milliseconds. */
 	this.period = 100;
@@ -2504,6 +2504,9 @@ function MimicWidget($container, title)
     /** Frame count. */
     this.fr = 0;
     
+    /** Motor frequency. */
+    this.motor = 0;
+    
     /** Coil power percentages. */
     this.coils = [ undefined, undefined, undefined ];
     
@@ -2522,6 +2525,7 @@ function MimicWidget($container, title)
         carHeight: 10,        // Height of carriage
         carWidth: 120,        // Width of carriage
         maxDisp: 60,          // Maximum displacement of the diagram
+        baseDisp: 0.7         // Displacement of the base when the motor is on
     };
     
     /** Animation interval. */
@@ -2537,7 +2541,7 @@ MimicWidget.prototype.init = function() {
     
     /* The width of the canvas diagram is the width of the building model plus 
      * the maximum possible displacement. */
-    this.width = this.px(this.model.levelWidth + this.model.maxDisp * 2) + 100;
+    this.width = this.px(this.model.levelWidth + this.model.maxDisp * 2) + this.px(100);
     this.cx = this.width / 2;
     
     /* The height is the height of building model. */
@@ -2611,7 +2615,7 @@ MimicWidget.prototype.consume = function(data) {
     
     /* Amplitude for the base is fixed at 0.7 mm but only applies if the motor
      * is active. */
-    this.amp[0] = data['motor-on'] ? 0.7 : 0;
+    this.amp[0] = data['motor-on'] ? this.model.baseDisp : 0;
     
     /* Angular frequency is derived by the periodicity of peaks. */
     range =  this.medianFilter([ peaks[0][0] - peaks[0][1],
@@ -2640,6 +2644,9 @@ MimicWidget.prototype.consume = function(data) {
     {
         // TODO 2DOF coils
     }
+    
+    /* Motor details. */
+    this.motor = data['motor-on'] ? data['motor-speed'] : 0;
 };
 
 /**
@@ -2659,15 +2666,16 @@ MimicWidget.prototype.animationFrame = function() {
         disp[i] = this.amp[i] * Math.sin(this.w * MimicWidget.ANIMATE_PERIOD / 1000 * this.fr + this.o[i]);
     }
     
-    this.drawFrame(disp);
+    this.drawFrame(disp, disp[0] > 0 ? (this.w * MimicWidget.ANIMATE_PERIOD / 1000 * this.fr) : 0);
 };
 
 /**
  * Animates the mimic.
  * 
  * @param disp displacements of each level in mm
+ * @param motor motor rotation
  */
-MimicWidget.prototype.drawFrame = function(disp) {
+MimicWidget.prototype.drawFrame = function(disp, motor) {
 
     /* Store the current transformation matrix. */
     this.ctx.save();
@@ -2678,10 +2686,8 @@ MimicWidget.prototype.drawFrame = function(disp) {
 
     /* Restore the transform. */
     this.ctx.restore();
-    
-    this.drawGrid();
-    this.drawTrackCarriage(disp[0]);
-    this.drawMotor();
+
+    this.drawTrackCarriageMotor(disp[0], motor);
     
     var l, xVert = [], yVert = [];
 
@@ -2707,8 +2713,7 @@ MimicWidget.prototype.drawFrame = function(disp) {
                 xVert[l + 1] + this.px(this.model.levelWidth), yVert[l + 1] + this.px(this.model.levelHeight));
     }
     
-    
-    
+    this.drawGrid();
 };
 
 /** The widget of the coil box in mm. */
@@ -2792,33 +2797,15 @@ MimicWidget.prototype.drawLevel = function(x, y, l) {
 };
 
 /**
- * Draws the motor.
- */
-MimicWidget.prototype.drawMotor = function() {
-    
-    this.ctx.beginPath();
-    this.ctx.arc(this.px(40), this.height - this.px(44), this.px(16), 0, 2 * Math.PI);
-    
-    this.ctx.fillStyle = "#666666";
-    this.ctx.fill();
-    this.ctx.strokeStyle = "#333333";
-    this.ctx.stroke();
-    
-    /* Arm. */
-    this.ctx.fillStyle = "#AAAAAA";
-    this.ctx.fillRect(this.px(40), this.height - this.px(49), this.width / 2 - this.px(50), this.px(10));
-    this.ctx.lineWidth = 1;
-    this.ctx.strokeStyle = "#333333";
-    this.ctx.strokeRect(this.px(40), this.height - this.px(49), this.width / 2 - this.px(50), this.px(10));
-};
-
-/**
- * Draws the track and carriage.
+ * Draws the track, carriage and motor.
  *  
  * @param d0 displacement of base level
+ * @param motor motor rotation
  */
-MimicWidget.prototype.drawTrackCarriage = function(d0) {
-    var tx = this.cx - this.px(this.model.trackWidth / 2), ty = this.height - this.px(this.model.trackHeight);
+MimicWidget.prototype.drawTrackCarriageMotor = function(d0, motor) {
+    var tx = this.cx - this.px(this.model.trackWidth / 2), 
+        ty = this.height - this.px(this.model.trackHeight), 
+        mx, my, mr;
     
     /* Track. */
     this.ctx.fillStyle = "#AAAAAA";
@@ -2841,6 +2828,61 @@ MimicWidget.prototype.drawTrackCarriage = function(d0) {
     this.ctx.strokeStyle = "#222222";
     this.ctx.strokeRect(this.cx - this.px(this.model.levelWidth / 4 + 10) - this.px(d0), ty - this.px(10), this.px(20), this.px(20));
     this.ctx.strokeRect(this.cx + this.px(this.model.levelWidth / 4 - 10) - this.px(d0), ty - this.px(10), this.px(20), this.px(20));
+    
+    mx = this.px(40);
+    my = this.height - this.px(44);
+    mr = this.px(20);
+    
+    /* Arm. */    
+    this.ctx.beginPath();
+    this.ctx.moveTo(mx - this.px(8 + d0), my - this.px(15));
+    this.ctx.lineTo(mx + this.px(8 - d0), my - this.px(15));
+    this.ctx.lineTo(mx + this.px(8 - d0), my - this.px(5));
+    this.ctx.lineTo(this.cx, my - this.px(5));
+    this.ctx.lineTo(this.cx, my + this.px(5));
+    this.ctx.lineTo(mx + this.px(8 - d0), my + this.px(5));
+    this.ctx.lineTo(mx + this.px(8 - d0), my + this.px(15));
+    this.ctx.lineTo(mx - this.px(8 + d0), my + this.px(15));
+    this.ctx.closePath();
+    
+    this.ctx.fillStyle = "#AAAAAA";
+    this.ctx.fill();
+    this.ctx.clearRect(mx - this.px(2.5 + d0), my - this.px(9), this.px(5), this.px(18));
+    this.ctx.strokeStyle = "#333333";
+    this.ctx.stroke();
+    this.ctx.strokeRect(mx - this.px(2.5 + d0), my - this.px(9), this.px(5), this.px(18));
+    
+    /* Motor. */
+    this.ctx.save();
+    
+    
+    this.ctx.globalCompositeOperation = "destination-over";
+    
+    /* Couple between the motor and the arm. */
+    this.ctx.beginPath();
+    this.ctx.arc(mx, my - this.px(d0), this.px(4), 0, 2 * Math.PI);
+    this.ctx.fillStyle = "#222222";
+    this.ctx.fill();
+    
+    this.ctx.beginPath();
+    this.ctx.arc(mx, my, mr, -Math.PI / 18 + motor, Math.PI / 18 + motor, false);
+    this.ctx.arc(mx, my, mr, Math.PI - Math.PI / 18 + motor, Math.PI + Math.PI / 18 + motor, false);
+    this.ctx.closePath();
+    this.ctx.strokeStyle = "#333333";
+    this.ctx.stroke();
+    this.ctx.fillStyle = "#999999";
+    this.ctx.fill();
+    
+    this.ctx.beginPath();
+    this.ctx.arc(mx, my, mr, 0, 2 * Math.PI);
+    this.ctx.fillStyle = "#666666";
+    this.ctx.fill();
+    this.ctx.strokeStyle = "#333333";
+    this.ctx.stroke();
+
+    this.ctx.restore();
+    
+    
 };
 
 MimicWidget.GRID_WIDTH = 50;
@@ -2851,6 +2893,9 @@ MimicWidget.GRID_WIDTH = 50;
 MimicWidget.prototype.drawGrid = function() {
     var d, dt = this.px(MimicWidget.GRID_WIDTH);
        
+    this.ctx.save();
+    this.ctx.globalCompositeOperation = "destination-over";
+    
     /* Grid lines. */
     this.ctx.beginPath();
     for (d = this.cx - dt; d > 0; d -= dt) this.stippleLine(d, 0, d, this.height);
@@ -2910,6 +2955,8 @@ MimicWidget.prototype.drawGrid = function() {
     this.ctx.strokeStyle = "#555555";
     this.ctx.lineWidth = 1.5;
     this.ctx.stroke();
+    
+    this.ctx.restore();
 };
 
 MimicWidget.STIPPLE_WIDTH = 10;
