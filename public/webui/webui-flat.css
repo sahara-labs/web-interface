@@ -1,0 +1,124 @@
+/**
+ * Flat theme for Web User Interface Widget Library.
+ *
+ * @author Michael Diponio <michael.diponio@uts.edu.au>
+ * @date 20th November 2013
+ */
+
+.window-wrapper {
+	background: #fafafa;
+    border-radius: 10px;
+    border: 1px solid #aaa;
+    margin: 4px;
+    -moz-box-shadow: 0 1px 3px #B5B5B5;
+    -webkit-box-shadow: 0 1px 3px #B5B5B5;
+    box-shadow: 0 1px 3px #B5B5B5;
+}
+
+.window-content, .tab-content {
+	border: solid 1px #C0C0C0;
+    border-radius: 0 0 10px 10px;
+}
+
+.window-header .ui-icon, .tab-wrapper-controls .ui-icon {
+    border: 1px solid #ddd;
+    box-shadow: 0 0 2px #ddd;
+    cursor: pointer;
+}
+
+.window-header .ui-icon:hover, .tab-wrapper-controls .ui-icon:hover {
+    box-shadow: 0 0 2px #999;
+}
+
+.window-icon {
+	background-image: url('/webui/images/flat-icons.png');
+	opacity: 0.8;
+}
+
+.window-title {
+	color: #666666;
+}
+
+/******************************************************************************
+ ** Switch                                                                   **
+ ******************************************************************************/
+ 
+.switch-label, .led-adjacent .led-label {
+    display: block;
+    float: left;
+    margin: 3px 5px 0 0;
+    text-align: right;
+}
+ 
+.switch {
+    height: 20px;
+    width: 40px;
+    margin-top: 2px;
+    background: #f5f5f5;
+    border: solid 1px #ddd;
+    border-radius: 20px;
+    float: right;
+    cursor: pointer;
+}
+
+.switch-slide {
+    height: 14px;
+    width: 14px;
+    background: #ccc;
+    margin: 2px;
+    border-radius: 10px;
+}
+
+.switch-animated {
+    -webkit-transition:all 0.3s ease-in-out;
+    -moz-transition:all 0.3s ease-in-out;
+    -o-transition:all 0.3s ease-in-out;
+    transition:all 0.3s ease-in-out;
+}
+
+.switch-on {
+    background-color: #757575;
+    box-shadow: 0 0 2px #999999;
+    float:right; 
+    border: 1px solid #4d4c4c;   
+}
+
+/******************************************************************************
+ ** LED                                                                      **
+ ******************************************************************************/
+.led-below .led-label {
+	display: block;
+	text-align: center;
+}
+ 
+.led {
+	height: 20px;
+	width: 20px;
+	border-radius: 11px;
+}
+
+.led-below .led {
+	margin: 5px auto;
+}
+
+.led-adjacent .led {
+	float: right;
+}
+
+.led-novalue {
+	border: 1px solid #959595;
+	background-color: #DDDDDD;
+	box-shadow: 0 0 2px #B4B4B4;
+}
+
+.led-on {
+	border: 1px solid #79B864;
+    background-color: #A2DEA7;
+    box-shadow: 0 0 2px #B4B4B4;
+}
+
+.led-off {
+	border: 1px solid #A01D1D;
+    background-color: #D76666;
+    box-shadow: 0 0 2px #B4B4B4;
+}

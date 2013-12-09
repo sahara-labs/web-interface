@@ -1,213 +1,220 @@
 /**
- * Wave Tank /basic/ user interface. 
+ * Wave Tank user interface. 
+ * 
+ * @author Michael Diponio
+ * @date 18th November 2013
  */
 
-/* Timestamp of last data update. */
-var dataUpdate = undefined;
+/* Globals overrides. */
+Globals.COOKIE_PREFIX = "wavetank";
+Globals.CONTROLLER    = "WaveTankController";
+Globals.THEME         = Globals.THEMES.skeuo;
 
-var isPumpOn = false;
-function setPump()
-{
-	/* Disable control until first server update. */
-	if (!dataUpdate) return;
-	
-	isPumpOn = !isPumpOn;
-	$("#controls0 img").attr("src", "/uts/wavetank/images/" + (isPumpOn ? "on" : "off" ) + ".png");
-	command("setPump", {on : isPumpOn});
-}
+function WaveTank(id) 
+{ 
+    /** Display Manager. */
+    this.display = undefined;
 
-var isInverterOn = false;
-function setInverter()
-{
-	if (!dataUpdate) return;
-	
-	isInverterOn = !isInverterOn;
-	$("#controls1 img").attr("src", "/uts/wavetank/images/" + (isInverterOn ? "on" : "off") + ".png");
-	command("setInverter", {on: isInverterOn});
-}
+    /** Widgets. */
+    this.widgets = [ ];
 
-var paddleSpeed = 0;
-function setPaddle()
-{
-	if (!dataUpdate) return;
-	
-	var speed = parseFloat($("#paddle").val());
-	if (isNaN(speed))
-	{
-		alert("Must be a double value.");
-		return;
-	}
-	
-	paddleSpeed = speed;
-	command("setPaddle", {speed: speed});
-}
+    /** Container. */
+    this.$container = $('#' + id);
 
-var digitalOut = [false, false, false, false, false, false, false, false];
-function setDigitalOut(num)
-{
-	if (!dataUpdate) return;
-	
-	digitalOut[num] = !digitalOut[num];
-	$("#dout" + num + " img").attr("src", "/uts/wavetank/images/" + (digitalOut[num] ? "on_small" : "off_small") + ".png");
-	command("setDigitalOutput", {chan: num, val: digitalOut[num]});
-}
+    /** Occurs if there is a data error. */
+    this.dataError = false;
+    
+    /** Global error display. */
+    this.errorDisplay = undefined;
+    
+    /** The number of seconds this graph displays. */
+    this.duration = 60;
 
-var analogOut = [0, 0, 0, 0, 0, 0, 0, 0];
-function setAnalogOutputs()
-{
-	if (!dataUpdate) return;
-	var i = 0, val;
-	
-	for (i in analogOut)
-	{
-		val = parseFloat($("#analog-out-" + i).val());
-		if (isNaN(val))
-		{
-			alert("Must be a double value.");
-			return;
-		}
-		
-		if (val != analogOut[i])
-		{
-			analogOut[i] = val;
-			command("setAnalogOutput", {chan: i, val: val});
-		}
-	}
-}
+    /** The period in milliseconds. */
+    this.period = 100;
+};
 
-var digitalIn = [false, false, false, false, false, false, false, false];
-var analogIn = [0, 0, 0, 0, 0, 
-                0, 0, 0, 0, 0, 
-                0, 0, 0, 0, 0, 
-                0, 0];
+/** 
+ * Sets up this interface.
+ */
+WaveTank.prototype.setup = function() {
+    var o;
 
-function update(data, isUpdate)
-{
-	var k = '';
-	
-	for (k in data)
-	{
-		switch (data[k].name)
-		{
-		case 'pump':
-			var pump = "true" == data[k].value;
-			if (!dataUpdate || pump != isPumpOn)
-			{
-				isPumpOn = pump;
-				$("#controls0 img").attr("src", "/uts/wavetank/images/" + (isPumpOn ? "on" : "off" ) + ".png");
-			}
-			break;
-			
-		case 'inverter':
-			var inv = "true" == data[k].value;
-			if (!dataUpdate || inv != isInverterOn)
-			{
-				isInverterOn = inv;
-				$("#controls1 img").attr("src", "/uts/wavetank/images/" + (isInverterOn ? "on" : "off") + ".png");
-			}
-			break;
-			
-		case 'paddle':
-			var val = parseFloat(data[k].value);
-			if (!dataUpdate || val != paddleSpeed)
-			{
-				paddleSpeed = val;
-				$("#paddle").val(val);
-			}
-			break;
-			
-		case 'din':
-			var i = 0, din = data[k].value.replace(/[\s*|\[|\]]/g, "").split(","), val;
-			for (i in din)
-			{
-				if (i == 0) din[i] = din[i].substring(1);
-				if (i == din.length - 1) din[i] = din[i].substring(0, din[i].length - 1);
-				val = din[i].replace(/^\s+|\s+$/g, "").toLowerCase() == "true";
-				if (!dataUpdate || val != digitalIn[i])
-				{
-					digitalIn[i] = val;
-					$("#digital-status-" + i).removeClass(val ? 'led-off' : 'led-on')
-											.addClass(val ? 'led-on' : 'led-off');
-				}
-			}
-			break;
-			
-		case 'ain':
-			var i = 0, ain = data[k].value.split(","), val;
-			for (i in ain)
-			{
-				if (i == 0) ain[i] = ain[i].substr(1);
-				val = decimal(parseFloat(ain[i]));
-				if (!dataUpdate || val != analogIn[i])
-				{
-					analogIn[i] = val;
-					$("#analog-input-" + i).empty().append(val);
-				}
-			}
-			break;
-			
-		case 'dout':
-			var i = 0, dout = data[k].value.replace(/[\s*|\[|\]]/g, "").split(","), val;
-			for (i in dout)
-			{
-				val = dout[i] == "true";
-				
-				if (!dataUpdate || val != digitalOut[i])
-				{
-					digitalOut[i] = val;
-					$("#dout" + i + " img").attr("src", "/uts/wavetank/images/" + (digitalOut[i] ? "on_small" : "off_small") + ".png");
-				}
-			}
-			break;
-			
-		case 'aout':
-			var i = 0, aout = data[k].value.split(","), val;
-			for (i in aout)
-			{
-				if (i == 0) aout[i] = aout[i].substr(1);
-				val = decimal(parseFloat(aout[i]));
-				if (!dataUpdate || val != analogOut[i])
-				{
-					analogOut[i] = val;
-					$("#analog-out-" + i).val(val);
-				}
-			}
-			break;
-		}
-	}
-	
-	if (data.length > 0) dataUpdate = new Date().getTime();
-	
-	if (isUpdate)
-	{
-		/* Schedule next update. */
-		setTimeout(function() {
-			$.get(
-					"/primitive/json/pc/WaveTankController/pa/data",
-					null,
-					function (resp) {
-						if (typeof resp == "object") update(resp, true);
-					}
-			);
-		}, 3000);
-	}
-}
+    o = new RotarySwitch("rotary-Label", {
+        field: "pump-on",
+        action: "setPump",
+        label: "Rotary Switch",
+        icon: "pump",
+        draggable: true,
+        values: ['one','two','three','four','five','six','seven','eight','nine','ten'],
+        radius: 70
+    });
+    this.widgets.push(o);
 
-function command(action, params)
-{
-	$.post(
-		"/primitive/json/pc/WaveTankController/pa/" + action,
-		params,
-		function (resp) {
-			if (typeof resp == "object") update(resp);
-		}
-	);
-}
+    o = new RotarySwitch("rotary-Larger", {
+        field: "pump-on",
+        action: "setPump",
+        icon: "pump",
+        draggable: true,
+        values: ['ON','OFF'],
+        radius: 70,
+        colour: "white"
+    });
+    this.widgets.push(o);
 
-function decimal(val)
-{
-	val *= 100;
-	val = Math.round(val);
-	val = val / 100;
-	return val;
-}
+    o = new RotarySwitch("rotary-small", {
+        field: "pump-on",
+        action: "setPump",
+        icon: "pump",
+        draggable: true,
+        values: ['1','2','3','4','5','6'],
+        radius: 50,
+        colour: 'white'
+    });
+    this.widgets.push(o);
+
+    o = new Switch("switch-1", {
+        field: "pump-on",
+        action: "setPump",
+        label: "Silver",
+        icon: "pump",
+        draggable: true,
+        tooltip: "Turn on pump",
+        stickColor: "silver",
+        vertical: true
+    });
+    this.widgets.push(o);
+
+    o = new Switch("switch-2", {
+        field: "pump-on",
+        action: "setPump",
+        label: "Black",
+        icon: "pump",
+        draggable: true,
+        tooltip: "Turn on pump",
+        stickColor: "black",
+        vertical: true
+    });
+    this.widgets.push(o);
+    
+    o = new Switch("switch-3", {
+        field: "pump-on",
+        action: "setPump",
+        label: "Red",
+        icon: "pump",
+        draggable: true,
+        tooltip: "Turn on pump",
+        stickColor: "red",
+        vertical: true
+    });
+    this.widgets.push(o);
+
+    o = new Switch("switch-4", {
+        field: "pump-on",
+        action: "setPump",
+        label: "Pump",
+        icon: "pump",
+        draggable: true,
+        tooltip: "Turn on pump",
+        vertical: false
+    });
+    this.widgets.push(o);
+   
+    this.widgets.push(new LED("led-1", {
+        field: "pump-on",
+        label: "Pump",
+        draggable: true,
+        ledBelow: true
+    }));
+};
+
+/** 
+ * Runs the interface. 
+ */
+WaveTank.prototype.run = function() {
+    /* Render the page. */
+    var i = 0;
+    for (i in this.widgets)
+    {
+        this.widgets[i]._loadState();
+        this.widgets[i].init(this.$container);
+        
+    }
+    
+    /* Start acquiring data. */
+    this.acquireLoop();
+};
+
+WaveTank.prototype.acquireLoop = function() {
+    var thiz = this;
+
+    $.ajax({
+        url: "/primitive/mapjson/pc/" + Globals.CONTROLLER + "/pa/data",
+        data: {
+            period: this.period,
+            duration: this.duration,
+            from: 0,     // For now we are just asked for the latest data
+        },
+        success: function(data) {
+            thiz.processData(data);
+            setTimeout(function() { thiz.acquireLoop(); }, 10000);
+        },
+        error: function(data) {
+            thiz.errorData('Connection error.');
+            setTimeout(function() { thiz.acquireLoop(); }, 10000);
+        }
+    });
+};
+
+/**
+ * Processes a successfully received data packet.  
+ * 
+ * @param data data packet
+ */
+WaveTank.prototype.processData = function(data) {
+    var i = 0;
+    for (i in this.widgets) this.widgets[i].consume(data);
+//    /* A data packet may specify an error so we make need to make this into an 
+//     * error message. */
+//
+//    /* AJAX / Primitive / validation error. */
+//    if (!(data['success'] == undefined || data['success'])) return this.errorData(data['errorReason']);
+//
+//    /* Hardware communication error. */
+//    if (data['system-err'] != undefined && data['system-err']) return this.errorData('Hardware communication error.');
+//
+//    /* Seems like a good packet so it will be forwarded to the display to
+//     * render its contents and any error states will be cleared. */
+//    if (this.dataError)
+//    {
+//        this.dataError = false;
+//        this.display.unblur();
+//        this.errorDisplay.destroy();
+//    }
+//    
+//    this.display.consume(data);
+};
+
+/**
+ * Processes an errored communication. 
+ * 
+ * @param msg error message
+ */
+WaveTank.prototype.errorData = function(msg) {    
+//    if (!this.dataError)
+//    {
+//        /* Going into errored state, display error message. */
+//        this.dataError = true;
+//        this.display.blur();
+//        
+//        this.errorDisplay.error = msg;
+//        this.errorDisplay.init();
+//    }
+//    else if (this.errorData && this.errorDisplay.error != msg)
+//    {
+//        /* Error has changed, update the error display. */
+//        this.errorDisplay.error = msg;
+//        this.errorDisplay.destroy();
+//        this.errorDisplay.init();
+//    }
+};
