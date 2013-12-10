@@ -50,8 +50,10 @@ Globals = {
  * @config {integer} [minWidth] minimum width of widget if resizable
  * @config {integer} [minHeight] minimum height of widget if resizable
  * @config {boolean} [preserveAspectRatio] whether aspect ratio should be kept if resizable (default false)
- * @config {boolean} [expandable] whether this widget should be expandable
+ * @config {boolean} [expandable] whether this widget should be expandable (default false)
  * @config {boolean} [draggable] whether this widget should be draggable (default false)
+ * @config {boolean} [shadeable] whether this widget should be shadeable (default false)
+ * @config {boolean} [closeable] whether this widget should be closeable (default false) 
  * @config {string}  [tooltip] tooltip to show on hover (optional)
  */
 function Widget(id, config)
@@ -351,7 +353,7 @@ Widget.prototype.toggleWindowExpand = function() {
  * @return {jQuery} node of the generated box that has been appended to the page
  */
 Widget.prototype._generate = function($container, html) {
-    var $w = $container.append(
+    this.$widget = $container.append(
       "<div class='window-wrapper window-" + Globals.THEME + " " + 
                   (this.config.classes ? this.config.classes.join(' ') : "") + "' id='" + this.id + "' " +
                   "style='" +
@@ -361,20 +363,25 @@ Widget.prototype._generate = function($container, html) {
           "<div class='window-header'>" +
               (this.config.icon ? "<span class='window-icon icon_"+ this.config.icon + "'></span>" : "")+
               (this.config.title ? "<span class='window-title'>" + this.config.title + "</span>" : "") +
-              "<span class='window-close ui-icon ui-icon-close'></span>" +
-              "<span class='window-shade ui-icon ui-icon-minus'></span>" + 
-              "<span class='window-expand ui-icon ui-icon-arrow-4-diag'></span>" +             
+              (this.config.closeable ? "<span class='window-close ui-icon ui-icon-close'></span>" : "") +
+              (this.config.shadeable ? "<span class='window-shade ui-icon ui-icon-minus'></span>" : "") + 
+              (this.config.expandable ? "<span class='window-expand ui-icon ui-icon-arrow-4-diag'></span>" : '') +             
           "</div>" +
           "<div class='window-content'>" + 
               html +
           "</div>" +
       "</div>"
-    ).children().last(), thiz = this;
+    ).children().last();
     
-    $w.find(".window-expand").click(function() { thiz.toggleWindowExpand(); });
-    $w.find(".window-shade").click(function() { thiz.toggleWindowShade(); });
-    $w.find(".window-header").dblclick(function() { thiz.toggleWindowShade(); });
-    $w.find(".window-close").click(function() { thiz.destroy(); });
+    var thiz = this;
+    
+    if (this.config.expandable) this.$widget.find(".window-expand").click(function() { thiz.toggleWindowExpand(); });
+    if (this.config.shadeable)
+    {
+        this.$widget.find(".window-shade").click(function() { thiz.toggleWindowShade(); });
+        this.$widget.find(".window-header").dblclick(function() { thiz.toggleWindowShade(); });
+    }
+    if (this.config.closeable) this.$widget.find(".window-close").click(function() { thiz.destroy(); });
     
     $(document).bind("keypress.widget-" + this.id, function(e) {
        switch (e.keyCode) 
@@ -385,11 +392,11 @@ Widget.prototype._generate = function($container, html) {
        }
     });
     
-    if (this.config.draggable) this._makeDraggable($w);
-    if (this.config.resizable) this._makeResizable($w);
-    if (this.config.tooltip) this._addTooltip($w);
+    if (this.config.draggable) this._makeDraggable(this.$widget);
+    if (this.config.resizable) this._makeResizable(this.$widget);
+    if (this.config.tooltip) this._addTooltip(this.$widget);
     
-    return $w;
+    return this.$widget;
 };
 
 /** @global Tooltip timeout period. */
@@ -445,7 +452,11 @@ Widget.prototype._makeDraggable = function($w) {
                     top: this.window.top,
                     zIndex: this.window.zin
                 });
-        this.dragged(this.window.left, this.window.top);
+        try
+        {
+            this.dragged(this.window.left, this.window.top);
+        }
+        catch (e) { }
     }
     
     /* Enables dragging on the widgets 'window-wrapper' class */
@@ -517,9 +528,13 @@ Widget.prototype._makeResizable = function($w) {
             width: this.window.width,
             height: this.window.height
         });
-        
-        this.resized(this.window.width, this.window.height);
-        this.resizeStopped(this.window.width, this.window.height);
+
+        try
+        {
+            this.resized(this.window.width, this.window.height);
+            this.resizeStopped(this.window.width, this.window.height);
+        }
+        catch (e) { }
     }
 };
 
