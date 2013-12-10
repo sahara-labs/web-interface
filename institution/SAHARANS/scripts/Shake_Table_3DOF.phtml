@@ -1,5 +1,10 @@
 <?php
 
+/* Web user interface. */
+$this->headScript()->appendFile($this->baseUrl('webui/webui.js'));
+$this->headLink()->appendStylesheet($this->baseUrl('webui/webui.css'));
+$this->headLink()->appendStylesheet($this->baseUrl('webui/webui-flat.css'));
+
 /* Shake Table interface implementation. */
 $this->headScript()->appendFile($this->baseUrl('uts/shaketable/shaketable.js'));
 $this->headLink()->appendStylesheet($this->baseUrl('uts/shaketable/shaketable.css'));

@@ -96,7 +96,7 @@ ShakeTableControl.prototype.setup = function() {
 	this.display = new DisplayManager(this.$container, 'Display', this.widgets);
 	
 	/* Error display triggered if error occurs. */
-	this.errorDisplay = new GlobalError(this.$container);
+	this.errorDisplay = new GlobalError();
 };
 
 /** 
@@ -152,7 +152,7 @@ ShakeTableControl.prototype.processData = function(data) {
 	{
 		this.dataError = false;
 		this.display.unblur();
-		this.errorDisplay.destroy();
+		this.errorDisplay.clearError();
 	}
 	
 	this.display.consume(data);
@@ -169,17 +169,9 @@ ShakeTableControl.prototype.errorData = function(msg) {
 	    /* Going into errored state, display error message. */
 		this.dataError = true;
 		this.display.blur();
-		
-		this.errorDisplay.error = msg;
-		this.errorDisplay.init();
 	}
-	else if (this.errorData && this.errorDisplay.error != msg)
-	{
-	    /* Error has changed, update the error display. */
-	    this.errorDisplay.error = msg;
-	    this.errorDisplay.destroy();
-	    this.errorDisplay.init();
-	}
+
+	this.errorDisplay.displayError(msg);
 };
 
 /* ============================================================================
@@ -3451,59 +3443,6 @@ PlaceHolderWidget.prototype.getHTML = function() {
     
     html +=    '</div>';
     return html;
-};
-
-/* ============================================================================
- * == Global Error Widget                                                    ==
- * ============================================================================ */
-
-/**
- * Display an error overlay on the page.
- * 
- * @param $container page container
- */
-function GlobalError($container) 
-{
-	Widget.call(this, $container, 'Global Error', 'settings');
-	
-	/** Displayed error message. */
-	this.error = '';
-};
-
-GlobalError.prototype = new Widget;
-
-GlobalError.prototype.init = function() {	
-    this.$widget = this.$container.append(
-    	"<div id='global-error' class='global-error-overlay'>" +
-            "<div class='global-error-container'>" +
-		        "<span class='ui-icon ui-icon-alert global-error-icon'></span>" +
-		        "<span class='global-error-heading'>Alert!</span>" +
-		        "<span class='window-close ui-icon ui-icon-close global-error-close'></span>" +
-                "<p class='global-error-message'>This web page has encountered an error. This may be " +
-                "because you are no longer connected to the internet. To resolve this error, first " +
-                "check your internet connection, then refresh this page.<br/><br/>" +
-                "If further assistance is required, please use the 'Contact Support' button to the " +
-                "right of the page.</p>" +
-                "<p class='global-error-log'>" + this.error + "</p>" +
-            "</div>" +
-        "</div>"
-    ).children().last();
-
-    /* Add a error class to widget boxes. */
-    this.$container.find(".window-wrapper, .tab-wrapper").addClass("global-error-blur");
-    
-    var thiz = this;
-    this.$widget.find(".window-close").click(function() { thiz.destroy(); });
-    
-    $(document).bind("keydown.global-error", function(e) {
-        if (e.keyCode == 27) thiz.destroy();
-    });
-};
-
-GlobalError.prototype.destroy = function() {
-    $(document).unbind("keydown.global-error");
-    this.$container.find(".window-wrapper, .tab-wrapper").removeClass("global-error-blur");
-    Widget.prototype.destroy.call(this);
 };
 
 /* ============================================================================
