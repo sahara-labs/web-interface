@@ -7,16 +7,11 @@
  */
 
 /* ============================================================================ 
- * == Global variables namespace.                                           ==
+ * == Global variables.                                           ==
  * ============================================================================ */
-
-function Globals() { };
-
-/** {String} Name of the Rig Client controller this page users. */
-Globals.RC_CONTROLLER = "ShakeTableController";
-
-/** {String} Cookie prefix. */
-Globals.COOKIE_PREFIX = "shake-";
+Globals.COOKIE_PREFIX = "shaketable";
+Globals.CONTROLLER    = "ShakeTableController";
+Globals.THEME         = Globals.THEMES.flat;
 
 /* ============================================================================
  * == Shake Table page control.                                              ==
@@ -73,13 +68,17 @@ ShakeTableControl.prototype.setup = function() {
 	this.widgets.push(new CameraWidget(this.$container, 'Camera', ''));
 
 	/* Controls. */
-	o = new SwitchWidget(this.$container, "Motor Switch", "Motor On", "motor", "motor-on", "setMotor");
-	o.setDraggable(true);
-	this.widgets.push(o);
+	this.widgets.push(new Switch("switch-motor-on", {
+	   field: "motor-on", 
+	   action: "setMotor",
+	   label: "Motor",
+	}));
 	
-	o = new SwitchWidget(this.$container, "Dampening", "Dampening", "coils", "coils-on", "setCoils");
-	o.setDraggable(true);
-	this.widgets.push(o);
+	this.widgets.push(new Switch("switch-coils-on", {
+	    field: "coils-on",
+	    action: "setCoils",
+	    label: "Dampening"
+	}));
 	
 	o = new SliderWidget(this.$container, "Motor", "motor", "motor-speed", "setMotor");
 	o.setOrientation(true);
@@ -114,7 +113,7 @@ ShakeTableControl.prototype.acquireLoop = function() {
 	var thiz = this;
 
 	$.ajax({
-		url: "/primitive/mapjson/pc/" + Globals.RC_CONTROLLER + "/pa/dataAndGraph",
+		url: "/primitive/mapjson/pc/" + Globals.CONTROLLER + "/pa/dataAndGraph",
 		data: {
 		    period: this.period,
 			duration: this.duration,
@@ -188,7 +187,7 @@ ShakeTableControl.prototype.errorData = function(msg) {
  * @param title the widgets title
  * @param icon the widgets box icon 
  */
-function Widget($container, title, icon)
+function SWidget($container, title, icon)
 {
 	/** The jQuery object of the container the widget is attached to. */
 	this.$container = $container;
@@ -225,7 +224,7 @@ function Widget($container, title, icon)
 /** 
  * Adds the widget to the page and sets up any widgets event handlers.
  */
-Widget.prototype.init = function() {
+SWidget.prototype.init = function() {
     throw "Widget init not defined.";
 };
 
@@ -235,13 +234,13 @@ Widget.prototype.init = function() {
  * 
  * @param data data object
  */
-Widget.prototype.consume = function(data) { };
+SWidget.prototype.consume = function(data) { };
 
 /** 
  * Removes the widget from the page and cleans up all registered
  * events handlers. 
  */
-Widget.prototype.destroy = function() {     
+SWidget.prototype.destroy = function() {     
     if (this.$widget) this.$widget.remove();
     $(document).unbind("keypress.widget-" + this.id);
 };
@@ -253,12 +252,12 @@ Widget.prototype.destroy = function() {
  * a view that indicates something is amiss. An example of a possible error
  * is an error was received in server data polling.
  */
-Widget.prototype.blur = function() { };
+SWidget.prototype.blur = function() { };
 
 /**
  * Event callback to notify a previous blur can be cleared.
  */
-Widget.prototype.unblur = function() { };
+SWidget.prototype.unblur = function() { };
 
 /** 
  * Event callback that is invoked when the widget is resized. This is called 
@@ -267,7 +266,7 @@ Widget.prototype.unblur = function() { };
  * @param width the new widget width
  * @param height the new widget height
  */
-Widget.prototype.resized = function(width, height) { };
+SWidget.prototype.resized = function(width, height) { };
 
 /**
  * Event callback that is invoked when the widget has finished resizing. 
@@ -275,7 +274,7 @@ Widget.prototype.resized = function(width, height) { };
  * @param width the final widget width
  * @param height the final widget height
  */
-Widget.prototype.resizeStopped = function(width, height) { };
+SWidget.prototype.resizeStopped = function(width, height) { };
 
 /**
  * Event callback that is invoked when the widget has been dragged. 
@@ -283,7 +282,7 @@ Widget.prototype.resizeStopped = function(width, height) { };
  * @param xpos the new x coordinate from its enclosing container
  * @param ypos the new y coordinate from its enclosing container
  */
-Widget.prototype.dragged = function(xpos, ypos) { };
+SWidget.prototype.dragged = function(xpos, ypos) { };
 
 /* ----- WIDGET COMMON BEHAVIOURS AND DISPLAY GENERATION ---------------------- */
 
@@ -297,7 +296,7 @@ Widget.prototype.dragged = function(xpos, ypos) { };
  * @param top top absolute coordinate
  * @param pos the arrow position, 'left', 'right', 'right-bottom', 'top-left', 'top-center'
  */
-Widget.prototype.addMessage = function(msgId, message, type, left, top, pos) {
+SWidget.prototype.addMessage = function(msgId, message, type, left, top, pos) {
 	var $box, i, aniIn, bs = 1, up = true, html = 
 		"<div id='" + msgId + "' class='message-box message-box-" + type + " message-box-in1' style='left:" + left + "px; top:" + top + "px'>" +
 			"<div class='message-box-text'>" + message + "</div>" +
@@ -329,7 +328,7 @@ Widget.prototype.addMessage = function(msgId, message, type, left, top, pos) {
 /**
  * Removes messages from the page.
  */
-Widget.prototype.removeMessages = function() {
+SWidget.prototype.removeMessages = function() {
 	this.$widget.find(".message-box").remove();
 };
 
@@ -341,7 +340,7 @@ Widget.prototype.removeMessages = function() {
  * @param classes additional classes to add to the box
  * @return jQuery node of the generated box that has been appended to the page
  */
-Widget.prototype.generateBox = function(boxId, classes) {
+SWidget.prototype.generateBox = function(boxId, classes) {
     var $w = this.$container.append(
       "<div class='window-wrapper " + (classes ? classes : "") + "' id='" + boxId + "'>" +
           "<div class='window-header'>" +
@@ -381,7 +380,7 @@ Widget.prototype.generateBox = function(boxId, classes) {
  *
  * @param shadeCallback runs a callback function after the shade animation has completed
  */
-Widget.prototype.toggleWindowShade = function(shadeCallback) {
+SWidget.prototype.toggleWindowShade = function(shadeCallback) {
 	if (shadeCallback && typeof(shadeCallback) === "function") {
 	    this.$widget.find(".window-content").slideToggle('fast');
 	    this.$widget.find(".window-header").toggleClass("window-header-shade", "slide",function(){
@@ -420,16 +419,16 @@ Widget.prototype.toggleWindowShade = function(shadeCallback) {
 };
 
 /** The expanded width of an expanded, resizable widget. */
-Widget.EXPANDED_WIDTH = 800;
+SWidget.EXPANDED_WIDTH = 800;
 
 /** The maximum expanded height of an expanded, resizable widget. */
-Widget.MAX_EXPANDED_HEIGHT = 500;
+SWidget.MAX_EXPANDED_HEIGHT = 500;
 
 /**
  * Toggles the window expand state which makes the widget take a prominent 
  * position on the interface. 
  */
-Widget.prototype.toggleWindowExpand = function() {
+SWidget.prototype.toggleWindowExpand = function() {
     var thiz = this;
     /* Prevents expanding of a shaded widget */
     if (this.window.shaded === true) {
@@ -472,15 +471,15 @@ Widget.prototype.toggleWindowExpand = function() {
             if (this.$widget.hasClass("ui-resizable"))
             {
                 /* We can resize the widget so we will make it larger. */
-                height = Widget.EXPANDED_WIDTH / width * height;
-                width = Widget.EXPANDED_WIDTH;
+                height = SWidget.EXPANDED_WIDTH / width * height;
+                width = SWidget.EXPANDED_WIDTH;
 
                 /* If the height is larger than the width, we want to scale the 
                 * widget so it first better. */
-                if (height > Widget.MAX_EXPANDED_HEIGHT)
+                if (height > SWidget.MAX_EXPANDED_HEIGHT)
                 {
-                    height = Widget.MAX_EXPANDED_HEIGHT;
-                    width = Widget.MAX_EXPANDED_HEIGHT / this.window.height * this.window.width;
+                    height = SWidget.MAX_EXPANDED_HEIGHT;
+                    width = SWidget.MAX_EXPANDED_HEIGHT / this.window.height * this.window.width;
                 }
 
                 this.$widget.width(width);
@@ -512,15 +511,15 @@ Widget.prototype.toggleWindowExpand = function() {
 /**
  * Generates the HTML content for the widget box.
  */
-Widget.prototype.getHTML = function() {	};
+SWidget.prototype.getHTML = function() {	};
 
 /** Whether the z-index fix has been applied. */
-Widget.hasZIndexFix = false;
+SWidget.hasZIndexFix = false;
 
 /**
  * Enables this widget to be draggable.
  */
-Widget.prototype.enableDraggable = function() {
+SWidget.prototype.enableDraggable = function() {
 		
     /* Adds the CSS for the draggable widgets */
     this.$widget.addClass('draggable');
@@ -559,7 +558,7 @@ Widget.prototype.enableDraggable = function() {
         }
     });
 
-	if (!Widget.hasZIndexFix)
+	if (!SWidget.hasZIndexFix)
 	{
 		/* Enables increase Z-index on mouse down. */ 	
 	    $.ui.plugin.add('draggable', 'increaseZindexOnmousedown', {
@@ -573,7 +572,7 @@ Widget.prototype.enableDraggable = function() {
 	        }
 	    });
 	    
-	    Widget.hasZIndexFix = true;
+	    SWidget.hasZIndexFix = true;
 	}
 };
 
@@ -584,7 +583,7 @@ Widget.prototype.enableDraggable = function() {
  * @param minHeight the minimum height the widget can be resized to (optional)
  * @param preserveAspectRatio whether to preserve the widgets aspect ratio, default to not preserve 
  */
-Widget.prototype.enableResizable = function(minWidth, minHeight, preserveAspectRatio) {
+SWidget.prototype.enableResizable = function(minWidth, minHeight, preserveAspectRatio) {
     var thiz = this;
 	this.$widget.resizable({
          minWidth: minWidth,
@@ -623,7 +622,7 @@ Widget.prototype.enableResizable = function(minWidth, minHeight, preserveAspectR
  * @param responseCallback function to be invoked with the response of POST
  * @param errorCallback function to be invoked if an error occurs
  */
-Widget.prototype.postControl = function(action, params, responseCallback, errorCallback) {
+SWidget.prototype.postControl = function(action, params, responseCallback, errorCallback) {
     $.ajax({
         url: "/primitive/mapjson/pc/" + Globals.RC_CONTROLLER + "/pa/" + action,
         data: params,
@@ -639,7 +638,7 @@ Widget.prototype.postControl = function(action, params, responseCallback, errorC
 /**
  * Stores the state of this widget in a cookie.
  */
-Widget.prototype.storeState = function() {
+SWidget.prototype.storeState = function() {
     var json;
     
     if (JSON.stringify)
@@ -663,7 +662,7 @@ Widget.prototype.storeState = function() {
 /**
  * Loads the stored state from a store cookie.
  */
-Widget.prototype.loadState = function() {
+SWidget.prototype.loadState = function() {
     var state = getCookie(this.id + '-win');
     
     if (state && state.match(/^{.*}$/))
@@ -685,7 +684,7 @@ Widget.prototype.loadState = function() {
  */
 function DisplayManager($container, title, widgets) 
 {	
-    Widget.call(this, $container, title, 'toggle');
+    SWidget.call(this, $container, title, 'toggle');
 
     /** Identifier of the display manager box. */
     this.id = 'display-manager';
@@ -699,7 +698,7 @@ function DisplayManager($container, title, widgets)
     /** Whether the displayed in is blurred state. */
     this.isBlurred = false;
 }
-DisplayManager.prototype = new Widget;
+DisplayManager.prototype = new SWidget;
 
 DisplayManager.prototype.init = function() {
     var thiz = this, i = 0;
@@ -708,11 +707,12 @@ DisplayManager.prototype.init = function() {
     for (i in this.widgets) 
     {    	
         this.widgets[i].parentManager = this; 
-        this.widgets[i].loadState();
+        if (this.widgets[i]._loadState) this.widgets[i]._loadState();
+        else this.widgets[i].loadState();
     
         if (this.widgets[i].window.shown = this.states[i] = !(this.widgets[i].window.shown === false))
         {
-            this.widgets[i].init();
+            this.widgets[i].init(this.$container);
             
             /* Restore other states. */
             if (this.widgets[i].window.expanded)
@@ -804,7 +804,7 @@ DisplayManager.prototype.getHTML = function() {
  * @param title the title of the widget to toggle
  * @param node switch node to toggle classes (optional)
  */
-Widget.prototype.toggleWidget = function(title, node) {
+SWidget.prototype.toggleWidget = function(title, node) {
 	var i = 0;
 
 	for (i in this.widgets)
@@ -849,238 +849,6 @@ DisplayManager.prototype.unblur = function() {
 };
 
 /* ============================================================================
- * == Tabbed Container Widget                                                ==
- * ============================================================================ */
-
-/**
- * The 'tabbed' widget provides a container that holds other widgets within 
- * its tabs. Only one widget is visible at a time 
- */
-function TabbedWidget($container, title, widgets, modeVar, modeAction) 
-{
-   DisplayManager.call(this, $container, title, widgets);
-   
-   /** Identifer of this widget. */
-   this.id = title.toLowerCase().replace(' ', '-') + '-tabs';
-   
-   /** Tab idenfitiers. */
-   this.tabIds = [ ];
-   
-   /** Tab contents container. */
-   this.$tabContainer = undefined;
-   
-   /** Tools tips of the tab. */
-   this.toolTips = undefined;
-   
-   /** Width of the tab box. If this is undefined, the box takes the width
-    *  of its currently displayed contents. */
-   this.width = undefined;
-   
-   /** Height of the box. If this is undefinde, the box takes the height of
-    *  its currently displayed contents. */
-   this.height = undefined;
-   
-   /** Server mode variable the controls which tab is currently active. */ 
-   this.modeVar = modeVar;
-   
-   /** Action to post the mode change to. */
-   this.modeAction = modeAction;
-   
-   /** Current mode. */
-   this.currentMode = undefined;
-   
-   /** If a tab has been clicked to change current tab. */
-   this.tabChanged = false;
-   
-   /** Tool tips hover states. */
-   this.toolTipsHovers = { };
-
-   /* Initialise the tab indentifiers. */
-   var i = 0;
-   for (i in this.widgets) this.tabIds[i] = "tab-" + this.widgets[i].title.toLowerCase().replace(' ', '-');
-}
-TabbedWidget.prototype = new DisplayManager;
-
-TabbedWidget.prototype.init = function() {
-    /* Reset. */
-    this.currentMode = undefined;
-    
-    /* Render the content box. */
-	this.$widget = this.generateBox(this.id);
-	this.$tabContainer = this.$widget.find(".tab-content");
-	
-	var i = 0;
-	for (i in this.widgets)
-	{
-	    /* Replace default boxing with tab containment. */
-	    this.widgets[i].$container = this.$tabContainer;
-	    this.widgets[i].generateBox = function(boxId, icon) {
-	       return this.$container.append(
-	           "<div id='" + boxId + "' class='tab-containment'>" +
-	               this.getHTML() +
-	           "</div>"
-	       ).children().last();
-	    };
-	    this.widgets[i].enableDraggable = function() { /* No-op. */ };   
-	    this.states[i] = false;
-	}
-	
-	var thiz = this;
-	this.$widget.find(".tab-title")
-	    .click(function() { thiz.tabClicked($(this).attr("id")); })
-	    .mouseenter(function() {
-	        var id = $(this).attr("id");
-	        thiz.toolTipsHovers[id] = true;
-	        setTimeout(function() {
-	            if (thiz.toolTipsHovers[id]) thiz.showToolTip(id);
-	        }, 2000);
-	    })
-	    .mouseleave(function() {
-	        thiz.toolTipsHovers[$(this).attr("id")] = false;
-	    });
-	
-	this.$widget.find(".window-close").click(function() {
-	    if   (thiz.parentManager) thiz.parentManager.toggleWidget(thiz.title);
-        else  thiz.destroy();
-	});
-
-	/* Enable dragging. */
-	this.enableDraggable();
-};
-
-TabbedWidget.prototype.generateBox = function(boxId) {
-    var i = 0, html = 
-      "<div class='tab-wrapper' id='" + boxId + "'>" +
-          "<div class='tab-wrapper-controls draggable-header'>" +
-              "<span class='window-close ui-icon ui-icon-close'></span>" +    
-              "<div class='tab-wrapper-height'></div>" +
-          "</div>" +
-         "<div class='tab-header' style='width:" + (this.widgets.length * 122) + "px'>";
-
-    for (i in this.widgets)
-    {
-        html += 
-              "<div id='" + this.tabIds[i] + "' class='tab-title'>" +
-                  "<span class='window-icon icon_"+ this.widgets[i].icon + "'></span>" +
-                  "<span class='window-title'>" + this.widgets[i].title + "</span>" +
-              "</div>";
-    }
-
-    html += 
-         "</div>" + 
-         "<div class='tab-content' style='width:" + (this.width ? this.width + "px" : "inherit") + 
-         		";height:" + (this.height ? this.height + "px" : "inherit") + "'></div>" +
-      "</div>";
-
-    return this.$container.append(html).children().last();
-};
-
-TabbedWidget.prototype.consume = function(data) {
-    if (!this.tabChanged && data[this.modeVar] != undefined && data[this.modeVar] != this.currentMode)
-    {
-        /* Server state is different from the displayed state. */
-        this.currentMode = data[this.modeVar];
-        this.switchTab();
-    }
-    
-    DisplayManager.prototype.consume.call(this, data);
-};
-
-/**
- * Handle a tab being clicked.
- * 
- * @param id identifer of clicked tab
- */
-
-TabbedWidget.prototype.tabClicked = function(id) {
-    if (!$('#' + id).hasClass('tab-active')){
-        this.tabChanged = true;
-
-        this.destroyCurrentTab();
-    
-        var thiz = this, params = { }, i;
-    
-        /* Seach for the new tab index. */
-        for (i = 0; i < this.tabIds.length; i++) if (this.tabIds[i] == id) break; 
-    
-        /* Post the change to the server. */
-        params[this.modeVar] = i;
-        this.postControl(this.modeAction, params, function(data) {
-            thiz.tabChanged = false;
-            thiz.consume(data);
-        });
-    }
-};
-
-/**
- * Switches tab.
- */
-TabbedWidget.prototype.switchTab = function() {
-    this.destroyCurrentTab();
-    this.states[this.currentMode] = true;
-    this.widgets[this.currentMode].init();
-    
-    this.$widget.find(".tab-active").removeClass("tab-active");
-    $("#" + this.tabIds[this.currentMode]).addClass("tab-active");
-};
-
-/**
- * Removes the current tab.
- */
-TabbedWidget.prototype.destroyCurrentTab = function() {
-    var i = 0;
-    
-    /* Remove the displayed widget. */
-    for (i in this.states) 
-    {
-        if (this.states[i]) 
-        {
-            this.widgets[i].destroy();
-            this.states[i] = false;
-            break;
-        }
-    }    
-};
-
-/**
- * Shows a tooltip of a tab.
- * 
- * @param {string} id ID of a tab to show
- */
-TabbedWidget.prototype.showToolTip = function(id) {
-    if ($("#" + id + "-tooltip").size() == 0)
-    {
-        this.removeMessages();
-        
-        var message = "", i = 0;
-        for (i in this.tabIds) if (this.tabIds[i] == id) message = this.toolTips[i];
-        this.addMessage(id + "-tooltip", message, "info", $("#" + id).position().left - 10, -3, "top-left");
-    }
-};
-
-/**
- * Sets the tool tips of the tabs of this container. These tooltips are 
- * displayed when hovering over a tab.
- * 
- * @param toolTips list of tool tips
- */
-TabbedWidget.prototype.setToolTips = function(toolTips) {
-    this.toolTips = toolTips;
-};
-
-/**
- * Sets the dimension of the box. If the width and height are undefined,
- * the box size is determined by its displayed contents.
- * 
- * @param width width of the box in pixels
- * @param height height of the box in pixels
- */
-TabbedWidget.prototype.setDimensions = function(width, height) {
-    this.width = width;
-    this.height = height;
-};
-
-/* ============================================================================
  * == Data Logging                                                           ==
  * ============================================================================ */
 
@@ -1092,7 +860,7 @@ TabbedWidget.prototype.setDimensions = function(width, height) {
  */
 function DataLogging($container)
 {
-    Widget.call(this, $container, 'Data', 'datafiles');
+    SWidget.call(this, $container, 'Data', 'datafiles');
     
     /** @type {string} Widget box ID. */
     this.id = 'data-logging';
@@ -1118,7 +886,7 @@ function DataLogging($container)
     /** @type {int} The timeout handle for session file polling. */
     this.filePollHandle = null;
 }
-DataLogging.prototype = new Widget;
+DataLogging.prototype = new SWidget;
 
 DataLogging.prototype.init = function() {
     /* Clear to force UI redraw. */
@@ -1351,7 +1119,7 @@ DataLogging.prototype.checkDownloadable = function(sessionFiles) {
 };
 
 DataLogging.prototype.destroy = function() {
-    Widget.prototype.destroy.call(this);
+    SWidget.prototype.destroy.call(this);
     
     if (this.filePollHandle)
     {
@@ -1375,7 +1143,7 @@ DataLogging.prototype.destroy = function() {
  */
 function GraphWidget($container, title, chained) 
 {
-	Widget.call(this, $container, title, 'graph');
+	SWidget.call(this, $container, title, 'graph');
 
 	/** ID of canvas. */
 	this.id = "graph-" + title.toLowerCase().replace(' ', '-');
@@ -1450,7 +1218,7 @@ function GraphWidget($container, title, chained)
 	/** Whether the controls are displayed. */
 	this.isControlsDisplayed = false;
 }
-GraphWidget.prototype = new Widget;
+GraphWidget.prototype = new SWidget;
 
 GraphWidget.prototype.init = function() {
     /* Size reset. */
@@ -1963,7 +1731,7 @@ GraphWidget.prototype.setAxisLabels = function(x, y) {
  */
 function SliderWidget($container, title, icon, dataVar, postAction) 
 {
-    Widget.call(this, $container, title, icon);
+    SWidget.call(this, $container, title, icon);
     
     /** The identifer of this slider. */
     this.id = "slider-" + title.toLowerCase().replace(' ', '-');
@@ -2020,7 +1788,7 @@ function SliderWidget($container, title, icon, dataVar, postAction)
     /** Last coordinate in sliding orientation. */
     this.lastCoordinate = undefined;
 }
-SliderWidget.prototype = new Widget;
+SliderWidget.prototype = new SWidget;
 
 /** The number of displayed scales. */
 SliderWidget.NUM_SCALES = 10;
@@ -2328,134 +2096,18 @@ SliderWidget.prototype.setResizable = function(resizable) {
 };
 
 /* ============================================================================
- * == Switch Widget.                                                         ==
- * ============================================================================ */
-
-/**
- * Switch widget which provides a toggable switch.
- * 
- * @param {jQuery} $container the container to add this widget to
- * @param {String} label the label of the switch
- * @param {String} icon box icon
- * @param {String} dataVar data variable that this switch is toggling
- * @param {String} postAction the action to post to 
- */
-function SwitchWidget($container, title, label, icon, dataVar, postAction)
-{
-    Widget.call(this, $container, title, icon);
-    
-    /** {String} The identifier of this slider. */
-    this.id = "switch-" + label.toLowerCase().replace(' ', '-');
-    
-    /** {String} The label of the switch. */
-    this.label = label;
-    
-    /** {String} The data variable this slider is manipulating. */
-    this.dataVar = dataVar;
-    
-    /** {String} Action to send request to. */
-    this.postAction = postAction;
-    
-    /** {boolean} The state of the switch. */
-    this.val = undefined;
-    
-    /** {boolean} Whether the value has been changed by user action. */
-    this.isChanged = false;
-    
-    /** {boolean} Whether this widget is to be draggable. */
-    this.isDraggable = false;
-}
-SwitchWidget.prototype = new Widget;
-
-SwitchWidget.prototype.init = function() {
-    this.$widget = this.generateBox(this.id, "switch-box");
-    
-    var thiz = this;
-    this.$widget.find(".switch-label, .switch").click(function() { thiz.clicked(); });
-    this.$widget.find(".window-title").html('');
-    
-    if (this.isDraggable) this.enableDraggable();
-};
-
-SwitchWidget.prototype.getHTML = function() {
-    return '<div class="switch-container">' +
-               '<label class="switch-label">' + this.label + ':</label>' +
-               '<div class="switch">' +
-                   '<div class="animated slide"></div>' +
-               '</div>' +
-            '</div>';
-};
-
-SwitchWidget.prototype.consume = function(data) {
-    if (!(data[this.dataVar] === undefined || data[this.dataVar] === this.val || this.isChanged))
-    {
-        this.val = data[this.dataVar];
-        this.setDisplay(this.val);
-    }
-};
-
-/**
- * Event handler to be called when the switch is clicked.
- */
-SwitchWidget.prototype.clicked = function() {
-    this.isChanged = true;
-    this.val = !this.val;
-    this.setDisplay(this.val);
-    
-    var thiz = this, params = { };
-    params[this.dataVar] = this.val ? 'true' : 'false';
-    this.postControl(
-        this.postAction,
-        params,
-        function() {
-            thiz.isChanged = false;
-        }
-     );
-
-     if (this.postAction === "setMotor" && this.val == false)
-     {
-         this.postControl('setCoils','coils-on=true');
-     }
-};
-
-/**
- * Sets the display value. 
- * 
- * @param on whether the display should be on or off
- */
-SwitchWidget.prototype.setDisplay = function(on) {
-    if (on)
-    {
-        this.$widget.find(".switch .slide").addClass("on");
-    }
-    else
-    {
-        this.$widget.find(".switch .slide").removeClass("on");
-    }
-};
-
-/**
- * Whether this widget is draggable.
- * 
- * @param draggable true if is draggable
- */
-SwitchWidget.prototype.setDraggable = function(draggable) {
-    this.isDraggable = draggable;
-};
-
-/* ============================================================================
  * == Mimic Widget.                                                          ==
  * ============================================================================ */
 
 /**
- * Mimic Widget. This widget creates and controls the Shake Table Mimic.
+ * Mimic SWidget. This widget creates and controls the Shake Table Mimic.
  *
  * @param $container the container to append the mimic to
  * @param title the mimic title
  */
 function MimicWidget($container, title)
 {
-    Widget.call(this, $container, title, 'mimic');
+    SWidget.call(this, $container, title, 'mimic');
 
     /** {String} The identifier of the Mimic. */
     this.id = 'mimic';
@@ -2523,7 +2175,7 @@ function MimicWidget($container, title)
     /** Animation interval. */
     this.animateInterval = undefined;
 }
-MimicWidget.prototype = new Widget;
+MimicWidget.prototype = new SWidget;
 
 
 MimicWidget.ANIMATE_PERIOD = 50;
@@ -3053,7 +2705,7 @@ MimicWidget.prototype.destroy = function() {
     clearInterval(this.animateInterval);
     this.animateInterval = undefined;
     
-    Widget.prototype.destroy.call(this);
+    SWidget.prototype.destroy.call(this);
 };
 
 /* ============================================================================
@@ -3070,7 +2722,7 @@ MimicWidget.prototype.destroy = function() {
  */
 function CameraWidget($container, title, suf) 
 {
-    Widget.call(this, $container, title, 'video');
+    SWidget.call(this, $container, title, 'video');
     
 	/** Identifier of the camera box. */
 	this.id = title.toLowerCase().replace(' ', '-');
@@ -3099,7 +2751,7 @@ function CameraWidget($container, title, suf)
 	/** SWF timer. */
 	this.swfTimer = undefined;
 };
-CameraWidget.prototype = new Widget;
+CameraWidget.prototype = new SWidget;
 
 /** Cookie which stores the users chosen camera format. */
 CameraWidget.SELECTED_FORMAT_COOKIE = "camera-format";
@@ -3343,7 +2995,7 @@ CameraWidget.prototype.resizeStopped = function(width, height) {
 
 CameraWidget.prototype.destroy = function() {
     this.undeploy();
-    Widget.prototype.destroy.call(this);
+    SWidget.prototype.destroy.call(this);
 };
 
 /**
@@ -3388,61 +3040,6 @@ CameraWidget.prototype.toggleWindowShade = function(shadeCallback) {
         /* Enable resizing */
         this.$widget.find('.ui-resizable-handle').css('display', 'block');
     }
-};
-
-/* ============================================================================
- * == Information Widget                                                     ==
- * ============================================================================ */
-
-/**
- * Information displaying widget. The information can be of type 'info' which
- * shows an informational guiadance message, 'error' which shows an error message,
- * '
- * 
- * @param 
- */
-function PlaceHolderWidget($container, title, icon, message, type)
-{
-    Widget.call(this, $container, title, icon);
-    
-    /** Identifer of this widget. */
-    this.id = "place-holder-" + title.toLowerCase().replace(' ', '-');
-    
-    /** Message that is displayed by this widget. */
-    this.message = message;
-    
-    /** The information type of this widget; either 'info', 'error', or 
-     * 'loading'. */
-    this.type = type;
-}
-
-PlaceHolderWidget.prototype = new Widget;
-
-PlaceHolderWidget.prototype.init = function() {
-    this.$widget = this.generateBox(this.id);
-};
-
-PlaceHolderWidget.prototype.getHTML = function() {
-    var html = '<div class="place-holder place-holder-' + this.type + '">';
-    
-    switch (this.type)
-    {
-    case 'info':
-        html += '<p>Guidance: <span class="place-holder-message">' + this.message + '</span></p>';
-        break;
-        
-    case 'error':
-        html += '<p>Error: <span class="place-holder-message">' + this.message + '</span></p>';
-        break;
-        
-    case 'loading':
-        html += '<img src="/uts/coupledtanksnew/images/loading.gif" alt=" " />' +
-                '<p>Please wait: <span class="place-holder-message">' + this.message + '</span></p>';
-        break;
-    }
-    
-    html +=    '</div>';
-    return html;
 };
 
 /* ============================================================================

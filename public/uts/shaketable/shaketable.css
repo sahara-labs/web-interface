@@ -25,7 +25,7 @@
 	top: 325px;
 }
 
-#switch-dampening {
+#switch-coils-on {
 	left: 160px;
 	top: 325px;
 }
@@ -53,113 +53,6 @@
 
 .ui-icon-gripsmall-diagonal-se {
     background-position: -34px -179px !important;
-}
-/* ----------------------------------------------------------------------------
- * --- Common Styling                                                       ---
- * ---------------------------------------------------------------------------- */                        
-
-/******************************************************************************
- ** Windows                                                                  **
- ******************************************************************************/
-.window-wrapper {
-	position: absolute;
-    float: left;
-    background: #fafafa;
-    border-radius: 10px;
-    border: 1px solid #aaa;
-    margin: 4px;
-    -moz-box-shadow: 0 1px 3px #B5B5B5;
-    -webkit-box-shadow: 0 1px 3px #B5B5B5;
-    box-shadow: 0 1px 3px #B5B5B5;
-}
-
-.window-expanded {
-	box-shadow: 0 0 20px #666666;
-}
-
-.dragged {
-    border: 2px dashed #8CE2FF;
-}
-
-.draggable-header {
-	cursor: move;
-}
-
-.window-header {
-    height: 19px;
-    font-size: 24px;
-    padding: 5px 10px;
-    color: #525252;
-    font-size: 15px;
-}
-
-.window-icon {
-    height: 24px;
-    width: 26px;
-    display: inline-block;
-    background-repeat: no-repeat;
-	background-image: url('/uts/coupledtanksnew/images/icons.png');
-    opacity: 0.8;
-}
-
-.window-title {
-    position: relative;
-    top: -7px;
-    left: 10px;
-    padding-right: 10px;
-    color: #666;
-}
-
-.window-header .ui-icon {
-	float: right;
-	margin: 2px 3px;
-}
-
-.window-header .ui-icon, .tab-wrapper-controls .ui-icon {
-	border: 1px solid #ddd;
-	box-shadow: 0 0 2px #ddd;
-	cursor: pointer;
-}
-
-.window-header .ui-icon:hover, .tab-wrapper-controls .ui-icon:hover {
-    box-shadow: 0 0 2px #999;
-}
-
-.window-content, .tab-content {
-	position: relative;
-    padding: 10px 10px 6px 10px;
-    margin: 5px;
-    background: #FFF;
-    border: solid 1px #C0C0C0;
-    border-radius: 0 0 10px 10px;
-}
-
-.window-content {
-	overflow: hidden;
-}
-
-.resizable {
-    min-width: 145px;
-    min-height: 50px;
-}
-
-.data-blur {
-	background-color: #F0F0F0;
-	opacity: 0.6;
-	position: absolute;
-	left: 0;
-	top: 0;
-	width: 100%;
-	height: 100%;
-	z-index: 100;
-}
-
-.window-header-shade {
-    height: 25px !important;
-}
-
-.ui-resizable-se {
-	z-index: 0 !important;
 }
 
 /******************************************************************************
