@@ -622,7 +622,7 @@ function Graph()
  * @param {string} id the identifier of widget
  * @param {object} config configuration of widget
  * @config {string} [field] server data variable that is being switched
- * @config {string} [action] server action to call when the switched is changed1
+ * @config {string} [action] server action to call when the switched is changed
  * @config {string} [label] switch label (optional)
  * @config {string} [stickColor] sets the color of the switches stick (silver, black, red)
  * @config {boolean} [vertical] set button vertical or horizontal (default horizontal)
@@ -882,10 +882,295 @@ function Spinner()
  * == Slider widget                                                          ==
  * ============================================================================ */
 
-function Slider()
+/**
+ * Slider widget that displays a slider that allows that provides a slidable
+ * scale over the specified range.
+ * 
+ * @param {string} id widget identifier
+ * @param {object} config configuration of widget
+ * @config {string}  [field] server data variable that is being set
+ * @config {string}  [action] server action to call when the slider is changed
+ * @config {boolean} [textEntry] whether text entry is displayed (default true) 
+ * @config {string}  [label] slider label (optional)
+ * @config {string}  [units] units label to display (optional)
+ * @config {integer} [precision] precision of displayed value (default 1)
+ * @config {integer} [min] minimum value of slider (default 0)
+ * @config {integer} [max] maximum value of slider (default 100)
+ * @config {boolean} [vertical] whether slider is vertically or horizontally orientated (default vertical)
+ * @config {integer} [length] length of slider in pixels (default 250)
+ * @config {integer} [scales] number of scales to display (default fitted to min, max value)
+ */
+function Slider(id, config)
 {
-    // TODO Slider widget
+    if (!(config.field || config.action)) throw "Options not supplied.";
+    
+    Widget.call(this, id, config);
+    
+    /* Default options. */
+    if (this.config.min === undefined) this.config.min = 0;
+    if (this.config.max === undefined) this.config.max = 100;
+    if (this.config.vertical === undefined) this.config.vertical = true;
+    if (this.config.textEntry === undefined) this.config.textEntry = true;
+    if (this.config.length === undefined) this.config.length = 250;
+    if (this.config.label === undefined) this.config.label = '';
+    if (this.config.units === undefined) this.config.units = '';
+    if (this.config.precision === undefined) this.config.precision = 1;
+    if (this.config.scales === undefined) this.config.scales = 
+            this.config.max - this.config.min > 10 ? 10 : this.config.max - this.config.min;
+
+    /** The current value of the data variable. */
+    this.val = undefined;
+    
+    /** Whether the value has changed due to user interaction. */
+    this.valueChanged = false;
+    
+    /** Knob holder. */
+    this.$knob = undefined;
+    
+    /** Value box. */
+    this.$input = undefined;
+    
+    /** Whether we are sliding. */
+    this.isSliding = false;
+    
+    /** Last coordinate in sliding orientation. */
+    this.lastCoordinate = undefined;
 }
+Slider.prototype = new Widget;
+
+Slider.prototype.init = function($container) {
+    /* Reset values. */
+    this.val = undefined;
+    this.valueChanged = false;
+    
+    this.$widget = this._generate($container, this._buildHTML());
+    
+    var thiz = this;
+    
+    /* Slider events. */
+    this.$knob = this.$widget.find(".slider-knob")
+        .mousedown(function(e) { thiz._slideStart(e.pageX, e.pageY); });
+    
+    /* Slider position click. */
+    this.$widget.find(".slider-outer").bind("click." + this.id, function(e) { thiz._sliderClicked(e.pageX, e.pageY); });
+    
+    /* Value box events. */
+    if (this.config.textEntry) this.$input = this.$widget.find(".slider-text input")
+        .focusin(formFocusIn)
+        .focusout(formFocusOut)
+        .change(function() { thiz._handleTextBoxChange($(this).val()); });    
+};
+
+Slider.prototype._buildHTML = function() {
+    var i, s = (Math.floor((this.config.max - this.config.min) / this.config.scales)),
+        html = 
+        "<div class='slider-outer' style='" + (this.config.vertical ? "height" : "width") + ":" + this.config.length + "px'>";
+            
+    /* Slider scale. */
+    html += "<div class='slider-scales slider-scales-" + (this.config.vertical ? "vertical" : "horizontal") + "'>";
+    for (i = 0; i <= this.config.scales; i++)
+    {
+        html += "<div class='slider-scale' style='" + (this.config.vertical ? "top" : "left") + ":" + 
+                        (this.config.length / this.config.scales * i) + "px'>" +
+                    "<span class='ui-icon ui-icon-arrowthick-1-" + (this.config.vertical ? "w" : "n") + "'></span>" +
+                    "<span class='slider-scale-value'>" + 
+                            (this.config.vertical ? this.config.max - s * i : this.config.min + s * i) + "</span>" +
+                "</div>";
+    }
+    html += "</div>";
+    
+    /* Slider post. */
+    html += "<div class='slider-post slider-post-" + (this.config.vertical ? "vertical" : "horizontal") + "'></div>";
+    
+    /* Slider knob. */
+    html += "<div class='slider-knob slider-knob-" + (this.config.vertical ? "vertical" : "horizontal" ) + "'>" +
+                "<div class='slider-knob-slice slider-knob-back'></div>";
+    
+    for (i = 0; i < 9; i++)
+    {
+        html +=     "<div class='slider-knob-slice slider-knob-slice-" + i + "'></div>";
+    }
+    
+    html += "</div>";
+    
+    html += 
+        "</div>";
+    
+    /* Text box with numeric value. */
+    html += this.config.textEntry ?
+        "<div class='slider-text slider-text-" + (this.config.vertical ? "vertical" : "horizontal") +
+                " saharaform' style='margin-" + (this.config.vertical ? "top" : "left") + ":" +
+                (this.config.length + (this.config.vertical ? 20 : -200)) + "px'>" +                
+                "<label for='" + this.id + "-text' class='slider-text-label'>" + this.config.label + ":&nbsp;</label>" +
+            "<input id='" + this.id + "-text' type='text' /> " +
+            "<span>" + this.config.units + "</span>" +
+        "</div>" : 
+        "<div class='slider-text-" + (this.config.vertical ? "vertical" : "horizontal") +
+                "' style='margin-" + (this.config.vertical ? "top" : "left") + ":" +
+                (this.config.length + (this.config.vertical ? 20 : -90)) + "px'>" + this.config.label + "</div>";
+    
+    return html;
+};
+
+/**
+ * Handles a slider position click.
+ * 
+ * @param {number} x coordinate of mouse
+ * @param {number} y coordiante of mouse
+ */
+Slider.prototype._sliderClicked = function(x, y) {
+    if (this.isSliding) return;
+    
+    var off = this.$widget.find(".slider-outer").offset(),
+        p = this.config.vertical ? y - off.top - 7 : x - off.left - 7;
+    
+    /* Value scaling. */
+    this.valueChanged = true;
+    this.val = p * (this.config.max - this.config.min) / this.config.length + this.config.min;
+    
+    /* Range check. */
+    if (this.val < this.config.min) this.val = this.config.min;
+    if (this.val > this.config.max) this.val = this.config.max;
+    
+    /* Vertical sliders have the scale inverse to positioning. */
+    if (this.config.vertical) this.val = this.config.max + this.config.min - this.val;
+    
+    /* Update display. */
+    this._moveTo();
+    if (this.config.textEntry) this.$input.val(Util.zeroPad(this.val, this.config.precision));
+    
+    /* Send results. */
+    this._send();
+};
+
+/**
+ * Handles slider start.
+ * 
+ * @param {number} x x coordinate of mouse
+ * @param {number} y y coordinate of mouse
+ */
+Slider.prototype._slideStart = function(x, y) {
+    /* State management. */
+    this.isSliding = true;
+    this.valueChanged = true;
+    
+    /* Position tracking. */
+    this.lastCoordinate = (this.config.vertical ? y : x);
+    
+    /* Event handlings. */
+    var thiz = this;
+    $(document)
+        .bind('mousemove.' + this.id, function(e) { thiz._slideMove (e.pageX, e.pageY); })
+        .bind('mouseup.' + this.id,   function(e) { thiz._slideStop (e.pageX, e.pageY); });
+    
+    /* Stop double handling. */
+    this.$widget.find(".slider-outer").unbind("click." + this.id);
+};
+
+/**
+ * Handles slider move.
+ *  
+ * @param {number} x x coordinate of mouse
+ * @param {number} y y coordinate of mouse
+ */
+Slider.prototype._slideMove = function(x, y) {
+    if (!this.isSliding) return;
+    
+    /* Scaling to value. */
+    var dist = (this.config.vertical ? y : x) - this.lastCoordinate;
+    this.val += (this.config.max - this.config.min) * dist / this.config.length * (this.config.vertical ? -1 : 1);
+    
+    
+    /* Range check. */
+    if (this.val < this.config.min) this.val = this.config.min;
+    if (this.val > this.config.max) this.val = this.config.max;
+    
+    /* Display update. */
+    if (this.config.textEntry) this.$input.val(Util.zeroPad(this.val, this.config.precision));
+    this._moveTo();
+    
+    /* Position tracking. */
+    this.lastCoordinate = (this.config.vertical ? y : x);
+};
+
+/**
+ * Handles slide stop.
+ * 
+ * @param {number} x x coordinate of mouse
+ * @param {number} y y coordinate of mouse
+ */
+Slider.prototype._slideStop = function(x, y) {
+    if (!this.isSliding) return;
+    
+    $(document)
+        .unbind('mousemove.' + this.id)
+        .unbind('mouseup.' + this.id);
+    
+    this.isSliding = false;
+    this._send();
+    
+    var thiz = this;
+    this.$widget.find(".slider-outer").bind("click." + this.id, function(e) { thiz._sliderClicked(e.pageX, e.pageY); });
+};
+/**
+ * Moves the slider to the specified value 
+ */
+Slider.prototype._moveTo = function() {
+    var p = this.val / (this.config.max - this.config.min) * this.config.length - 
+            this.config.min / (this.config.max - this.config.min) * this.config.length;
+    this.$knob.css(this.config.vertical ? "top" : "left", this.config.vertical ? this.config.length - p : p);
+};
+
+/**
+ * Handles a value text box change.
+ * 
+ * @param {number} val new value
+ */
+Slider.prototype._handleTextBoxChange = function(val) {
+    var ttLeft = this.config.vertical ? 60 : this.config.length + 17,
+        ttTop  = this.config.vertical ? this.config.length + 82 : 75, n;
+    
+    this.removeMessages();
+    if (!val.match(/^-?\d+\.?\d*$/))
+    {
+        this.addMessage("Value must be a number.", Widget.MESSAGE_TYPE.error, ttLeft, ttTop, Widget.MESSAGE_INDICATOR.left);
+        return;
+    }
+    
+    n = parseFloat(val);
+    if (n < this.config.min || n > this.config.max)
+    {
+        this.addMessage("Value out of range.", Widget.MESSAGE_TYPE.error, ttLeft, ttTop, Widget.MESSAGE_INDICATOR.left);
+        return;
+    }
+    
+    this.valueChanged = true;
+    this.val = n;
+    this._moveTo();
+    this._send();  
+};
+
+/** 
+ * Sends the updated value to the server.
+ */
+Slider.prototype._send = function() {
+    var thiz = this, params = { };
+    params[this.config.field] = this.val;
+    this._postControl(this.config.action, params,
+        function(data) {
+            thiz.valueChanged = false;
+        }
+    );
+};
+
+Slider.prototype.consume = function(data) {
+    if (!(data[this.config.field] === undefined || data[this.config.field] == this.val || this.valueChanged))
+    {
+        this.val = data[this.config.field];
+        this._moveTo();
+        if (this.config.textEntry) this.$input.val(Util.zeroPad(this.val, this.config.precision));
+    }
+};
 
 /* ============================================================================
  * == LED widget                                                             ==

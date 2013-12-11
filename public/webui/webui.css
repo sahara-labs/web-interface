@@ -91,6 +91,280 @@
 }
 
 /******************************************************************************
+ ** Slider                                                                   **
+ ******************************************************************************/
+
+.slider-scale-value {
+    font-size: 12px;
+}
+
+.slider-outer {
+    position: absolute;
+    top: 10px;
+     -moz-user-select: none;
+    -webkit-user-select: none;
+    -ie-user-select: none;
+    user-select: none;
+    width: 100%;
+    height: 70px;
+}
+
+.slider-post {
+    position: absolute;
+    border: 1px solid #666;
+    box-shadow: inset 0px 2px 4px #C7C7C7;
+    background-color: #fff;
+    border-radius: 5px;
+}
+
+.slider-post-vertical {
+    left: 25px;
+    top: 6px;
+    width: 10px;
+    height: 100%;
+}
+
+.slider-post-horizontal {
+    left: 6px;
+    top: 23px;
+    height: 12px;
+    width: 100%;
+}
+
+.slider-scales {
+    position: absolute;
+}
+
+.slider-scales-vertical {
+    left: 35px;
+    top: 0;
+}
+
+.slider-scales-horizontal {
+    left: 0;
+    top: 35px;
+}
+
+.slider-scale {
+    position: absolute;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.slider-scales-vertical .slider-scale {
+    left: 0;
+    width: 50px;
+}
+
+.slider-scales-vertical .slider-scale .ui-icon {
+    float: left;
+    margin-right: 5px;
+}
+
+.slider-scales-horizontal .slider-scale {
+    top: 0;
+}
+
+.slider-knob {
+    position: absolute;
+    z-index: 2;
+}
+
+.slider-knob-vertical {
+    left: 4px;
+}
+
+.slider-knob-horizontal {
+    top: 4px;
+}
+
+.slider-knob-slice {
+    position: absolute;
+    background-color: #555555;
+}
+
+.slider-knob-slice {
+    box-shadow: 0 0 2px #555555;
+    border-color: #444444;
+    cursor: pointer;
+}
+
+.slider-knob-slice:hover {
+    box-shadow: 0 0 4px #555555;
+    border-color: #333333;
+}
+
+.slider-knob-vertical .slider-knob-slice {
+    border-top: 2px;
+    border-bottom: 2px;
+    width: 1px;
+}
+
+.slider-knob-vertical .slider-knob-back {
+    height: 15px;
+    width: 20px;
+    border-radius: 5px 0 0 5px;
+}
+
+.slider-knob-vertical .slider-knob-slice-0 {
+    height: 13px;
+    left: 20px;
+    top: 1px;
+}
+
+.slider-knob-vertical .slider-knob-slice-1 {
+    height: 11px;
+    left: 21px;
+    top: 2px;
+}
+
+.slider-knob-vertical .slider-knob-slice-2 {
+    height: 9px;
+    left: 22px;
+    top: 3px;
+}
+
+.slider-knob-vertical .slider-knob-slice-3 {
+    height: 7px;
+    left: 23px;
+    top: 4px;
+}
+
+.slider-knob-vertical .slider-knob-slice-4 {
+    height: 5px;
+    left: 24px;
+    top: 5px;
+}
+
+.slider-knob-vertical .slider-knob-slice-5 {
+    height: 3px;
+    left: 25px;
+    top: 6px;
+}
+
+.slider-knob-vertical .slider-knob-slice-6 {
+    height: 1px;
+    left: 26px;
+    top: 7px;
+}
+
+.slider-knob-vertical .slider-knob-slice-7 {
+    height: 0px;
+    left: 27px;
+    top: 8px;
+}
+
+.slider-knob-vertical .slider-knob-slice-8 {
+    height: 0px;
+    left: 28px;
+    top: 9px;
+    border-bottom: 0;
+}
+
+.slider-knob-horizontal .slider-knob-slice {
+    border-left: 2px;
+    border-right: 2px;
+    height: 1px;
+}
+
+.slider-knob-horizontal .slider-knob-back {
+    width: 15px;
+    height: 17px;
+    border-radius: 5px 5px 0 0;
+    border-top: 3px solid #7C7C7C;
+}
+
+.slider-knob-horizontal .slider-knob-slice-0 {
+    width: 13px;
+    top: 20px;
+    left: 1px;
+}
+
+.slider-knob-horizontal .slider-knob-slice-1 {
+    width: 11px;
+    top: 21px;
+    left: 2px;
+}
+
+.slider-knob-horizontal .slider-knob-slice-2 {
+    width: 9px;
+    top: 22px;
+    left: 3px;
+}
+
+.slider-knob-horizontal .slider-knob-slice-3 {
+    width: 7px;
+    top: 23px;
+    left: 4px;
+}
+
+.slider-knob-horizontal .slider-knob-slice-4 {
+    width: 5px;
+    top: 24px;
+    left: 5px;
+}
+
+.slider-knob-horizontal .slider-knob-slice-5 {
+    width: 3px;
+    top: 25px;
+    left: 6px;
+}
+
+.slider-knob-horizontal .slider-knob-slice-6 {
+    width: 1px;
+    top: 26px;
+    left: 7px;
+}
+
+.slider-knob-horizontal .slider-knob-slice-7 {
+    width: 0px;
+    top: 27px;
+    left: 8px;
+}
+
+.slider-knob-horizontal .slider-knob-slice-8 {
+    width: 0px;
+    top: 28px;
+    left: 9px;
+    border-right: 0;
+}
+
+.slider-text {
+
+}
+
+.slider-text-vertical {
+    width: 80px;
+}
+
+.slider-text-horizontal {
+    margin-top: 80px;
+}
+
+.slider-text label {
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ie-user-select: none;
+    user-select: none;
+}
+
+.slider-text-vertical label {
+    width: 45px !important;
+}
+
+.slider-text-horizontal label {
+	width: 145px !important;
+	text-align: right;
+}
+
+.slider-text input {
+    width: 40px;
+    text-align: right;
+}
+
+/******************************************************************************
  ** Global Error                                                             **
  ******************************************************************************/
  
