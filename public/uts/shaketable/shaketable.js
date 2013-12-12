@@ -40,7 +40,7 @@ function ShakeTableControl(id)
 	this.errorDisplay = undefined;
 	
 	/** The number of seconds this graph displays. */
-    this.duration = 30;
+    this.duration = 10;
 
     /** The period in milliseconds. */
     this.period = 100;
@@ -58,43 +58,54 @@ ShakeTableControl.prototype.setup = function() {
 //	o.setDataVariable('disp-graph-3', 'Level 3', '#8c42fb', -60, 60);
 //	o.setAxisLabels('Time (s)', 'Displacement (mm)');
 	this.widgets.push(new Graph("graph-displacement", {
+	    title: "Displacement Levels",
+	    draggable: true,
+	    closeable: true,
+	    width: 484,
+//	    height: 350,
 	    fields: {
 	        'disp-graph-1': 'Level 1',
 	        'disp-graph-2': 'Level 2',
 	        'disp-graph-3': 'Level 3'
 	    },
 	    minValue: -60,
-	    maxValue: 60
+	    maxValue: 60,
+	    duration: 10,
+	    yLabel: "Displacement (mm)",
+	    fieldCtl: true,
+	    autoCtl: true,
+	    durationCtl: true,
+	    traceLabels: true,
 	}));
 
-    /* Add mimic to page. */
-    this.widgets.push(new MimicWidget(this.$container, 'Diagram', ''));
-
-	/* Add camera to page. */
-	this.widgets.push(new CameraWidget(this.$container, 'Camera', ''));
-
-	/* Controls. */
+//    /* Add mimic to page. */
+//    this.widgets.push(new MimicWidget(this.$container, 'Diagram', ''));
+//
+//	/* Add camera to page. */
+//	this.widgets.push(new CameraWidget(this.$container, 'Camera', ''));
+//
+//	/* Controls. */
 	this.widgets.push(new Switch("switch-motor-on", {
 	   field: "motor-on", 
 	   action: "setMotor",
 	   label: "Motor",
 	}));
-	
-	this.widgets.push(new Switch("switch-coils-on", {
-	    field: "coils-on",
-	    action: "setCoils",
-	    label: "Dampening",
-	}));
-	
-	this.widgets.push(new Slider("slider-motor-speed", {
-	    field: "motor-speed",
-	    action: "setMotor",
-	    max: 8,
-	    precision: 2,
-	    label: "Motor Frequency",
-	    units: "Hz",
-
-	}));
+//	
+//	this.widgets.push(new Switch("switch-coils-on", {
+//	    field: "coils-on",
+//	    action: "setCoils",
+//	    label: "Dampening",
+//	}));
+//	
+//	this.widgets.push(new Slider("slider-motor-speed", {
+//	    field: "motor-speed",
+//	    action: "setMotor",
+//	    max: 8,
+//	    precision: 2,
+//	    label: "Motor Frequency",
+//	    units: "Hz",
+//
+//	}));
 	
 	this.widgets.push(new DataLogging(this.$container));
 

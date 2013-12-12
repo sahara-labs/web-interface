@@ -606,16 +606,15 @@ Widget.prototype._postControl = function(action, params, responseCallback, error
  * == Graph widget                                                           ==
  * ============================================================================ */
 
-
 /** 
  * Graph widget. This widget contains a scrolling graph that is user navigable
  * through the sessions data. 
  * 
+ * @constructor
  * @param {string} id graph identifier
  * @param {object} config configuration object
- * @config {object}  [fields]      map of graphed data fiels in with field => label
- * @config {integer} [width]       width of graph (default 400)
- * @config {integer} [height]      height of graph (default 250)
+ * @config {object}  [fields]      map of graphed data fields with field => label
+ * @config {object}  [colors]      map of graph trace colors with field => color (optional)
  * @config {boolean} [autoScale]   whether to autoscale the graph dependant (default off)
  * @config {integer} [minValue]    minimum value that is graphed, implies not autoscaling (default 0)
  * @config {integer} [maxValue]    maximum value that is graphed, implies not autoscaling (default 100)
@@ -623,6 +622,7 @@ Widget.prototype._postControl = function(action, params, responseCallback, error
  * @config {integer} [period]      period betweeen samples in milliseconds (default 100)
  * @config {string}  [xLabel]      X axis label (default (Time (s))
  * @config {String}  [yLabel]      Y axis label (optional)
+ * @config {boolean} [traceLabels] whether to show trace labels (default true)
  * @config {boolean} [fieldCtl]    whether data field displays can be toggled (default false)
  * @config {boolean} [autoCtl]     whether autoscaling enable control is shown (default false)
  * @config {boolean} [durationCtl] whether duration control slider is displayed
@@ -636,8 +636,7 @@ function Graph(id, config)
 	Widget.call(this, id, config);
 
 	/* Default options. */
-	if (this.config.width === undefined)       this.config.width = 400;
-	if (this.config.height === undefined)      this.config.height = 250;
+	if (this.config.colors === undefined )     this.config.colors = { };
 	if (this.config.autoScale === undefined)   this.config.autoScale = false;
 	if (this.config.minValue === undefined)    this.config.minValue = 0;
 	if (this.config.maxValue === undefined)    this.config.maxValue = 100;
@@ -645,6 +644,7 @@ function Graph(id, config)
 	if (this.config.period === undefined)      this.config.period = 100;
 	if (this.config.xLabel === undefined)      this.config.xLabel = "Time (s)";
 	if (this.config.yLabel === undefined)      this.config.yLabel = '';
+	if (this.config.traceLabels === undefined) this.config.traceLabels = true;
 	if (this.config.fieldCtl === undefined)    this.config.fieldCtl = false;
 	if (this.config.autoCtl === undefined)     this.config.autoCtl = false;
 	if (this.config.durationCtl === undefined) this.config.durationCtl = false;
@@ -653,17 +653,6 @@ function Graph(id, config)
 	
 	/** @private {object} Data fields. */
 	this.dataFields = { };
-	var i = 0;
-	for (i in this.config.fields)
-	{
-	    this.dataFields[i] = {
-	        label: this.config.fields[i],
-	        visible: true,
-	        values: [ ],
-	        seconds: 0,
-	        color: "#FFFFFF"
-	    };
-	}
 		
 	/** The minimum expected graphed value. A value smaller than this will be
 	 *  clipped. */
@@ -678,8 +667,14 @@ function Graph(id, config)
 	 *  difference between the max and min graphed values. */
 	this.graphRange = this.config.maxValue - this.config.minValue;
 	
-	/** @private {Number} The zero point offset of the graph in pixels. */
+	/** @private {number} The zero point offset of the graph in pixels. */
 	this.graphOffset = this.config.minValue / this.graphRange;
+	
+	/** @private {integer} Width of the graph. */
+	this.graphWidth = undefined;
+	
+	/** @private {integer} Height of the graph. */
+	this.graphHeight = undefined;
 
 	/** Canvas context. */
 	this.ctx = null;
@@ -690,35 +685,58 @@ function Graph(id, config)
 	/** The time of the latest data update in seconds since epoch. */
 	this.latestTime = undefined;
 
-	/** The displayed duration in seconds. */
-	this.displayedDuration = undefined;
+	/** @private {integer} The displayed duration in seconds. */
+	this.displayedDuration = this.config.duration;
 }
 Graph.prototype = new Widget;
 
+/** @const {array} List of default trace colors. */
+Graph.COLORS = [
+     "#FCFF00", "#FF3B3B", "#8C42FB"
+];
+
 Graph.prototype.init = function($container) {
-    this.graphRange = this.config.maxValue - this.config.minValue;
+    var i = 0, c = 0, thiz = this;
+    
+    /* Field dynamic properties. */
+    for (i in this.config.fields)
+    {
+        this.dataFields[i] = {
+            label: this.config.fields[i],
+            visible: true,
+            values: [ ],
+            seconds: 0,
+            color: this.config.colors.hasOwnProperty(i) ? this.config.colors[i] : 
+                    Graph.COLORS[c++ % Graph.COLORS.length]
+        };
+    }
+    
+    /* Size reset. */
+    this.graphWidth = this.config.width ? this.config.width - 84 : 400;
+    this.graphHeight = this.config.height ? this.config.height - 130 : 160;
+    if (!this.config.traceLabels) this.graphHeight += 30;
+    if (this.config.autoCtl || this.config.durationCtl) this.graphHeight -= 9;
     
 	this.$widget = this._generate($container, this._buildHTML());
 
 	/* Add the canvas panel. */
-	var canvas = getCanvas(this.id, this.config.width, this.config.height);
+	var canvas = getCanvas(this.id, this.graphWidth, this.graphHeight);
 	this.$widget.find("#" + this.id + "-canvas").append(canvas);
 	this.ctx = canvas.getContext("2d");
 
 	/* Event handlers. */
-//	var thiz = this;
-//	this.$widget.find('.graph-label').click(function() {    
-//		thiz.showTrace($(this).children(".graph-label-text").text(), 
-//				$(this).find(".switch .slide").toggleClass("on off").hasClass("on"));
-//	});
-//	
-//	this.$widget.find(".graph-controls-show").click(function() {
-//	    thiz.showControls($(this).find(".switch .slide").toggleClass("on off").hasClass("on"));
-//	});
-//	
-//	this.$widget.find(".graph-autoscale").click(function() {
-//	   thiz.enableAutoscale($(this).find(".switch .slide").toggleClass("on off").hasClass("on")); 
-//	});
+	this.$widget.find('.graph-label').click(function() {    
+		thiz._showTrace($(this).children(".graph-label-text").text(), 
+				$(this).find(".switch .switch-slide").toggleClass("switch-on switch-off").hasClass("switch-on"));
+	});
+	
+	this.$widget.find(".graph-controls-show").click(function() {
+	    thiz._showControls($(this).find(".switch .switch-slide").toggleClass("switch-on switch-off").hasClass("switch-on"));
+	});
+	
+	this.$widget.find(".graph-autoscale").click(function() {
+	   thiz._enableAutoscale($(this).find(".switch .switch-slide").toggleClass("switch-on switch-off").hasClass("switch-on")); 
+	});
 
 	/* Draw the first frame contents. */
 	this._drawFrame();
@@ -728,22 +746,27 @@ Graph.prototype._buildHTML = function() {
 	var i = 0, unitScale, styleScale, html = ''; 
 
 	/* Graph labels. */
-	html += "<div class='graph-labels'>";
-	for (i in this.config.fields)
+	if (this.config.traceLabels)
 	{
-		html += "	<div class='graph-label'>" + 
-				"		<label for='graph-label-" + i + "' class='graph-label-text'>" + this.config.fields[i].label + "</label>" +  
-		        "       <div id='graph-label-" + i + "' class='switch graph-label-enable'>" +
-        		"		    <div class='animated slide on'></div>" +
-        		"       </div>" +
-				"	</div>";
+    	html += "<div class='graph-labels'>";
+    	for (i in this.config.fields)
+    	{
+    		html += "	<div class='graph-label'>" +
+    		        (this.config.fieldCtl ?
+    				"		<label for='graph-label-" + i + "' class='graph-label-text'>" + this.config.fields[i] + "</label>" +  
+    		        "       <div id='graph-label-" + i + "' class='switch graph-label-enable'>" +
+            		"		    <div class='switch-animated switch-slide switch-on'></div>" +
+            		"       </div>" :
+            		"       <div class='graph-label-text'>" + this.config.fields[i] + "</div>" ) +
+    				"	</div>";
+    	}
+    	html += "</div>";
 	}
-	html += "</div>";
 
 	/* Left scale. */
 	unitScale = Math.floor(this.graphRange / this.config.vertScales);
-	styleScale = this.config.height / this.config.vertScales;
-	html += "<div class='graph-left-scales'>";
+	styleScale = this.graphHeight / this.config.vertScales;
+	html += "<div class='graph-left-scales' style='top:" + (this.config.traceLabels ? "33" : "3") + "px'>";
 	for (i = 0; i <= this.config.vertScales; i++)
 	{
 		html += "<div class='graph-left-scale-" + i + "' style='top:"+ (styleScale * i) + "px'>" + 
@@ -756,37 +779,46 @@ Graph.prototype._buildHTML = function() {
 	html += "<div class='graph-axis-label graph-left-axis-label' style='top:40%'>" + this.config.yLabel + "</div>";
 
 	/* Canvas element holding box. */
-	html += "<div id='" + this.id +  "-canvas' class='graph-canvas-box gradient' style='height:" + this.config.height + "px'></div>";
+	html += "<div id='" + this.id +  "-canvas' class='graph-canvas-box gradient' style='height:" + this.graphHeight + 
+	                "px;margin-top:" + (this.config.traceLabels ? "30" : "0") + "px'></div>";
 
 	/* Bottom scale. */
 	html += "<div class='graph-bottom-scales'>";
-	styleScale = this.config.width / this.config.horizScales;
+	styleScale = this.graphWidth / this.config.horizScales;
 	for (i = 0; i <= this.config.horizScales; i++)
 	{
-		html += "<div class='graph-bottom-scale-" + i + "' style='left:" + (styleScale * i - 5) + "px'>&nbsp</div>";
+		html += "<div class='graph-bottom-scale-" + i + " " + (i == this.config.horizScales ? "graph-bottom-scale-last" : "") +
+		        "' style='left:" + (styleScale * i - 5) + "px'>&nbsp</div>";
 	}
 	html += "</div>";
 
 	/* Bottom axis label. */
 	html += "<div class='graph-axis-label graph-bottom-axis-label'>" + this.config.xLabel + "</div>";
 	
-	/* Controls show / hide button. */
-	html += "<div class='graph-controls-show'>" +
-        	"   <label for='" + this.id + "-graph-controls-show' class='graph-label-text'>Controls</label>" +  
-            "   <div id='" + this.id + "-graph-controls-show' class='switch graph-controls-show-enable'>" +
-            "       <div class='animated slide off'></div>" +
-            "   </div>" +
-	        "</div>";
+	if (this.config.autoCtl || this.config.durationCtl)
+	{
+    	/* Controls show / hide button. */
+    	html += "<div class='graph-controls-show'>" +
+            	"   <label for='" + this.id + "-graph-controls-show' class='graph-label-text'>Controls</label>" +  
+                "   <div id='" + this.id + "-graph-controls-show' class='switch graph-controls-show-enable'>" +
+                "       <div class='switch-animated switch-slide'></div>" +
+                "   </div>" +
+    	        "</div>";
+	}
+	else html += "<div class='graph-no-controls'></div>";
 	
-	/* Controls. */
-	html += "<div class='graph-controls'>" +
-        	"   <div class='graph-autoscale'>" +
-            "       <label for='" + this.id + "-graph-autoscale' class='graph-label-text'>Autoscale</label>" +  
-            "       <div id='" + this.id + "-graph-autoscale' class='switch'>" +
-            "          <div class='animated slide " + (this.config.autoScale ? "on" : "off") + "'></div>" +
-            "       </div>" +
-            "   </div>" +
-	        "</div>";
+	if (this.config.autoCtl)
+	{
+    	/* Controls. */
+    	html += "<div class='graph-controls'>" +
+            	"   <div class='graph-autoscale'>" +
+                "       <label for='" + this.id + "-graph-autoscale' class='graph-label-text'>Autoscale</label>" +  
+                "       <div id='" + this.id + "-graph-autoscale' class='switch'>" +
+                "          <div class='switch-animated switch-slide " + (this.config.autoScale ? "switch-on" : "") + "'></div>" +
+                "       </div>" +
+                "   </div>" +
+    	        "</div>";
+	}
 
 	return html;
 };
@@ -824,7 +856,7 @@ Graph.prototype._drawFrame = function() {
 	var i = 0;
 	
 	/* Clear old frame. */
-	this.ctx.clearRect(0, 0, this.config.width, this.config.height);
+	this.ctx.clearRect(0, 0, this.graphWidth, this.graphHeight);
 	
 	/* Draw scales. */
 	this._drawDependantScales();
@@ -861,7 +893,7 @@ Graph.STIPPLE_WIDTH = 10;
  */
 Graph.prototype._drawDependantScales = function() {
 	var i, j,
-		off = this.config.height - Math.abs(this.graphOffset * this.config.height);
+		off = this.graphHeight - Math.abs(this.graphOffset * this.graphHeight);
 
 	this.ctx.save();
 	this.ctx.beginPath();
@@ -870,17 +902,17 @@ Graph.prototype._drawDependantScales = function() {
 	
 	/* Zero line. */
 	this.ctx.lineWidth = 3;
-	if (off > 0 && off < this.config.height)
+	if (off > 0 && off < this.graphHeight)
 	{
 	    this.ctx.moveTo(0, off + 1.5);
-	    this.ctx.lineTo(this.config.width, off + 1.5);
+	    this.ctx.lineTo(this.graphWidth, off + 1.5);
 	}
 	
 	this.ctx.lineWidth = 0.3;
 
-	for (i = 0; i < this.config.height; i += this.config.height / this.config.vertScales)
+	for (i = 0; i < this.graphHeight; i += this.graphHeight / this.config.vertScales)
 	{
-		for (j = 0; j < this.config.width; j += Graph.STIPPLE_WIDTH * 1.5)
+		for (j = 0; j < this.graphWidth; j += Graph.STIPPLE_WIDTH * 1.5)
 		{
 			this.ctx.moveTo(j, i + 0.25);
 			this.ctx.lineTo(j + Graph.STIPPLE_WIDTH, i + 0.25);
@@ -900,8 +932,8 @@ Graph.prototype._drawDependantScales = function() {
 Graph.prototype._drawTrace = function(dObj) {
 	if (!dObj.visible) return;
 
-	var xStep  = this.config.width / (dObj.seconds * 1000 / this.config.period), 
-	    yScale = this.config.height / this.graphRange, i, yCoord;
+	var xStep = this.graphWidth / (dObj.seconds * 1000 / this.config.period), 
+	    yScale = this.graphHeight / this.graphRange, i, yCoord;
 
 	this.ctx.save();
 	this.ctx.strokeStyle = dObj.color;
@@ -915,9 +947,9 @@ Graph.prototype._drawTrace = function(dObj) {
 	this.ctx.beginPath();
 	for (i = 0; i < dObj.values.length; i++)
 	{
-		yCoord = this.config.height - dObj.values[i] * yScale + this.graphOffset * this.config.height;
+		yCoord = this.graphHeight - dObj.values[i] * yScale + this.graphOffset * this.graphHeight;
 		/* If value too large, clipping at the top of the graph. */
-		if (yCoord > this.config.height) yCoord = this.config.height;
+		if (yCoord > this.graphHeight) yCoord = this.graphHeight;
 		/* If value too small, clippling at the bottom of the graph. */
 		if (yCoord < 0) yCoord = 0;
 
@@ -971,7 +1003,7 @@ Graph.prototype._updateTimeScale = function() {
  * @param label label of the variable
  * @param show whether the variable is displayed
  */
-Graph.prototype.showTrace = function(label, show) {
+Graph.prototype._showTrace = function(label, show) {
 	var i = 0;
 	for (i in this.dataFields)
 	{
@@ -981,7 +1013,7 @@ Graph.prototype.showTrace = function(label, show) {
 		}
 	}
 
-	this.drawFrame();
+	this._drawFrame();
 };
 
 
@@ -1033,15 +1065,27 @@ Graph.prototype.resizeStopped = function(width, height) {
 /**
  * Enables or disables graph autoscaling. 
  * 
- * @param autoscale true if graph autoscales
+ * @param {boolean} autoscale true if graph autoscales
  */
-Graph.prototype.enableAutoscale = function(autoscale) {
+Graph.prototype._enableAutoscale = function(autoscale) {
     if (!(this.isAutoscaling = autoscale))
     {
         this.graphRange = this.maxGraphedValue - this.minGraphedValue;
         this.graphOffset = this.minGraphedValue / this.graphRange;
         this.updateDependantScale();
     }
+};
+
+
+/**
+ * Shows or hides the graph controls.
+ * 
+ * @param {boolean} show whether to show the controls
+ */
+Graph.prototype._showControls = function(show) {
+    var $n = this.$widget.find(".graph-controls");
+    $n.css("display", $n.css("display") == "none" ? "block" : "none");
+    this.$widget.css("height", "auto");
 };
 
 /* ============================================================================
@@ -1323,6 +1367,7 @@ function Spinner()
  * Slider widget that displays a slider that allows that provides a slidable
  * scale over the specified range.
  * 
+ * @constructor
  * @param {string} id widget identifier
  * @param {object} config configuration of widget
  * @config {string}  [field] server data variable that is being set
@@ -1876,4 +1921,17 @@ Util.getCanvas = function(id, width, height) {
     }
 
     return canvas;
+};
+
+/**
+ * Determines the number of elements of an object.
+ * 
+ * @static
+ * @param {object} o object to determine size
+ * @return {integer} number of elements in an object
+ */
+Util.sizeOf = function(o) {
+    var i = 0, c = 0;
+    for (i in o) c++;
+    return c;
 };
