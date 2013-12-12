@@ -1059,6 +1059,7 @@ Graph.prototype.enableAutoscale = function(autoscale) {
  * @config {string}  [action]     server action to call when the switched is changed
  * @config {string}  [label]      switch label (optional)
  * @config {string}  [stickColor] sets the color of the switches stick (silver, black, red)
+ * @config {string} [led] set switch LED indicator (optional)
  * @config {boolean} [vertical]   set button vertical or horizontal (default horizontal)
  */
 function Switch(id, config)
@@ -1083,7 +1084,9 @@ Switch.prototype.init = function($container) {
         this.config.vertical ? // Vertical orientation
             '<div class="switch-vertical-container">' +
                 (this.config.label ? '<label class="switch-vertical-label">' + this.config.label + ':</label>' : '') +
-                '<div class="switch-vertical switch-' + this.config.stickColor + '-down"></div>' +
+                (this.config.led ?'<div class="led switch-led led-novalue"></div>' : '') +
+                '<div class="switch-vertical switch-stick-base"></div>' +
+                '<div class="switch-vertical switch-stick switch-' + this.config.stickColor + '-down"></div>' +      
             '</div>'
         : // Horizontal orientation
             '<div class="switch-container">' +
@@ -1135,13 +1138,17 @@ Switch.prototype._setDisplay = function(on) {
     {
         if (on)
         {
-            this.$widget.find(".switch-vertical").removeClass("switch-" + this.config.stickColor + "-down");
-            this.$widget.find(".switch-vertical").addClass("switch-" + this.config.stickColor + "-up");
+            this.$widget.find(".switch-stick").removeClass("switch-" + this.config.stickColor + "-down");
+            this.$widget.find(".switch-stick").addClass("switch-" + this.config.stickColor + "-up");
+            this.$widget.find(".switch-led").addClass("led-on");
+            this.$widget.find(".switch-led").removeClass("led-novalue");
         }
         else
         {
-            this.$widget.find(".switch-vertical").addClass("switch-" + this.config.stickColor + "-down");
-            this.$widget.find(".switch-vertical").removeClass("switch-" + this.config.stickColor + "-up");
+            this.$widget.find(".switch-stick").addClass("switch-" + this.config.stickColor + "-down");
+            this.$widget.find(".switch-stick").removeClass("switch-" + this.config.stickColor + "-up");
+            this.$widget.find(".switch-led").addClass("led-novalue");
+            this.$widget.find(".switch-led").removeClass("led-on");
         }     
     }
     else
@@ -1169,7 +1176,7 @@ Switch.prototype._setDisplay = function(on) {
  * @param {object} config configuration of widget
  * @config {string} [field]  server data variable that is being switched
  * @config {string} [action] server action to call when the switched is changed
- * @config {array}  [values] the list of potential
+ * @config {array}  [values] the list of potential values
  * @config {number} [radius] the radius of the switch
  * @config {string} [label]  switch label (optional)
  * @config {string} [colour] set the switch colour (default black)
@@ -1210,13 +1217,11 @@ RotarySwitch.prototype.init = function($container) {
             y = (r - 5) - (r + 10) * Math.sin(2 * Math.PI * i / v.length),
             p = v[(v.length - i)];
 
-        //TODO Fix Label positioning
-
         $("#rotary-container-" + this.id).append(
             "<div class='rotary-switch-val " +
-            ( y <= 55 ? y = (y - ( p ? p.length : '')) - 8 : 0) + "' id='" + this.id + "-" + i + "' " + 
-            "style='left:" + Math.round(y) + "px;top:" + Math.round(x) + "px' " + "value=" + 
-            ( p ? p : v[0]) + ">" + ( p ? p : v[0]) + "</div>"
+            ( y <= 55 ? y = (y - ( p ? p.label.length / 2 : '')) - (r >= 60 ? 9 : 4): 0) + "' id='" + this.id + "-" + i + "' " +
+            "style='left:" + Math.round(y) + "px;top:" + Math.round(x) + "px' " + "value=" +
+            ( p ? p.value : v[0].value) + ">" + ( p ? p.label : v[0].label) + "</div>"
         );
     }
 
@@ -1232,9 +1237,7 @@ RotarySwitch.prototype.consume = function(data) {
  * Event handler to be called when a value is clicked.
  */
 RotarySwitch.prototype._clicked = function(point) {
-	//TODO Add code to update rig with the selected value.
-	
-    this.val = undefined;
+    this.val = $(point).attr('value');
     this.isChanged = true;
     this._animateSwitch(point);
 
