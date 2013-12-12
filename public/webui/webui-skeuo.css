@@ -55,7 +55,7 @@
 	color: #666666;
 }
 
-label {
+.window-wrapper label {
     display: block;
     text-align: center;
     padding: 0px 8px;
@@ -67,6 +67,7 @@ label {
     line-height: 23px;
     text-shadow: 0px 1px 2px #B9B9B9;
     color: #E7E7E7;
+    background: #353535;
     background: url('/webui/images/skeuo/label-texture.png');
 }
 
@@ -80,7 +81,7 @@ label {
  
 .switch-label {
 	float: left;
-    padding: 0 4px;
+    padding: 0 4px !important;
 }
  
 .switch {
@@ -132,43 +133,83 @@ label {
     left: 22px;
 }
 
+.switch-vertical-container {
+    position: relative;
+    height: 115px;
+    width: 100%;
+}
+
 .switch-vertical {
-    background-repeat: no-repeat;
+    cursor: pointer;
+}
+
+.switch-stick-base {
+    position: relative;
+    height: 48px;
     margin: auto;
-    padding-top: 5px;
-    height: 83px;
-    width:52px;
-    cursor:pointer;
+    margin-top: 20px;
+    width: 56px;
+	background-image: url('/webui/images/skeuo/switch-back.png');
+    background-size: 100% 100%;
+}
+
+.switch-stick {
+	width: 14px;
+	height: 41px;
+	position: relative;
+	margin: -2% 42%;
+	top: -22px;
+	background-size: 100% 100%;
+	-webkit-transition: all 0.1s ease-in-out;
+	-moz-transition: all 0.1s ease-in-out;
+	-o-transition: all 0.1s ease-in-out;
+	transition: all 0.1s ease-in-out;
+}
+
+.switch-led {
+	position: absolute;
+	top: 30%;
+	left: 5%;
+    height: 8px !important;
+    width: 8px !important;
 }
 
 .switch-silver-up {
 	background-image: url('/webui/images/skeuo/switch-silver-up.png');
 	background-size: 100% 100%;
-}
-
-.switch-black-up {
-	background-image: url('/webui/images/skeuo/switch-black-up.png');
-	background-size: 100% 100%;
-}
-
-.switch-red-up {
-	background-image: url('/webui/images/skeuo/switch-red-up.png');
-	background-size: 100% 100%;
+    top: -55%;
 }
 
 .switch-silver-down {
 	background-image: url('/webui/images/skeuo/switch-silver-down.png');
 	background-size: 100% 100%;
+    box-shadow: 13px 6px 9px -4px rgba(150, 150, 150, 0.64);
+}
+
+.switch-black-up {
+	background-image: url('/webui/images/skeuo/switch-black-up.png');
+	background-size: 100% 100%;
+    top: -55%;
+    margin-left: 41.5%;
 }
 
 .switch-black-down {
 	background-image: url('/webui/images/skeuo/switch-black-down.png');
 	background-size: 100% 100%;
+    margin-left: 41.5%;
+    box-shadow: 13px 6px 9px -4px rgba(150, 150, 150, 0.64);
+}
+
+.switch-red-up {
+	background-image: url('/webui/images/skeuo/switch-red-up.png');
+	background-size: 100% 100%;
+    top: -55%;
 }
 
 .switch-red-down {
 	background-image: url('/webui/images/skeuo/switch-red-down.png');
 	background-size: 100% 100%;
+    box-shadow: 13px 6px 9px -4px rgba(150, 150, 150, 0.64);
 }
 
 /******************************************************************************
@@ -271,3 +312,113 @@ label {
     color: #727272;
     text-shadow: 1px 1px 1px #bebebe;
 }
+
+/******************************************************************************
+ ** Rotary Switch                                                            **
+ ******************************************************************************/
+
+.slider-outer {
+    height: 90px;
+    width: 200px;
+}
+
+.slider-scale-value {
+    font-size: 12px;
+}
+
+.slider-scale {
+    position: absolute;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.slider-container {
+    position: absolute;
+}
+
+.slider-post {
+    position: absolute;
+    box-shadow: inset 0px 2px 4px #C7C7C7;
+    background-color: #fff;
+    border-radius: 5px;
+    background: #E7E3E3;
+    border: solid 1px #A09F9F;
+}
+
+.slider-scales {
+	position: absolute;
+}
+
+.slider-scales-vertical {
+    left: 35px;
+    top: 0;
+}
+
+.slider-scales-horizontal {
+	left: 0;
+	top: 35px;
+}
+
+.slider-post-vertical {
+	left: 25px;
+	top: 6px;
+	width: 10px;
+	height: 100%;
+}
+
+.slider-post-horizontal {
+    left: 6px;
+	top: 23px;
+	height: 8px;
+	width: 100%;
+	border: solid 2px #D1D1D1;
+	border-bottom: solid 2px #FFF;
+	border-radius: 20px;
+	box-shadow: inset 3px 3px 2px #292929;
+	background: #575757;
+}
+
+.slider-text-vertical {
+	width: 80px;
+}
+
+.slider-text-horizontal {
+	margin-top: 80px;
+}
+
+.slider-knob {
+	height: 15px;
+	width: 15px;
+	position: absolute;
+	border: 1px solid #868686;
+	border-radius: 20px;
+	box-shadow: 1px 3px 8px rgba(43, 43, 43, 0.6);
+	background-image: url('/webui/images/skeuo/switch-knob.png');
+	background-size: 100% 100%;
+	cursor: pointer;
+}
+
+.slider-knob-horizontal {
+	top: 22%;
+	left: 0%;
+}
+
+.slider-knob-vertical {
+
+}
+
+.slider-text label {
+	width: 45px !important;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ie-user-select: none;
+    user-select: none;
+}
+
+.slider-text input {
+	width: 40px;
+	text-align: right;
+}
+

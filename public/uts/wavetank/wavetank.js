@@ -46,7 +46,18 @@ WaveTank.prototype.setup = function() {
         label: "Rotary Switch",
         icon: "pump",
         draggable: true,
-        values: ['one','two','three','four','five','six','seven','eight','nine','ten'],
+        values: [
+            {label: "One", value: 1},
+            {label: "Two", value: 2},
+            {label: "Three", value: 3},
+            {label: "Four", value: 4},
+            {label: "Five", value: 5},
+            {label: "Six", value: 6},
+            {label: "Seven", value: 7},
+            {label: "Eight", value: 8},
+            {label: "Nine", value: 9},
+            {label: "Ten", value: 10}
+        ],
         radius: 70
     });
     this.widgets.push(o);
@@ -56,7 +67,10 @@ WaveTank.prototype.setup = function() {
         action: "setPump",
         icon: "pump",
         draggable: true,
-        values: ['ON','OFF'],
+        values: [
+            {label: "ON", value: 1},
+            {label: "OFF", value: 0}
+        ],
         radius: 70,
         colour: "white"
     });
@@ -67,7 +81,12 @@ WaveTank.prototype.setup = function() {
         action: "setPump",
         icon: "pump",
         draggable: true,
-        values: ['1','2','3','4','5','6'],
+        values: [
+            {label: "one", value: 1},
+            {label: "two", value: 2},
+            {label: "three", value: 3},
+            {label: "four", value: 4}
+        ],
         radius: 50,
         colour: 'white'
     });
@@ -78,8 +97,8 @@ WaveTank.prototype.setup = function() {
         action: "setPump",
         label: "Silver",
         icon: "pump",
+        led: true,
         draggable: true,
-        tooltip: "Turn on pump",
         stickColor: "silver",
         vertical: true
     });
@@ -90,8 +109,8 @@ WaveTank.prototype.setup = function() {
         action: "setPump",
         label: "Black",
         icon: "pump",
+        led: true,
         draggable: true,
-        tooltip: "Turn on pump",
         stickColor: "black",
         vertical: true
     });
@@ -103,7 +122,6 @@ WaveTank.prototype.setup = function() {
         label: "Red",
         icon: "pump",
         draggable: true,
-        tooltip: "Turn on pump",
         stickColor: "red",
         vertical: true
     });
@@ -119,7 +137,34 @@ WaveTank.prototype.setup = function() {
         vertical: false
     });
     this.widgets.push(o);
-   
+
+    o = new Slider("slider01", {
+        field: "pump-on",
+        action: "setPump",
+        icon: "pump",
+        draggable: true,
+        labeltext: "Short Slider",
+        min: 0,
+        max: 20,
+        scales: 10,
+        dimension: 180
+    });
+    this.widgets.push(o);
+
+    o = new Slider("slider02", {
+        field: "pump-on",
+        action: "setPump",
+        icon: "pump",
+        draggable: true,
+        vertical: true,
+        labeltext: "Long Slider",
+        min: 0,
+        max: 20,
+        scales: 10,
+        dimension: 180
+    });
+    this.widgets.push(o);
+
     this.widgets.push(new LED("led-1", {
         field: "pump-on",
         label: "Pump",

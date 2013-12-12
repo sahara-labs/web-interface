@@ -610,6 +610,7 @@ function Graph()
  * @config {string} [action] server action to call when the switched is changed1
  * @config {string} [label] switch label (optional)
  * @config {string} [stickColor] sets the color of the switches stick (silver, black, red)
+ * @config {string} [led] set switch LED indicator (optional)
  * @config {boolean} [vertical] set button vertical or horizontal (default horizontal)
  */
 function Switch(id, config)
@@ -634,7 +635,9 @@ Switch.prototype.init = function($container) {
         this.config.vertical ? // Vertical orientation
             '<div class="switch-vertical-container">' +
                 (this.config.label ? '<label class="switch-vertical-label">' + this.config.label + ':</label>' : '') +
-                '<div class="switch-vertical switch-' + this.config.stickColor + '-down"></div>' +
+                (this.config.led ?'<div class="led switch-led led-novalue"></div>' : '') +
+                '<div class="switch-vertical switch-stick-base"></div>' +
+                '<div class="switch-vertical switch-stick switch-' + this.config.stickColor + '-down"></div>' +      
             '</div>'
         : // Horizontal orientation
             '<div class="switch-container">' +
@@ -686,13 +689,17 @@ Switch.prototype._setDisplay = function(on) {
     {
         if (on)
         {
-            this.$widget.find(".switch-vertical").removeClass("switch-" + this.config.stickColor + "-down");
-            this.$widget.find(".switch-vertical").addClass("switch-" + this.config.stickColor + "-up");
+            this.$widget.find(".switch-stick").removeClass("switch-" + this.config.stickColor + "-down");
+            this.$widget.find(".switch-stick").addClass("switch-" + this.config.stickColor + "-up");
+            this.$widget.find(".switch-led").addClass("led-on");
+            this.$widget.find(".switch-led").removeClass("led-novalue");
         }
         else
         {
-            this.$widget.find(".switch-vertical").addClass("switch-" + this.config.stickColor + "-down");
-            this.$widget.find(".switch-vertical").removeClass("switch-" + this.config.stickColor + "-up");
+            this.$widget.find(".switch-stick").addClass("switch-" + this.config.stickColor + "-down");
+            this.$widget.find(".switch-stick").removeClass("switch-" + this.config.stickColor + "-up");
+            this.$widget.find(".switch-led").addClass("led-novalue");
+            this.$widget.find(".switch-led").removeClass("led-on");
         }     
     }
     else
@@ -720,7 +727,7 @@ Switch.prototype._setDisplay = function(on) {
  * @param {object} config configuration of widget
  * @config {string} [field] server data variable that is being switched
  * @config {string} [action] server action to call when the switched is changed
- * @config {array}  [values] the list of potential
+ * @config {array}  [values] the list of potential values
  * @config {number} [radius] the radius of the switch
  * @config {string} [label] switch label (optional)
  * @config {string} [colour] set the switch colour (default black)
@@ -761,13 +768,11 @@ RotarySwitch.prototype.init = function($container) {
             y = (r - 5) - (r + 10) * Math.sin(2 * Math.PI * i / v.length),
             p = v[(v.length - i)];
 
-        //TODO Fix Label positioning
-
         $("#rotary-container-" + this.id).append(
             "<div class='rotary-switch-val " +
-            ( y <= 55 ? y = (y - ( p ? p.length : '')) - 8 : 0) + "' id='" + this.id + "-" + i + "' " + 
-            "style='left:" + Math.round(y) + "px;top:" + Math.round(x) + "px' " + "value=" + 
-            ( p ? p : v[0]) + ">" + ( p ? p : v[0]) + "</div>"
+            ( y <= 55 ? y = (y - ( p ? p.label.length / 2 : '')) - (r >= 60 ? 9 : 4): 0) + "' id='" + this.id + "-" + i + "' " +
+            "style='left:" + Math.round(y) + "px;top:" + Math.round(x) + "px' " + "value=" +
+            ( p ? p.value : v[0].value) + ">" + ( p ? p.label : v[0].label) + "</div>"
         );
     }
 
@@ -783,9 +788,7 @@ RotarySwitch.prototype.consume = function(data) {
  * Event handler to be called when a value is clicked.
  */
 RotarySwitch.prototype._clicked = function(point) {
-	//TODO Add code to update rig with the selected value.
-	
-    this.val = undefined;
+    this.val = $(point).attr('value');
     this.isChanged = true;
     this._animateSwitch(point);
 
@@ -867,9 +870,101 @@ function Spinner()
  * == Slider widget                                                          ==
  * ============================================================================ */
 
-function Slider()
+/**
+ * A Slider switch allows the selection of a range of options.
+ *
+ * @constructor
+ * @param {string} id the identifier of widget
+ * @param {object} config configuration of widget
+ * @config {string} [field] server data variable that is being switched
+ * @config {string} [action] server action to call when the slider's value is changed
+ * @config {string} [label] slider label (optional)
+ * @config {string} [units] units for the display
+ * @config {string} [vertical] set slider vertical or horizontal (default horizontal)
+ * @config {string} [labeltext] the label to appear next to the range input field
+ * @config {number} [min] the minimum value of the slider
+ * @config {number} [max] the maximum value of this slider
+ * @config {number} [dimension] dimension of the slider, height or width value depending on orientation (in pixels)
+ * @config {number} [scales] the number of displayed scales
+ */
+function Slider(id, config)
 {
-    // TODO Slider widget
+    if (!(config.field || config.action || config.values)) throw "Options not supplied."; 
+    
+    Widget.call(this, id, config);
+
+    /** @private {boolean} The selected value. */
+    this.val = undefined;
+    
+    /** @private {boolean} Whether the value has been changed by user action. */
+    this.isChanged = false;  
+}
+
+Slider.prototype = new Widget;
+
+Slider.prototype.init = function($container) {
+    //TODO Finish Slider
+    this.$widget = this._generate($container,
+    	(this.config.label ? "<label>" + this.config.label + "</label>" : '') +
+        "<div class='slider-outer'>" +
+    	"<div id='slider-container-" + this.id + "' class='slider-container' style='" + 
+    	(this.config.vertical ? "height" : "width") + ":" + this.config.dimension + "px'>" +
+            "<div id='slider-scales-" + this.id + "' class='slider-scales slider-scales-" +
+            (this.config.vertical ? "vertical" : "horizontal") + "'></div>" +
+            "<div id='slider-post-" + this.id + "' class='slider-post slider-post-" + (this.config.vertical ? "vertical" : "horizontal") + "'></div>" +
+            "<div id='slider-knob-" + this.id + "' class='slider-knob slider-knob-" + (this.config.vertical ? "vertical" : "horizontal")+ "'></div>" +
+            "<div class='slider-text-" + (this.config.vertical ? "vertical" : "horizontal") + "'>" + this.config.labeltext + "</div>" +
+        "</div></div>"
+    );
+
+    var s = Math.floor((this.config.max - this.config.min) / this.config.scales);
+
+    for (i = 0; i <= this.config.scales; i++)
+    {
+        $("#slider-scales-" + this.id).append(
+            "<div class='slider-scale' style='" + (this.config.vertical ? "top" : "left") + ":" + 
+             (this.config.dimension / this.config.scales * i) + "px'>" +
+                 "<span class='ui-icon ui-icon-arrowthick-1-" + (this.config.vertical ? "w" : "n") + "'></span>" +
+                 "<span class='slider-scale-value'>" + (this.config.vertical ? this.config.max - s * i : s * i) + "</span>" +
+            "</div>"
+        );
+    }
+
+    var thiz = this;
+    this.$widget.find(".slider").click(function() { thiz._clicked(); });	
+};
+
+Slider.prototype.consume = function(data) {
+
+};
+
+/**
+ * Event handler to be called when a value is clicked.
+ */
+Slider.prototype._clicked = function() {
+    //TODO Set values when the slider is clicked
+    this.val = undefined;
+    this.isChanged = true;
+    this._animateSlider();
+
+    var thiz = this, params = { };
+    params[this.config.field] = this.val;
+    this._postControl(
+        this.config.action,
+        params,
+        function() {
+            thiz.isChanged = false;
+        }
+     );
+};
+
+/**
+ * Animates the slider. 
+ * 
+ * @param point the selected label
+ */
+Slider.prototype._animateSlider = function(point) {
+    //TODO Animate Slider
 }
 
 /* ============================================================================
