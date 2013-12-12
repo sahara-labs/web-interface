@@ -1875,7 +1875,7 @@ Util.round = function(num, places) {
  * @returns {string} padded string
  */
 Util.zeroPad = function(num, places) {
-    var r = '' + mathRound(num, places);
+    var r = '' + Util.round(num, places);
 
     if (places > 0)
     {
