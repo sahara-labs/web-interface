@@ -204,12 +204,14 @@
 	background-image: url('/webui/images/skeuo/switch-red-up.png');
 	background-size: 100% 100%;
     top: -55%;
+    margin-left: 39.5%;
 }
 
 .switch-red-down {
 	background-image: url('/webui/images/skeuo/switch-red-down.png');
 	background-size: 100% 100%;
     box-shadow: 13px 6px 9px -4px rgba(150, 150, 150, 0.64);
+    margin-left: 39.5%;
 }
 
 /******************************************************************************
@@ -316,6 +318,12 @@
 /******************************************************************************
  ** Slider                                                                   **
  ******************************************************************************/
+
+.slider-scale {
+    font-size: 10px;
+    color: #727272;
+    text-shadow: 1px 1px 1px #BEBEBE;
+}
 
 .slider-post-vertical {
 	left: 25px;
