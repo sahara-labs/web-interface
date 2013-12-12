@@ -7,16 +7,11 @@
  */
 
 /* ============================================================================ 
- * == Global variables namespace.                                           ==
+ * == Global variables.                                           ==
  * ============================================================================ */
-
-function Globals() { };
-
-/** {String} Name of the Rig Client controller this page users. */
-Globals.RC_CONTROLLER = "ShakeTableController";
-
-/** {String} Cookie prefix. */
-Globals.COOKIE_PREFIX = "shake-";
+Globals.COOKIE_PREFIX = "shaketable";
+Globals.CONTROLLER    = "ShakeTableController";
+Globals.THEME         = Globals.THEMES.flat;
 
 /* ============================================================================
  * == Shake Table page control.                                              ==
@@ -45,10 +40,10 @@ function ShakeTableControl(id)
 	this.errorDisplay = undefined;
 	
 	/** The number of seconds this graph displays. */
-    this.duration = 60;
+    this.duration = 30;
 
     /** The period in milliseconds. */
-    this.period = 50;
+    this.period = 100;
 };
 
 /** 
@@ -73,22 +68,27 @@ ShakeTableControl.prototype.setup = function() {
 	this.widgets.push(new CameraWidget(this.$container, 'Camera', ''));
 
 	/* Controls. */
-	o = new SwitchWidget(this.$container, "Motor Switch", "Motor On", "motor", "motor-on", "setMotor");
-	o.setDraggable(true);
-	this.widgets.push(o);
+	this.widgets.push(new Switch("switch-motor-on", {
+	   field: "motor-on", 
+	   action: "setMotor",
+	   label: "Motor",
+	}));
 	
-	o = new SwitchWidget(this.$container, "Dampening", "Dampening", "coils", "coils-on", "setCoils");
-	o.setDraggable(true);
-	this.widgets.push(o);
+	this.widgets.push(new Switch("switch-coils-on", {
+	    field: "coils-on",
+	    action: "setCoils",
+	    label: "Dampening",
+	}));
 	
-	o = new SliderWidget(this.$container, "Motor", "motor", "motor-speed", "setMotor");
-	o.setOrientation(true);
-	o.setRange(0, 8);
-	o.setPrecision(2);
-	o.setLabels("Freq", "Hz");
-	o.setDimension(167);
-	o.setDraggable(true);
-	this.widgets.push(o);
+	this.widgets.push(new Slider("slider-motor-speed", {
+	    field: "motor-speed",
+	    action: "setMotor",
+	    max: 8,
+	    precision: 2,
+	    label: "Motor Frequency",
+	    units: "Hz",
+
+	}));
 	
 	this.widgets.push(new DataLogging(this.$container));
 
@@ -96,7 +96,7 @@ ShakeTableControl.prototype.setup = function() {
 	this.display = new DisplayManager(this.$container, 'Display', this.widgets);
 	
 	/* Error display triggered if error occurs. */
-	this.errorDisplay = new GlobalError(this.$container);
+	this.errorDisplay = new GlobalError();
 };
 
 /** 
@@ -114,7 +114,7 @@ ShakeTableControl.prototype.acquireLoop = function() {
 	var thiz = this;
 
 	$.ajax({
-		url: "/primitive/mapjson/pc/" + Globals.RC_CONTROLLER + "/pa/dataAndGraph",
+		url: "/primitive/mapjson/pc/" + Globals.CONTROLLER + "/pa/dataAndGraph",
 		data: {
 		    period: this.period,
 			duration: this.duration,
@@ -152,7 +152,7 @@ ShakeTableControl.prototype.processData = function(data) {
 	{
 		this.dataError = false;
 		this.display.unblur();
-		this.errorDisplay.destroy();
+		this.errorDisplay.clearError();
 	}
 	
 	this.display.consume(data);
@@ -169,18 +169,616 @@ ShakeTableControl.prototype.errorData = function(msg) {
 	    /* Going into errored state, display error message. */
 		this.dataError = true;
 		this.display.blur();
-		
-		this.errorDisplay.error = msg;
-		this.errorDisplay.init();
 	}
-	else if (this.errorData && this.errorDisplay.error != msg)
-	{
-	    /* Error has changed, update the error display. */
-	    this.errorDisplay.error = msg;
-	    this.errorDisplay.destroy();
-	    this.errorDisplay.init();
-	}
+
+	this.errorDisplay.displayError(msg);
 };
+
+/* ============================================================================
+ * == Mimic Widget.                                                          ==
+ * ============================================================================ */
+
+/**
+ * Mimic Widget. This widget creates and controls the Shake Table Mimic.
+ */
+function MimicWidget()
+{
+    Widget.call(this, "shaker-mimic", {
+        title: "Shake Table Model",
+        resizable: true,
+        preserveAspectRation: true,
+        minWidth: 320,
+        minHeight: 410,
+        closeable: true,
+        shadeable: true,
+        expandable: true,
+        draggable: true,
+    });
+    
+    /** Model dimensions in mm. */
+    this.model = {
+        levelWidth: 200,      // Width of the model
+        armWidth: 70,         // Width of the stroke arm connecting the motor to the model
+        motorRadius: 10,      // Radius of the motor
+        wallHeight: 120,      // Height of the walls
+        levelHeight: 30,      // Height of the levels
+        trackHeight: 20,      // Height of the track
+        trackWidth: 300,      // Width of track
+        carHeight: 10,        // Height of carriage
+        carWidth: 120,        // Width of carriage
+        maxDisp: 60,          // Maximum displacement of the diagram
+        baseDisp: 0.7         // Displacement of the base when the motor is on
+    };
+    
+    /** Whether this mimic represents a 2DOF or a 3DOF widget. */
+    this.is3DOF = true;
+    
+    /** Number of levels in the model. */
+    this.numberLevels = this.is3DOF ? 4 : 3;
+    
+    /** Millimeters per pixel. */
+    this.mmPerPx = 1.475;
+    
+    /** The width of the diagram in pixels. */
+    this.width = undefined;
+
+    /** The height of the diagram in pixels. */
+    this.height = undefined;
+    
+    /** The period in milliseconds. */
+    this.period = 100;
+    
+    /** Canvas context. */
+    this.ctx = null;
+
+    /** Amplitude of displacement in mm. */
+    this.amp = [ 0, 0, 0, 0 ];
+    
+    /** Angular frequency r/s. */
+    this.w = 0;
+    
+    /** Offsets of levels. */
+    this.o = [ 0, 0, 0, 0 ];
+        
+    /** Frame count. */
+    this.fr = 0;
+    
+    /** Motor frequency. */
+    this.motor = 0;
+    
+    /** Coil power percentages. */
+    this.coils = [ undefined, undefined, undefined ];
+    
+    /** Center line. */
+    this.cx = undefined;
+    
+    /** Animation interval. */
+    this.animateInterval = undefined;
+}
+MimicWidget.prototype = new Widget;
+
+MimicWidget.ANIMATE_PERIOD = 50;
+
+MimicWidget.prototype.init = function($container) {
+    var canvas, thiz = this;
+    
+    if (this.window.width)
+    {
+        this.mmPerPx = 320 / this.window.width * 1.475;
+    }
+
+    /* The width of the canvas diagram is the width of the building model plus 
+     * the maximum possible displacement. */
+    this.width = this.px(this.model.levelWidth + this.model.maxDisp * 2) + this.px(100);
+    this.height = this.px(this.model.levelHeight * (this.is3DOF ? 4 : 3) + 
+            this.model.wallHeight * (this.is3DOF ? 3: 2) + this.model.trackHeight + this.model.carHeight);
+    this.cx = this.width / 2;
+    
+    /* Box. */
+    this.$widget = this._generate($container, "<div class='mimic'></div>");
+    this.$widget.css("height", "auto");
+    
+    /* Canvas to draw display. */
+    canvas = Util.getCanvas(this.id + "-canvas", this.width, this.height);
+    this.$widget.find(".mimic").append(canvas);
+    this.ctx = canvas.getContext("2d");
+    this.ctx.translate(0.5, 0.5);
+
+    /* Draw initial frame of zero position. */
+    this.drawFrame([0, 0, 0, 0]);
+    
+    this.boxWidth = this.$widget.width();
+   
+    /* Start animation. */
+    this.animateInterval = setInterval(function() { thiz.animationFrame(); }, MimicWidget.ANIMATE_PERIOD);
+};
+
+MimicWidget.prototype.consume = function(data) {
+    var i, l, peaks = [], level, range;
+    
+    /* We need to find a list of peaks for each of the levels. */
+    for (l = 1; l <= this.numberLevels; l++)
+    {
+        if (!$.isArray(data["disp-graph-" + l])) continue;
+
+        /* To find peaks we are searching for the values where the preceding value is
+         * not larger than the subsequent value. */
+        level = [ ];
+        for (i = data["disp-graph-" + l].length - 2; i > 1; i--)
+        {
+            if (data["disp-graph-" + l][i] > data["disp-graph-" + l][i + 1] && 
+                    data["disp-graph-" + l][i] >= data["disp-graph-" + l][i - 1])
+            {
+                level.push(i);
+                
+                /* We only require a maximum of 5 peaks. */
+                if (level.length == 5) break;
+            }
+        }
+        
+        /* If we don't have the requiste number of peaks, don't update data. */ 
+        while (level.length < 5) return;
+        
+        peaks.push(level);
+        
+        /* Amplitude is a peak value. The amplitude we are using will the median
+         * of the last 3 peaks. */
+        this.amp[l] = this.medianFilter([ data["disp-graph-" + l][level[0]], 
+                                          data["disp-graph-" + l][level[1]], 
+                                          data["disp-graph-" + l][level[2]] ]); 
+    }
+    
+    /* Amplitude for the base is fixed at 0.7 mm but only applies if the motor
+     * is active. */
+    this.amp[0] = data['motor-on'] ? this.model.baseDisp : 0;
+    
+    /* Angular frequency is derived by the periodicity of peaks. */
+    range =  this.medianFilter([ peaks[0][0] - peaks[0][1],
+                                 peaks[0][1] - peaks[0][2],
+                                 peaks[0][2] - peaks[0][3],
+                                 peaks[0][3] - peaks[0][4] ]);
+    this.w = isFinite(i = 2 * Math.PI * 1 / (0.1 * range)) != Number.Infinity ? i : 0;
+    
+    /* Phase if determined based on the difference in peaks between the level
+     * one and upper levels. */
+    for (l = 2; l <= this.numberLevels - 1; l++)
+    {
+        this.o[l] = 2 * Math.PI * this.medianFilter([ peaks[l - 1][0] - peaks[0][0],
+                                                      peaks[l - 1][1] - peaks[0][1],
+                                                      peaks[l - 1][2] - peaks[0][2],
+                                                      peaks[l - 1][3] - peaks[0][3] ]) / range;
+    }
+    
+    /** Coil states. */
+    if (this.is3DOF)
+    {
+        /* The 3DOF is either on or off. */
+        for (i = 0; i < this.coils.length; i++) this.coils[i] = data['coils-on'] ? 100 : 0;
+    }
+    else
+    {
+        // TODO 2DOF coils
+    }
+    
+    /* Motor details. */
+    this.motor = data['motor-on'] ? data['motor-speed'] : 0;
+};
+
+/**
+ * Runs a median filter on the algorithm.
+ */
+MimicWidget.prototype.medianFilter = function(data) {
+    data = data.sort(function(a, b) { return a - b; });
+    return data[Math.round(data.length / 2)];
+};
+
+MimicWidget.prototype.animationFrame = function() {
+    var disp = [], i;
+    
+    this.fr++;
+    for (i = 0; i < this.numberLevels; i++)
+    {
+        disp[i] = this.amp[i] * Math.sin(this.w * MimicWidget.ANIMATE_PERIOD / 1000 * this.fr + this.o[i]);
+    }
+    
+    this.drawFrame(disp, disp[0] > 0 ? (this.w * MimicWidget.ANIMATE_PERIOD / 1000 * this.fr) : 0);
+};
+
+/**
+ * Animates the mimic.
+ * 
+ * @param disp displacements of each level in mm
+ * @param motor motor rotation
+ */
+MimicWidget.prototype.drawFrame = function(disp, motor) {
+
+    /* Store the current transformation matrix. */
+    this.ctx.save();
+
+    /* Use the identity matrix while clearing the canvas to fix I.E not clearing. */
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+    this.ctx.clearRect(0, 0, this.width, this.height);
+
+    /* Restore the transform. */
+    this.ctx.restore();
+
+    this.drawTrackCarriageMotor(disp[0], motor);
+    
+    var l, xVert = [], yVert = [];
+
+    /* Levels. */
+    for (l = 0; l < this.numberLevels; l++)
+    {
+        xVert.push(this.cx - this.px(this.model.levelWidth / 2 + disp[l]));
+        yVert.push(this.height - this.px(this.model.trackHeight + this.model.carHeight) - 
+                this.px(this.model.levelHeight * (l + 1)) - this.px(this.model.wallHeight * l));
+        
+        /* Coil. */
+        if (l > 0) this.drawCoil(yVert[l] + this.px(this.model.levelHeight / 2), this.coils[l - 1]);
+        
+        /* Mass. */
+        this.drawLevel(xVert[l], yVert[l], l);
+    }
+    
+    /* Arm vertices. */
+    for (l = 0; l < xVert.length - 1; l++)
+    {
+        this.drawVertex(xVert[l], yVert[l], xVert[l + 1], yVert[l + 1] + this.px(this.model.levelHeight));
+        this.drawVertex(xVert[l] + this.px(this.model.levelWidth), yVert[l], 
+                xVert[l + 1] + this.px(this.model.levelWidth), yVert[l + 1] + this.px(this.model.levelHeight));
+    }
+    
+    this.drawGrid();
+};
+
+/** The widget of the coil box in mm. */
+MimicWidget.COIL_BOX_WIDTH = 26;
+
+/**
+ * Draws a coil. 
+ * 
+ * @param y the vertical position of coil
+ * @param pw coil power
+ */
+MimicWidget.prototype.drawCoil = function(y, pw) {
+    var gx = this.width - this.px(20), gy;
+    
+    this.ctx.strokeStyle = "#888888";
+    this.ctx.lineWidth = 1;
+
+    this.ctx.beginPath();
+    this.ctx.moveTo(this.cx, y);
+    this.ctx.lineTo(gx, y);
+    
+    this.ctx.moveTo(gx, y - this.px(this.model.levelHeight) / 2);
+    this.ctx.lineTo(gx, y + this.px(this.model.levelHeight / 2));
+    
+    for (gy = y - this.px(this.model.levelHeight) / 2; 
+            gy <= y + this.px(this.model.levelHeight) / 2; gy += this.px(this.model.levelHeight) / 4)            
+    {
+        this.ctx.moveTo(gx, gy);
+        this.ctx.lineTo(this.width, gy + this.px(5));
+    }
+    
+    this.ctx.stroke();
+    
+    
+    this.ctx.fillStyle = pw === undefined ? "#CCCCCC" : pw > 0 ? "#50C878" : "#ED2939";
+    this.ctx.fillRect(this.width - this.px(55), y - this.px(MimicWidget.COIL_BOX_WIDTH / 2), 
+            this.px(MimicWidget.COIL_BOX_WIDTH), this.px(MimicWidget.COIL_BOX_WIDTH));
+    this.ctx.strokeRect(this.width - this.px(55), y - this.px(MimicWidget.COIL_BOX_WIDTH / 2), 
+            this.px(MimicWidget.COIL_BOX_WIDTH), this.px(MimicWidget.COIL_BOX_WIDTH));
+    
+    this.ctx.fillStyle = "#000000";
+    this.ctx.font = this.px(13) + "px sans-serif";
+    this.ctx.textAlign = "center";
+    this.ctx.textBaseline = "middle";
+    this.ctx.fillText("C", this.width - this.px(55 - this.px(MimicWidget.COIL_BOX_WIDTH / 2)), y);
+    
+};
+
+MimicWidget.prototype.drawVertex = function(x0, y0, x1, y1) {
+    this.ctx.strokeStyle = "#333333";
+    this.ctx.lineWidth = 2;
+    this.ctx.beginPath();
+    this.ctx.moveTo(x0, y0);
+    this.ctx.lineTo(x1, y1);
+    this.ctx.stroke();
+};
+
+/**
+ * Draws a level box from the top left position. 
+ * 
+ * @param x x coordinate
+ * @param y y coordinate
+ * @param l level number
+ */
+MimicWidget.prototype.drawLevel = function(x, y, l) {
+    this.ctx.fillStyle = "#548DD4";
+    this.ctx.fillRect(x, y, this.px(this.model.levelWidth), this.px(this.model.levelHeight));
+    
+    this.ctx.strokeStyle = "#333333";
+    this.ctx.lineWidth = 1.5;
+    this.ctx.strokeRect(x, y, this.px(this.model.levelWidth), this.px(this.model.levelHeight));
+    
+    if (l > 0)
+    {
+        this.ctx.fillStyle = "#000000";
+        this.ctx.font = this.px(13) + "px sans-serif";
+        this.ctx.textAlign = "center";
+        this.ctx.textBaseline = "middle";
+        this.ctx.fillText("M" + l, x + this.px(this.model.levelWidth) / 2, y + this.px(this.model.levelHeight / 2));
+    }
+};
+
+/**
+ * Draws the track, carriage and motor.
+ *  
+ * @param d0 displacement of base level
+ * @param motor motor rotation
+ */
+MimicWidget.prototype.drawTrackCarriageMotor = function(d0, motor) {
+    var tx = this.cx - this.px(this.model.trackWidth / 2), 
+        ty = this.height - this.px(this.model.trackHeight), 
+        mx, my, mr;
+    
+    /* Track. */
+    this.ctx.fillStyle = "#AAAAAA";
+    this.ctx.fillRect(tx, ty, this.px(this.model.trackWidth), this.px(this.model.trackHeight));
+    
+    this.ctx.strokeStyle = "#333333";
+    this.ctx.lineWidth = 1;
+    this.ctx.strokeRect(tx, ty, this.px(this.model.trackWidth), this.px(this.model.trackHeight));
+    
+    this.ctx.beginPath();
+    this.ctx.moveTo(tx, ty + this.px(this.model.trackHeight) / 2 - 1);
+    this.ctx.lineTo(tx + this.px(this.model.trackWidth), ty + this.px(this.model.trackHeight) / 2 - 1);
+    this.ctx.lineWidth = 2;
+    this.ctx.stroke();
+    
+    /* Carriage. */
+    this.ctx.fillStyle = "#666666";
+    this.ctx.fillRect(this.cx - this.px(this.model.levelWidth / 4 + 10) - this.px(d0), ty - this.px(10), this.px(20), this.px(20));
+    this.ctx.fillRect(this.cx + this.px(this.model.levelWidth / 4 - 10) - this.px(d0), ty - this.px(10), this.px(20), this.px(20));
+    this.ctx.strokeStyle = "#222222";
+    this.ctx.strokeRect(this.cx - this.px(this.model.levelWidth / 4 + 10) - this.px(d0), ty - this.px(10), this.px(20), this.px(20));
+    this.ctx.strokeRect(this.cx + this.px(this.model.levelWidth / 4 - 10) - this.px(d0), ty - this.px(10), this.px(20), this.px(20));
+    
+    mx = this.px(40);
+    my = this.height - this.px(44);
+    mr = this.px(20);
+    
+    /* Arm. */    
+    this.ctx.beginPath();
+    this.ctx.moveTo(mx - this.px(8 + d0), my - this.px(15));
+    this.ctx.lineTo(mx + this.px(8 - d0), my - this.px(15));
+    this.ctx.lineTo(mx + this.px(8 - d0), my - this.px(5));
+    this.ctx.lineTo(this.cx, my - this.px(5));
+    this.ctx.lineTo(this.cx, my + this.px(5));
+    this.ctx.lineTo(mx + this.px(8 - d0), my + this.px(5));
+    this.ctx.lineTo(mx + this.px(8 - d0), my + this.px(15));
+    this.ctx.lineTo(mx - this.px(8 + d0), my + this.px(15));
+    this.ctx.closePath();
+    
+    this.ctx.fillStyle = "#AAAAAA";
+    this.ctx.fill();
+    this.ctx.clearRect(mx - this.px(2.5 + d0), my - this.px(9), this.px(5), this.px(18));
+    this.ctx.strokeStyle = "#333333";
+    this.ctx.stroke();
+    this.ctx.strokeRect(mx - this.px(2.5 + d0), my - this.px(9), this.px(5), this.px(18));
+    
+    /* Motor. */
+    this.ctx.save();
+    
+    
+    this.ctx.globalCompositeOperation = "destination-over";
+    
+    /* Couple between the motor and the arm. */
+    this.ctx.beginPath();
+    this.ctx.arc(mx, my - this.px(d0), this.px(4), 0, 2 * Math.PI);
+    this.ctx.fillStyle = "#222222";
+    this.ctx.fill();
+    
+    this.ctx.beginPath();
+    this.ctx.arc(mx, my, mr, -Math.PI / 18 + motor, Math.PI / 18 + motor, false);
+    this.ctx.arc(mx, my, mr, Math.PI - Math.PI / 18 + motor, Math.PI + Math.PI / 18 + motor, false);
+    this.ctx.closePath();
+    this.ctx.strokeStyle = "#333333";
+    this.ctx.stroke();
+    this.ctx.fillStyle = "#999999";
+    this.ctx.fill();
+    
+    this.ctx.beginPath();
+    this.ctx.arc(mx, my, mr, 0, 2 * Math.PI);
+    this.ctx.fillStyle = "#666666";
+    this.ctx.fill();
+    this.ctx.strokeStyle = "#333333";
+    this.ctx.stroke();
+
+    this.ctx.restore();
+    
+    
+};
+
+MimicWidget.GRID_WIDTH = 50;
+
+/**
+ * Draws a grid.
+ */
+MimicWidget.prototype.drawGrid = function() {
+    var d, dt = this.px(MimicWidget.GRID_WIDTH);
+       
+    this.ctx.save();
+    this.ctx.globalCompositeOperation = "destination-over";
+    
+    /* Grid lines. */
+    this.ctx.beginPath();
+    for (d = this.cx - dt; d > 0; d -= dt) this.stippleLine(d, 0, d, this.height);
+    for (d = this.cx + dt; d < this.width - dt; d+= dt) this.stippleLine(d, 0, d, this.height);    
+    for (d = dt; d < this.height; d += dt) this.stippleLine(0, d, this.width, d);
+    this.ctx.strokeStyle = "#AAAAAA";
+    this.ctx.lineWidth = 1;
+    this.ctx.stroke();
+    
+    /* Units. */    
+    this.ctx.beginPath();
+    this.ctx.moveTo(this.px(22), 0);
+    this.ctx.lineTo(this.px(22), dt);
+    
+    this.ctx.moveTo(this.px(10), this.px(10));
+    this.ctx.lineTo(dt + this.px(10), this.px(10));
+    this.ctx.strokeStyle = "#555555";
+    this.ctx.stroke();
+    
+    this.ctx.beginPath();
+    this.ctx.moveTo(this.px(22), 0);
+    this.ctx.lineTo(this.px(22 + 2.5), this.px(5));
+    this.ctx.lineTo(this.px(22 - 2.5), this.px(5));
+    this.ctx.closePath();
+    this.ctx.fillStyle = "#555555";
+    this.ctx.fill();
+    
+    this.ctx.beginPath();
+    this.ctx.moveTo(this.px(22), dt);
+    this.ctx.lineTo(this.px(22 + 2.5), dt - this.px(5));
+    this.ctx.lineTo(this.px(22 - 2.5), dt - this.px(5));
+    this.ctx.closePath();
+    this.ctx.fill();
+    
+    this.ctx.beginPath();
+    this.ctx.moveTo(this.px(10), this.px(10));
+    this.ctx.lineTo(this.px(15), this.px(7.5));
+    this.ctx.lineTo(this.px(15), this.px(12.5));
+    this.ctx.closePath();
+    this.ctx.fill();
+    
+    this.ctx.beginPath();
+    this.ctx.moveTo(this.px(10) + dt, this.px(10));
+    this.ctx.lineTo(this.px(5) + dt, this.px(7.5));
+    this.ctx.lineTo(this.px(5) + dt, this.px(12.5));
+    this.ctx.closePath();
+    this.ctx.fill();
+    
+    this.ctx.font = this.px(10) + "px sans-serif";
+    this.ctx.fillText(MimicWidget.GRID_WIDTH + "mm", this.px(40), this.px(20));
+    
+    /* Center line. */
+    this.ctx.beginPath();
+    this.ctx.moveTo(this.cx, 0);
+    this.ctx.lineTo(this.cx, this.height);
+    this.ctx.moveTo(0, this.height / 2);
+    this.ctx.strokeStyle = "#555555";
+    this.ctx.lineWidth = 1.5;
+    this.ctx.stroke();
+    
+    this.ctx.restore();
+};
+
+MimicWidget.STIPPLE_WIDTH = 10;
+
+/**
+ * Draws a stippled line. 
+ * 
+ * @param x0 begin x coordinate
+ * @param y0 begin y coordinate
+ * @param x1 end x coordinate 
+ * @param y1 end y coordinate
+ */
+MimicWidget.prototype.stippleLine = function(x0, y0, x1, y1) {
+    var p;
+    
+    if (x0 == x1) // Horizontal line
+    {
+        p = y0 - MimicWidget.STIPPLE_WIDTH;
+        while (p < y1)
+        {
+            this.ctx.moveTo(x0, p += MimicWidget.STIPPLE_WIDTH);
+            this.ctx.lineTo(x0, p += MimicWidget.STIPPLE_WIDTH);
+        }
+    }
+    else if (y0 == y1) // Vertical line
+    {
+        p = x0 - MimicWidget.STIPPLE_WIDTH;
+        while (p < x1)
+        {
+            this.ctx.moveTo(p += MimicWidget.STIPPLE_WIDTH, y0);
+            this.ctx.lineTo(p += MimicWidget.STIPPLE_WIDTH, y0);
+        }
+    }
+    else // Diagonal
+    {
+        throw "Diagonal lines not implemented.";
+    }
+};
+
+/**
+ * Converts a pixel dimension to a millimetre dimension.
+ * 
+ * @param px pixel dimension
+ * @return millimetre dimension
+ */
+MimicWidget.prototype.mm = function(px) {
+    return px * this.mmPerPx;
+};
+
+/**
+ * Converts a millimetre dimension to a pixel dimension.
+ * 
+ * @param mm millimetre dimension
+ * @return pixel dimension
+ */
+MimicWidget.prototype.px = function(mm) {
+    return mm / this.mmPerPx;
+};
+
+MimicWidget.prototype.resized = function(width, height) {
+    if (this.animateInterval)
+    {
+        clearInterval(this.animateInterval);
+        this.animateInterval = undefined;
+    }
+
+    height -= 63;
+    this.$widget.find("canvas").attr({
+        width: width,
+        height: height
+    });
+    
+    this.ctx.fillStyle = "#FAFAFA";
+    this.ctx.fillRect(0, 0, width, height);
+};
+
+MimicWidget.prototype.resizeStopped = function(width, height) {
+    this.mmPerPx *= this.boxWidth / width;
+    
+    this.width = this.px(this.model.levelWidth + this.model.maxDisp * 2) + this.px(100);
+    this.cx = this.width / 2;
+
+    this.height = this.px(this.model.levelHeight * (this.is3DOF ? 4 : 3) + 
+            this.model.wallHeight * (this.is3DOF ? 3: 2) + this.model.trackHeight + this.model.carHeight);
+
+    this.boxWidth = width;
+
+    this.$widget.find("canvas").attr({
+        width: this.width,
+        height: this.height
+    });
+    this.$widget.css("height", "auto");
+
+    if (!this.animateInterval) 
+    {
+        var thiz = this;
+        this.animateInterval = setInterval(function() { thiz.animationFrame(); }, MimicWidget.ANIMATE_PERIOD);
+    }
+};
+
+MimicWidget.prototype.destroy = function() {
+    clearInterval(this.animateInterval);
+    this.animateInterval = undefined;
+    
+    SWidget.prototype.destroy.call(this);
+};
+
 
 /* ============================================================================
  * == Base widget                                                            ==
@@ -196,7 +794,7 @@ ShakeTableControl.prototype.errorData = function(msg) {
  * @param title the widgets title
  * @param icon the widgets box icon 
  */
-function Widget($container, title, icon)
+function SWidget($container, title, icon)
 {
 	/** The jQuery object of the container the widget is attached to. */
 	this.$container = $container;
@@ -233,7 +831,7 @@ function Widget($container, title, icon)
 /** 
  * Adds the widget to the page and sets up any widgets event handlers.
  */
-Widget.prototype.init = function() {
+SWidget.prototype.init = function() {
     throw "Widget init not defined.";
 };
 
@@ -243,13 +841,13 @@ Widget.prototype.init = function() {
  * 
  * @param data data object
  */
-Widget.prototype.consume = function(data) { };
+SWidget.prototype.consume = function(data) { };
 
 /** 
  * Removes the widget from the page and cleans up all registered
  * events handlers. 
  */
-Widget.prototype.destroy = function() {     
+SWidget.prototype.destroy = function() {     
     if (this.$widget) this.$widget.remove();
     $(document).unbind("keypress.widget-" + this.id);
 };
@@ -261,12 +859,12 @@ Widget.prototype.destroy = function() {
  * a view that indicates something is amiss. An example of a possible error
  * is an error was received in server data polling.
  */
-Widget.prototype.blur = function() { };
+SWidget.prototype.blur = function() { };
 
 /**
  * Event callback to notify a previous blur can be cleared.
  */
-Widget.prototype.unblur = function() { };
+SWidget.prototype.unblur = function() { };
 
 /** 
  * Event callback that is invoked when the widget is resized. This is called 
@@ -275,7 +873,7 @@ Widget.prototype.unblur = function() { };
  * @param width the new widget width
  * @param height the new widget height
  */
-Widget.prototype.resized = function(width, height) { };
+SWidget.prototype.resized = function(width, height) { };
 
 /**
  * Event callback that is invoked when the widget has finished resizing. 
@@ -283,7 +881,7 @@ Widget.prototype.resized = function(width, height) { };
  * @param width the final widget width
  * @param height the final widget height
  */
-Widget.prototype.resizeStopped = function(width, height) { };
+SWidget.prototype.resizeStopped = function(width, height) { };
 
 /**
  * Event callback that is invoked when the widget has been dragged. 
@@ -291,7 +889,7 @@ Widget.prototype.resizeStopped = function(width, height) { };
  * @param xpos the new x coordinate from its enclosing container
  * @param ypos the new y coordinate from its enclosing container
  */
-Widget.prototype.dragged = function(xpos, ypos) { };
+SWidget.prototype.dragged = function(xpos, ypos) { };
 
 /* ----- WIDGET COMMON BEHAVIOURS AND DISPLAY GENERATION ---------------------- */
 
@@ -305,7 +903,7 @@ Widget.prototype.dragged = function(xpos, ypos) { };
  * @param top top absolute coordinate
  * @param pos the arrow position, 'left', 'right', 'right-bottom', 'top-left', 'top-center'
  */
-Widget.prototype.addMessage = function(msgId, message, type, left, top, pos) {
+SWidget.prototype.addMessage = function(msgId, message, type, left, top, pos) {
 	var $box, i, aniIn, bs = 1, up = true, html = 
 		"<div id='" + msgId + "' class='message-box message-box-" + type + " message-box-in1' style='left:" + left + "px; top:" + top + "px'>" +
 			"<div class='message-box-text'>" + message + "</div>" +
@@ -337,7 +935,7 @@ Widget.prototype.addMessage = function(msgId, message, type, left, top, pos) {
 /**
  * Removes messages from the page.
  */
-Widget.prototype.removeMessages = function() {
+SWidget.prototype.removeMessages = function() {
 	this.$widget.find(".message-box").remove();
 };
 
@@ -349,7 +947,7 @@ Widget.prototype.removeMessages = function() {
  * @param classes additional classes to add to the box
  * @return jQuery node of the generated box that has been appended to the page
  */
-Widget.prototype.generateBox = function(boxId, classes) {
+SWidget.prototype.generateBox = function(boxId, classes) {
     var $w = this.$container.append(
       "<div class='window-wrapper " + (classes ? classes : "") + "' id='" + boxId + "'>" +
           "<div class='window-header'>" +
@@ -389,7 +987,7 @@ Widget.prototype.generateBox = function(boxId, classes) {
  *
  * @param shadeCallback runs a callback function after the shade animation has completed
  */
-Widget.prototype.toggleWindowShade = function(shadeCallback) {
+SWidget.prototype.toggleWindowShade = function(shadeCallback) {
 	if (shadeCallback && typeof(shadeCallback) === "function") {
 	    this.$widget.find(".window-content").slideToggle('fast');
 	    this.$widget.find(".window-header").toggleClass("window-header-shade", "slide",function(){
@@ -428,16 +1026,16 @@ Widget.prototype.toggleWindowShade = function(shadeCallback) {
 };
 
 /** The expanded width of an expanded, resizable widget. */
-Widget.EXPANDED_WIDTH = 800;
+SWidget.EXPANDED_WIDTH = 800;
 
 /** The maximum expanded height of an expanded, resizable widget. */
-Widget.MAX_EXPANDED_HEIGHT = 500;
+SWidget.MAX_EXPANDED_HEIGHT = 500;
 
 /**
  * Toggles the window expand state which makes the widget take a prominent 
  * position on the interface. 
  */
-Widget.prototype.toggleWindowExpand = function() {
+SWidget.prototype.toggleWindowExpand = function() {
     var thiz = this;
     /* Prevents expanding of a shaded widget */
     if (this.window.shaded === true) {
@@ -480,15 +1078,15 @@ Widget.prototype.toggleWindowExpand = function() {
             if (this.$widget.hasClass("ui-resizable"))
             {
                 /* We can resize the widget so we will make it larger. */
-                height = Widget.EXPANDED_WIDTH / width * height;
-                width = Widget.EXPANDED_WIDTH;
+                height = SWidget.EXPANDED_WIDTH / width * height;
+                width = SWidget.EXPANDED_WIDTH;
 
                 /* If the height is larger than the width, we want to scale the 
                 * widget so it first better. */
-                if (height > Widget.MAX_EXPANDED_HEIGHT)
+                if (height > SWidget.MAX_EXPANDED_HEIGHT)
                 {
-                    height = Widget.MAX_EXPANDED_HEIGHT;
-                    width = Widget.MAX_EXPANDED_HEIGHT / this.window.height * this.window.width;
+                    height = SWidget.MAX_EXPANDED_HEIGHT;
+                    width = SWidget.MAX_EXPANDED_HEIGHT / this.window.height * this.window.width;
                 }
 
                 this.$widget.width(width);
@@ -520,15 +1118,15 @@ Widget.prototype.toggleWindowExpand = function() {
 /**
  * Generates the HTML content for the widget box.
  */
-Widget.prototype.getHTML = function() {	};
+SWidget.prototype.getHTML = function() {	};
 
 /** Whether the z-index fix has been applied. */
-Widget.hasZIndexFix = false;
+SWidget.hasZIndexFix = false;
 
 /**
  * Enables this widget to be draggable.
  */
-Widget.prototype.enableDraggable = function() {
+SWidget.prototype.enableDraggable = function() {
 		
     /* Adds the CSS for the draggable widgets */
     this.$widget.addClass('draggable');
@@ -567,7 +1165,7 @@ Widget.prototype.enableDraggable = function() {
         }
     });
 
-	if (!Widget.hasZIndexFix)
+	if (!SWidget.hasZIndexFix)
 	{
 		/* Enables increase Z-index on mouse down. */ 	
 	    $.ui.plugin.add('draggable', 'increaseZindexOnmousedown', {
@@ -581,7 +1179,7 @@ Widget.prototype.enableDraggable = function() {
 	        }
 	    });
 	    
-	    Widget.hasZIndexFix = true;
+	    SWidget.hasZIndexFix = true;
 	}
 };
 
@@ -592,7 +1190,7 @@ Widget.prototype.enableDraggable = function() {
  * @param minHeight the minimum height the widget can be resized to (optional)
  * @param preserveAspectRatio whether to preserve the widgets aspect ratio, default to not preserve 
  */
-Widget.prototype.enableResizable = function(minWidth, minHeight, preserveAspectRatio) {
+SWidget.prototype.enableResizable = function(minWidth, minHeight, preserveAspectRatio) {
     var thiz = this;
 	this.$widget.resizable({
          minWidth: minWidth,
@@ -631,7 +1229,7 @@ Widget.prototype.enableResizable = function(minWidth, minHeight, preserveAspectR
  * @param responseCallback function to be invoked with the response of POST
  * @param errorCallback function to be invoked if an error occurs
  */
-Widget.prototype.postControl = function(action, params, responseCallback, errorCallback) {
+SWidget.prototype.postControl = function(action, params, responseCallback, errorCallback) {
     $.ajax({
         url: "/primitive/mapjson/pc/" + Globals.RC_CONTROLLER + "/pa/" + action,
         data: params,
@@ -647,7 +1245,7 @@ Widget.prototype.postControl = function(action, params, responseCallback, errorC
 /**
  * Stores the state of this widget in a cookie.
  */
-Widget.prototype.storeState = function() {
+SWidget.prototype.storeState = function() {
     var json;
     
     if (JSON.stringify)
@@ -671,7 +1269,7 @@ Widget.prototype.storeState = function() {
 /**
  * Loads the stored state from a store cookie.
  */
-Widget.prototype.loadState = function() {
+SWidget.prototype.loadState = function() {
     var state = getCookie(this.id + '-win');
     
     if (state && state.match(/^{.*}$/))
@@ -693,7 +1291,7 @@ Widget.prototype.loadState = function() {
  */
 function DisplayManager($container, title, widgets) 
 {	
-    Widget.call(this, $container, title, 'toggle');
+    SWidget.call(this, $container, title, 'toggle');
 
     /** Identifier of the display manager box. */
     this.id = 'display-manager';
@@ -707,7 +1305,7 @@ function DisplayManager($container, title, widgets)
     /** Whether the displayed in is blurred state. */
     this.isBlurred = false;
 }
-DisplayManager.prototype = new Widget;
+DisplayManager.prototype = new SWidget;
 
 DisplayManager.prototype.init = function() {
     var thiz = this, i = 0;
@@ -716,11 +1314,12 @@ DisplayManager.prototype.init = function() {
     for (i in this.widgets) 
     {    	
         this.widgets[i].parentManager = this; 
-        this.widgets[i].loadState();
+        if (this.widgets[i]._loadState) this.widgets[i]._loadState();
+        else this.widgets[i].loadState();
     
         if (this.widgets[i].window.shown = this.states[i] = !(this.widgets[i].window.shown === false))
         {
-            this.widgets[i].init();
+            this.widgets[i].init(this.$container);
             
             /* Restore other states. */
             if (this.widgets[i].window.expanded)
@@ -812,7 +1411,7 @@ DisplayManager.prototype.getHTML = function() {
  * @param title the title of the widget to toggle
  * @param node switch node to toggle classes (optional)
  */
-Widget.prototype.toggleWidget = function(title, node) {
+SWidget.prototype.toggleWidget = function(title, node) {
 	var i = 0;
 
 	for (i in this.widgets)
@@ -857,238 +1456,6 @@ DisplayManager.prototype.unblur = function() {
 };
 
 /* ============================================================================
- * == Tabbed Container Widget                                                ==
- * ============================================================================ */
-
-/**
- * The 'tabbed' widget provides a container that holds other widgets within 
- * its tabs. Only one widget is visible at a time 
- */
-function TabbedWidget($container, title, widgets, modeVar, modeAction) 
-{
-   DisplayManager.call(this, $container, title, widgets);
-   
-   /** Identifer of this widget. */
-   this.id = title.toLowerCase().replace(' ', '-') + '-tabs';
-   
-   /** Tab idenfitiers. */
-   this.tabIds = [ ];
-   
-   /** Tab contents container. */
-   this.$tabContainer = undefined;
-   
-   /** Tools tips of the tab. */
-   this.toolTips = undefined;
-   
-   /** Width of the tab box. If this is undefined, the box takes the width
-    *  of its currently displayed contents. */
-   this.width = undefined;
-   
-   /** Height of the box. If this is undefinde, the box takes the height of
-    *  its currently displayed contents. */
-   this.height = undefined;
-   
-   /** Server mode variable the controls which tab is currently active. */ 
-   this.modeVar = modeVar;
-   
-   /** Action to post the mode change to. */
-   this.modeAction = modeAction;
-   
-   /** Current mode. */
-   this.currentMode = undefined;
-   
-   /** If a tab has been clicked to change current tab. */
-   this.tabChanged = false;
-   
-   /** Tool tips hover states. */
-   this.toolTipsHovers = { };
-
-   /* Initialise the tab indentifiers. */
-   var i = 0;
-   for (i in this.widgets) this.tabIds[i] = "tab-" + this.widgets[i].title.toLowerCase().replace(' ', '-');
-}
-TabbedWidget.prototype = new DisplayManager;
-
-TabbedWidget.prototype.init = function() {
-    /* Reset. */
-    this.currentMode = undefined;
-    
-    /* Render the content box. */
-	this.$widget = this.generateBox(this.id);
-	this.$tabContainer = this.$widget.find(".tab-content");
-	
-	var i = 0;
-	for (i in this.widgets)
-	{
-	    /* Replace default boxing with tab containment. */
-	    this.widgets[i].$container = this.$tabContainer;
-	    this.widgets[i].generateBox = function(boxId, icon) {
-	       return this.$container.append(
-	           "<div id='" + boxId + "' class='tab-containment'>" +
-	               this.getHTML() +
-	           "</div>"
-	       ).children().last();
-	    };
-	    this.widgets[i].enableDraggable = function() { /* No-op. */ };   
-	    this.states[i] = false;
-	}
-	
-	var thiz = this;
-	this.$widget.find(".tab-title")
-	    .click(function() { thiz.tabClicked($(this).attr("id")); })
-	    .mouseenter(function() {
-	        var id = $(this).attr("id");
-	        thiz.toolTipsHovers[id] = true;
-	        setTimeout(function() {
-	            if (thiz.toolTipsHovers[id]) thiz.showToolTip(id);
-	        }, 2000);
-	    })
-	    .mouseleave(function() {
-	        thiz.toolTipsHovers[$(this).attr("id")] = false;
-	    });
-	
-	this.$widget.find(".window-close").click(function() {
-	    if   (thiz.parentManager) thiz.parentManager.toggleWidget(thiz.title);
-        else  thiz.destroy();
-	});
-
-	/* Enable dragging. */
-	this.enableDraggable();
-};
-
-TabbedWidget.prototype.generateBox = function(boxId) {
-    var i = 0, html = 
-      "<div class='tab-wrapper' id='" + boxId + "'>" +
-          "<div class='tab-wrapper-controls draggable-header'>" +
-              "<span class='window-close ui-icon ui-icon-close'></span>" +    
-              "<div class='tab-wrapper-height'></div>" +
-          "</div>" +
-         "<div class='tab-header' style='width:" + (this.widgets.length * 122) + "px'>";
-
-    for (i in this.widgets)
-    {
-        html += 
-              "<div id='" + this.tabIds[i] + "' class='tab-title'>" +
-                  "<span class='window-icon icon_"+ this.widgets[i].icon + "'></span>" +
-                  "<span class='window-title'>" + this.widgets[i].title + "</span>" +
-              "</div>";
-    }
-
-    html += 
-         "</div>" + 
-         "<div class='tab-content' style='width:" + (this.width ? this.width + "px" : "inherit") + 
-         		";height:" + (this.height ? this.height + "px" : "inherit") + "'></div>" +
-      "</div>";
-
-    return this.$container.append(html).children().last();
-};
-
-TabbedWidget.prototype.consume = function(data) {
-    if (!this.tabChanged && data[this.modeVar] != undefined && data[this.modeVar] != this.currentMode)
-    {
-        /* Server state is different from the displayed state. */
-        this.currentMode = data[this.modeVar];
-        this.switchTab();
-    }
-    
-    DisplayManager.prototype.consume.call(this, data);
-};
-
-/**
- * Handle a tab being clicked.
- * 
- * @param id identifer of clicked tab
- */
-
-TabbedWidget.prototype.tabClicked = function(id) {
-    if (!$('#' + id).hasClass('tab-active')){
-        this.tabChanged = true;
-
-        this.destroyCurrentTab();
-    
-        var thiz = this, params = { }, i;
-    
-        /* Seach for the new tab index. */
-        for (i = 0; i < this.tabIds.length; i++) if (this.tabIds[i] == id) break; 
-    
-        /* Post the change to the server. */
-        params[this.modeVar] = i;
-        this.postControl(this.modeAction, params, function(data) {
-            thiz.tabChanged = false;
-            thiz.consume(data);
-        });
-    }
-};
-
-/**
- * Switches tab.
- */
-TabbedWidget.prototype.switchTab = function() {
-    this.destroyCurrentTab();
-    this.states[this.currentMode] = true;
-    this.widgets[this.currentMode].init();
-    
-    this.$widget.find(".tab-active").removeClass("tab-active");
-    $("#" + this.tabIds[this.currentMode]).addClass("tab-active");
-};
-
-/**
- * Removes the current tab.
- */
-TabbedWidget.prototype.destroyCurrentTab = function() {
-    var i = 0;
-    
-    /* Remove the displayed widget. */
-    for (i in this.states) 
-    {
-        if (this.states[i]) 
-        {
-            this.widgets[i].destroy();
-            this.states[i] = false;
-            break;
-        }
-    }    
-};
-
-/**
- * Shows a tooltip of a tab.
- * 
- * @param {string} id ID of a tab to show
- */
-TabbedWidget.prototype.showToolTip = function(id) {
-    if ($("#" + id + "-tooltip").size() == 0)
-    {
-        this.removeMessages();
-        
-        var message = "", i = 0;
-        for (i in this.tabIds) if (this.tabIds[i] == id) message = this.toolTips[i];
-        this.addMessage(id + "-tooltip", message, "info", $("#" + id).position().left - 10, -3, "top-left");
-    }
-};
-
-/**
- * Sets the tool tips of the tabs of this container. These tooltips are 
- * displayed when hovering over a tab.
- * 
- * @param toolTips list of tool tips
- */
-TabbedWidget.prototype.setToolTips = function(toolTips) {
-    this.toolTips = toolTips;
-};
-
-/**
- * Sets the dimension of the box. If the width and height are undefined,
- * the box size is determined by its displayed contents.
- * 
- * @param width width of the box in pixels
- * @param height height of the box in pixels
- */
-TabbedWidget.prototype.setDimensions = function(width, height) {
-    this.width = width;
-    this.height = height;
-};
-
-/* ============================================================================
  * == Data Logging                                                           ==
  * ============================================================================ */
 
@@ -1100,7 +1467,7 @@ TabbedWidget.prototype.setDimensions = function(width, height) {
  */
 function DataLogging($container)
 {
-    Widget.call(this, $container, 'Data', 'datafiles');
+    SWidget.call(this, $container, 'Data', 'datafiles');
     
     /** @type {string} Widget box ID. */
     this.id = 'data-logging';
@@ -1126,7 +1493,7 @@ function DataLogging($container)
     /** @type {int} The timeout handle for session file polling. */
     this.filePollHandle = null;
 }
-DataLogging.prototype = new Widget;
+DataLogging.prototype = new SWidget;
 
 DataLogging.prototype.init = function() {
     /* Clear to force UI redraw. */
@@ -1359,7 +1726,7 @@ DataLogging.prototype.checkDownloadable = function(sessionFiles) {
 };
 
 DataLogging.prototype.destroy = function() {
-    Widget.prototype.destroy.call(this);
+    SWidget.prototype.destroy.call(this);
     
     if (this.filePollHandle)
     {
@@ -1383,7 +1750,7 @@ DataLogging.prototype.destroy = function() {
  */
 function GraphWidget($container, title, chained) 
 {
-	Widget.call(this, $container, title, 'graph');
+	SWidget.call(this, $container, title, 'graph');
 
 	/** ID of canvas. */
 	this.id = "graph-" + title.toLowerCase().replace(' ', '-');
@@ -1458,7 +1825,7 @@ function GraphWidget($container, title, chained)
 	/** Whether the controls are displayed. */
 	this.isControlsDisplayed = false;
 }
-GraphWidget.prototype = new Widget;
+GraphWidget.prototype = new SWidget;
 
 GraphWidget.prototype.init = function() {
     /* Size reset. */
@@ -1959,1171 +2326,7 @@ GraphWidget.prototype.setAxisLabels = function(x, y) {
  * == Slider Widget                                                          ==
  * ============================================================================ */
 
-/**
- * Slider widget that displays a slider that allows that provides a slidable
- * scale over the specified range.
- * 
- * @param $container the container to add this widget to
- * @param title the title of this widget
- * @param icon the icon to display for the sliders box
- * @param dataVar the data variable that this slider is manipulating
- * @param postAction the action to post to
- */
-function SliderWidget($container, title, icon, dataVar, postAction) 
-{
-    Widget.call(this, $container, title, icon);
-    
-    /** The identifer of this slider. */
-    this.id = "slider-" + title.toLowerCase().replace(' ', '-');
-    
-    /** The minimum value of this slider. */
-    this.min = 0;
-    
-    /** The maximum value of this slider. */
-    this.max = 100;
-    
-    /** Whether this widget is vertically or horizontally oriented. */
-    this.isVertical = true;
-    
-    /** Dimension of the slider, either height or width value depending 
-     *  on orientation in pixels. */
-    this.dimension = 250;
-    
-    /** Whether the slider is draggable. */
-    this.isDraggable = false;
-    
-    /** Whether the slider is resizable. */
-    this.isResizable = false;
-    
-    /** Precision of label. */
-    this.precision = 1;
-    
-    /** Label for slider. */
-    this.label = '';
-    
-    /** Units for the display. */
-    this.units = '';
-    
-    /** The data variable this slider is manipulating. */
-    this.dataVar = dataVar;
-    
-    /** The location to post data to. */
-    this.postAction = postAction;
-    
-    /** The current value of the data variable. */
-    this.val = undefined;
-    
-    /** Whether the value has changed due to user interaction. */
-    this.valueChanged = false;
-    
-    /** Knob holder. */
-    this.$knob = undefined;
-    
-    /** Value box. */
-    this.$input = undefined;
-    
-    /** Whether we are sliding. */
-    this.isSliding = false;
-    
-    /** Last coordinate in sliding orientation. */
-    this.lastCoordinate = undefined;
-}
-SliderWidget.prototype = new Widget;
 
-/** The number of displayed scales. */
-SliderWidget.NUM_SCALES = 10;
-
-SliderWidget.prototype.init = function() {
-    /* Reset values. */
-    this.val = undefined;
-    this.valueChanged = false;
-    
-    this.$widget = this.generateBox(this.id);
-    
-    var thiz = this;
-    
-    /* Slider events. */
-    this.$knob = this.$widget.find(".slider-knob")
-        .mousedown(function(e) { thiz.slideStart(e.pageX, e.pageY); });
-    
-    /* Slider position click. */
-    this.$widget.find(".slider-outer").bind("click." + this.id, function(e) { thiz.sliderClicked(e.pageX, e.pageY); });
-    
-    /* Value box events. */
-    this.$input = this.$widget.find(".slider-text input")
-        .focusin(formFocusIn)
-        .focusout(formFocusOut)
-        .change(function() { thiz.handleTextBoxChange($(this).val()); });    
-    
-    if (this.isDraggable) this.enableDraggable();
-    if (this.isResizable) this.enableResizable();
-};
-
-/**
- * Handles a slider position click.
- * 
- * @param x coordinate of mouse
- * @param y coordiante of mouse
- */
-SliderWidget.prototype.sliderClicked = function(x, y) {
-    if (this.isSliding) return;
-    
-    var off = this.$widget.find(".slider-outer").offset(),
-        p = this.isVertical ? y - off.top - 7 : x - off.left - 7;
-    
-    /* Value scaling. */
-    this.valueChanged = true;
-    this.val = p * (this.max - this.min) / this.dimension;
-    
-    /* Range check. */
-    if (this.val < this.min) this.val = this.min;
-    if (this.val > this.max) this.val = this.max;
-    
-    /* Vertical sliders have the scale inverse to positioning. */
-    if (this.isVertical) this.val = this.max - this.val;
-    
-    /* Update display. */
-    this.moveTo();
-    this.$input.val(zeroPad(this.val, this.precision));
-    
-    /* Send results. */
-    this.send();
-};
-
-/**
- * Handles slider start.
- * 
- * @param x x coordinate of mouse
- * @param y y coordinate of mouse
- */
-SliderWidget.prototype.slideStart = function(x, y) {
-    /* State management. */
-    this.isSliding = true;
-    this.valueChanged = true;
-    
-    /* Position tracking. */
-    this.lastCoordinate = (this.isVertical ? y : x);
-    
-    /* Event handlings. */
-    var thiz = this;
-    $(document)
-        .bind('mousemove.' + this.id, function(e) { thiz.slideMove (e.pageX, e.pageY); })
-        .bind('mouseup.' + this.id,   function(e) { thiz.slideStop (e.pageX, e.pageY); });
-    
-    /* Stop double handling. */
-    this.$widget.find(".slider-outer").unbind("click." + this.id);
-};
-
-/**
- * Handles slider move.
- *  
- * @param x x coordinate of mouse
- * @param y y coordinate of mouse
- */
-SliderWidget.prototype.slideMove = function(x, y) {
-    if (!this.isSliding) return;
-    
-    /* Scaling to value. */
-    var dist = (this.isVertical ? y : x) - this.lastCoordinate;
-    this.val += (this.max - this.min) * dist / this.dimension * (this.isVertical ? -1 : 1);
-    
-    
-    /* Range check. */
-    if (this.val < this.min) this.val = this.min;
-    if (this.val > this.max) this.val = this.max;
-    
-    /* Display update. */
-    this.$input.val(zeroPad(this.val, this.precision));
-    this.moveTo();
-    
-    /* Position tracking. */
-    this.lastCoordinate = (this.isVertical ? y : x);
-};
-
-/**
- * Handles slide stop.
- * 
- * @param x x coordinate of mouse
- * @param y y coordinate of mouse
- */
-SliderWidget.prototype.slideStop = function(x, y) {
-    if (!this.isSliding) return;
-    
-    $(document)
-        .unbind('mousemove.' + this.id)
-        .unbind('mouseup.' + this.id);
-    
-    this.isSliding = false;
-    this.send();
-    
-    var thiz = this;
-    this.$widget.find(".slider-outer").bind("click." + this.id, function(e) { thiz.sliderClicked(e.pageX, e.pageY); });
-};
-/**
- * Moves the slider to the specified value 
- */
-SliderWidget.prototype.moveTo = function() {
-    var p = this.val / (this.max - this.min) * this.dimension;
-    this.$knob.css(this.isVertical ? "top" : "left", this.isVertical ? this.dimension - p : p);
-};
-
-/**
- * Handles a value text box change.
- * 
- * @param val new value
- */
-SliderWidget.prototype.handleTextBoxChange = function(val) {
-    var ttLeft = this.isVertical ? 60 : this.dimension + 17,
-        ttTop  = this.isVertical ? this.dimension + 82 : 75, n;
-    
-    this.removeMessages();
-    if (!val.match(/^-?\d+\.?\d*$/))
-    {
-        this.addMessage("slider-validation-" + this.id, "Value must be a number.", "error", ttLeft, ttTop, "left");
-        return;
-    }
-    
-    n = parseFloat(val);
-    if (n < this.min || n > this.max)
-    {
-        this.addMessage("slider-validation-" + this.id, "Value out of range.", "error", ttLeft, ttTop, "left");
-        return;
-    }
-    
-    this.valueChanged = true;
-    this.val = n;
-    this.moveTo();
-    this.send();  
-};
-
-SliderWidget.prototype.getHTML = function() {
-    var numScales =  this.max - this.min > 10 ? SliderWidget.NUM_SCALES : this.max - this.min,
-        i, s = (Math.floor((this.max - this.min) / numScales)),
-        html = 
-        "<div class='slider-outer' style='" + (this.isVertical ? "height" : "width") + ":" + this.dimension + "px'>";
-            
-    /* Slider scale. */
-    html += "<div class='slider-scales slider-scales-" + (this.isVertical ? "vertical" : "horizontal") + "'>";
-    for (i = 0; i <= numScales; i++)
-    {
-        html += "<div class='slider-scale' style='" + (this.isVertical ? "top" : "left") + ":" + 
-                        (this.dimension / numScales * i) + "px'>" +
-                    "<span class='ui-icon ui-icon-arrowthick-1-" + (this.isVertical ? "w" : "n") + "'></span>" +
-                    "<span class='slider-scale-value'>" + (this.isVertical ? this.max - s * i : s * i) + "</span>" +
-                "</div>";
-    }
-    html += "</div>";
-    
-    /* Slider post. */
-    html += "<div class='slider-post slider-post-" + (this.isVertical ? "vertical" : "horizontal") + "'></div>";
-    
-    /* Slider knob. */
-    html += "<div class='slider-knob slider-knob-" + (this.isVertical ? "vertical" : "horizontal" ) + "'>" +
-                "<div class='slider-knob-slice slider-knob-back'></div>";
-    
-    for (i = 0; i < 9; i++)
-    {
-        html +=     "<div class='slider-knob-slice slider-knob-slice-" + i + "'></div>";
-    }
-    
-    html += "</div>";
-    
-    html += 
-        "</div>";
-    
-    /* Text box with numeric value. */
-    html +=
-        "<div class='slider-text slider-text-" + (this.isVertical ? "vertical" : "horizontal") +
-                " saharaform' style='margin-" + (this.isVertical ? "top" : "left") + ":" +
-                (this.dimension + (this.isVertical ? 20 : -90)) + "px'>" +                
-                "<label for='" + this.id + "-text' class='slider-text-label'>" + this.label + ":</label>" +
-            "<input id='" + this.id + "-text' type='text' /> " +
-            "<span>" + this.units + "</span>" +
-        "</div>";
-    
-    return html;
-};
-
-/** 
- * Sends the updated value to the server.
- */
-SliderWidget.prototype.send = function() {
-    var thiz = this, params = { };
-    params[this.dataVar] = this.val;
-    this.postControl(this.postAction, params,
-        function(data) {
-            thiz.valueChanged = false;
-        }
-    );
-};
-
-SliderWidget.prototype.consume = function(data) {
-    if (!(data[this.dataVar] == undefined || data[this.dataVar] == this.val || this.valueChanged))
-    {
-        this.val = data[this.dataVar];
-        this.moveTo();
-        this.$input.val(zeroPad(this.val, this.precision));
-    }
-};
-
-/**
- * Sets the range of values this sliders scale has. The default range is 
- * between 0 and 100.
- * 
- * @param min minimum value
- * @param max maximum value
- */
-SliderWidget.prototype.setRange = function(min, max) {
-    this.min = min;
-    this.max = max;
-};
-
-/**
- * Sets the orientation of this slider, which is either vertical or 
- * horizontal. The default orientation is vertical.
- * 
- * @param vertical true if vertical, false if horizontal
- */
-SliderWidget.prototype.setOrientation = function(vertical) {
-    this.isVertical = vertical;
-};
-
-/**
- * Sets the dimension of the slider which is either the height or width of the
- * slider depending on the sliders orientation. The default dimension is 250px.  
- * 
- * @param dimension dimension of the slider in pixels
- */
-SliderWidget.prototype.setDimension = function(dimension) {
-    this.dimension = dimension;
-};
-
-/** Sets the precision of the text input of the slider.
- * 
- * @param precision number digits after decimal point
- */
-SliderWidget.prototype.setPrecision = function(precision) {
-    this.precision = precision;
-};
-
-/**
- * Sets the labels for graphed variables.
- * 
- * @param label label for value text box
- * @param units units units of the sliders value 
- */
-SliderWidget.prototype.setLabels = function(label, units) {
-    this.label = label;
-    this.units = units;
-};
-
-/**
- * Sets whether the slider is draggable.
- * 
- * @param draggable true if draggable
- */
-SliderWidget.prototype.setDraggable = function(draggable) {
-    this.isDraggable = draggable;
-};
-
-/**
- * Sets whether the slider is resizable. 
- * 
- * @param resizable true if resizable
- */
-SliderWidget.prototype.setResizable = function(resizable) {
-    this.isResizable = resizable;
-};
-
-/* ============================================================================
- * == Switch Widget.                                                         ==
- * ============================================================================ */
-
-/**
- * Switch widget which provides a toggable switch.
- * 
- * @param {jQuery} $container the container to add this widget to
- * @param {String} label the label of the switch
- * @param {String} icon box icon
- * @param {String} dataVar data variable that this switch is toggling
- * @param {String} postAction the action to post to 
- */
-function SwitchWidget($container, title, label, icon, dataVar, postAction)
-{
-    Widget.call(this, $container, title, icon);
-    
-    /** {String} The identifier of this slider. */
-    this.id = "switch-" + label.toLowerCase().replace(' ', '-');
-    
-    /** {String} The label of the switch. */
-    this.label = label;
-    
-    /** {String} The data variable this slider is manipulating. */
-    this.dataVar = dataVar;
-    
-    /** {String} Action to send request to. */
-    this.postAction = postAction;
-    
-    /** {boolean} The state of the switch. */
-    this.val = undefined;
-    
-    /** {boolean} Whether the value has been changed by user action. */
-    this.isChanged = false;
-    
-    /** {boolean} Whether this widget is to be draggable. */
-    this.isDraggable = false;
-}
-SwitchWidget.prototype = new Widget;
-
-SwitchWidget.prototype.init = function() {
-    this.$widget = this.generateBox(this.id, "switch-box");
-    
-    var thiz = this;
-    this.$widget.find(".switch-label, .switch").click(function() { thiz.clicked(); });
-    this.$widget.find(".window-title").html('');
-    
-    if (this.isDraggable) this.enableDraggable();
-};
-
-SwitchWidget.prototype.getHTML = function() {
-    return '<div class="switch-container">' +
-               '<label class="switch-label">' + this.label + ':</label>' +
-               '<div class="switch">' +
-                   '<div class="animated slide"></div>' +
-               '</div>' +
-            '</div>';
-};
-
-SwitchWidget.prototype.consume = function(data) {
-    if (!(data[this.dataVar] === undefined || data[this.dataVar] === this.val || this.isChanged))
-    {
-        this.val = data[this.dataVar];
-        this.setDisplay(this.val);
-    }
-};
-
-/**
- * Event handler to be called when the switch is clicked.
- */
-SwitchWidget.prototype.clicked = function() {
-    this.isChanged = true;
-    this.val = !this.val;
-    this.setDisplay(this.val);
-    
-    var thiz = this, params = { };
-    params[this.dataVar] = this.val ? 'true' : 'false';
-    this.postControl(
-        this.postAction,
-        params,
-        function() {
-            thiz.isChanged = false;
-        }
-     );
-
-     if (this.postAction === "setMotor" && this.val == false)
-     {
-         this.postControl('setCoils','coils-on=true');
-     }
-};
-
-/**
- * Sets the display value. 
- * 
- * @param on whether the display should be on or off
- */
-SwitchWidget.prototype.setDisplay = function(on) {
-    if (on)
-    {
-        this.$widget.find(".switch .slide").addClass("on");
-    }
-    else
-    {
-        this.$widget.find(".switch .slide").removeClass("on");
-    }
-};
-
-/**
- * Whether this widget is draggable.
- * 
- * @param draggable true if is draggable
- */
-SwitchWidget.prototype.setDraggable = function(draggable) {
-    this.isDraggable = draggable;
-};
-
-/* ============================================================================
- * == Mimic Widget.                                                          ==
- * ============================================================================ */
-
-/**
- * Mimic Widget. This widget creates and controls the Shake Table Mimic.
- *
- * @param $container the container to append the mimic to
- * @param title the mimic title
- */
-function MimicWidget($container, title)
-{
-    Widget.call(this, $container, title, 'mimic');
-
-    /** {String} The identifier of the Mimic. */
-    this.id = 'mimic';
-
-    /** The box width. The box is the outmost container of the widget. */
-    this.boxWidth = undefined;
-
-    /** The box height. */
-    this.boxHeight = undefined;
-
-	/** The number used to make the mimic smaller. */
-	this.sizeRatio = 1.2;
-
-    /** Width of the mimic. */
-    this.width = Math.floor(360 / this.sizeRatio);
-
-    /** Height of the mimic. */
-    this.height = Math.floor(380 / this.sizeRatio);
-
-	/** The number of seconds the mimic displays. */
-	this.duration = 100;
-
-	/** The period in milliseconds. */
-	this.period = 50;
-
-    /** The X and Y axis labels. */
-    this.axis = {
-        x: Math.floor(80 / this.sizeRatio),
-        y: Math.floor(300 / this.sizeRatio)
-    };
-
-    /** Starting X axis postions of the masses. */
-    this.baseX = this.axis.x;
-    this.mass1X = this.axis.x;
-    this.mass2X = this.axis.x;
-    this.mass3X = this.axis.x;
-
-    /** Canvas context. */
-    this.ctx = null;
-
-    /** Dataset Index */
-    this.datasetIndex = 0;
-
-    /** Frame Index */
-    this.frameIndex = 0;
-
-    /** Whether this widget is pulling data, i.e. polling the server for new
-     *  graphing information. */
-    this.isPulling = true;
-}
-MimicWidget.prototype = new Widget;
-
-MimicWidget.prototype.init = function() {
-    /* Size reset. */
-    this.width = Math.floor(360 / this.sizeRatio);
-    this.height = Math.floor(380 / this.sizeRatio);
-
-    this.$widget = this.generateBox(this.id + '-box');
-
-    /* Add the canvas panel. */
-    this.canvas = getCanvas(this.id, this.width, this.height);
-    this.$widget.find("#" + this.id).append(this.canvas);
-    this.ctx = this.canvas.getContext("2d");
-
-    /* Disable antialiasing. */
-    this.ctx.translate(0.5, 0.5);
-
-    /* Track size. */
-    this.boxWidth = parseInt(this.$widget.css("width"));
-    this.boxHeight = parseInt(this.$widget.css("height"));
-
-    /* Settings for the masses */
-    this.massW = Math.floor(170 / this.sizeRatio);
-    this.massH = Math.floor(25 / this.sizeRatio);
-    this.massBg = '#428AE9';
-    this.massStroke = '#282828';
-
-    /* Settings for the shadows. */
-    this.shadowH = this.massH / 8;
-    this.shadowBg = '#3571c1';
-
-    /* Settings for the guide rail. */
-    this.guideH = this.massH - (this.massH / 1.3);
-    this.guideBg = '#dadada';
-    this.handleH = this.guideH * 2;
-    this.handleW = this.massW - (this.massW / 1.25);
-    this.handleBg = '#aaa';
-    this.handleStroke = '#666';
-
-    /* Motor scotch yoke position. */
-    this.scotchPos = false;
-
-    /* Counter for the peak function. */
-    this.peakCounter = {};
-
-    /* Calculates the Y axes of various mimic elements. */
-    this.mass1Y = this.axis.y - (this.massH * 4);
-    this.mass2Y = this.axis.y - (this.massH * 8);
-    this.mass3Y = this.axis.y - (this.massH * 12);
-    this.guideY = this.axis.y + (this.massH * 1.10);
-    this.handleY = this.axis.y + this.massH;
-    this.circleY = (this.axis.y + (this.massH / 2));
-
-    /* Event handlers. */
-    var thiz = this;
-    this.$widget.find('.mimic-label').click(function() {
-        thiz.showTrace($(this).children(".mimic-label-text").text(),
-                $(this).find(".switch .slide").toggleClass("on off").hasClass("on"));
-	});
-
-    this.$widget.find(".mimic-label-checkbox").click(function() {
-        $(".mimic-label").fadeToggle('fast');
-    });
-
-    this.$widget.find('.mimic-toggle-dampers').click(function() {
-        $('.mimic-damper').fadeToggle('fast');
-    });
-
-    this.$widget.find('.mimic-resonant-button').click(function() {
-        $('.mimic-resonant-legend').fadeToggle('fast');
-        $('.mimic-resonant-upper, .mimic-resonant-lower').hide();
-        $('.res-lower, .res-upper').css('color','#acacac');
-    });
-
-    this.$widget.find('.res-upper').click(function(){
-        $('.mimic-resonant-upper').fadeIn();
-        $('.mimic-resonant-lower').hide();
-        $(this).css('color','#fff');
-        $('.res-lower').css('color','#acacac');
-    });
-
-    this.$widget.find('.res-lower').click(function(){
-        $('.mimic-resonant-lower').fadeIn();
-        $('.mimic-resonant-upper').hide();
-        $(this).css('color','#fff');
-        $('.res-upper').css('color','#acacac');
-    });
-
-    /* Enable dragging. */
-    this.enableDraggable();
-
-    /* Draw the first frame contents. */
-    this.drawFrame();
-
-	/* Pull data if we are setup to pull. */
-	//if (this.isPulling) this.acquireData();
-};
-
-MimicWidget.prototype.getHTML = function() {
-    /* Canvas Element. */
-    var html = "<div class='mimic'>" +
-    "               <div class='mimic-label mimic-label-m3'>M3</div>" +
-    "               <div class='mimic-damper' id='mimic-damper-three'>" +
-    "               <img class='damper-arm damper-arm-two' src='/uts/shaketable/images/damper-arm.png'/>" +
-    "                   <input class='mimic-damperInfo' value='Off'/>" +
-    "               </div>" +
-    "               <div class='mimic-label mimic-label-m2'>M2</div>" +
-    "               <div class='mimic-damper' id='mimic-damper-two'>" +
-    "               <img class='damper-arm damper-arm-two' src='/uts/shaketable/images/damper-arm.png'/>" +
-    "                   <input class='mimic-damperInfo' value='Off'/>" +
-    "               </div>" +
-    "               <div class='mimic-label mimic-label-m1'>M1</div>" +
-    "               <div class='mimic-damper' id='mimic-damper-one'>" +
-    "               <img class='damper-arm damper-arm-one' src='/uts/shaketable/images/damper-arm.png'/>" +
-    "                   <input class='mimic-damperInfo' value='Off'/>" +
-    "               </div>" +
-    "               <div class='mimic-label mimic-label-base'>Base</div>" +
-    "               <span class='mimic-label-motor'><input class='mimic-input-motor' value='-'/>Hz</span>" +
-    "               <span class='click-button mimic-resonant-button'>Resonant Display</span>" +
-    "               <div class='mimic-label-toggle'>Labels <input type='checkbox' class='mimic-label-checkbox' checked/></div>" +
-    "               <div class='mimic-resonant mimic-resonant-legend'>" +
-    "                   <div class='res-upper res-value'>Upper</div>" +
-    "                   <div class='res-lower res-value'>Lower</div>" +
-    "               </div>" +
-    "               <div class='mimic-resonant mimic-resonant-40 mimic-resonant-upper'></div>" +
-    "               <div class='mimic-resonant mimic-resonant-20 mimic-resonant-lower'></div>" +
-    "               <div class='mimic-resonant mimic-resonant-15 mimic-resonant-upper'></div>" +
-    "               <div class='mimic-resonant mimic-resonant-75 mimic-resonant-lower'></div>" +
-    "               <div id='mimic'></div>" +
-    "            </div>";
-
-    return html;
-};
-
-MimicWidget.prototype.consume = function(data) {
-
-    /* Get the motor's angular frequency. */
-    this.w = 2 * Math.PI * data['motor-speed'];
-
-    /* Get the high peaks for each mass level. */
-    this.peakValues = {
-        one: this.filterPeaks(data['disp-graph-1']),
-        two: this.filterPeaks(data['disp-graph-2']),
-        three: this.filterPeaks(data['disp-graph-3'])
-    }
-
-    //TODO Get the difference between levels.
-    /* Difference in index between level 2/3 and level one. */
-    this.c2 = 0;
-    this.c3 = 0;
-
-    /* Determine the phase offsets. */
-    this.phaseOffset = {
-        one: this.peakValues.one,
-        two: this.c2 / (this.peakIndex * 2 * Math.PI),
-        three: this.c3 / (this.peakIndex * 2 * Math.PI)
-    }
-
-    /* Update mimic data. */
-    this.updateData(data);
-};
-
-/**
- * Periodically requests the server to provide mimic data.
- */
-MimicWidget.prototype.acquireData = function() {
-	var thiz = this;
-	$.ajax({
-		url: "/primitive/mapjson/pc/ShakeTableController/pa/dataAndGraph",
-		data: {
-			period: this.period,
-			duration: this.duration,
-			from: 0,     // For now we are just asked for the latest data
-		},
-		success: function(data) {
-			thiz.updateData(data);
-			if (thiz.isPulling) setTimeout(function() { thiz.acquireData(); }, 0.5);
-		},
-		error: function(data) {
-			if (thiz.isPulling) setTimeout(function() { thiz.acquireData(); }, 5000);
-		}
-	});
-};
-
-/**
- * Updates mimic with data received from the server.
- *
- * @param data data object
- */
-MimicWidget.prototype.updateData = function(data) {
-    var thiz = this;
-
-    setTimeout(function() {
-
-        /* Counter incremented every frame. */
-        thiz.frameIndex++;
-
-        /* Get the time for the mimic animation. */
-        thiz.time = (1 / thiz.period) * thiz.frameIndex;
-
-        //TODO get displacement and scale by pixels per mm
-        //pxValue = mmValue * 3.7795275593333;
-        /* Set the displacement values for the mass levels. */
-        thiz.disp = {
-            one: thiz.peakValues.one + Math.sin((thiz.w * thiz.time) + thiz.phaseOffset.one) / thiz.sizeRatio,
-            two: thiz.peakValues.two + Math.sin((thiz.w * thiz.time) + thiz.phaseOffset.two) / thiz.sizeRatio,
-            three: thiz.peakValues.three + Math.sin((thiz.w * thiz.time) + thiz.phaseOffset.three) / thiz.sizeRatio
-        };
-
-        /* Calculate the masses positions. */
-        thiz.baseRange = Math.abs(Math.floor(thiz.disp.one / 7));
-        thiz.baseX = (thiz.disp.one <= 0) ? thiz.axis.x - thiz.baseRange : thiz.axis.x + thiz.baseRange;
-        thiz.mass1X = (thiz.disp.one >= 0) ? thiz.axis.x + thiz.disp.one : thiz.axis.x - Math.abs(thiz.disp.one);
-        thiz.mass2X = (thiz.disp.two >= 0) ? thiz.axis.x + thiz.disp.two : thiz.axis.x - Math.abs(thiz.disp.two);
-        thiz.mass3X = (thiz.disp.three >= 0) ? thiz.axis.x + thiz.disp.three : thiz.axis.x - Math.abs(thiz.disp.three);
-
-        /* Update the frame contents. */
-        thiz.drawFrame();
-
-        /* Get the coil's states and percentages. */
-        thiz.coil = {
-            on1: data['coil-on-1'],
-            on2: data['coil-on-2'],
-            percent1: data['coil-percent-1'],
-            percent2: data['coil-percent-2']
-        }
-
-        /* Change the Motor label to display the Motor's Hz. */
-        thiz.motorSpeed = (data['motor-on'] === true) ? Math.floor(data['motor-speed'] * 100)/100 : '-';
-        $('.mimic-label-motor').find('.mimic-input-motor').val(thiz.motorSpeed);
-
-        /* Update the coil values. */
-        thiz.updateCoils();
-
-    }, 50);
-}
-
-/**
- * Updates the colour indicators and values of the coils.
- */
-MimicWidget.prototype.updateCoils = function() {
-    /* Checks to see if coils are activated */
-    if (this.coil.on1 === true || this.coil.on2 === true)
-    {
-        /* Change the input values to match the values of the coils. */
-        $('#mimic-damper-one').find('input').val(this.coil.percent1 + '%');
-        $('#mimic-damper-two').find('input').val(this.coil.percent2 + '%');
-        $('#mimic-damper-three').find('input').val(this.coil.percent2 + '%');
-
-        /* Change the coil's colour indicators to match their percentages. */
-        $('#mimic-damper-one').animate({'background-position': '0' + this.coil.percent1 + '%',}, 40 ); 
-        $('#mimic-damper-two').animate({'background-position': '0' + this.coil.percent2 + '%',}, 40 );
-        $('#mimic-damper-three').animate({'background-position': '0' + this.coil.percent2 + '%',}, 40 );
-    }
-    else
-    {
-        /* Change the input values of the coils to 0%. */
-        $('#mimic-damper-one').find('input').val('Off');
-        $('#mimic-damper-two').find('input').val('Off');
-        $('#mimic-damper-three').find('input').val('Off');
-
-        /* Change the coil's colour indicators to 0%. */
-        $('#mimic-damper-one').animate({'background-position': '-15%',}, 40 );
-        $('#mimic-damper-two').animate({'background-position': '-15%',}, 40 );
-        $('#mimic-damper-three').animate({'background-position': '-15%',}, 40 );
-    }
-}
-
-/**
- * Get the peak values from an array.
- * 
- * @param arrayVal the array that will be filtered.
- * @param lvl the level that the peakCounter will update to.
- * 
- */
-MimicWidget.prototype.filterPeaks = function(arrayVal) {
-    /* Reset the arrays and index counter. */
-    var peaks = [],
-        peakIndex = 0;
-
-    /* Iterate backwards through arrayVal. */
-    for (i = arrayVal.length -1; i > -1; i--)
-    {
-        /* Get the previous and next values. */
-        var p = arrayVal[Number(i)-1],
-            c = arrayVal[Number(i)],
-            n = arrayVal[Number(i)+1];
-
-        /* Push the high peak values into the 'peaks' array. */
-        if (c > p && c > n)
-        {
-            peaks.push(c);
-        }
-        else
-        {
-        	/* Increment the number of indexes between peaks. */
-            if (peaks.length === 2) peakIndex++;
-        }
-    }
-
-    /* Store the difference of indexes between peaks. */
-    this.peakIndex = peakIndex;
-
-    /* Return the two latest peak values. */
-    return peaks;
-}
-
-/**
- * Animates the mimic.
- */
-MimicWidget.prototype.drawFrame = function() {
-
-    /* Store the current transformation matrix. */
-    this.ctx.save();
-
-    /* Use the identity matrix while clearing the canvas to fix I.E not clearing. */
-    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
-    this.ctx.clearRect(0, 0, this.width, this.height);
-
-    /* Restore the transform. */
-    this.ctx.restore();
-
-    /* Draw the bases left arm. */
-    this.drawArm(this.mass1X, this.mass1Y, 0, this.massH, this.baseX, this.axis.y);
-
-    /* Draw the bases right arm. */
-    this.drawArm(this.mass1X, this.mass1Y, this.massW, this.massH, this.baseX, this.axis.y);
-
-    /* Draw Mass Two's left arm. */
-    this.drawArm(this.mass3X, this.mass3Y, 0, this.massH, this.mass2X, this.mass2Y);
-
-    /* Draw Mass Two's right arm. */
-    this.drawArm(this.mass3X, this.mass3Y, this.massW, this.massH, this.mass2X, this.mass2Y);
-
-    /* Draw Mass Ones's left arm. */
-    this.drawArm(this.mass2X, this.mass2Y, 0, this.massH, this.mass1X, this.mass1Y);
-
-    /* Draw Mass Ones's right arm. */
-    this.drawArm(this.mass2X, this.mass2Y, this.massW, this.massH, this.mass1X, this.mass1Y);
-
-    /* Draw the Base. */
-    this.drawBox(this.baseX, this.axis.y, this.massW, this.massH, this.massBg, this.massStroke, false);
-
-    /* Draw the Base's shadow. */
-    this.drawBox(this.baseX, (this.axis.y - this.massH / 8), this.massW, this.shadowH, this.shadowBg, this.massStroke,false);
-
-    /* Draw Mass One. */
-    this.drawBox(this.mass1X, this.mass1Y, this.massW, this.massH, this.massBg, this.massStroke, true);
-
-    /* Draw Mass One's shadow. */
-    this.drawBox(this.mass1X, (this.mass1Y - this.massH / 8), this.massW, this.shadowH, this.shadowBg, this.massStroke, false);
-
-    /* Draw Mass Two. */
-    this.drawBox(this.mass2X, this.mass2Y, this.massW, this.massH, this.massBg, this.massStroke, true);
-
-    /* Draw Mass Two's shadow. */
-    this.drawBox(this.mass2X, (this.mass2Y + this.massH), this.massW, this.shadowH, this.shadowBg, this.massStroke,false);
-
-    /* Draw Mass Three. */
-    this.drawBox(this.mass3X, this.mass3Y, this.massW, this.massH, this.massBg, this.massStroke, true);
-
-    /* Draw Mass Three's shadow. */
-    this.drawBox(this.mass3X, (this.mass3Y + this.massH), this.massW, this.shadowH, this.shadowBg, this.massStroke,false);
-
-    /* Draw the guide rail. */
-    this.drawBox(this.axis.x, this.guideY, this.massW, this.guideH, this.guideBg, this.massStroke, false);
-
-    /* Get positon for the guide handles that are relative to the position of the base. */
-    this.leftHandleX = this.baseX + (this.massW / 4.5);
-    this.rightHandleX = this.baseX + this.massW - (this.massW / 2.5);
-
-    /* Draw the guide handles. */
-    this.drawBox(this.leftHandleX, this.handleY, this.handleW, this.handleH, this.guideBg, this.handleStroke, false);
-    this.drawBox(this.rightHandleX, this.handleY, this.handleW, this.handleH, this.guideBg, this.handleStroke, false);
-    this.drawBox(this.leftHandleX, this.guideY, this.handleW, this.guideH, this.handleBg, this.handleStroke, false);
-    this.drawBox(this.rightHandleX, this.guideY, this.handleW, this.guideH, this.handleBg, this.handleStroke, false);
-
-    /* Draw the motor outter circle. */
-    this.drawCircle((this.axis.x - (this.axis.x / 1.6)), this.circleY, (Math.floor(this.massH / 1.35)), "#999", 1.3, "#333");
-
-    /* Animate the motor. */
-    this.animateMotor(this.axis.y, this.massH);
-
-    /* Draw the scotch yolk circle. */
-    this.drawCircle(this.yokeX, this.yokeY, 3.5, "#e5e5e5", 1, "#444");
-};
-
-/**
- * Draws a box.
- *
- * @param x the box's x axis.
- * @param y the box's y axis.
- * @param mw the box's width.
- * @param mh the box's height.
- * @param bg the box's background colour.
- * @param label the box's label.
- */
-MimicWidget.prototype.drawBox = function(x,y,bw,bh,bg,stroke,damper) {
-
-    /* Draws the box. */
-    this.ctx.beginPath();
-    this.ctx.rect(x,y,bw,bh);
-    this.ctx.fillStyle = bg;
-    this.ctx.fill();
-    this.ctx.lineWidth = 1;
-    this.ctx.strokeStyle = stroke;
-    this.ctx.stroke();
-
-    if (damper === true)
-    {
-        this.ctx.beginPath();
-        this.ctx.moveTo((x + bw) + 1, (y + (bh / 2)));
-        this.ctx.lineTo((this.width - 20), (y + (bh / 2)));
-        this.ctx.strokeStyle = '#000';
-        this.ctx.stroke();
-    }
-};
-
-/**
- * Draws an arm.
- *
- * @param x the arm's x axis.
- * @param y the arm's y axis.
- * @param mw width of the mass.
- * @param mh height of the mass.
- * @param endX the arms end X axis.
- * @param endY the arms end Y axis.
- */
-MimicWidget.prototype.drawArm = function(x,y,mw,mh,endX,endY) {
-    /* Get the start point of the arm. */
-    mw > 0 ? this.xPos = x + mw - 2 + '.5':
-    this.xPos = x + 1 + '.5';
-    this.yPos = y + mh;
-
-    /* Get the end point of the arm. */
-    mw > 0 ? this.xEnd = endX + mw - 2 + '.5':
-    this.xEnd = endX + 1 + '.5';
-    this.yEnd = endY;
-
-    /* Sets the control point's Y axis depending on the arms position in relation to the canvas height. */
-    if (this.yPos < this.height - (this.height / 1.5))
-    {
-        /* Sets the Y axis for the arm between mass 2 and 3. */
-        this.yCon = y + (y / 0.5);
-    }
-    else if (this.yPos < this.height - (this.height / 2))
-    {
-        /* Sets the Y axis for the arm between mass 1 and 2. */
-        this.yCon = y + (y / 4.5);
-    }
-    else
-    {
-        /* Sets the Y axis for the arm between the base and mass 1. */
-        this.yCon = y + (y / 5.5);
-    }
-
-    /* Draws the arm's border. */
-    this.ctx.beginPath();
-    this.ctx.moveTo(this.xPos,this.yPos);
-    this.ctx.quadraticCurveTo(this.xPos, this.yCon, this.xEnd, this.yEnd);
-    this.ctx.lineWidth = 4;
-    this.ctx.strokeStyle = '#808080';
-    this.ctx.stroke();
-
-    /* Draws the arm. */
-    this.ctx.beginPath();
-    this.ctx.moveTo(this.xPos,this.yPos);
-    this.ctx.quadraticCurveTo(this.xPos, this.yCon, this.xEnd, this.yEnd);
-    this.ctx.lineWidth = 2;
-    this.ctx.strokeStyle = '#dadada';
-    this.ctx.stroke();
-}
-
-/**
- * Draws a circle.
- *
- * @param x the circle's x axis.
- * @param y the circle's y axis.
- * @param radius the radius of the circle.
- * @param fill the fill style of the circle.
- * @param lw the circle's line width
- * @param stroke the circle's stroke style
- */
-MimicWidget.prototype.drawCircle = function(x,y,radius,fill,lw,stroke) {
-    this.ctx.beginPath();
-    this.ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
-    this.ctx.fillStyle = fill;
-    this.ctx.fill();
-    this.ctx.lineWidth = lw;
-    this.ctx.strokeStyle = stroke;
-    this.ctx.stroke();
-}
-
-/**
- * Draws the motor animations.
- *
- * @param x the x axis of the base.
- * @param y the default y axis.
- * @param mh the height of the mass.
- */
-MimicWidget.prototype.animateMotor = function(y,mh) {
-
-    /* get the X axis movement ranges*/
-    this.xPos = {
-        left: this.axis.x - this.baseX,
-        right: this.baseX - this.axis.x
-    };
-
-    /* The movement range of the scotch yoke. */
-    this.yokeRange = 5;
-
-    /* Gets the X axis of the scotch yoke. */
-    this.yokeX = this.axis.x - (this.axis.x / 1.6);
-    this.yokeX = (this.baseX < this.axis.x) ? this.yokeX - (this.xPos.left) : this.yokeX + (this.xPos.right);
-
-    /* x axis positions. */
-    var x1 = (this.yokeX - 6);
-    var x2 = (this.yokeX + 6);
-    var x3 = this.baseX;
-
-    /* y axis positions. */
-    var y1 = (y - (mh / 7));
-    var y2 = (y + 5);
-    var y3 = (y + 14);
-    var y4 = (y + (mh + (mh / 7)));
-
-    /* Draw the motor arm path. */
-    this.ctx.beginPath();
-    this.ctx.moveTo(x1, y1);
-    this.ctx.lineTo(x2, y1);
-    this.ctx.lineTo(x2, y2);
-    this.ctx.lineTo(x3, y2);
-    this.ctx.lineTo(x3, y3);
-    this.ctx.lineTo(x2, y3);
-    this.ctx.lineTo(x2, y4);
-    this.ctx.lineTo(x1, y4);
-    this.ctx.lineTo(x1, y1);
-
-    /* Complete motor arm shape. */
-    this.ctx.closePath();
-    this.ctx.lineWidth = 1;
-    this.ctx.fillStyle = '#ccc';
-    this.ctx.fill();
-    this.ctx.strokeStyle = '#333';
-    this.ctx.stroke();
-
-    /* Draws the box. */
-    this.ctx.beginPath();
-    this.ctx.rect((x1 + 4.5),(y1 + 4.5),3,13);
-    this.ctx.fillStyle = '#808080';
-    this.ctx.fill();
-    this.ctx.lineWidth = 1;
-    this.ctx.strokeStyle = '#333';
-    this.ctx.stroke();
-
-    /* Check if the yoke's x axis is far left. */
-    if (this.xPos.left === this.yokeRange)
-    {
-        /* Set Y axis to the center of parent circle. */
-        this.yokeY = this.circleY;
-
-        /* Set scotch yoke position to bottom. */
-        this.scotchPos = true;
-    }
-    /* Check if the yoke's x axis is far right. */
-    else if(this.xPos.right === (this.yokeRange))
-    {
-        /* Set Y axis to the center of parent circle. */
-        this.yokeY = this.circleY;
-
-        /* Set scotch yoke position to top. */
-        this.scotchPos = false;
-    }
-    else
-    {
-        /* Check if yoke's X axis is one away from either the left or right side of the yokeRange. */
-        if (this.xPos.left === (this.yokeRange - 1) || this.xPos.right === (this.yokeRange - 1))
-        {
-            /* Set the scotch yoke position to four from either the top or bottom. */
-            this.yokeY = (this.scotchPos === false) ? this.circleY + 3 : this.circleY - 3;
-        }
-        /* Check if yoke's X axis is two away from either the left or right side of the yokeRange. */
-        else if (this.xPos.left === (this.yokeRange - 2) || this.xPos.right === (this.yokeRange - 2))
-        {
-            /* Set the scotch yoke position to two from either the top or bottom. */
-            this.yokeY = (this.scotchPos === false) ? this.circleY + 5 : this.circleY - 5;
-        }
-	    else // If x axis is near the center of the circle
-        {
-            /* Set y axis to either the top or bottom of the circle. */
-            this.yokeY = (this.scotchPos === false) ? this.circleY + 7 : this.circleY - 7;
-	    }
-    }
-}
-
-/**
- * Sets the display value.
- *
- * @param on whether the display should be on or off
- */
-MimicWidget.prototype.setDisplay = function(on) {
-    if (on)
-    {
-        this.$widget.find(".switch .slide").addClass("on");
-    }
-    else
-    {
-        this.$widget.find(".switch .slide").removeClass("on");
-    }
-};
 
 /* ============================================================================
  * == Camera Widget                                                          ==
@@ -3139,7 +2342,7 @@ MimicWidget.prototype.setDisplay = function(on) {
  */
 function CameraWidget($container, title, suf) 
 {
-    Widget.call(this, $container, title, 'video');
+    SWidget.call(this, $container, title, 'video');
     
 	/** Identifier of the camera box. */
 	this.id = title.toLowerCase().replace(' ', '-');
@@ -3168,7 +2371,7 @@ function CameraWidget($container, title, suf)
 	/** SWF timer. */
 	this.swfTimer = undefined;
 };
-CameraWidget.prototype = new Widget;
+CameraWidget.prototype = new SWidget;
 
 /** Cookie which stores the users chosen camera format. */
 CameraWidget.SELECTED_FORMAT_COOKIE = "camera-format";
@@ -3412,7 +2615,7 @@ CameraWidget.prototype.resizeStopped = function(width, height) {
 
 CameraWidget.prototype.destroy = function() {
     this.undeploy();
-    Widget.prototype.destroy.call(this);
+    SWidget.prototype.destroy.call(this);
 };
 
 /**
@@ -3457,114 +2660,6 @@ CameraWidget.prototype.toggleWindowShade = function(shadeCallback) {
         /* Enable resizing */
         this.$widget.find('.ui-resizable-handle').css('display', 'block');
     }
-};
-
-/* ============================================================================
- * == Information Widget                                                     ==
- * ============================================================================ */
-
-/**
- * Information displaying widget. The information can be of type 'info' which
- * shows an informational guiadance message, 'error' which shows an error message,
- * '
- * 
- * @param 
- */
-function PlaceHolderWidget($container, title, icon, message, type)
-{
-    Widget.call(this, $container, title, icon);
-    
-    /** Identifer of this widget. */
-    this.id = "place-holder-" + title.toLowerCase().replace(' ', '-');
-    
-    /** Message that is displayed by this widget. */
-    this.message = message;
-    
-    /** The information type of this widget; either 'info', 'error', or 
-     * 'loading'. */
-    this.type = type;
-}
-
-PlaceHolderWidget.prototype = new Widget;
-
-PlaceHolderWidget.prototype.init = function() {
-    this.$widget = this.generateBox(this.id);
-};
-
-PlaceHolderWidget.prototype.getHTML = function() {
-    var html = '<div class="place-holder place-holder-' + this.type + '">';
-    
-    switch (this.type)
-    {
-    case 'info':
-        html += '<p>Guidance: <span class="place-holder-message">' + this.message + '</span></p>';
-        break;
-        
-    case 'error':
-        html += '<p>Error: <span class="place-holder-message">' + this.message + '</span></p>';
-        break;
-        
-    case 'loading':
-        html += '<img src="/uts/coupledtanksnew/images/loading.gif" alt=" " />' +
-                '<p>Please wait: <span class="place-holder-message">' + this.message + '</span></p>';
-        break;
-    }
-    
-    html +=    '</div>';
-    return html;
-};
-
-/* ============================================================================
- * == Global Error Widget                                                    ==
- * ============================================================================ */
-
-/**
- * Display an error overlay on the page.
- * 
- * @param $container page container
- */
-function GlobalError($container) 
-{
-	Widget.call(this, $container, 'Global Error', 'settings');
-	
-	/** Displayed error message. */
-	this.error = '';
-};
-
-GlobalError.prototype = new Widget;
-
-GlobalError.prototype.init = function() {	
-    this.$widget = this.$container.append(
-    	"<div id='global-error' class='global-error-overlay'>" +
-            "<div class='global-error-container'>" +
-		        "<span class='ui-icon ui-icon-alert global-error-icon'></span>" +
-		        "<span class='global-error-heading'>Alert!</span>" +
-		        "<span class='window-close ui-icon ui-icon-close global-error-close'></span>" +
-                "<p class='global-error-message'>This web page has encountered an error. This may be " +
-                "because you are no longer connected to the internet. To resolve this error, first " +
-                "check your internet connection, then refresh this page.<br/><br/>" +
-                "If further assistance is required, please use the 'Contact Support' button to the " +
-                "right of the page.</p>" +
-                "<p class='global-error-log'>" + this.error + "</p>" +
-            "</div>" +
-        "</div>"
-    ).children().last();
-
-    /* Add a error class to widget boxes. */
-    this.$container.find(".window-wrapper, .tab-wrapper").addClass("global-error-blur");
-    
-    var thiz = this;
-    this.$widget.find(".window-close").click(function() { thiz.destroy(); });
-    
-    $(document).bind("keydown.global-error", function(e) {
-        if (e.keyCode == 27) thiz.destroy();
-    });
-};
-
-GlobalError.prototype.destroy = function() {
-    $(document).unbind("keydown.global-error");
-    this.$container.find(".window-wrapper, .tab-wrapper").removeClass("global-error-blur");
-    Widget.prototype.destroy.call(this);
 };
 
 /* ============================================================================

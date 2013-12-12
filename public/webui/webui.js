@@ -50,8 +50,10 @@ Globals = {
  * @config {integer} [minWidth] minimum width of widget if resizable
  * @config {integer} [minHeight] minimum height of widget if resizable
  * @config {boolean} [preserveAspectRatio] whether aspect ratio should be kept if resizable (default false)
- * @config {boolean} [expandable] whether this widget should be expandable
+ * @config {boolean} [expandable] whether this widget should be expandable (default false)
  * @config {boolean} [draggable] whether this widget should be draggable (default false)
+ * @config {boolean} [shadeable] whether this widget should be shadeable (default false)
+ * @config {boolean} [closeable] whether this widget should be closeable (default false) 
  * @config {string}  [tooltip] tooltip to show on hover (optional)
  */
 function Widget(id, config)
@@ -351,7 +353,7 @@ Widget.prototype.toggleWindowExpand = function() {
  * @return {jQuery} node of the generated box that has been appended to the page
  */
 Widget.prototype._generate = function($container, html) {
-    var $w = $container.append(
+    this.$widget = $container.append(
       "<div class='window-wrapper window-" + Globals.THEME + " " + 
                   (this.config.classes ? this.config.classes.join(' ') : "") + "' id='" + this.id + "' " +
                   "style='" +
@@ -361,20 +363,25 @@ Widget.prototype._generate = function($container, html) {
           "<div class='window-header'>" +
               (this.config.icon ? "<span class='window-icon icon_"+ this.config.icon + "'></span>" : "")+
               (this.config.title ? "<span class='window-title'>" + this.config.title + "</span>" : "") +
-              "<span class='window-close ui-icon ui-icon-close'></span>" +
-              "<span class='window-shade ui-icon ui-icon-minus'></span>" + 
-              "<span class='window-expand ui-icon ui-icon-arrow-4-diag'></span>" +             
+              (this.config.closeable ? "<span class='window-close ui-icon ui-icon-close'></span>" : "") +
+              (this.config.shadeable ? "<span class='window-shade ui-icon ui-icon-minus'></span>" : "") + 
+              (this.config.expandable ? "<span class='window-expand ui-icon ui-icon-arrow-4-diag'></span>" : '') +             
           "</div>" +
           "<div class='window-content'>" + 
               html +
           "</div>" +
       "</div>"
-    ).children().last(), thiz = this;
+    ).children().last();
     
-    $w.find(".window-expand").click(function() { thiz.toggleWindowExpand(); });
-    $w.find(".window-shade").click(function() { thiz.toggleWindowShade(); });
-    $w.find(".window-header").dblclick(function() { thiz.toggleWindowShade(); });
-    $w.find(".window-close").click(function() { thiz.destroy(); });
+    var thiz = this;
+    
+    if (this.config.expandable) this.$widget.find(".window-expand").click(function() { thiz.toggleWindowExpand(); });
+    if (this.config.shadeable)
+    {
+        this.$widget.find(".window-shade").click(function() { thiz.toggleWindowShade(); });
+        this.$widget.find(".window-header").dblclick(function() { thiz.toggleWindowShade(); });
+    }
+    if (this.config.closeable) this.$widget.find(".window-close").click(function() { thiz.destroy(); });
     
     $(document).bind("keypress.widget-" + this.id, function(e) {
        switch (e.keyCode) 
@@ -385,11 +392,11 @@ Widget.prototype._generate = function($container, html) {
        }
     });
     
-    if (this.config.draggable) this._makeDraggable($w);
-    if (this.config.resizable) this._makeResizable($w);
-    if (this.config.tooltip) this._addTooltip($w);
+    if (this.config.draggable) this._makeDraggable(this.$widget);
+    if (this.config.resizable) this._makeResizable(this.$widget);
+    if (this.config.tooltip) this._addTooltip(this.$widget);
     
-    return $w;
+    return this.$widget;
 };
 
 /** @global Tooltip timeout period. */
@@ -445,7 +452,11 @@ Widget.prototype._makeDraggable = function($w) {
                     top: this.window.top,
                     zIndex: this.window.zin
                 });
-        this.dragged(this.window.left, this.window.top);
+        try
+        {
+            this.dragged(this.window.left, this.window.top);
+        }
+        catch (e) { }
     }
     
     /* Enables dragging on the widgets 'window-wrapper' class */
@@ -517,9 +528,13 @@ Widget.prototype._makeResizable = function($w) {
             width: this.window.width,
             height: this.window.height
         });
-        
-        this.resized(this.window.width, this.window.height);
-        this.resizeStopped(this.window.width, this.window.height);
+
+        try
+        {
+            this.resized(this.window.width, this.window.height);
+            this.resizeStopped(this.window.width, this.window.height);
+        }
+        catch (e) { }
     }
 };
 
@@ -607,7 +622,7 @@ function Graph()
  * @param {string} id the identifier of widget
  * @param {object} config configuration of widget
  * @config {string} [field] server data variable that is being switched
- * @config {string} [action] server action to call when the switched is changed1
+ * @config {string} [action] server action to call when the switched is changed
  * @config {string} [label] switch label (optional)
  * @config {string} [stickColor] sets the color of the switches stick (silver, black, red)
  * @config {string} [led] set switch LED indicator (optional)
@@ -871,101 +886,294 @@ function Spinner()
  * ============================================================================ */
 
 /**
- * A Slider switch allows the selection of a range of options.
- *
- * @constructor
- * @param {string} id the identifier of widget
+ * Slider widget that displays a slider that allows that provides a slidable
+ * scale over the specified range.
+ * 
+ * @param {string} id widget identifier
  * @param {object} config configuration of widget
- * @config {string} [field] server data variable that is being switched
- * @config {string} [action] server action to call when the slider's value is changed
- * @config {string} [label] slider label (optional)
- * @config {string} [units] units for the display
- * @config {string} [vertical] set slider vertical or horizontal (default horizontal)
- * @config {string} [labeltext] the label to appear next to the range input field
- * @config {number} [min] the minimum value of the slider
- * @config {number} [max] the maximum value of this slider
- * @config {number} [dimension] dimension of the slider, height or width value depending on orientation (in pixels)
- * @config {number} [scales] the number of displayed scales
+ * @config {string}  [field] server data variable that is being set
+ * @config {string}  [action] server action to call when the slider is changed
+ * @config {boolean} [textEntry] whether text entry is displayed (default true) 
+ * @config {string}  [label] slider label (optional)
+ * @config {string}  [units] units label to display (optional)
+ * @config {integer} [precision] precision of displayed value (default 1)
+ * @config {integer} [min] minimum value of slider (default 0)
+ * @config {integer} [max] maximum value of slider (default 100)
+ * @config {boolean} [vertical] whether slider is vertically or horizontally orientated (default vertical)
+ * @config {integer} [length] length of slider in pixels (default 250)
+ * @config {integer} [scales] number of scales to display (default fitted to min, max value)
  */
 function Slider(id, config)
 {
-    if (!(config.field || config.action || config.values)) throw "Options not supplied."; 
+    if (!(config.field || config.action)) throw "Options not supplied.";
     
     Widget.call(this, id, config);
+    
+    /* Default options. */
+    if (this.config.min === undefined) this.config.min = 0;
+    if (this.config.max === undefined) this.config.max = 100;
+    if (this.config.vertical === undefined) this.config.vertical = true;
+    if (this.config.textEntry === undefined) this.config.textEntry = true;
+    if (this.config.length === undefined) this.config.length = 250;
+    if (this.config.label === undefined) this.config.label = '';
+    if (this.config.units === undefined) this.config.units = '';
+    if (this.config.precision === undefined) this.config.precision = 1;
+    if (this.config.scales === undefined) this.config.scales = 
+            this.config.max - this.config.min > 10 ? 10 : this.config.max - this.config.min;
 
-    /** @private {boolean} The selected value. */
+    /** The current value of the data variable. */
     this.val = undefined;
     
-    /** @private {boolean} Whether the value has been changed by user action. */
-    this.isChanged = false;  
+    /** Whether the value has changed due to user interaction. */
+    this.valueChanged = false;
+    
+    /** Knob holder. */
+    this.$knob = undefined;
+    
+    /** Value box. */
+    this.$input = undefined;
+    
+    /** Whether we are sliding. */
+    this.isSliding = false;
+    
+    /** Last coordinate in sliding orientation. */
+    this.lastCoordinate = undefined;
 }
-
 Slider.prototype = new Widget;
 
 Slider.prototype.init = function($container) {
-    //TODO Finish Slider
-    this.$widget = this._generate($container,
-    	(this.config.label ? "<label>" + this.config.label + "</label>" : '') +
-        "<div class='slider-outer'>" +
-    	"<div id='slider-container-" + this.id + "' class='slider-container' style='" + 
-    	(this.config.vertical ? "height" : "width") + ":" + this.config.dimension + "px'>" +
-            "<div id='slider-scales-" + this.id + "' class='slider-scales slider-scales-" +
-            (this.config.vertical ? "vertical" : "horizontal") + "'></div>" +
-            "<div id='slider-post-" + this.id + "' class='slider-post slider-post-" + (this.config.vertical ? "vertical" : "horizontal") + "'></div>" +
-            "<div id='slider-knob-" + this.id + "' class='slider-knob slider-knob-" + (this.config.vertical ? "vertical" : "horizontal")+ "'></div>" +
-            "<div class='slider-text-" + (this.config.vertical ? "vertical" : "horizontal") + "'>" + this.config.labeltext + "</div>" +
-        "</div></div>"
-    );
+    /* Reset values. */
+    this.val = undefined;
+    this.valueChanged = false;
+    
+    this.$widget = this._generate($container, this._buildHTML());
+    
+    var thiz = this;
+    
+    /* Slider events. */
+    this.$knob = this.$widget.find(".slider-knob")
+        .mousedown(function(e) { thiz._slideStart(e.pageX, e.pageY); });
+    
+    /* Slider position click. */
+    this.$widget.find(".slider-outer").bind("click." + this.id, function(e) { thiz._sliderClicked(e.pageX, e.pageY); });
+    
+    /* Value box events. */
+    if (this.config.textEntry) this.$input = this.$widget.find(".slider-text input")
+        .focusin(formFocusIn)
+        .focusout(formFocusOut)
+        .change(function() { thiz._handleTextBoxChange($(this).val()); });    
+};
 
-    var s = Math.floor((this.config.max - this.config.min) / this.config.scales);
-
+Slider.prototype._buildHTML = function() {
+    var i, s = (Math.floor((this.config.max - this.config.min) / this.config.scales)),
+        html = 
+        "<div class='slider-outer' style='" + (this.config.vertical ? "height" : "width") + ":" + this.config.length + "px'>";
+            
+    /* Slider scale. */
+    html += "<div class='slider-scales slider-scales-" + (this.config.vertical ? "vertical" : "horizontal") + "'>";
     for (i = 0; i <= this.config.scales; i++)
     {
-        $("#slider-scales-" + this.id).append(
-            "<div class='slider-scale' style='" + (this.config.vertical ? "top" : "left") + ":" + 
-             (this.config.dimension / this.config.scales * i) + "px'>" +
-                 "<span class='ui-icon ui-icon-arrowthick-1-" + (this.config.vertical ? "w" : "n") + "'></span>" +
-                 "<span class='slider-scale-value'>" + (this.config.vertical ? this.config.max - s * i : s * i) + "</span>" +
-            "</div>"
-        );
+        html += "<div class='slider-scale' style='" + (this.config.vertical ? "top" : "left") + ":" + 
+                        (this.config.length / this.config.scales * i) + "px'>" +
+                    "<span class='ui-icon ui-icon-arrowthick-1-" + (this.config.vertical ? "w" : "n") + "'></span>" +
+                    "<span class='slider-scale-value'>" + 
+                            (this.config.vertical ? this.config.max - s * i : this.config.min + s * i) + "</span>" +
+                "</div>";
     }
+    html += "</div>";
+    
+    /* Slider post. */
+    html += "<div class='slider-post slider-post-" + (this.config.vertical ? "vertical" : "horizontal") + "'></div>";
+    
+    /* Slider knob. */
+    html += "<div class='slider-knob slider-knob-" + (this.config.vertical ? "vertical" : "horizontal" ) + "'>" +
+                "<div class='slider-knob-slice slider-knob-back'></div>";
+    
+    for (i = 0; i < 9; i++)
+    {
+        html +=     "<div class='slider-knob-slice slider-knob-slice-" + i + "'></div>";
+    }
+    
+    html += "</div>";
+    
+    html += 
+        "</div>";
+    
+    /* Text box with numeric value. */
+    html += this.config.textEntry ?
+        "<div class='slider-text slider-text-" + (this.config.vertical ? "vertical" : "horizontal") +
+                " saharaform' style='margin-" + (this.config.vertical ? "top" : "left") + ":" +
+                (this.config.length + (this.config.vertical ? 20 : -200)) + "px'>" +                
+                "<label for='" + this.id + "-text' class='slider-text-label'>" + this.config.label + ":&nbsp;</label>" +
+            "<input id='" + this.id + "-text' type='text' /> " +
+            "<span>" + this.config.units + "</span>" +
+        "</div>" : 
+        "<div class='slider-text-" + (this.config.vertical ? "vertical" : "horizontal") +
+                "' style='margin-" + (this.config.vertical ? "top" : "left") + ":" +
+                (this.config.length + (this.config.vertical ? 20 : -90)) + "px'>" + this.config.label + "</div>";
+    
+    return html;
+};
 
+/**
+ * Handles a slider position click.
+ * 
+ * @param {number} x coordinate of mouse
+ * @param {number} y coordiante of mouse
+ */
+Slider.prototype._sliderClicked = function(x, y) {
+    if (this.isSliding) return;
+    
+    var off = this.$widget.find(".slider-outer").offset(),
+        p = this.config.vertical ? y - off.top - 7 : x - off.left - 7;
+    
+    /* Value scaling. */
+    this.valueChanged = true;
+    this.val = p * (this.config.max - this.config.min) / this.config.length + this.config.min;
+    
+    /* Range check. */
+    if (this.val < this.config.min) this.val = this.config.min;
+    if (this.val > this.config.max) this.val = this.config.max;
+    
+    /* Vertical sliders have the scale inverse to positioning. */
+    if (this.config.vertical) this.val = this.config.max + this.config.min - this.val;
+    
+    /* Update display. */
+    this._moveTo();
+    if (this.config.textEntry) this.$input.val(Util.zeroPad(this.val, this.config.precision));
+    
+    /* Send results. */
+    this._send();
+};
+
+/**
+ * Handles slider start.
+ * 
+ * @param {number} x x coordinate of mouse
+ * @param {number} y y coordinate of mouse
+ */
+Slider.prototype._slideStart = function(x, y) {
+    /* State management. */
+    this.isSliding = true;
+    this.valueChanged = true;
+    
+    /* Position tracking. */
+    this.lastCoordinate = (this.config.vertical ? y : x);
+    
+    /* Event handlings. */
     var thiz = this;
-    this.$widget.find(".slider").click(function() { thiz._clicked(); });	
+    $(document)
+        .bind('mousemove.' + this.id, function(e) { thiz._slideMove (e.pageX, e.pageY); })
+        .bind('mouseup.' + this.id,   function(e) { thiz._slideStop (e.pageX, e.pageY); });
+    
+    /* Stop double handling. */
+    this.$widget.find(".slider-outer").unbind("click." + this.id);
+};
+
+/**
+ * Handles slider move.
+ *  
+ * @param {number} x x coordinate of mouse
+ * @param {number} y y coordinate of mouse
+ */
+Slider.prototype._slideMove = function(x, y) {
+    if (!this.isSliding) return;
+    
+    /* Scaling to value. */
+    var dist = (this.config.vertical ? y : x) - this.lastCoordinate;
+    this.val += (this.config.max - this.config.min) * dist / this.config.length * (this.config.vertical ? -1 : 1);
+    
+    
+    /* Range check. */
+    if (this.val < this.config.min) this.val = this.config.min;
+    if (this.val > this.config.max) this.val = this.config.max;
+    
+    /* Display update. */
+    if (this.config.textEntry) this.$input.val(Util.zeroPad(this.val, this.config.precision));
+    this._moveTo();
+    
+    /* Position tracking. */
+    this.lastCoordinate = (this.config.vertical ? y : x);
+};
+
+/**
+ * Handles slide stop.
+ * 
+ * @param {number} x x coordinate of mouse
+ * @param {number} y y coordinate of mouse
+ */
+Slider.prototype._slideStop = function(x, y) {
+    if (!this.isSliding) return;
+    
+    $(document)
+        .unbind('mousemove.' + this.id)
+        .unbind('mouseup.' + this.id);
+    
+    this.isSliding = false;
+    this._send();
+    
+    var thiz = this;
+    this.$widget.find(".slider-outer").bind("click." + this.id, function(e) { thiz._sliderClicked(e.pageX, e.pageY); });
+};
+/**
+ * Moves the slider to the specified value 
+ */
+Slider.prototype._moveTo = function() {
+    var p = this.val / (this.config.max - this.config.min) * this.config.length - 
+            this.config.min / (this.config.max - this.config.min) * this.config.length;
+    this.$knob.css(this.config.vertical ? "top" : "left", this.config.vertical ? this.config.length - p : p);
+};
+
+/**
+ * Handles a value text box change.
+ * 
+ * @param {number} val new value
+ */
+Slider.prototype._handleTextBoxChange = function(val) {
+    var ttLeft = this.config.vertical ? 60 : this.config.length + 17,
+        ttTop  = this.config.vertical ? this.config.length + 82 : 75, n;
+    
+    this.removeMessages();
+    if (!val.match(/^-?\d+\.?\d*$/))
+    {
+        this.addMessage("Value must be a number.", Widget.MESSAGE_TYPE.error, ttLeft, ttTop, Widget.MESSAGE_INDICATOR.left);
+        return;
+    }
+    
+    n = parseFloat(val);
+    if (n < this.config.min || n > this.config.max)
+    {
+        this.addMessage("Value out of range.", Widget.MESSAGE_TYPE.error, ttLeft, ttTop, Widget.MESSAGE_INDICATOR.left);
+        return;
+    }
+    
+    this.valueChanged = true;
+    this.val = n;
+    this._moveTo();
+    this._send();  
+};
+
+/** 
+ * Sends the updated value to the server.
+ */
+Slider.prototype._send = function() {
+    var thiz = this, params = { };
+    params[this.config.field] = this.val;
+    this._postControl(this.config.action, params,
+        function(data) {
+            thiz.valueChanged = false;
+        }
+    );
 };
 
 Slider.prototype.consume = function(data) {
-
+    if (!(data[this.config.field] === undefined || data[this.config.field] == this.val || this.valueChanged))
+    {
+        this.val = data[this.config.field];
+        this._moveTo();
+        if (this.config.textEntry) this.$input.val(Util.zeroPad(this.val, this.config.precision));
+    }
 };
-
-/**
- * Event handler to be called when a value is clicked.
- */
-Slider.prototype._clicked = function() {
-    //TODO Set values when the slider is clicked
-    this.val = undefined;
-    this.isChanged = true;
-    this._animateSlider();
-
-    var thiz = this, params = { };
-    params[this.config.field] = this.val;
-    this._postControl(
-        this.config.action,
-        params,
-        function() {
-            thiz.isChanged = false;
-        }
-     );
-};
-
-/**
- * Animates the slider. 
- * 
- * @param point the selected label
- */
-Slider.prototype._animateSlider = function(point) {
-    //TODO Animate Slider
-}
 
 /* ============================================================================
  * == LED widget                                                             ==
@@ -1037,6 +1245,97 @@ function LinearGauge()
 {
     // TODO Implement Linear Gauge widget
 }
+
+
+/* ============================================================================
+ * == Global Error Widget                                                    ==
+ * ============================================================================ */
+
+/**
+ * Display an error overlay on the page.
+ */
+function GlobalError() 
+{
+	Widget.call(this, 'global-error-overlay', { });
+	
+	/** @private {jQuery} Parent container. */
+	this.$container = undefined;
+	
+	/** @private {String} Displayed error message. */
+	this.error = '';
+};
+
+GlobalError.prototype = new Widget;
+
+GlobalError.prototype.init = function($container) {
+    this.$container = $container ? $container : $("#rigscriptcontainer");
+    
+    this.$widget = this.$container.append(
+    	"<div id='global-error' class='global-error-overlay'>" +
+            "<div class='global-error-container'>" +
+		        "<span class='ui-icon ui-icon-alert global-error-icon'></span>" +
+		        "<span class='global-error-heading'>Alert!</span>" +
+		        "<span class='window-close ui-icon ui-icon-close global-error-close'></span>" +
+                "<p class='global-error-message'>This web page has encountered an error. This may be " +
+                "because you are no longer connected to the internet. To resolve this error, first " +
+                "check your internet connection, then refresh this page.<br/><br/>" +
+                "If further assistance is required, please use the 'Contact Support' button to the " +
+                "right of the page.</p>" +
+                "<p class='global-error-log'>" + this.error + "</p>" +
+            "</div>" +
+        "</div>"
+    ).children().last();
+
+    /* Add a error class to widget boxes. */
+    this.$container.find(".window-wrapper, .tab-wrapper").addClass("global-error-blur");
+    
+    var thiz = this;
+    this.$widget.find(".window-close").click(function() { thiz.destroy(); });
+    
+    $(document).bind("keydown.global-error", function(e) {
+        if (e.keyCode == 27) thiz.destroy();
+    });
+};
+
+/**
+ * Returns the error message string currently displayed.
+ * 
+ * @returns {String} error message
+ */
+GlobalError.prototype.getError = function() {
+    return this.error;
+};
+
+/**
+ * Displays the specified error message. 
+ * 
+ * @param {String} error message to display. 
+ */
+GlobalError.prototype.displayError = function(error) {
+    if (this.error != error)
+    {
+        /* Clear previous display. */
+        if (this.$container) this.destroy();
+        
+        this.error = error;
+        this.init();
+    }
+};
+
+/**
+ * Clears displaying an error message.
+ */
+GlobalError.prototype.clearError = function() {
+    this.error = null;
+    this.destroy();
+};
+
+GlobalError.prototype.destroy = function() {
+    $(document).unbind("keydown.global-error");
+    this.$container.find(".window-wrapper, .tab-wrapper").removeClass("global-error-blur");
+    this.$container = null;
+    Widget.prototype.destroy.call(this);
+};
 
 /* ============================================================================ 
  * == Utility functions namespace                                            ==
