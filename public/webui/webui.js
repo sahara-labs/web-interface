@@ -720,7 +720,7 @@ Graph.prototype.init = function($container) {
 	this.$widget = this._generate($container, this._buildHTML());
 
 	/* Add the canvas panel. */
-	var canvas = getCanvas(this.id, this.graphWidth, this.graphHeight);
+	var canvas = Util.getCanvas(this.id, this.graphWidth, this.graphHeight);
 	this.$widget.find("#" + this.id + "-canvas").append(canvas);
 	this.ctx = canvas.getContext("2d");
 
@@ -1230,6 +1230,9 @@ function RotarySwitch(id, config)
     if (!(config.field || config.action || config.values)) throw "Options not supplied."; 
     
     Widget.call(this, id, config);
+    
+    /* Default options. */
+    if (this.config.label === undefined) this.config.label = '';
 
     /** @private {boolean} The selected value. */
     this.val = undefined;
@@ -1263,7 +1266,7 @@ RotarySwitch.prototype.init = function($container) {
 
         $("#rotary-container-" + this.id).append(
             "<div class='rotary-switch-val " +
-            ( y <= 55 ? y = (y - ( p ? p.label.length / 2 : '')) - (r >= 60 ? 9 : 4): 0) + "' id='" + this.id + "-" + i + "' " +
+            ( y <= 55 ? y = (y - ( p ? 2 / 2 : '')) - (r >= 60 ? 9 : 4): 0) + "' id='" + this.id + "-" + i + "' " +
             "style='left:" + Math.round(y) + "px;top:" + Math.round(x) + "px' " + "value=" +
             ( p ? p.value : v[0].value) + ">" + ( p ? p.label : v[0].label) + "</div>"
         );

@@ -52,31 +52,26 @@ function ShakeTableControl(id)
 ShakeTableControl.prototype.setup = function() {
 	
 	/* Graph to display tank levels. */
-//	o = new GraphWidget(this.$container, "Displacements");
-//	o.setDataVariable('disp-graph-1', 'Level 1',  '#fcff00', -60, 60);
-//	o.setDataVariable('disp-graph-2', 'Level 2',  '#ff3b3b', -60, 60);
-//	o.setDataVariable('disp-graph-3', 'Level 3', '#8c42fb', -60, 60);
-//	o.setAxisLabels('Time (s)', 'Displacement (mm)');
-	this.widgets.push(new Graph("graph-displacement", {
-	    title: "Displacement Levels",
-	    draggable: true,
-	    closeable: true,
-	    width: 484,
+//	this.widgets.push(new Graph("graph-displacement", {
+//	    title: "Displacement Levels",
+//	    draggable: true,
+//	    closeable: true,
+//	    width: 484,
 //	    height: 350,
-	    fields: {
-	        'disp-graph-1': 'Level 1',
-	        'disp-graph-2': 'Level 2',
-	        'disp-graph-3': 'Level 3'
-	    },
-	    minValue: -60,
-	    maxValue: 60,
-	    duration: 10,
-	    yLabel: "Displacement (mm)",
-	    fieldCtl: true,
-	    autoCtl: true,
-	    durationCtl: true,
-	    traceLabels: true,
-	}));
+//	    fields: {
+//	        'disp-graph-1': 'Level 1',
+//	        'disp-graph-2': 'Level 2',
+//	        'disp-graph-3': 'Level 3'
+//	    },
+//	    minValue: -60,
+//	    maxValue: 60,
+//	    duration: 10,
+//	    yLabel: "Displacement (mm)",
+//	    fieldCtl: false,
+//	    autoCtl: true,
+//	    durationCtl: true,
+//	    traceLabels: true,
+//	}));
 
 //    /* Add mimic to page. */
 //    this.widgets.push(new MimicWidget(this.$container, 'Diagram', ''));
@@ -106,6 +101,19 @@ ShakeTableControl.prototype.setup = function() {
 //	    units: "Hz",
 //
 //	}));
+	
+	this.widgets.push(new RotarySwitch("rotary-Label", {
+	    draggable: true,
+        field: "pump-on",
+        action: "setPump",
+        values: [
+            {label: "One", value: 1},
+            {label: "Two", value: 2},
+            {label: "Three", value: 3},
+            {label: "Four", value: 4},
+        ],
+        radius: 50
+    }));
 	
 	this.widgets.push(new DataLogging(this.$container));
 
@@ -1642,7 +1650,7 @@ DataLogging.prototype.consume = function(data) {
         
         /* Files may have some leading and trailing whitespace which may interfere with
          * sorting, so this is being removed. */
-        for (i in files) files[i] = trim(files[i]);
+        for (i in files) files[i] = Util.trim(files[i]);
         
         /* The files are named with a timestamp in the format YYYYMMDD_hhmmss.<format>
          * so a direct lexographical sort will correctly sort the files from earliest 
@@ -2126,74 +2134,4 @@ function getCookie(cookie)
 function setCookie(cookie, value)
 {
     document.cookie = Globals.COOKIE_PREFIX + cookie + '=' + value + ';path=/;max-age=' + (60 * 60 * 24 * 365);
-}
-
-/**
- * Gets a canvas element with an appropriate fallback for IE6 to IE8 which do
- * not natively support canvas.
- * 
- * @param id the ID of the element
- * @param width the width of the canvas element
- * @param height the height of the canvas element
- * @return canvas element or appropriate fallback
- */
-function getCanvas(id, width, height)
-{
-	var canvas = document.createElement("canvas");
-	canvas.setAttribute("id", id);
-	canvas.setAttribute("width", width);
-	canvas.setAttribute("height", height);
-
-	if (typeof G_vmlCanvasManager != "undefined")
-	{
-		/* Hack to get canvas setup on IE6 to 8 which don't support canvas
-		 * natively. */
-		G_vmlCanvasManager.initElement(canvas);
-	}
-
-	return canvas;
-}
-
-/**
- * Rounds of a number to a specified number of significant figures.
- * 
- * @param {number} num number to round
- * @param {int} places significant figures
- * @returns {number} number to return
- */
-function mathRound(num, places) 
-{
-	return Math.round(num * Math.pow(10, places)) / Math.pow(10, places);
-}
-
-/**
- * Adds '0' characters to a number so it correctly displays the specified 
- * decimal point characters.
- * 
- * @param {number} num number to pad
- * @param {int} places significant figures
- * @returns {string}
- */
-function zeroPad(num, places)
-{
-	var r = '' + mathRound(num, places);
-
-	if (places > 0)
-	{
-		if (r.indexOf('.') == -1) r += '.';
-		while (r.length - r.indexOf('.') < places + 1) r += '0';
-	}
-
-	return r;
-}
-
-/**
- * Trims leading and trailing whitespace from a string.
- * 
- * @param {string} s the string to trim
- * @return {string} the trimmed string
- */
-function trim(s)
-{
-    return s.trim ? s.trim() : s.replace(/^\s+|\s+$/g);
 }
