@@ -42,6 +42,7 @@ Globals = {
  * @constructor
  * @param {string} id the identifier of this widget
  * @param {object} config configuration of widget
+ * @config {boolean} [windowed]            whether this widget is enclosed in a window frame (default true)
  * @config {string}  [title]               the title of this widget
  * @config {string}  [icon]                class for icon sprite
  * @config {array}   [classes]             list of classes to add for the container of this box
@@ -69,6 +70,7 @@ function Widget(id, config)
     /** @protected {object} Display options. */
     this.config = config ? config : { };
     if (!this.config.classes) this.config.classes = [ ];
+    if (this.config.windowed === undefined) this.config.windowed = true;
     
     /** @private {object} Window management properties. */
     this.window = {
@@ -354,49 +356,60 @@ Widget.prototype.toggleWindowExpand = function() {
  * @return {jQuery} node of the generated box that has been appended to the page
  */
 Widget.prototype._generate = function($container, html) {
-    this.$widget = $container.append(
-      "<div class='window-wrapper window-" + Globals.THEME + " " + 
-                  (this.config.classes ? this.config.classes.join(' ') : "") + "' id='" + this.id + "' " +
-                  "style='" +
-                      (this.config.height ? "height:" + this.config.height + "px;" : "") +
-                      (this.config.width ? "width:" + this.config.width + "px;" : "") +
-                  "'>" +
-          "<div class='window-header'>" +
-              (this.config.icon ? "<span class='window-icon icon_"+ this.config.icon + "'></span>" : "")+
-              (this.config.title ? "<span class='window-title'>" + this.config.title + "</span>" : "") +
-              (this.config.closeable ? "<span class='window-close ui-icon ui-icon-close'></span>" : "") +
-              (this.config.shadeable ? "<span class='window-shade ui-icon ui-icon-minus'></span>" : "") + 
-              (this.config.expandable ? "<span class='window-expand ui-icon ui-icon-arrow-4-diag'></span>" : '') +             
-          "</div>" +
-          "<div class='window-content'>" + 
-              html +
-          "</div>" +
-      "</div>"
-    ).children().last();
-    
-    var thiz = this;
-    
-    if (this.config.expandable) this.$widget.find(".window-expand").click(function() { thiz.toggleWindowExpand(); });
-    if (this.config.shadeable)
+    if (this.config.windowed)
     {
-        this.$widget.find(".window-shade").click(function() { thiz.toggleWindowShade(); });
-        this.$widget.find(".window-header").dblclick(function() { thiz.toggleWindowShade(); });
+        this.$widget = $container.append(
+          "<div class='window-wrapper window-" + Globals.THEME + " " + 
+                      (this.config.classes ? this.config.classes.join(' ') : "") + "' id='" + this.id + "' " +
+                      "style='" +
+                          (this.config.height ? "height:" + this.config.height + "px;" : "") +
+                          (this.config.width ? "width:" + this.config.width + "px;" : "") +
+                      "'>" +
+              "<div class='window-header'>" +
+                  (this.config.icon ? "<span class='window-icon icon_"+ this.config.icon + "'></span>" : "")+
+                  (this.config.title ? "<span class='window-title'>" + this.config.title + "</span>" : "") +
+                  (this.config.closeable ? "<span class='window-close ui-icon ui-icon-close'></span>" : "") +
+                  (this.config.shadeable ? "<span class='window-shade ui-icon ui-icon-minus'></span>" : "") + 
+                  (this.config.expandable ? "<span class='window-expand ui-icon ui-icon-arrow-4-diag'></span>" : '') +             
+              "</div>" +
+              "<div class='window-content'>" + 
+                  html +
+              "</div>" +
+          "</div>"
+        ).children().last();
+        
+        var thiz = this;
+        
+        if (this.config.expandable) this.$widget.find(".window-expand").click(function() { thiz.toggleWindowExpand(); });
+        if (this.config.shadeable)
+        {
+            this.$widget.find(".window-shade").click(function() { thiz.toggleWindowShade(); });
+            this.$widget.find(".window-header").dblclick(function() { thiz.toggleWindowShade(); });
+        }
+        if (this.config.closeable) this.$widget.find(".window-close").click(function() { thiz.destroy(); });
+        
+        $(document).bind("keypress.widget-" + this.id, function(e) {
+           switch (e.keyCode) 
+           {
+               case 27:
+                   if (thiz.isExpanded) thiz.toggleWindowExpand();
+                   break;
+           }
+        });
+        
+        if (this.config.draggable) this._makeDraggable(this.$widget);
+        if (this.config.resizable) this._makeResizable(this.$widget);
     }
-    if (this.config.closeable) this.$widget.find(".window-close").click(function() { thiz.destroy(); });
+    else
+    {
+        this.$widget = $container.append(
+            "<div id="+ this.id + " class='no-window-content'>" + 
+                html +
+            "</div>"
+        ).children().last();
+    }
     
-    $(document).bind("keypress.widget-" + this.id, function(e) {
-       switch (e.keyCode) 
-       {
-           case 27:
-               if (thiz.isExpanded) thiz.toggleWindowExpand();
-               break;
-       }
-    });
-    
-    if (this.config.draggable) this._makeDraggable(this.$widget);
-    if (this.config.resizable) this._makeResizable(this.$widget);
     if (this.config.tooltip) this._addTooltip(this.$widget);
-    
     return this.$widget;
 };
 
