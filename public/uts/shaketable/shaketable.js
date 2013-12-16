@@ -40,7 +40,7 @@ function ShakeTableControl(id)
 	this.errorDisplay = undefined;
 	
 	/** The number of seconds this graph displays. */
-    this.duration = 30;
+    this.duration = 10;
 
     /** The period in milliseconds. */
     this.period = 100;
@@ -50,45 +50,70 @@ function ShakeTableControl(id)
  * Sets up this interface.
  */
 ShakeTableControl.prototype.setup = function() {
-	var o;
 	
 	/* Graph to display tank levels. */
-	o = new GraphWidget(this.$container, "Displacements");
-	o.setDataVariable('disp-graph-1', 'Level 1',  '#fcff00', -60, 60);
-	o.setDataVariable('disp-graph-2', 'Level 2',  '#ff3b3b', -60, 60);
-	o.setDataVariable('disp-graph-3', 'Level 3', '#8c42fb', -60, 60);
-	o.setAxisLabels('Time (s)', 'Displacement (mm)');
-	o.isPulling = false;
-	this.widgets.push(o);
+//	this.widgets.push(new Graph("graph-displacement", {
+//	    title: "Displacement Levels",
+//	    draggable: true,
+//	    closeable: true,
+//	    width: 484,
+//	    height: 350,
+//	    fields: {
+//	        'disp-graph-1': 'Level 1',
+//	        'disp-graph-2': 'Level 2',
+//	        'disp-graph-3': 'Level 3'
+//	    },
+//	    minValue: -60,
+//	    maxValue: 60,
+//	    duration: 10,
+//	    yLabel: "Displacement (mm)",
+//	    fieldCtl: false,
+//	    autoCtl: true,
+//	    durationCtl: true,
+//	    traceLabels: true,
+//	}));
 
-    /* Add mimic to page. */
-    this.widgets.push(new MimicWidget(this.$container, 'Diagram', ''));
-
-	/* Add camera to page. */
-	this.widgets.push(new CameraWidget(this.$container, 'Camera', ''));
-
-	/* Controls. */
+//    /* Add mimic to page. */
+//    this.widgets.push(new MimicWidget(this.$container, 'Diagram', ''));
+//
+//	/* Add camera to page. */
+//	this.widgets.push(new CameraWidget(this.$container, 'Camera', ''));
+//
+//	/* Controls. */
 	this.widgets.push(new Switch("switch-motor-on", {
 	   field: "motor-on", 
 	   action: "setMotor",
 	   label: "Motor",
 	}));
+//	
+//	this.widgets.push(new Switch("switch-coils-on", {
+//	    field: "coils-on",
+//	    action: "setCoils",
+//	    label: "Dampening",
+//	}));
+//	
+//	this.widgets.push(new Slider("slider-motor-speed", {
+//	    field: "motor-speed",
+//	    action: "setMotor",
+//	    max: 8,
+//	    precision: 2,
+//	    label: "Motor Frequency",
+//	    units: "Hz",
+//
+//	}));
 	
-	this.widgets.push(new Switch("switch-coils-on", {
-	    field: "coils-on",
-	    action: "setCoils",
-	    label: "Dampening",
-	}));
-	
-	this.widgets.push(new Slider("slider-motor-speed", {
-	    field: "motor-speed",
-	    action: "setMotor",
-	    max: 8,
-	    precision: 2,
-	    label: "Motor Frequency",
-	    units: "Hz",
-
-	}));
+	this.widgets.push(new RotarySwitch("rotary-Label", {
+	    draggable: true,
+        field: "pump-on",
+        action: "setPump",
+        values: [
+            {label: "One", value: 1},
+            {label: "Two", value: 2},
+            {label: "Three", value: 3},
+            {label: "Four", value: 4},
+        ],
+        radius: 50
+    }));
 	
 	this.widgets.push(new DataLogging(this.$container));
 
@@ -1625,7 +1650,7 @@ DataLogging.prototype.consume = function(data) {
         
         /* Files may have some leading and trailing whitespace which may interfere with
          * sorting, so this is being removed. */
-        for (i in files) files[i] = trim(files[i]);
+        for (i in files) files[i] = Util.trim(files[i]);
         
         /* The files are named with a timestamp in the format YYYYMMDD_hhmmss.<format>
          * so a direct lexographical sort will correctly sort the files from earliest 
@@ -1738,589 +1763,6 @@ DataLogging.prototype.destroy = function() {
 /* ============================================================================
  * == Graph Widget                                                           ==
  * ============================================================================ */
-
-/** 
- * Graph widget. This widget contains a scrolling graph that is user navigable
- * through the sessions data. 
- * 
- * @param $container the container to append the graph to
- * @param title the graph title
- * @param chained a graphs that are chained to this graph to receives its \
- * 			 pulled or pushed data
- */
-function GraphWidget($container, title, chained) 
-{
-	SWidget.call(this, $container, title, 'graph');
-
-	/** ID of canvas. */
-	this.id = "graph-" + title.toLowerCase().replace(' ', '-');
-	
-	/** The box width. The box is the outmost container of the widget. */
-	this.boxWidth = undefined;
-	
-	/** The box height. */
-	this.boxHeight = undefined;
-	
-	/** Width of the graph, including the padding whitespace but excluding the
-	 *  border width. */
-	this.width = 580;
-
-	/** Height of the graph, including the padding whitespace but excluding the
-	 *  border width and border title. */
-	this.height = 300;
-
-	/** The minimum expected graphed value. A value smaller than this will be
-	 *  clipped. */
-	this.minGraphedValue = undefined;
-
-	/** The maximum expected graphed value. A value greater than this will be 
-	 *  clipped. */
-	this.maxGraphedValue = undefined;
-	
-	/** Whether the graph is autoscaling. */
-	this.isAutoscaling = false;
-	
-	/** The range of values. If autoscaling, this is determined as the difference
-	 *  between the largest and smallest valuem, if not this is the difference 
-	 *  between the max and min graphed values. */
-	this.graphRange = undefined;
-	
-	/** The zero point offset of the graph in pixels. */
-	this.graphOffset = undefined;
-
-	/** Canvas context. */
-	this.ctx = null;
-
-	/** Data fields. */
-	this.dataFields = { };
-
-	/** The number of seconds this graph displays. */
-	this.duration = 60;
-
-	/** The period in milliseconds. */
-	this.period = 100;
-
-	/** The X and Y axis labels. */
-	this.axis = {
-		x: '',
-		y: ''
-	};
-
-	/** The time of the first data update in seconds since epoch. */
-	this.startTime = undefined;
-
-	/** The time of the latest data update in seconds since epoch. */
-	this.latestTime = undefined;
-
-	/** The displayed duration in seconds. */
-	this.displayedDuration = undefined;
-
-	/** Whether this widget is pulling data, i.e. polling the server for new
-	 *  graphing information. */
-	this.isPulling = true;
-
-	/** Graphs that are chained to this graph. */
-	this.chained = chained;
-	
-	/** Whether the controls are displayed. */
-	this.isControlsDisplayed = false;
-}
-GraphWidget.prototype = new SWidget;
-
-GraphWidget.prototype.init = function() {
-    /* Size reset. */
-    this.width = 580;
-    this.height = 300;
-    
-	this.$widget = this.generateBox(this.id + '-box');
-
-	/* Add the canvas panel. */
-	var canvas = getCanvas(this.id, this.width, this.height);
-	this.$widget.find("#" + this.id + "-canvas").append(canvas);
-	this.ctx = canvas.getContext("2d");
-	
-	/* Track size. */
-	this.boxWidth = parseInt(this.$widget.css("width"));
-	this.boxHeight = parseInt(this.$widget.css("height"));
-
-	/* Event handlers. */
-	var thiz = this;
-	this.$widget.find('.graph-label').click(function() {    
-		thiz.showTrace($(this).children(".graph-label-text").text(), 
-				$(this).find(".switch .slide").toggleClass("on off").hasClass("on"));
-	});
-	
-	this.$widget.find(".graph-controls-show").click(function() {
-	    thiz.showControls($(this).find(".switch .slide").toggleClass("on off").hasClass("on"));
-	});
-	
-	this.$widget.find(".graph-autoscale").click(function() {
-	   thiz.enableAutoscale($(this).find(".switch .slide").toggleClass("on off").hasClass("on")); 
-	});
-
-	/* Draw the first frame contents. */
-	this.drawFrame();
-
-	/* Pull data if we are setup to pull. */
-	if (this.isPulling) this.acquireData();
-
-	/* Enable dragging. */
-	this.enableDraggable();
-
-	/* Enable resizing. */
-	this.enableResizable(484, 300);
-};
-
-/** The number of vertical scales. */
-GraphWidget.NUM_VERT_SCALES = 5;
-
-/** The number of horizontal scales. */
-GraphWidget.NUM_HORIZ_SCALES = 8;
-
-GraphWidget.prototype.getHTML = function() {
-   
-	var i = null, unitScale, styleScale, html = ''; 
-
-	/* Graph labels. */
-	html += "<div class='graph-labels'>";
-	for (i in this.dataFields)
-	{
-		html += "	<div class='graph-label'>" + 
-				"		<label for='graph-label-" + i + "' class='graph-label-text'>" + this.dataFields[i].label + "</label>" +  
-		        "       <div id='graph-label-" + i + "' class='switch graph-label-enable'>" +
-        		"		    <div class='animated slide on'></div>" +
-        		"       </div>" +
-				"	</div>";
-	}
-	html += "</div>";
-
-	/* Left scale. */
-	unitScale = Math.floor(this.graphRange / GraphWidget.NUM_VERT_SCALES);
-	styleScale = this.height / GraphWidget.NUM_VERT_SCALES;
-	html += "<div class='graph-left-scales'>";
-	for (i = 0; i <= GraphWidget.NUM_VERT_SCALES; i++)
-	{
-		html += "<div class='graph-left-scale-" + i + "' style='top:"+ (styleScale * i) + "px'>" + 
-					(this.maxGraphedValue - i * unitScale)+ 
-				"</div>";
-	}
-	html += "</div>";
-
-	/* Left axis label. */
-	html += "<div class='graph-axis-label graph-left-axis-label' style='top:40%'>" + this.axis.y + "</div>";
-
-	/* Canvas element holding box. */
-	html += "<div id='" + this.id +  "-canvas' class='graph-canvas-box gradient' style='height:" + this.height + "px'></div>";
-
-	/* Bottom scale. */
-	html += "<div class='graph-bottom-scales'>";
-	styleScale = this.width / GraphWidget.NUM_HORIZ_SCALES;
-	for (i = 0; i <= GraphWidget.NUM_HORIZ_SCALES; i++)
-	{
-		html += "<div class='graph-bottom-scale-" + i + "' style='left:" + (styleScale * i - 5) + "px'>&nbsp</div>";
-	}
-	html += "</div>";
-
-	/* Bottom axis label. */
-	html += "<div class='graph-axis-label graph-bottom-axis-label'>" + this.axis.x + "</div>";
-	
-	/* Controls show / hide button. */
-	html += "<div class='graph-controls-show'>" +
-        	"   <label for='" + this.id + "-graph-controls-show' class='graph-label-text'>Controls</label>" +  
-            "   <div id='" + this.id + "-graph-controls-show' class='switch graph-controls-show-enable'>" +
-            "       <div class='animated slide off'></div>" +
-            "   </div>" +
-	        "</div>";
-	
-	/* Controls. */
-	html += "<div class='graph-controls'>" +
-        	"   <div class='graph-autoscale'>" +
-            "       <label for='" + this.id + "-graph-autoscale' class='graph-label-text'>Autoscale</label>" +  
-            "       <div id='" + this.id + "-graph-autoscale' class='switch'>" +
-            "          <div class='animated slide " + (this.isAutoscaling ? "on" : "off") + "'></div>" +
-            "       </div>" +
-            "   </div>" +
-	        "</div>";
-
-	return html;
-};
-
-GraphWidget.prototype.consume = function(data) { 
-    this.updateData(data);
-};
-
-/**
- * Periodically requests the server to provide graph data.
- */
-GraphWidget.prototype.acquireData = function() {
-	var thiz = this;
-	$.ajax({
-		url: "/primitive/mapjson/pc/CoupledTanksController/pa/graphData",
-		data: {
-			period: this.period,
-			duration: this.duration,
-			from: 0,     // For now we are just asked for the latest data
-		},
-		success: function(data) {
-			thiz.updateData(data);
-			if (thiz.isPulling) setTimeout(function() { thiz.acquireData(); }, 500);
-		},
-		error: function(data) {
-			if (thiz.isPulling) setTimeout(function() { thiz.acquireData(); }, 5000);
-		}
-	});
-};
-
-/**
- * Updates graph with data received from the server. 
- * 
- * @param data data object
- */
-GraphWidget.prototype.updateData = function(data) {
-	var i = 0;
-
-	if (this.startTime == undefined) this.startTime = data.start;
-	this.latestTime = data.time;
-
-	for (i in this.dataFields)
-	{
-		if (data[i] == undefined) continue;
-
-		this.dataFields[i].values = data[i];
-		this.dataFields[i].seconds = data.duration;
-		this.displayedDuration = data.duration;
-	}
-	
-    if (this.isAutoscaling) 
-    {
-        /* Determine graph scaling for this frame and label it. */
-        this.adjustScaling();
-        this.updateDependantScale();
-    }
-
-	this.drawFrame();
-	this.updateTimeScale();
-
-
-	/* Forward data onto chained graph. */
-	if (this.chained != undefined) this.chained.updateData(data);
-};
-
-/**
- * Draws a graph frame.
- */
-GraphWidget.prototype.drawFrame = function() {
-	var i = 0;
-	
-	/* Clear old frame. */
-	this.ctx.clearRect(0, 0, this.width, this.height);
-	
-	/* Draw scales. */
-	this.drawDependantScales();
-	    
-	/* Draw the trace for all graphed variables. */
-	for (i in this.dataFields) this.drawTrace(this.dataFields[i]);
-};
-
-/**
- * Adjusts the scaling and offset based on the range of values in the graphed
- * datasets.
- */
-GraphWidget.prototype.adjustScaling = function() {
-    var min = Number.POSITIVE_INFINITY, max = Number.NEGATIVE_INFINITY, j;
-
-    for (i in this.dataFields)
-    {
-        for (j = 0; j < this.dataFields[i].values.length; j++)
-        {
-            if (this.dataFields[i].values[j] < min) min = this.dataFields[i].values[j];
-            if (this.dataFields[i].values[j] > max) max = this.dataFields[i].values[j];
-        }
-    }
-
-    this.graphRange = max - min;
-    this.graphOffset = min / this.graphRange;    
-};
-
-/** The stipple width. */
-GraphWidget.STIPPLE_WIDTH = 10;
-
-/**
- * Draws the scales on the interface.
- */
-GraphWidget.prototype.drawDependantScales = function() {
-	var i, j,
-		off = this.height - Math.abs(this.graphOffset * this.height);
-
-	this.ctx.save();
-	this.ctx.beginPath();
-	
-	this.ctx.strokeStyle = "#FFFFFF";
-	
-	/* Zero line. */
-	this.ctx.lineWidth = 3;
-	if (off > 0 && off < this.height)
-	{
-	    this.ctx.moveTo(0, off + 1.5);
-	    this.ctx.lineTo(this.width, off + 1.5);
-	}
-	
-	this.ctx.lineWidth = 0.3;
-
-	for (i = 0; i < this.height; i += this.height / GraphWidget.NUM_VERT_SCALES)
-	{
-		for (j = 0; j < this.width; j += GraphWidget.STIPPLE_WIDTH * 1.5)
-		{
-			this.ctx.moveTo(j, i + 0.25);
-			this.ctx.lineTo(j + GraphWidget.STIPPLE_WIDTH, i + 0.25);
-		}
-	}
-
-	this.ctx.closePath();
-	this.ctx.stroke();
-	this.ctx.restore();
-};
-
-/**
- * Draws the trace of the data. 
- * 
- * @param dObj data object
- */
-GraphWidget.prototype.drawTrace = function(dObj) {
-	if (!dObj.visible) return;
-
-	var xStep  = this.width / (dObj.seconds * 1000 / this.period), 
-	    yScale = this.height / this.graphRange, i, yCoord;
-
-	this.ctx.save();
-	this.ctx.strokeStyle = dObj.color;
-	this.ctx.lineWidth = 3;
-	this.ctx.lineJoin = "round";
-	this.ctx.shadowColor = "#222222";
-	this.ctx.shadowBlur = 2;
-	this.ctx.shadowOffsetX = 1;
-	this.ctx.shadowOffsetY = 1;
-
-	this.ctx.beginPath();
-	for (i = 0; i < dObj.values.length; i++)
-	{
-		yCoord = this.height - dObj.values[i] * yScale + this.graphOffset * this.height;
-		/* If value too large, clipping at the top of the graph. */
-		if (yCoord > this.height) yCoord = this.height;
-		/* If value too small, clippling at the bottom of the graph. */
-		if (yCoord < 0) yCoord = 0;
-
-		if (i == 0)
-		{
-			this.ctx.moveTo(i * xStep, yCoord);
-		}
-		else
-		{
-			this.ctx.lineTo(i * xStep, yCoord);
-		}
-	}
-
-	this.ctx.stroke();
-	this.ctx.restore();
-};
-
-/**
- * Updates the dependant variable scale.
- */
-GraphWidget.prototype.updateDependantScale = function() {
-    var i, $s = this.$widget.find(".graph-left-scale-0");
-    
-    for (i = 0; i <= GraphWidget.NUM_VERT_SCALES; i++)
-    {
-        $s.html(zeroPad(
-                this.graphRange + this.graphOffset * this.graphRange - this.graphRange / GraphWidget.NUM_VERT_SCALES * i, 
-                this.graphRange >= GraphWidget.NUM_VERT_SCALES * 2 ? 0 : 1));
-        $s = $s.next();
-    }
-};
-
-/**
- * Updates the time scale.
- */
-GraphWidget.prototype.updateTimeScale = function() {
-	var xstep = this.displayedDuration / GraphWidget.NUM_HORIZ_SCALES, i,
-		$d = this.$widget.find(".graph-bottom-scale-0"), t;
-
-	for (i = 0; i <= GraphWidget.NUM_HORIZ_SCALES; i++)
-	{
-		t = this.latestTime - xstep * (GraphWidget.NUM_HORIZ_SCALES - i) - this.startTime;
-		$d.html(zeroPad(t, t < 100 ? 1 : 0));
-		$d = $d.next();
-	}
-};
-
-/**
- * Enables or disables displaying of the graphed variable.
- * 
- * @param label label of the variable
- * @param show whether the variable is displayed
- */
-GraphWidget.prototype.showTrace = function(label, show) {
-	var i = 0;
-	for (i in this.dataFields)
-	{
-		if (this.dataFields[i].label == label)
-		{
-			this.dataFields[i].visible = show;
-		}
-	}
-
-	this.drawFrame();
-};
-
-
-GraphWidget.prototype.resized = function(width, height) {
-    this.width = this.width + (width - this.boxWidth);
-    this.height = this.height + (height - this.boxHeight);
-    
-    this.boxWidth = width;
-    this.boxHeight = height;
-    
-    /* Adjust dimensions of canvas, box and other stuff. */
-    this.$widget.find("canvas").attr({
-        width: this.width,
-        height: this.height
-    });
-    
-    this.$widget.find(".graph-canvas-box").css({
-        width: this.width,
-        height: this.height 
-    });
-    
-    var i, $s = this.$widget.find(".graph-left-scale-0");
-    
-    /* Left scales. */
-    for (i = 0; i <= GraphWidget.NUM_VERT_SCALES; i++)
-    {
-        $s.css("top", this.height / GraphWidget.NUM_VERT_SCALES * i);
-        $s = $s.next();
-    }
-    
-    /* Left label. */
-    this.$widget.find(".graph-left-axis-label").css("top", this.boxHeight / 2 - this.axis.y.length * 3);
-    
-    /* Bottom scales. */
-    for (i = 0, $s = this.$widget.find(".graph-bottom-scale-0"); i <= GraphWidget.NUM_HORIZ_SCALES; i++)
-    {
-        $s.css("left", this.width / GraphWidget.NUM_HORIZ_SCALES * i);
-        $s = $s.next();
-    }
-    
-    this.$widget.css("height", "auto");
-};
-
-GraphWidget.prototype.resizeStopped = function(width, height) {
-    this.resized(width, height);
-    this.drawFrame();
-};
-
-/**
- * Shows or hides the graph controls.
- * 
- * @param show whether to show the controls
- */
-GraphWidget.prototype.showControls = function(show) {
-    var $n = this.$widget.find(".graph-controls");
-    $n.css("display", $n.css("display") == "none" ? "block" : "none");
-    this.$widget.css("height", "auto");
-};
-
-/**
- * Enables or disables graph autoscaling. 
- * 
- * @param autoscale true if graph autoscales
- */
-GraphWidget.prototype.enableAutoscale = function(autoscale) {
-    if (!(this.isAutoscaling = autoscale))
-    {
-        this.graphRange = this.maxGraphedValue - this.minGraphedValue;
-        this.graphOffset = this.minGraphedValue / this.graphRange;
-        this.updateDependantScale();
-    }
-};
-
-/**
- * Adds a data variable to be graphed. The minimum and maximum 
- * define ranges the graph will be expected to graph. If a
- * value of this data field is out of this range, it may be 
- * clipped.
- * <br />
- * If a new data variable is added, this widget must be
- * re-initialised so the display and labeling are correctly
- * redrawn.
- * 
- * @param dvar the data variable
- * @param label label to display
- * @param color graph line value
- * @param min minimum value of this variable to graph
- * @param max maximum value of this variable to graph
- */
-GraphWidget.prototype.setDataVariable = function(dvar, label, color, min, max) {
-	this.dataFields[dvar] = {
-		label: label,
-		color: color,
-		min: min,
-		max: max,
-		values: [ ],
-		seconds: 0,
-		visible: true,
-	};
-
-	if (this.minGraphedValue == undefined || min < this.minGraphedValue) this.minGraphedValue = min;
-	if (this.maxGraphedValue == undefined || max > this.maxGraphedValue) this.maxGraphedValue = max;
-	
-	this.graphRange = this.maxGraphedValue - this.minGraphedValue;
-	this.graphOffset = this.minGraphedValue / this.graphRange;
-};
-
-/**
- * Remove a data variable from being graphed. 
- * <br />
- * If a new data variable is added, this widget must be
- * re-initialised so the display and labeling are correctly
- * redrawn.
- * 
- * @param dvar data variable to remove
- */
-GraphWidget.prototype.removeDataVariable = function(dvar) {
-	delete this.dataFields[dvar];
-
-	/* Work out the correct scale. */
-	this.minGraphedValue = this.maxGraphedValue = undefined;
-	var i = null;
-	for (i in this.dataFields)
-	{
-		if (this.minGraphedValue == undefined || this.dataFields[i].min < this.minGraphedValue)
-		{
-			this.minGraphedValue = this.dataFields[i].min;
-		}
-
-		if (this.maxGraphedValue == undefined || this.dataFields[i].min > this.maxGraphedValue)
-		{
-			this.maxGraphedValue = this.dataFields[i].max;
-		}
-	}
-	
-	this.graphRange = this.maxGraphedValue - this.minGraphedValue;
-    this.graphOffset = this.minGraphedValue / this.graphRange;
-};
-
-/**
- * Sets the axis Labels. This widget must be re-initialised so the display and 
- * labeling are correctly redrawn.
- * 
- * @param x independent axis label
- * @param y dependent axis label
- */
-GraphWidget.prototype.setAxisLabels = function(x, y) {
-	this.axis.x = x;
-	this.axis.y = y;
-};
 
 /* ============================================================================
  * == Slider Widget                                                          ==
@@ -2692,74 +2134,4 @@ function getCookie(cookie)
 function setCookie(cookie, value)
 {
     document.cookie = Globals.COOKIE_PREFIX + cookie + '=' + value + ';path=/;max-age=' + (60 * 60 * 24 * 365);
-}
-
-/**
- * Gets a canvas element with an appropriate fallback for IE6 to IE8 which do
- * not natively support canvas.
- * 
- * @param id the ID of the element
- * @param width the width of the canvas element
- * @param height the height of the canvas element
- * @return canvas element or appropriate fallback
- */
-function getCanvas(id, width, height)
-{
-	var canvas = document.createElement("canvas");
-	canvas.setAttribute("id", id);
-	canvas.setAttribute("width", width);
-	canvas.setAttribute("height", height);
-
-	if (typeof G_vmlCanvasManager != "undefined")
-	{
-		/* Hack to get canvas setup on IE6 to 8 which don't support canvas
-		 * natively. */
-		G_vmlCanvasManager.initElement(canvas);
-	}
-
-	return canvas;
-}
-
-/**
- * Rounds of a number to a specified number of significant figures.
- * 
- * @param {number} num number to round
- * @param {int} places significant figures
- * @returns {number} number to return
- */
-function mathRound(num, places) 
-{
-	return Math.round(num * Math.pow(10, places)) / Math.pow(10, places);
-}
-
-/**
- * Adds '0' characters to a number so it correctly displays the specified 
- * decimal point characters.
- * 
- * @param {number} num number to pad
- * @param {int} places significant figures
- * @returns {string}
- */
-function zeroPad(num, places)
-{
-	var r = '' + mathRound(num, places);
-
-	if (places > 0)
-	{
-		if (r.indexOf('.') == -1) r += '.';
-		while (r.length - r.indexOf('.') < places + 1) r += '0';
-	}
-
-	return r;
-}
-
-/**
- * Trims leading and trailing whitespace from a string.
- * 
- * @param {string} s the string to trim
- * @return {string} the trimmed string
- */
-function trim(s)
-{
-    return s.trim ? s.trim() : s.replace(/^\s+|\s+$/g);
 }

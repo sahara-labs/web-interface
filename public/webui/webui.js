@@ -6,6 +6,7 @@
  * @date 18th November 2013
  */
 
+
 /* ============================================================================
  * == Globals (must be set configured in implementations                     ==
  * ============================================================================ */
@@ -41,20 +42,21 @@ Globals = {
  * @constructor
  * @param {string} id the identifier of this widget
  * @param {object} config configuration of widget
- * @config {string}  [title] the title of this widget
- * @config {string}  [icon] class for icon sprite
- * @config {array}   [classes] list of classes to add for the container of this box
- * @config {integer} [width] width of widget in px
- * @config {integer} [height] height of widget in px
- * @config {boolean} [resizable] whether this widget should be resizable (default false)
- * @config {integer} [minWidth] minimum width of widget if resizable
- * @config {integer} [minHeight] minimum height of widget if resizable
+ * @config {boolean} [windowed]            whether this widget is enclosed in a window frame (default true)
+ * @config {string}  [title]               the title of this widget
+ * @config {string}  [icon]                class for icon sprite
+ * @config {array}   [classes]             list of classes to add for the container of this box
+ * @config {integer} [width]               width of widget in px
+ * @config {integer} [height]              height of widget in px
+ * @config {boolean} [resizable]           whether this widget should be resizable (default false)
+ * @config {integer} [minWidth]            minimum width of widget if resizable
+ * @config {integer} [minHeight]           minimum height of widget if resizable
  * @config {boolean} [preserveAspectRatio] whether aspect ratio should be kept if resizable (default false)
- * @config {boolean} [expandable] whether this widget should be expandable (default false)
- * @config {boolean} [draggable] whether this widget should be draggable (default false)
- * @config {boolean} [shadeable] whether this widget should be shadeable (default false)
- * @config {boolean} [closeable] whether this widget should be closeable (default false) 
- * @config {string}  [tooltip] tooltip to show on hover (optional)
+ * @config {boolean} [expandable]          whether this widget should be expandable (default false)
+ * @config {boolean} [draggable]           whether this widget should be draggable (default false)
+ * @config {boolean} [shadeable]           whether this widget should be shadeable (default false)
+ * @config {boolean} [closeable]           whether this widget should be closeable (default false) 
+ * @config {string}  [tooltip]             tooltip to show on hover (optional)
  */
 function Widget(id, config)
 {
@@ -68,6 +70,7 @@ function Widget(id, config)
     /** @protected {object} Display options. */
     this.config = config ? config : { };
     if (!this.config.classes) this.config.classes = [ ];
+    if (this.config.windowed === undefined) this.config.windowed = true;
     
     /** @private {object} Window management properties. */
     this.window = {
@@ -353,49 +356,60 @@ Widget.prototype.toggleWindowExpand = function() {
  * @return {jQuery} node of the generated box that has been appended to the page
  */
 Widget.prototype._generate = function($container, html) {
-    this.$widget = $container.append(
-      "<div class='window-wrapper window-" + Globals.THEME + " " + 
-                  (this.config.classes ? this.config.classes.join(' ') : "") + "' id='" + this.id + "' " +
-                  "style='" +
-                      (this.config.height ? "height:" + this.config.height + "px;" : "") +
-                      (this.config.width ? "width:" + this.config.width + "px;" : "") +
-                  "'>" +
-          "<div class='window-header'>" +
-              (this.config.icon ? "<span class='window-icon icon_"+ this.config.icon + "'></span>" : "")+
-              (this.config.title ? "<span class='window-title'>" + this.config.title + "</span>" : "") +
-              (this.config.closeable ? "<span class='window-close ui-icon ui-icon-close'></span>" : "") +
-              (this.config.shadeable ? "<span class='window-shade ui-icon ui-icon-minus'></span>" : "") + 
-              (this.config.expandable ? "<span class='window-expand ui-icon ui-icon-arrow-4-diag'></span>" : '') +             
-          "</div>" +
-          "<div class='window-content'>" + 
-              html +
-          "</div>" +
-      "</div>"
-    ).children().last();
-    
-    var thiz = this;
-    
-    if (this.config.expandable) this.$widget.find(".window-expand").click(function() { thiz.toggleWindowExpand(); });
-    if (this.config.shadeable)
+    if (this.config.windowed)
     {
-        this.$widget.find(".window-shade").click(function() { thiz.toggleWindowShade(); });
-        this.$widget.find(".window-header").dblclick(function() { thiz.toggleWindowShade(); });
+        this.$widget = $container.append(
+          "<div class='window-wrapper window-" + Globals.THEME + " " + 
+                      (this.config.classes ? this.config.classes.join(' ') : "") + "' id='" + this.id + "' " +
+                      "style='" +
+                          (this.config.height ? "height:" + this.config.height + "px;" : "") +
+                          (this.config.width ? "width:" + this.config.width + "px;" : "") +
+                      "'>" +
+              "<div class='window-header'>" +
+                  (this.config.icon ? "<span class='window-icon icon_"+ this.config.icon + "'></span>" : "")+
+                  (this.config.title ? "<span class='window-title'>" + this.config.title + "</span>" : "") +
+                  (this.config.closeable ? "<span class='window-close ui-icon ui-icon-close'></span>" : "") +
+                  (this.config.shadeable ? "<span class='window-shade ui-icon ui-icon-minus'></span>" : "") + 
+                  (this.config.expandable ? "<span class='window-expand ui-icon ui-icon-arrow-4-diag'></span>" : '') +             
+              "</div>" +
+              "<div class='window-content'>" + 
+                  html +
+              "</div>" +
+          "</div>"
+        ).children().last();
+        
+        var thiz = this;
+        
+        if (this.config.expandable) this.$widget.find(".window-expand").click(function() { thiz.toggleWindowExpand(); });
+        if (this.config.shadeable)
+        {
+            this.$widget.find(".window-shade").click(function() { thiz.toggleWindowShade(); });
+            this.$widget.find(".window-header").dblclick(function() { thiz.toggleWindowShade(); });
+        }
+        if (this.config.closeable) this.$widget.find(".window-close").click(function() { thiz.destroy(); });
+        
+        $(document).bind("keypress.widget-" + this.id, function(e) {
+           switch (e.keyCode) 
+           {
+               case 27:
+                   if (thiz.isExpanded) thiz.toggleWindowExpand();
+                   break;
+           }
+        });
+        
+        if (this.config.draggable) this._makeDraggable(this.$widget);
+        if (this.config.resizable) this._makeResizable(this.$widget);
     }
-    if (this.config.closeable) this.$widget.find(".window-close").click(function() { thiz.destroy(); });
+    else
+    {
+        this.$widget = $container.append(
+            "<div id="+ this.id + " class='no-window-content'>" + 
+                html +
+            "</div>"
+        ).children().last();
+    }
     
-    $(document).bind("keypress.widget-" + this.id, function(e) {
-       switch (e.keyCode) 
-       {
-           case 27:
-               if (thiz.isExpanded) thiz.toggleWindowExpand();
-               break;
-       }
-    });
-    
-    if (this.config.draggable) this._makeDraggable(this.$widget);
-    if (this.config.resizable) this._makeResizable(this.$widget);
     if (this.config.tooltip) this._addTooltip(this.$widget);
-    
     return this.$widget;
 };
 
@@ -605,10 +619,487 @@ Widget.prototype._postControl = function(action, params, responseCallback, error
  * == Graph widget                                                           ==
  * ============================================================================ */
 
-function Graph()
+/** 
+ * Graph widget. This widget contains a scrolling graph that is user navigable
+ * through the sessions data. 
+ * 
+ * @constructor
+ * @param {string} id graph identifier
+ * @param {object} config configuration object
+ * @config {object}  [fields]      map of graphed data fields with field => label
+ * @config {object}  [colors]      map of graph trace colors with field => color (optional)
+ * @config {boolean} [autoScale]   whether to autoscale the graph dependant (default off)
+ * @config {integer} [minValue]    minimum value that is graphed, implies not autoscaling (default 0)
+ * @config {integer} [maxValue]    maximum value that is graphed, implies not autoscaling (default 100)
+ * @config {integer} [duration]    number of seconds this graph displays (default 60)
+ * @config {integer} [period]      period betweeen samples in milliseconds (default 100)
+ * @config {string}  [xLabel]      X axis label (default (Time (s))
+ * @config {String}  [yLabel]      Y axis label (optional)
+ * @config {boolean} [traceLabels] whether to show trace labels (default true)
+ * @config {boolean} [fieldCtl]    whether data field displays can be toggled (default false)
+ * @config {boolean} [autoCtl]     whether autoscaling enable control is shown (default false)
+ * @config {boolean} [durationCtl] whether duration control slider is displayed
+ * @config {integer} [vertScales]  number of vertical scales (default 5)
+ * @config {integer} [horizScales] number of horizontal scales (default 8)
+ */
+function Graph(id, config)
 {
-    // TODO Graph widget
+    if (!(config.fields)) throw "Options not set";
+    
+	Widget.call(this, id, config);
+
+	/* Default options. */
+	if (this.config.colors === undefined )     this.config.colors = { };
+	if (this.config.autoScale === undefined)   this.config.autoScale = false;
+	if (this.config.minValue === undefined)    this.config.minValue = 0;
+	if (this.config.maxValue === undefined)    this.config.maxValue = 100;
+	if (this.config.duration === undefined)    this.config.duration = 60;
+	if (this.config.period === undefined)      this.config.period = 100;
+	if (this.config.xLabel === undefined)      this.config.xLabel = "Time (s)";
+	if (this.config.yLabel === undefined)      this.config.yLabel = '';
+	if (this.config.traceLabels === undefined) this.config.traceLabels = true;
+	if (this.config.fieldCtl === undefined)    this.config.fieldCtl = false;
+	if (this.config.autoCtl === undefined)     this.config.autoCtl = false;
+	if (this.config.durationCtl === undefined) this.config.durationCtl = false;
+	if (this.config.vertScales === undefined)  this.config.vertScales = 5;
+	if (this.config.horizScales === undefined) this.config.horizScales = 8;
+	
+	/** @private {object} Data fields. */
+	this.dataFields = { };
+		
+	/** The minimum expected graphed value. A value smaller than this will be
+	 *  clipped. */
+	this.minGraphedValue = undefined;
+
+	/** The maximum expected graphed value. A value greater than this will be 
+	 *  clipped. */
+	this.maxGraphedValue = undefined;
+	
+	/** @private {integer} The range of values. If autoscaling, this is determined
+	 *  as the difference between the largest and smallest value, if not this is the 
+	 *  difference between the max and min graphed values. */
+	this.graphRange = this.config.maxValue - this.config.minValue;
+	
+	/** @private {number} The zero point offset of the graph in pixels. */
+	this.graphOffset = this.config.minValue / this.graphRange;
+	
+	/** @private {integer} Width of the graph. */
+	this.graphWidth = undefined;
+	
+	/** @private {integer} Height of the graph. */
+	this.graphHeight = undefined;
+
+	/** Canvas context. */
+	this.ctx = null;
+
+	/** The time of the first data update in seconds since epoch. */
+	this.startTime = undefined;
+
+	/** The time of the latest data update in seconds since epoch. */
+	this.latestTime = undefined;
+
+	/** @private {integer} The displayed duration in seconds. */
+	this.displayedDuration = this.config.duration;
 }
+Graph.prototype = new Widget;
+
+/** @const {array} List of default trace colors. */
+Graph.COLORS = [
+     "#FCFF00", "#FF3B3B", "#8C42FB"
+];
+
+Graph.prototype.init = function($container) {
+    var i = 0, c = 0, thiz = this;
+    
+    /* Field dynamic properties. */
+    for (i in this.config.fields)
+    {
+        this.dataFields[i] = {
+            label: this.config.fields[i],
+            visible: true,
+            values: [ ],
+            seconds: 0,
+            color: this.config.colors.hasOwnProperty(i) ? this.config.colors[i] : 
+                    Graph.COLORS[c++ % Graph.COLORS.length]
+        };
+    }
+    
+    /* Size reset. */
+    this.graphWidth = this.config.width ? this.config.width - 84 : 400;
+    this.graphHeight = this.config.height ? this.config.height - 130 : 160;
+    if (!this.config.traceLabels) this.graphHeight += 30;
+    if (this.config.autoCtl || this.config.durationCtl) this.graphHeight -= 9;
+    
+	this.$widget = this._generate($container, this._buildHTML());
+
+	/* Add the canvas panel. */
+	var canvas = Util.getCanvas(this.id, this.graphWidth, this.graphHeight);
+	this.$widget.find("#" + this.id + "-canvas").append(canvas);
+	this.ctx = canvas.getContext("2d");
+
+	/* Event handlers. */
+	this.$widget.find('.graph-label').click(function() {    
+		thiz._showTrace($(this).children(".graph-label-text").text(), 
+				$(this).find(".switch .switch-slide").toggleClass("switch-on switch-off").hasClass("switch-on"));
+	});
+	
+	this.$widget.find(".graph-controls-show").click(function() {
+	    thiz._showControls($(this).find(".switch .switch-slide").toggleClass("switch-on switch-off").hasClass("switch-on"));
+	});
+	
+	this.$widget.find(".graph-autoscale").click(function() {
+	   thiz._enableAutoscale($(this).find(".switch .switch-slide").toggleClass("switch-on switch-off").hasClass("switch-on")); 
+	});
+
+	/* Draw the first frame contents. */
+	this._drawFrame();
+};
+
+Graph.prototype._buildHTML = function() {
+	var i = 0, unitScale, styleScale, html = ''; 
+
+	/* Graph labels. */
+	if (this.config.traceLabels)
+	{
+    	html += "<div class='graph-labels'>";
+    	for (i in this.config.fields)
+    	{
+    		html += "	<div class='graph-label'>" +
+    		        (this.config.fieldCtl ?
+    				"		<label for='graph-label-" + i + "' class='graph-label-text'>" + this.config.fields[i] + "</label>" +  
+    		        "       <div id='graph-label-" + i + "' class='switch graph-label-enable'>" +
+            		"		    <div class='switch-animated switch-slide switch-on'></div>" +
+            		"       </div>" :
+            		"       <div class='graph-label-text'>" + this.config.fields[i] + "</div>" ) +
+    				"	</div>";
+    	}
+    	html += "</div>";
+	}
+
+	/* Left scale. */
+	unitScale = Math.floor(this.graphRange / this.config.vertScales);
+	styleScale = this.graphHeight / this.config.vertScales;
+	html += "<div class='graph-left-scales' style='top:" + (this.config.traceLabels ? "33" : "3") + "px'>";
+	for (i = 0; i <= this.config.vertScales; i++)
+	{
+		html += "<div class='graph-left-scale-" + i + "' style='top:"+ (styleScale * i) + "px'>" + 
+					(this.config.maxValue - i * unitScale)+ 
+				"</div>";
+	}
+	html += "</div>";
+
+	/* Left axis label. */
+	html += "<div class='graph-axis-label graph-left-axis-label' style='top:40%'>" + this.config.yLabel + "</div>";
+
+	/* Canvas element holding box. */
+	html += "<div id='" + this.id +  "-canvas' class='graph-canvas-box gradient' style='height:" + this.graphHeight + 
+	                "px;margin-top:" + (this.config.traceLabels ? "30" : "0") + "px'></div>";
+
+	/* Bottom scale. */
+	html += "<div class='graph-bottom-scales'>";
+	styleScale = this.graphWidth / this.config.horizScales;
+	for (i = 0; i <= this.config.horizScales; i++)
+	{
+		html += "<div class='graph-bottom-scale-" + i + " " + (i == this.config.horizScales ? "graph-bottom-scale-last" : "") +
+		        "' style='left:" + (styleScale * i - 5) + "px'>&nbsp</div>";
+	}
+	html += "</div>";
+
+	/* Bottom axis label. */
+	html += "<div class='graph-axis-label graph-bottom-axis-label'>" + this.config.xLabel + "</div>";
+	
+	if (this.config.autoCtl || this.config.durationCtl)
+	{
+    	/* Controls show / hide button. */
+    	html += "<div class='graph-controls-show'>" +
+            	"   <label for='" + this.id + "-graph-controls-show' class='graph-label-text'>Controls</label>" +  
+                "   <div id='" + this.id + "-graph-controls-show' class='switch graph-controls-show-enable'>" +
+                "       <div class='switch-animated switch-slide'></div>" +
+                "   </div>" +
+    	        "</div>";
+	}
+	else html += "<div class='graph-no-controls'></div>";
+	
+	if (this.config.autoCtl)
+	{
+    	/* Controls. */
+    	html += "<div class='graph-controls'>" +
+            	"   <div class='graph-autoscale'>" +
+                "       <label for='" + this.id + "-graph-autoscale' class='graph-label-text'>Autoscale</label>" +  
+                "       <div id='" + this.id + "-graph-autoscale' class='switch'>" +
+                "          <div class='switch-animated switch-slide " + (this.config.autoScale ? "switch-on" : "") + "'></div>" +
+                "       </div>" +
+                "   </div>" +
+    	        "</div>";
+	}
+
+	return html;
+};
+
+Graph.prototype.consume = function(data) { 
+    var i = 0;
+
+    if (this.startTime == undefined) this.startTime = data.start;
+    this.latestTime = data.time;
+
+    for (i in this.dataFields)
+    {
+        if (data[i] == undefined) continue;
+
+        this.dataFields[i].values = data[i];
+        this.dataFields[i].seconds = data.duration;
+        this.displayedDuration = data.duration;
+    }
+    
+    if (this.isAutoscaling) 
+    {
+        /* Determine graph scaling for this frame and label it. */
+        this._adjustScaling();
+        this._updateDependantScale();
+    }
+
+    this._drawFrame();
+    this._updateTimeScale();
+};
+
+/**
+ * Draws a graph frame.
+ */
+Graph.prototype._drawFrame = function() {
+	var i = 0;
+	
+	/* Clear old frame. */
+	this.ctx.clearRect(0, 0, this.graphWidth, this.graphHeight);
+	
+	/* Draw scales. */
+	this._drawDependantScales();
+	    
+	/* Draw the trace for all graphed variables. */
+	for (i in this.dataFields) this._drawTrace(this.dataFields[i]);
+};
+
+/**
+ * Adjusts the scaling and offset based on the range of values in the graphed
+ * datasets.
+ */
+Graph.prototype.adjustScaling = function() {
+    var min = Number.POSITIVE_INFINITY, max = Number.NEGATIVE_INFINITY, j;
+
+    for (i in this.dataFields)
+    {
+        for (j = 0; j < this.dataFields[i].values.length; j++)
+        {
+            if (this.dataFields[i].values[j] < min) min = this.dataFields[i].values[j];
+            if (this.dataFields[i].values[j] > max) max = this.dataFields[i].values[j];
+        }
+    }
+
+    this.graphRange = max - min;
+    this.graphOffset = min / this.graphRange;    
+};
+
+/** @static {integer} The stipple width. */
+Graph.STIPPLE_WIDTH = 10;
+
+/**
+ * Draws the scales on the interface.
+ */
+Graph.prototype._drawDependantScales = function() {
+	var i, j,
+		off = this.graphHeight - Math.abs(this.graphOffset * this.graphHeight);
+
+	this.ctx.save();
+	this.ctx.beginPath();
+	
+	this.ctx.strokeStyle = "#FFFFFF";
+	
+	/* Zero line. */
+	this.ctx.lineWidth = 3;
+	if (off > 0 && off < this.graphHeight)
+	{
+	    this.ctx.moveTo(0, off + 1.5);
+	    this.ctx.lineTo(this.graphWidth, off + 1.5);
+	}
+	
+	this.ctx.lineWidth = 0.3;
+
+	for (i = 0; i < this.graphHeight; i += this.graphHeight / this.config.vertScales)
+	{
+		for (j = 0; j < this.graphWidth; j += Graph.STIPPLE_WIDTH * 1.5)
+		{
+			this.ctx.moveTo(j, i + 0.25);
+			this.ctx.lineTo(j + Graph.STIPPLE_WIDTH, i + 0.25);
+		}
+	}
+
+	this.ctx.closePath();
+	this.ctx.stroke();
+	this.ctx.restore();
+};
+
+/**
+ * Draws the trace of the data. 
+ * 
+ * @param {array} dObj data object
+ */
+Graph.prototype._drawTrace = function(dObj) {
+	if (!dObj.visible) return;
+
+	var xStep = this.graphWidth / (dObj.seconds * 1000 / this.config.period), 
+	    yScale = this.graphHeight / this.graphRange, i, yCoord;
+
+	this.ctx.save();
+	this.ctx.strokeStyle = dObj.color;
+	this.ctx.lineWidth = 3;
+	this.ctx.lineJoin = "round";
+	this.ctx.shadowColor = "#222222";
+	this.ctx.shadowBlur = 2;
+	this.ctx.shadowOffsetX = 1;
+	this.ctx.shadowOffsetY = 1;
+
+	this.ctx.beginPath();
+	for (i = 0; i < dObj.values.length; i++)
+	{
+		yCoord = this.graphHeight - dObj.values[i] * yScale + this.graphOffset * this.graphHeight;
+		/* If value too large, clipping at the top of the graph. */
+		if (yCoord > this.graphHeight) yCoord = this.graphHeight;
+		/* If value too small, clippling at the bottom of the graph. */
+		if (yCoord < 0) yCoord = 0;
+
+		if (i == 0)
+		{
+			this.ctx.moveTo(i * xStep, yCoord);
+		}
+		else
+		{
+			this.ctx.lineTo(i * xStep, yCoord);
+		}
+	}
+
+	this.ctx.stroke();
+	this.ctx.restore();
+};
+
+/**
+ * Updates the dependant variable scale.
+ */
+Graph.prototype._updateDependantScale = function() {
+    var i, $s = this.$widget.find(".graph-left-scale-0");
+    
+    for (i = 0; i <= this.config.vertScales; i++)
+    {
+        $s.html(Util.zeroPad(
+                this.graphRange + this.graphOffset * this.graphRange - this.graphRange / this.config.vertScales * i, 
+                this.graphRange >= this.config.vertScales * 2 ? 0 : 1));
+        $s = $s.next();
+    }
+};
+
+/**
+ * Updates the time scale.
+ */
+Graph.prototype._updateTimeScale = function() {
+	var xstep = this.displayedDuration / this.config.horizScales, i,
+		$d = this.$widget.find(".graph-bottom-scale-0"), t;
+
+	for (i = 0; i <= this.config.horizScales; i++)
+	{
+		t = this.latestTime - xstep * (this.config.horizScales - i) - this.startTime;
+		$d.html(Util.zeroPad(t, t < 100 ? 1 : 0));
+		$d = $d.next();
+	}
+};
+
+/**
+ * Enables or disables displaying of the graphed variable.
+ * 
+ * @param label label of the variable
+ * @param show whether the variable is displayed
+ */
+Graph.prototype._showTrace = function(label, show) {
+	var i = 0;
+	for (i in this.dataFields)
+	{
+		if (this.dataFields[i].label == label)
+		{
+			this.dataFields[i].visible = show;
+		}
+	}
+
+	this._drawFrame();
+};
+
+
+Graph.prototype.resized = function(width, height) {
+    this.width = this.width + (width - this.boxWidth);
+    this.height = this.height + (height - this.boxHeight);
+    
+    this.boxWidth = width;
+    this.boxHeight = height;
+    
+    /* Adjust dimensions of canvas, box and other stuff. */
+    this.$widget.find("canvas").attr({
+        width: this.width,
+        height: this.height
+    });
+    
+    this.$widget.find(".graph-canvas-box").css({
+        width: this.width,
+        height: this.height 
+    });
+    
+    var i, $s = this.$widget.find(".graph-left-scale-0");
+    
+    /* Left scales. */
+    for (i = 0; i <= GraphWidget.NUM_VERT_SCALES; i++)
+    {
+        $s.css("top", this.height / GraphWidget.NUM_VERT_SCALES * i);
+        $s = $s.next();
+    }
+    
+    /* Left label. */
+    this.$widget.find(".graph-left-axis-label").css("top", this.boxHeight / 2 - this.axis.y.length * 3);
+    
+    /* Bottom scales. */
+    for (i = 0, $s = this.$widget.find(".graph-bottom-scale-0"); i <= GraphWidget.NUM_HORIZ_SCALES; i++)
+    {
+        $s.css("left", this.width / GraphWidget.NUM_HORIZ_SCALES * i);
+        $s = $s.next();
+    }
+    
+    this.$widget.css("height", "auto");
+};
+
+Graph.prototype.resizeStopped = function(width, height) {
+    this.resized(width, height);
+    this.drawFrame();
+};
+
+/**
+ * Enables or disables graph autoscaling. 
+ * 
+ * @param {boolean} autoscale true if graph autoscales
+ */
+Graph.prototype._enableAutoscale = function(autoscale) {
+    if (!(this.isAutoscaling = autoscale))
+    {
+        this.graphRange = this.maxGraphedValue - this.minGraphedValue;
+        this.graphOffset = this.minGraphedValue / this.graphRange;
+        this.updateDependantScale();
+    }
+};
+
+
+/**
+ * Shows or hides the graph controls.
+ * 
+ * @param {boolean} show whether to show the controls
+ */
+Graph.prototype._showControls = function(show) {
+    var $n = this.$widget.find(".graph-controls");
+    $n.css("display", $n.css("display") == "none" ? "block" : "none");
+    this.$widget.css("height", "auto");
+};
 
 /* ============================================================================
  * == Switch Widget.                                                         ==
@@ -621,12 +1112,12 @@ function Graph()
  * @constructor
  * @param {string} id the identifier of widget
  * @param {object} config configuration of widget
- * @config {string} [field] server data variable that is being switched
- * @config {string} [action] server action to call when the switched is changed
- * @config {string} [label] switch label (optional)
- * @config {string} [stickColor] sets the color of the switches stick (silver, black, red)
+ * @config {string}  [field]      server data variable that is being switched
+ * @config {string}  [action]     server action to call when the switched is changed
+ * @config {string}  [label]      switch label (optional)
+ * @config {string}  [stickColor] sets the color of the switches stick (silver, black, red)
  * @config {string} [led] set switch LED indicator (optional)
- * @config {boolean} [vertical] set button vertical or horizontal (default horizontal)
+ * @config {boolean} [vertical]   set button vertical or horizontal (default horizontal)
  */
 function Switch(id, config)
 {
@@ -740,11 +1231,11 @@ Switch.prototype._setDisplay = function(on) {
  * @constructor
  * @param {string} id the identifier of widget
  * @param {object} config configuration of widget
- * @config {string} [field] server data variable that is being switched
+ * @config {string} [field]  server data variable that is being switched
  * @config {string} [action] server action to call when the switched is changed
  * @config {array}  [values] the list of potential values
  * @config {number} [radius] the radius of the switch
- * @config {string} [label] switch label (optional)
+ * @config {string} [label]  switch label (optional)
  * @config {string} [colour] set the switch colour (default black)
  */
 function RotarySwitch(id, config)
@@ -752,6 +1243,9 @@ function RotarySwitch(id, config)
     if (!(config.field || config.action || config.values)) throw "Options not supplied."; 
     
     Widget.call(this, id, config);
+    
+    /* Default options. */
+    if (this.config.label === undefined) this.config.label = '';
 
     /** @private {boolean} The selected value. */
     this.val = undefined;
@@ -785,7 +1279,7 @@ RotarySwitch.prototype.init = function($container) {
 
         $("#rotary-container-" + this.id).append(
             "<div class='rotary-switch-val " +
-            ( y <= 55 ? y = (y - ( p ? p.label.length / 2 : '')) - (r >= 60 ? 9 : 4): 0) + "' id='" + this.id + "-" + i + "' " +
+            ( y <= 55 ? y = (y - ( p ? 2 / 2 : '')) - (r >= 60 ? 9 : 4): 0) + "' id='" + this.id + "-" + i + "' " +
             "style='left:" + Math.round(y) + "px;top:" + Math.round(x) + "px' " + "value=" +
             ( p ? p.value : v[0].value) + ">" + ( p ? p.label : v[0].label) + "</div>"
         );
@@ -889,6 +1383,7 @@ function Spinner()
  * Slider widget that displays a slider that allows that provides a slidable
  * scale over the specified range.
  * 
+ * @constructor
  * @param {string} id widget identifier
  * @param {object} config configuration of widget
  * @config {string}  [field] server data variable that is being set
@@ -1396,7 +1891,7 @@ Util.round = function(num, places) {
  * @returns {string} padded string
  */
 Util.zeroPad = function(num, places) {
-    var r = '' + mathRound(num, places);
+    var r = '' + Util.round(num, places);
 
     if (places > 0)
     {
@@ -1442,4 +1937,17 @@ Util.getCanvas = function(id, width, height) {
     }
 
     return canvas;
+};
+
+/**
+ * Determines the number of elements of an object.
+ * 
+ * @static
+ * @param {object} o object to determine size
+ * @return {integer} number of elements in an object
+ */
+Util.sizeOf = function(o) {
+    var i = 0, c = 0;
+    for (i in o) c++;
+    return c;
 };
