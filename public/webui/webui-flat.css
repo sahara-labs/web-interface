@@ -40,6 +40,33 @@
 }
 
 /******************************************************************************
+ ** Button, Push Button                                                      **
+ ******************************************************************************/
+
+.button {
+	padding: 2px;
+    border-radius: 4px;
+    border: 1px solid #B5B5B5;
+    box-shadow: 0 0 4px #B5B5B5;
+	background-color: #EFEFEF;
+	cursor: pointer;
+	width: 100%;
+	height: 100%;
+	font-weight: bold;
+	text-align: center;
+}
+
+.button:hover {
+    box-shadow: 0 0 4px #555555;
+}
+
+.button-engaged {
+	background-color: #FE6F5E;
+}
+
+
+
+/******************************************************************************
  ** Slider                                                                   **
  ******************************************************************************/
 
@@ -170,8 +197,8 @@
 }
 
 .led-novalue {
-	border: 1px solid #959595;
-	background-color: #DDDDDD;
+	border: 1px solid #B5B5B5;
+	background-color: #EFEFEF;
 	box-shadow: 0 0 2px #B4B4B4;
 }
 

@@ -403,7 +403,10 @@ Widget.prototype._generate = function($container, html) {
     else
     {
         this.$widget = $container.append(
-            "<div id="+ this.id + " class='no-window-content'>" + 
+            "<div id="+ this.id + " class='no-window-content " + 
+                    (this.config.classes ? this.config.classes.join(' ') : "") + "' style='" +
+                    (this.config.width ? "width:" + this.config.width + "px;" : "") + 
+                    (this.config.height ? "height:" + this.config.height + "px;" : "") + "'>" + 
                 html +
             "</div>"
         ).children().last();
@@ -1343,19 +1346,131 @@ RotarySwitch.prototype._animateSwitch = function(point) {
  * == Button widget                                                          ==
  * ============================================================================ */
 
-function Button()
+/**
+ * Button that posts to the server when clicked.
+ * 
+ * @param {string} id identifier of widget
+ * @param {object} config configuration of widget
+ * @config {string}  [action] action to send to when pressed
+ * @config {object}  [params] parameters to be sent when pressed (optional)
+ * @config {string}  [label] the label to display on the button (optional)
+ * @config {boolean} [circular] whether the button is circular (default false)
+ * @config {string}  [clickColor] color of button when clicked (default #CCCCCC)
+ * @config {function} [callback] callback to be invoked with response of posts (optional)
+ */
+function Button(id, config)
 {
-    // TODO Button widget
+    Widget.call(this, id, config);
+    this.config.classes.push("button-outer");
+
+    /* Default options. */
+    if (this.config.params === undefined) this.config.params = { };
+    if (this.config.label === undefined) this.config.label = '';
+    if (this.config.circular === undefined) this.config.circular = false;
+    if (this.config.clickColor === undefined) this.config.clickColor = "#CCCCCC";
 }
+
+Button.prototype = new Widget;
+
+Button.prototype.init = function($container) {
+    if (!this.config.action) throw "Options not set.";    
+    
+    this.$widget = this._generate($container,
+        "<div class='button' style='" + 
+                (this.config.height ? "line-height:" + this.config.height + "px;" : "") + 
+                (this.config.circular ? "border-radius:" + this.config.width + "px;" : "") + "'>" +
+            "<span class='button-label'>" + this.config.label + "</span>" + 
+        "</div>" 
+    );
+    
+    var thiz = this;
+    this.$widget.mousedown(function() { thiz._buttonEngaged(); });
+    this.$widget.bind("mouseup mouseout", function(){ thiz._buttonReleased(); });
+    this.$widget.click(function() { thiz._clicked(); });
+};
+
+/**
+ * Event handler triggered from mouse down on button.
+ */
+Button.prototype._buttonEngaged = function() {
+    this.$widget.find(".button").css("background-color", this.config.clickColor);
+};
+
+/**
+ * Event handler triggered when no longer on mouse down on button.
+ */
+Button.prototype._buttonReleased = function() {
+    this.$widget.find(".button").css("background-color", "");
+};
+
+/**
+ * Event handler triggered when button clicked.
+ */
+Button.prototype._clicked = function() {
+    this._postControl(this.config.action, this.config.params, this.config.callback);
+};
+
 
 /* ============================================================================
  * == Push Button widget                                                     ==
  * ============================================================================ */
 
-function PushButton()
+/**
+ * Push button that is active when the button is clicked. 
+ * 
+ * @param {string} id identifier of widget
+ * @param {object} config configuration of widget
+ * @config {string}  [action] action to send to when pressed
+ * @config {string}  [releaseAction] action to send when released (optional)
+ * @config {object}  [params] parameters to be sent when pressed (optional)
+ * @config {integer} [period] number of milliseconds before next server post (default 250)
+ * @config {string}  [label] the label to display on the button (optional)
+ * @config {boolean} [circular] whether the button is circular (default false)
+ * @config {function} [callback] callback to be invoked with response of posts (optional)
+ */
+function PushButton(id, config)
 {
-    // TODO Push button widget
+    if (!config.action) throw "Options not set";
+    
+    Button.call(this, id, config);
+    this.config.classes.push("push-button");
+    
+    /* Default options. */
+    if (this.config.period === undefined) this.config.period = 250;
+    
+    /* Whether the mouse is down. */
+    this.engaged = false;
 }
+
+PushButton.prototype = new Button;
+
+PushButton.prototype._buttonEngaged = function() {
+    Button.prototype._buttonEngaged.call(this);
+    
+    this.engaged = true;
+    this._sendUpdate();
+};
+
+PushButton.prototype._sendUpdate = function() {
+    if (!this.engaged) return;
+    
+    var thiz = this;
+    this._postControl(this.config.action, this.config.params, this.config.callback);
+    setTimeout(function() { thiz._sendUpdate(); }, this.config.period);
+};
+
+PushButton.prototype._buttonReleased = function() {
+    if (!this.engaged) return;
+    
+    Button.prototype._buttonReleased.call(this);
+    this.engaged = false;
+};
+
+PushButton.prototype._clicked = function() { 
+    /* Push buttons ignore the click event because data sending is triggered
+     * in the mouse down event. */
+};
+
 
 /* ============================================================================
  * == Knob widget                                                            ==
