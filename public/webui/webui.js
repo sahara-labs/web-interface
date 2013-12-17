@@ -733,7 +733,7 @@ Graph.prototype.init = function($container) {
     
 	this.$widget = this._generate($container, this._buildHTML());
 	c = this.$widget.find(".graph-left-axis-label");
-	c.css("top", this.graphHeight / 2 + 30 - c.height() / 2);
+	c.css("top", 30 + this.graphHeight / 2 - c.height() / 2);
 
 	/* Add the canvas panel. */
 	var canvas = Util.getCanvas(this.id, this.graphWidth, this.graphHeight);
@@ -1334,8 +1334,8 @@ RotarySwitch.prototype._animateSwitch = function(point) {
     //TODO Fix issue with some labels making the switch fully rotate to get to the closest one.
 
     /* Calculate the switches degree in relation to the point. */
-    var deg = Math.atan((pos.left - x0) / (y0 - pos.top)) * 180 /Math.PI,
-        deg = x0 < pos.top ? Math.round(deg + 180) : Math.round(deg);
+    var deg = Math.atan((pos.left - x0) / (y0 - pos.top)) * 180 /Math.PI;
+    deg = x0 < pos.top ? Math.round(deg + 180) : Math.round(deg);
 
     /* Rotates the switch. */
     $(point).parent().find('.rotary-switch').css({
