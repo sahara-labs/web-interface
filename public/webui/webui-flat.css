@@ -168,9 +168,7 @@
 .rotary-switch-val {
     position: absolute;
     cursor: pointer;
-    font-size: 10px;
-    color: #727272;
-    text-shadow: 1px 1px 1px #bebebe;
+    font-size: 12px;
 }
 
 

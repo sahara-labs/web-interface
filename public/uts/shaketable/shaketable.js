@@ -52,69 +52,61 @@ function ShakeTableControl(id)
 ShakeTableControl.prototype.setup = function() {
 	
 	/* Graph to display tank levels. */
-//	this.widgets.push(new Graph("graph-displacement", {
-//	    title: "Displacement Levels",
-//	    draggable: true,
-//	    closeable: true,
-//	    width: 484,
-//	    height: 350,
-//	    fields: {
-//	        'disp-graph-1': 'Level 1',
-//	        'disp-graph-2': 'Level 2',
-//	        'disp-graph-3': 'Level 3'
-//	    },
-//	    minValue: -60,
-//	    maxValue: 60,
-//	    duration: 10,
-//	    yLabel: "Displacement (mm)",
-//	    fieldCtl: false,
-//	    autoCtl: true,
-//	    durationCtl: true,
-//	    traceLabels: true,
-//	}));
+	this.widgets.push(new Graph("graph-displacement", {
+	    title: "Displacement Levels",
+	    draggable: true,
+	    closeable: true,
+	    shadeable: true,
+	    expandable: true,
+	    resizable: true,
+	    width: 420,
+	    height: 325,
+	    left: 355,
+	    top: 420,
+	    fields: {
+	        'disp-graph-1': 'Level 1',
+	        'disp-graph-2': 'Level 2',
+	        'disp-graph-3': 'Level 3'
+	    },
+	    minValue: -60,
+	    maxValue: 60,
+	    duration: 10,
+	    yLabel: "Displacement (mm)",
+	    fieldCtl: false,
+	    autoCtl: false,
+	    durationCtl: false,
+	    traceLabels: true,
+	}));
 
-//    /* Add mimic to page. */
-//    this.widgets.push(new MimicWidget(this.$container, 'Diagram', ''));
-//
-//	/* Add camera to page. */
-//	this.widgets.push(new CameraWidget(this.$container, 'Camera', ''));
-//
-//	/* Controls. */
+    /* Add mimic to page. */
+    this.widgets.push(new MimicWidget(this.$container, 'Diagram', ''));
+
+	/* Add camera to page. */
+	this.widgets.push(new CameraWidget(this.$container, 'Camera', ''));
+
+	/* Controls. */
 	this.widgets.push(new Switch("switch-motor-on", {
 	   field: "motor-on", 
 	   action: "setMotor",
 	   label: "Motor",
 	}));
-//	
-//	this.widgets.push(new Switch("switch-coils-on", {
-//	    field: "coils-on",
-//	    action: "setCoils",
-//	    label: "Dampening",
-//	}));
-//	
-//	this.widgets.push(new Slider("slider-motor-speed", {
-//	    field: "motor-speed",
-//	    action: "setMotor",
-//	    max: 8,
-//	    precision: 2,
-//	    label: "Motor Frequency",
-//	    units: "Hz",
-//
-//	}));
 	
-	this.widgets.push(new RotarySwitch("rotary-Label", {
-	    draggable: true,
-        field: "pump-on",
-        action: "setPump",
-        values: [
-            {label: "One", value: 1},
-            {label: "Two", value: 2},
-            {label: "Three", value: 3},
-            {label: "Four", value: 4},
-        ],
-        radius: 50
-    }));
+	this.widgets.push(new Switch("switch-coils-on", {
+	    field: "coils-on",
+	    action: "setCoils",
+	    label: "Dampening",
+	}));
 	
+	this.widgets.push(new Slider("slider-motor-speed", {
+	    field: "motor-speed",
+	    action: "setMotor",
+	    max: 8,
+	    precision: 2,
+	    label: "Motor Frequency",
+	    units: "Hz",
+
+	}));
+
 	this.widgets.push(new DataLogging(this.$container));
 
 	/* Display manager to allow things to be shown / removed. */
@@ -218,6 +210,8 @@ function MimicWidget()
         shadeable: true,
         expandable: true,
         draggable: true,
+        left: 355,
+        top: 5,
     });
     
     /** Model dimensions in mm. */
