@@ -690,7 +690,7 @@ function Graph(id, config)
 	
 	/** @private {integer} Height of the graph. */
 	this.graphHeight = undefined;
-
+	
 	/** @private {CanvasRenderingCOntext2D} Canvas context. */
 	this.ctx = null;
 
@@ -1039,39 +1039,39 @@ Graph.prototype._showTrace = function(label, show) {
 
 
 Graph.prototype.resized = function(width, height) {
-    this.width = this.width + (width - this.boxWidth);
-    this.height = this.height + (height - this.boxHeight);
+    this.graphWidth = this.graphWidth + (width - this.config.width);
+    this.graphHeight = this.graphHeight + (height - this.config.height);
     
-    this.boxWidth = width;
-    this.boxHeight = height;
+    this.config.width = width;
+    this.config.height = height;
     
     /* Adjust dimensions of canvas, box and other stuff. */
     this.$widget.find("canvas").attr({
-        width: this.width,
-        height: this.height
+        width: this.graphWidth,
+        height: this.graphHeight
     });
     
     this.$widget.find(".graph-canvas-box").css({
-        width: this.width,
-        height: this.height 
+        width: this.graphWidth,
+        height: this.graphHeight 
     });
     
     var i, $s = this.$widget.find(".graph-left-scale-0");
     
     /* Left scales. */
-    for (i = 0; i <= GraphWidget.NUM_VERT_SCALES; i++)
+    for (i = 0; i <= this.config.vertScales; i++)
     {
-        $s.css("top", this.height / GraphWidget.NUM_VERT_SCALES * i);
+        $s.css("top", this.graphHeight / this.config.vertScales * i);
         $s = $s.next();
     }
     
     /* Left label. */
-    this.$widget.find(".graph-left-axis-label").css("top", this.boxHeight / 2 - this.axis.y.length * 3);
+//    this.$widget.find(".graph-left-axis-label").css("top", this.boxHeight / 2 - this.axis.y.length * 3);
     
     /* Bottom scales. */
-    for (i = 0, $s = this.$widget.find(".graph-bottom-scale-0"); i <= GraphWidget.NUM_HORIZ_SCALES; i++)
+    for (i = 0, $s = this.$widget.find(".graph-bottom-scale-0"); i <= this.config.horizScales; i++)
     {
-        $s.css("left", this.width / GraphWidget.NUM_HORIZ_SCALES * i);
+        $s.css("left", this.graphWidth / this.config.horizScales * i);
         $s = $s.next();
     }
     
@@ -1080,7 +1080,7 @@ Graph.prototype.resized = function(width, height) {
 
 Graph.prototype.resizeStopped = function(width, height) {
     this.resized(width, height);
-    this.drawFrame();
+    this._drawFrame();
 };
 
 /**
