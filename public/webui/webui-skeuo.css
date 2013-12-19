@@ -55,7 +55,7 @@
 	color: #666666;
 }
 
-.window-wrapper label {
+.window-wrapper label, .no-window-content label {
     display: block;
     text-align: center;
     padding: 0px 8px;
@@ -83,7 +83,7 @@
 	float: left;
     padding: 0 4px !important;
 }
- 
+
 .switch {
     height: 22px;
     width: 44px;
@@ -123,10 +123,10 @@
 }
 
 .switch-animated {
-    -webkit-transition:all 0.3s ease-in-out;
-    -moz-transition:all 0.3s ease-in-out;
-    -o-transition:all 0.3s ease-in-out;
-    transition:all 0.3s ease-in-out;
+    -webkit-transition:all 0.2s ease-in-out;
+    -moz-transition:all 0.2s ease-in-out;
+    -o-transition:all 0.2s ease-in-out;
+    transition:all 0.2s ease-in-out;
 }
 
 .switch-on {
@@ -214,6 +214,37 @@
     margin-left: 39.5%;
 }
 
+.no-window-content .switch-container, .no-window-content .switch-vertical-container {
+    width: auto;
+    display: inline-block;
+    border: solid 1px rgba(255, 255, 255, 0);
+    margin: 5px;
+    display: inline-block;
+    float: left;
+}
+
+.no-window-content .switch-vertical-label {
+    border: none;
+    box-shadow: none;
+    background: none;
+    font-size: 14px;
+    color: #727272;
+    text-shadow: 1px 1px 1px #BEBEBE;
+    font-family: Arial,Helvetica,sans-serif;
+}
+
+.no-window-content .switch-stick {
+    margin: -2% 36.8%;
+}
+
+.no-window-content .switch-silver-down, .no-window-content .switch-silver-down {
+    margin: -2% 38%;
+}
+
+.no-window-content .switch-led {
+    top: 20% !important;
+}
+
 /******************************************************************************
  ** LED                                                                      **
  ******************************************************************************/
@@ -258,13 +289,29 @@
 	border: solid 1px #FFB3B3;
 }
 
+.no-window-content .led-container {
+    width: auto;
+    display: inline-block;
+    border: solid 1px #ddd;
+    padding-bottom: 5px;
+}
+
+.no-window-content .led-label {
+    border: none;
+    box-shadow: none;
+    background: none;
+    font-size: 12px;
+    color: #727272;
+    text-shadow: 1px 1px 1px #BEBEBE;
+    font-family: Arial,Helvetica,sans-serif;
+}
+
 /******************************************************************************
  ** Rotary Switch                                                            **
  ******************************************************************************/
 
 .rotary-switch-container {
-	margin: 30px;
-    margin-top: 25px;
+    margin: 25px auto 25px auto;
 	position: relative;
     border-radius: 50%;
     border-bottom: 1px solid #fff;
@@ -315,6 +362,13 @@
     text-shadow: 1px 1px 1px #bebebe;
 }
 
+.no-window-content .rotary-container {
+    border: solid 1px rgba(0, 0, 0, 0);
+    margin: 5px;
+    display: inline-block;
+    float: left;
+}
+
 /******************************************************************************
  ** Slider                                                                   **
  ******************************************************************************/
@@ -356,10 +410,6 @@
     cursor: pointer;
     cursor: -webkit-grabbing;
     cursor: -moz-grabbing;
-	-webkit-transition: all 0.6s ease-in-out;
-	-moz-transition: all 0.6s ease-in-out;
-	-o-transition: all 0.6s ease-in-out;
-	transition: all 0.6s ease-in-out;
 }
 
 .slider-knob-horizontal {
@@ -471,6 +521,86 @@
 }
 
 .slider-text-vertical label {
-    margin-left: -8% !important;
-    width: 100% !important;
+    position: relative;
+    left: -4px;
+    top: -550px;
+    background: #FFF !important;
+    width: 70px !important;
+}
+
+.slider-text-vertical input {
+    left: 9px;
+    top: -257px;
+}
+
+.slider-container .slider-text-horizontal .slider-text-label {
+    position: relative;
+    left: -30%;
+    background: #FFF !important;
+    width: auto !important;
+}
+
+.no-window-content .slider-container-horizontal {
+    border: solid 1px #ddd;
+    margin: 10px;
+    padding: 5px 30px 10px 25px;
+    display: inline-block;
+    float: left;
+}
+
+.no-window-content .slider-container-vertical {
+    border: solid 1px #DDD;
+    margin: 10px;
+    padding: 15px 0px 10px 10px;
+    display: inline-block;
+}
+
+.no-window-content .slider-outer {
+    position: relative;
+}
+
+.no-window-content .slider-text-horizontal, .no-window-content .slider-text-vertical {
+    margin-top: 0 !important;
+}
+
+.no-window-content .slider-container-horizontal .slider-text label {
+    padding: 0px 5px !important;
+    width: auto !important;
+    display: inline-block;
+    background: #FFF !important;
+    position: relative;
+    top: -90px;
+    left: -35%;
+}
+
+.no-window-content .slider-container-vertical .slider-text label {
+    padding: 0px 5px !important;
+    width: auto !important;
+    display: inline-block;
+    background: #FFF !important;
+    position: relative;
+    top: -281px;
+    left: -7%;
+}
+
+.no-window-content .slider-container-horizontal .slider-outer {
+    top: 0px !important;
+    left: -4px;
+}
+
+.no-window-content .slider-container-horizontal .slider-text input {
+    position: relative;
+    bottom: -4px;
+    right: -11%;
+    width: 70px;
+}
+
+.no-window-content .slider-text-vertical input {
+    width: 70px !important;
+    margin: 10px 4px -5px auto !important;
+    display: inline-block;
+}
+
+.no-window-content .slider-knob-vertical {
+    left: 23%;
 }

@@ -40,12 +40,101 @@ function WaveTank(id)
 WaveTank.prototype.setup = function() {
     var o;
 
+    o = new Switch("switch-1", {
+        field: "pump-on",
+        action: "setPump",
+        label: "Silver",
+        icon: "pump",
+        led: true,
+        draggable: true,
+        stickColor: "silver",
+        windowed: false,
+        vertical: true
+    });
+    this.widgets.push(o);
+
+    o = new Switch("switch-2", {
+        field: "pump-on",
+        action: "setPump",
+        label: "Black",
+        icon: "pump",
+        led: true,
+        draggable: true,
+        windowed: false,
+        stickColor: "black",
+        vertical: true
+    });
+    this.widgets.push(o);
+    
+    o = new Switch("switch-3", {
+        field: "pump-on",
+        action: "setPump",
+        label: "Red",
+        icon: "pump",
+        draggable: true,
+        windowed: false,
+        stickColor: "red",
+        vertical: true
+    });
+    this.widgets.push(o);
+
+    o = new Switch("switch-4", {
+        field: "pump-on",
+        action: "setPump",
+        label: "Pump",
+        icon: "pump",
+        draggable: true,
+        tooltip: "Turn on pump",
+        windowed: false,
+        vertical: false
+    });
+    this.widgets.push(o);
+
+    this.widgets.push(new LED("led-1", {
+        field: "pump-on",
+        label: "Pump",
+        draggable: true,
+        windowed: false,
+        ledBelow: true
+    }));
+
+    o = new Slider("slider01", {
+        field: "pump-on",
+        action: "setPump",
+        icon: "pump",
+        draggable: true,
+        label: "Short Slider",
+        vertical: false,
+        windowed: false,
+        min: 0,
+        max: 20,
+        scales: 10,
+        dimension: 180
+    });
+    this.widgets.push(o);
+
+    o = new Slider("slider02", {
+        field: "pump-on",
+        action: "setPump",
+        icon: "pump",
+        draggable: true,
+        vertical: true,
+        label: "Long Slider",
+        min: 0,
+        max: 20,
+        scales: 10,
+        windowed: false,
+        dimension: 180
+    });
+    this.widgets.push(o);
+
     o = new RotarySwitch("rotary-Label", {
         field: "pump-on",
         action: "setPump",
         label: "Rotary Switch",
         icon: "pump",
         draggable: true,
+        windowed: false,
         values: [
             {label: "One", value: 1},
             {label: "Two", value: 2},
@@ -67,6 +156,7 @@ WaveTank.prototype.setup = function() {
         action: "setPump",
         icon: "pump",
         draggable: true,
+        windowed: false,
         values: [
             {label: "ON", value: 1},
             {label: "OFF", value: 0}
@@ -80,6 +170,7 @@ WaveTank.prototype.setup = function() {
         field: "pump-on",
         action: "setPump",
         icon: "pump",
+        windowed: false,
         draggable: true,
         values: [
             {label: "one", value: 1},
@@ -91,87 +182,6 @@ WaveTank.prototype.setup = function() {
         colour: 'white'
     });
     this.widgets.push(o);
-
-    o = new Switch("switch-1", {
-        field: "pump-on",
-        action: "setPump",
-        label: "Silver",
-        icon: "pump",
-        led: true,
-        draggable: true,
-        stickColor: "silver",
-        vertical: true
-    });
-    this.widgets.push(o);
-
-    o = new Switch("switch-2", {
-        field: "pump-on",
-        action: "setPump",
-        label: "Black",
-        icon: "pump",
-        led: true,
-        draggable: true,
-        stickColor: "black",
-        vertical: true
-    });
-    this.widgets.push(o);
-    
-    o = new Switch("switch-3", {
-        field: "pump-on",
-        action: "setPump",
-        label: "Red",
-        icon: "pump",
-        draggable: true,
-        stickColor: "red",
-        vertical: true
-    });
-    this.widgets.push(o);
-
-    o = new Switch("switch-4", {
-        field: "pump-on",
-        action: "setPump",
-        label: "Pump",
-        icon: "pump",
-        draggable: true,
-        tooltip: "Turn on pump",
-        vertical: false
-    });
-    this.widgets.push(o);
-
-    o = new Slider("slider01", {
-        field: "pump-on",
-        action: "setPump",
-        icon: "pump",
-        draggable: true,
-        label: "Short Slider",
-        vertical: false,
-        min: 0,
-        max: 20,
-        scales: 10,
-        dimension: 180
-    });
-    this.widgets.push(o);
-
-    o = new Slider("slider02", {
-        field: "pump-on",
-        action: "setPump",
-        icon: "pump",
-        draggable: true,
-        vertical: true,
-        label: "Long Slider",
-        min: 0,
-        max: 20,
-        scales: 10,
-        dimension: 180
-    });
-    this.widgets.push(o);
-
-    this.widgets.push(new LED("led-1", {
-        field: "pump-on",
-        label: "Pump",
-        draggable: true,
-        ledBelow: true
-    }));
 };
 
 /** 

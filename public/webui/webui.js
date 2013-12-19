@@ -1261,12 +1261,14 @@ RotarySwitch.prototype.init = function($container) {
         v = this.config.values;
 	
     this.$widget = this._generate($container,
+    	"<div class='rotary-container " + (this.config.label ? 'rotary-container-label' : '') + 
+    	"' style='width:" + r * 3 + "px'>" +
     	(this.config.label ? "<label>" + this.config.label + "</label>" : '') +
         "<div id='rotary-container-" + this.id + "' class='rotary-switch-container' " + 
             "style='width:" + r * 2 +"px;height:" + r * 2 + "px;'>" +
                 "<div id='rotary-switch-" + this.id + "' class='rotary-switch rotary-" + 
                 (this.config.colour ? this.config.colour : 'black') + "'></div>" +
-        "</div>"
+        "</div></div>"
     );
 
     /* Generates the positions of the switches' points. */
@@ -1462,7 +1464,8 @@ Slider.prototype.init = function($container) {
 Slider.prototype._buildHTML = function() {
     var i, s = (Math.floor((this.config.max - this.config.min) / this.config.scales)),
         html = 
-        "<div class='slider-outer' style='" + (this.config.vertical ? "height" : "width") + ":" + this.config.length + "px'>";
+        "<div class='slider-container-" + (this.config.vertical ? "vertical" : "horizontal") + "'>" +
+            "<div class='slider-outer' style='" + (this.config.vertical ? "height" : "width") + ":" + this.config.length + "px'>";
             
     /* Slider scale. */
     html += "<div class='slider-scales slider-scales-" + (this.config.vertical ? "vertical" : "horizontal") + "'>";
@@ -1491,8 +1494,7 @@ Slider.prototype._buildHTML = function() {
     
     html += "</div>";
     
-    html += 
-        "</div>";
+    html += "</div>";
     
     /* Text box with numeric value. */
     html += this.config.textEntry ?
@@ -1506,7 +1508,9 @@ Slider.prototype._buildHTML = function() {
         "<div class='slider-text-" + (this.config.vertical ? "vertical" : "horizontal") +
                 "' style='margin-" + (this.config.vertical ? "top" : "left") + ":" +
                 (this.config.length + (this.config.vertical ? 20 : -90)) + "px'>" + this.config.label + "</div>";
-    
+
+    html += "</div>";
+
     return html;
 };
 
