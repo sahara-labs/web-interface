@@ -48,6 +48,8 @@ Globals = {
  * @config {array}   [classes]             list of classes to add for the container of this box
  * @config {integer} [width]               width of widget in px
  * @config {integer} [height]              height of widget in px
+ * @config {integer} [left]                left absolute position of widget in px (default auto position)
+ * @config {integer} [top]                 top absolute position of widget in px (default auto position)
  * @config {boolean} [resizable]           whether this widget should be resizable (default false)
  * @config {integer} [minWidth]            minimum width of widget if resizable
  * @config {integer} [minHeight]           minimum height of widget if resizable
@@ -364,6 +366,8 @@ Widget.prototype._generate = function($container, html) {
                       "style='" +
                           (this.config.height ? "height:" + this.config.height + "px;" : "") +
                           (this.config.width ? "width:" + this.config.width + "px;" : "") +
+                          (this.config.left ? "left:" + this.config.left + "px;" : "") +
+                          (this.config.top ? "top:" + this.config.top + "px;" : "") +
                       "'>" +
               "<div class='window-header'>" +
                   (this.config.icon ? "<span class='window-icon icon_"+ this.config.icon + "'></span>" : "")+
@@ -403,7 +407,13 @@ Widget.prototype._generate = function($container, html) {
     else
     {
         this.$widget = $container.append(
-            "<div id="+ this.id + " class='no-window-content'>" + 
+            "<div id="+ this.id + " class='no-window-content " + 
+                    (this.config.classes ? this.config.classes.join(' ') : "") + "' style='" +
+                        (this.config.width ? "width:" + this.config.width + "px;" : "") + 
+                        (this.config.height ? "height:" + this.config.height + "px;" : "") +
+                        (this.config.left ? "left:" + this.config.left + "px;" : "") +
+                        (this.config.top ? "top:" + this.config.top + "px;" : "") +
+                    "'>" + 
                 html +
             "</div>"
         ).children().last();
@@ -666,14 +676,6 @@ function Graph(id, config)
 	
 	/** @private {object} Data fields. */
 	this.dataFields = { };
-		
-	/** The minimum expected graphed value. A value smaller than this will be
-	 *  clipped. */
-	this.minGraphedValue = undefined;
-
-	/** The maximum expected graphed value. A value greater than this will be 
-	 *  clipped. */
-	this.maxGraphedValue = undefined;
 	
 	/** @private {integer} The range of values. If autoscaling, this is determined
 	 *  as the difference between the largest and smallest value, if not this is the 
@@ -683,19 +685,19 @@ function Graph(id, config)
 	/** @private {number} The zero point offset of the graph in pixels. */
 	this.graphOffset = this.config.minValue / this.graphRange;
 	
-	/** @private {integer} Width of the graph. */
+	/** @private {integer} Width of the graph in pixels. */
 	this.graphWidth = undefined;
 	
-	/** @private {integer} Height of the graph. */
+	/** @private {integer} Height of the graph in pixels. */
 	this.graphHeight = undefined;
-
-	/** Canvas context. */
+	
+	/** @private {CanvasRenderingCOntext2D} Canvas context. */
 	this.ctx = null;
 
-	/** The time of the first data update in seconds since epoch. */
+	/** @private {integer} The time of the first data update in seconds since epoch. */
 	this.startTime = undefined;
 
-	/** The time of the latest data update in seconds since epoch. */
+	/** @private {integer} The time of the latest data update in seconds since epoch. */
 	this.latestTime = undefined;
 
 	/** @private {integer} The displayed duration in seconds. */
@@ -726,11 +728,27 @@ Graph.prototype.init = function($container) {
     
     /* Size reset. */
     this.graphWidth = this.config.width ? this.config.width - 84 : 400;
-    this.graphHeight = this.config.height ? this.config.height - 130 : 160;
+    this.graphHeight = this.config.height ? this.config.height - 134 : 160;
     if (!this.config.traceLabels) this.graphHeight += 30;
-    if (this.config.autoCtl || this.config.durationCtl) this.graphHeight -= 9;
+    if (!this.config.windowed) 
+    {
+        this.graphHeight += 50;
+        this.graphWidth += 15;
+    }
     
 	this.$widget = this._generate($container, this._buildHTML());
+	
+	/* Positioning based on configured options. */
+	c = this.$widget.find(".graph-left-axis-label");
+	c.css({
+	    top: (this.config.windowed ? 30 : 0) + this.graphHeight / 2,
+	    left: -0.545 * c.width() + (this.config.windowed ? 26.1 : 21)
+	});
+	
+	if (this.config.windowed)
+	{
+	    
+	}
 
 	/* Add the canvas panel. */
 	var canvas = Util.getCanvas(this.id, this.graphWidth, this.graphHeight);
@@ -738,16 +756,19 @@ Graph.prototype.init = function($container) {
 	this.ctx = canvas.getContext("2d");
 
 	/* Event handlers. */
-	this.$widget.find('.graph-label').click(function() {    
-		thiz._showTrace($(this).children(".graph-label-text").text(), 
-				$(this).find(".switch .switch-slide").toggleClass("switch-on switch-off").hasClass("switch-on"));
-	});
+	if (this.config.fieldCtl && this.config.traceLabels)
+	{
+    	this.$widget.find('.graph-label').click(function() {    
+    		thiz._showTrace($(this).children(".graph-label-text").text(), 
+    				$(this).find(".switch .switch-slide").toggleClass("switch-on switch-off").hasClass("switch-on"));
+    	});
+	}
 	
-	this.$widget.find(".graph-controls-show").click(function() {
+	if (this.config.autoCtl || this.config.durationCtl) this.$widget.find(".graph-controls-show").click(function() {
 	    thiz._showControls($(this).find(".switch .switch-slide").toggleClass("switch-on switch-off").hasClass("switch-on"));
 	});
 	
-	this.$widget.find(".graph-autoscale").click(function() {
+	if (this.config.autoCtl) this.$widget.find(".graph-autoscale").click(function() {
 	   thiz._enableAutoscale($(this).find(".switch .switch-slide").toggleClass("switch-on switch-off").hasClass("switch-on")); 
 	});
 
@@ -756,7 +777,15 @@ Graph.prototype.init = function($container) {
 };
 
 Graph.prototype._buildHTML = function() {
-	var i = 0, unitScale, styleScale, html = ''; 
+	var i = 0, unitScale, styleScale, html = '', left, top; 
+	
+	if (this.config.autoCtl || this.config.durationCtl)
+    {
+        /* Controls show / hide button. */
+        html += "<div class='graph-controls-show'>" +
+                "   <label for='" + this.id + "-graph-controls-show' class='graph-label-text'>Controls</label>" +  
+                "</div>";
+    }
 
 	/* Graph labels. */
 	if (this.config.traceLabels)
@@ -768,9 +797,15 @@ Graph.prototype._buildHTML = function() {
     		        (this.config.fieldCtl ?
     				"		<label for='graph-label-" + i + "' class='graph-label-text'>" + this.config.fields[i] + "</label>" +  
     		        "       <div id='graph-label-" + i + "' class='switch graph-label-enable'>" +
-            		"		    <div class='switch-animated switch-slide switch-on'></div>" +
-            		"       </div>" :
-            		"       <div class='graph-label-text'>" + this.config.fields[i] + "</div>" ) +
+            		"		    <div class='switch-animated switch-slide switch-on' " +
+            		"                 style='background-color:" + this.dataFields[i].color + "'></div>" +
+            		"       </div>"
+            		:
+            		"       <div class='graph-label-text' style='cursor:default'>" +
+            		"           <div class='graph-label-color-box' " +
+            		"                   style='background-color:" + this.dataFields[i].color + "'></div>" +
+            		                this.config.fields[i] + 
+            		"       </div>" ) +
     				"	</div>";
     	}
     	html += "</div>";
@@ -779,7 +814,9 @@ Graph.prototype._buildHTML = function() {
 	/* Left scale. */
 	unitScale = Math.floor(this.graphRange / this.config.vertScales);
 	styleScale = this.graphHeight / this.config.vertScales;
-	html += "<div class='graph-left-scales' style='top:" + (this.config.traceLabels ? "33" : "3") + "px'>";
+	top = this.config.windowed ? (this.config.traceLabels ? 33 : 3) : (this.config.traceLabels ? 26 : 0);
+	left = this.config.windowed ? 15 : 6;
+	html += "<div class='graph-left-scales' style='top:" + top + "px;left:" + left + "px'>";
 	for (i = 0; i <= this.config.vertScales; i++)
 	{
 		html += "<div class='graph-left-scale-" + i + "' style='top:"+ (styleScale * i) + "px'>" + 
@@ -789,11 +826,11 @@ Graph.prototype._buildHTML = function() {
 	html += "</div>";
 
 	/* Left axis label. */
-	html += "<div class='graph-axis-label graph-left-axis-label' style='top:40%'>" + this.config.yLabel + "</div>";
+	html += "<div class='graph-axis-label graph-left-axis-label'>" + this.config.yLabel + "</div>";
 
 	/* Canvas element holding box. */
 	html += "<div id='" + this.id +  "-canvas' class='graph-canvas-box gradient' style='height:" + this.graphHeight + 
-	                "px;margin-top:" + (this.config.traceLabels ? "30" : "0") + "px'></div>";
+	                "px;width:" + this.graphWidth + "px;margin-top:" + (this.config.traceLabels ? "30" : "0") + "px'></div>";
 
 	/* Bottom scale. */
 	html += "<div class='graph-bottom-scales'>";
@@ -807,18 +844,6 @@ Graph.prototype._buildHTML = function() {
 
 	/* Bottom axis label. */
 	html += "<div class='graph-axis-label graph-bottom-axis-label'>" + this.config.xLabel + "</div>";
-	
-	if (this.config.autoCtl || this.config.durationCtl)
-	{
-    	/* Controls show / hide button. */
-    	html += "<div class='graph-controls-show'>" +
-            	"   <label for='" + this.id + "-graph-controls-show' class='graph-label-text'>Controls</label>" +  
-                "   <div id='" + this.id + "-graph-controls-show' class='switch graph-controls-show-enable'>" +
-                "       <div class='switch-animated switch-slide'></div>" +
-                "   </div>" +
-    	        "</div>";
-	}
-	else html += "<div class='graph-no-controls'></div>";
 	
 	if (this.config.autoCtl)
 	{
@@ -851,7 +876,7 @@ Graph.prototype.consume = function(data) {
         this.displayedDuration = data.duration;
     }
     
-    if (this.isAutoscaling) 
+    if (this.config.autoScale) 
     {
         /* Determine graph scaling for this frame and label it. */
         this._adjustScaling();
@@ -882,7 +907,7 @@ Graph.prototype._drawFrame = function() {
  * Adjusts the scaling and offset based on the range of values in the graphed
  * datasets.
  */
-Graph.prototype.adjustScaling = function() {
+Graph.prototype._adjustScaling = function() {
     var min = Number.POSITIVE_INFINITY, max = Number.NEGATIVE_INFINITY, j;
 
     for (i in this.dataFields)
@@ -1031,39 +1056,39 @@ Graph.prototype._showTrace = function(label, show) {
 
 
 Graph.prototype.resized = function(width, height) {
-    this.width = this.width + (width - this.boxWidth);
-    this.height = this.height + (height - this.boxHeight);
+    this.graphWidth = this.graphWidth + (width - this.config.width);
+    this.graphHeight = this.graphHeight + (height - this.config.height);
     
-    this.boxWidth = width;
-    this.boxHeight = height;
+    this.config.width = width;
+    this.config.height = height;
     
     /* Adjust dimensions of canvas, box and other stuff. */
     this.$widget.find("canvas").attr({
-        width: this.width,
-        height: this.height
+        width: this.graphWidth,
+        height: this.graphHeight
     });
     
     this.$widget.find(".graph-canvas-box").css({
-        width: this.width,
-        height: this.height 
+        width: this.graphWidth,
+        height: this.graphHeight 
     });
     
     var i, $s = this.$widget.find(".graph-left-scale-0");
     
     /* Left scales. */
-    for (i = 0; i <= GraphWidget.NUM_VERT_SCALES; i++)
+    for (i = 0; i <= this.config.vertScales; i++)
     {
-        $s.css("top", this.height / GraphWidget.NUM_VERT_SCALES * i);
+        $s.css("top", this.graphHeight / this.config.vertScales * i);
         $s = $s.next();
     }
     
     /* Left label. */
-    this.$widget.find(".graph-left-axis-label").css("top", this.boxHeight / 2 - this.axis.y.length * 3);
+    this.$widget.find(".graph-left-axis-label").css("top", (this.config.windowed ? 30 : 0) + this.graphHeight / 2);
     
     /* Bottom scales. */
-    for (i = 0, $s = this.$widget.find(".graph-bottom-scale-0"); i <= GraphWidget.NUM_HORIZ_SCALES; i++)
+    for (i = 0, $s = this.$widget.find(".graph-bottom-scale-0"); i <= this.config.horizScales; i++)
     {
-        $s.css("left", this.width / GraphWidget.NUM_HORIZ_SCALES * i);
+        $s.css("left", this.graphWidth / this.config.horizScales * i);
         $s = $s.next();
     }
     
@@ -1072,7 +1097,7 @@ Graph.prototype.resized = function(width, height) {
 
 Graph.prototype.resizeStopped = function(width, height) {
     this.resized(width, height);
-    this.drawFrame();
+    this._drawFrame();
 };
 
 /**
@@ -1081,11 +1106,11 @@ Graph.prototype.resizeStopped = function(width, height) {
  * @param {boolean} autoscale true if graph autoscales
  */
 Graph.prototype._enableAutoscale = function(autoscale) {
-    if (!(this.isAutoscaling = autoscale))
+    if (!(this.config.autoScale = autoscale))
     {
-        this.graphRange = this.maxGraphedValue - this.minGraphedValue;
-        this.graphOffset = this.minGraphedValue / this.graphRange;
-        this.updateDependantScale();
+        this.graphRange = this.config.maxValue - this.config.minValue;
+        this.graphOffset = this.config.minValue / this.graphRange;
+        this._updateDependantScale();
     }
 };
 
@@ -1328,8 +1353,8 @@ RotarySwitch.prototype._animateSwitch = function(point) {
     //TODO Fix issue with some labels making the switch fully rotate to get to the closest one.
 
     /* Calculate the switches degree in relation to the point. */
-    var deg = Math.atan((pos.left-x0)/(y0-pos.top))*180/Math.PI,
-        deg = x0 < pos.top ? Math.round(deg + 180) : Math.round(deg);
+    var deg = Math.atan((pos.left - x0) / (y0 - pos.top)) * 180 /Math.PI;
+    deg = x0 < pos.top ? Math.round(deg + 180) : Math.round(deg);
 
     /* Rotates the switch. */
     $(point).parent().find('.rotary-switch').css({
@@ -1339,25 +1364,137 @@ RotarySwitch.prototype._animateSwitch = function(point) {
         '-o-transform' : 'rotate('+ deg +'deg)',
         'transform' : 'rotate('+ deg +'deg)'
     });
-}
+};
 
 /* ============================================================================
  * == Button widget                                                          ==
  * ============================================================================ */
 
-function Button()
+/**
+ * Button that posts to the server when clicked.
+ * 
+ * @param {string} id identifier of widget
+ * @param {object} config configuration of widget
+ * @config {string}  [action] action to send to when pressed
+ * @config {object}  [params] parameters to be sent when pressed (optional)
+ * @config {string}  [label] the label to display on the button (optional)
+ * @config {boolean} [circular] whether the button is circular (default false)
+ * @config {string}  [clickColor] color of button when clicked (default #CCCCCC)
+ * @config {function} [callback] callback to be invoked with response of posts (optional)
+ */
+function Button(id, config)
 {
-    // TODO Button widget
+    Widget.call(this, id, config);
+    this.config.classes.push("button-outer");
+
+    /* Default options. */
+    if (this.config.params === undefined) this.config.params = { };
+    if (this.config.label === undefined) this.config.label = '';
+    if (this.config.circular === undefined) this.config.circular = false;
+    if (this.config.clickColor === undefined) this.config.clickColor = "#CCCCCC";
 }
+
+Button.prototype = new Widget;
+
+Button.prototype.init = function($container) {
+    if (!this.config.action) throw "Options not set.";    
+    
+    this.$widget = this._generate($container,
+        "<div class='button' style='" + 
+                (this.config.height ? "line-height:" + this.config.height + "px;" : "") + 
+                (this.config.circular ? "border-radius:" + this.config.width + "px;" : "") + "'>" +
+            "<span class='button-label'>" + this.config.label + "</span>" + 
+        "</div>" 
+    );
+    
+    var thiz = this;
+    this.$widget.mousedown(function() { thiz._buttonEngaged(); });
+    this.$widget.bind("mouseup mouseout", function(){ thiz._buttonReleased(); });
+    this.$widget.click(function() { thiz._clicked(); });
+};
+
+/**
+ * Event handler triggered from mouse down on button.
+ */
+Button.prototype._buttonEngaged = function() {
+    this.$widget.find(".button").css("background-color", this.config.clickColor);
+};
+
+/**
+ * Event handler triggered when no longer on mouse down on button.
+ */
+Button.prototype._buttonReleased = function() {
+    this.$widget.find(".button").css("background-color", "");
+};
+
+/**
+ * Event handler triggered when button clicked.
+ */
+Button.prototype._clicked = function() {
+    this._postControl(this.config.action, this.config.params, this.config.callback);
+};
+
 
 /* ============================================================================
  * == Push Button widget                                                     ==
  * ============================================================================ */
 
-function PushButton()
+/**
+ * Push button that is active when the button is clicked. 
+ * 
+ * @param {string} id identifier of widget
+ * @param {object} config configuration of widget
+ * @config {string}  [action] action to send to when pressed
+ * @config {string}  [releaseAction] action to send when released (optional)
+ * @config {object}  [params] parameters to be sent when pressed (optional)
+ * @config {integer} [period] number of milliseconds before next server post (default 250)
+ * @config {string}  [label] the label to display on the button (optional)
+ * @config {boolean} [circular] whether the button is circular (default false)
+ * @config {function} [callback] callback to be invoked with response of posts (optional)
+ */
+function PushButton(id, config)
 {
-    // TODO Push button widget
+    if (!config.action) throw "Options not set";
+    
+    Button.call(this, id, config);
+    this.config.classes.push("push-button");
+    
+    /* Default options. */
+    if (this.config.period === undefined) this.config.period = 250;
+    
+    /* Whether the mouse is down. */
+    this.engaged = false;
 }
+
+PushButton.prototype = new Button;
+
+PushButton.prototype._buttonEngaged = function() {
+    Button.prototype._buttonEngaged.call(this);
+    
+    this.engaged = true;
+    this._sendUpdate();
+};
+
+PushButton.prototype._sendUpdate = function() {
+    if (!this.engaged) return;
+    
+    var thiz = this;
+    this._postControl(this.config.action, this.config.params, this.config.callback);
+    setTimeout(function() { thiz._sendUpdate(); }, this.config.period);
+};
+
+PushButton.prototype._buttonReleased = function() {
+    if (!this.engaged) return;
+    
+    Button.prototype._buttonReleased.call(this);
+    this.engaged = false;
+};
+
+PushButton.prototype._clicked = function() { 
+    /* Push buttons ignore the click event because data sending is triggered
+     * in the mouse down event. */
+};
+
 
 /* ============================================================================
  * == Knob widget                                                            ==
