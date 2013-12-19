@@ -730,13 +730,25 @@ Graph.prototype.init = function($container) {
     this.graphWidth = this.config.width ? this.config.width - 84 : 400;
     this.graphHeight = this.config.height ? this.config.height - 134 : 160;
     if (!this.config.traceLabels) this.graphHeight += 30;
+    if (!this.config.windowed) 
+    {
+        this.graphHeight += 50;
+        this.graphWidth += 15;
+    }
     
 	this.$widget = this._generate($container, this._buildHTML());
+	
+	/* Positioning based on configured options. */
 	c = this.$widget.find(".graph-left-axis-label");
 	c.css({
-	    top: 30 + this.graphHeight / 2,
-	    left: -0.545 * c.width() + 26.1
+	    top: (this.config.windowed ? 30 : 0) + this.graphHeight / 2,
+	    left: -0.545 * c.width() + (this.config.windowed ? 26.1 : 21)
 	});
+	
+	if (this.config.windowed)
+	{
+	    
+	}
 
 	/* Add the canvas panel. */
 	var canvas = Util.getCanvas(this.id, this.graphWidth, this.graphHeight);
@@ -765,7 +777,7 @@ Graph.prototype.init = function($container) {
 };
 
 Graph.prototype._buildHTML = function() {
-	var i = 0, unitScale, styleScale, html = ''; 
+	var i = 0, unitScale, styleScale, html = '', left, top; 
 	
 	if (this.config.autoCtl || this.config.durationCtl)
     {
@@ -802,7 +814,9 @@ Graph.prototype._buildHTML = function() {
 	/* Left scale. */
 	unitScale = Math.floor(this.graphRange / this.config.vertScales);
 	styleScale = this.graphHeight / this.config.vertScales;
-	html += "<div class='graph-left-scales' style='top:" + (this.config.traceLabels ? "33" : "3") + "px'>";
+	top = this.config.windowed ? (this.config.traceLabels ? 33 : 3) : (this.config.traceLabels ? 26 : 0);
+	left = this.config.windowed ? 15 : 6;
+	html += "<div class='graph-left-scales' style='top:" + top + "px;left:" + left + "px'>";
 	for (i = 0; i <= this.config.vertScales; i++)
 	{
 		html += "<div class='graph-left-scale-" + i + "' style='top:"+ (styleScale * i) + "px'>" + 
@@ -816,7 +830,7 @@ Graph.prototype._buildHTML = function() {
 
 	/* Canvas element holding box. */
 	html += "<div id='" + this.id +  "-canvas' class='graph-canvas-box gradient' style='height:" + this.graphHeight + 
-	                "px;margin-top:" + (this.config.traceLabels ? "30" : "0") + "px'></div>";
+	                "px;width:" + this.graphWidth + "px;margin-top:" + (this.config.traceLabels ? "30" : "0") + "px'></div>";
 
 	/* Bottom scale. */
 	html += "<div class='graph-bottom-scales'>";
@@ -1069,7 +1083,7 @@ Graph.prototype.resized = function(width, height) {
     }
     
     /* Left label. */
-    this.$widget.find(".graph-left-axis-label").css("top", 30 + this.graphHeight / 2);
+    this.$widget.find(".graph-left-axis-label").css("top", (this.config.windowed ? 30 : 0) + this.graphHeight / 2);
     
     /* Bottom scales. */
     for (i = 0, $s = this.$widget.find(".graph-bottom-scale-0"); i <= this.config.horizScales; i++)

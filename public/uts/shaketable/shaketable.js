@@ -54,11 +54,7 @@ ShakeTableControl.prototype.setup = function() {
 	/* Graph to display tank levels. */
 	this.widgets.push(new Graph("graph-displacement", {
 	    title: "Displacement Levels",
-	    draggable: true,
-	    closeable: true,
-	    shadeable: true,
-	    expandable: true,
-	    resizable: true,
+	    windowed: false,
 	    width: 420,
 	    height: 325,
 	    left: 355,
@@ -75,7 +71,7 @@ ShakeTableControl.prototype.setup = function() {
 	    fieldCtl: false,
 	    autoCtl: false,
 	    durationCtl: false,
-	    traceLabels: true,
+	    traceLabels: false,
 	}));
 
     /* Add mimic to page. */

@@ -9,9 +9,8 @@
     height: 950px;
 }
 
-#graph-displacements-box {
-    left: 117px;
-    top: 420px;
+#graph-displacement {
+    border: 1px solid #000;
 }
 
 #slider-motor-speed {
