@@ -209,7 +209,6 @@
     transform: rotate(270deg);
     -ms-transform: rotate(270deg);
     -webkit-transform: rotate(270deg);
-    left: -30px;
 }
 
 .graph-bottom-axis-label {
@@ -218,6 +217,7 @@
     top: 20px;
     width: 100%;
     margin: 0 auto;
+    height: 40px;
 }
 
 .graph-controls-show {

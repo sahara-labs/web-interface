@@ -685,10 +685,10 @@ function Graph(id, config)
 	/** @private {number} The zero point offset of the graph in pixels. */
 	this.graphOffset = this.config.minValue / this.graphRange;
 	
-	/** @private {integer} Width of the graph. */
+	/** @private {integer} Width of the graph in pixels. */
 	this.graphWidth = undefined;
 	
-	/** @private {integer} Height of the graph. */
+	/** @private {integer} Height of the graph in pixels. */
 	this.graphHeight = undefined;
 	
 	/** @private {CanvasRenderingCOntext2D} Canvas context. */
@@ -728,12 +728,15 @@ Graph.prototype.init = function($container) {
     
     /* Size reset. */
     this.graphWidth = this.config.width ? this.config.width - 84 : 400;
-    this.graphHeight = this.config.height ? this.config.height - 110 : 160;
+    this.graphHeight = this.config.height ? this.config.height - 134 : 160;
     if (!this.config.traceLabels) this.graphHeight += 30;
     
 	this.$widget = this._generate($container, this._buildHTML());
 	c = this.$widget.find(".graph-left-axis-label");
-	c.css("top", 30 + this.graphHeight / 2 - c.height() / 2);
+	c.css({
+	    top: 30 + this.graphHeight / 2,
+	    left: -0.545 * c.width() + 26.1
+	});
 
 	/* Add the canvas panel. */
 	var canvas = Util.getCanvas(this.id, this.graphWidth, this.graphHeight);
@@ -1066,7 +1069,7 @@ Graph.prototype.resized = function(width, height) {
     }
     
     /* Left label. */
-//    this.$widget.find(".graph-left-axis-label").css("top", this.boxHeight / 2 - this.axis.y.length * 3);
+    this.$widget.find(".graph-left-axis-label").css("top", 30 + this.graphHeight / 2);
     
     /* Bottom scales. */
     for (i = 0, $s = this.$widget.find(".graph-bottom-scale-0"); i <= this.config.horizScales; i++)
