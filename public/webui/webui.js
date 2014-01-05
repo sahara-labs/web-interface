@@ -176,15 +176,15 @@ Widget.MESSAGE_INDICATOR = {
  * 
  * @param {string} message the message to display
  * @param {string} type the message type, this should be a value from MESSAGE_TYPE
- * @param {integer} left left absolute coordinate
- * @param {integer} top top absolute coordinate
- * @param {string} pos the arrow position, this should be a value from MESSAGE_INDICATOR
+ * @param {integer} xpos left absolute coordinate
+ * @param {integer} ypos top absolute coordinate
+ * @param {string} arrow the arrow position, this should be a value from MESSAGE_INDICATOR
  */
-Widget.prototype.addMessage = function(message, type, left, top, pos) {
+Widget.prototype.addMessage = function(message, type, xpos, ypos, arrow) {
     var $box, i, aniIn, bs = 1, up = true, html = 
-        "<div class='message-box message-box-" + type + " message-box-in1' style='left:" + left + "px; top:" + top + "px'>" +
+        "<div class='message-box message-box-" + type + " message-box-in1' style='left:" + xpos + "px; top:" + ypos + "px'>" +
             "<div class='message-box-text'>" + message + "</div>" +
-            "<div class='message-box-arrow message-box-arrow-" + pos + "'>";
+            "<div class='message-box-arrow message-box-arrow-" + arrow + "'>";
 
     for (i = 0; i < 8; i++)
     {
