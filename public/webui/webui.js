@@ -42,7 +42,7 @@ Globals = {
  * @constructor
  * @param {string} id the identifier of this widget
  * @param {object} config configuration of widget
- * @config {boolean} [windowed]            whether this widget is enclosed in a window frame (default true)
+ * @config {boolean} [windowed]            whether this widget is enclosed in a window frame (default false)
  * @config {string}  [title]               the title of this widget
  * @config {string}  [icon]                class for icon sprite
  * @config {array}   [classes]             list of classes to add for the container of this box
@@ -72,7 +72,6 @@ function Widget(id, config)
     /** @protected {object} Display options. */
     this.config = config ? config : { };
     if (!this.config.classes) this.config.classes = [ ];
-    if (this.config.windowed === undefined) this.config.windowed = true;
     
     /** @private {object} Window management properties. */
     this.window = {
@@ -95,7 +94,7 @@ function Widget(id, config)
  * @param {jQuery} container to add this widget to
  */
 Widget.prototype.init = function($container) {
-    throw "Widget init not defined.";
+    throw "Widget->init not implemented.";
 };
 
 /** 
@@ -349,7 +348,7 @@ Widget.prototype.toggleWindowExpand = function() {
     }
 };
 
-/* ----- UTILITY FUNCTIONS ---------------------------------------------------- */
+/* ----- UTILITY METHODS ------------------------------------------------------ */
 
 /**
  * Generates the common styled widget box.
@@ -407,7 +406,7 @@ Widget.prototype._generate = function($container, html) {
     else
     {
         this.$widget = $container.append(
-            "<div id="+ this.id + " class='no-window-content " + 
+            "<div id='"+ this.id + "' class='no-window-content " + 
                     (this.config.classes ? this.config.classes.join(' ') : "") + "' style='" +
                         (this.config.width ? "width:" + this.config.width + "px;" : "") + 
                         (this.config.height ? "height:" + this.config.height + "px;" : "") +
@@ -623,6 +622,212 @@ Widget.prototype._postControl = function(action, params, responseCallback, error
             if (errorCallabck != null) errorCallback(data);
         }
     });
+};
+
+/* -- ACCESSOR METHODS -------------------------------------------------------- */
+
+/**
+ * Gets the widgets identifier.
+ * 
+ * @return {string} widget identifier
+ */
+Widget.prototype.getIdentifier = function() {
+    return this.id;
+};
+
+/**
+ * Gets the specified window property.
+ * 
+ * @param {string} name of window property
+ * @return {mixed} window property value or undefined if none exists
+ */
+Widget.prototype.getWindowProperty = function(property) {
+    return this.window[property];
+};
+
+/* ============================================================================
+ * == Layouts                                                                ==
+ * ============================================================================ */
+
+/*
+ * Layouts that are implemented:
+ * 
+ *  -> AbsoluteLayout: Widgets placed according to user supplied coordinates   
+ *  -> BoxLayout: Widgets placed either in vertical or horizontal stacks
+ *  -> FlowLayout: Widgets placed adjacent to each other wrapping to prevent horizontal overflow
+ *  -> GridLayout: Widgets placed in a grid arrangement with a set number of columns 
+ *  -> StackLayout: Widgets stacked with only visible at a time
+ *  -> TabLayout: Widgets tabbed with only one visible at a time
+ */
+
+/**
+ * A layout is used by a container to specify which widgets are currently visible
+ * and where widgets are placed in relation to their parent container and siblings.
+ */
+function Layout(config)
+{
+    /** @private {object} Configuration object. */
+    this.config = config;
+    
+    /** @private {array} List of widgets. */
+    this.widgets = undefined;
+    
+    /** @private {Container} Container this layout positions. */
+    this.container = undefined;
+}
+
+/**
+ * Sets up the display elements required by the layout (such as a tab bar) 
+ * to the container contents box. 
+ */
+Layout.prototype.displayInit = function() { };
+
+/**
+ * Removes any display elements required by the layout 
+ */
+Layout.prototype.displayDestroy = function() { };
+
+
+/**
+ * Runs the layout moving, all contained widgets to their layout defined
+ * position.
+ */
+Layout.prototype.layout = function() {
+    throw "Layout->layout not implmented.";
+};
+
+
+
+/* ============================================================================
+ * == Grid Layout                                                        ==
+ * ============================================================================ */
+
+/**
+ * The grid layout sets out the widgest into 
+ */
+function GridLayout(config) 
+{
+    Layout.call(this, config);
+};
+
+GridLayout.prototype = new Layout;
+
+GridLayout.prototype.layout = function() {
+    
+};
+
+/* ============================================================================
+ * == Container Widget                                                       ==
+ * ============================================================================ */
+
+/**
+ * A container encloses one or more widgets. A container may be set with the 
+ * following behaviour:
+ * <ul>
+ *   <li>Layout - </ul>
+ *   <li>Toggling - whereby contained widgets may be selectively be displayed 
+ *   or hidden.</li>
+ * </ul> 
+ * 
+ * @param {string} id identifier 
+ * @param {object} config configuration object
+ * @config {array} [widgets] list of widgets managed by this container
+ * @config {Layout} [layout] layout used to specify how widgets are placed (optional)
+ * @config {boolean} [toggling] Whether this container toggles visibility  
+ * @config {string}  [toggleVar] data variable which specifies which widget is currently visible
+ * @config {string}  [toggleAction] action to send to server 
+ */
+function Container(id, config)
+{
+    Widget.call(this, id, config);
+    
+    /** @private {object} Map of widget visibility states keyed by widget id. */
+    this.states = { };
+    
+    this.widgets = config.widgets;
+    
+    this.$contents = undefined;
+}
+
+Container.prototype = new Widget;
+
+Container.prototype.init = function($container) {    
+    this.$widget = this._generate($container, "");
+    this.$contentBox = this.config.windowed ? this.$widget.children(".window-content") : this.$widget;
+    
+    /* Setup widget UI. */
+    for (i in this.widgets)
+    {
+        this.widgets[i]._loadState();
+        
+        if (this.widgets[i].window.shown = this.states[this.widgets[i].id] = !(this.widgets[i].window.shown === false))
+        {
+            this.widgets[i].init(this.$contentBox);
+
+            if (!this.config.layout)
+            {
+                /* No layout, restore windowing. */
+                if (this.widgets[i].window.expanded)
+                {
+                    this.widgets[i].window.expanded = false;
+                    this.widgets[i].toggleWindowExpand();
+                }
+                
+                if (this.widgets[i].window.shaded)
+                {
+                    this.widgets[i].window.shaded = false;
+                    this.widgets[i].toggleWindowShade();
+                }
+            }
+        }
+    }
+    
+    if (this.config.layout)
+    {
+        this.config.layout.displayInit();
+        this.config.layout.layout();
+    }
+};
+
+Container.prototype.consume = function(data) {
+    var i = 0;
+    for (i in this.widgets) if (this.states[this.widgets[i].id]) this.widgets[i].consume(data);
+};
+
+Container.prototype.destroy = function() {
+    
+    var i = 0;
+    for (i in this.widgets) 
+    {
+        if (this.states[this.widgets[i].id]) 
+        {
+            this.widgets[i].destroy();
+            this.states[this.widgets[i].id] = false;
+        }
+    }
+    
+    Widget.prototype.destroy.call(this);
+};
+
+Container.prototype.resized = function(width, height) {
+    if (this.config.layout) this.config.layout.resized(width, height);
+};
+
+Container.prototype.resizeStopped = function(width, height) {
+    if (this.config.layout) this.config.layout.resizeStopped(width, height);
+};
+
+Container.prototype.toggleEvent = function(id, visible) {
+    
+};
+
+/**
+ * Returns the contents box of this container.
+ * 
+ * @return ${jQuery} contents box
+ */
+Container.prototype.getContentsBox = function() {
+    return this.$contentBox;
 };
 
 /* ============================================================================

@@ -50,11 +50,15 @@ function ShakeTableControl(id)
  * Sets up this interface.
  */
 ShakeTableControl.prototype.setup = function() {
-	
 	/* Graph to display tank levels. */
 	this.widgets.push(new Graph("graph-displacement", {
 	    title: "Displacement Levels",
-	    windowed: false,
+	    windowed: true,
+	    closeable: true,
+	    draggable: true,
+	    shadeable: true,
+	    resizable: true,
+	    expandable: true,
 	    width: 420,
 	    height: 325,
 	    left: 355,
@@ -78,35 +82,53 @@ ShakeTableControl.prototype.setup = function() {
     this.widgets.push(new MimicWidget(this.$container, 'Diagram', ''));
 
 	/* Add camera to page. */
-	this.widgets.push(new CameraWidget(this.$container, 'Camera', ''));
+//	this.widgets.push(new CameraWidget(this.$container, 'Camera', ''));
 
 	/* Controls. */
-	this.widgets.push(new Switch("switch-motor-on", {
-	   field: "motor-on", 
-	   action: "setMotor",
-	   label: "Motor",
-	}));
-	
-	this.widgets.push(new Switch("switch-coils-on", {
-	    field: "coils-on",
-	    action: "setCoils",
-	    label: "Dampening",
-	}));
-	
-	this.widgets.push(new Slider("slider-motor-speed", {
-	    field: "motor-speed",
-	    action: "setMotor",
-	    max: 8,
-	    precision: 2,
-	    label: "Motor Frequency",
-	    units: "Hz",
+    this.widgets.push(new Container("controls-container", {
+        windowed: true,
+        title: "Controls",
+        draggable: true,
+        closeable: true,
+        expandable: true,
+        width: 300,
+        shadeable: true,
+        widgets: [
+            new Switch("switch-motor-on", {
+                field: "motor-on", 
+                action: "setMotor",
+                label: "Motor",
+             }),
+             new Switch("switch-coils-on", {
+                 field: "coils-on",
+                 action: "setCoils",
+                 label: "Dampening",
+             }),
+             new Slider("slider-motor-speed", {
+                 field: "motor-speed",
+                 action: "setMotor",
+                 max: 8,
+                 precision: 2,
+                 label: "Motor Frequency",
+                 units: "Hz",
 
-	}));
+             })
+        ],
+        layout: new GridLayout({
+            columns: [
+                ["slider-motor-speed"],
+                ["switch-motor-on", "switch-coils-on"]
+            ]
+        })
+    }));
 
-	this.widgets.push(new DataLogging(this.$container));
+
+//	this.widgets.push(new DataLogging(this.$container));
 
 	/* Display manager to allow things to be shown / removed. */
-	this.display = new DisplayManager(this.$container, 'Display', this.widgets);
+	this.display = new Container("shake-container", {
+	    widgets: this.widgets
+	});
 	
 	/* Error display triggered if error occurs. */
 	this.errorDisplay = new GlobalError();
@@ -117,7 +139,7 @@ ShakeTableControl.prototype.setup = function() {
  */
 ShakeTableControl.prototype.run = function() {
 	/* Render the page. */
-	this.display.init();
+	this.display.init(this.$container);
 
 	/* Start acquiring data. */
 	this.acquireLoop();
@@ -198,6 +220,7 @@ function MimicWidget()
 {
     Widget.call(this, "shaker-mimic", {
         title: "Shake Table Model",
+        windowed: true,
         resizable: true,
         preserveAspectRation: true,
         minWidth: 320,
