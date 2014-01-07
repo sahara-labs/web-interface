@@ -1994,7 +1994,8 @@ Slider.prototype.init = function($container) {
 Slider.prototype._buildHTML = function() {
     var i, s = (Math.floor((this.config.max - this.config.min) / this.config.scales)),
         html = 
-        "<div class='slider-container-" + (this.config.vertical ? "vertical" : "horizontal") + "'>" +
+        "<div class='slider-container-" + (this.config.vertical ? "vertical" : "horizontal") + "' style='" + 
+                    (this.config.vertical ? "" : "width:" + (this.config.length + 15) + "px;") + "'>" +
             "<div class='slider-outer' style='" + (this.config.vertical ? "height" : "width") + ":" + this.config.length + "px'>";
             
     /* Slider scale. */
@@ -2029,15 +2030,15 @@ Slider.prototype._buildHTML = function() {
     /* Text box with numeric value. */
     html += this.config.textEntry ?
         "<div class='slider-text slider-text-" + (this.config.vertical ? "vertical" : "horizontal") +
-                " saharaform' style='margin-" + (this.config.vertical ? "top" : "left") + ":" +
-                (this.config.length + (this.config.vertical ? 20 : -200)) + "px'>" +                
-                "<label for='" + this.id + "-text' class='slider-text-label'>" + this.config.label + ":&nbsp;</label>" +
+                " saharaform' style='" + (this.config.vertical ? "margin-top:" + (this.config.length + 20) + "px;" : "") + "'>" +
+            "<label for='" + this.id + "-text' class='slider-text-label'>" + this.config.label + ":&nbsp;</label>" +
             "<input id='" + this.id + "-text' type='text' /> " +
             "<span>" + this.config.units + "</span>" +
         "</div>" : 
         "<div class='slider-text-" + (this.config.vertical ? "vertical" : "horizontal") +
-                "' style='margin-" + (this.config.vertical ? "top" : "left") + ":" +
-                (this.config.length + (this.config.vertical ? 20 : -90)) + "px'>" + this.config.label + "</div>";
+                "' style='" + (this.config.vertical ? "margin-top:" + (this.config.length + 20) +"px;" : "") + "'>" +
+            this.config.label + 
+        "</div>";
 
     html += "</div>";
 

@@ -112,7 +112,7 @@ ShakeTableControl.prototype.setup = function() {
                  precision: 2,
                  label: "Motor Frequency",
                  units: "Hz",
-                 vertical: false
+                 vertical: false,
              })
         ],
         layout: new GridLayout({
