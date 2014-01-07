@@ -90,19 +90,20 @@ ShakeTableControl.prototype.setup = function() {
         title: "Controls",
         draggable: true,
         closeable: true,
-        expandable: true,
-        width: 300,
         shadeable: true,
         widgets: [
             new Switch("switch-motor-on", {
                 field: "motor-on", 
                 action: "setMotor",
                 label: "Motor",
+                width: 100,
+                
              }),
              new Switch("switch-coils-on", {
                  field: "coils-on",
                  action: "setCoils",
                  label: "Dampening",
+                 width: 125,
              }),
              new Slider("slider-motor-speed", {
                  field: "motor-speed",
@@ -111,14 +112,15 @@ ShakeTableControl.prototype.setup = function() {
                  precision: 2,
                  label: "Motor Frequency",
                  units: "Hz",
-
+                 vertical: false
              })
         ],
         layout: new GridLayout({
-            columns: [
-                ["slider-motor-speed"],
-                ["switch-motor-on", "switch-coils-on"]
-            ]
+            rows: [
+                ["switch-motor-on", "switch-coils-on"],
+                ["slider-motor-speed"]
+            ],
+            padding: 10
         })
     }));
 
