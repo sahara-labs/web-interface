@@ -116,7 +116,7 @@ ShakeTableControl.prototype.setup = function() {
              })
         ],
         layout: new FlowLayout({
-            padding: 10,
+            padding: 5,
             size: 280,
             vertical: false,
         })

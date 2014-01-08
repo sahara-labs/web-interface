@@ -695,7 +695,6 @@ Widget.prototype.getWindowProperty = function(property) {
  * Layouts that are to be implemented:
  * 
  *  -> AbsoluteLayout: Widgets placed according to user supplied coordinates   
- *  -> FlowLayout: Widgets placed adjacent to each other wrapping to prevent horizontal overflow
  *  -> StackLayout: Widgets stacked with only visible at a time
  *  -> TabLayout: Widgets tabbed with only one visible at a time
  */
@@ -766,7 +765,53 @@ Layout.prototype.setContainer = function(container) {
 };
 
 /* ============================================================================
- * == Grid Layout                                                        ==
+ * == Absolute Layout                                                        ==
+ * ============================================================================ */
+
+/**
+ * The absolute layout has absolute coordinates of each component.
+ * 
+ * @param {object} config configuration object
+ * @config {object} [coords] coordinates of each widget keyed by widget id
+ */
+function AbsoluteLayout(config)
+{
+    Layout.call(this, config);
+    
+    if (this.config.coords === undefined) this.config.coords = {};
+}
+
+AbsoluteLayout.prototype = new Layout;
+
+AbsoluteLayout.prototype.layout = function() {
+    var i = 0, w, width, height, x, y;
+
+    this.width = this.height = 0;
+    
+    for (i in this.container.getWidgets())
+    {
+        w = this.container.getWidget(i);
+        
+        if (this.config.coords[i] !== undefined)
+        {
+            x = this.config.coords[i].x;
+            y = this.config.coords[i].y;
+        }
+        else
+        {
+            x = 0;
+            y = 0;
+        }
+        
+        w.moveTo(x, y);
+        
+        if ((width = w.getWindowProperty("width")) + x > this.width) this.width = x + width;
+        if ((height = w.getWindowProperty("height")) + y > this.height) this.height = y + height;
+    }
+};
+
+/* ============================================================================
+ * == Grid Layout                                                            ==
  * ============================================================================ */
 
 /**
