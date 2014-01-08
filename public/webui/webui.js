@@ -42,7 +42,7 @@ Globals = {
  * @constructor
  * @param {string} id the identifier of this widget
  * @param {object} config configuration of widget
- * @config {boolean} [windowed]            whether this widget is enclosed in a window frame (default true)
+ * @config {boolean} [windowed]            whether this widget is enclosed in a window frame (default false)
  * @config {string}  [title]               the title of this widget
  * @config {string}  [icon]                class for icon sprite
  * @config {array}   [classes]             list of classes to add for the container of this box
@@ -72,7 +72,6 @@ function Widget(id, config)
     /** @protected {object} Display options. */
     this.config = config ? config : { };
     if (!this.config.classes) this.config.classes = [ ];
-    if (this.config.windowed === undefined) this.config.windowed = true;
     
     /** @private {object} Window management properties. */
     this.window = {
@@ -95,7 +94,7 @@ function Widget(id, config)
  * @param {jQuery} container to add this widget to
  */
 Widget.prototype.init = function($container) {
-    throw "Widget init not defined.";
+    throw "Widget->init not implemented.";
 };
 
 /** 
@@ -176,15 +175,15 @@ Widget.MESSAGE_INDICATOR = {
  * 
  * @param {string} message the message to display
  * @param {string} type the message type, this should be a value from MESSAGE_TYPE
- * @param {integer} left left absolute coordinate
- * @param {integer} top top absolute coordinate
- * @param {string} pos the arrow position, this should be a value from MESSAGE_INDICATOR
+ * @param {integer} xpos left absolute coordinate
+ * @param {integer} ypos top absolute coordinate
+ * @param {string} arrow the arrow position, this should be a value from MESSAGE_INDICATOR
  */
-Widget.prototype.addMessage = function(message, type, left, top, pos) {
+Widget.prototype.addMessage = function(message, type, xpos, ypos, arrow) {
     var $box, i, aniIn, bs = 1, up = true, html = 
-        "<div class='message-box message-box-" + type + " message-box-in1' style='left:" + left + "px; top:" + top + "px'>" +
+        "<div class='message-box message-box-" + type + " message-box-in1' style='left:" + xpos + "px; top:" + ypos + "px'>" +
             "<div class='message-box-text'>" + message + "</div>" +
-            "<div class='message-box-arrow message-box-arrow-" + pos + "'>";
+            "<div class='message-box-arrow message-box-arrow-" + arrow + "'>";
 
     for (i = 0; i < 8; i++)
     {
@@ -214,6 +213,23 @@ Widget.prototype.addMessage = function(message, type, left, top, pos) {
  */
 Widget.prototype.removeMessages = function() {
     this.$widget.find(".message-box").remove();
+};
+
+/**
+ * Moves the widget to the specified coordinates.
+ * 
+ * @param {integer} xpos x (left) position
+ * @param {integer} ypos y (top) position
+ */
+Widget.prototype.moveTo = function(xpos, ypos) {
+    this.$widget.css({
+        left: xpos,
+        top: ypos
+    });
+
+    /* Moving is equivalent to dragging, so the dragged event should be fired
+     * in case any special handling needs to occur. */
+    this.dragged(xpos, ypos);
 };
 
 /**
@@ -349,7 +365,7 @@ Widget.prototype.toggleWindowExpand = function() {
     }
 };
 
-/* ----- UTILITY FUNCTIONS ---------------------------------------------------- */
+/* ----- UTILITY METHODS ------------------------------------------------------ */
 
 /**
  * Generates the common styled widget box.
@@ -407,7 +423,7 @@ Widget.prototype._generate = function($container, html) {
     else
     {
         this.$widget = $container.append(
-            "<div id="+ this.id + " class='no-window-content " + 
+            "<div id='"+ this.id + "' class='no-window-content " + 
                     (this.config.classes ? this.config.classes.join(' ') : "") + "' style='" +
                         (this.config.width ? "width:" + this.config.width + "px;" : "") + 
                         (this.config.height ? "height:" + this.config.height + "px;" : "") +
@@ -623,6 +639,382 @@ Widget.prototype._postControl = function(action, params, responseCallback, error
             if (errorCallabck != null) errorCallback(data);
         }
     });
+};
+
+/* -- ACCESSOR METHODS -------------------------------------------------------- */
+
+/**
+ * Gets the widgets identifier.
+ * 
+ * @return {string} widget identifier
+ */
+Widget.prototype.getIdentifier = function() {
+    return this.id;
+};
+
+/**
+ * Gets the specified window property.
+ * 
+ * @param {string} name of window property
+ * @return {mixed} window property value or undefined if none exists
+ */
+Widget.prototype.getWindowProperty = function(property) {
+
+    /* If the widget has not be intialized, a stale property will be returned. */
+    if (!this.$widget) return this.window[property];
+
+    switch (property)
+    {
+    case 'width':
+        return this.window.width === undefined ? this.$widget.width() : this.window.width;
+        break;
+
+    case 'height':
+        return this.window.height === undefined ? this.$widget.height() : this.window.height;
+        break;
+
+    case 'left':
+        return this.window.left === undefined ? parseInt(this.$widget.css("left")) : this.window.left;
+        break;
+
+    case 'top':
+        return this.window.top === undefined ? parseInt(this.$widget.css("top")) : this.window.top;
+        break;
+
+    default:
+        return this.window[property];
+        break;
+    }
+};
+
+/* ============================================================================
+ * == Layouts                                                                ==
+ * ============================================================================ */
+
+/*
+ * Layouts that are to be implemented:
+ * 
+ *  -> AbsoluteLayout: Widgets placed according to user supplied coordinates   
+ *  -> BoxLayout: Widgets placed either in vertical or horizontal stacks
+ *  -> FlowLayout: Widgets placed adjacent to each other wrapping to prevent horizontal overflow
+ *  -> StackLayout: Widgets stacked with only visible at a time
+ *  -> TabLayout: Widgets tabbed with only one visible at a time
+ */
+
+/**
+ * A layout is used by a container to specify which widgets are currently visible
+ * and where widgets are placed in relation to their parent container and siblings.
+ */
+function Layout(config)
+{
+    /** @private {object} Configuration object. */
+    this.config = config;
+    
+    /** @protected {Container} Container this layout positions. */
+    this.container = undefined;
+
+    /** @protected {integer} Content width. */
+    this.width = undefined;
+
+    /** @protected {integer} Content height. */
+    this.height = undefined;
+}
+
+/**
+ * Sets up the display elements required by the layout (such as a tab bar) 
+ * to the container contents box. 
+ */
+Layout.prototype.displayInit = function() { };
+
+/**
+ * Removes any display elements required by the layout 
+ */
+Layout.prototype.displayDestroy = function() { };
+
+/**
+ * Runs the layout moving, all contained widgets to their layout defined
+ * position.
+ */
+Layout.prototype.layout = function() {
+    throw "Layout->layout not implmented.";
+};
+
+/**
+ * Gets the width of the layouts displayed contents.
+ *
+ * @return {integer} contents width
+ */
+Layout.prototype.getWidth = function() {
+    return this.width;
+};
+
+/**
+ * Gets the height of the layouts displayed contents.
+ *
+ * @return {integer} contents height
+ */
+Layout.prototype.getHeight = function() {
+    return this.height;
+};
+
+/**
+ * Sets the container whose contents this layout positions.
+ *
+ * @param {Container} container to set
+ */
+Layout.prototype.setContainer = function(container) {
+    this.container = container;
+};
+
+/* ============================================================================
+ * == Grid Layout                                                        ==
+ * ============================================================================ */
+
+/**
+ * The grid layout sets out the widgets into the specified columns or rows. If 
+ * both columns or rows are specified, the columns configuration takes precendence
+ * and the layout will be in columns.
+ * 
+ * @param {object} config configuration object
+ * @config {array} [columns] array of arrays, each specifying the list of \
+ * 					indentifiers of the widgets in that column
+ * @config {array} [rows] array of arrays, each specifying the list of \ 
+ *                  indentifiers of the widgets in that row
+ * @config {integer} [padding] number of pixels between widgets (default 10px)
+ */
+function GridLayout(config) 
+{
+    Layout.call(this, config);
+
+    if (this.config.padding === undefined) this.config.padding = 10;    
+}
+
+GridLayout.prototype = new Layout;
+
+GridLayout.prototype.layout = function() {
+    if (this.config.columns) this.columnLayout();
+    else if (this.config.rows) this.rowLayout();
+    else throw "No columns or rows specified for grid layout.";
+};
+
+/**
+ * Lays out the widgets in columns.
+ */
+GridLayout.prototype.columnLayout = function() {
+    var i = 0, j = 0, left = this.config.padding, top, colWidth = 0, w, t;
+
+    this.height = 0;
+    for (i in this.config.columns)
+    {
+        colWidth = 0;
+        top = this.config.padding;
+
+        for (j in this.config.columns[i])
+        {
+            w = this.container.getWidget(this.config.columns[i][j]);
+            w.moveTo(left, top);
+
+            top += w.getWindowProperty("height") + this.config.padding;
+            t = w.getWindowProperty("width");
+            
+            /* A column is as wide as the widest element. */
+            if (t > colWidth) colWidth = t;
+        }
+
+        left += colWidth + this.config.padding;
+
+        /* The container height is as tall as the tallest column. */
+        if (top > this.height) this.height = top;
+    }
+    
+    
+
+    /* Account for CSS padding. */
+    w = this.container.getContentBox();
+    this.width = left - parseInt(w.css("padding-left")) - parseInt(w.css("padding-right"));
+    this.height -= parseInt(w.css("padding-top")) + parseInt(w.css("padding-bottom"));
+};
+
+/**
+ * Lays out the widgets in rows.
+ */
+GridLayout.prototype.rowLayout = function() {
+    var i = 0, j = 0, left, top = this.config.padding, rowHeight = 0, w, t;
+
+    this.width = 0;
+    for (i in this.config.rows)
+    {
+        rowHeight = 0;
+        left = this.config.padding;
+
+        for (j in this.config.rows[i])
+        {
+            w = this.container.getWidget(this.config.rows[i][j]);
+            w.moveTo(left, top);
+
+            left += w.getWindowProperty("width") + this.config.padding;
+            t = w.getWindowProperty("height");
+            
+            /* A column is as wide as the widest element. */
+            if (t > rowHeight) rowHeight = t;
+        }
+
+        top += rowHeight + this.config.padding;
+
+        /* The container width is as wide as the widest row. */
+        if (left > this.width) this.width = left;
+    }
+    
+    
+
+    /* Account for CSS padding. */
+    w = this.container.getContentBox();
+    this.width -= parseInt(w.css("padding-left")) + parseInt(w.css("padding-right"));
+    this.height = top - parseInt(w.css("padding-top")) - parseInt(w.css("padding-bottom"));
+};
+
+/* ============================================================================
+ * == Container Widget                                                       ==
+ * ============================================================================ */
+
+/**
+ * A container encloses one or more widgets. A container may be set with the 
+ * following behaviour:
+ * <ul>
+ *   <li>Layout - </ul>
+ *   <li>Toggling - whereby contained widgets may be selectively be displayed 
+ *   or hidden.</li>
+ * </ul> 
+ * 
+ * @param {string} id identifier 
+ * @param {object} config configuration object
+ * @config {array} [widgets] list of widgets managed by this container
+ * @config {Layout} [layout] layout used to specify how widgets are placed (optional)
+ * @config {boolean} [toggling] Whether this container toggles visibility  
+ * @config {string}  [toggleVar] data variable which specifies which widget is currently visible
+ * @config {string}  [toggleAction] action to send to server 
+ */
+function Container(id, config)
+{
+    Widget.call(this, id, config);
+    
+    /** @private {object} Map of widget visibility states keyed by widget id. */
+    this.states = { };
+    
+    /** @private {object} Map of widgets keyed by identifer. */
+    this.widgets = { };
+    
+    /** @private {jQuery} Box where the contained widgets displayed gets attached to. */
+    this.$contentBox = undefined;
+}
+
+Container.prototype = new Widget;
+
+Container.prototype.init = function($container) {    
+    var i = 0, w;
+	
+    this.$widget = this._generate($container, "");
+    this.$contentBox = this.config.windowed ? this.$widget.children(".window-content") : this.$widget;
+    
+    /* Setup widget UI. */
+    for (i in this.config.widgets)
+    {
+    	this.widgets[this.config.widgets[i].id] = w = this.config.widgets[i];
+    	
+        w._loadState();
+        
+        if (w.window.shown = this.states[w.id] = !(w.window.shown === false))
+        {
+            w.init(this.$contentBox);
+
+            if (!this.config.layout)
+            {
+                /* No layout, restore windowing. */
+                if (w.window.expanded)
+                {
+                    w.window.expanded = false;
+                    w.toggleWindowExpand();
+                }
+                
+                if (w.window.shaded)
+                {
+                    w.window.shaded = false;
+                    w.toggleWindowShade();
+                }
+            }
+        }
+    }
+    
+    if (this.config.layout)
+    {
+        this.config.layout.setContainer(this);
+        this.config.layout.displayInit();
+        this.config.layout.layout();
+
+        this.$contentBox.css({
+            width: this.config.layout.getWidth(),
+            height: this.config.layout.getHeight()
+        });
+    }
+};
+
+Container.prototype.consume = function(data) {
+    var i = 0;
+    for (i in this.widgets) if (this.states[i]) this.widgets[i].consume(data);
+};
+
+Container.prototype.destroy = function() {
+    var i = 0;
+    for (i in this.widgets) 
+    {
+        if (this.states[i]) 
+        {
+            this.widgets[i].destroy();
+            this.states[i] = false;
+        }
+    }
+    
+    Widget.prototype.destroy.call(this);
+};
+
+Container.prototype.resized = function(width, height) {
+    if (this.config.layout) this.config.layout.resized(width, height);
+};
+
+Container.prototype.resizeStopped = function(width, height) {
+    if (this.config.layout) this.config.layout.resizeStopped(width, height);
+};
+
+Container.prototype.toggleEvent = function(id, visible) {
+    
+};
+
+/**
+ * Returns the contents box of this container.
+ * 
+ * @return ${jQuery} contents box
+ */
+Container.prototype.getContentBox = function() {
+    return this.$contentBox;
+};
+
+/**
+ * Returns the widgets this container holds.
+ * 
+ * @return {array} list of widgets this widget holds 
+ */
+Container.prototype.getWidgets = function() {
+	return this.widgets;
+};
+
+/**
+ * Gets the widget with the specified identifier.
+ * 
+ * @param {string} id widget identifier
+ * @return {Widget|null} widget or null of non exists with id
+ */
+Container.prototype.getWidget = function(id) {
+	return this.widgets[id];
 };
 
 /* ============================================================================
@@ -1169,6 +1561,7 @@ Switch.prototype.init = function($container) {
                 (this.config.led ?'<div class="led switch-led led-novalue"></div>' : '') +
                 '<div class="switch-vertical switch-stick-base"></div>' +
                 '<div class="switch-vertical switch-stick switch-' + this.config.stickColor + '-down"></div>' +      
+                '<div style="clear:both"></div>' +
             '</div>'
         : // Horizontal orientation
             '<div class="switch-container">' +
