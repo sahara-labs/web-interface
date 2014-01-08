@@ -4,3 +4,80 @@
  * @author Michael Diponio
  * @date 18th November 2013
  */
+
+/* ----------------------------------------------------------------------------
+ * --- Wave Tank specific styles                                          ---
+ * ---------------------------------------------------------------------------- */
+
+#switch-1 {
+    left: -121px;
+    top: 80px;
+}
+
+#switch-2 {
+    left: -58px;
+    top: 80px;
+}
+
+#switch-3 {
+	left: -183px;
+    top: 80px;
+}
+
+#switch-4 {
+    left: -178px;
+    top: 205px;
+}
+
+#led-1 {
+    left: -52px;
+    top: 204px;
+}
+
+#slider-1{
+    left: 60px;
+    top: 230px;
+}
+
+#slider-2 {
+     left: 80%;
+     top: -50px;
+}
+
+#slider-3 {
+     left: 65%;
+     top: -50px;
+}
+
+#rotary-1 {
+     left: 5%;
+     top: 400px;
+}
+
+#rotary-2 {
+     left: 43%;
+     top: 420px;
+}
+
+#rotary-3 {
+    left: -27%;
+    top: 256px;
+}
+
+#knob-1 {
+    left: 50px;
+}
+
+#knob-2 {
+    left: 530px;
+    top: 417px;
+}
+
+#knob-3 {
+    left: 235px;
+}
+
+#knob-4 {
+    left: -167px;
+    top: 440px;
+}
