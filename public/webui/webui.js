@@ -695,7 +695,6 @@ Widget.prototype.getWindowProperty = function(property) {
  * Layouts that are to be implemented:
  * 
  *  -> AbsoluteLayout: Widgets placed according to user supplied coordinates   
- *  -> BoxLayout: Widgets placed either in vertical or horizontal stacks
  *  -> FlowLayout: Widgets placed adjacent to each other wrapping to prevent horizontal overflow
  *  -> StackLayout: Widgets stacked with only visible at a time
  *  -> TabLayout: Widgets tabbed with only one visible at a time
@@ -826,13 +825,8 @@ GridLayout.prototype.columnLayout = function() {
         /* The container height is as tall as the tallest column. */
         if (top > this.height) this.height = top;
     }
-    
-    
 
-    /* Account for CSS padding. */
-    w = this.container.getContentBox();
-    this.width = left - parseInt(w.css("padding-left")) - parseInt(w.css("padding-right"));
-    this.height -= parseInt(w.css("padding-top")) + parseInt(w.css("padding-bottom"));
+    this.width = left;
 };
 
 /**
@@ -865,12 +859,182 @@ GridLayout.prototype.rowLayout = function() {
         if (left > this.width) this.width = left;
     }
     
-    
+    this.height = top;
+};
 
-    /* Account for CSS padding. */
-    w = this.container.getContentBox();
-    this.width -= parseInt(w.css("padding-left")) + parseInt(w.css("padding-right"));
-    this.height = top - parseInt(w.css("padding-top")) - parseInt(w.css("padding-bottom"));
+/* ============================================================================
+ * == Box Layout                                                             ==
+ * ============================================================================ */
+
+/**
+ * The box layout places widgets in either vertical and horizontal stacks. The 
+ * widget order as the order the widgets are setup.
+ * 
+ * @param {object} config configuration object
+ * @config {boolean} [vertical] the orientation (default vertical)
+ * @config {integer} [padding] spacing between widgets (default 10)
+ */
+function BoxLayout(config) 
+{
+    Layout.call(this, config);
+    
+    if (this.config.vertical === undefined) this.config.vertical = true;
+    if (this.config.padding === undefined) this.config.padding = 10;
+}
+
+BoxLayout.prototype = new Layout;
+
+BoxLayout.prototype.layout = function() {
+    if (this.config.vertical) this.verticalLayout();
+    else this.horizontalLayout();
+};
+
+/**
+ * Runs box layout in vertical orientation.
+ */
+BoxLayout.prototype.verticalLayout = function() {
+    var i = 0, top = this.config.padding, wid, w;
+    
+    this.width = 0;
+    for (i in this.container.getWidgets())
+    {
+        w = this.container.getWidget(i);
+        w.moveTo(this.config.padding, top);
+        
+        top += w.getWindowProperty("height") + this.config.padding;
+        
+        wid = w.getWindowProperty("width");
+        if (wid > this.width) this.width = wid;
+    }
+    
+    this.width += this.config.padding * 2;
+    this.height = top;
+};
+
+/**
+ * Runs box layout in horizontal orientation. 
+ */
+BoxLayout.prototype.horizontalLayout = function() {
+    var i = 0, left = this.config.padding, hei, w;
+    
+    this.height = 0;
+    for (i in this.container.getWidgets())
+    {
+        w = this.container.getWidget(i);
+        w.moveTo(left, this.config.padding);
+        
+        left += w.getWindowProperty("width") + this.config.padding;
+        
+        hei = w.getWindowProperty("height");
+        if (hei > this.height) this.height = hei;
+    }
+    
+    this.width = left;
+    this.height += this.config.padding * 2;
+};
+
+/* ============================================================================
+ * == Flow Layout                                                            ==
+ * ============================================================================ */
+
+/**
+ * The flow layout arranges widgets in a 'directional flow' where widgets are 
+ * placed adjacent or below (depending on orientation), wrapping to the next
+ * column or row when the next widget will overflow the specified size. 
+ * The display order is the same as the containers insertion order.
+ * If no size is set, the flow layout is effectively equivalent to the box 
+ * layout. If any single widget is larger than the size, the size is adjusted 
+ * to that size.
+ * 
+ * @param {object} config configuration object
+ * @config {boolean} [vertical] the orientation (default vertical)
+ * @config {integer} [size] maximum size in pixels that causes wrapping
+ * @config {integer} [padding] spacing between widgets in pixels (default 10px)
+ */
+function FlowLayout(config)
+{
+    Layout.call(this, config);
+   
+    if (this.config.vertical === undefined) this.config.vertical = true;
+    if (this.config.size === undefined) this.config.size = Number.MAX_VALUE;
+    if (this.config.padding === undefined) this.config.padding = 10;   
+}
+
+FlowLayout.prototype = new Layout;
+
+FlowLayout.prototype.layout = function() {
+    if (this.config.vertical) this.verticalLayout();
+    else this.horizontalLayout();
+};
+
+FlowLayout.prototype.verticalLayout = function() {
+    var i = 0, w, top = this.config.padding, left = this.config.padding, height, wid, colWidth = 0, first = true;
+    
+    for (i in this.container.getWidgets())
+    {
+        w = this.container.getWidget(i);
+        height = w.getWindowProperty("height");
+        
+        if (top + height > this.config.size)
+        {
+            /* Overflow, wrap to new column. */
+            top = this.config.padding;
+            if (!first) left += colWidth + this.config.padding;
+            colWidth = 0;
+        }
+
+        w.moveTo(left, top);
+        top += height + this.config.padding;
+        
+        if (height + this.config.padding * 2 > this.config.size)
+        {
+            this.config.size = height + this.config.padding * 2;
+        }
+        
+        wid = w.getWindowProperty("width");
+        if (wid > colWidth) colWidth = wid;
+        
+        first = false;
+    }
+    
+    this.height = this.config.size;
+    this.width = left + colWidth + this.config.padding;
+};
+
+FlowLayout.prototype.horizontalLayout = function() {
+    var i = 0, w, left = this.config.padding, top = this.config.padding, width, h, rowHeight = 0, first = true;
+    
+    for (i in this.container.getWidgets())
+    {
+        w = this.container.getWidget(i);
+        width = w.getWindowProperty("width");
+        
+        if (left + width > this.config.size && !first)
+        {
+            /* Overflow, Wrap to new row. */
+            left = this.config.padding;
+            top += rowHeight + this.config.padding;
+            rowHeight = 0;
+        }
+        
+        w.moveTo(left, top);
+        
+        left += width + this.config.padding;
+        
+        if (width + this.config.padding * 2 > this.config.size)
+        {
+            /* Widget width is wider than size, so increase size. */
+            this.config.size = width + this.config.padding * 2;
+        }
+        
+        h = w.getWindowProperty("height");
+        if (h > rowHeight) rowHeight = h;
+        
+        first = false;
+    }
+    
+    this.width = this.config.size;
+    this.height = top + rowHeight + this.config.padding;
 };
 
 /* ============================================================================
@@ -951,9 +1115,12 @@ Container.prototype.init = function($container) {
         this.config.layout.displayInit();
         this.config.layout.layout();
 
+        /* Account for CSS padding. */
         this.$contentBox.css({
-            width: this.config.layout.getWidth(),
-            height: this.config.layout.getHeight()
+            width: this.config.layout.getWidth() - parseInt(this.$contentBox.css("padding-left")) - 
+                        parseInt(this.$contentBox.css("padding-right")),
+            height: this.config.layout.getHeight() - parseInt(this.$contentBox.css("padding-top")) -
+                        parseInt(this.$contentBox.css("padding-bottom"))
         });
     }
 };
@@ -1564,13 +1731,20 @@ Switch.prototype.init = function($container) {
                 '<div style="clear:both"></div>' +
             '</div>'
         : // Horizontal orientation
-            '<div class="switch-container">' +
+            '<div class="switch-container" >' +
                 (this.config.label ? '<label class="switch-label">' + this.config.label + ':</label>' : '') +
                 '<div class="switch">' +
                     '<div class="switch-animated switch-slide"></div>' +
                 '</div>' +
             '</div>'
     );
+    
+    if (!this.config.vertical && this.config.width === undefined)
+    {
+        this.config.width = this.$widget.find("label").outerWidth(true) + 
+                            this.$widget.find(".switch").outerWidth(true) + 13;
+        this.$widget.css("width", this.config.width + "px");
+    }
     
     var thiz = this;
     this.$widget.find(".switch-label, .switch, .switch-vertical").click(function() { thiz._clicked(); });

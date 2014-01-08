@@ -96,14 +96,14 @@ ShakeTableControl.prototype.setup = function() {
                 field: "motor-on", 
                 action: "setMotor",
                 label: "Motor",
-                width: 100,
+//                width: 100,
                 
              }),
              new Switch("switch-coils-on", {
                  field: "coils-on",
                  action: "setCoils",
                  label: "Dampening",
-                 width: 125,
+//                 width: 125,
              }),
              new Slider("slider-motor-speed", {
                  field: "motor-speed",
@@ -115,12 +115,10 @@ ShakeTableControl.prototype.setup = function() {
                  vertical: false,
              })
         ],
-        layout: new GridLayout({
-            rows: [
-                ["switch-motor-on", "switch-coils-on"],
-                ["slider-motor-speed"]
-            ],
-            padding: 10
+        layout: new FlowLayout({
+            padding: 10,
+            size: 280,
+            vertical: false,
         })
     }));
 
@@ -1321,180 +1319,6 @@ SWidget.prototype.loadState = function() {
         catch (e) { /* Invalid JSON, not restoring layout. */ alert(e); }
     }
 };
-
-/* ============================================================================
- * == Display Manager.                                                       ==
- * ============================================================================ */
-
-/**
- * Controls which widgets are active a which point.
- */
-function DisplayManager($container, title, widgets) 
-{	
-    SWidget.call(this, $container, title, 'toggle');
-
-    /** Identifier of the display manager box. */
-    this.id = 'display-manager';
-
-    /** Widgets that are toggle able by this widget. */
-    this.widgets = widgets;
-    
-    /** The states of each of the widgets. */
-    this.states = [ ];
-    
-    /** Whether the displayed in is blurred state. */
-    this.isBlurred = false;
-}
-DisplayManager.prototype = new SWidget;
-
-DisplayManager.prototype.init = function() {
-    var thiz = this, i = 0;
-    
-    /* Enable all the other widgets. */
-    for (i in this.widgets) 
-    {    	
-        this.widgets[i].parentManager = this; 
-        if (this.widgets[i]._loadState) this.widgets[i]._loadState();
-        else this.widgets[i].loadState();
-    
-        if (this.widgets[i].window.shown = this.states[i] = !(this.widgets[i].window.shown === false))
-        {
-            this.widgets[i].init(this.$container);
-            
-            /* Restore other states. */
-            if (this.widgets[i].window.expanded)
-            {
-                this.widgets[i].window.expanded = false;
-                this.widgets[i].toggleWindowExpand();
-            }
-            
-            if (this.widgets[i].window.shaded)
-            {
-                this.widgets[i].window.shaded = false;
-                this.widgets[i].toggleWindowShade();
-            }
-        }
-    }
-
-    /* Generate our UI. */
-	this.$widget = this.generateBox('display-manager');
-    this.$widget.find(".window-close").hide();
-
-	/* Enable dragging. */
-	this.enableDraggable();
-
-    /* Shade the display manager if shaded cookie is undefined */
-    if (this.window.shaded === undefined) this.toggleWindowShade();
-
-    this.$widget.find('.toggle').click(function() {    
-    	thiz.toggleWidget($(this).find("span").html(), this);
-    });
-    
-    this.$widget.find('.reset-button').click(function() {    
-	    var i = 0;
-	    for (i in thiz.widgets)
-	    {
-            if (thiz.widgets[i].window.shown === false)
-            {
-	            thiz.widgets[i].parentManager.toggleWidget(thiz.widgets[i].title);
-	        }
-	        
-            delete thiz.widgets[i].boxHeight;
-            thiz.widgets[i].window = { };
-            thiz.widgets[i].storeState();
-            thiz.widgets[i].destroy();
-            thiz.widgets[i].init();
-	    }
-	    
-	    thiz.$widget.find(".button .animated")
-            .removeClass("off")
-            .addClass("on");
-            
-        thiz.$widget.css({
-            'top': 155,
-            'left': -194
-        });
-
-        thiz.toggleWindowShade();
-    });
-    
-    if (this.window.shaded === undefined) this.toggleWindowShade();
-};
-
-DisplayManager.prototype.getHTML = function() {	
-	var i = 0, html =
-		'<div class="buttonwrapper">';
-	
-	for (i in this.widgets)
-	{
-		/* We should be adding this to be widgets that can be removed. */
-		if (this.widgets[i] == this) continue;
-
-		html += '<div class="button toggle">' +
-					(this.icon != undefined ? '<div class="window-icon icon_' + this.widgets[i].icon + '"></div>' : '') +  
-					'<span class="display-manager-title">' + this.widgets[i].title + '</span>' +
-        			'<div class="switch">' +
-        				'<div class="animated slide ' + (this.widgets[i].window.shown === false? "off" : "on") + '"></div>' +
-        			'</div>' +
-        		'</div>';
-	}
-
-    html += '<div class="button reset-button">Reset</div>' +
-        '</div>';
-
-	return html;
-};
-
-/**
- * Toggles a widget from either displaying or being invisible. 
- * 
- * @param title the title of the widget to toggle
- * @param node switch node to toggle classes (optional)
- */
-SWidget.prototype.toggleWidget = function(title, node) {
-	var i = 0;
-
-	for (i in this.widgets)
-	{
-		if (this.widgets[i].title == title)
-		{
-			if (this.states[i])
-			{
-				this.widgets[i].destroy();
-		    }
-			else 
-			{
-				this.widgets[i].init();
-				if (this.isBlurred) this.widgets[i].blur();
-			}
-			
-			this.widgets[i].window.shown = this.states[i] = !this.states[i];
-			this.widgets[i].storeState();
-		}
-	}
-	
-	$node = node ? $(node) : this.$widget.find(".button:has(span:contains(" + title + "))");
-	$node.find('.switch .slide').toggleClass("on off");
-};
-
-DisplayManager.prototype.consume = function(data) {
-	var i = 0;
-	for (i in this.widgets) if (this.states[i]) this.widgets[i].consume(data);
-};
-
-
-DisplayManager.prototype.blur = function() {
-	var i = 0;
-	this.isBlurred = true;
-	for (i in this.widgets) if (this.states[i]) this.widgets[i].blur();
-};
-
-DisplayManager.prototype.unblur = function() {
-	var i = 0;
-	this.isBlurred = false;
-	for (i in this.widgets) if (this.states[i]) this.widgets[i].unblur();
-};
-
 /* ============================================================================
  * == Data Logging                                                           ==
  * ============================================================================ */
