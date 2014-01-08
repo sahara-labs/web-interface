@@ -45,7 +45,6 @@ WaveTank.prototype.setup = function() {
         action: "setPump",
         label: "Silver",
         icon: "pump",
-        led: true,
         draggable: true,
         stickColor: "silver",
         windowed: false,
@@ -58,7 +57,6 @@ WaveTank.prototype.setup = function() {
         action: "setPump",
         label: "Black",
         icon: "pump",
-        led: true,
         draggable: true,
         windowed: false,
         stickColor: "black",
@@ -72,6 +70,7 @@ WaveTank.prototype.setup = function() {
         label: "Red",
         icon: "pump",
         draggable: true,
+        led: true,
         windowed: false,
         stickColor: "red",
         vertical: true
@@ -98,12 +97,12 @@ WaveTank.prototype.setup = function() {
         ledBelow: true
     }));
 
-    o = new Slider("slider01", {
+    o = new Slider("slider-1", {
         field: "pump-on",
         action: "setPump",
         icon: "pump",
         draggable: true,
-        label: "Short Slider",
+        label: "Horizontal Slider",
         vertical: false,
         windowed: false,
         min: 0,
@@ -113,13 +112,13 @@ WaveTank.prototype.setup = function() {
     });
     this.widgets.push(o);
 
-    o = new Slider("slider02", {
+    o = new Slider("slider-2", {
         field: "pump-on",
         action: "setPump",
         icon: "pump",
         draggable: true,
         vertical: true,
-        label: "Long Slider",
+        label: "Flow two",
         min: 0,
         max: 20,
         scales: 10,
@@ -128,10 +127,25 @@ WaveTank.prototype.setup = function() {
     });
     this.widgets.push(o);
 
-    o = new RotarySwitch("rotary-Label", {
+    o = new Slider("slider-3", {
         field: "pump-on",
         action: "setPump",
-        label: "Rotary Switch",
+        icon: "pump",
+        draggable: true,
+        vertical: true,
+        label: "Flow one",
+        min: 0,
+        max: 20,
+        scales: 10,
+        windowed: false,
+        dimension: 180
+    });
+    this.widgets.push(o);
+
+    o = new RotarySwitch("rotary-1", {
+        field: "pump-on",
+        action: "setPump",
+        label: "Water Level",
         icon: "pump",
         draggable: true,
         windowed: false,
@@ -151,22 +165,30 @@ WaveTank.prototype.setup = function() {
     });
     this.widgets.push(o);
 
-    o = new RotarySwitch("rotary-Larger", {
+    o = new RotarySwitch("rotary-2", {
         field: "pump-on",
         action: "setPump",
         icon: "pump",
         draggable: true,
         windowed: false,
         values: [
-            {label: "ON", value: 1},
-            {label: "OFF", value: 0}
+            {label: "1", value: 1},
+            {label: "2", value: 2},
+            {label: "3", value: 3},
+            {label: "4", value: 4},
+            {label: "5", value: 5},
+            {label: "6", value: 6},
+            {label: "7", value: 7},
+            {label: "8", value: 8},
+            {label: "9", value: 9},
+            {label: "10", value: 10}
         ],
         radius: 70,
         colour: "white"
     });
     this.widgets.push(o);
 
-    o = new RotarySwitch("rotary-small", {
+    o = new RotarySwitch("rotary-3", {
         field: "pump-on",
         action: "setPump",
         icon: "pump",
@@ -182,6 +204,47 @@ WaveTank.prototype.setup = function() {
         colour: 'white'
     });
     this.widgets.push(o);
+ 
+    o = new Knob("knob-1", {
+    	action: "setPump",
+        label: "Knob Smooth",
+        draggable: true,
+        style: "white",
+        windowed: false,
+        radius: 70,
+    });
+    this.widgets.push(o);
+
+    o = new Knob("knob-2", {
+    	action: "setPump",
+        label: "Knob Black",
+        draggable: true,
+        style: "black",
+        windowed: false,
+        radius: 70,
+    });
+    this.widgets.push(o);
+
+    o = new Knob("knob-3", {
+    	action: "setPump",
+        label: "Knob Metal",
+        draggable: true,
+        style: "metal",
+        windowed: false,
+        radius: 70,
+    });
+    this.widgets.push(o);
+
+    o = new Knob("knob-4", {
+    	action: "setPump",
+        label: "Knob Volume",
+        draggable: true,
+        style: "volume",
+        windowed: false,
+        radius: 50,
+    });
+    this.widgets.push(o);
+    
 };
 
 /** 

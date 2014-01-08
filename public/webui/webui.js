@@ -1500,10 +1500,86 @@ PushButton.prototype._clicked = function() {
  * == Knob widget                                                            ==
  * ============================================================================ */
 
-function Knob()
+/**
+ * A Knob switch allows the selection of a range of options using a circular slider.
+ * 
+ * @constructor
+ * @param {string} id the identifier of widget
+ * @param {object} config configuration of widget
+ * @config {string} [action] server action to call when the switched is changed
+ * @config {string} [label] label to display
+ * @config {string} [style] set the knob style (default smooth)
+ * @config {number} [radius] the radius of the knob
+ */
+function Knob(id, config)
 {
-    // TODO Knob widget
+
+    Widget.call(this, id, config);
+
+    /* Default options*/
 }
+
+Knob.prototype = new Widget;
+
+Knob.prototype.init = function($container) {
+    if (!this.config.action) throw "Options not supplied.";
+    var d = this.config.radius * 2;
+	
+    this.$Widget = this._generate($container,
+        //HTML Goes here.
+        "<div id='knob-container-" + this.id + "'>" +
+            (this.config.label ? "<label>" + this.config.label + "</label>" : '') +
+            "<div class='knob-container' style='height:" + d + "px; width: " + d + "px;'>" +
+                "<div class='knob knob-" + this.config.style + "'>" +
+                (this.config.style == 'volume' ? '<div class="knob-volume-mid"></div>' : '') +
+                "<div class='knob-handle knob-handle-" + this.config.style + "'></div></div>" +
+            "</div>" +
+        "</div>"
+    );
+    
+    //Handlers go here
+    thiz = this;
+    this.$widget.mousedown(function(){ thiz._knobEngaged(this.id,thiz) })
+    this.$widget.mouseup(function(){ thiz._knobReleased() })
+}
+
+/**
+ * Event handler triggered when the knob is dragged.
+ */
+Knob.prototype._knobEngaged = function(id,thiz){
+    console.log('engaged: ' + id);
+    
+    //TODO animate knob
+      
+    //Need position of mouse in object.
+    var pos = $('#' + id).position(),
+    
+    x0 = (thiz.config.radius),
+    y0 = (thiz.config.radius);
+
+    /* Calculate the switches degree in relation to the point. */
+    var deg = Math.atan((pos.left - x0) / (y0 - pos.top)) * 180 /Math.PI;
+    deg = x0 < pos.top ? Math.round(deg + 180) : Math.round(deg);
+
+    //Log the degree to the console.
+    console.log(deg);
+
+    /* Rotates the switch. */
+    $('#' + id).find('.knob').css({
+        '-webkit-transform' : 'rotate('+ deg +'deg)',
+        '-moz-transform' : 'rotate('+ deg +'deg)',
+        '-ms-transform' : 'rotate('+ deg +'deg)',
+        '-o-transform' : 'rotate('+ deg +'deg)',
+        'transform' : 'rotate('+ deg +'deg)'
+    });
+}
+
+/**
+ * Event handler triggered when no longer on mouse down on button.
+ */
+Knob.prototype._knobReleased = function() {
+	console.log('released');
+};
 
 /* ============================================================================
  * == Spinner widget                                                         ==
