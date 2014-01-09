@@ -133,8 +133,32 @@ ShakeTableControl.prototype.setup = function() {
             padding: 5,
             size: 320,
             vertical: false,
-            center: false,
+            center: true,
         })
+    }));
+    
+    this.widgets.push(new Container("resizing-container", {
+       windowed: true,
+       title: "Resizing",
+       draggable: true,
+       closeable: true,
+       shadeable: true,
+       expandable: true,
+       resizable: true,
+       widgets: [
+           new Spacer("sp-1", {
+               border: "black",
+               color: "red",
+               round: false,
+               width: 200,
+               height: 50
+           }),
+       ],
+       layout: new GridLayout({
+           columns: [
+               ["sp-1"] 
+           ]
+       })
     }));
 
 	/* Display manager to allow things to be shown / removed. */

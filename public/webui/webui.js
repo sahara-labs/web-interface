@@ -1274,6 +1274,49 @@ Container.prototype.getWidget = function(id) {
 };
 
 /* ============================================================================
+ * == Spacer widget                                                          ==
+ * ============================================================================ */
+
+/**
+ * A spacer is a reserved block of space that may be set to have a border or a 
+ * solid color. For a spacer to be useful, its width and height should be set.
+ * 
+ * @param {string} id spacer identifier
+ * @param {object} config configuration option
+ * @config {string} [border] color of the border (default no border)
+ * @config {string} [color] color of the spacer (default no color)
+ * @config {boolean} [round] whether to round the corners of the spacer (default false)
+ * @config {string} [css] additional CSS directives to add to the spacer (optional)
+ */
+function Spacer(id, config) 
+{
+    Widget.call(this, id, config);
+    
+    if (this.config.css === undefined) this.config.css = '';
+}
+
+Spacer.prototype = new Widget;
+
+Spacer.prototype.init = function($container) {
+    this.$widget = this._generate($container, 
+            "<div class='spacer-inner' style='" +
+                (this.config.border ? "border: 1px solid " + this.config.border + ";" : "") +
+                (this.config.color ? "background-color:" + this.config.color + ";" : "") +
+                (this.config.round ? "border-radius:" + 
+                        ((this.config.width < this.config.height ? this.config.width : this.config.height) / 2) + "px;" : "") + 
+                this.config.css + 
+            "'></div>"
+    );
+};
+
+Spacer.prototype.resized = function(width, height) {
+    if (this.config.round)
+    {
+        this.$widget.children("border-radius", (width < height ? width : height) / 2);
+    }
+};
+
+/* ============================================================================
  * == Graph widget                                                           ==
  * ============================================================================ */
 
