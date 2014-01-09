@@ -133,6 +133,7 @@ ShakeTableControl.prototype.setup = function() {
             padding: 5,
             size: 320,
             vertical: false,
+            center: false,
         })
     }));
 

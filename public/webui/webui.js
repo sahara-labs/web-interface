@@ -994,6 +994,7 @@ BoxLayout.prototype.horizontalLayout = function() {
  * @param {object} config configuration object
  * @config {boolean} [vertical] the orientation (default vertical)
  * @config {integer} [size] maximum size in pixels that causes wrapping
+ * @config {boolean} [center] whether to center contents if size leaves remaining whitespace (default false)
  * @config {integer} [padding] spacing between widgets in pixels (default 10px)
  */
 function FlowLayout(config)
@@ -1002,6 +1003,7 @@ function FlowLayout(config)
    
     if (this.config.vertical === undefined) this.config.vertical = true;
     if (this.config.size === undefined) this.config.size = Number.MAX_VALUE;
+    if (this.config.center === undefined) this.config.center = false; 
     if (this.config.padding === undefined) this.config.padding = 10;   
 }
 
@@ -1013,69 +1015,111 @@ FlowLayout.prototype.layout = function() {
 };
 
 FlowLayout.prototype.verticalLayout = function() {
-    var i = 0, w, top = this.config.padding, left = this.config.padding, height, wid, colWidth = 0, first = true;
+    var i = 0, left = this.config.padding, top = this.config.padding, heights = [], w, colWidth = 0, 
+        col = 0, offsets = [];
     
-    for (i in this.container.getWidgets())
+    for (i in this.container.getWidgets()) 
     {
-        w = this.container.getWidget(i);
-        height = w.getWindowProperty("height");
-        
-        if (top + height > this.config.size)
+        if ((heights[i] = this.container.getWidget(i).getWindowProperty("height")) +
+                2 * this.config.padding > this.config.size)
         {
-            /* Overflow, wrap to new column. */
-            top = this.config.padding;
-            if (!first) left += colWidth + this.config.padding;
-            colWidth = 0;
+            /* If any single widget is larger than the specified size, we need 
+             * to expand the size to fit it. */
+            this.config.size = heights[i] + 2 * this.config.padding;
         }
-
-        w.moveTo(left, top);
-        top += height + this.config.padding;
-        
-        if (height + this.config.padding * 2 > this.config.size)
-        {
-            this.config.size = height + this.config.padding * 2;
-        }
-        
-        wid = w.getWindowProperty("width");
-        if (wid > colWidth) colWidth = wid;
-        
-        first = false;
     }
     
-    this.height = this.config.size;
+    if (this.config.center)
+    {
+        for (i in heights)
+        {
+            if (top + heights[i] + this.config.padding > this.config.size)
+            {
+                offsets[col++] = (this.config.size - top) / 2;
+                top = this.config.padding;
+            }
+            
+            top += heights[i] + this.config.padding;
+        }
+        
+        offsets[col++] = (this.config.size - top) / 2;
+    }
+    
+    col = 0;
+    top = this.config.padding + (this.config.center ? offsets[col++] : 0);
+    for (i in this.container.getWidgets())
+    {
+        if (top + heights[i] + this.config.padding > this.config.size)
+        {
+            /* Overflow, Wrap to new column. */
+            left += colWidth + this.config.padding;
+            top = this.config.padding + (this.config.center ? offsets[col++] : 0);
+            
+            colWidth = 0;
+        }
+        
+        this.container.getWidget(i).moveTo(left, top);
+        
+        top += heights[i] + this.config.padding;
+
+        w = this.container.getWidget(i).getWindowProperty("width");
+        if (w > colWidth) colWidth = w;
+    }
+    
     this.width = left + colWidth + this.config.padding;
+    this.height = this.config.size;
 };
 
 FlowLayout.prototype.horizontalLayout = function() {
-    var i = 0, w, left = this.config.padding, top = this.config.padding, width, h, rowHeight = 0, first = true;
+    var i = 0, left = this.config.padding, top = this.config.padding, widths = [], h, rowHeight = 0, 
+        row = 0, offsets = [];
     
+    for (i in this.container.getWidgets()) 
+    {
+        if ((widths[i] = this.container.getWidget(i).getWindowProperty("width")) +
+                2 * this.config.padding > this.config.size)
+        {
+            /* If any single widget is larger than the specified size, we need 
+             * to expand the size to fit it. */
+            this.config.size = widths[i] + 2 * this.config.padding;
+        }
+    }
+    
+    if (this.config.center)
+    {
+        left = this.config.padding;
+        for (i in widths)
+        {
+            if (left + widths[i] + this.config.padding > this.config.size)
+            {
+                offsets[row++] = (this.config.size - left) / 2;
+                left = this.config.padding;
+            }
+            
+            left += widths[i] + this.config.padding;
+        }
+        
+        offsets[row++] = (this.config.size - left) / 2;
+    }
+    
+    row = 0;
+    left = this.config.padding + (this.config.center ? offsets[row++] : 0);
     for (i in this.container.getWidgets())
     {
-        w = this.container.getWidget(i);
-        width = w.getWindowProperty("width");
-        
-        if (left + width > this.config.size && !first)
+        if (left + widths[i] + this.config.padding > this.config.size)
         {
             /* Overflow, Wrap to new row. */
-            left = this.config.padding;
+            left = this.config.padding + (this.config.center ? offsets[row++] : 0);
             top += rowHeight + this.config.padding;
             rowHeight = 0;
         }
         
-        w.moveTo(left, top);
+        this.container.getWidget(i).moveTo(left, top);
         
-        left += width + this.config.padding;
-        
-        if (width + this.config.padding * 2 > this.config.size)
-        {
-            /* Widget width is wider than size, so increase size. */
-            this.config.size = width + this.config.padding * 2;
-        }
-        
-        h = w.getWindowProperty("height");
+        left += widths[i] + this.config.padding;
+
+        h = this.container.getWidget(i).getWindowProperty("height");
         if (h > rowHeight) rowHeight = h;
-        
-        first = false;
     }
     
     this.width = this.config.size;
