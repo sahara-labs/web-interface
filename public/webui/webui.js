@@ -252,7 +252,7 @@ Widget.prototype.toggleWindowShade = function(shadeCallback) {
         this.$widget.css("width", this.$widget.width());
     }
 
-    if (this.window.shaded != true)
+    if (!this.window.shaded)
     {
         this.$widget.css("height", 'auto');
         
@@ -2570,6 +2570,309 @@ function LinearGauge()
 {
     // TODO Implement Linear Gauge widget
 }
+
+/* ============================================================================
+ * == Camera Widget                                                          ==
+ * ============================================================================ */
+
+/**
+ * The camera widget displays a single camera stream which may have one or more
+ * formats.  
+ * 
+ * @param {string} id camera identifier
+ * @param {object} config configuration object
+ * @config {string} [title] the camera box title
+ * @config {string} [swfParam] data variable that specifies SWF stream URL
+ * @config {string} [mjpegParam] data variable that specifies MJPEG stream URL
+ * @config {integer} [videoWidth] width of the video stream
+ * @config {integer} [videoHeight] height of the video stream
+ */
+function CameraStream(id, config)
+{
+    Widget.call(this, id, config);
+
+    /** The list of address for the each of the camera formats. */
+    this.urls = {
+        swf:   undefined, // Flash format
+        mjpeg: undefined  // MJPEG format
+    };  
+    
+    /** @private {boolean} Whether the camera is deployed. */
+    this.isDeployed = false;
+    
+    /** @private {string} Deployed video format. */
+    this.deployedFormat = undefined;
+    
+    /** @private {integer} Deployed video width. */
+    this.videoWidth = undefined;
+    
+    /** @private {integer} Deployed video height. */
+    this.videoHeight = undefined;
+    
+    /** @private {} SWF timer. */
+    this.swfTimer = undefined;
+    
+    this.config.classes.push("camera-stream");
+};
+
+CameraStream.prototype = new Widget;
+
+/** @const {string} Cookie which stores the users chosen camera format. */
+CameraStream.SELECTED_FORMAT_COOKIE = "camera-format";
+
+CameraStream.prototype.init = function($container) {
+    var thiz = this;
+    
+    /* Reset. */
+    this.isDeployed = false;
+    this.videoWidth = this.config.videoWidth;
+    this.videoHeight = this.config.videoHeight;
+    
+    this.$widget = this._generate($container, this._buildHTML());
+
+    this.$widget.find('.format-select').find('select').change(function() {
+        thiz._undeploy();
+        thiz._deploy($(this).val());
+    });
+    
+    /* Loads Metro help window */
+    this.$widget.find(".metro-fcheck").click(function() { $('.metro-container').fadeToggle(); });
+
+    /* Restore current format after reinit. */
+    if (this.deployedFormat) this._deploy(this.deployedFormat);
+};
+
+CameraStream.prototype.consume = function(data) {
+    /* Camera streams don't change. */
+    if ((this.urls.mjpeg || !this.config.mjpegParam) && (this.urls.swf || !this.config.swfParam)) return;
+    
+    if (this.config.swfParam && data[this.config.swfParam] != undefined)
+    {
+        this.urls.swf = decodeURIComponent(data[this.config.swfParam]);
+    }
+    
+    if (this.config.mjpegParam || data[this.config.mjpegParam] != undefined)
+    {
+        this.urls.mjpeg = decodeURIComponent(data[this.config.mjpegParam]);
+    }
+    
+    if ((this.urls.swf || this.urls.mjpeg) && !this.isDeployed) 
+    {
+        this._restoreDeploy();
+    }
+};
+
+/**
+ * Restores a stored user chosen format choice, otherwise uses platform deploy
+ * to load the most appropriate choice. 
+ */
+CameraStream.prototype._restoreDeploy = function() {
+    var storedChoice = Util.getCookie(CameraStream.SELECTED_FORMAT_COOKIE);
+    
+    if (storedChoice && this.urls[storedChoice])
+    {
+        this._deploy(storedChoice);
+    }
+    else
+    {
+        this._platformDeploy();
+    }
+};
+
+/**
+ * Deploys a format most appropriate to the platform.
+ */
+CameraStream.prototype._platformDeploy = function() {
+    this._deploy(/Mobile|mobi|Android|android/i.test(navigator.userAgent) ? 'mjpeg' : 'swf');  
+};
+
+/**
+ * Deploys the specified camera format. 
+ * 
+ * @param {string} format format to deploy
+ */
+CameraStream.prototype._deploy = function(format) {
+    var html;
+    
+    switch (format)
+    {
+    case 'swf':
+        html = this._getSwfHtml();
+        break;
+        
+    case 'mjpeg':
+        html = this._getMjpegHtml();
+        break;
+        
+    default:
+        this._platformDeploy();
+        return;
+    }
+    
+    this.isDeployed = true;
+    this.$widget.find(".video-player").html(html);
+    this.$widget.find("#video-player-select").children(":selected").removeAttr("selected");
+    this.$widget.find("#video-player-select > option[value='" + format + "']").attr("selected", "selected");
+    Util.setCookie(CameraStream.SELECTED_FORMAT_COOKIE, this.deployedFormat = format);
+    
+    if (this.deployedFormat == 'swf')
+    {
+        var thiz = this;
+        this.swfTimer = setTimeout(function() {
+            if (thiz.deployedFormat == 'swf') thiz._deploy(thiz.deployedFormat);
+        }, 360000);
+    }
+};
+
+/**
+ * Removes the currently deployed video from displaying.
+ */
+CameraStream.prototype._undeploy = function() {
+    if (this.deployedFormat == 'mjpeg')
+    {
+        /* Reports in the wild indicate Firefox may continue to the download 
+         * the stream unless the source attribute is cleared. */
+        this.$widget.find(".video-player > img").attr("src", "#");
+    }
+
+    this.$widget.find(".video-player").empty();
+    
+    if (this.swfTimer)
+    {
+        clearTimeout(this.swfTimer);
+        this.swfTimer = undefined;
+    }
+    
+    this.isDeployed = false;
+};
+
+CameraStream.prototype._buildHTML = function() {
+    return (
+        '<div class="video-player" style="height:' + this.videoHeight + 'px;width:' + this.videoWidth + 'px">' +
+            '<div class="video-placeholder">Please wait...</div>' +
+        '</div>' +
+        '<div class="metro-container">' +
+            'Please click the settings icon found at the bottom right corner of your browser window.' + 
+            '<p>(This menu can be accessed by right clicking in the browser window).</p>' +
+            '<div class="metro-image metro-image-settings"></div>' +
+            '<br /><br />Then select the "View on the desktop" option.' +
+            '<div class="metro-image metro-image-desktop"></div>' +
+        '</div>' +
+        ($.browser.msie && $.browser.version >= 10 && !window.screenTop && !window.screenY ? 
+            '<div class="metro-check">' +
+                '<img class="metro-icon" src="/uts/coupledtanksnew/images/ie10-icon.png" alt="Using Metro?" />' +
+                'Using Metro?' +
+            '</div>' : '' ) +
+        '<div class="format-select">' +   
+            '<select id="video-player-select" class="gradient">' +
+                '<option selected="selected" value=" ">Select Format</option>' +
+                (this.config.swfParam ? '<option value="swf">SWF</option>' : '') +
+                (this.config.mjpegParam ? '<option value="mjpeg">M-JPEG</option>' : '') +
+            '</select>' +
+        '</div>'
+    );
+};
+
+/**
+ * Gets the HTML to deploy a SWF stream format. 
+ * 
+ * @return {string} SWF video HTML
+ */
+CameraStream.prototype._getSwfHtml = function() {
+    return (!$.browser.msie ? // Firefox, Chrome, ...
+            '<object type="application/x-shockwave-flash" data="' + this.urls.swf + '" ' +
+                    'width="' +  this.videoWidth  + '" height="' + this.videoHeight + '">' +
+                '<param name="movie" value="' + 'this.urls.swf' + '"/>' +
+                '<param name="wmode" value="opaque" />' +
+                '<div class="no-flash-container">' +
+                    '<div class="no-flash-button">' +
+                        '<a href="http://www.adobe.com/go/getflash">' +
+                            '<img class="no-flash-image" src="/uts/coupledtanksnew/images/flash-icon.png"' +
+                                'alt="Get Adobe Flash player"/>' +
+                            '<span class="no-flash-button-text">Video requires Adobe Flash Player</span>' +
+                        '</a>' +
+                    '</div>' +
+                    '<p class="no-flash-substring">If you do not wish to install Adobe flash player ' +
+                        'you can try another video format using the drop down box below.</p>' +
+                '</div>' +
+            '</object>'
+        :                  // Internet Explorer
+            '<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000"  width="' + this.videoWidth + 
+                    '" height="' + this.videoHeight + '"  id="camera-swf-movie">' +
+                '<param name="movie" value="' + this.urls.swf + '" />' +
+                '<param name="wmode" value="opaque" />' +
+                '<div class="no-flash-container">' +
+                    '<div class="no-flash-button">' +
+                        '<a href="http://www.adobe.com/go/getflash">' +
+                            '<img class="no-flash-image" src="/uts/coupledtanksnew/images/flash-icon.png"' +
+                                'alt="Get Adobe Flash player"/>' +
+                            '<span class="no-flash-button-text">Video requires Adobe Flash Player</span>' +
+                        '</a>' +
+                    '</div>' +
+                    '<p class="no-flash-substring">If you do not wish to install Adobe flash player ' +
+                        'you can try another video format using the drop down box below.</p>' +
+                '</div>' +
+            '</object>'
+        );
+};
+
+/**
+ * Gets the HTML to deploy a MJPEG stream.
+ * 
+ * @param {string} MJPEG video HTML
+ */
+CameraStream.prototype._getMjpegHtml = function() {
+    return (!$.browser.msie ? // Firefox, Chrome, ...
+             '<img style="width:' + this.videoWidth + 'px;height:' + this.videoHeight + 'px" ' +
+                        'src="' + this.urls.mjpeg + '?' + new Date().getTime() + ' alt="&nbsp;" />'
+         :                 // Internet Explorer
+             '<applet code="com.charliemouse.cambozola.Viewer" archive="/applets/cambozola.jar" ' + 
+                    'width="' + this.videoWidth + '" height="' + this.videoHeight + '">' +
+                '<param name="url" value="' + this.urls.mjpeg + '"/>' +
+                '<param name="accessories" value="none"/>' +
+            '</applet>'
+        );
+};
+
+/** @const {integer} Difference between widget width and video width. */
+CameraStream.VID_WIDTH_DIFF = 8;
+
+/** @const {integer} Difference between widget height and video height. */
+CameraStream.VID_HEIGHT_DIFF = 72;
+
+CameraStream.prototype.resized = function(width, height) {
+    if (this.isDeployed) this._undeploy();
+    
+    this.$widget.find(".video-player").css({
+       width: width - CameraStream.VID_WIDTH_DIFF,
+       height: height - CameraStream.VID_HEIGHT_DIFF
+    });
+    this.$widget.css("padding-bottom","0.8%");
+};
+
+CameraStream.prototype.resizeStopped = function(width, height) {
+    this.videoWidth = width - CameraStream.VID_WIDTH_DIFF;
+    this.videoHeight = height - CameraStream.VID_HEIGHT_DIFF;
+    
+    this._deploy(this.currentFormat);
+};
+
+CameraStream.prototype.destroy = function() {
+    this._undeploy();
+    Widget.prototype.destroy.call(this);
+};
+
+/**
+ * Shades the Camera widget which hides the widget contents only showing the title.
+ *
+ * @param {Function} callback callback invoked after the shade animation has completed
+ */
+CameraStream.prototype.toggleWindowShade = function(callback) {
+    Widget.prototype.toggleWindowShade.call(this, callback);
+    
+    if (this.window.shaded) this._undeploy();
+    else this._deploy(this.deployedFormat);
+};
 
 
 /* ============================================================================
