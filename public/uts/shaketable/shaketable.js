@@ -145,19 +145,36 @@ ShakeTableControl.prototype.setup = function() {
        shadeable: true,
        expandable: true,
        resizable: true,
+       top: 150,
+       left: -200,
        widgets: [
            new Spacer("sp-1", {
                border: "black",
                color: "red",
                round: false,
+               width: 100,
+               height: 50
+           }),
+           new Spacer("sp-2", {
+               border: "black",
+               color: "green",
+               round: false,
+               width: 100,
+               height: 50
+           }),
+           new Spacer("sp-3", {
+               border: "black",
+               color: "yellow",
+               round: false,
                width: 200,
                height: 50
            }),
        ],
-       layout: new GridLayout({
-           columns: [
-               ["sp-1"] 
-           ]
+       layout: new FlowLayout({
+           padding: 0,
+           size: 220,
+           center: true,
+           
        })
     }));
 

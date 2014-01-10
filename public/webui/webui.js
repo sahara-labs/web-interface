@@ -666,11 +666,11 @@ Widget.prototype.getWindowProperty = function(property) {
     switch (property)
     {
     case 'width':
-        return this.window.width === undefined ? this.$widget.width() : this.window.width;
+        return this.window.width === undefined ? this.$widget.outerWidth(true) : this.window.width;
         break;
 
     case 'height':
-        return this.window.height === undefined ? this.$widget.height() : this.window.height;
+        return this.window.height === undefined ? this.$widget.outerHeight(true) : this.window.height;
         break;
 
     case 'left':
@@ -694,7 +694,6 @@ Widget.prototype.getWindowProperty = function(property) {
 /*
  * Layouts that are to be implemented:
  * 
- *  -> AbsoluteLayout: Widgets placed according to user supplied coordinates   
  *  -> StackLayout: Widgets stacked with only visible at a time
  *  -> TabLayout: Widgets tabbed with only one visible at a time
  */
@@ -736,6 +735,12 @@ Layout.prototype.displayDestroy = function() { };
 Layout.prototype.layout = function() {
     throw "Layout->layout not implmented.";
 };
+
+/**
+ * Scales the 
+ * 
+ */
+Layout.prototype.scale = function(x, y) { };
 
 /**
  * Gets the width of the layouts displayed contents.
@@ -1126,6 +1131,10 @@ FlowLayout.prototype.horizontalLayout = function() {
     this.height = top + rowHeight + this.config.padding;
 };
 
+FlowLayout.prototype.scale = function(h, v) {
+    this.config.size *= this.config.vertical ? v : h;
+};
+
 /* ============================================================================
  * == Container Widget                                                       ==
  * ============================================================================ */
@@ -1212,6 +1221,9 @@ Container.prototype.init = function($container) {
                         parseInt(this.$contentBox.css("padding-bottom"))
         });
     }
+    
+    /* Restore sizing.*/
+    if (this.window.width && this.window.height) this.resizeStopped(this.window.width, this.window.height);
 };
 
 Container.prototype.consume = function(data) {
@@ -1234,11 +1246,40 @@ Container.prototype.destroy = function() {
 };
 
 Container.prototype.resized = function(width, height) {
-    if (this.config.layout) this.config.layout.resized(width, height);
+    
 };
 
 Container.prototype.resizeStopped = function(width, height) {
-    if (this.config.layout) this.config.layout.resizeStopped(width, height);
+    var i = 0, w, h, 
+        horiz = (width - 12) / this.config.layout.getWidth(), 
+        vert = (height - 35) / this.config.layout.getHeight() ;
+    
+    for (i in this.widgets)
+    {
+        this.widgets[i].$widget.css({
+            width: w = this.widgets[i].getWindowProperty("width") * horiz, 
+            height: h = this.widgets[i].getWindowProperty("height") * vert
+        });
+        this.widgets[i].resized(w, h);
+        this.widgets[i].resizeStopped(w, h);
+    }
+
+    if (this.config.layout)
+    {
+        this.config.layout.scale(horiz, vert);
+        this.config.layout.layout();
+        this.$contentBox.css({
+            width: this.config.layout.getWidth() - parseInt(this.$contentBox.css("padding-left")) - 
+                        parseInt(this.$contentBox.css("padding-right")),
+            height: this.config.layout.getHeight() - parseInt(this.$contentBox.css("padding-top")) -
+                        parseInt(this.$contentBox.css("padding-bottom"))
+        });
+    }
+    
+    this.$widget.css({
+        width: "auto",
+        height: "auto"
+    });
 };
 
 Container.prototype.toggleEvent = function(id, visible) {
@@ -1305,7 +1346,7 @@ Spacer.prototype.init = function($container) {
                 (this.config.round ? "border-radius:" + 
                         ((this.config.width < this.config.height ? this.config.width : this.config.height) / 2) + "px;" : "") + 
                 this.config.css + 
-            "'></div>"
+            "'>" + this.config.width + "x" + this.config.height + "</div>"
     );
 };
 
@@ -1314,6 +1355,8 @@ Spacer.prototype.resized = function(width, height) {
     {
         this.$widget.children("border-radius", (width < height ? width : height) / 2);
     }
+    
+    this.$widget.children().text(Math.round(width) + "x" + Math.round(height));
 };
 
 /* ============================================================================
