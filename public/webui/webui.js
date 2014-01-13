@@ -6,7 +6,6 @@
  * @date 18th November 2013
  */
 
-
 /* ============================================================================
  * == Globals (must be set configured in implementations                     ==
  * ============================================================================ */
@@ -30,6 +29,153 @@ Globals = {
     
     /** @static {string} Default theme is flat. */
     THEME: 'flat'
+};
+
+/**
+ * Web application controlling class. 
+ *
+ * @param {object} config configuration option
+ * @config {string} [anchor] where the display is anchored to the screen
+ * @config {array} [widgets] list of widgets that are on the page
+ * @config {string} [controller] Controller used to interact with the Rig Client
+ * @config {string} [dataAction] Action to request to pull data from the server (default data)
+ * @config {integer} [dataDuration] Duration of graph data to request in seconds (default 60)
+ * @config {integer} [dataPeriod] Period of graph data to request in milliseconds (default 100)
+ * @config {integer} [pollPeriod] How often to poll server data in milliseconds (default 3000)
+ * @config {integer} [errorPeriod] How long to wait after receiving errored data before \
+ *                          requesting again in milliseconds (default 10000)
+ * @config {string} [theme] display theme (default 'flat')
+ * @config {string} [cookie] cookie prefix (default anchor id) 
+ */
+function WebUIApp(config)
+{
+    /** @private {object} Configuration object. */
+    this.config = config;
+    
+    /** @private {jQuery} Interface anchor. */
+    this.$anchor = undefined;
+    
+    /** @private {Container} Page container. */
+    this.display = undefined;
+    
+    /** @private {boolean} Whether a data error has occurred. */
+    this.dataError = false;
+    
+    /** @private {GlobalError} Global error display. */
+    this.errorDisplay = undefined;
+    
+    /* Set default options. */
+    if (this.config.dataAction === undefined) this.config.dataAction = "data";
+    if (this.config.dataDuration === undefined) this.config.dataDuration = 60;
+    if (this.config.dataPeriod === undefined) this.config.dataPeriod = 100;
+    if (this.config.pollPeriod === undefined) this.config.pollPeriod = 3000;
+    if (this.config.errorPeriod === undefined) this.config.errorPeriod = 10000;
+    if (this.config.theme === undefined) this.config.theme = Globals.THEMES.flat;
+    if (this.config.cookie === undefined) this.config.cookie = this.config.anchor;
+    
+    return this;
+}
+
+WebUIApp.prototype.setup = function() {
+    /* Set globals. */
+    if (!this.config.controller) throw "Rig Client controller not set.";
+    
+    Globals.CONTROLLER = this.config.controller;
+    Globals.COOKIE_PREFIX = this.config.cookie;
+    Globals.THEME = this.config.theme;
+    
+    /* Set up the display. */
+    if (!this.config.anchor) throw "Page anchor not configured.";
+    this.$anchor = $(this.config.anchor);
+    if (this.$anchor.length == 0) throw "Anchor " + this.config.anchor + " not found on the page.";
+    
+    this.display = new Container(this.config.anchor + "-container", {
+        widgets: this.config.widgets
+    });
+    
+    this.errorDisplay = new GlobalError();
+    
+    return this;
+};
+
+/** 
+ * Run the web application. 
+ */
+WebUIApp.prototype.run = function() {
+    /* Init the display. */
+    this.display.init(this.$anchor);
+    
+    /* Start retreiving data. */
+    this._acquireLoop();
+    
+    return this;
+};
+
+/**
+ * Acquisition main loop.
+ */
+WebUIApp.prototype._acquireLoop = function() {
+    var thiz = this;
+
+    $.ajax({
+        url: "/primitive/mapjson/pc/" + this.config.controller + "/pa/" + this.config.dataAction,
+        data: {
+            period: this.config.dataPeriod,
+            duration: this.config.dataDuration,
+            from: 0,     // For now we are just asked for the latest data
+        },
+        success: function(data) {
+            thiz._processData(data);
+            setTimeout(function() { thiz._acquireLoop(); }, thiz.config.pollPeriod);
+        },
+        error: function(data) {
+            thiz._errorData('Connection error.');
+            setTimeout(function() { thiz._acquireLoop(); }, thiz.config.errorPeriod);
+        }
+    });
+};
+
+/**
+ * Processes a successfully received data packet.  
+ * 
+ * @param {object} data data packet
+ */
+WebUIApp.prototype._processData = function(data) {
+    /* A data packet may specify an error so we make need to make this into an 
+     * error message. */
+
+    /* AJAX / Primitive / validation error. */
+    if (!(data['success'] == undefined || data['success'])) return this._errorData(data['errorReason']);
+
+    /* Hardware communication error. */
+    if (data['system-err'] != undefined && data['system-err']) return this._errorData('Hardware communication error.');
+
+    /* Seems like a good packet so it will be forwarded to the display to
+     * render its contents and any error states will be cleared. */
+    if (this.dataError)
+    {
+        this.dataError = false;
+        this.display.unblur();
+        this.errorDisplay.clearError();
+    }
+    
+    this.display.consume(data);
+};
+
+/**
+ * Processes an errored communication. 
+ * 
+ * @param {string}  msg error message
+ */
+WebUIApp.prototype._errorData = function(msg) {    
+    if (!this.dataError)
+    {
+        /* Going into errored state, display error message. */
+        this.dataError = true;
+        this.display.blur();
+    }
+
+    this.errorDisplay.displayError(msg);
 };
 
 /* ============================================================================

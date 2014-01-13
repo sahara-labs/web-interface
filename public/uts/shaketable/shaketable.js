@@ -6,263 +6,104 @@
  * @date 1/6/2013
  */
 
-/* ============================================================================ 
- * == Global variables.                                           ==
- * ============================================================================ */
-Globals.COOKIE_PREFIX = "shaketable";
-Globals.CONTROLLER    = "ShakeTableController";
-Globals.THEME         = Globals.THEMES.flat;
-
 /* ============================================================================
- * == Shake Table page control.                                              ==
+ * == Shake Table.                                                           ==
  * ============================================================================ */
 
-/**
- * This object controls the interface.
- * 
- * @param id container to add this interface to
- */
-function ShakeTableControl(id) 
-{ 
-	/** Display Manager. */
-	this.display = undefined;
-
-	/** Widgets. */
-	this.widgets = [ ];
-
-	/** Container. */
-	this.$container = $('#' + id);
-
-	/** Occurs if there is a data error. */
-	this.dataError = false;
-	
-	/** Global error display. */
-	this.errorDisplay = undefined;
-	
-	/** The number of seconds this graph displays. */
-    this.duration = 10;
-
-    /** The period in milliseconds. */
-    this.period = 100;
-};
-
-/** 
- * Sets up this interface.
- */
-ShakeTableControl.prototype.setup = function() {
-	/* Graph to display tank levels. */
-	this.widgets.push(new Graph("graph-displacement", {
-	    title: "Displacement Levels",
-	    windowed: true,
-	    closeable: true,
-	    draggable: true,
-	    shadeable: true,
-	    resizable: true,
-	    expandable: true,
-	    width: 420,
-	    height: 325,
-	    left: 355,
-	    top: 420,
-	    fields: {
-	        'disp-graph-1': 'Level 1',
-	        'disp-graph-2': 'Level 2',
-	        'disp-graph-3': 'Level 3'
-	    },
-	    minValue: -60,
-	    maxValue: 60,
-	    duration: 10,
-	    yLabel: "Displacement (mm)",
-	    fieldCtl: false,
-	    autoCtl: false,
-	    durationCtl: false,
-	    traceLabels: false,
-	}));
-
-    /* Add mimic to page. */
-    this.widgets.push(new MimicWidget(this.$container, 'Diagram', ''));
-
-	/* Add camera to page. */
-    this.widgets.push(new CameraStream("camera-stream", {
-        windowed: true,
-        draggable: true,
-        closeable: true,
-        shadeable: true,
-        resizable: true,
-        expandable: true,
-        left: -5,
-        top: 5,
-        videoWidth: 320,
-        videoHeight: 240,
-        swfParam: 'camera-swf',
-        mjpegParam: 'camera-mjpeg',
-        title: "Camera"
-    }));
-
-	/* Controls. */
-    this.widgets.push(new Container("controls-container", {
-        windowed: true,
-        title: "Controls",
-        draggable: true,
-        closeable: true,
-        shadeable: true,
-        left: 50,
-        top: 420,
+function ShakeTable()
+{
+    new WebUIApp({
+        anchor: "#shake-table-anchor",
+        controller: "ShakeTableController",
+        dataAction: "dataAndGraph",
+        dataDuration: 10,
+        dataPeriod: 100,
+        pollPeriod: 1000,
+        theme: "flat",
+        cookie: "shaketable",
         widgets: [
-            new Switch("switch-motor-on", {
-                field: "motor-on", 
-                action: "setMotor",
-                label: "Motor",
-                
-             }),
-             new Switch("switch-coils-on", {
-                 field: "coils-on",
-                 action: "setCoils",
-                 label: "Dampening",
-             }),
-             new Slider("slider-motor-speed", {
-                 field: "motor-speed",
-                 action: "setMotor",
-                 max: 8,
-                 precision: 2,
-                 label: "Motor Frequency",
-                 units: "Hz",
-                 vertical: false,
-             })
-        ],
-        layout: new FlowLayout({
-            padding: 5,
-            size: 320,
-            vertical: false,
-            center: true,
-        })
-    }));
-    
-    this.widgets.push(new Container("resizing-container", {
-       windowed: true,
-       title: "Resizing",
-       draggable: true,
-       closeable: true,
-       shadeable: true,
-       expandable: true,
-       resizable: true,
-       top: 150,
-       left: -200,
-       widgets: [
-           new Spacer("sp-1", {
-               border: "black",
-               color: "red",
-               round: false,
-               width: 100,
-               height: 50
-           }),
-           new Spacer("sp-2", {
-               border: "black",
-               color: "green",
-               round: false,
-               width: 100,
-               height: 50
-           }),
-           new Spacer("sp-3", {
-               border: "black",
-               color: "yellow",
-               round: false,
-               width: 200,
-               height: 75
-           }),
-       ],
-       layout: new AbsoluteLayout({
-           coords: {
-               "sp-1": {x: 0, y: 0},
-               "sp-2": {x: 110, y: 0},
-               "sp-3": {x: 0, y: 60}
-           },
-           border: 10
-       })
-    }));
-
-	/* Display manager to allow things to be shown / removed. */
-	this.display = new Container("shake-container", {
-	    widgets: this.widgets
-	});
-	
-	/* Error display triggered if error occurs. */
-	this.errorDisplay = new GlobalError();
-};
-
-/** 
- * Runs the interface. 
- */
-ShakeTableControl.prototype.run = function() {
-	/* Render the page. */
-	this.display.init(this.$container);
-
-	/* Start acquiring data. */
-	this.acquireLoop();
-};
-
-ShakeTableControl.prototype.acquireLoop = function() {
-	var thiz = this;
-
-	$.ajax({
-		url: "/primitive/mapjson/pc/" + Globals.CONTROLLER + "/pa/dataAndGraph",
-		data: {
-		    period: this.period,
-			duration: this.duration,
-			from: 0,     // For now we are just asked for the latest data
-		},
-		success: function(data) {
-			thiz.processData(data);
-			setTimeout(function() { thiz.acquireLoop(); }, 1000);
-		},
-		error: function(data) {
-			thiz.errorData('Connection error.');
-			setTimeout(function() { thiz.acquireLoop(); }, 10000);
-		}
-	});
-};
-
-/**
- * Processes a successfully received data packet.  
- * 
- * @param data data packet
- */
-ShakeTableControl.prototype.processData = function(data) {
-	/* A data packet may specify an error so we make need to make this into an 
-	 * error message. */
-
-	/* AJAX / Primitive / validation error. */
-	if (!(data['success'] == undefined || data['success'])) return this.errorData(data['errorReason']);
-
-	/* Hardware communication error. */
-	if (data['system-err'] != undefined && data['system-err']) return this.errorData('Hardware communication error.');
-
-	/* Seems like a good packet so it will be forwarded to the display to
-	 * render its contents and any error states will be cleared. */
-	if (this.dataError)
-	{
-		this.dataError = false;
-		this.display.unblur();
-		this.errorDisplay.clearError();
-	}
-	
-	this.display.consume(data);
-};
-
-/**
- * Processes an errored communication. 
- * 
- * @param msg error message
- */
-ShakeTableControl.prototype.errorData = function(msg) {    
-	if (!this.dataError)
-	{
-	    /* Going into errored state, display error message. */
-		this.dataError = true;
-		this.display.blur();
-	}
-
-	this.errorDisplay.displayError(msg);
-};
+            new Graph("graph-displacement", {
+                title: "Displacement Levels",
+                windowed: true,
+                closeable: true,
+                draggable: true,
+                shadeable: true,
+                resizable: true,
+                expandable: true,
+                width: 420,
+                height: 325,
+                left: 355,
+                top: 420,
+                fields: {
+                    'disp-graph-1': 'Level 1',
+                    'disp-graph-2': 'Level 2',
+                    'disp-graph-3': 'Level 3'
+                },
+                minValue: -60,
+                maxValue: 60,
+                duration: 10,
+                yLabel: "Displacement (mm)",
+                fieldCtl: false,
+                autoCtl: false,
+                durationCtl: false,
+                traceLabels: false,
+            }),
+            new MimicWidget(this.$container, 'Diagram', ''),
+            new CameraStream("camera-stream", {
+                windowed: true,
+                draggable: true,
+                closeable: true,
+                shadeable: true,
+                resizable: true,
+                expandable: true,
+                left: -5,
+                top: 5,
+                videoWidth: 320,
+                videoHeight: 240,
+                swfParam: 'camera-swf',
+                mjpegParam: 'camera-mjpeg',
+                title: "Camera"
+            }),
+            new Container("controls-container", {
+                windowed: true,
+                title: "Controls",
+                draggable: true,
+                closeable: true,
+                shadeable: true,
+                left: 50,
+                top: 420,
+                widgets: [
+                    new Switch("switch-motor-on", {
+                        field: "motor-on", 
+                        action: "setMotor",
+                        label: "Motor",
+                        
+                     }),
+                     new Switch("switch-coils-on", {
+                         field: "coils-on",
+                         action: "setCoils",
+                         label: "Dampening",
+                     }),
+                     new Slider("slider-motor-speed", {
+                         field: "motor-speed",
+                         action: "setMotor",
+                         max: 8,
+                         precision: 2,
+                         label: "Motor Frequency",
+                         units: "Hz",
+                         vertical: false,
+                     })
+                ],
+                layout: new FlowLayout({
+                    padding: 5,
+                    size: 320,
+                    vertical: false,
+                    center: true,
+                })
+            })
+        ]
+    }).setup().run();
+}
 
 /* ============================================================================
  * == Mimic Widget.                                                          ==
