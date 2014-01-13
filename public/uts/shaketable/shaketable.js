@@ -170,11 +170,13 @@ ShakeTableControl.prototype.setup = function() {
                height: 75
            }),
        ],
-       layout: new FlowLayout({
-           padding: 10,
-           vertical: true,
-           size:130,
-           center: true
+       layout: new AbsoluteLayout({
+           coords: {
+               "sp-1": {x: 0, y: 0},
+               "sp-2": {x: 110, y: 0},
+               "sp-3": {x: 0, y: 60}
+           },
+           border: 10
        })
     }));
 

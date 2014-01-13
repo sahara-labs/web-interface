@@ -737,8 +737,10 @@ Layout.prototype.layout = function() {
 };
 
 /**
- * Scales the 
+ * Scales the layout if the container has been resized.
  * 
+ * @param {number} x x direction resize scale
+ * @param {number} y y direction resize scale
  */
 Layout.prototype.scale = function(x, y) { };
 
@@ -778,12 +780,18 @@ Layout.prototype.setContainer = function(container) {
  * 
  * @param {object} config configuration object
  * @config {object} [coords] coordinates of each widget keyed by widget id
+ * @config {integer} [border] border around contents box (default 0)
  */
 function AbsoluteLayout(config)
 {
     Layout.call(this, config);
     
     if (this.config.coords === undefined) this.config.coords = {};
+    if (this.config.border === undefined) this.config.border = 0;
+    
+    /* Seperate vertical and horizontal borders are needed because resizing
+     * may not preserve aspect ratio. */
+    this.config.tbBorder = this.config.lrBorder = this.config.border;
 }
 
 AbsoluteLayout.prototype = new Layout;
@@ -808,10 +816,27 @@ AbsoluteLayout.prototype.layout = function() {
             y = 0;
         }
         
+        x += this.config.lrBorder;
+        y += this.config.tbBorder;
         w.moveTo(x, y);
         
         if ((width = w.getWindowProperty("width")) + x > this.width) this.width = x + width;
         if ((height = w.getWindowProperty("height")) + y > this.height) this.height = y + height;
+    }
+
+    this.width += this.config.lrBorder;
+    this.height += this.config.tbBorder;
+};
+
+AbsoluteLayout.prototype.scale = function(x, y) {
+    this.lrBorder *= x;
+    this.tbBorder *= y;
+    
+    var i = 0;
+    for (i in this.config.coords)
+    {
+        this.config.coords[i].x *= x;
+        this.config.coords[i].y *= y;
     }
 };
 
