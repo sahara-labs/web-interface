@@ -923,6 +923,8 @@ GridLayout.prototype.rowLayout = function() {
  * @param {object} config configuration object
  * @config {boolean} [vertical] the orientation (default vertical)
  * @config {integer} [padding] spacing between widgets (default 10)
+ * @config {string} [align] align of elements either left, right, center, top, or \
+ *                          bottom (default left for vertical, top for horizontal orientiation) 
  */
 function BoxLayout(config) 
 {
@@ -930,9 +932,19 @@ function BoxLayout(config)
     
     if (this.config.vertical === undefined) this.config.vertical = true;
     if (this.config.padding === undefined) this.config.padding = 10;
+    if (this.config.align === undefined) this.config.align = this.config.vertical ? "top" : "left";
 }
 
 BoxLayout.prototype = new Layout;
+
+/** @const Alignments for the box layout. */
+BoxLayout.ALIGN = {
+    left: "left", 
+    right: "right",
+    center: "center",
+    top: "top",
+    bottom: "bottom"
+};
 
 BoxLayout.prototype.layout = function() {
     if (this.config.vertical) this.verticalLayout();
@@ -943,13 +955,36 @@ BoxLayout.prototype.layout = function() {
  * Runs box layout in vertical orientation.
  */
 BoxLayout.prototype.verticalLayout = function() {
-    var i = 0, top = this.config.padding, wid, w;
+    var i = 0, top = this.config.padding, widths = [], w, leftOff;
     
     this.width = 0;
     for (i in this.container.getWidgets())
     {
+        widths[i] = this.container.getWidget(i).getWindowProperty("width");
+        if (widths[i] > this.width) this.width = widths[i];
+    }
+    
+    for (i in this.container.getWidgets())
+    {
+        leftOff = this.config.padding;
+        switch (this.config.align)
+        {
+        case 'center':
+            leftOff += (this.width - widths[i]) / 2;
+            break;
+            
+        case 'right':
+            leftOff += this.width - widths[i];
+            break;
+            
+        case 'left': // Default, falls through
+        default:
+            /* By default aligned to left. */
+            break;
+        }
+        
         w = this.container.getWidget(i);
-        w.moveTo(this.config.padding, top);
+        w.moveTo(leftOff, top);
         
         top += w.getWindowProperty("height") + this.config.padding;
         
@@ -965,18 +1000,38 @@ BoxLayout.prototype.verticalLayout = function() {
  * Runs box layout in horizontal orientation. 
  */
 BoxLayout.prototype.horizontalLayout = function() {
-    var i = 0, left = this.config.padding, hei, w;
+    var i = 0, left = this.config.padding, heights = [ ], w, topOff;
     
     this.height = 0;
+    for (i in this.container.getWidgets()) 
+    {
+        heights[i] = this.container.getWidget(i).getWindowProperty("height");
+        if (heights[i] > this.height) this.height = heights[i];
+    }
+    
     for (i in this.container.getWidgets())
     {
+        topOff = this.config.padding;
+        switch (this.config.align) 
+        {
+        case 'center':
+            topOff += (this.height - heights[i]) / 2;
+            break;
+            
+        case 'bottom':
+            topOff += this.height - heights[i];
+            break;
+            
+        case 'top': // Default case, falls through
+        default:
+            /* By default aligned to top. */
+            break;
+        }
+        
         w = this.container.getWidget(i);
-        w.moveTo(left, this.config.padding);
+        w.moveTo(left, topOff);
         
         left += w.getWindowProperty("width") + this.config.padding;
-        
-        hei = w.getWindowProperty("height");
-        if (hei > this.height) this.height = hei;
     }
     
     this.width = left;
