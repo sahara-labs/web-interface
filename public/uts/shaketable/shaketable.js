@@ -170,10 +170,11 @@ ShakeTableControl.prototype.setup = function() {
                height: 75
            }),
        ],
-       layout: new BoxLayout({
+       layout: new FlowLayout({
            padding: 10,
            vertical: true,
-           align: BoxLayout.ALIGN.center
+           size:130,
+           center: true
        })
     }));
 

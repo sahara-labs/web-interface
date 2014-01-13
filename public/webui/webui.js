@@ -1223,6 +1223,9 @@ function Container(id, config)
     
     /** @private {jQuery} Box where the contained widgets displayed gets attached to. */
     this.$contentBox = undefined;
+    
+    /** @private {boolean} Whether contents are shown or hidden. */
+    this.contentsShown = true;
 }
 
 Container.prototype = new Widget;
@@ -1301,10 +1304,20 @@ Container.prototype.destroy = function() {
 };
 
 Container.prototype.resized = function(width, height) {
+    /* Mask this function during initial _generate resize restore. */
+    if (this.config.layout && this.config.layout.getWidth() === undefined) return;
     
+    if (this.contentsShown)
+    {
+        this.$contentBox.hide();
+        this.contentsShown = false;
+    }
 };
 
 Container.prototype.resizeStopped = function(width, height) {
+    /* Mask this function durinig initial _generate resize restore. */
+    if (this.config.layout && this.config.layout.getWidth() === undefined) return;
+    
     var i = 0, w, h, 
         horiz = (width - 12) / this.config.layout.getWidth(), 
         vert = (height - 35) / this.config.layout.getHeight() ;
@@ -1335,6 +1348,9 @@ Container.prototype.resizeStopped = function(width, height) {
         width: "auto",
         height: "auto"
     });
+    
+    this.$contentBox.show();
+    this.contentsShown = true;
 };
 
 Container.prototype.toggleEvent = function(id, visible) {
