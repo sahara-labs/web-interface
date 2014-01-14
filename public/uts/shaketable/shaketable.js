@@ -26,10 +26,10 @@ function ShakeTable()
             new Graph("graph-displacement", {
                 title: "Graphs",
                 resizable: true,
-                width: 420,
-                height: 325,
-                left: 355,
-                top: 420,
+                width: 418,
+                height: 328,
+                left: 351,
+                top: 423,
                 fields: {
                     'disp-graph-1': 'Level 1',
                     'disp-graph-2': 'Level 2',
@@ -58,8 +58,8 @@ function ShakeTable()
             new Container("controls-container", {
                 title: "Controls",
                 resizable: false,
-                left: 10,
-                top: 420,
+                left: 2,
+                top: 375,
                 widgets: [
                     new Switch("switch-motor-on", {
                         field: "motor-on", 
@@ -113,7 +113,7 @@ function MimicWidget()
         shadeable: true,
         expandable: true,
         draggable: true,
-        left: 355,
+        left: 351,
         top: 5,
     });
     
