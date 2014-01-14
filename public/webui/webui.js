@@ -32,17 +32,19 @@ Globals = {
 };
 
 /**
- * Web application controlling class. 
+ * Web application. 
  *
  * @param {object} config configuration option
  * @config {string} [anchor] where the display is anchored to the screen
  * @config {array} [widgets] list of widgets that are on the page
- * @config {string} [controller] Controller used to interact with the Rig Client
- * @config {string} [dataAction] Action to request to pull data from the server (default data)
- * @config {integer} [dataDuration] Duration of graph data to request in seconds (default 60)
- * @config {integer} [dataPeriod] Period of graph data to request in milliseconds (default 100)
- * @config {integer} [pollPeriod] How often to poll server data in milliseconds (default 3000)
- * @config {integer} [errorPeriod] How long to wait after receiving errored data before \
+ * @config {boolean} [windowToggle] whether to show the widget toggle list to allow windows \
+ *                                  to be closed (default off)
+ * @config {string} [controller] controller used to interact with the Rig Client
+ * @config {string} [dataAction] action to request to pull data from the server (default data)
+ * @config {integer} [dataDuration] duration of graph data to request in seconds (default 60)
+ * @config {integer} [dataPeriod] period of graph data to request in milliseconds (default 100)
+ * @config {integer} [pollPeriod] how often to poll server data in milliseconds (default 3000)
+ * @config {integer} [errorPeriod] how long to wait after receiving errored data before \
  *                          requesting again in milliseconds (default 10000)
  * @config {string} [theme] display theme (default 'flat')
  * @config {string} [cookie] cookie prefix (default anchor id) 
@@ -55,16 +57,20 @@ function WebUIApp(config)
     /** @private {jQuery} Interface anchor. */
     this.$anchor = undefined;
     
-    /** @private {Container} Page container. */
-    this.display = undefined;
+    /** @private {WindowManager} Page container. */
+    this.display = new WindowManager(this.config.anchor + "-container", {
+        widgets: this.config.widgets,
+        windowToggle: this.config.windowToggle
+    });;
     
     /** @private {boolean} Whether a data error has occurred. */
     this.dataError = false;
     
     /** @private {GlobalError} Global error display. */
-    this.errorDisplay = undefined;
+    this.errorDisplay = new GlobalError();
     
     /* Set default options. */
+    if (this.config.windowToggle === undefined) this.config.windowToggle = false;
     if (this.config.dataAction === undefined) this.config.dataAction = "data";
     if (this.config.dataDuration === undefined) this.config.dataDuration = 60;
     if (this.config.dataPeriod === undefined) this.config.dataPeriod = 100;
@@ -76,25 +82,19 @@ function WebUIApp(config)
     return this;
 }
 
+/**
+ * Perform setup of the application.
+ */
 WebUIApp.prototype.setup = function() {
-    /* Set globals. */
+    /* Validation of mandatory options. */
     if (!this.config.controller) throw "Rig Client controller not set.";
+    if (!this.config.anchor) throw "Page anchor not configured.";
+    if (!this.config.widgets) throw "No widgets added to the interface.";
     
     Globals.CONTROLLER = this.config.controller;
     Globals.COOKIE_PREFIX = this.config.cookie;
     Globals.THEME = this.config.theme;
-    
-    /* Set up the display. */
-    if (!this.config.anchor) throw "Page anchor not configured.";
-    this.$anchor = $(this.config.anchor);
-    if (this.$anchor.length == 0) throw "Anchor " + this.config.anchor + " not found on the page.";
-    
-    this.display = new Container(this.config.anchor + "-container", {
-        widgets: this.config.widgets
-    });
-    
-    this.errorDisplay = new GlobalError();
-    
+
     return this;
 };
 
@@ -102,13 +102,25 @@ WebUIApp.prototype.setup = function() {
  * Run the web application. 
  */
 WebUIApp.prototype.run = function() {
-    /* Init the display. */
-    this.display.init(this.$anchor);
-    
-    /* Start retreiving data. */
+    /* Setup display. */
+    this._setupDisplay();
+       
+    /* Start retrieving data. */
     this._acquireLoop();
     
     return this;
+};
+
+/**
+ * Setup the display.
+ */
+WebUIApp.prototype._setupDisplay = function() {
+    if ((this.$anchor = $(this.config.anchor)).length == 0)
+    {
+        throw "Anchor " + this.config.anchor + " not found on the page.";
+    }
+    
+    this.display.init(this.$anchor);
 };
 
 /**
@@ -1386,16 +1398,16 @@ function Container(id, config)
 {
     Widget.call(this, id, config);
     
-    /** @private {object} Map of widget visibility states keyed by widget id. */
+    /** @protected {object} Map of widget visibility states keyed by widget id. */
     this.states = { };
     
-    /** @private {object} Map of widgets keyed by identifer. */
+    /** @protected {object} Map of widgets keyed by identifer. */
     this.widgets = { };
     
-    /** @private {jQuery} Box where the contained widgets displayed gets attached to. */
+    /** @protected {jQuery} Box where the contained widgets displayed gets attached to. */
     this.$contentBox = undefined;
     
-    /** @private {boolean} Whether contents are shown or hidden. */
+    /** @protected {boolean} Whether contents are shown or hidden. */
     this.contentsShown = true;
 }
 
@@ -1524,8 +1536,21 @@ Container.prototype.resizeStopped = function(width, height) {
     this.contentsShown = true;
 };
 
+/**
+ * Sets a widget either to be displaying or hidden.
+ * 
+ * @param {string} id widget intentifier
+ * @param {boolean} visible whether the widget is displayed or hidden
+ */
 Container.prototype.toggleEvent = function(id, visible) {
-    
+    if (this.states[id] = visible)
+    {
+        this.widgets[id].init(this.$contentBox);
+    }
+    else
+    {
+        this.widgets[id].destroy();
+    }
 };
 
 /**
@@ -2165,6 +2190,9 @@ Switch.prototype.init = function($container) {
     
     var thiz = this;
     this.$widget.find(".switch-label, .switch, .switch-vertical").click(function() { thiz._clicked(); });
+    
+    /* Set existing state. */
+    if (this.value !== undefined) this._setDisplay(this.value);
 };
 
 Switch.prototype.consume = function(data) {
@@ -3230,7 +3258,7 @@ CameraStream.prototype.resizeStopped = function(width, height) {
 };
 
 CameraStream.prototype.destroy = function() {
-    this._undeploy();
+    if (this.isDeployed) this._undeploy();
     Widget.prototype.destroy.call(this);
 };
 
@@ -3246,6 +3274,183 @@ CameraStream.prototype.toggleWindowShade = function(callback) {
     else this._deploy(this.deployedFormat);
 };
 
+/* ============================================================================
+ * == Window Manager                                                         ==
+ * ============================================================================ */
+
+/**
+ * The window manager is the outer container of the page holding all windowed
+ * widgets. As well as the container, widget tracking it adds window management
+ * persistance and restoration.
+ * 
+ * @param {string} id page identifier
+ * @param {object} config configuration object
+ * @config {boolean} [windowToggle] whether windows can be toggled on or off (default off)
+ */
+function WindowManager(id, config)
+{
+    Container.call(this, id, config);
+
+    /** @private {WindowToggle} Window toggle list. */
+    this.windowToggler = this.config.windowToggle ? new WindowToggler(this) : null;
+    
+    /** @private {object} Widget destroy functions. */
+    this.destroyers = { };
+}
+
+WindowManager.prototype = new Container;
+
+WindowManager.prototype.init = function($anchor) {
+    var i = 0, w, thiz = this;
+    
+    /* Set the default windowing strategy if no explicit options have been set. */
+    for (i in this.config.widgets)
+    {
+        w = this.config.widgets[i].config;
+        if (w.closeable === undefined) w.closeable = this.config.windowToggle;
+        if (w.windowed === undefined) w.windowed = true;
+        if (w.draggable === undefined) w.draggable = true;
+        if (w.shadeable === undefined) w.shadeable = true;
+        if (w.expandable === undefined) w.expandable = true;
+        if (w.resizable === undefined) w.resizable = true;
+    }
+    
+    Container.prototype.init.call(this, $anchor);
+    if (this.windowToggler) this.windowToggler.init($anchor);
+    
+    for (i in this.widgets)
+    {
+        /* We need to intercept window closes so we can track and store 
+         * window closes. */
+        w = this.widgets[i];
+        this.destroyers[w.id] = w.destroy;
+        w.destroy = function() {
+            thiz.states[this.id] = false;
+            thiz.widgets[this.id].window.shown = false;
+            thiz.widgets[this.id]._storeState();
+            if (thiz.windowToggler) thiz.windowToggler.setSwitch(this.id, false);
+            
+            thiz.destroyers[this.id].call(this);
+        };
+    }
+};
+
+WindowManager.prototype.toggleEvent = function(id, visible) {
+    Container.prototype.toggleEvent.call(this, id, visible);
+    
+    this.widgets[id].window.shown = visible;
+    this.widgets[id]._storeState();
+};
+
+/**
+ * Resets the display, puting the contents back to their default positions.
+ */
+WindowManager.prototype.reset = function() {
+    var i = 0;
+    
+    for (i in this.widgets) 
+    {
+        this.widgets[i].destroy();
+        this.widgets[i].window = { };
+        this.widgets[i]._storeState();
+        
+        this.states[i] = true;
+        this.widgets[i].init(this.$contentBox);
+    }
+};
+
+/* ============================================================================
+ * == Window Toggler                                                         ==
+ * ============================================================================ */
+
+/**
+ * List of windows that may be toggled to be on or off.
+ * 
+ * @param {Container} page outer page container
+ */
+function WindowToggler(page)
+{   /** @private {Contnainer} Toggle list container. */
+    this.page = page;
+}
+
+WindowToggler.prototype.init = function($container) {
+    var i = 0, w, s, widgets = [ ], thiz = this;
+    
+    for (i in this.page.getWidgets())
+    {
+        w = this.page.getWidget(i);
+        
+        s = new Switch(w.id + "-toggle", {
+           field: w.id,
+           action: "none",
+           label: w.config.title,
+           vertical: false,
+           width: 145
+        });
+        widgets.push(s);
+        
+        s._clicked = function() {
+            /* When clicked the displayed state of the widget is toggled. */
+            this.value = !this.value;
+            thiz.page.toggleEvent(this.config.field, this.value);
+            this._setDisplay(this.value);
+        };
+    }
+    
+    widgets.push(s = new Button("page-reset-button", {
+        label: "Reset",
+        action: "Reset",
+    }));
+    
+    s._clicked = function() {
+        thiz.page.reset();
+        for (i in widgets) widgets[i]._setDisplay(widgets[i].value = true);
+    };
+
+    this.container = new Container("widget-toggle-list", {
+        windowed: true,
+        title: "Display",
+        icon: "toggle",
+        closeable: false,
+        expandable: false,
+        shadeable: true,
+        expandable: false,
+        draggable: true,
+        resizable: false,
+        left: -188,
+        top: 144,
+        widgets: widgets,
+        
+        layout: new BoxLayout({
+           vertical: true,
+           padding: 7
+        })
+    });
+    
+    this.container._loadState();
+    this.container.init($container);
+    
+    /* Automatically set the to not displayed. */
+    if (this.container.window.shaded === undefined) this.container.toggleWindowShade();
+    
+    /* Set the switch state. */
+    widgets.pop();
+    for (i in widgets)
+    {
+        widgets[i]._setDisplay(widgets[i].value = this.page.getWidget(widgets[i].config.field).window.shown);
+    }
+};
+
+/**
+ * Sets the state of a toggle switch.
+ * 
+ * @param {string} id identifier of window whose switch is being set
+ * @param {boolean} state whether the switch is on or off
+ */
+WindowToggler.prototype.setSwitch = function(id, state) {
+    var w = this.container.getWidget(id + "-toggle");
+    w._setDisplay(w.value = state);
+};
 
 /* ============================================================================
  * == Global Error Widget                                                    ==
@@ -3263,7 +3468,7 @@ function GlobalError()
 	
 	/** @private {String} Displayed error message. */
 	this.error = '';
-};
+}
 
 GlobalError.prototype = new Widget;
 

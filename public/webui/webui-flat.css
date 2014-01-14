@@ -39,6 +39,20 @@
 	color: #666666;
 }
 
+#widget-toggle-list .switch-label {
+    color: #666666;
+}
+
+#page-reset-button {
+	width: 140px;
+}
+
+#page-reset-button .button {
+    box-shadow: none;
+    font-weight: normal;
+    color: #666666;
+}
+
 /******************************************************************************
  ** Button, Push Button                                                      **
  ******************************************************************************/

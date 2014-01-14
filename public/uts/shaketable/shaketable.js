@@ -19,17 +19,13 @@ function ShakeTable()
         dataDuration: 10,
         dataPeriod: 100,
         pollPeriod: 1000,
-        theme: "flat",
+        windowToggle: true,
+        theme: Globals.THEMES.flat,
         cookie: "shaketable",
         widgets: [
             new Graph("graph-displacement", {
-                title: "Displacement Levels",
-                windowed: true,
-                closeable: true,
-                draggable: true,
-                shadeable: true,
+                title: "Graphs",
                 resizable: true,
-                expandable: true,
                 width: 420,
                 height: 325,
                 left: 355,
@@ -50,14 +46,9 @@ function ShakeTable()
             }),
             new MimicWidget(this.$container, 'Diagram', ''),
             new CameraStream("camera-stream", {
-                windowed: true,
-                draggable: true,
-                closeable: true,
-                shadeable: true,
                 resizable: true,
-                expandable: true,
-                left: -5,
-                top: 5,
+                left: 2,
+                top: 45,
                 videoWidth: 320,
                 videoHeight: 240,
                 swfParam: 'camera-swf',
@@ -65,12 +56,9 @@ function ShakeTable()
                 title: "Camera"
             }),
             new Container("controls-container", {
-                windowed: true,
                 title: "Controls",
-                draggable: true,
-                closeable: true,
-                shadeable: true,
-                left: 50,
+                resizable: false,
+                left: 10,
                 top: 420,
                 widgets: [
                     new Switch("switch-motor-on", {
@@ -115,7 +103,7 @@ function ShakeTable()
 function MimicWidget()
 {
     Widget.call(this, "shaker-mimic", {
-        title: "Shake Table Model",
+        title: "Model",
         windowed: true,
         resizable: true,
         preserveAspectRation: true,
