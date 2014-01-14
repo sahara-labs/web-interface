@@ -39,7 +39,7 @@
 }
 
 .window-expanded {
-    box-shadow: 0 0 20px #666666;
+    box-shadow: 0 0 20px #666666 !important;
 }
 
 .dragged {

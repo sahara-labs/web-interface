@@ -508,7 +508,7 @@ Widget.prototype.toggleWindowExpand = function() {
 
             /* Move the widget to a central position. */
             this.$widget.css({
-                left: this.$widget.parent().width() / 2 - width / 2 - 60,
+                left: this.$widget.parent().parent().width() / 2 - width / 2,
                 top: 100,
                 zIndex: zin + 100
             });
