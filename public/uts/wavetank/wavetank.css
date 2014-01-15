@@ -40,23 +40,23 @@
 }
 
 #slider-2 {
-     left: 80%;
-     top: -50px;
+    left: 80%;
+    top: -50px;
 }
 
 #slider-3 {
-     left: 65%;
-     top: -50px;
+    left: 65%;
+    top: -50px;
 }
 
 #rotary-1 {
-     left: 5%;
-     top: 400px;
+    left: 8%;
+    top: 245px;
 }
 
 #rotary-2 {
-     left: 43%;
-     top: 420px;
+    left: 48%;
+    top: 245px;
 }
 
 #rotary-3 {
@@ -66,18 +66,42 @@
 
 #knob-1 {
     left: 50px;
+    top: 15px;
 }
 
 #knob-2 {
-    left: 530px;
-    top: 417px;
+    left: 415px;
+    top: 15px;
 }
 
 #knob-3 {
     left: 235px;
+    top: 15px;
 }
 
-#knob-4 {
-    left: -167px;
-    top: 440px;
+#button-1 {
+    position: absolute;
+    top: -140px;
+    right: 30px;
+}
+
+#button-2 {
+    position: absolute;
+    top: -140px;
+    right: -100px;
+}
+
+#button-3 {
+    top: -50px;
+    left: 5px;
+}
+
+#button-4 {
+    top: -50px;
+    left: 95px;
+}
+
+#button-5 {
+    top: -50px;
+    left: 184px;
 }
