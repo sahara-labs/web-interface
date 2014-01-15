@@ -2,8 +2,34 @@
  * Web User Interface Widget Library.
  * 
  * @author Michael Diponio
+ * @author Jesse Charlton
  * @date 18th Novermber 2013
  */
+ 
+/******************************************************************************
+ ** Overrides Old layout elements                                            **
+ ******************************************************************************/
+ 
+ #sessioninfo {
+    margin: 4px 0 0 !important;
+}
+
+.contentheader {
+    display: none !important;
+}
+
+/******************************************************************************
+ ** Styles for Mobile devices                                                         **
+ ******************************************************************************/
+@media handheld, only screen and (max-width: 480px) {
+    .spin {
+        -webkit-animation: none !important;
+        -moz-animation: none !important;
+        -ms-animation: none !important;
+        -o-animation: none !important;
+        animation: none !important;
+    }
+}
 
 /******************************************************************************
  ** Windows                                                                  **
@@ -13,7 +39,7 @@
 }
 
 .window-expanded {
-    box-shadow: 0 0 20px #666666;
+    box-shadow: 0 0 20px #666666 !important;
 }
 
 .dragged {
@@ -91,7 +117,15 @@
 
 .no-window-content {
 	position: absolute;
-	border: 1px solid black;
+}
+
+/******************************************************************************
+ ** Spacers                                                                  **
+ ******************************************************************************/
+ 
+.spacer-inner {
+	width: 100%;
+	height: 100%;
 }
 
 /******************************************************************************
@@ -506,7 +540,8 @@
 }
 
 .slider-text-horizontal {
-    margin-top: 80px;
+    margin: 80px 5px 10px;
+    float: right;    
 }
 
 .slider-text label {
@@ -528,6 +563,194 @@
 .slider-text input {
     width: 40px;
     text-align: right;
+}
+
+/******************************************************************************
+ ** Camera                                                                   **
+ ******************************************************************************/
+
+.camera-stream {
+    position: absolute;
+    left: 5px;
+    top: 1px;
+}
+
+.camera-stream .window-content {
+    padding: 0;
+    background: #242424;
+    border-bottom: solid 1px #868686;
+}
+
+.camera-stream .video-player {
+    background-color: #333;
+    border-bottom: 1px solid #464646;
+    box-shadow: 1px 3px 10px #0C0C0C;
+}
+
+.camera-stream .video-placeholder {
+    color: #AAAAAA;
+    font-size: 11pt;
+    text-align: center;
+    padding-top: 90px;
+}
+
+.camera-stream .format-select-label {
+    float: right;
+    width: 40px;
+    margin: 10px 4px;
+    font-size: 0.8em;
+    color: #ddd;
+}
+
+.camera-stream .format-select select {
+    color: #777777;
+    text-shadow: 1px 1px 1px #FFF;
+    width: 150px;
+    padding: 5px;
+    font-size: 12px;
+    line-height: 1.2;
+    border: 0;
+    border-radius: 0;
+    height: 25px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    -ie-appearance: none;
+    appearance: none;
+    cursor: pointer;
+    /* IE9 SVG, needs conditional override of 'filter' to 'none' */
+    background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2I5YjhiOCIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNmZmZmZmYiIHN0b3Atb3BhY2l0eT0iMCIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+);
+    background: -moz-linear-gradient(top,  rgba(185,184,184,1) 0%, rgba(255,255,255,0) 100%); /* FF3.6+ */
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(185,184,184,1)), color-stop(100%,rgba(255,255,255,0))); /* Chrome,Safari4+ */
+    background: -webkit-linear-gradient(top,  rgba(185,184,184,1) 0%,rgba(255,255,255,0) 100%); /* Chrome10+,Safari5.1+ */
+    background: -o-linear-gradient(top,  rgba(185,184,184,1) 0%,rgba(255,255,255,0) 100%); /* Opera 11.10+ */
+    background: -ms-linear-gradient(top,  rgba(185,184,184,1) 0%,rgba(255,255,255,0) 100%); /* IE10+ */
+    background: linear-gradient(to bottom,  rgba(185,184,184,1) 0%,rgba(255,255,255,0) 100%); /* W3C */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#b9b8b8', endColorstr='#00ffffff',GradientType=0 ); /* IE6-8 */
+}
+
+.camera-stream .format-select {
+    float: right;
+    margin: 4px;
+    width: 110px;
+    height: 25px;
+    overflow: hidden;
+    background: url('/uts/coupledtanksnew/images/arrow-down.png') no-repeat right #F3F3F3;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    border: 1px solid #F0F0F0;
+}
+
+.camera-stream .metro-check {
+    position: relative;
+    top: -1px;
+    left: 7px;
+    height: 0px;
+    cursor: pointer;
+    font-size: 11px;
+    color: #35BEFF;
+    text-shadow: 1px 1px 1px #000;
+}
+
+.camera-stream .metro-icon {
+    height: 23px;
+    top: 6px;
+    padding-right: 5px;
+    position: relative;
+}
+
+.camera-stream .metro-image {
+    background: url('/uts/coupledtanksnew/images/metro-help-menu.png') no-repeat    
+}
+
+.camera-stream .metro-image-settings {
+    width: 42px;
+    height: 42px;
+    background-position: -1px -1px;
+    margin: 5px 0px -20px 100px;
+}
+
+.camera-stream .metro-image-desktop {
+    width: 184px;
+    height: 47px;
+    background-position: -45px 0px;
+    margin: 10px 0px 0px 30px;
+}
+
+.camera-stream .metro-container {
+    background: #fff;
+    position: absolute;
+    top: 10px;
+    width: 85%;
+    left: 5%;
+    height: 70%;
+    border-radius: 10px;
+    padding-left: 5%;
+    padding-top: 5%;
+    font-size: 12px;
+    color: #383838;
+    overflow: hidden;
+    border: solid 1px #CCC;
+    -moz-box-shadow: 0 1px 3px #333333;
+    -webkit-box-shadow: 0 1px 3px #333;
+    box-shadow: 0 1px 3px #333;
+    display: none;
+}
+
+.camera-stream .metro-container p {
+    font-size: 11px;
+}
+
+.camera-stream .no-flash-container {
+    height: 100%;
+    background: #2B2B2B;
+    border: solid 1px #C0C0C0;
+    border-top: none;
+    text-align: center;
+}
+
+.camera-stream .no-flash-button {
+    width: 60%;
+    height: 20%;
+    text-align: left;
+    cursor: pointer;
+}
+
+.camera-stream .no-flash-button-text {
+    position: absolute;
+    top: 32%;
+    left: 24%;
+    color: #e4e4e4;
+    font-size: 15px;
+    text-shadow: 1px 1px 1px #000;
+}
+
+.camera-stream .no-flash-button-text:hover {
+    color: #fff;
+}
+
+.camera-stream .no-flash-image {
+    height: 98%;
+    padding: 0% 2%;
+    margin: 1%;
+    position: relative;
+    background-color: #B81519;
+    border: solid 1px #999;
+    top: 140%;
+    left: 7%;
+    border-radius: 4px;
+}
+
+.camera-stream .no-flash-image:hover {
+    background-color: #CF181D;   
+}
+
+.camera-stream .no-flash-substring {
+    color: #a7a7a7;
+    font-size: 10px;
+    padding: 5%;
+    text-align: justify;
+    position: absolute;
+    bottom: 28px;
 }
 
 /******************************************************************************
@@ -609,3 +832,45 @@
 .global-error-blur {
     opacity: 0.3;
 }
+
+
+/******************************************************************************
+ ** Specific icons                                                           **
+ ******************************************************************************/
+ 
+.icon_video {
+    background-position: 0px 0px;
+}
+
+.icon_pid {
+    background-position: -26px 0px;
+}
+
+.icon_mimic {
+    background-position: -52px 0px;
+}
+
+.icon_graph {
+    background-position: -78px 0px;
+}
+
+.icon_toggle {
+    background-position: -105px 0px;
+}
+
+.icon_manual {
+    background-position: -131px 0px;
+}
+
+.icon_settings {
+    background-position: -157px 0px;
+}
+
+.icon_drain {
+    background-position: -183px 0px;
+}
+
+.icon_datafiles{
+    background-position: -208px 0px;
+}
+

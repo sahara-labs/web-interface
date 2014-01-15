@@ -6,7 +6,6 @@
  * @date 18th November 2013
  */
 
-
 /* ============================================================================
  * == Globals (must be set configured in implementations                     ==
  * ============================================================================ */
@@ -30,6 +29,165 @@ Globals = {
     
     /** @static {string} Default theme is flat. */
     THEME: 'flat'
+};
+
+/**
+ * Web application. 
+ *
+ * @param {object} config configuration option
+ * @config {string} [anchor] where the display is anchored to the screen
+ * @config {array} [widgets] list of widgets that are on the page
+ * @config {boolean} [windowToggle] whether to show the widget toggle list to allow windows \
+ *                                  to be closed (default off)
+ * @config {string} [controller] controller used to interact with the Rig Client
+ * @config {string} [dataAction] action to request to pull data from the server (default data)
+ * @config {integer} [dataDuration] duration of graph data to request in seconds (default 60)
+ * @config {integer} [dataPeriod] period of graph data to request in milliseconds (default 100)
+ * @config {integer} [pollPeriod] how often to poll server data in milliseconds (default 3000)
+ * @config {integer} [errorPeriod] how long to wait after receiving errored data before \
+ *                          requesting again in milliseconds (default 10000)
+ * @config {string} [theme] display theme (default 'flat')
+ * @config {string} [cookie] cookie prefix (default anchor id) 
+ */
+function WebUIApp(config)
+{
+    /** @private {object} Configuration object. */
+    this.config = config;
+    
+    /** @private {jQuery} Interface anchor. */
+    this.$anchor = undefined;
+    
+    /** @private {WindowManager} Page container. */
+    this.display = new WindowManager(this.config.anchor + "-container", {
+        widgets: this.config.widgets,
+        windowToggle: this.config.windowToggle
+    });;
+    
+    /** @private {boolean} Whether a data error has occurred. */
+    this.dataError = false;
+    
+    /** @private {GlobalError} Global error display. */
+    this.errorDisplay = new GlobalError();
+    
+    /* Set default options. */
+    if (this.config.windowToggle === undefined) this.config.windowToggle = false;
+    if (this.config.dataAction === undefined) this.config.dataAction = "data";
+    if (this.config.dataDuration === undefined) this.config.dataDuration = 60;
+    if (this.config.dataPeriod === undefined) this.config.dataPeriod = 100;
+    if (this.config.pollPeriod === undefined) this.config.pollPeriod = 3000;
+    if (this.config.errorPeriod === undefined) this.config.errorPeriod = 10000;
+    if (this.config.theme === undefined) this.config.theme = Globals.THEMES.flat;
+    if (this.config.cookie === undefined) this.config.cookie = this.config.anchor;
+    
+    return this;
+}
+
+/**
+ * Perform setup of the application.
+ */
+WebUIApp.prototype.setup = function() {
+    /* Validation of mandatory options. */
+    if (!this.config.controller) throw "Rig Client controller not set.";
+    if (!this.config.anchor) throw "Page anchor not configured.";
+    if (!this.config.widgets) throw "No widgets added to the interface.";
+    
+    Globals.CONTROLLER = this.config.controller;
+    Globals.COOKIE_PREFIX = this.config.cookie;
+    Globals.THEME = this.config.theme;
+
+    return this;
+};
+
+/** 
+ * Run the web application. 
+ */
+WebUIApp.prototype.run = function() {
+    /* Setup display. */
+    this._setupDisplay();
+       
+    /* Start retrieving data. */
+    this._acquireLoop();
+    
+    return this;
+};
+
+/**
+ * Setup the display.
+ */
+WebUIApp.prototype._setupDisplay = function() {
+    if ((this.$anchor = $(this.config.anchor)).length == 0)
+    {
+        throw "Anchor " + this.config.anchor + " not found on the page.";
+    }
+    
+    this.display.init(this.$anchor);
+};
+
+/**
+ * Acquisition main loop.
+ */
+WebUIApp.prototype._acquireLoop = function() {
+    var thiz = this;
+
+    $.ajax({
+        url: "/primitive/mapjson/pc/" + this.config.controller + "/pa/" + this.config.dataAction,
+        data: {
+            period: this.config.dataPeriod,
+            duration: this.config.dataDuration,
+            from: 0,     // For now we are just asked for the latest data
+        },
+        success: function(data) {
+            thiz._processData(data);
+            setTimeout(function() { thiz._acquireLoop(); }, thiz.config.pollPeriod);
+        },
+        error: function(data) {
+            thiz._errorData('Connection error.');
+            setTimeout(function() { thiz._acquireLoop(); }, thiz.config.errorPeriod);
+        }
+    });
+};
+
+/**
+ * Processes a successfully received data packet.  
+ * 
+ * @param {object} data data packet
+ */
+WebUIApp.prototype._processData = function(data) {
+    /* A data packet may specify an error so we make need to make this into an 
+     * error message. */
+
+    /* AJAX / Primitive / validation error. */
+    if (!(data['success'] == undefined || data['success'])) return this._errorData(data['errorReason']);
+
+    /* Hardware communication error. */
+    if (data['system-err'] != undefined && data['system-err']) return this._errorData('Hardware communication error.');
+
+    /* Seems like a good packet so it will be forwarded to the display to
+     * render its contents and any error states will be cleared. */
+    if (this.dataError)
+    {
+        this.dataError = false;
+        this.display.unblur();
+        this.errorDisplay.clearError();
+    }
+    
+    this.display.consume(data);
+};
+
+/**
+ * Processes an errored communication. 
+ * 
+ * @param {string}  msg error message
+ */
+WebUIApp.prototype._errorData = function(msg) {    
+    if (!this.dataError)
+    {
+        /* Going into errored state, display error message. */
+        this.dataError = true;
+        this.display.blur();
+    }
+
+    this.errorDisplay.displayError(msg);
 };
 
 /* ============================================================================
@@ -252,7 +410,7 @@ Widget.prototype.toggleWindowShade = function(shadeCallback) {
         this.$widget.css("width", this.$widget.width());
     }
 
-    if (this.window.shaded != true)
+    if (!this.window.shaded)
     {
         this.$widget.css("height", 'auto');
         
@@ -350,7 +508,7 @@ Widget.prototype.toggleWindowExpand = function() {
 
             /* Move the widget to a central position. */
             this.$widget.css({
-                left: this.$widget.parent().width() / 2 - width / 2 - 60,
+                left: this.$widget.parent().parent().width() / 2 - width / 2,
                 top: 100,
                 zIndex: zin + 100
             });
@@ -666,11 +824,11 @@ Widget.prototype.getWindowProperty = function(property) {
     switch (property)
     {
     case 'width':
-        return this.window.width === undefined ? this.$widget.width() : this.window.width;
+        return this.window.width === undefined ? this.$widget.outerWidth(true) : this.window.width;
         break;
 
     case 'height':
-        return this.window.height === undefined ? this.$widget.height() : this.window.height;
+        return this.window.height === undefined ? this.$widget.outerHeight(true) : this.window.height;
         break;
 
     case 'left':
@@ -694,9 +852,6 @@ Widget.prototype.getWindowProperty = function(property) {
 /*
  * Layouts that are to be implemented:
  * 
- *  -> AbsoluteLayout: Widgets placed according to user supplied coordinates   
- *  -> BoxLayout: Widgets placed either in vertical or horizontal stacks
- *  -> FlowLayout: Widgets placed adjacent to each other wrapping to prevent horizontal overflow
  *  -> StackLayout: Widgets stacked with only visible at a time
  *  -> TabLayout: Widgets tabbed with only one visible at a time
  */
@@ -740,6 +895,14 @@ Layout.prototype.layout = function() {
 };
 
 /**
+ * Scales the layout if the container has been resized.
+ * 
+ * @param {number} x x direction resize scale
+ * @param {number} y y direction resize scale
+ */
+Layout.prototype.scale = function(x, y) { };
+
+/**
  * Gets the width of the layouts displayed contents.
  *
  * @return {integer} contents width
@@ -767,7 +930,76 @@ Layout.prototype.setContainer = function(container) {
 };
 
 /* ============================================================================
- * == Grid Layout                                                        ==
+ * == Absolute Layout                                                        ==
+ * ============================================================================ */
+
+/**
+ * The absolute layout has absolute coordinates of each component.
+ * 
+ * @param {object} config configuration object
+ * @config {object} [coords] coordinates of each widget keyed by widget id
+ * @config {integer} [border] border around contents box (default 0)
+ */
+function AbsoluteLayout(config)
+{
+    Layout.call(this, config);
+    
+    if (this.config.coords === undefined) this.config.coords = {};
+    if (this.config.border === undefined) this.config.border = 0;
+    
+    /* Seperate vertical and horizontal borders are needed because resizing
+     * may not preserve aspect ratio. */
+    this.config.tbBorder = this.config.lrBorder = this.config.border;
+}
+
+AbsoluteLayout.prototype = new Layout;
+
+AbsoluteLayout.prototype.layout = function() {
+    var i = 0, w, width, height, x, y;
+
+    this.width = this.height = 0;
+    
+    for (i in this.container.getWidgets())
+    {
+        w = this.container.getWidget(i);
+        
+        if (this.config.coords[i] !== undefined)
+        {
+            x = this.config.coords[i].x;
+            y = this.config.coords[i].y;
+        }
+        else
+        {
+            x = 0;
+            y = 0;
+        }
+        
+        x += this.config.lrBorder;
+        y += this.config.tbBorder;
+        w.moveTo(x, y);
+        
+        if ((width = w.getWindowProperty("width")) + x > this.width) this.width = x + width;
+        if ((height = w.getWindowProperty("height")) + y > this.height) this.height = y + height;
+    }
+
+    this.width += this.config.lrBorder;
+    this.height += this.config.tbBorder;
+};
+
+AbsoluteLayout.prototype.scale = function(x, y) {
+    this.lrBorder *= x;
+    this.tbBorder *= y;
+    
+    var i = 0;
+    for (i in this.config.coords)
+    {
+        this.config.coords[i].x *= x;
+        this.config.coords[i].y *= y;
+    }
+};
+
+/* ============================================================================
+ * == Grid Layout                                                            ==
  * ============================================================================ */
 
 /**
@@ -826,13 +1058,8 @@ GridLayout.prototype.columnLayout = function() {
         /* The container height is as tall as the tallest column. */
         if (top > this.height) this.height = top;
     }
-    
-    
 
-    /* Account for CSS padding. */
-    w = this.container.getContentBox();
-    this.width = left - parseInt(w.css("padding-left")) - parseInt(w.css("padding-right"));
-    this.height -= parseInt(w.css("padding-top")) + parseInt(w.css("padding-bottom"));
+    this.width = left;
 };
 
 /**
@@ -865,12 +1092,285 @@ GridLayout.prototype.rowLayout = function() {
         if (left > this.width) this.width = left;
     }
     
-    
+    this.height = top;
+};
 
-    /* Account for CSS padding. */
-    w = this.container.getContentBox();
-    this.width -= parseInt(w.css("padding-left")) + parseInt(w.css("padding-right"));
-    this.height = top - parseInt(w.css("padding-top")) - parseInt(w.css("padding-bottom"));
+/* ============================================================================
+ * == Box Layout                                                             ==
+ * ============================================================================ */
+
+/**
+ * The box layout places widgets in either vertical and horizontal stacks. The 
+ * widget order as the order the widgets are setup.
+ * 
+ * @param {object} config configuration object
+ * @config {boolean} [vertical] the orientation (default vertical)
+ * @config {integer} [padding] spacing between widgets (default 10)
+ * @config {string} [align] align of elements either left, right, center, top, or \
+ *                          bottom (default left for vertical, top for horizontal orientiation) 
+ */
+function BoxLayout(config) 
+{
+    Layout.call(this, config);
+    
+    if (this.config.vertical === undefined) this.config.vertical = true;
+    if (this.config.padding === undefined) this.config.padding = 10;
+    if (this.config.align === undefined) this.config.align = this.config.vertical ? "top" : "left";
+}
+
+BoxLayout.prototype = new Layout;
+
+/** @const Alignments for the box layout. */
+BoxLayout.ALIGN = {
+    left: "left", 
+    right: "right",
+    center: "center",
+    top: "top",
+    bottom: "bottom"
+};
+
+BoxLayout.prototype.layout = function() {
+    if (this.config.vertical) this.verticalLayout();
+    else this.horizontalLayout();
+};
+
+/**
+ * Runs box layout in vertical orientation.
+ */
+BoxLayout.prototype.verticalLayout = function() {
+    var i = 0, top = this.config.padding, widths = [], w, leftOff;
+    
+    this.width = 0;
+    for (i in this.container.getWidgets())
+    {
+        widths[i] = this.container.getWidget(i).getWindowProperty("width");
+        if (widths[i] > this.width) this.width = widths[i];
+    }
+    
+    for (i in this.container.getWidgets())
+    {
+        leftOff = this.config.padding;
+        switch (this.config.align)
+        {
+        case 'center':
+            leftOff += (this.width - widths[i]) / 2;
+            break;
+            
+        case 'right':
+            leftOff += this.width - widths[i];
+            break;
+            
+        case 'left': // Default, falls through
+        default:
+            /* By default aligned to left. */
+            break;
+        }
+        
+        w = this.container.getWidget(i);
+        w.moveTo(leftOff, top);
+        
+        top += w.getWindowProperty("height") + this.config.padding;
+        
+        wid = w.getWindowProperty("width");
+        if (wid > this.width) this.width = wid;
+    }
+    
+    this.width += this.config.padding * 2;
+    this.height = top;
+};
+
+/**
+ * Runs box layout in horizontal orientation. 
+ */
+BoxLayout.prototype.horizontalLayout = function() {
+    var i = 0, left = this.config.padding, heights = [ ], w, topOff;
+    
+    this.height = 0;
+    for (i in this.container.getWidgets()) 
+    {
+        heights[i] = this.container.getWidget(i).getWindowProperty("height");
+        if (heights[i] > this.height) this.height = heights[i];
+    }
+    
+    for (i in this.container.getWidgets())
+    {
+        topOff = this.config.padding;
+        switch (this.config.align) 
+        {
+        case 'center':
+            topOff += (this.height - heights[i]) / 2;
+            break;
+            
+        case 'bottom':
+            topOff += this.height - heights[i];
+            break;
+            
+        case 'top': // Default case, falls through
+        default:
+            /* By default aligned to top. */
+            break;
+        }
+        
+        w = this.container.getWidget(i);
+        w.moveTo(left, topOff);
+        
+        left += w.getWindowProperty("width") + this.config.padding;
+    }
+    
+    this.width = left;
+    this.height += this.config.padding * 2;
+};
+
+/* ============================================================================
+ * == Flow Layout                                                            ==
+ * ============================================================================ */
+
+/**
+ * The flow layout arranges widgets in a 'directional flow' where widgets are 
+ * placed adjacent or below (depending on orientation), wrapping to the next
+ * column or row when the next widget will overflow the specified size. 
+ * The display order is the same as the containers insertion order.
+ * If no size is set, the flow layout is effectively equivalent to the box 
+ * layout. If any single widget is larger than the size, the size is adjusted 
+ * to that size.
+ * 
+ * @param {object} config configuration object
+ * @config {boolean} [vertical] the orientation (default vertical)
+ * @config {integer} [size] maximum size in pixels that causes wrapping
+ * @config {boolean} [center] whether to center contents if size leaves remaining whitespace (default false)
+ * @config {integer} [padding] spacing between widgets in pixels (default 10px)
+ */
+function FlowLayout(config)
+{
+    Layout.call(this, config);
+   
+    if (this.config.vertical === undefined) this.config.vertical = true;
+    if (this.config.size === undefined) this.config.size = Number.MAX_VALUE;
+    if (this.config.center === undefined) this.config.center = false; 
+    if (this.config.padding === undefined) this.config.padding = 10;   
+}
+
+FlowLayout.prototype = new Layout;
+
+FlowLayout.prototype.layout = function() {
+    if (this.config.vertical) this.verticalLayout();
+    else this.horizontalLayout();
+};
+
+FlowLayout.prototype.verticalLayout = function() {
+    var i = 0, left = this.config.padding, top = this.config.padding, heights = [], w, colWidth = 0, 
+        col = 0, offsets = [];
+    
+    for (i in this.container.getWidgets()) 
+    {
+        if ((heights[i] = this.container.getWidget(i).getWindowProperty("height")) +
+                2 * this.config.padding > this.config.size)
+        {
+            /* If any single widget is larger than the specified size, we need 
+             * to expand the size to fit it. */
+            this.config.size = heights[i] + 2 * this.config.padding;
+        }
+    }
+    
+    if (this.config.center)
+    {
+        for (i in heights)
+        {
+            if (top + heights[i] + this.config.padding > this.config.size)
+            {
+                offsets[col++] = (this.config.size - top) / 2;
+                top = this.config.padding;
+            }
+            
+            top += heights[i] + this.config.padding;
+        }
+        
+        offsets[col++] = (this.config.size - top) / 2;
+    }
+    
+    col = 0;
+    top = this.config.padding + (this.config.center ? offsets[col++] : 0);
+    for (i in this.container.getWidgets())
+    {
+        if (top + heights[i] + this.config.padding > this.config.size)
+        {
+            /* Overflow, Wrap to new column. */
+            left += colWidth + this.config.padding;
+            top = this.config.padding + (this.config.center ? offsets[col++] : 0);
+            
+            colWidth = 0;
+        }
+        
+        this.container.getWidget(i).moveTo(left, top);
+        
+        top += heights[i] + this.config.padding;
+
+        w = this.container.getWidget(i).getWindowProperty("width");
+        if (w > colWidth) colWidth = w;
+    }
+    
+    this.width = left + colWidth + this.config.padding;
+    this.height = this.config.size;
+};
+
+FlowLayout.prototype.horizontalLayout = function() {
+    var i = 0, left = this.config.padding, top = this.config.padding, widths = [], h, rowHeight = 0, 
+        row = 0, offsets = [];
+    
+    for (i in this.container.getWidgets()) 
+    {
+        if ((widths[i] = this.container.getWidget(i).getWindowProperty("width")) +
+                2 * this.config.padding > this.config.size)
+        {
+            /* If any single widget is larger than the specified size, we need 
+             * to expand the size to fit it. */
+            this.config.size = widths[i] + 2 * this.config.padding;
+        }
+    }
+    
+    if (this.config.center)
+    {
+        left = this.config.padding;
+        for (i in widths)
+        {
+            if (left + widths[i] + this.config.padding > this.config.size)
+            {
+                offsets[row++] = (this.config.size - left) / 2;
+                left = this.config.padding;
+            }
+            
+            left += widths[i] + this.config.padding;
+        }
+        
+        offsets[row++] = (this.config.size - left) / 2;
+    }
+    
+    row = 0;
+    left = this.config.padding + (this.config.center ? offsets[row++] : 0);
+    for (i in this.container.getWidgets())
+    {
+        if (left + widths[i] + this.config.padding > this.config.size)
+        {
+            /* Overflow, Wrap to new row. */
+            left = this.config.padding + (this.config.center ? offsets[row++] : 0);
+            top += rowHeight + this.config.padding;
+            rowHeight = 0;
+        }
+        
+        this.container.getWidget(i).moveTo(left, top);
+        
+        left += widths[i] + this.config.padding;
+
+        h = this.container.getWidget(i).getWindowProperty("height");
+        if (h > rowHeight) rowHeight = h;
+    }
+    
+    this.width = this.config.size;
+    this.height = top + rowHeight + this.config.padding;
+};
+
+FlowLayout.prototype.scale = function(h, v) {
+    this.config.size *= this.config.vertical ? v : h;
 };
 
 /* ============================================================================
@@ -898,14 +1398,17 @@ function Container(id, config)
 {
     Widget.call(this, id, config);
     
-    /** @private {object} Map of widget visibility states keyed by widget id. */
+    /** @protected {object} Map of widget visibility states keyed by widget id. */
     this.states = { };
     
-    /** @private {object} Map of widgets keyed by identifer. */
+    /** @protected {object} Map of widgets keyed by identifer. */
     this.widgets = { };
     
-    /** @private {jQuery} Box where the contained widgets displayed gets attached to. */
+    /** @protected {jQuery} Box where the contained widgets displayed gets attached to. */
     this.$contentBox = undefined;
+    
+    /** @protected {boolean} Whether contents are shown or hidden. */
+    this.contentsShown = true;
 }
 
 Container.prototype = new Widget;
@@ -951,11 +1454,17 @@ Container.prototype.init = function($container) {
         this.config.layout.displayInit();
         this.config.layout.layout();
 
+        /* Account for CSS padding. */
         this.$contentBox.css({
-            width: this.config.layout.getWidth(),
-            height: this.config.layout.getHeight()
+            width: this.config.layout.getWidth() - parseInt(this.$contentBox.css("padding-left")) - 
+                        parseInt(this.$contentBox.css("padding-right")),
+            height: this.config.layout.getHeight() - parseInt(this.$contentBox.css("padding-top")) -
+                        parseInt(this.$contentBox.css("padding-bottom"))
         });
     }
+    
+    /* Restore sizing.*/
+    if (this.window.width && this.window.height) this.resizeStopped(this.window.width, this.window.height);
 };
 
 Container.prototype.consume = function(data) {
@@ -978,15 +1487,70 @@ Container.prototype.destroy = function() {
 };
 
 Container.prototype.resized = function(width, height) {
-    if (this.config.layout) this.config.layout.resized(width, height);
+    /* Mask this function during initial _generate resize restore. */
+    if (this.config.layout && this.config.layout.getWidth() === undefined) return;
+    
+    if (this.contentsShown)
+    {
+        this.$contentBox.hide();
+        this.contentsShown = false;
+    }
 };
 
 Container.prototype.resizeStopped = function(width, height) {
-    if (this.config.layout) this.config.layout.resizeStopped(width, height);
+    /* Mask this function durinig initial _generate resize restore. */
+    if (this.config.layout && this.config.layout.getWidth() === undefined) return;
+    
+    var i = 0, w, h, 
+        horiz = (width - 12) / this.config.layout.getWidth(), 
+        vert = (height - 35) / this.config.layout.getHeight() ;
+    
+    for (i in this.widgets)
+    {
+        this.widgets[i].$widget.css({
+            width: w = this.widgets[i].getWindowProperty("width") * horiz, 
+            height: h = this.widgets[i].getWindowProperty("height") * vert
+        });
+        this.widgets[i].resized(w, h);
+        this.widgets[i].resizeStopped(w, h);
+    }
+
+    if (this.config.layout)
+    {
+        this.config.layout.scale(horiz, vert);
+        this.config.layout.layout();
+        this.$contentBox.css({
+            width: this.config.layout.getWidth() - parseInt(this.$contentBox.css("padding-left")) - 
+                        parseInt(this.$contentBox.css("padding-right")),
+            height: this.config.layout.getHeight() - parseInt(this.$contentBox.css("padding-top")) -
+                        parseInt(this.$contentBox.css("padding-bottom"))
+        });
+    }
+    
+    this.$widget.css({
+        width: "auto",
+        height: "auto"
+    });
+    
+    this.$contentBox.show();
+    this.contentsShown = true;
 };
 
+/**
+ * Sets a widget either to be displaying or hidden.
+ * 
+ * @param {string} id widget intentifier
+ * @param {boolean} visible whether the widget is displayed or hidden
+ */
 Container.prototype.toggleEvent = function(id, visible) {
-    
+    if (this.states[id] = visible)
+    {
+        this.widgets[id].init(this.$contentBox);
+    }
+    else
+    {
+        this.widgets[id].destroy();
+    }
 };
 
 /**
@@ -1015,6 +1579,51 @@ Container.prototype.getWidgets = function() {
  */
 Container.prototype.getWidget = function(id) {
 	return this.widgets[id];
+};
+
+/* ============================================================================
+ * == Spacer widget                                                          ==
+ * ============================================================================ */
+
+/**
+ * A spacer is a reserved block of space that may be set to have a border or a 
+ * solid color. For a spacer to be useful, its width and height should be set.
+ * 
+ * @param {string} id spacer identifier
+ * @param {object} config configuration option
+ * @config {string} [border] color of the border (default no border)
+ * @config {string} [color] color of the spacer (default no color)
+ * @config {boolean} [round] whether to round the corners of the spacer (default false)
+ * @config {string} [css] additional CSS directives to add to the spacer (optional)
+ */
+function Spacer(id, config) 
+{
+    Widget.call(this, id, config);
+    
+    if (this.config.css === undefined) this.config.css = '';
+}
+
+Spacer.prototype = new Widget;
+
+Spacer.prototype.init = function($container) {
+    this.$widget = this._generate($container, 
+            "<div class='spacer-inner' style='" +
+                (this.config.border ? "border: 1px solid " + this.config.border + ";" : "") +
+                (this.config.color ? "background-color:" + this.config.color + ";" : "") +
+                (this.config.round ? "border-radius:" + 
+                        ((this.config.width < this.config.height ? this.config.width : this.config.height) / 2) + "px;" : "") + 
+                this.config.css + 
+            "'>" + this.config.width + "x" + this.config.height + "</div>"
+    );
+};
+
+Spacer.prototype.resized = function(width, height) {
+    if (this.config.round)
+    {
+        this.$widget.children("border-radius", (width < height ? width : height) / 2);
+    }
+    
+    this.$widget.children().text(Math.round(width) + "x" + Math.round(height));
 };
 
 /* ============================================================================
@@ -1564,7 +2173,7 @@ Switch.prototype.init = function($container) {
                 '<div style="clear:both"></div>' +
             '</div>'
         : // Horizontal orientation
-            '<div class="switch-container">' +
+            '<div class="switch-container" >' +
                 (this.config.label ? '<label class="switch-label">' + this.config.label + ':</label>' : '') +
                 '<div class="switch">' +
                     '<div class="switch-animated switch-slide"></div>' +
@@ -1572,8 +2181,18 @@ Switch.prototype.init = function($container) {
             '</div>'
     );
     
+    if (!this.config.vertical && this.config.width === undefined)
+    {
+        this.config.width = this.$widget.find("label").outerWidth(true) + 
+                            this.$widget.find(".switch").outerWidth(true) + 13;
+        this.$widget.css("width", this.config.width + "px");
+    }
+    
     var thiz = this;
     this.$widget.find(".switch-label, .switch, .switch-vertical").click(function() { thiz._clicked(); });
+    
+    /* Set existing state. */
+    if (this.value !== undefined) this._setDisplay(this.value);
 };
 
 Switch.prototype.consume = function(data) {
@@ -2159,7 +2778,8 @@ Slider.prototype.init = function($container) {
 Slider.prototype._buildHTML = function() {
     var i, s = (Math.floor((this.config.max - this.config.min) / this.config.scales)),
         html = 
-        "<div class='slider-container-" + (this.config.vertical ? "vertical" : "horizontal") + "'>" +
+        "<div class='slider-container-" + (this.config.vertical ? "vertical" : "horizontal") + "' style='" + 
+                    (this.config.vertical ? "" : "width:" + (this.config.length + 15) + "px;") + "'>" +
             "<div class='slider-outer' style='" + (this.config.vertical ? "height" : "width") + ":" + this.config.length + "px'>";
             
     /* Slider scale. */
@@ -2194,15 +2814,15 @@ Slider.prototype._buildHTML = function() {
     /* Text box with numeric value. */
     html += this.config.textEntry ?
         "<div class='slider-text slider-text-" + (this.config.vertical ? "vertical" : "horizontal") +
-                " saharaform' style='margin-" + (this.config.vertical ? "top" : "left") + ":" +
-                (this.config.length + (this.config.vertical ? 20 : -200)) + "px'>" +                
-                "<label for='" + this.id + "-text' class='slider-text-label'>" + this.config.label + ":&nbsp;</label>" +
+                " saharaform' style='" + (this.config.vertical ? "margin-top:" + (this.config.length + 20) + "px;" : "") + "'>" +
+            "<label for='" + this.id + "-text' class='slider-text-label'>" + this.config.label + ":&nbsp;</label>" +
             "<input id='" + this.id + "-text' type='text' /> " +
             "<span>" + this.config.units + "</span>" +
         "</div>" : 
         "<div class='slider-text-" + (this.config.vertical ? "vertical" : "horizontal") +
-                "' style='margin-" + (this.config.vertical ? "top" : "left") + ":" +
-                (this.config.length + (this.config.vertical ? 20 : -90)) + "px'>" + this.config.label + "</div>";
+                "' style='" + (this.config.vertical ? "margin-top:" + (this.config.length + 20) +"px;" : "") + "'>" +
+            this.config.label + 
+        "</div>";
 
     html += "</div>";
 
@@ -2440,6 +3060,486 @@ function LinearGauge()
     // TODO Implement Linear Gauge widget
 }
 
+/* ============================================================================
+ * == Camera Widget                                                          ==
+ * ============================================================================ */
+
+/**
+ * The camera widget displays a single camera stream which may have one or more
+ * formats.  
+ * 
+ * @param {string} id camera identifier
+ * @param {object} config configuration object
+ * @config {string} [title] the camera box title
+ * @config {string} [swfParam] data variable that specifies SWF stream URL
+ * @config {string} [mjpegParam] data variable that specifies MJPEG stream URL
+ * @config {integer} [videoWidth] width of the video stream
+ * @config {integer} [videoHeight] height of the video stream
+ */
+function CameraStream(id, config)
+{
+    Widget.call(this, id, config);
+
+    /** The list of address for the each of the camera formats. */
+    this.urls = {
+        swf:   undefined, // Flash format
+        mjpeg: undefined  // MJPEG format
+    };  
+    
+    /** @private {boolean} Whether the camera is deployed. */
+    this.isDeployed = false;
+    
+    /** @private {string} Deployed video format. */
+    this.deployedFormat = undefined;
+    
+    /** @private {integer} Deployed video width. */
+    this.videoWidth = undefined;
+    
+    /** @private {integer} Deployed video height. */
+    this.videoHeight = undefined;
+    
+    /** @private {} SWF timer. */
+    this.swfTimer = undefined;
+    
+    this.config.classes.push("camera-stream");
+};
+
+CameraStream.prototype = new Widget;
+
+/** @const {string} Cookie which stores the users chosen camera format. */
+CameraStream.SELECTED_FORMAT_COOKIE = "camera-format";
+
+CameraStream.prototype.init = function($container) {
+    var thiz = this;
+    
+    /* Reset. */
+    this.isDeployed = false;
+    this.videoWidth = this.config.videoWidth;
+    this.videoHeight = this.config.videoHeight;
+    
+    this.$widget = this._generate($container, this._buildHTML());
+
+    this.$widget.find('.format-select').find('select').change(function() {
+        thiz._undeploy();
+        thiz._deploy($(this).val());
+    });
+    
+    /* Loads Metro help window */
+    this.$widget.find(".metro-fcheck").click(function() { $('.metro-container').fadeToggle(); });
+
+    /* Restore current format after reinit. */
+    if (this.deployedFormat) this._deploy(this.deployedFormat);
+};
+
+CameraStream.prototype.consume = function(data) {
+    /* Camera streams don't change. */
+    if ((this.urls.mjpeg || !this.config.mjpegParam) && (this.urls.swf || !this.config.swfParam)) return;
+    
+    if (this.config.swfParam && data[this.config.swfParam] != undefined)
+    {
+        this.urls.swf = decodeURIComponent(data[this.config.swfParam]);
+    }
+    
+    if (this.config.mjpegParam || data[this.config.mjpegParam] != undefined)
+    {
+        this.urls.mjpeg = decodeURIComponent(data[this.config.mjpegParam]);
+    }
+    
+    if ((this.urls.swf || this.urls.mjpeg) && !this.isDeployed) 
+    {
+        this._restoreDeploy();
+    }
+};
+
+/**
+ * Restores a stored user chosen format choice, otherwise uses platform deploy
+ * to load the most appropriate choice. 
+ */
+CameraStream.prototype._restoreDeploy = function() {
+    var storedChoice = Util.getCookie(CameraStream.SELECTED_FORMAT_COOKIE);
+    
+    if (storedChoice && this.urls[storedChoice])
+    {
+        this._deploy(storedChoice);
+    }
+    else
+    {
+        this._platformDeploy();
+    }
+};
+
+/**
+ * Deploys a format most appropriate to the platform.
+ */
+CameraStream.prototype._platformDeploy = function() {
+    this._deploy(/Mobile|mobi|Android|android/i.test(navigator.userAgent) ? 'mjpeg' : 'swf');  
+};
+
+/**
+ * Deploys the specified camera format. 
+ * 
+ * @param {string} format format to deploy
+ */
+CameraStream.prototype._deploy = function(format) {
+    var html;
+    
+    switch (format)
+    {
+    case 'swf':
+        html = this._getSwfHtml();
+        break;
+        
+    case 'mjpeg':
+        html = this._getMjpegHtml();
+        break;
+        
+    default:
+        this._platformDeploy();
+        return;
+    }
+    
+    this.isDeployed = true;
+    this.$widget.find(".video-player").html(html);
+    this.$widget.find("#video-player-select").children(":selected").removeAttr("selected");
+    this.$widget.find("#video-player-select > option[value='" + format + "']").attr("selected", "selected");
+    Util.setCookie(CameraStream.SELECTED_FORMAT_COOKIE, this.deployedFormat = format);
+    
+    if (this.deployedFormat == 'swf')
+    {
+        var thiz = this;
+        this.swfTimer = setTimeout(function() {
+            if (thiz.deployedFormat == 'swf') thiz._deploy(thiz.deployedFormat);
+        }, 360000);
+    }
+};
+
+/**
+ * Removes the currently deployed video from displaying.
+ */
+CameraStream.prototype._undeploy = function() {
+    if (this.deployedFormat == 'mjpeg')
+    {
+        /* Reports in the wild indicate Firefox may continue to the download 
+         * the stream unless the source attribute is cleared. */
+        this.$widget.find(".video-player > img").attr("src", "#");
+    }
+
+    this.$widget.find(".video-player").empty();
+    
+    if (this.swfTimer)
+    {
+        clearTimeout(this.swfTimer);
+        this.swfTimer = undefined;
+    }
+    
+    this.isDeployed = false;
+};
+
+CameraStream.prototype._buildHTML = function() {
+    return (
+        '<div class="video-player" style="height:' + this.videoHeight + 'px;width:' + this.videoWidth + 'px">' +
+            '<div class="video-placeholder">Please wait...</div>' +
+        '</div>' +
+        '<div class="metro-container">' +
+            'Please click the settings icon found at the bottom right corner of your browser window.' + 
+            '<p>(This menu can be accessed by right clicking in the browser window).</p>' +
+            '<div class="metro-image metro-image-settings"></div>' +
+            '<br /><br />Then select the "View on the desktop" option.' +
+            '<div class="metro-image metro-image-desktop"></div>' +
+        '</div>' +
+        ($.browser.msie && $.browser.version >= 10 && !window.screenTop && !window.screenY ? 
+            '<div class="metro-check">' +
+                '<img class="metro-icon" src="/uts/coupledtanksnew/images/ie10-icon.png" alt="Using Metro?" />' +
+                'Using Metro?' +
+            '</div>' : '' ) +
+        '<div class="format-select">' +   
+            '<select id="video-player-select" class="gradient">' +
+                '<option selected="selected" value=" ">Select Format</option>' +
+                (this.config.swfParam ? '<option value="swf">SWF</option>' : '') +
+                (this.config.mjpegParam ? '<option value="mjpeg">M-JPEG</option>' : '') +
+            '</select>' +
+        '</div>'
+    );
+};
+
+/**
+ * Gets the HTML to deploy a SWF stream format. 
+ * 
+ * @return {string} SWF video HTML
+ */
+CameraStream.prototype._getSwfHtml = function() {
+    return (!$.browser.msie ? // Firefox, Chrome, ...
+            '<object type="application/x-shockwave-flash" data="' + this.urls.swf + '" ' +
+                    'width="' +  this.videoWidth  + '" height="' + this.videoHeight + '">' +
+                '<param name="movie" value="' + 'this.urls.swf' + '"/>' +
+                '<param name="wmode" value="opaque" />' +
+                '<div class="no-flash-container">' +
+                    '<div class="no-flash-button">' +
+                        '<a href="http://www.adobe.com/go/getflash">' +
+                            '<img class="no-flash-image" src="/uts/coupledtanksnew/images/flash-icon.png"' +
+                                'alt="Get Adobe Flash player"/>' +
+                            '<span class="no-flash-button-text">Video requires Adobe Flash Player</span>' +
+                        '</a>' +
+                    '</div>' +
+                    '<p class="no-flash-substring">If you do not wish to install Adobe flash player ' +
+                        'you can try another video format using the drop down box below.</p>' +
+                '</div>' +
+            '</object>'
+        :                  // Internet Explorer
+            '<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000"  width="' + this.videoWidth + 
+                    '" height="' + this.videoHeight + '"  id="camera-swf-movie">' +
+                '<param name="movie" value="' + this.urls.swf + '" />' +
+                '<param name="wmode" value="opaque" />' +
+                '<div class="no-flash-container">' +
+                    '<div class="no-flash-button">' +
+                        '<a href="http://www.adobe.com/go/getflash">' +
+                            '<img class="no-flash-image" src="/uts/coupledtanksnew/images/flash-icon.png"' +
+                                'alt="Get Adobe Flash player"/>' +
+                            '<span class="no-flash-button-text">Video requires Adobe Flash Player</span>' +
+                        '</a>' +
+                    '</div>' +
+                    '<p class="no-flash-substring">If you do not wish to install Adobe flash player ' +
+                        'you can try another video format using the drop down box below.</p>' +
+                '</div>' +
+            '</object>'
+        );
+};
+
+/**
+ * Gets the HTML to deploy a MJPEG stream.
+ * 
+ * @param {string} MJPEG video HTML
+ */
+CameraStream.prototype._getMjpegHtml = function() {
+    return (!$.browser.msie ? // Firefox, Chrome, ...
+             '<img style="width:' + this.videoWidth + 'px;height:' + this.videoHeight + 'px" ' +
+                        'src="' + this.urls.mjpeg + '?' + new Date().getTime() + ' alt="&nbsp;" />'
+         :                 // Internet Explorer
+             '<applet code="com.charliemouse.cambozola.Viewer" archive="/applets/cambozola.jar" ' + 
+                    'width="' + this.videoWidth + '" height="' + this.videoHeight + '">' +
+                '<param name="url" value="' + this.urls.mjpeg + '"/>' +
+                '<param name="accessories" value="none"/>' +
+            '</applet>'
+        );
+};
+
+/** @const {integer} Difference between widget width and video width. */
+CameraStream.VID_WIDTH_DIFF = 8;
+
+/** @const {integer} Difference between widget height and video height. */
+CameraStream.VID_HEIGHT_DIFF = 72;
+
+CameraStream.prototype.resized = function(width, height) {
+    if (this.isDeployed) this._undeploy();
+    
+    this.$widget.find(".video-player").css({
+       width: width - CameraStream.VID_WIDTH_DIFF,
+       height: height - CameraStream.VID_HEIGHT_DIFF
+    });
+    this.$widget.css("padding-bottom","0.8%");
+};
+
+CameraStream.prototype.resizeStopped = function(width, height) {
+    this.videoWidth = width - CameraStream.VID_WIDTH_DIFF;
+    this.videoHeight = height - CameraStream.VID_HEIGHT_DIFF;
+    
+    this._deploy(this.currentFormat);
+};
+
+CameraStream.prototype.destroy = function() {
+    if (this.isDeployed) this._undeploy();
+    Widget.prototype.destroy.call(this);
+};
+
+/**
+ * Shades the Camera widget which hides the widget contents only showing the title.
+ *
+ * @param {Function} callback callback invoked after the shade animation has completed
+ */
+CameraStream.prototype.toggleWindowShade = function(callback) {
+    Widget.prototype.toggleWindowShade.call(this, callback);
+    
+    if (this.window.shaded) this._undeploy();
+    else this._deploy(this.deployedFormat);
+};
+
+/* ============================================================================
+ * == Window Manager                                                         ==
+ * ============================================================================ */
+
+/**
+ * The window manager is the outer container of the page holding all windowed
+ * widgets. As well as the container, widget tracking it adds window management
+ * persistance and restoration.
+ * 
+ * @param {string} id page identifier
+ * @param {object} config configuration object
+ * @config {boolean} [windowToggle] whether windows can be toggled on or off (default off)
+ */
+function WindowManager(id, config)
+{
+    Container.call(this, id, config);
+
+    /** @private {WindowToggle} Window toggle list. */
+    this.windowToggler = this.config.windowToggle ? new WindowToggler(this) : null;
+    
+    /** @private {object} Widget destroy functions. */
+    this.destroyers = { };
+}
+
+WindowManager.prototype = new Container;
+
+WindowManager.prototype.init = function($anchor) {
+    var i = 0, w, thiz = this;
+    
+    /* Set the default windowing strategy if no explicit options have been set. */
+    for (i in this.config.widgets)
+    {
+        w = this.config.widgets[i].config;
+        if (w.closeable === undefined) w.closeable = this.config.windowToggle;
+        if (w.windowed === undefined) w.windowed = true;
+        if (w.draggable === undefined) w.draggable = true;
+        if (w.shadeable === undefined) w.shadeable = true;
+        if (w.expandable === undefined) w.expandable = true;
+        if (w.resizable === undefined) w.resizable = true;
+    }
+    
+    Container.prototype.init.call(this, $anchor);
+    if (this.windowToggler) this.windowToggler.init($anchor);
+    
+    for (i in this.widgets)
+    {
+        /* We need to intercept window closes so we can track and store 
+         * window closes. */
+        w = this.widgets[i];
+        this.destroyers[w.id] = w.destroy;
+        w.destroy = function() {
+            thiz.states[this.id] = false;
+            thiz.widgets[this.id].window.shown = false;
+            thiz.widgets[this.id]._storeState();
+            if (thiz.windowToggler) thiz.windowToggler.setSwitch(this.id, false);
+            
+            thiz.destroyers[this.id].call(this);
+        };
+    }
+};
+
+WindowManager.prototype.toggleEvent = function(id, visible) {
+    Container.prototype.toggleEvent.call(this, id, visible);
+    
+    this.widgets[id].window.shown = visible;
+    this.widgets[id]._storeState();
+};
+
+/**
+ * Resets the display, puting the contents back to their default positions.
+ */
+WindowManager.prototype.reset = function() {
+    var i = 0;
+    
+    for (i in this.widgets) 
+    {
+        this.widgets[i].destroy();
+        this.widgets[i].window = { };
+        this.widgets[i]._storeState();
+        
+        this.states[i] = true;
+        this.widgets[i].init(this.$contentBox);
+    }
+};
+
+/* ============================================================================
+ * == Window Toggler                                                         ==
+ * ============================================================================ */
+
+/**
+ * List of windows that may be toggled to be on or off.
+ * 
+ * @param {Container} page outer page container
+ */
+function WindowToggler(page)
+{   /** @private {Contnainer} Toggle list container. */
+    this.page = page;
+}
+
+WindowToggler.prototype.init = function($container) {
+    var i = 0, w, s, widgets = [ ], thiz = this;
+    
+    for (i in this.page.getWidgets())
+    {
+        w = this.page.getWidget(i);
+        
+        s = new Switch(w.id + "-toggle", {
+           field: w.id,
+           action: "none",
+           label: w.config.title,
+           vertical: false,
+           width: 145
+        });
+        widgets.push(s);
+        
+        s._clicked = function() {
+            /* When clicked the displayed state of the widget is toggled. */
+            this.value = !this.value;
+            thiz.page.toggleEvent(this.config.field, this.value);
+            this._setDisplay(this.value);
+        };
+    }
+    
+    widgets.push(s = new Button("page-reset-button", {
+        label: "Reset",
+        action: "Reset",
+    }));
+    
+    s._clicked = function() {
+        thiz.page.reset();
+        for (i in widgets) widgets[i]._setDisplay(widgets[i].value = true);
+    };
+
+    this.container = new Container("widget-toggle-list", {
+        windowed: true,
+        title: "Display",
+        icon: "toggle",
+        closeable: false,
+        expandable: false,
+        shadeable: true,
+        expandable: false,
+        draggable: true,
+        resizable: false,
+        left: -188,
+        top: 144,
+        widgets: widgets,
+        
+        layout: new BoxLayout({
+           vertical: true,
+           padding: 7
+        })
+    });
+    
+    this.container._loadState();
+    this.container.init($container);
+    
+    /* Automatically set the to not displayed. */
+    if (this.container.window.shaded === undefined) this.container.toggleWindowShade();
+    
+    /* Set the switch state. */
+    widgets.pop();
+    for (i in widgets)
+    {
+        widgets[i]._setDisplay(widgets[i].value = this.page.getWidget(widgets[i].config.field).window.shown);
+    }
+};
+
+/**
+ * Sets the state of a toggle switch.
+ * 
+ * @param {string} id identifier of window whose switch is being set
+ * @param {boolean} state whether the switch is on or off
+ */
+WindowToggler.prototype.setSwitch = function(id, state) {
+    var w = this.container.getWidget(id + "-toggle");
+    w._setDisplay(w.value = state);
+};
 
 /* ============================================================================
  * == Global Error Widget                                                    ==
@@ -2457,7 +3557,7 @@ function GlobalError()
 	
 	/** @private {String} Displayed error message. */
 	this.error = '';
-};
+}
 
 GlobalError.prototype = new Widget;
 
