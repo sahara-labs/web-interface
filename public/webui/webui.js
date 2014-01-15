@@ -2559,14 +2559,14 @@ Knob.prototype.init = function($container) {
 
     /* Event Handlers. */
     var thiz = this;    
-    this.$widget.find('.knob').mousedown(function(e){ e.preventDefault(); thiz._knobEngaged(); })
-    this.$widget.mouseup(function(){ thiz._knobReleased(); })
-    this.$widget.mousemove(function(e){ thiz._knobChanged(e); })
+    this.$widget.find('.knob').mousedown(function(e){ e.preventDefault(); thiz._knobEngaged(); });
+    this.$widget.mouseup(function(){ thiz._knobReleased(); });
+    this.$widget.mousemove(function(e){ thiz._knobChanged(e); });
     this.$input = this.$widget.find("input").change(function() { thiz._handleTextBoxChange($(this).val()); });   
-}
+};
 
 Knob.prototype._buildHTML = function() {
-    html =
+    return (
     "<div id='knob-container-" + this.id + "'>" +
         (this.config.label ? "<label class='knob-label'>" + this.config.label + ":</label>" : '') +
         "<div class='knob-container' style='height:" + this.config.radius * 2 + "px; width: " + this.config.radius * 2 + "px;'>" +
@@ -2576,16 +2576,15 @@ Knob.prototype._buildHTML = function() {
             "</div>" +
         "</div>" +
         "<input class='knob-value' value='0'></input>" +
-    "</div>"
-    return html;
-}
+    "</div>");
+};
 
 /**
  * Event handler triggered when the knob is active.
  */
 Knob.prototype._knobEngaged = function(){
     this.mouseDown = true;
-}
+};
 
 /**
  * Event handler triggered when no longer on mouse down on button.
@@ -2603,7 +2602,7 @@ Knob.prototype._knobReleased = function() {
 Knob.prototype._knobChanged = function(e){
     if (this.mouseDown) {
 
-        e.preventDefault()
+        e.preventDefault();
 
         /* The current position of the mouse within the knob. */
         var mPos = {x: e.clientX - this.kPos.x, y: e.clientY - this.kPos.y};
@@ -2626,7 +2625,7 @@ Knob.prototype._knobChanged = function(e){
 
         this.valueChanged = 'true';
     }
-}
+};
 
 /**
  * Rotates the knob widget.
@@ -2639,7 +2638,7 @@ Knob.prototype._rotateKnob = function(){
             '-o-transform' : 'rotate(' + this.deg + 'deg)',
             'transform' : 'rotate(' + this.deg + 'deg)'
         });
-}
+};
 
 /**
  * Handles a value text box change.
