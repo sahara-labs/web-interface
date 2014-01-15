@@ -1654,7 +1654,7 @@ Switch.prototype._setDisplay = function(on) {
  * @config {array}  [values] the list of potential values
  * @config {number} [radius] the radius of the switch
  * @config {string} [label]  switch label (optional)
- * @config {string} [colour] set the switch colour (default black)
+ * @config {string} [color] set the switch color (default black)
  */
 function RotarySwitch(id, config)
 {
@@ -1685,7 +1685,7 @@ RotarySwitch.prototype.init = function($container) {
         "<div id='rotary-container-" + this.id + "' class='rotary-switch-container' " + 
             "style='width:" + r * 2 +"px;height:" + r * 2 + "px;'>" +
                 "<div id='rotary-switch-" + this.id + "' class='rotary-switch rotary-" + 
-                (this.config.colour ? this.config.colour : 'black') + "'></div>" +
+                (this.config.color ? this.config.color : 'black') + "'></div>" +
         "</div></div>"
     );
 
@@ -1772,7 +1772,9 @@ RotarySwitch.prototype._animateSwitch = function(point) {
  * @config {object}  [params] parameters to be sent when pressed (optional)
  * @config {string}  [label] the label to display on the button (optional)
  * @config {boolean} [circular] whether the button is circular (default false)
+ * @config {string}  [color]  custom color setting for the button (default #EFEFEF)
  * @config {string}  [clickColor] color of button when clicked (default #CCCCCC)
+ * @config {boolean} [overlay] whether the button has the clear style overlay (default false)
  * @config {function} [callback] callback to be invoked with response of posts (optional)
  */
 function Button(id, config)
@@ -1783,23 +1785,26 @@ function Button(id, config)
     /* Default options. */
     if (this.config.params === undefined) this.config.params = { };
     if (this.config.label === undefined) this.config.label = '';
+    if (this.config.overlay === undefined) this.config.overlay = false;
     if (this.config.circular === undefined) this.config.circular = false;
-    if (this.config.clickColor === undefined) this.config.clickColor = "#CCCCCC";
+    if (this.config.color === undefined) this.config.color = "#EFEFEF";
+    if (this.config.clickColor === undefined) this.config.clickColor = "#CCC";
 }
 
 Button.prototype = new Widget;
 
 Button.prototype.init = function($container) {
-    if (!this.config.action) throw "Options not set.";    
-    
+    if (!this.config.action) throw "Options not set.";
+
     this.$widget = this._generate($container,
-        "<div class='button' style='" + 
-                (this.config.height ? "line-height:" + this.config.height + "px;" : "") + 
+        "<div class='button " + (this.config.overlay && this.config.circular === false ? "button-overlay" : '') + "'style='" +
+                (this.config.height ? "line-height:" + this.config.height + "px;" : "") +
+                (this.config.color ? "background-color:" + this.config.color : "") +
                 (this.config.circular ? "border-radius:" + this.config.width + "px;" : "") + "'>" +
-            "<span class='button-label'>" + this.config.label + "</span>" + 
-        "</div>" 
+            "<span class='button-label'>" + this.config.label + "</span>" +
+        "</div>"
     );
-    
+
     var thiz = this;
     this.$widget.mousedown(function() { thiz._buttonEngaged(); });
     this.$widget.bind("mouseup mouseout", function(){ thiz._buttonReleased(); });
@@ -1811,13 +1816,17 @@ Button.prototype.init = function($container) {
  */
 Button.prototype._buttonEngaged = function() {
     this.$widget.find(".button").css("background-color", this.config.clickColor);
+    !this.config.color ? this.$widget.find(".button").css("box-shadow", "0px 1px 5px 1px #" + this.config.color) : '';
+    !this.config.color ? this.$widget.find(".button:after").css("background-size", "100% 100% !important") : '';
 };
 
 /**
  * Event handler triggered when no longer on mouse down on button.
  */
 Button.prototype._buttonReleased = function() {
-    this.$widget.find(".button").css("background-color", "");
+    !this.config.color ?
+        this.$widget.find(".button").css("background-color", "") :
+        this.$widget.find(".button").css("background-color", this.config.color);
 };
 
 /**
@@ -1902,76 +1911,156 @@ PushButton.prototype._clicked = function() {
  * @config {string} [action] server action to call when the switched is changed
  * @config {string} [label] label to display
  * @config {string} [style] set the knob style (default smooth)
+ * @config {integer} [min] minimum value of slider (default 0)
+ * @config {integer} [max] maximum value of slider (default 100)
  * @config {number} [radius] the radius of the knob
  */
 function Knob(id, config)
 {
-
     Widget.call(this, id, config);
-
-    /* Default options*/
+    
+    /** Default settings. */
+    this.val = undefined;
+    this.valueChanged = false;
+    if (this.config.min === undefined) this.config.min = 0;
+    if (this.config.max === undefined) this.config.max = 100;
 }
 
 Knob.prototype = new Widget;
 
 Knob.prototype.init = function($container) {
     if (!this.config.action) throw "Options not supplied.";
-    var d = this.config.radius * 2;
 	
-    this.$Widget = this._generate($container,
-        //HTML Goes here.
-        "<div id='knob-container-" + this.id + "'>" +
-            (this.config.label ? "<label>" + this.config.label + "</label>" : '') +
-            "<div class='knob-container' style='height:" + d + "px; width: " + d + "px;'>" +
-                "<div class='knob knob-" + this.config.style + "'>" +
-                (this.config.style == 'volume' ? '<div class="knob-volume-mid"></div>' : '') +
-                "<div class='knob-handle knob-handle-" + this.config.style + "'></div></div>" +
+    this.$Widget = this._generate($container,this._buildHTML());
+
+    /* Knob Position */        
+    this.knob = this.$widget.find('.knob-' + this.config.style);
+    this.kP = this.knob.offset();
+    this.kPos = { x: this.kP.left, y: this.kP.top};
+
+    /* Event Handlers. */
+    var thiz = this;    
+    this.$widget.find('.knob').mousedown(function(e){ e.preventDefault(); thiz._knobEngaged(); })
+    this.$widget.mouseup(function(){ thiz._knobReleased(); })
+    this.$widget.mousemove(function(e){ thiz._knobChanged(e); })
+    this.$input = this.$widget.find("input").change(function() { thiz._handleTextBoxChange($(this).val()); });   
+}
+
+Knob.prototype._buildHTML = function() {
+    html =
+    "<div id='knob-container-" + this.id + "'>" +
+        (this.config.label ? "<label class='knob-label'>" + this.config.label + ":</label>" : '') +
+        "<div class='knob-container' style='height:" + this.config.radius * 2 + "px; width: " + this.config.radius * 2 + "px;'>" +
+            "<div class='knob'>" +
+                "<div class='knob-texture knob-" + this.config.style + "'></div>" +
+                "<div class='knob-highlight'" + (this.config.style == 'black' ? 'style="opacity:0.4;"' : '') + "></div>"+
             "</div>" +
-        "</div>"
-    );
-    
-    //Handlers go here
-    thiz = this;
-    this.$widget.mousedown(function(){ thiz._knobEngaged(this.id,thiz) })
-    this.$widget.mouseup(function(){ thiz._knobReleased() })
+        "</div>" +
+        "<input class='knob-value' value='0'></input>" +
+    "</div>"
+    return html;
 }
 
 /**
- * Event handler triggered when the knob is dragged.
+ * Event handler triggered when the knob is active.
  */
-Knob.prototype._knobEngaged = function(id,thiz){
-    console.log('engaged: ' + id);
-    
-    //TODO animate knob
-      
-    //Need position of mouse in object.
-    var pos = $('#' + id).position(),
-    
-    x0 = (thiz.config.radius),
-    y0 = (thiz.config.radius);
-
-    /* Calculate the switches degree in relation to the point. */
-    var deg = Math.atan((pos.left - x0) / (y0 - pos.top)) * 180 /Math.PI;
-    deg = x0 < pos.top ? Math.round(deg + 180) : Math.round(deg);
-
-    //Log the degree to the console.
-    console.log(deg);
-
-    /* Rotates the switch. */
-    $('#' + id).find('.knob').css({
-        '-webkit-transform' : 'rotate('+ deg +'deg)',
-        '-moz-transform' : 'rotate('+ deg +'deg)',
-        '-ms-transform' : 'rotate('+ deg +'deg)',
-        '-o-transform' : 'rotate('+ deg +'deg)',
-        'transform' : 'rotate('+ deg +'deg)'
-    });
+Knob.prototype._knobEngaged = function(){
+    this.mouseDown = true;
 }
 
 /**
  * Event handler triggered when no longer on mouse down on button.
  */
 Knob.prototype._knobReleased = function() {
-	console.log('released');
+    this.mouseDown = false;
+    if (this.valueChanged) {
+        this._send();
+    }
+};
+
+/**
+ * Event handler triggered when the knob is rotated.
+ */
+Knob.prototype._knobChanged = function(e){
+    if (this.mouseDown) {
+
+        e.preventDefault()
+
+        /* The current position of the mouse within the knob. */
+        var mPos = {x: e.clientX - this.kPos.x, y: e.clientY - this.kPos.y};
+
+        /* The current angle whose tangent is the mouse position. */
+        var atan = Math.atan2(mPos.x - this.config.radius, mPos.y - this.config.radius);
+
+        /* Degrees from mouse position. */
+        this.deg = Math.round(-atan / (Math.PI/180) + 180);
+
+        /* Rotates the knob. */
+        this._rotateKnob(this.deg);
+        
+        /* Get the value of the degree in comparison to the range of the knob widget. */
+        var range = this.config.max - this.config.min;
+        this.val = Math.round(this.deg * range / 359 + this.config.min);
+
+        /* Update the knob input field. */
+        this.$widget.find('.knob-value').val(this.val);
+
+        this.valueChanged = 'true';
+    }
+}
+
+/**
+ * Rotates the knob widget.
+ */
+Knob.prototype._rotateKnob = function(){
+        this.knob.css({
+            '-webkit-transform' : 'rotate(' + this.deg + 'deg)',
+            '-moz-transform' : 'rotate(' + this.deg + 'deg)',
+            '-ms-transform' : 'rotate(' + this.deg + 'deg)',
+            '-o-transform' : 'rotate(' + this.deg + 'deg)',
+            'transform' : 'rotate(' + this.deg + 'deg)'
+        });
+}
+
+/**
+ * Handles a value text box change.
+ * 
+ * @param {number} val new value
+ */
+Knob.prototype._handleTextBoxChange = function(val) { console.log(val);
+    this.removeMessages();
+    if (!val.match(/^-?\d+\.?\d*$/))
+    {
+        this.addMessage("Value must be a number.", Widget.MESSAGE_TYPE.error, (this.config.radius * 2.2), '95%', Widget.MESSAGE_INDICATOR.left);
+        return;
+    }
+
+    n = parseFloat(val);
+    if (n < this.config.min || n > this.config.max)
+    {
+        this.addMessage("Value out of range.", Widget.MESSAGE_TYPE.error, (this.config.radius * 2.2), '100%', Widget.MESSAGE_INDICATOR.left);
+        return;
+    }
+
+    /* Get the values positon in relation to degrees. */
+    this.deg = Math.round(val * 359 / this.config.max);
+    this.val = val;
+    this.valueChanged = true;
+    this._rotateKnob();
+    this._send();
+};
+
+/** 
+ * Sends the updated value to the server.
+ */
+Knob.prototype._send = function() {
+    var thiz = this, params = { };
+    params[this.config.field] = this.val;
+    this._postControl(this.config.action, params,
+        function(data) {
+            thiz.valueChanged = false;
+        }
+    );
 };
 
 /* ============================================================================
