@@ -91,12 +91,20 @@ function Config2DOF()
                          vertical: false,
                      }),
                      new Knob("knob-coil-1", {
-                        
+                         action: "setCoil",
+                         field: "coil-1-power",
+                         label: "Coil 1"
+                             
+                     }),
+                     new Knob("knob-coil-2", {
+                         action: "setCoil",
+                         field: "coil-2-power",
+                         label: "Coil 2"
                      }),
                 ],
                 layout: new FlowLayout({
                     padding: 5,
-                    size: 320,
+                    size: 310,
                     vertical: false,
                     center: true,
                 })

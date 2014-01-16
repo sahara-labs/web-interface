@@ -2527,30 +2527,41 @@ PushButton.prototype._clicked = function() {
  * @constructor
  * @param {string} id the identifier of widget
  * @param {object} config configuration of widget
+ * @config {string} [field] data field that has displayed value
  * @config {string} [action] server action to call when the switched is changed
  * @config {string} [label] label to display
+ * @config {string} [units] Units of the knobs value 
+ * @config {string} [precision] precision of values (default 0)
  * @config {string} [style] set the knob style (default smooth)
  * @config {integer} [min] minimum value of slider (default 0)
  * @config {integer} [max] maximum value of slider (default 100)
- * @config {number} [radius] the radius of the knob
+ * @config {number} [radius] the radius of the knob in pixels (default 25px)
+ * @config {boolean} [vertical] whether the label and text entry is aside (default false)
  */
 function Knob(id, config)
 {
     Widget.call(this, id, config);
     
     /** Default settings. */
-    this.val = undefined;
-    this.valueChanged = false;
     if (this.config.min === undefined) this.config.min = 0;
     if (this.config.max === undefined) this.config.max = 100;
+    if (this.config.radius === undefined) this.config.radius = 25;
+    if (this.config.precision === undefined) this.config.precision = 0;
+    
+    /** @private {number} Current value of knob. */
+    this.val = undefined;
+    
+    /** @private {boolean} Whether the value has changed by user action
+     *  and is the being sent to the server. */
+    this.valueChanged = false;
 }
 
 Knob.prototype = new Widget;
 
 Knob.prototype.init = function($container) {
-    if (!this.config.action) throw "Options not supplied.";
+    if (!(this.config.action && this.config.field)) throw "Options not supplied.";
 	
-    this.$Widget = this._generate($container,this._buildHTML());
+    this.$widget = this._generate($container, this._buildHTML());
 
     /* Knob Position */        
     this.knob = this.$widget.find('.knob-' + this.config.style);
@@ -2560,7 +2571,7 @@ Knob.prototype.init = function($container) {
     /* Event Handlers. */
     var thiz = this;    
     this.$widget.find('.knob').mousedown(function(e){ e.preventDefault(); thiz._knobEngaged(); });
-    this.$widget.mouseup(function(){ thiz._knobReleased(); });
+    $(document).bind("mouseup.knob-" + this.id, function(){ thiz._knobReleased(); });
     this.$widget.mousemove(function(e){ thiz._knobChanged(e); });
     this.$input = this.$widget.find("input").change(function() { thiz._handleTextBoxChange($(this).val()); });   
 };
@@ -2631,13 +2642,13 @@ Knob.prototype._knobChanged = function(e){
  * Rotates the knob widget.
  */
 Knob.prototype._rotateKnob = function(){
-        this.knob.css({
-            '-webkit-transform' : 'rotate(' + this.deg + 'deg)',
-            '-moz-transform' : 'rotate(' + this.deg + 'deg)',
-            '-ms-transform' : 'rotate(' + this.deg + 'deg)',
-            '-o-transform' : 'rotate(' + this.deg + 'deg)',
-            'transform' : 'rotate(' + this.deg + 'deg)'
-        });
+    this.knob.css({
+        '-webkit-transform' : 'rotate(' + this.deg + 'deg)',
+        '-moz-transform' : 'rotate(' + this.deg + 'deg)',
+        '-ms-transform' : 'rotate(' + this.deg + 'deg)',
+        '-o-transform' : 'rotate(' + this.deg + 'deg)',
+        'transform' : 'rotate(' + this.deg + 'deg)'
+    });
 };
 
 /**
@@ -2679,6 +2690,11 @@ Knob.prototype._send = function() {
             thiz.valueChanged = false;
         }
     );
+};
+
+Knob.prototype.destroy = function() {
+    $(document).unbind("mouseup.knob-" + this.id);
+    Widget.prototype.destroy.call(this);
 };
 
 /* ============================================================================
