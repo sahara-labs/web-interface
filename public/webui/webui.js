@@ -903,7 +903,7 @@ Layout.prototype.layout = function() {
 Layout.prototype.scale = function(x, y) { };
 
 /**
- * Gets the width of the layouts displayed contents.
+ * Gets the width of the layouts displayed contents. 
  *
  * @return {integer} contents width
  */
@@ -1656,12 +1656,17 @@ Container.prototype.resizeStopped = function(width, height) {
     /* Mask this function durinig initial _generate resize restore. */
     if (this.config.layout && this.config.layout.getWidth() === undefined) return;
     
+    this.$contentBox.show();
+    this.contentsShown = true;
+    
     var i = 0, w, h, 
         horiz = (width - 12) / this.config.layout.getWidth(), 
         vert = (height - 35) / this.config.layout.getHeight() ;
     
     for (i in this.widgets)
     {   
+        if (!this.states[i]) continue;
+        
         this.widgets[i].$widget.css({
             width: w = this.widgets[i].getWindowProperty("width") * horiz, 
             height: h = this.widgets[i].getWindowProperty("height") * vert
@@ -1686,9 +1691,6 @@ Container.prototype.resizeStopped = function(width, height) {
         width: "auto",
         height: "auto"
     });
-    
-    this.$contentBox.show();
-    this.contentsShown = true;
 };
 
 /**
