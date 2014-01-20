@@ -104,7 +104,8 @@ class Sahara_Feedback_Form extends Zend_Form
         $bots = new Zend_Form_Element_Text('botsfu');
         $bots->setAllowEmpty(true)
              ->setRequired(false)
-             ->setAttrib('id', 'botsfu');
+             ->setAttrib('id', 'botsfu')
+             ->setDecorators(Sahara_Decorator_Table::$ELEMENT);
         $this->addElement($bots);
 
         $this->addDisplayGroup(array('name', 'email', 'type', 'purpose', 'feedback', 'botsfu'), 'feedback_form');

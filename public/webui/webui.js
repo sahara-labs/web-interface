@@ -1374,6 +1374,162 @@ FlowLayout.prototype.scale = function(h, v) {
 };
 
 /* ============================================================================
+ * == Tab Layout                                                             == 
+ * ============================================================================ */
+
+/**
+ * The tab layout only shows one widget at time and provides a tab selector to
+ * switch between the widgets. 
+ * 
+ * @param {object} config configuration object
+ * @config {vertical} whether the tab orientation is vertical or horizontal (default false)
+ * @config {border} border padding of widget in pixels (default 10px)
+ */
+function TabLayout(config)
+{
+    Layout.call(this, config);
+    
+    if (this.config.vertical === undefined) this.config.vertical = false;
+    if (this.config.border === undefined) this.config.border = 10;
+    
+    /** @private {jQuery} Tab bar node. */
+    this.$tabBar = undefined;
+    
+    /** @private {Widget} Currently displayed widget. */    
+    this.currentWidget = undefined;
+}
+
+TabLayout.prototype = new Layout;
+
+TabLayout.prototype.displayInit = function($container) {
+    this.$tabBar = this.container.getContentBox().prepend(this._tabBarHTML()).children(":first");
+    
+    var thiz = this;
+    this.$tabBar.children(".tab").click(function() { thiz._tabClick($(this).text()); });
+};
+
+TabLayout.prototype._tabClick = function(title) {
+   var i = 0, w = false,
+           x = this.config.vertical ? this.$tabBar.width() + this.config.border : this.config.border, 
+           y = this.config.vertical ? this.config.border : this.$tabBar.height() + this.config.border;
+   
+   for (i in this.container.getWidgets())
+   {
+       if ((w = this.container.getWidget(i)).config.title == title) break;
+   }
+   
+   if (!w)
+   {
+       alert("Widget with title '" + title + "' not found!");
+       return;
+   }
+   
+   /* No need to tab to the current widget. */
+   if (w == this.currentWidget) return;
+   
+   /* Remove the current widget. */
+   this.container.toggleEvent(this.currentWidget.id, false);
+   
+   /* Add the current widget. */
+   this.currentWidget = w;
+   this.container.toggleEvent(w.id, true);
+
+   /* Resize and move the widget into the center. */
+   if (w.getWindowProperty("width") + x + this.config.border < this.width || 
+           w.getWindowProperty("height") + y + this.config.border < this.height)
+   {
+       w.resized(this.width - x - this.config.border, this.height - y - this.config.border);
+       w.resizeStopped(this.width - x - this.config.border, this.height - y - this.config.border);
+   }
+
+   x += (this.width - x - w.getWindowProperty("width") - this.config.border) / 2;
+   y += (this.height - y - w.getWindowProperty("height") - this.config.border) / 2;
+
+   w.moveTo(x, y);
+
+};
+
+TabLayout.prototype._tabBarHTML = function() {
+    var i = 0, w, html = 
+        "<div class='tab-bar tab-bar-" + (this.config.vertical ? "vertical" : "horizontal" )+ "'>";
+    
+    for (i in this.container.getWidgets())
+    {
+        w = this.container.getWidget(i);
+        
+        html += "<div class='tab'>" + w.config.title + "</div>"; 
+    }
+    
+    html += 
+        "</div>";
+        
+    return html;
+};
+
+TabLayout.prototype.displayDestroy = function() {
+    this.currentWidget = undefined;
+    this.$tabBar.remove();
+};
+
+TabLayout.prototype.layout = function() {
+    var i = 0, w, wid, hei, x, y,
+        wOff = this.config.vertical ? this.$tabBar.width() + this.config.border : this.config.border, 
+        hOff = this.config.vertical ? this.config.border : this.$tabBar.height() + this.config.border;
+ 
+    if (!this.config.resizing)
+    {
+        this.width = this.height = 0;
+        
+        for (i in this.container.getWidgets())
+        {
+            w = this.container.getWidget(i);
+            
+            if ((wid = w.getWindowProperty("width")) > this.width) this.width = wid;
+            if ((hei = w.getWindowProperty("height")) > this.height) this.height = hei;    
+        }
+
+    }
+    
+    for (i in this.container.getWidgets())
+    {
+        w = this.container.getWidget(i);
+        
+        if (!this.currentWidget || this.currentWidget == w)
+        {
+            /* The first widget is the widget first displayed. */
+            this.currentWidget = w;
+            
+            wid = w.getWindowProperty("width");
+            hei = w.getWindowProperty("height");
+
+            x = wOff;
+            y = hOff;
+
+            if (wid < this.width || hei < this.height)
+            {
+                w.resized(this.width, this.height);
+                w.resizeStopped(this.width, this.height);
+            }
+
+            x += (this.width - w.getWindowProperty("width")) / 2;
+            y += (this.height - w.getWindowProperty("height")) / 2;
+            w.moveTo(x, y);
+        }
+        else
+        {
+            this.container.toggleEvent(w.id, false);
+        }
+    }
+
+    this.width += wOff + this.config.border;
+    this.height += hOff + this.config.border;
+};
+
+TabLayout.prototype.scale = function(h, v) {
+    
+};
+
+/* ============================================================================
  * == Container Widget                                                       ==
  * ============================================================================ */
 
@@ -1390,9 +1546,6 @@ FlowLayout.prototype.scale = function(h, v) {
  * @param {object} config configuration object
  * @config {array} [widgets] list of widgets managed by this container
  * @config {Layout} [layout] layout used to specify how widgets are placed (optional)
- * @config {boolean} [toggling] Whether this container toggles visibility  
- * @config {string}  [toggleVar] data variable which specifies which widget is currently visible
- * @config {string}  [toggleAction] action to send to server 
  */
 function Container(id, config)
 {
@@ -1483,6 +1636,8 @@ Container.prototype.destroy = function() {
         }
     }
     
+    if (this.config.layout) this.config.layout.displayDestroy();
+    
     Widget.prototype.destroy.call(this);
 };
 
@@ -1506,7 +1661,7 @@ Container.prototype.resizeStopped = function(width, height) {
         vert = (height - 35) / this.config.layout.getHeight() ;
     
     for (i in this.widgets)
-    {
+    {   
         this.widgets[i].$widget.css({
             width: w = this.widgets[i].getWindowProperty("width") * horiz, 
             height: h = this.widgets[i].getWindowProperty("height") * vert
@@ -1622,7 +1777,7 @@ Spacer.prototype.resized = function(width, height) {
     {
         this.$widget.children("border-radius", (width < height ? width : height) / 2);
     }
-    
+    this.$widget.css({ width: width, height: height });
     this.$widget.children().text(Math.round(width) + "x" + Math.round(height));
 };
 
@@ -1745,11 +1900,6 @@ Graph.prototype.init = function($container) {
 	    top: (this.config.windowed ? 30 : 0) + this.graphHeight / 2,
 	    left: -0.545 * c.width() + (this.config.windowed ? 26.1 : 21)
 	});
-	
-	if (this.config.windowed)
-	{
-	    
-	}
 
 	/* Add the canvas panel. */
 	var canvas = Util.getCanvas(this.id, this.graphWidth, this.graphHeight);
@@ -2093,7 +2243,10 @@ Graph.prototype.resized = function(width, height) {
         $s = $s.next();
     }
     
-    this.$widget.css("height", "auto");
+    this.$widget.css({
+        width: width,
+        height: height
+    });
 };
 
 Graph.prototype.resizeStopped = function(width, height) {

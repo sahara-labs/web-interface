@@ -32,26 +32,48 @@ function Config2DOF()
         theme: Globals.THEMES.flat,
         cookie: "shaketable",
         widgets: [
-            new Graph("graph-displacement", {
+            new Container("graphs-container", {
                 title: "Graphs",
-                resizable: true,
-                width: 418,
-                height: 328,
+                reizable: true,
                 left: 351,
                 top: 423,
-                fields: {
-                    'disp-graph-1': 'Level 1',
-                    'disp-graph-2': 'Level 2',
-                    'disp-graph-3': 'Level 3'
-                },
-                minValue: -60,
-                maxValue: 60,
-                duration: 10,
-                yLabel: "Displacement (mm)",
-                fieldCtl: false,
-                autoCtl: false,
-                durationCtl: false,
-                traceLabels: false,
+                widgets: [
+                    new Spacer("graph-lissajous", {
+                        width: 400,
+                        height: 328,
+                        color: "blue",
+                        title: "Lissajous",
+                    }),
+                    new Graph("graph-displacement", {
+                        width: 418,
+                        height: 328,
+                        title: "Displacement",
+                        resizable: true,
+                        fields: {
+                            'disp-graph-1': 'Level 1',
+                            'disp-graph-2': 'Level 2',
+                            'disp-graph-3': 'Level 3'
+                        },
+                        minValue: -60,
+                        maxValue: 60,
+                        duration: 10,
+                        yLabel: "Displacement (mm)",
+                        fieldCtl: true,
+                        autoCtl: false,
+                        durationCtl: false,
+                        traceLabels: true,
+                    }),
+                    new Spacer("graph-ffts", {
+                        width: 500,
+                        height: 50,
+                        color: "red",
+                        title: "FFT"
+                    })
+                ],
+                layout: new TabLayout({
+                    vertical: false,
+                    border: 10,
+                })
             }),
             new MimicWidget(false),
             new CameraStream("camera-stream", {
@@ -89,18 +111,18 @@ function Config2DOF()
                          label: "Motor Frequency",
                          units: "Hz",
                          vertical: false,
-                     }),
-                     new Knob("knob-coil-1", {
-                         action: "setCoil",
-                         field: "coil-1-power",
-                         label: "Coil 1"
-                             
-                     }),
-                     new Knob("knob-coil-2", {
-                         action: "setCoil",
-                         field: "coil-2-power",
-                         label: "Coil 2"
-                     }),
+                     }), 
+//                     new Knob("knob-coil-1", {
+//                         action: "setCoil",
+//                         field: "coil-1-power",
+//                         label: "Coil 1"
+//                             
+//                     }),
+//                     new Knob("knob-coil-2", {
+//                         action: "setCoil",
+//                         field: "coil-2-power",
+//                         label: "Coil 2"
+//                     }),
                 ],
                 layout: new FlowLayout({
                     padding: 5,
