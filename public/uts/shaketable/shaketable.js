@@ -38,7 +38,20 @@ function Config2DOF()
                 left: 351,
                 top: 423,
                 widgets: [
-                    
+                    new ScatterPlot("graph-lissajous", {
+                        title: "Lissajous",
+                        xLabel: "L0 (mm)",
+                        yLabel: "L1 (mm)",
+                        dependantMin: -8,
+                        dependantMax: 8,
+                        vertScales: 4,
+                        independantMin: -8,
+                        independantMax: 8,
+                        horizScales: 4,
+                        fields: {
+                            
+                        }
+                    }),
                     new Graph("graph-displacement", {
                         width: 450,
                         height: 330,
@@ -57,10 +70,6 @@ function Config2DOF()
                         autoCtl: false,
                         durationCtl: false,
                         traceLabels: true,
-                    }),
-                    new Spacer("graph-lissajous", {
-                        color: "blue",
-                        title: "Lissajous",
                     }),
                     new Spacer("graph-ffts", {
                         color: "red",

@@ -1814,8 +1814,6 @@ Spacer.prototype.resized = function(width, height) {
  */
 function Graph(id, config)
 {
-    if (!(config.fields)) throw "Options not set";
-    
 	Widget.call(this, id, config);
 
 	/* Default options. */
@@ -1833,6 +1831,8 @@ function Graph(id, config)
 	if (this.config.durationCtl === undefined) this.config.durationCtl = false;
 	if (this.config.vertScales === undefined)  this.config.vertScales = 5;
 	if (this.config.horizScales === undefined) this.config.horizScales = 8;
+	if (this.config.width === undefined) this.config.width = 300;
+	if (this.config.height === undefined) this.config.height = 300;
 	
 	/** @private {object} Data fields. */
 	this.dataFields = { };
@@ -1871,6 +1871,8 @@ Graph.COLORS = [
 ];
 
 Graph.prototype.init = function($container) {
+    if (!(this.config.fields)) throw "Options not set";
+    
     var i = 0, c = 0, thiz = this;
     
     /* Field dynamic properties. */
@@ -2039,7 +2041,7 @@ Graph.prototype.consume = function(data) {
     }
 
     this._drawFrame();
-    this._updateTimeScale();
+    this._updateIndependentScale();
 };
 
 /**
@@ -2053,6 +2055,7 @@ Graph.prototype._drawFrame = function() {
 	
 	/* Draw scales. */
 	this._drawDependantScales();
+	this._drawIndependantScales();
 	    
 	/* Draw the trace for all graphed variables. */
 	for (i in this.dataFields) this._drawTrace(this.dataFields[i]);
@@ -2082,7 +2085,7 @@ Graph.prototype._adjustScaling = function() {
 Graph.STIPPLE_WIDTH = 10;
 
 /**
- * Draws the scales on the interface.
+ * Draws the dependant scales on the interface.
  */
 Graph.prototype._drawDependantScales = function() {
 	var i, j,
@@ -2100,6 +2103,7 @@ Graph.prototype._drawDependantScales = function() {
 	    this.ctx.moveTo(0, off + 1.5);
 	    this.ctx.lineTo(this.graphWidth, off + 1.5);
 	}
+	this.ctx.stroke();
 	
 	this.ctx.lineWidth = 0.3;
 
@@ -2115,6 +2119,13 @@ Graph.prototype._drawDependantScales = function() {
 	this.ctx.closePath();
 	this.ctx.stroke();
 	this.ctx.restore();
+};
+
+/**
+ * Draws the independant scales on the interface.
+ */
+Graph.prototype._drawIndependantScales = function() {
+    /* For the time series graph, no scales are drawn. */
 };
 
 /**
@@ -2176,9 +2187,9 @@ Graph.prototype._updateDependantScale = function() {
 };
 
 /**
- * Updates the time scale.
+ * Updates the independent scale.
  */
-Graph.prototype._updateTimeScale = function() {
+Graph.prototype._updateIndependentScale = function() {
 	var xstep = this.displayedDuration / this.config.horizScales, i,
 		$d = this.$widget.find(".graph-bottom-scale-0"), t;
 
@@ -2283,6 +2294,120 @@ Graph.prototype._showControls = function(show) {
     $n.css("display", $n.css("display") == "none" ? "block" : "none");
     this.$widget.css("height", "auto");
 };
+
+/* ============================================================================
+ * == Scatter Plot Widget.                                                   ==
+ * ============================================================================ */
+
+/**
+ * The scatter plot widget is a graph that plots points to show the 
+ * relationship between two sets of time-series data.
+ * 
+ * @param {string} id graph identifier
+ * @param {object} config configuration object
+ * @config {object}  [fields]         map of graphed data fields with field => label
+ * @config {object}  [colors]         map of graph trace colors with field => color (optional)
+ * @config {boolean} [autoScale]      whether to autoscale the graph dependant (default off)
+ * @config {integer} [dependantMin]   minimum value that is graphed for dependant axis, implies not autoscaling (default 0)
+ * @config {integer} [dependantMax]   maximum value that is graphed for dependant axis, implies not autoscaling (default 100)
+ * @config {integer} [independantMin] minimum value that is graphed for dependant axis, implies not autoscaling (default 0)
+ * @config {integer} [independantMax] maximum value that is graphed for dependant axis, implies not autoscaling (default 100)
+ * @config {integer} [duration]       number of seconds this graph displays (default 60)
+ * @config {integer} [period]         period betweeen samples in milliseconds (default 100)
+ * @config {string}  [xLabel]         X axis label (default (Time (s))
+ * @config {String}  [yLabel]         Y axis label (optional)
+ * @config {boolean} [traceLabels]    whether to show trace labels (default true)
+ * @config {boolean} [fieldCtl]       whether data field displays can be toggled (default false)
+ * @config {boolean} [autoCtl]        whether autoscaling enable control is shown (default false)
+ * @config {boolean} [durationCtl]    whether duration control slider is displayed
+ * @config {integer} [vertScales]     number of vertical scales (default 5)
+ * @config {integer} [horizScales]    number of horizontal scales (default 5)
+ */
+function ScatterPlot(id, config)
+{
+    /* Overriding base default options. */
+    if (config.horizScales === undefined) config.horizScales = 5;
+    
+    /* Configuration synonyms. */
+    if (config.dependantMin) config.minValue = config.dependantMin;
+    if (config.dependantMax) config.maxValue = config.dependantMax;
+    
+    Graph.call(this, id, config);
+    
+    if (this.config.independantMin === undefined) this.config.independantMin = 0;
+    if (this.config.independantMax === undefined) this.config.independantMax = 100;
+    
+    /** @private {integer} The range of values on the indepenedant scale. */
+    this.independantRange = this.config.independantMax - this.config.independantMin;
+    
+    /** @private {integer} Offset to the zero value on the independant range. */
+    this.independantOffset = this.config.independantMin / this.independantRange;
+}
+
+ScatterPlot.prototype = new Graph;
+
+ScatterPlot.prototype.init = function($container) {
+    Graph.prototype.init.call(this, $container);
+    
+    
+};
+
+ScatterPlot.prototype._drawIndependantScales = function() {
+    var i, j,
+        off = this.graphWidth - Math.abs(this.independantOffset * this.graphWidth);
+
+    this.ctx.save();
+    this.ctx.beginPath();
+
+    this.ctx.strokeStyle = "#FFFFFF";
+
+    /* Zero line. */
+    this.ctx.lineWidth = 3;
+    if (off > 0 && off < this.graphWidth)
+    {
+        this.ctx.moveTo(off - 1.5, 0);
+        this.ctx.lineTo(off - 1.5, this.graphHeight);
+    }
+    this.ctx.stroke();
+    
+    this.ctx.lineWidth = 0.3;
+
+    for (i = 0; i < this.graphWidth; i += this.graphWidth / this.config.horizScales)
+    {
+        for (j = 0; j < this.graphHeight ; j += Graph.STIPPLE_WIDTH * 1.5)
+        {
+            this.ctx.moveTo(i - 0.25, j);
+            this.ctx.lineTo(i - 0.25, j + Graph.STIPPLE_WIDTH);
+        }
+    }
+
+    this.ctx.closePath();
+    this.ctx.stroke();
+    this.ctx.restore();
+};
+
+ScatterPlot.prototype.consume = function(data) {
+    
+};
+
+ScatterPlot.prototype._drawTrace = function(dOb) {
+    
+};
+
+
+
+ScatterPlot.prototype._updateIndependentScale = function() {
+    var i, $s = this.$widget.find(".graph-bottom-scale-0");
+    
+    for (i = 0; i <= this.config.horizScales; i++)
+    {
+        $s.html(Util.zeroPad(
+                this.independantRange / this.config.horizScales * i + this.config.independantMin,
+                this.independantRange >= this.config.horizScales * 2 ? 0 : 1));
+        $s = $s.next();
+    }
+};
+
 
 /* ============================================================================
  * == Switch Widget.                                                         ==
