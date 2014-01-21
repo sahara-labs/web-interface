@@ -1405,13 +1405,17 @@ TabLayout.prototype.displayInit = function($container) {
     this.$tabBar = this.container.getContentBox().prepend(this._tabBarHTML()).children(":first");
     
     var thiz = this;
-    this.$tabBar.children(".tab").click(function() { thiz._tabClick($(this).text()); });
+    this.$tabBar.children(".tab").click(function() {
+        $(this).siblings(".tab-active").removeClass("tab-active");
+        $(this).addClass("tab-active");
+        thiz._tabClick($(this).text()); 
+    });
 };
 
 TabLayout.prototype._tabClick = function(title) {
    var i = 0, w = false,
-           x = this.config.vertical ? this.$tabBar.width() + this.config.border : this.config.border, 
-           y = this.config.vertical ? this.config.border : this.$tabBar.height() + this.config.border;
+           x = this.config.vertical ? this.$tabBar.width() + this.config.border * 2: this.config.border, 
+           y = this.config.vertical ? this.config.border : this.$tabBar.height() + this.config.border * 2;
    
    for (i in this.container.getWidgets())
    {
@@ -1450,17 +1454,18 @@ TabLayout.prototype._tabClick = function(title) {
 };
 
 TabLayout.prototype._tabBarHTML = function() {
-    var i = 0, w, html = 
+    var i = 0, w, first = true, html = 
         "<div class='tab-bar tab-bar-" + (this.config.vertical ? "vertical" : "horizontal" )+ "'>";
     
     for (i in this.container.getWidgets())
     {
         w = this.container.getWidget(i);
         
-        html += "<div class='tab'>" + w.config.title + "</div>"; 
+        html += "<div class='tab " + (first ? "tab-active" : "") + "'>" + w.config.title + "</div>";
+        first = false;
     }
     
-    html += 
+    html += "<div class='tab-footer'></div>" +
         "</div>";
         
     return html;
@@ -1473,21 +1478,18 @@ TabLayout.prototype.displayDestroy = function() {
 
 TabLayout.prototype.layout = function() {
     var i = 0, w, wid, hei, x, y,
-        wOff = this.config.vertical ? this.$tabBar.width() + this.config.border : this.config.border, 
-        hOff = this.config.vertical ? this.config.border : this.$tabBar.height() + this.config.border;
- 
-    if (!this.config.resizing)
-    {
-        this.width = this.height = 0;
-        
-        for (i in this.container.getWidgets())
-        {
-            w = this.container.getWidget(i);
-            
-            if ((wid = w.getWindowProperty("width")) > this.width) this.width = wid;
-            if ((hei = w.getWindowProperty("height")) > this.height) this.height = hei;    
-        }
+        wOff = this.config.vertical ? this.$tabBar.width() + this.config.border * 2: this.config.border, 
+        hOff = this.config.vertical ? this.config.border : this.$tabBar.height() + this.config.border * 2;
 
+    this.width = this.height = 0;
+
+    for (i in this.container.getWidgets())
+    {
+        if (!this.container.states[i]) continue;
+        w = this.container.getWidget(i);
+
+        if ((wid = w.getWindowProperty("width")) > this.width) this.width = wid;
+        if ((hei = w.getWindowProperty("height")) > this.height) this.height = hei;    
     }
     
     for (i in this.container.getWidgets())

@@ -38,15 +38,10 @@ function Config2DOF()
                 left: 351,
                 top: 423,
                 widgets: [
-                    new Spacer("graph-lissajous", {
-                        width: 400,
-                        height: 328,
-                        color: "blue",
-                        title: "Lissajous",
-                    }),
+                    
                     new Graph("graph-displacement", {
-                        width: 418,
-                        height: 328,
+                        width: 450,
+                        height: 330,
                         title: "Displacement",
                         resizable: true,
                         fields: {
@@ -63,9 +58,11 @@ function Config2DOF()
                         durationCtl: false,
                         traceLabels: true,
                     }),
+                    new Spacer("graph-lissajous", {
+                        color: "blue",
+                        title: "Lissajous",
+                    }),
                     new Spacer("graph-ffts", {
-                        width: 500,
-                        height: 50,
                         color: "red",
                         title: "FFT"
                     })
