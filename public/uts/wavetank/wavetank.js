@@ -212,8 +212,12 @@ WaveTank.prototype.setup = function() {
         label: "Knob Metal",
         draggable: true,
         style: "metal",
+        max: 200,
+        min: 100,
+        units: 'rad',
+        labelVertical: false,
         windowed: false,
-        radius: 70,
+        radius: 65,
     });
     this.widgets.push(o);
 
@@ -223,8 +227,13 @@ WaveTank.prototype.setup = function() {
         label: "Knob Black",
         draggable: true,
         style: "black",
+        min: 10,
+        max: 50,
+        labelVertical: false,
+        units: 'rpm',
+        tooltip: 'Select a value.',
         windowed: false,
-        radius: 70,
+        radius: 65,
     });
     this.widgets.push(o);
     
@@ -234,8 +243,9 @@ WaveTank.prototype.setup = function() {
         label: "Knob Widget",
         draggable: true,
         style: "white",
-        max: 100,
-        windowed: false,
+        max: 360,
+        units: 'deg',
+        windowed: true,
         radius: 70,
     });
     this.widgets.push(o);
@@ -295,6 +305,16 @@ WaveTank.prototype.setup = function() {
         windowed: false,
         circular: false,
         overlay: false,
+        color: '#747474',
+        clickColor: '#464646'
+    });
+    this.widgets.push(o);
+
+    o = new PushButton("button-6", {
+    	action: "setPump",
+        label: "Push Button",
+        draggable: true,
+        windowed: true,
         color: '#747474',
         clickColor: '#464646'
     });
