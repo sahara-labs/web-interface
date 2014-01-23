@@ -207,6 +207,7 @@ WaveTank.prototype.setup = function() {
     this.widgets.push(o);
 
     o = new Knob("knob-2", {
+        field: "pump",
     	action: "setPump",
         label: "Knob Metal",
         draggable: true,
@@ -221,6 +222,7 @@ WaveTank.prototype.setup = function() {
     this.widgets.push(o);
 
     o = new Knob("knob-3", {
+        field: "pump",
     	action: "setPump",
         label: "Knob Black",
         draggable: true,
@@ -236,6 +238,7 @@ WaveTank.prototype.setup = function() {
     this.widgets.push(o);
     
     o = new Knob("knob-1", {
+        field: "pump",
     	action: "setPump",
         label: "Knob Widget",
         draggable: true,

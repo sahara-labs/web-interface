@@ -10,9 +10,143 @@
  * == Shake Table.                                                           ==
  * ============================================================================ */
 
-function ShakeTable()
+function ShakeTable(is3DOF)
 {
-    new WebUIApp({
+    
+    new WebUIApp(is3DOF ? Config3DOF() : Config2DOF()).setup().run();
+}
+
+/**
+ * 2 degree of freedom (2DOF) Shake Table interface.
+ */
+function Config2DOF()
+{
+    return {
+        anchor: "#shake-table-anchor",
+        controller: "ShakeTableController",
+        dataAction: "dataAndGraph",
+        dataDuration: 10,
+        dataPeriod: 100,
+        pollPeriod: 1000,
+        windowToggle: true,
+        theme: Globals.THEMES.flat,
+        cookie: "shaketable",
+        widgets: [
+            new Container("graphs-container", {
+                title: "Graphs",
+                reizable: true,
+                left: 351,
+                top: 423,
+                widgets: [
+                    new ScatterPlot("graph-lissajous", {
+                        title: "Lissajous",
+                        xLabel: "L0 (mm)",
+                        yLabel: "L1 (mm)",
+                        dependantMin: -8,
+                        dependantMax: 8,
+                        vertScales: 4,
+                        independantMin: -8,
+                        independantMax: 8,
+                        horizScales: 4,
+                        fields: {
+                            
+                        }
+                    }),
+                    new Graph("graph-displacement", {
+                        width: 450,
+                        height: 330,
+                        title: "Displacement",
+                        resizable: true,
+                        fields: {
+                            'disp-graph-1': 'Level 1',
+                            'disp-graph-2': 'Level 2',
+                            'disp-graph-3': 'Level 3'
+                        },
+                        minValue: -60,
+                        maxValue: 60,
+                        duration: 10,
+                        yLabel: "Displacement (mm)",
+                        fieldCtl: true,
+                        autoCtl: false,
+                        durationCtl: false,
+                        traceLabels: true,
+                    }),
+                    new Spacer("graph-ffts", {
+                        color: "red",
+                        title: "FFT"
+                    })
+                ],
+                layout: new TabLayout({
+                    vertical: false,
+                    border: 10,
+                })
+            }),
+            new MimicWidget(false),
+            new CameraStream("camera-stream", {
+                resizable: true,
+                left: 2,
+                top: 45,
+                videoWidth: 320,
+                videoHeight: 240,
+                swfParam: 'camera-swf',
+                mjpegParam: 'camera-mjpeg',
+                title: "Camera"
+            }),
+            new Container("controls-container", {
+                title: "Controls",
+                resizable: false,
+                left: 2,
+                top: 375,
+                widgets: [
+                    new Switch("switch-motor-on", {
+                        field: "motor-on", 
+                        action: "setMotor",
+                        label: "Motor",
+                        
+                     }),
+                     new Switch("switch-coils-on", {
+                         field: "coils-on",
+                         action: "setCoils",
+                         label: "Dampening",
+                     }),
+                     new Slider("slider-motor-speed", {
+                         field: "motor-speed",
+                         action: "setMotor",
+                         max: 8,
+                         precision: 2,
+                         label: "Motor Frequency",
+                         units: "Hz",
+                         vertical: false,
+                     }), 
+//                     new Knob("knob-coil-1", {
+//                         action: "setCoil",
+//                         field: "coil-1-power",
+//                         label: "Coil 1"
+//                             
+//                     }),
+//                     new Knob("knob-coil-2", {
+//                         action: "setCoil",
+//                         field: "coil-2-power",
+//                         label: "Coil 2"
+//                     }),
+                ],
+                layout: new FlowLayout({
+                    padding: 5,
+                    size: 310,
+                    vertical: false,
+                    center: true,
+                })
+            })
+        ]
+    };
+}
+
+/*
+ * 3 degree of freedom (3DOF) Shake Table interface.
+ */
+function Config3DOF()
+{
+    return {
         anchor: "#shake-table-anchor",
         controller: "ShakeTableController",
         dataAction: "dataAndGraph",
@@ -44,7 +178,7 @@ function ShakeTable()
                 durationCtl: false,
                 traceLabels: false,
             }),
-            new MimicWidget(this.$container, 'Diagram', ''),
+            new MimicWidget(true),
             new CameraStream("camera-stream", {
                 resizable: true,
                 left: 2,
@@ -90,7 +224,7 @@ function ShakeTable()
                 })
             })
         ]
-    }).setup().run();
+    };
 }
 
 /* ============================================================================
@@ -99,8 +233,10 @@ function ShakeTable()
 
 /**
  * Mimic Widget. This widget creates and controls the Shake Table Mimic.
+ * 
+ * @param {boolean} is3DOF whether to display 2DOF or 3DOF configuration
  */
-function MimicWidget()
+function MimicWidget(is3DOF)
 {
     Widget.call(this, "shaker-mimic", {
         title: "Model",
@@ -133,7 +269,7 @@ function MimicWidget()
     };
     
     /** Whether this mimic represents a 2DOF or a 3DOF widget. */
-    this.is3DOF = true;
+    this.is3DOF = is3DOF;
     
     /** Number of levels in the model. */
     this.numberLevels = this.is3DOF ? 4 : 3;
@@ -279,7 +415,8 @@ MimicWidget.prototype.consume = function(data) {
     }
     else
     {
-        // TODO 2DOF coils
+        this.coils[0] = data['coils-1-on'] ? data['coils-1-power'] : 0;
+        this.coils[1] = data['coils-2-on'] ? data['coils-2-power'] : 0;
     }
     
     /* Motor details. */

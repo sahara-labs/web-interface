@@ -903,7 +903,7 @@ Layout.prototype.layout = function() {
 Layout.prototype.scale = function(x, y) { };
 
 /**
- * Gets the width of the layouts displayed contents.
+ * Gets the width of the layouts displayed contents. 
  *
  * @return {integer} contents width
  */
@@ -1374,6 +1374,164 @@ FlowLayout.prototype.scale = function(h, v) {
 };
 
 /* ============================================================================
+ * == Tab Layout                                                             == 
+ * ============================================================================ */
+
+/**
+ * The tab layout only shows one widget at time and provides a tab selector to
+ * switch between the widgets. 
+ * 
+ * @param {object} config configuration object
+ * @config {vertical} whether the tab orientation is vertical or horizontal (default false)
+ * @config {border} border padding of widget in pixels (default 10px)
+ */
+function TabLayout(config)
+{
+    Layout.call(this, config);
+    
+    if (this.config.vertical === undefined) this.config.vertical = false;
+    if (this.config.border === undefined) this.config.border = 10;
+    
+    /** @private {jQuery} Tab bar node. */
+    this.$tabBar = undefined;
+    
+    /** @private {Widget} Currently displayed widget. */    
+    this.currentWidget = undefined;
+}
+
+TabLayout.prototype = new Layout;
+
+TabLayout.prototype.displayInit = function($container) {
+    this.$tabBar = this.container.getContentBox().prepend(this._tabBarHTML()).children(":first");
+    
+    var thiz = this;
+    this.$tabBar.children(".tab").click(function() {
+        $(this).siblings(".tab-active").removeClass("tab-active");
+        $(this).addClass("tab-active");
+        thiz._tabClick($(this).text()); 
+    });
+};
+
+TabLayout.prototype._tabClick = function(title) {
+   var i = 0, w = false,
+           x = this.config.vertical ? this.$tabBar.width() + this.config.border * 2: this.config.border, 
+           y = this.config.vertical ? this.config.border : this.$tabBar.height() + this.config.border * 2;
+   
+   for (i in this.container.getWidgets())
+   {
+       if ((w = this.container.getWidget(i)).config.title == title) break;
+   }
+   
+   if (!w)
+   {
+       alert("Widget with title '" + title + "' not found!");
+       return;
+   }
+   
+   /* No need to tab to the current widget. */
+   if (w == this.currentWidget) return;
+   
+   /* Remove the current widget. */
+   this.container.toggleEvent(this.currentWidget.id, false);
+   
+   /* Add the current widget. */
+   this.currentWidget = w;
+   this.container.toggleEvent(w.id, true);
+
+   /* Resize and move the widget into the center. */
+   if (w.getWindowProperty("width") + x + this.config.border < this.width || 
+           w.getWindowProperty("height") + y + this.config.border < this.height)
+   {
+       w.resized(this.width - x - this.config.border, this.height - y - this.config.border);
+       w.resizeStopped(this.width - x - this.config.border, this.height - y - this.config.border);
+   }
+
+   x += (this.width - x - w.getWindowProperty("width") - this.config.border) / 2;
+   y += (this.height - y - w.getWindowProperty("height") - this.config.border) / 2;
+
+   w.moveTo(x, y);
+
+};
+
+TabLayout.prototype._tabBarHTML = function() {
+    var i = 0, w, first = true, html = 
+        "<div class='tab-bar tab-bar-" + (this.config.vertical ? "vertical" : "horizontal" )+ "'>";
+    
+    for (i in this.container.getWidgets())
+    {
+        w = this.container.getWidget(i);
+        
+        html += "<div class='tab " + (first ? "tab-active" : "") + "'>" + w.config.title + "</div>";
+        first = false;
+    }
+    
+    html += "<div class='tab-footer'></div>" +
+        "</div>";
+        
+    return html;
+};
+
+TabLayout.prototype.displayDestroy = function() {
+    this.currentWidget = undefined;
+    this.$tabBar.remove();
+};
+
+TabLayout.prototype.layout = function() {
+    var i = 0, w, wid, hei, x, y,
+        wOff = this.config.vertical ? this.$tabBar.width() + this.config.border * 2: this.config.border, 
+        hOff = this.config.vertical ? this.config.border : this.$tabBar.height() + this.config.border * 2;
+
+    this.width = this.height = 0;
+
+    for (i in this.container.getWidgets())
+    {
+        if (!this.container.states[i]) continue;
+        w = this.container.getWidget(i);
+
+        if ((wid = w.getWindowProperty("width")) > this.width) this.width = wid;
+        if ((hei = w.getWindowProperty("height")) > this.height) this.height = hei;    
+    }
+    
+    for (i in this.container.getWidgets())
+    {
+        w = this.container.getWidget(i);
+        
+        if (!this.currentWidget || this.currentWidget == w)
+        {
+            /* The first widget is the widget first displayed. */
+            this.currentWidget = w;
+            
+            wid = w.getWindowProperty("width");
+            hei = w.getWindowProperty("height");
+
+            x = wOff;
+            y = hOff;
+
+            if (wid < this.width || hei < this.height)
+            {
+                w.resized(this.width, this.height);
+                w.resizeStopped(this.width, this.height);
+            }
+
+            x += (this.width - w.getWindowProperty("width")) / 2;
+            y += (this.height - w.getWindowProperty("height")) / 2;
+            w.moveTo(x, y);
+        }
+        else
+        {
+            this.container.toggleEvent(w.id, false);
+        }
+    }
+
+    this.width += wOff + this.config.border;
+    this.height += hOff + this.config.border;
+};
+
+TabLayout.prototype.scale = function(h, v) {
+    
+};
+
+/* ============================================================================
  * == Container Widget                                                       ==
  * ============================================================================ */
 
@@ -1390,9 +1548,6 @@ FlowLayout.prototype.scale = function(h, v) {
  * @param {object} config configuration object
  * @config {array} [widgets] list of widgets managed by this container
  * @config {Layout} [layout] layout used to specify how widgets are placed (optional)
- * @config {boolean} [toggling] Whether this container toggles visibility  
- * @config {string}  [toggleVar] data variable which specifies which widget is currently visible
- * @config {string}  [toggleAction] action to send to server 
  */
 function Container(id, config)
 {
@@ -1483,6 +1638,8 @@ Container.prototype.destroy = function() {
         }
     }
     
+    if (this.config.layout) this.config.layout.displayDestroy();
+    
     Widget.prototype.destroy.call(this);
 };
 
@@ -1501,12 +1658,17 @@ Container.prototype.resizeStopped = function(width, height) {
     /* Mask this function durinig initial _generate resize restore. */
     if (this.config.layout && this.config.layout.getWidth() === undefined) return;
     
+    this.$contentBox.show();
+    this.contentsShown = true;
+    
     var i = 0, w, h, 
         horiz = (width - 12) / this.config.layout.getWidth(), 
         vert = (height - 35) / this.config.layout.getHeight() ;
     
     for (i in this.widgets)
-    {
+    {   
+        if (!this.states[i]) continue;
+        
         this.widgets[i].$widget.css({
             width: w = this.widgets[i].getWindowProperty("width") * horiz, 
             height: h = this.widgets[i].getWindowProperty("height") * vert
@@ -1531,9 +1693,6 @@ Container.prototype.resizeStopped = function(width, height) {
         width: "auto",
         height: "auto"
     });
-    
-    this.$contentBox.show();
-    this.contentsShown = true;
 };
 
 /**
@@ -1622,7 +1781,7 @@ Spacer.prototype.resized = function(width, height) {
     {
         this.$widget.children("border-radius", (width < height ? width : height) / 2);
     }
-    
+    this.$widget.css({ width: width, height: height });
     this.$widget.children().text(Math.round(width) + "x" + Math.round(height));
 };
 
@@ -1655,8 +1814,6 @@ Spacer.prototype.resized = function(width, height) {
  */
 function Graph(id, config)
 {
-    if (!(config.fields)) throw "Options not set";
-    
 	Widget.call(this, id, config);
 
 	/* Default options. */
@@ -1674,6 +1831,8 @@ function Graph(id, config)
 	if (this.config.durationCtl === undefined) this.config.durationCtl = false;
 	if (this.config.vertScales === undefined)  this.config.vertScales = 5;
 	if (this.config.horizScales === undefined) this.config.horizScales = 8;
+	if (this.config.width === undefined) this.config.width = 300;
+	if (this.config.height === undefined) this.config.height = 300;
 	
 	/** @private {object} Data fields. */
 	this.dataFields = { };
@@ -1712,6 +1871,8 @@ Graph.COLORS = [
 ];
 
 Graph.prototype.init = function($container) {
+    if (!(this.config.fields)) throw "Options not set";
+    
     var i = 0, c = 0, thiz = this;
     
     /* Field dynamic properties. */
@@ -1745,11 +1906,6 @@ Graph.prototype.init = function($container) {
 	    top: (this.config.windowed ? 30 : 0) + this.graphHeight / 2,
 	    left: -0.545 * c.width() + (this.config.windowed ? 26.1 : 21)
 	});
-	
-	if (this.config.windowed)
-	{
-	    
-	}
 
 	/* Add the canvas panel. */
 	var canvas = Util.getCanvas(this.id, this.graphWidth, this.graphHeight);
@@ -1885,7 +2041,7 @@ Graph.prototype.consume = function(data) {
     }
 
     this._drawFrame();
-    this._updateTimeScale();
+    this._updateIndependentScale();
 };
 
 /**
@@ -1899,6 +2055,7 @@ Graph.prototype._drawFrame = function() {
 	
 	/* Draw scales. */
 	this._drawDependantScales();
+	this._drawIndependantScales();
 	    
 	/* Draw the trace for all graphed variables. */
 	for (i in this.dataFields) this._drawTrace(this.dataFields[i]);
@@ -1928,7 +2085,7 @@ Graph.prototype._adjustScaling = function() {
 Graph.STIPPLE_WIDTH = 10;
 
 /**
- * Draws the scales on the interface.
+ * Draws the dependant scales on the interface.
  */
 Graph.prototype._drawDependantScales = function() {
 	var i, j,
@@ -1946,6 +2103,7 @@ Graph.prototype._drawDependantScales = function() {
 	    this.ctx.moveTo(0, off + 1.5);
 	    this.ctx.lineTo(this.graphWidth, off + 1.5);
 	}
+	this.ctx.stroke();
 	
 	this.ctx.lineWidth = 0.3;
 
@@ -1961,6 +2119,13 @@ Graph.prototype._drawDependantScales = function() {
 	this.ctx.closePath();
 	this.ctx.stroke();
 	this.ctx.restore();
+};
+
+/**
+ * Draws the independant scales on the interface.
+ */
+Graph.prototype._drawIndependantScales = function() {
+    /* For the time series graph, no scales are drawn. */
 };
 
 /**
@@ -2022,9 +2187,9 @@ Graph.prototype._updateDependantScale = function() {
 };
 
 /**
- * Updates the time scale.
+ * Updates the independent scale.
  */
-Graph.prototype._updateTimeScale = function() {
+Graph.prototype._updateIndependentScale = function() {
 	var xstep = this.displayedDuration / this.config.horizScales, i,
 		$d = this.$widget.find(".graph-bottom-scale-0"), t;
 
@@ -2093,7 +2258,10 @@ Graph.prototype.resized = function(width, height) {
         $s = $s.next();
     }
     
-    this.$widget.css("height", "auto");
+    this.$widget.css({
+        width: width,
+        height: height
+    });
 };
 
 Graph.prototype.resizeStopped = function(width, height) {
@@ -2126,6 +2294,120 @@ Graph.prototype._showControls = function(show) {
     $n.css("display", $n.css("display") == "none" ? "block" : "none");
     this.$widget.css("height", "auto");
 };
+
+/* ============================================================================
+ * == Scatter Plot Widget.                                                   ==
+ * ============================================================================ */
+
+/**
+ * The scatter plot widget is a graph that plots points to show the 
+ * relationship between two sets of time-series data.
+ * 
+ * @param {string} id graph identifier
+ * @param {object} config configuration object
+ * @config {object}  [fields]         map of graphed data fields with field => label
+ * @config {object}  [colors]         map of graph trace colors with field => color (optional)
+ * @config {boolean} [autoScale]      whether to autoscale the graph dependant (default off)
+ * @config {integer} [dependantMin]   minimum value that is graphed for dependant axis, implies not autoscaling (default 0)
+ * @config {integer} [dependantMax]   maximum value that is graphed for dependant axis, implies not autoscaling (default 100)
+ * @config {integer} [independantMin] minimum value that is graphed for dependant axis, implies not autoscaling (default 0)
+ * @config {integer} [independantMax] maximum value that is graphed for dependant axis, implies not autoscaling (default 100)
+ * @config {integer} [duration]       number of seconds this graph displays (default 60)
+ * @config {integer} [period]         period betweeen samples in milliseconds (default 100)
+ * @config {string}  [xLabel]         X axis label (default (Time (s))
+ * @config {String}  [yLabel]         Y axis label (optional)
+ * @config {boolean} [traceLabels]    whether to show trace labels (default true)
+ * @config {boolean} [fieldCtl]       whether data field displays can be toggled (default false)
+ * @config {boolean} [autoCtl]        whether autoscaling enable control is shown (default false)
+ * @config {boolean} [durationCtl]    whether duration control slider is displayed
+ * @config {integer} [vertScales]     number of vertical scales (default 5)
+ * @config {integer} [horizScales]    number of horizontal scales (default 5)
+ */
+function ScatterPlot(id, config)
+{
+    /* Overriding base default options. */
+    if (config.horizScales === undefined) config.horizScales = 5;
+    
+    /* Configuration synonyms. */
+    if (config.dependantMin) config.minValue = config.dependantMin;
+    if (config.dependantMax) config.maxValue = config.dependantMax;
+    
+    Graph.call(this, id, config);
+    
+    if (this.config.independantMin === undefined) this.config.independantMin = 0;
+    if (this.config.independantMax === undefined) this.config.independantMax = 100;
+    
+    /** @private {integer} The range of values on the indepenedant scale. */
+    this.independantRange = this.config.independantMax - this.config.independantMin;
+    
+    /** @private {integer} Offset to the zero value on the independant range. */
+    this.independantOffset = this.config.independantMin / this.independantRange;
+}
+
+ScatterPlot.prototype = new Graph;
+
+ScatterPlot.prototype.init = function($container) {
+    Graph.prototype.init.call(this, $container);
+    
+    
+};
+
+ScatterPlot.prototype._drawIndependantScales = function() {
+    var i, j,
+        off = this.graphWidth - Math.abs(this.independantOffset * this.graphWidth);
+
+    this.ctx.save();
+    this.ctx.beginPath();
+
+    this.ctx.strokeStyle = "#FFFFFF";
+
+    /* Zero line. */
+    this.ctx.lineWidth = 3;
+    if (off > 0 && off < this.graphWidth)
+    {
+        this.ctx.moveTo(off - 1.5, 0);
+        this.ctx.lineTo(off - 1.5, this.graphHeight);
+    }
+    this.ctx.stroke();
+    
+    this.ctx.lineWidth = 0.3;
+
+    for (i = 0; i < this.graphWidth; i += this.graphWidth / this.config.horizScales)
+    {
+        for (j = 0; j < this.graphHeight ; j += Graph.STIPPLE_WIDTH * 1.5)
+        {
+            this.ctx.moveTo(i - 0.25, j);
+            this.ctx.lineTo(i - 0.25, j + Graph.STIPPLE_WIDTH);
+        }
+    }
+
+    this.ctx.closePath();
+    this.ctx.stroke();
+    this.ctx.restore();
+};
+
+ScatterPlot.prototype.consume = function(data) {
+    
+};
+
+ScatterPlot.prototype._drawTrace = function(dOb) {
+    
+};
+
+
+
+ScatterPlot.prototype._updateIndependentScale = function() {
+    var i, $s = this.$widget.find(".graph-bottom-scale-0");
+    
+    for (i = 0; i <= this.config.horizScales; i++)
+    {
+        $s.html(Util.zeroPad(
+                this.independantRange / this.config.horizScales * i + this.config.independantMin,
+                this.independantRange >= this.config.horizScales * 2 ? 0 : 1));
+        $s = $s.next();
+    }
+};
+
 
 /* ============================================================================
  * == Switch Widget.                                                         ==
@@ -2534,33 +2816,42 @@ PushButton.prototype._clicked = function() {
  * @constructor
  * @param {string} id the identifier of widget
  * @param {object} config configuration of widget
+ * @config {string} [field] data field that has displayed value
  * @config {string} [action] server action to call when the switched is changed
  * @config {string} [label] label to display
- * @config {string} [labelVertical] whether the label is vertical (default true)
+ * @config {string} [units] Units of the knobs value 
+ * @config {string} [precision] precision of values (default 0)
  * @config {string} [style] set the knob style (default smooth)
  * @config {integer} [min] minimum value of slider (default 0)
  * @config {integer} [max] maximum value of slider (default 100)
- * @config {string} [units] the units of mesurment shown in the widget
- * @config {number} [radius] the radius of the knob
+ * @config {number} [radius] the radius of the knob in pixels (default 25px)
+ * @config {boolean} [vertical] whether the label and text entry is aside (default false)
  */
 function Knob(id, config)
 {
     Widget.call(this, id, config);
     
     /** Default settings. */
-    this.val = undefined;
-    this.valueChanged = false;
     if (this.config.min === undefined) this.config.min = 0;
     if (this.config.max === undefined) this.config.max = 100;
-    if (this.config.labelVertical === undefined) this.config.labelVertical = true;
+    if (this.config.vertical === undefined) this.config.vertical = false;
+    if (this.config.radius === undefined) this.config.radius = 25;
+    if (this.config.precision === undefined) this.config.precision = 0;
+    
+    /** @private {number} Current value of knob. */
+    this.val = undefined;
+    
+    /** @private {boolean} Whether the value has changed by user action
+     *  and is the being sent to the server. */
+    this.valueChanged = false;
 }
 
 Knob.prototype = new Widget;
 
 Knob.prototype.init = function($container) {
-    if (!this.config.action) throw "Options not supplied.";
+    if (!(this.config.action && this.config.field)) throw "Options not supplied.";
 	
-    this.$Widget = this._generate($container,this._buildHTML());
+    this.$widget = this._generate($container, this._buildHTML());
 
     /* Knob Position */        
     this.knob = this.$widget.find('.knob-' + this.config.style);
@@ -2575,13 +2866,14 @@ Knob.prototype.init = function($container) {
     this.$widget.find('.knob-val').click(function() { thiz._handleValueSelect($(this).data('value')); });
     this.$widget.find('.knob-range-val').click(function() { thiz._handleValueSelect($(this).data('value')); });
     this.$input = this.$widget.find('input').change(function() { thiz._handleTextBoxChange($(this).val()); });   
-}
+    $(document).bind("mouseup.knob-" + this.id, function(){ thiz._knobReleased(); });
+};
 
 Knob.prototype._buildHTML = function() {
-    html =
+    return (
     "<div id='knob-container-" + this.id + "'>" +
-        (this.config.label ? "<label class='knob-label" + (this.config.labelVertical ? '' : ' knob-label-horizontal') +"'>" + this.config.label + ":</label>" : '') +
-        "<div class='knob-range" + (!this.config.labelVertical && !this.config.windowed ? ' knob-range-horizontal' : '') +"'>" +
+        (this.config.label ? "<label class='knob-label" + (this.config.vertical ? '' : ' knob-label-horizontal') +"'>" + this.config.label + ":</label>" : '') +
+        "<div class='knob-range" + (!this.config.vertical && !this.config.windowed ? ' knob-range-horizontal' : '') +"'>" +
             "<div class='knob-range-val knob-max' data-value='1'>Max: " + this.config.max + "</div>" +
             "<div class='knob-min knob-range-val' data-value='0'>Min: " + this.config.min + "</div>" +
             "</div>" +
@@ -2594,20 +2886,20 @@ Knob.prototype._buildHTML = function() {
         "<div class='knob-val knob-25' data-value='0.25' style='top:50%; right:" + (!this.config.windowed ? '-25%' : '8%') + ";'>" + ((this.config.max - this.config.min) * 0.25 + this.config.min) + "</div>" +
         "<div><div class='knob-50-outter'><div class='knob-val knob-50' data-value='0.50'>" + ((this.config.max - this.config.min) * 0.50 + this.config.min) + "</div></div></div>" +
         "<div class='knob-val knob-75' data-value='0.75' style='top: 50%; left:" + (!this.config.windowed ? '-25%' : '8%') + ";'>" + ((this.config.max - this.config.min) * 0.75 + this.config.min) + "</div>" +
-        "<div class='knob-input-container" + (this.config.labelVertical ? '' : ' knob-input-horizontal') +"'>" +    
+        "<div class='knob-input-container" + (this.config.vertical ? '' : ' knob-input-horizontal') +"'>" +    
             "<input class='knob-input' value='0'></input>" +
-            "<div class='knob-input-units'>" + (this.config.units ? this.config.units : '') + "</div>"
+            "<div class='knob-input-units'>" + (this.config.units ? this.config.units : '') + "</div>" +
         "</div>" +
     "</div>"
-    return html;
-}
+    );
+};
 
 /**
  * Event handler triggered when the knob is active.
  */
 Knob.prototype._knobEngaged = function(){
     this.mouseDown = true;
-}
+};
 
 /**
  * Event handler triggered when no longer on mouse down on button.
@@ -2624,7 +2916,7 @@ Knob.prototype._knobReleased = function() {
  */
 Knob.prototype._knobChanged = function(e){
     if (this.mouseDown) {
-    //TODO Track mouse on the screen to improve controls for handheld and touch devices.
+       //TODO Track mouse on the screen to improve controls for handheld and touch devices.
         e.preventDefault()
 
         /* The current position of the mouse within the knob. */
@@ -2645,7 +2937,7 @@ Knob.prototype._knobChanged = function(e){
         this.val = Math.round((this.deg * range) / 360) + this.config.min;
         this.valueChanged = 'true';
     }
-}
+};
 
 /**
  * Rotates the knob widget.
@@ -2662,8 +2954,8 @@ Knob.prototype._rotateKnob = function(){
         'transform' : 'rotate(' + this.deg + 'deg)'
     });
 
-        /* Update the knob input field. */
-        this.$widget.find('.knob-input').val(this.val);
+    /* Update the knob input field. */
+    this.$widget.find('.knob-input').val(this.val);
 }
 
 /**
@@ -2709,8 +3001,8 @@ Knob.prototype._handleValueSelect = function(val) {
     /* Update the knob. */
     this.valueChanged = true;
     this._rotateKnob();
-    this._send();        
-}
+    this._send();
+};
 
 /**
  * Handles a value text box change.
@@ -2754,6 +3046,11 @@ Knob.prototype._send = function() {
             thiz.valueChanged = false;
         }
     );
+};
+
+Knob.prototype.destroy = function() {
+    $(document).unbind("mouseup.knob-" + this.id);
+    Widget.prototype.destroy.call(this);
 };
 
 /* ============================================================================
