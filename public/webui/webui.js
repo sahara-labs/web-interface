@@ -2428,6 +2428,13 @@ Button.prototype.init = function($container) {
     this.$widget.mousedown(function() { thiz._buttonEngaged(); });
     this.$widget.bind("mouseup mouseout", function(){ thiz._buttonReleased(); });
     this.$widget.click(function() { thiz._clicked(); });
+
+//TODO Finish implementing the push button.
+/*
+    if($('#'+this.id).hasClass('push-button')) $('#'+this.id).find('.button').before('<div class="push-button-outer"></div>');
+    if($('#'+this.id).hasClass('push-button')) $('#'+this.id).find('.button').addClass('push-button-middle');
+    if($('#'+this.id).hasClass('push-button')) $('#'+this.id).find('.button').after('<div class="push-button-color push-button-red"></div>');
+*/
 };
 
 /**
@@ -2479,7 +2486,7 @@ function PushButton(id, config)
     
     Button.call(this, id, config);
     this.config.classes.push("push-button");
-    
+
     /* Default options. */
     if (this.config.period === undefined) this.config.period = 250;
     
@@ -2529,9 +2536,11 @@ PushButton.prototype._clicked = function() {
  * @param {object} config configuration of widget
  * @config {string} [action] server action to call when the switched is changed
  * @config {string} [label] label to display
+ * @config {string} [labelVertical] whether the label is vertical (default true)
  * @config {string} [style] set the knob style (default smooth)
  * @config {integer} [min] minimum value of slider (default 0)
  * @config {integer} [max] maximum value of slider (default 100)
+ * @config {string} [units] the units of mesurment shown in the widget
  * @config {number} [radius] the radius of the knob
  */
 function Knob(id, config)
@@ -2543,6 +2552,7 @@ function Knob(id, config)
     this.valueChanged = false;
     if (this.config.min === undefined) this.config.min = 0;
     if (this.config.max === undefined) this.config.max = 100;
+    if (this.config.labelVertical === undefined) this.config.labelVertical = true;
 }
 
 Knob.prototype = new Widget;
@@ -2562,20 +2572,32 @@ Knob.prototype.init = function($container) {
     this.$widget.find('.knob').mousedown(function(e){ e.preventDefault(); thiz._knobEngaged(); })
     this.$widget.mouseup(function(){ thiz._knobReleased(); })
     this.$widget.mousemove(function(e){ thiz._knobChanged(e); })
-    this.$input = this.$widget.find("input").change(function() { thiz._handleTextBoxChange($(this).val()); });   
+    this.$widget.find('.knob-val').click(function() { thiz._handleValueSelect($(this).data('value')); });
+    this.$widget.find('.knob-range-val').click(function() { thiz._handleValueSelect($(this).data('value')); });
+    this.$input = this.$widget.find('input').change(function() { thiz._handleTextBoxChange($(this).val()); });   
 }
 
 Knob.prototype._buildHTML = function() {
     html =
     "<div id='knob-container-" + this.id + "'>" +
-        (this.config.label ? "<label class='knob-label'>" + this.config.label + ":</label>" : '') +
+        (this.config.label ? "<label class='knob-label" + (this.config.labelVertical ? '' : ' knob-label-horizontal') +"'>" + this.config.label + ":</label>" : '') +
+        "<div class='knob-range" + (!this.config.labelVertical && !this.config.windowed ? ' knob-range-horizontal' : '') +"'>" +
+            "<div class='knob-range-val knob-max' data-value='1'>Max: " + this.config.max + "</div>" +
+            "<div class='knob-min knob-range-val' data-value='0'>Min: " + this.config.min + "</div>" +
+            "</div>" +
         "<div class='knob-container' style='height:" + this.config.radius * 2 + "px; width: " + this.config.radius * 2 + "px;'>" +
             "<div class='knob'>" +
                 "<div class='knob-texture knob-" + this.config.style + "'></div>" +
                 "<div class='knob-highlight'" + (this.config.style == 'black' ? 'style="opacity:0.4;"' : '') + "></div>"+
             "</div>" +
         "</div>" +
-        "<input class='knob-value' value='0'></input>" +
+        "<div class='knob-val knob-25' data-value='0.25' style='top:50%; right:" + (!this.config.windowed ? '-25%' : '8%') + ";'>" + ((this.config.max - this.config.min) * 0.25 + this.config.min) + "</div>" +
+        "<div><div class='knob-50-outter'><div class='knob-val knob-50' data-value='0.50'>" + ((this.config.max - this.config.min) * 0.50 + this.config.min) + "</div></div></div>" +
+        "<div class='knob-val knob-75' data-value='0.75' style='top: 50%; left:" + (!this.config.windowed ? '-25%' : '8%') + ";'>" + ((this.config.max - this.config.min) * 0.75 + this.config.min) + "</div>" +
+        "<div class='knob-input-container" + (this.config.labelVertical ? '' : ' knob-input-horizontal') +"'>" +    
+            "<input class='knob-input' value='0'></input>" +
+            "<div class='knob-input-units'>" + (this.config.units ? this.config.units : '') + "</div>"
+        "</div>" +
     "</div>"
     return html;
 }
@@ -2602,7 +2624,7 @@ Knob.prototype._knobReleased = function() {
  */
 Knob.prototype._knobChanged = function(e){
     if (this.mouseDown) {
-
+    //TODO Track mouse on the screen to improve controls for handheld and touch devices.
         e.preventDefault()
 
         /* The current position of the mouse within the knob. */
@@ -2612,18 +2634,15 @@ Knob.prototype._knobChanged = function(e){
         var atan = Math.atan2(mPos.x - this.config.radius, mPos.y - this.config.radius);
 
         /* Degrees from mouse position. */
-        this.deg = Math.round(-atan / (Math.PI/180) + 180);
+        this.deg = -atan / (Math.PI/180) + 180;
 
         /* Rotates the knob. */
         this._rotateKnob(this.deg);
         
         /* Get the value of the degree in comparison to the range of the knob widget. */
         var range = this.config.max - this.config.min;
-        this.val = Math.round(this.deg * range / 359 + this.config.min);
 
-        /* Update the knob input field. */
-        this.$widget.find('.knob-value').val(this.val);
-
+        this.val = Math.round((this.deg * range) / 360) + this.config.min;
         this.valueChanged = 'true';
     }
 }
@@ -2632,13 +2651,65 @@ Knob.prototype._knobChanged = function(e){
  * Rotates the knob widget.
  */
 Knob.prototype._rotateKnob = function(){
-        this.knob.css({
-            '-webkit-transform' : 'rotate(' + this.deg + 'deg)',
-            '-moz-transform' : 'rotate(' + this.deg + 'deg)',
-            '-ms-transform' : 'rotate(' + this.deg + 'deg)',
-            '-o-transform' : 'rotate(' + this.deg + 'deg)',
-            'transform' : 'rotate(' + this.deg + 'deg)'
-        });
+    var t = (this.mouseDown === false) ? 0.5 : 0;
+
+    this.knob.css({
+    	'transition' : t + 's',
+        '-webkit-transform' : 'rotate(' + this.deg + 'deg)',
+        '-moz-transform' : 'rotate(' + this.deg + 'deg)',
+        '-ms-transform' : 'rotate(' + this.deg + 'deg)',
+        '-o-transform' : 'rotate(' + this.deg + 'deg)',
+        'transform' : 'rotate(' + this.deg + 'deg)'
+    });
+
+        /* Update the knob input field. */
+        this.$widget.find('.knob-input').val(this.val);
+}
+
+/**
+ * Handles the click event for the knob values 
+ */
+Knob.prototype._handleValueSelect = function(val) {
+
+    /* Get the values positon in relation to degrees. */
+    val === 0 ? this.val = this.config.min : this.val = (this.config.max - this.config.min) * val;
+    
+    /* Get the degree position of the selected value. */
+    switch (val)
+    {
+    case 0:
+        this.deg = 0;
+        this.val = this.config.min;
+        break;
+
+    case 0.25:
+        this.deg = 90;
+        this.val = ((this.config.max - this.config.min) * 0.25 + this.config.min);
+        break;
+
+    case 0.50:
+        this.deg = 180;
+        this.val = ((this.config.max - this.config.min) * 0.50 + this.config.min)
+        break;
+
+    case 0.75:
+        this.deg = 270;
+        this.val = ((this.config.max - this.config.min) * 0.75 + this.config.min)
+        break;
+
+    case 1:
+        this.deg = 360;
+        this.val = ((this.config.max - this.config.min) + this.config.min)
+        break;
+
+    default:
+        //Do Nothing
+    }
+
+    /* Update the knob. */
+    this.valueChanged = true;
+    this._rotateKnob();
+    this._send();        
 }
 
 /**
@@ -2646,7 +2717,7 @@ Knob.prototype._rotateKnob = function(){
  * 
  * @param {number} val new value
  */
-Knob.prototype._handleTextBoxChange = function(val) { console.log(val);
+Knob.prototype._handleTextBoxChange = function(val) {
     this.removeMessages();
     if (!val.match(/^-?\d+\.?\d*$/))
     {
@@ -2662,7 +2733,10 @@ Knob.prototype._handleTextBoxChange = function(val) { console.log(val);
     }
 
     /* Get the values positon in relation to degrees. */
-    this.deg = Math.round(val * 359 / this.config.max);
+    //TODO Set the knob to the correct degree position when entering a value in the input field.
+    //this.deg = Math.round(val * 360 / (this.config.max - this.config.min) - 90); // Works for black knob
+    this.deg = Math.round(val * 360 / (this.config.max - this.config.min) - 360); // Works for white knob
+
     this.val = val;
     this.valueChanged = true;
     this._rotateKnob();
