@@ -3026,9 +3026,9 @@ Knob.prototype.init = function($container) {
 
     /* Event Handlers. */
     var thiz = this;    
-    this.$widget.find('.knob').mousedown(function(e){ e.preventDefault(); thiz._knobEngaged(); })
-    this.$widget.mouseup(function(){ thiz._knobReleased(); })
-    this.$widget.mousemove(function(e){ thiz._knobChanged(e); })
+    this.$widget.find('.knob').mousedown(function(e){ e.preventDefault(); thiz._knobEngaged(); });
+    this.$widget.mouseup(function(){ thiz._knobReleased(); });
+    this.$widget.mousemove(function(e){ thiz._knobChanged(e); });
     this.$widget.find('.knob-val').click(function() { thiz._handleValueSelect($(this).data('value')); });
     this.$widget.find('.knob-range-val').click(function() { thiz._handleValueSelect($(this).data('value')); });
     this.$input = this.$widget.find('input').change(function() { thiz._handleTextBoxChange($(this).val()); });   
@@ -3083,7 +3083,7 @@ Knob.prototype._knobReleased = function() {
 Knob.prototype._knobChanged = function(e){
     if (this.mouseDown) {
        //TODO Track mouse on the screen to improve controls for handheld and touch devices.
-        e.preventDefault()
+        e.preventDefault();
 
         /* The current position of the mouse within the knob. */
         var mPos = {x: e.clientX - this.kPos.x, y: e.clientY - this.kPos.y};
@@ -3122,7 +3122,7 @@ Knob.prototype._rotateKnob = function(){
 
     /* Update the knob input field. */
     this.$widget.find('.knob-input').val(this.val);
-}
+};
 
 /**
  * Handles the click event for the knob values 
@@ -3147,17 +3147,17 @@ Knob.prototype._handleValueSelect = function(val) {
 
     case 0.50:
         this.deg = 180;
-        this.val = ((this.config.max - this.config.min) * 0.50 + this.config.min)
+        this.val = ((this.config.max - this.config.min) * 0.50 + this.config.min);
         break;
 
     case 0.75:
         this.deg = 270;
-        this.val = ((this.config.max - this.config.min) * 0.75 + this.config.min)
+        this.val = ((this.config.max - this.config.min) * 0.75 + this.config.min);
         break;
 
     case 1:
         this.deg = 360;
-        this.val = ((this.config.max - this.config.min) + this.config.min)
+        this.val = ((this.config.max - this.config.min) + this.config.min);
         break;
 
     default:
