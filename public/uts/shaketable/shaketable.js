@@ -42,15 +42,23 @@ function Config2DOF()
                         title: "Lissajous",
                         xLabel: "L0 (mm)",
                         yLabel: "L1 (mm)",
-                        dependantMin: -8,
-                        dependantMax: 8,
-                        vertScales: 4,
-                        independantMin: -8,
-                        independantMax: 8,
-                        horizScales: 4,
+                        autoScale: true,
+                        dependantMin: -50,
+                        dependantMax: 50,
+                        vertScales: 5,
+                        independantMin: -50,
+                        independantMax: 50,
+                        horizScales: 5,
+                        duration: 5,
                         fields: {
-                            
-                        }
+                            'disp-graph-1': [ 'disp-graph-2', 'disp-graph-3' ],
+                            'disp-graph-2': 'disp-graph-3'
+                        },
+                        labels: {
+                            'disp-graph-1': [ "L0 vs L1", "L0 vs L2" ],
+                            'disp-graph-2': "L1 vs L2"
+                        },
+                        fieldCtl: true
                     }),
                     new Graph("graph-displacement", {
                         width: 450,
@@ -58,9 +66,9 @@ function Config2DOF()
                         title: "Displacement",
                         resizable: true,
                         fields: {
-                            'disp-graph-1': 'Level 1',
-                            'disp-graph-2': 'Level 2',
-                            'disp-graph-3': 'Level 3'
+                            'disp-graph-1': 'Level 0',
+                            'disp-graph-2': 'Level 1',
+                            'disp-graph-3': 'Level 2'
                         },
                         minValue: -60,
                         maxValue: 60,
