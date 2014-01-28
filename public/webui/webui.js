@@ -1382,15 +1382,20 @@ FlowLayout.prototype.scale = function(h, v) {
  * switch between the widgets. 
  * 
  * @param {object} config configuration object
- * @config {vertical} whether the tab orientation is vertical or horizontal (default false)
- * @config {border} border padding of widget in pixels (default 10px)
+ * @config {string} [position] position of tab bar, either 'top', 'bottom' (horizontal tab bar), 
+ *                          'left', 'right' (vertical tab bar) (default top)
+ * @config {integer} [border] border padding of widget in pixels (default 10px)
+ * @config {boolean} [alignLeft] whether to align left or right for horizonal orientation (default left)
  */
 function TabLayout(config)
 {
     Layout.call(this, config);
     
-    if (this.config.vertical === undefined) this.config.vertical = false;
+    if (this.config.position === undefined) this.config.position = 'top';
+    if (this.config.vertical === undefined) this.config.vertical = 
+            this.config.position == 'top' || this.config.position == 'bottom';
     if (this.config.border === undefined) this.config.border = 10;
+    if (this.config.alignLeft === undefined) this.config.alignLeft = true;
     
     /** @private {jQuery} Tab bar node. */
     this.$tabBar = undefined;
@@ -1400,6 +1405,14 @@ function TabLayout(config)
 }
 
 TabLayout.prototype = new Layout;
+
+/** @const Possible tab bar positions. */
+TabLayout.POSITION = {
+    top: 'top',
+    bottom: 'bottom',
+    left: 'left',
+    right: 'right'
+};
 
 TabLayout.prototype.displayInit = function($container) {
     this.$tabBar = this.container.getContentBox().prepend(this._tabBarHTML()).children(":first");
@@ -1413,9 +1426,36 @@ TabLayout.prototype.displayInit = function($container) {
 };
 
 TabLayout.prototype._tabClick = function(title) {
-   var i = 0, w = false,
-           x = this.config.vertical ? this.$tabBar.width() + this.config.border * 2: this.config.border, 
-           y = this.config.vertical ? this.config.border : this.$tabBar.height() + this.config.border * 2;
+   var i = 0, w = false, x, y, 
+       wOff = this.config.vertical ? 0 : this.$tabBar.width() + this.config.border,
+       hOff = this.config.vertical ? this.$tabBar.height() + this.config.border : 0;
+     
+   switch (this.config.position)
+   {
+   case TabLayout.POSITION.top:
+       x = this.config.border;
+       y = hOff + this.config.border;
+       break;
+       
+   case TabLayout.POSITION.bottom:
+       x = this.config.border;
+       y = this.config.border;
+       break;
+       
+   case TabLayout.POSITION.left:
+       x = wOff + this.config.border;
+       y = this.config.border;
+       break;
+       
+   case TabLayout.POSITION.right:
+       x = this.config.border;
+       y = this.config.border;
+       break;
+       
+   default:
+       throw "Unknown tab bar position: " + this.config.position;
+       break;
+   }
    
    for (i in this.container.getWidgets())
    {
@@ -1439,33 +1479,56 @@ TabLayout.prototype._tabClick = function(title) {
    this.container.toggleEvent(w.id, true);
 
    /* Resize and move the widget into the center. */
-   if (w.getWindowProperty("width") + x + this.config.border < this.width || 
-           w.getWindowProperty("height") + y + this.config.border < this.height)
+   if (w.getWindowProperty("width") + wOff + this.config.border * 2 != this.width || 
+           w.getWindowProperty("height") + hOff + this.config.border * 2 != this.height)
    {
-       w.resized(this.width - x - this.config.border, this.height - y - this.config.border);
-       w.resizeStopped(this.width - x - this.config.border, this.height - y - this.config.border);
+       w.resized(this.width - wOff - this.config.border * 2, this.height - hOff - this.config.border * 2);
+       w.resizeStopped(this.width - wOff - this.config.border * 2, this.height - hOff - this.config.border * 2);
    }
 
-   x += (this.width - x - w.getWindowProperty("width") - this.config.border) / 2;
-   y += (this.height - y - w.getWindowProperty("height") - this.config.border) / 2;
+   x += (this.width - wOff - w.getWindowProperty("width") - this.config.border * 2) / 2;
+   y += (this.height - hOff - w.getWindowProperty("height") - this.config.border * 2) / 2;
 
    w.moveTo(x, y);
 
 };
 
 TabLayout.prototype._tabBarHTML = function() {
-    var i = 0, w, first = true, html = 
-        "<div class='tab-bar tab-bar-" + (this.config.vertical ? "vertical" : "horizontal" )+ "'>";
+    var i, w, widgets = Object.getOwnPropertyNames(this.container.getWidgets()), html = 
+        "<div class='tab-bar tab-bar-" + this.config.position + "'>";
     
-    for (i in this.container.getWidgets())
+    if (this.config.position == TabLayout.POSITION.bottom)
     {
-        w = this.container.getWidget(i);
-        
-        html += "<div class='tab " + (first ? "tab-active" : "") + "'>" + w.config.title + "</div>";
-        first = false;
+        widgets.reverse();
+        html += "<div class='tab-footer'></div>"; 
     }
     
-    html += "<div class='tab-footer'></div>" +
+    for (i = 0; i < widgets.length; i++)
+    {
+        w = this.container.getWidget(widgets[i]);
+        
+        html += "<div class='tab " + (i == 0 && this.config.position != TabLayout.POSITION.bottom || 
+                        i == widgets.length - 1 && this.config.position == TabLayout.POSITION.bottom ? "tab-active" : "")
+                        + "' style='" + (this.config.vertical ? "float:" + (this.config.alignLeft ? "left" : "right") : "") + "'>" + 
+                w.config.title + "</div>";
+    }
+    
+    if (this.config.position == TabLayout.POSITION.top)
+    {
+        html += "<div class='tab-footer'></div>"; 
+    }
+    else if (this.config.position == TabLayout.POSITION.bottom)
+    {
+        html += "<div style='clear:both'></div>";
+    }
+    else
+    {
+        html += "<div class='tab-post' style='" + 
+                (this.config.position == TabLayout.POSITION.left ? "right:0" : "left:0") + "'></div>";
+    }
+    
+    
+    html += 
         "</div>";
         
     return html;
@@ -1478,8 +1541,8 @@ TabLayout.prototype.displayDestroy = function() {
 
 TabLayout.prototype.layout = function() {
     var i = 0, w, wid, hei, x, y,
-        wOff = this.config.vertical ? this.$tabBar.width() + this.config.border * 2: this.config.border, 
-        hOff = this.config.vertical ? this.config.border : this.$tabBar.height() + this.config.border * 2;
+        wOff = this.config.vertical ? 0 : this.$tabBar.width() + this.config.border, 
+        hOff = this.config.vertical ? this.$tabBar.height() + this.config.border : 0;
 
     this.width = this.height = 0;
 
@@ -1504,17 +1567,45 @@ TabLayout.prototype.layout = function() {
             wid = w.getWindowProperty("width");
             hei = w.getWindowProperty("height");
 
-            x = wOff;
-            y = hOff;
-
             if (wid < this.width || hei < this.height)
             {
                 w.resized(this.width, this.height);
                 w.resizeStopped(this.width, this.height);
             }
+            
+            switch (this.config.position) 
+            {
+            case TabLayout.POSITION.top:
+                x = this.config.border;
+                y = hOff + this.config.border; 
+                break;
+                
+            case TabLayout.POSITION.bottom:
+                this.$tabBar.css({
+                    left: 0,
+                    top: hei + this.config.border * 2
+                });
+                x = this.config.border;
+                y = this.config.border;
+                break;
+                
+            case TabLayout.POSITION.left:
+                x = wOff + this.config.border;
+                y = this.config.border;
+                break;
+                
+            case TabLayout.POSITION.right:
+                x = this.config.border;
+                y = this.config.border;
+                break;
+                
+            default:
+                throw "Unknown tab position: " + this.config.position;
+                break;
+            }
 
             x += (this.width - w.getWindowProperty("width")) / 2;
-            y += (this.height - w.getWindowProperty("height")) / 2;
+            y += (this.height - w.getWindowProperty("height")) / 2; 
             w.moveTo(x, y);
         }
         else
@@ -1523,12 +1614,20 @@ TabLayout.prototype.layout = function() {
         }
     }
 
-    this.width += wOff + this.config.border;
-    this.height += hOff + this.config.border;
+    this.width += wOff + this.config.border * 2;
+    this.height += hOff + this.config.border * 2;
+    
+    if (this.config.position == TabLayout.POSITION.left || this.config.position == TabLayout.POSITION.right) 
+    {
+        this.$tabBar.children(".tab-post").css("height", this.height + "px");
+    }
 };
 
 TabLayout.prototype.scale = function(h, v) {
-    
+    if (this.config.position == TabLayout.POSITION.bottom)
+    {
+        this.$tabBar.css("top", parseInt(this.$tabBar.css("top")) * v + "px");
+    }
 };
 
 /* ============================================================================
@@ -1689,10 +1788,13 @@ Container.prototype.resizeStopped = function(width, height) {
         });
     }
     
-    this.$widget.css({
-        width: "auto",
-        height: "auto"
-    });
+    if (this.config.windowed)
+    {
+        this.$widget.css({
+            width: "auto",
+            height: "auto"
+        });
+    }
 };
 
 /**

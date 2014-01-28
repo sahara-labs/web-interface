@@ -58,32 +58,104 @@
  ** Tabs                                                                     **
  ******************************************************************************/
 
+.tab-bar {
+	
+}
+
+.tab-bar-left {
+	
+}
+
+.tab-bar-right {
+	
+}
+
 .tab {
-    float: left;
-    margin: -1px 2px;
     padding: 5px 10px 2px 10px;
     height: 20px;
     background-color: #FAFAFA;
     border: 1px solid #AAAAAA;
-    box-shadow: 0 -1px 2px #AAAAAA; 
-    border-radius: 8px 8px 0 0;
     cursor: pointer;
     text-align: center;
     color: #666666;
 }
 
+.tab-bar-top .tab {
+    margin: -1px 2px;
+    box-shadow: 0 -1px 2px #AAAAAA; 
+    border-radius: 8px 8px 0 0;
+}
+
+.tab-bar-top .tab:hover {
+	box-shadow: 0 -1px 4px #AAAAAA;
+}
+
+.tab-bar-bottom .tab {
+    margin: 0 2px;
+    box-shadow: 0 1px 2px #AAAAAA; 
+    border-radius: 0 0 8px 8px;
+}
+
+.tab-bar-bottom .tab:hover {
+	box-shadow: 0 1px 4px #AAAAAA;
+}
+
+.tab-bar-left .tab {
+    margin: 2px 0;
+    box-shadow: -1px 0 2px #AAAAAA;
+    border-radius: 8px 0 0 8px;
+}
+
+.tab-bar-left .tab:hover {
+	box-shadow: -1px 0 4px #AAAAAA;
+}
+
+.tab-bar-right .tab {
+    margin: 2px 0;
+    box-shadow: 1px 0 2px #AAAAAA;
+    border-radius: 0 8px 8px 0;
+}
+
+.tab-bar-right .tab:hover {
+	box-shadow: 1px 0 4px #AAAAAA;
+}
+
 .tab-active {
     border: 1px solid #333333;
     background-color: #333333;
-    box-shadow: 0 -1px 4px #333333; 
     color: #EFEFEF;
     font-weight: bold;
+}
+
+.tab-bar-top .tab-active{
+	box-shadow: 0 -1px 4px #333333; 
+}
+
+.tab-bar-bottom .tab-active {
+    box-shadow: 0 1px 4px #333333; 
+}
+
+.tab-bar-left .tab-active {
+    box-shadow: 0 -1px 4px #333333;
+}
+
+.tab-bar-right .tab-active {
+    box-shadow: 0 1px 4px #333333;
 }
 
 .tab-footer {
 	clear: both;
 	border-bottom: 3px solid #333333;
 	box-shadow: 0 1px 2px #333333;
+}
+
+.tab-post {
+	position: absolute;
+	top: 0;
+	border-left: 3px solid #333333;
+	box-shadow: 0 1px 2px #333333;
+	width: 0;
+	clear: both;
 }
 
 /******************************************************************************

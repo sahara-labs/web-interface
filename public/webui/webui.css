@@ -123,15 +123,69 @@
  ** Tabs                                                                     **
  ******************************************************************************/
 
+
+.tab-bar {
+	position: relative;
+}
+
+.tab-bar-left {
+	float: left;
+}
+
+.tab-bar-right {
+	float: right;
+}
+
 .tab {
-    float: left;
+}
+
+.tab-bar-top .tab {
+}
+
+.tab-bar-top .tab:hover {
+}
+
+.tab-bar-bottom .tab {
+}
+
+.tab-bar-bottom .tab:hover {
+}
+
+.tab-bar-left .tab {
+}
+
+.tab-bar-left .tab:hover {
+}
+
+.tab-bar-right .tab {
+}
+
+.tab-bar-right .tab:hover {
 }
 
 .tab-active {
-	
+}
+
+.tab-bar-top .tab-active{
+}
+
+.tab-bar-bottom .tab-active {
+}
+
+.tab-bar-left .tab-active {
+}
+
+.tab-bar-right .tab-active {
 }
 
 .tab-footer {
+	clear: both;
+}
+
+.tab-post {
+	position: absolute;
+	top: 0;
+	width: 0;
 	clear: both;
 }
 
@@ -268,7 +322,6 @@
     top: 20px;
     width: 100%;
     margin: 0 auto;
-    height: 40px;
 }
 
 .graph-controls-show {

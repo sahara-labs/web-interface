@@ -38,31 +38,66 @@ function Config2DOF()
                 left: 351,
                 top: 423,
                 widgets: [
-                    new ScatterPlot("graph-lissajous", {
+                    new Container("graphs-lissajous-container", {
                         title: "Lissajous",
-                        xLabel: "L0 (mm)",
-                        yLabel: "L1 (mm)",
-                        autoScale: true,
-                        dependantMin: -50,
-                        dependantMax: 50,
-                        vertScales: 5,
-                        independantMin: -50,
-                        independantMax: 50,
-                        horizScales: 5,
-                        duration: 5,
-                        fields: {
-                            'disp-graph-1': [ 'disp-graph-2', 'disp-graph-3' ],
-                            'disp-graph-2': 'disp-graph-3'
-                        },
-                        labels: {
-                            'disp-graph-1': [ "L0 vs L1", "L0 vs L2" ],
-                            'disp-graph-2': "L1 vs L2"
-                        },
-                        fieldCtl: true
+                        widgets: [
+                            new ScatterPlot("graph-lissajous-l0l1", {
+                                title: "L0 vs L1",
+                                xLabel: "L0 (mm)",
+                                yLabel: "L1 (mm)",
+                                autoScale: true,
+                                vertScales: 5,
+                                horizScales: 5,
+                                duration: 5,
+                                fields: {
+                                    'disp-graph-1': 'disp-graph-2'
+                                },
+                                labels: {
+                                    'disp-graph-1': "L0 vs L1",
+                                },
+                                traceLabels: false,
+                            }),
+                            new ScatterPlot("graph-lissajous-l0l2", {
+                                title: "L0 vs L2",
+                                xLabel: "L0 (mm)",
+                                yLabel: "L2 (mm)",
+                                autoScale: true,
+                                vertScales: 5,
+                                horizScales: 5,
+                                duration: 5,
+                                fields: {
+                                    'disp-graph-1': 'disp-graph-3'
+                                },
+                                labels: {
+                                    'disp-graph-1': "L0 vs L2",
+                                },
+                                traceLabels: false
+                            }),
+                            new ScatterPlot("graph-lissajous-l1l2", {
+                                title: "L1 vs L2",
+                                xLabel: "L1 (mm)",
+                                yLabel: "L2 (mm)",
+                                autoScale: true,
+                                vertScales: 5,
+                                horizScales: 5,
+                                duration: 5,
+                                fields: {
+                                    'disp-graph-2': 'disp-graph-3'
+                                },
+                                labels: {
+                                    'disp-graph-2': "L1 vs L2",
+                                },
+                                traceLabels: false
+                            }),
+                        ],
+                        layout: new TabLayout({
+                            position: TabLayout.POSITION.left,
+                            border: 0,
+                        })
                     }),
                     new Graph("graph-displacement", {
-                        width: 450,
-                        height: 330,
+//                        width: 600,
+//                        height: 400,
                         title: "Displacement",
                         resizable: true,
                         fields: {
@@ -85,7 +120,7 @@ function Config2DOF()
                     })
                 ],
                 layout: new TabLayout({
-                    vertical: false,
+                    position: TabLayout.POSITION.top,
                     border: 10,
                 })
             }),
