@@ -38,6 +38,25 @@ function Config2DOF()
                 left: 351,
                 top: 423,
                 widgets: [
+                    new Graph("graph-displacement", {
+                      width: 300,
+                      height: 180,
+                      title: "Displacements",
+                      resizable: true,
+                      fields: {
+                          'disp-graph-1': 'Base',
+                          'disp-graph-2': 'Level 1',
+                          'disp-graph-3': 'Level 2'
+                      },
+                      minValue: -60,
+                      maxValue: 60,
+                      duration: 10,
+                      yLabel: "Displacement (mm)",
+                      fieldCtl: true,
+                      autoCtl: false,
+                      durationCtl: false,
+                      traceLabels: true,
+                    }),
                     new Container("graphs-lissajous-container", {
                         title: "Lissajous",
                         widgets: [
@@ -95,25 +114,7 @@ function Config2DOF()
                             border: 0,
                         })
                     }),
-                    new Graph("graph-displacement", {
-//                        width: 600,
-//                        height: 400,
-                        title: "Displacement",
-                        resizable: true,
-                        fields: {
-                            'disp-graph-1': 'Level 0',
-                            'disp-graph-2': 'Level 1',
-                            'disp-graph-3': 'Level 2'
-                        },
-                        minValue: -60,
-                        maxValue: 60,
-                        duration: 10,
-                        yLabel: "Displacement (mm)",
-                        fieldCtl: true,
-                        autoCtl: false,
-                        durationCtl: false,
-                        traceLabels: true,
-                    }),
+                    
                     new Spacer("graph-ffts", {
                         color: "red",
                         title: "FFT"
