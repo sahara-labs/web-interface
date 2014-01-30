@@ -38,46 +38,90 @@ function Config2DOF()
                 left: 351,
                 top: 423,
                 widgets: [
-                    new ScatterPlot("graph-lissajous", {
-                        title: "Lissajous",
-                        xLabel: "L0 (mm)",
-                        yLabel: "L1 (mm)",
-                        dependantMin: -8,
-                        dependantMax: 8,
-                        vertScales: 4,
-                        independantMin: -8,
-                        independantMax: 8,
-                        horizScales: 4,
-                        fields: {
-                            
-                        }
-                    }),
                     new Graph("graph-displacement", {
-                        width: 450,
-                        height: 330,
-                        title: "Displacement",
-                        resizable: true,
-                        fields: {
-                            'disp-graph-1': 'Level 1',
-                            'disp-graph-2': 'Level 2',
-                            'disp-graph-3': 'Level 3'
-                        },
-                        minValue: -60,
-                        maxValue: 60,
-                        duration: 10,
-                        yLabel: "Displacement (mm)",
-                        fieldCtl: true,
-                        autoCtl: false,
-                        durationCtl: false,
-                        traceLabels: true,
+                      width: 300,
+                      height: 180,
+                      title: "Displacements",
+                      resizable: true,
+                      fields: {
+                          'disp-graph-1': 'Base',
+                          'disp-graph-2': 'Level 1',
+                          'disp-graph-3': 'Level 2'
+                      },
+                      minValue: -60,
+                      maxValue: 60,
+                      duration: 10,
+                      yLabel: "Displacement (mm)",
+                      fieldCtl: true,
+                      autoCtl: false,
+                      durationCtl: false,
+                      traceLabels: true,
                     }),
+                    new Container("graphs-lissajous-container", {
+                        title: "Lissajous",
+                        widgets: [
+                            new ScatterPlot("graph-lissajous-l0l1", {
+                                title: "L0 vs L1",
+                                xLabel: "L0 (mm)",
+                                yLabel: "L1 (mm)",
+                                autoScale: true,
+                                vertScales: 5,
+                                horizScales: 5,
+                                duration: 5,
+                                fields: {
+                                    'disp-graph-1': 'disp-graph-2'
+                                },
+                                labels: {
+                                    'disp-graph-1': "L0 vs L1",
+                                },
+                                traceLabels: false,
+                            }),
+                            new ScatterPlot("graph-lissajous-l0l2", {
+                                title: "L0 vs L2",
+                                xLabel: "L0 (mm)",
+                                yLabel: "L2 (mm)",
+                                autoScale: true,
+                                vertScales: 5,
+                                horizScales: 5,
+                                duration: 5,
+                                fields: {
+                                    'disp-graph-1': 'disp-graph-3'
+                                },
+                                labels: {
+                                    'disp-graph-1': "L0 vs L2",
+                                },
+                                traceLabels: false
+                            }),
+                            new ScatterPlot("graph-lissajous-l1l2", {
+                                title: "L1 vs L2",
+                                xLabel: "L1 (mm)",
+                                yLabel: "L2 (mm)",
+                                autoScale: true,
+                                vertScales: 5,
+                                horizScales: 5,
+                                duration: 5,
+                                fields: {
+                                    'disp-graph-2': 'disp-graph-3'
+                                },
+                                labels: {
+                                    'disp-graph-2': "L1 vs L2",
+                                },
+                                traceLabels: false
+                            }),
+                        ],
+                        layout: new TabLayout({
+                            position: TabLayout.POSITION.left,
+                            border: 0,
+                        })
+                    }),
+                    
                     new Spacer("graph-ffts", {
                         color: "red",
                         title: "FFT"
                     })
                 ],
                 layout: new TabLayout({
-                    vertical: false,
+                    position: TabLayout.POSITION.top,
                     border: 10,
                 })
             }),

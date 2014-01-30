@@ -1382,15 +1382,20 @@ FlowLayout.prototype.scale = function(h, v) {
  * switch between the widgets. 
  * 
  * @param {object} config configuration object
- * @config {vertical} whether the tab orientation is vertical or horizontal (default false)
- * @config {border} border padding of widget in pixels (default 10px)
+ * @config {string} [position] position of tab bar, either 'top', 'bottom' (horizontal tab bar), 
+ *                          'left', 'right' (vertical tab bar) (default top)
+ * @config {integer} [border] border padding of widget in pixels (default 10px)
+ * @config {boolean} [alignLeft] whether to align left or right for horizonal orientation (default left)
  */
 function TabLayout(config)
 {
     Layout.call(this, config);
     
-    if (this.config.vertical === undefined) this.config.vertical = false;
+    if (this.config.position === undefined) this.config.position = 'top';
+    if (this.config.vertical === undefined) this.config.vertical = 
+            this.config.position == 'top' || this.config.position == 'bottom';
     if (this.config.border === undefined) this.config.border = 10;
+    if (this.config.alignLeft === undefined) this.config.alignLeft = true;
     
     /** @private {jQuery} Tab bar node. */
     this.$tabBar = undefined;
@@ -1400,6 +1405,14 @@ function TabLayout(config)
 }
 
 TabLayout.prototype = new Layout;
+
+/** @const Possible tab bar positions. */
+TabLayout.POSITION = {
+    top: 'top',
+    bottom: 'bottom',
+    left: 'left',
+    right: 'right'
+};
 
 TabLayout.prototype.displayInit = function($container) {
     this.$tabBar = this.container.getContentBox().prepend(this._tabBarHTML()).children(":first");
@@ -1413,9 +1426,36 @@ TabLayout.prototype.displayInit = function($container) {
 };
 
 TabLayout.prototype._tabClick = function(title) {
-   var i = 0, w = false,
-           x = this.config.vertical ? this.$tabBar.width() + this.config.border * 2: this.config.border, 
-           y = this.config.vertical ? this.config.border : this.$tabBar.height() + this.config.border * 2;
+   var i = 0, w = false, x, y, 
+       wOff = this.config.vertical ? 0 : this.$tabBar.width() + this.config.border,
+       hOff = this.config.vertical ? this.$tabBar.height() + this.config.border : 0;
+     
+   switch (this.config.position)
+   {
+   case TabLayout.POSITION.top:
+       x = this.config.border;
+       y = hOff + this.config.border;
+       break;
+       
+   case TabLayout.POSITION.bottom:
+       x = this.config.border;
+       y = this.config.border;
+       break;
+       
+   case TabLayout.POSITION.left:
+       x = wOff + this.config.border;
+       y = this.config.border;
+       break;
+       
+   case TabLayout.POSITION.right:
+       x = this.config.border;
+       y = this.config.border;
+       break;
+       
+   default:
+       throw "Unknown tab bar position: " + this.config.position;
+       break;
+   }
    
    for (i in this.container.getWidgets())
    {
@@ -1439,33 +1479,56 @@ TabLayout.prototype._tabClick = function(title) {
    this.container.toggleEvent(w.id, true);
 
    /* Resize and move the widget into the center. */
-   if (w.getWindowProperty("width") + x + this.config.border < this.width || 
-           w.getWindowProperty("height") + y + this.config.border < this.height)
+   if (w.getWindowProperty("width") + wOff + this.config.border * 2 != this.width || 
+           w.getWindowProperty("height") + hOff + this.config.border * 2 != this.height)
    {
-       w.resized(this.width - x - this.config.border, this.height - y - this.config.border);
-       w.resizeStopped(this.width - x - this.config.border, this.height - y - this.config.border);
+       w.resized(this.width - wOff - this.config.border * 2, this.height - hOff - this.config.border * 2);
+       w.resizeStopped(this.width - wOff - this.config.border * 2, this.height - hOff - this.config.border * 2);
    }
 
-   x += (this.width - x - w.getWindowProperty("width") - this.config.border) / 2;
-   y += (this.height - y - w.getWindowProperty("height") - this.config.border) / 2;
+   x += (this.width - wOff - w.getWindowProperty("width") - this.config.border * 2) / 2;
+   y += (this.height - hOff - w.getWindowProperty("height") - this.config.border * 2) / 2;
 
    w.moveTo(x, y);
 
 };
 
 TabLayout.prototype._tabBarHTML = function() {
-    var i = 0, w, first = true, html = 
-        "<div class='tab-bar tab-bar-" + (this.config.vertical ? "vertical" : "horizontal" )+ "'>";
+    var i, w, widgets = Object.getOwnPropertyNames(this.container.getWidgets()), html = 
+        "<div class='tab-bar tab-bar-" + this.config.position + "'>";
     
-    for (i in this.container.getWidgets())
+    if (this.config.position == TabLayout.POSITION.bottom)
     {
-        w = this.container.getWidget(i);
-        
-        html += "<div class='tab " + (first ? "tab-active" : "") + "'>" + w.config.title + "</div>";
-        first = false;
+        widgets.reverse();
+        html += "<div class='tab-footer'></div>"; 
     }
     
-    html += "<div class='tab-footer'></div>" +
+    for (i = 0; i < widgets.length; i++)
+    {
+        w = this.container.getWidget(widgets[i]);
+        
+        html += "<div class='tab " + (i == 0 && this.config.position != TabLayout.POSITION.bottom || 
+                        i == widgets.length - 1 && this.config.position == TabLayout.POSITION.bottom ? "tab-active" : "")
+                        + "' style='" + (this.config.vertical ? "float:" + (this.config.alignLeft ? "left" : "right") : "") + "'>" + 
+                w.config.title + "</div>";
+    }
+    
+    if (this.config.position == TabLayout.POSITION.top)
+    {
+        html += "<div class='tab-footer'></div>"; 
+    }
+    else if (this.config.position == TabLayout.POSITION.bottom)
+    {
+        html += "<div style='clear:both'></div>";
+    }
+    else
+    {
+        html += "<div class='tab-post' style='" + 
+                (this.config.position == TabLayout.POSITION.left ? "right:0" : "left:0") + "'></div>";
+    }
+    
+    
+    html += 
         "</div>";
         
     return html;
@@ -1478,8 +1541,8 @@ TabLayout.prototype.displayDestroy = function() {
 
 TabLayout.prototype.layout = function() {
     var i = 0, w, wid, hei, x, y,
-        wOff = this.config.vertical ? this.$tabBar.width() + this.config.border * 2: this.config.border, 
-        hOff = this.config.vertical ? this.config.border : this.$tabBar.height() + this.config.border * 2;
+        wOff = this.config.vertical ? 0 : this.$tabBar.width() + this.config.border, 
+        hOff = this.config.vertical ? this.$tabBar.height() + this.config.border : 0;
 
     this.width = this.height = 0;
 
@@ -1504,17 +1567,45 @@ TabLayout.prototype.layout = function() {
             wid = w.getWindowProperty("width");
             hei = w.getWindowProperty("height");
 
-            x = wOff;
-            y = hOff;
-
             if (wid < this.width || hei < this.height)
             {
                 w.resized(this.width, this.height);
                 w.resizeStopped(this.width, this.height);
             }
+            
+            switch (this.config.position) 
+            {
+            case TabLayout.POSITION.top:
+                x = this.config.border;
+                y = hOff + this.config.border; 
+                break;
+                
+            case TabLayout.POSITION.bottom:
+                this.$tabBar.css({
+                    left: 0,
+                    top: hei + this.config.border * 2
+                });
+                x = this.config.border;
+                y = this.config.border;
+                break;
+                
+            case TabLayout.POSITION.left:
+                x = wOff + this.config.border;
+                y = this.config.border;
+                break;
+                
+            case TabLayout.POSITION.right:
+                x = this.config.border;
+                y = this.config.border;
+                break;
+                
+            default:
+                throw "Unknown tab position: " + this.config.position;
+                break;
+            }
 
             x += (this.width - w.getWindowProperty("width")) / 2;
-            y += (this.height - w.getWindowProperty("height")) / 2;
+            y += (this.height - w.getWindowProperty("height")) / 2; 
             w.moveTo(x, y);
         }
         else
@@ -1523,12 +1614,20 @@ TabLayout.prototype.layout = function() {
         }
     }
 
-    this.width += wOff + this.config.border;
-    this.height += hOff + this.config.border;
+    this.width += wOff + this.config.border * 2;
+    this.height += hOff + this.config.border * 2;
+    
+    if (this.config.position == TabLayout.POSITION.left || this.config.position == TabLayout.POSITION.right) 
+    {
+        this.$tabBar.children(".tab-post").css("height", this.height + "px");
+    }
 };
 
 TabLayout.prototype.scale = function(h, v) {
-    
+    if (this.config.position == TabLayout.POSITION.bottom)
+    {
+        this.$tabBar.css("top", parseInt(this.$tabBar.css("top")) * v + "px");
+    }
 };
 
 /* ============================================================================
@@ -1689,10 +1788,13 @@ Container.prototype.resizeStopped = function(width, height) {
         });
     }
     
-    this.$widget.css({
-        width: "auto",
-        height: "auto"
-    });
+    if (this.config.windowed)
+    {
+        this.$widget.css({
+            width: "auto",
+            height: "auto"
+        });
+    }
 };
 
 /**
@@ -1790,8 +1892,8 @@ Spacer.prototype.resized = function(width, height) {
  * ============================================================================ */
 
 /** 
- * Graph widget. This widget contains a scrolling graph that is user navigable
- * through the sessions data. 
+ * Graph widget. This widget contains a scrolling graph displays a series of 
+ * data points that (usually) represent a time series.
  * 
  * @constructor
  * @param {string} id graph identifier
@@ -1835,7 +1937,7 @@ function Graph(id, config)
 	if (this.config.height === undefined) this.config.height = 300;
 	
 	/** @private {object} Data fields. */
-	this.dataFields = { };
+	this.dataFields = undefined;
 	
 	/** @private {integer} The range of values. If autoscaling, this is determined
 	 *  as the difference between the largest and smallest value, if not this is the 
@@ -1876,16 +1978,20 @@ Graph.prototype.init = function($container) {
     var i = 0, c = 0, thiz = this;
     
     /* Field dynamic properties. */
-    for (i in this.config.fields)
+    if (!this.dataFields)
     {
-        this.dataFields[i] = {
-            label: this.config.fields[i],
-            visible: true,
-            values: [ ],
-            seconds: 0,
-            color: this.config.colors.hasOwnProperty(i) ? this.config.colors[i] : 
-                    Graph.COLORS[c++ % Graph.COLORS.length]
-        };
+        this.dataFields = { };
+        for (i in this.config.fields)
+        {
+            this.dataFields[i] = {
+                    label: this.config.fields[i],
+                    visible: true,
+                    values: [ ],
+                    seconds: 0,
+                    color: this.config.colors.hasOwnProperty(i) ? this.config.colors[i] : 
+                        Graph.COLORS[c++ % Graph.COLORS.length]
+            };
+        }
     }
     
     /* Size reset. */
@@ -1948,11 +2054,11 @@ Graph.prototype._buildHTML = function() {
 	if (this.config.traceLabels)
 	{
     	html += "<div class='graph-labels'>";
-    	for (i in this.config.fields)
+    	for (i in this.dataFields)
     	{
     		html += "	<div class='graph-label'>" +
     		        (this.config.fieldCtl ?
-    				"		<label for='graph-label-" + i + "' class='graph-label-text'>" + this.config.fields[i] + "</label>" +  
+    				"		<label for='graph-label-" + i + "' class='graph-label-text'>" + this.dataFields[i].label + "</label>" +  
     		        "       <div id='graph-label-" + i + "' class='switch graph-label-enable'>" +
             		"		    <div class='switch-animated switch-slide switch-on' " +
             		"                 style='background-color:" + this.dataFields[i].color + "'></div>" +
@@ -1961,7 +2067,7 @@ Graph.prototype._buildHTML = function() {
             		"       <div class='graph-label-text' style='cursor:default'>" +
             		"           <div class='graph-label-color-box' " +
             		"                   style='background-color:" + this.dataFields[i].color + "'></div>" +
-            		                this.config.fields[i] + 
+            		                this.dataFields[i].label + 
             		"       </div>" ) +
     				"	</div>";
     	}
@@ -2026,7 +2132,7 @@ Graph.prototype.consume = function(data) {
 
     for (i in this.dataFields)
     {
-        if (data[i] == undefined) continue;
+        if (data[i] === undefined) continue;
 
         this.dataFields[i].values = data[i];
         this.dataFields[i].seconds = data.duration;
@@ -2058,7 +2164,7 @@ Graph.prototype._drawFrame = function() {
 	this._drawIndependantScales();
 	    
 	/* Draw the trace for all graphed variables. */
-	for (i in this.dataFields) this._drawTrace(this.dataFields[i]);
+	for (i in this.dataFields) if (this.dataFields[i].visible) this._drawTrace(this.dataFields[i]);
 };
 
 /**
@@ -2066,7 +2172,7 @@ Graph.prototype._drawFrame = function() {
  * datasets.
  */
 Graph.prototype._adjustScaling = function() {
-    var min = Number.POSITIVE_INFINITY, max = Number.NEGATIVE_INFINITY, j;
+    var min = Number.POSITIVE_INFINITY, max = Number.NEGATIVE_INFINITY, i = 0, j;
 
     for (i in this.dataFields)
     {
@@ -2134,9 +2240,7 @@ Graph.prototype._drawIndependantScales = function() {
  * @param {array} dObj data object
  */
 Graph.prototype._drawTrace = function(dObj) {
-	if (!dObj.visible) return;
-
-	var xStep = this.graphWidth / (dObj.seconds * 1000 / this.config.period), 
+    var xStep = this.graphWidth / (dObj.seconds * 1000 / this.config.period), 
 	    yScale = this.graphHeight / this.graphRange, i, yCoord;
 
 	this.ctx.save();
@@ -2301,19 +2405,25 @@ Graph.prototype._showControls = function(show) {
 
 /**
  * The scatter plot widget is a graph that plots points to show the 
- * relationship between two sets of time-series data.
+ * relationship between two sets of data. 
  * 
  * @param {string} id graph identifier
  * @param {object} config configuration object
- * @config {object}  [fields]         map of graphed data fields with field => label
- * @config {object}  [colors]         map of graph trace colors with field => color (optional)
+ * @config {object}  [fields]         map of graphed data fields with independant field => dependant field or 
+ *                                      field => [dependant field, dependant field] 
+ * @config {object}  [labels]         map of graphed data labels with independant field => label or
+ *                                      field => [label, label] (optional)
+ * @config {object}  [colors]         map of graph trace colors with independant field => color or
+ *                                      field => [color, color] (optional)
+ * @config {boolean} [continuous]      whether to plot a continous line or a series of points (default true)
  * @config {boolean} [autoScale]      whether to autoscale the graph dependant (default off)
  * @config {integer} [dependantMin]   minimum value that is graphed for dependant axis, implies not autoscaling (default 0)
  * @config {integer} [dependantMax]   maximum value that is graphed for dependant axis, implies not autoscaling (default 100)
  * @config {integer} [independantMin] minimum value that is graphed for dependant axis, implies not autoscaling (default 0)
  * @config {integer} [independantMax] maximum value that is graphed for dependant axis, implies not autoscaling (default 100)
- * @config {integer} [duration]       number of seconds this graph displays (default 60)
- * @config {integer} [period]         period betweeen samples in milliseconds (default 100)
+ * @config {integer} [sampleSize]     number of samples to graph (default data size) 
+ * @config {integer} [duration]       number of seconds this graph displays if time series (default data size)
+ * @config {integer} [period]         period betweeen samples in milliseconds if time series (default 100)
  * @config {string}  [xLabel]         X axis label (default (Time (s))
  * @config {String}  [yLabel]         Y axis label (optional)
  * @config {boolean} [traceLabels]    whether to show trace labels (default true)
@@ -2326,6 +2436,7 @@ Graph.prototype._showControls = function(show) {
 function ScatterPlot(id, config)
 {
     /* Overriding base default options. */
+    if (config.labels === undefined) config.labels = { };
     if (config.horizScales === undefined) config.horizScales = 5;
     
     /* Configuration synonyms. */
@@ -2334,22 +2445,74 @@ function ScatterPlot(id, config)
     
     Graph.call(this, id, config);
     
+    /* Discarding base default values. */
+    this.config.duration = config.duration;
+    
+    /* Default options. */
     if (this.config.independantMin === undefined) this.config.independantMin = 0;
     if (this.config.independantMax === undefined) this.config.independantMax = 100;
+    if (this.config.continuous === undefined) this.config.continuous = true;
     
     /** @private {integer} The range of values on the indepenedant scale. */
     this.independantRange = this.config.independantMax - this.config.independantMin;
     
     /** @private {integer} Offset to the zero value on the independant range. */
     this.independantOffset = this.config.independantMin / this.independantRange;
+    
+    /** @private {integer} Displayed sample size. If this is not set, the
+     *  packet data length will be used as the sample size. */
+    this.sampleSize = undefined;
+    if (this.config.sampleSize) this.sampleSize = this.config.sampleSize;
+    else if (this.config.duration && this.config.period) this.sampleSize = this.config.duration * this.config.period;
 }
 
 ScatterPlot.prototype = new Graph;
 
 ScatterPlot.prototype.init = function($container) {
+    var i = 0, j, c = 0;
+    
+    if (!this.dataFields)
+    {
+        this.dataFields = { };
+        for (i in this.config.fields)
+        {
+            if ($.isArray(this.config.fields[i]))
+            {
+                for (j = 0; j < this.config.fields[i].length; j++)
+                {
+                    this.dataFields[i + "-" + j] = {
+                            independant: i,
+                            dependant: this.config.fields[i][j],
+                            label: this.config.labels.hasOwnProperty(i) && this.config.labels[i].length > j ?
+                                        this.config.labels[i][j] : "",
+                            visible: true,
+                            independantValues: [ ],
+                            dependantValues: [ ],
+                            color: this.config.colors.hasOwnProperty(i) && this.config.colors[i].length > j? 
+                                        this.config.colors[i][j] : Graph.COLORS[c++ % Graph.COLORS.length]
+                    };
+                }
+            }
+            else
+            {
+                this.dataFields[i] = {
+                        independant: i,
+                        dependant: this.config.fields[i],
+                        label: this.config.labels.hasOwnProperty(i) ? this.config.labels[i] : "",
+                        visible: true,
+                        independantValues: [ ],
+                        dependantValues: [ ],
+                        color: this.config.colors.hasOwnProperty(i) ? this.config.colors[i] : 
+                            Graph.COLORS[c++ % Graph.COLORS.length]
+                };
+            }
+        }
+    }
+    
     Graph.prototype.init.call(this, $container);
     
-    
+    this._updateDependantScale();
+    this._updateIndependentScale();
 };
 
 ScatterPlot.prototype._drawIndependantScales = function() {
@@ -2386,15 +2549,98 @@ ScatterPlot.prototype._drawIndependantScales = function() {
     this.ctx.restore();
 };
 
+
 ScatterPlot.prototype.consume = function(data) {
+    var i = 0, size;
     
+    for (i in this.dataFields)
+    {
+        if (data[this.dataFields[i].independant] === undefined ||
+                data[this.dataFields[i].dependant] === undefined) continue;
+        
+        size = this.sampleSize ? this.sampleSize : data[this.dataFields[i].independant].length;
+
+        this.dataFields[i].independantValues = this._pruneSample(data[this.dataFields[i].independant], size);
+        this.dataFields[i].dependantValues = this._pruneSample(data[this.dataFields[i].dependant], size);
+    }
+    
+    if (this.config.autoScale) 
+    {
+        /* Determine graph scaling for this frame and label it. */
+        this._adjustScaling();
+        this._updateDependantScale();
+        this._updateIndependentScale();
+    }
+
+    this._drawFrame();
 };
 
-ScatterPlot.prototype._drawTrace = function(dOb) {
+/**
+ * Prune the sample dataset to the number of specified size. If the values 
+ * length is less than the specified size, the data is padded with zeros, if
+ * the values length is greater than the specified size, the oldest data 
+ * (from the beginning of the values) is discarded.
+ * 
+ * @param {array} values list of samples
+ * @param {integer} desired data size
+ * @return {array} pruned values
+ */
+ScatterPlot.prototype._pruneSample = function(values, size) {
+    if (values.length < size)
+    {
+        while (values.length < size) values.push(0);
+    }
+    else if (values.length > size)
+    {
+        while (values.length > size) values.shift();
+    }
     
+    return values;
 };
 
-
+ScatterPlot.prototype._drawTrace = function(dObj) {
+    var i = 0, xCoord, yCoord;
+    
+    this.ctx.save();
+    this.ctx.beginPath();
+    
+    this.ctx.strokeStyle = dObj.color;
+    this.ctx.lineWidth = 3;
+    this.ctx.lineJoin = "round";
+    this.ctx.shadowColor = "#222222";
+    this.ctx.shadowBlur = 2;
+    this.ctx.shadowOffsetX = 1;
+    this.ctx.shadowOffsetY = 1;
+    
+    do 
+    {
+        xCoord = this.graphWidth / this.independantRange * dObj.independantValues[i] - 
+                this.independantOffset * this.graphWidth;
+        if (xCoord < 0) xCoord = 1;
+        if (xCoord > this.graphWidth - 1) xCoord = this.graphWidth;
+        
+        yCoord = this.graphHeight - this.graphHeight / this.graphRange * dObj.dependantValues[i] + 
+                this.graphOffset * this.graphHeight;
+        if (yCoord < 0) yCoord = 1;
+        if (yCoord > this.graphHeight) yCoord = this.graphHeight - 1;
+        
+        if (this.config.continuous)
+        {
+            if (i == 0) this.ctx.moveTo(xCoord, yCoord); 
+            else this.ctx.lineTo(xCoord, yCoord);
+        }
+        else
+        {
+            this.ctx.moveTo(xCoord, yCoord);
+            this.ctx.lineTo(xCoord + 1, yCoord + 1);
+            this.ctx.stroke();
+        }
+    }
+    while (++i < dObj.independant.length);
+    
+    this.ctx.stroke();
+    this.ctx.restore();
+};
 
 ScatterPlot.prototype._updateIndependentScale = function() {
     var i, $s = this.$widget.find(".graph-bottom-scale-0");
@@ -2402,10 +2648,32 @@ ScatterPlot.prototype._updateIndependentScale = function() {
     for (i = 0; i <= this.config.horizScales; i++)
     {
         $s.html(Util.zeroPad(
-                this.independantRange / this.config.horizScales * i + this.config.independantMin,
+                this.independantRange / this.config.horizScales * i + this.independantRange * this.independantOffset,
                 this.independantRange >= this.config.horizScales * 2 ? 0 : 1));
         $s = $s.next();
     }
+};
+
+ScatterPlot.prototype._adjustScaling = function() {
+    var dmin = Number.POSITIVE_INFINITY, imin = Number.POSITIVE_INFINITY, dmax = Number.NEGATIVE_INFINITY, 
+            imax = Number.NEGATIVE_INFINITY, i = 0, j;
+
+    for (i in this.dataFields)
+    {
+        for (j = 0; j < this.dataFields[i].independantValues.length; j++)
+        {
+            if (this.dataFields[i].independantValues[j] < imin) imin = this.dataFields[i].independantValues[j];
+            if (this.dataFields[i].independantValues[j] > imax) imax = this.dataFields[i].independantValues[j];
+            if (this.dataFields[i].dependantValues[j] < dmin) dmin = this.dataFields[i].dependantValues[j];
+            if (this.dataFields[i].dependantValues[j] > dmax) dmax = this.dataFields[i].dependantValues[j];
+        }
+    }
+
+    this.graphRange = dmax - dmin;
+    this.graphOffset = dmin / this.graphRange;
+    
+    this.independantRange = imax - imin;
+    this.independantOffset = imin / this.independantRange;
 };
 
 
@@ -2864,9 +3132,9 @@ Knob.prototype.init = function($container) {
 
     /* Event Handlers. */
     var thiz = this;    
-    this.$widget.find('.knob').mousedown(function(e){ e.preventDefault(); thiz._knobEngaged(); })
-    this.$widget.mouseup(function(){ thiz._knobReleased(); })
-    this.$widget.mousemove(function(e){ thiz._knobChanged(e); })
+    this.$widget.find('.knob').mousedown(function(e){ e.preventDefault(); thiz._knobEngaged(); });
+    this.$widget.mouseup(function(){ thiz._knobReleased(); });
+    this.$widget.mousemove(function(e){ thiz._knobChanged(e); });
     this.$widget.find('.knob-val').click(function() { thiz._handleValueSelect($(this).data('value')); });
     this.$widget.find('.knob-range-val').click(function() { thiz._handleValueSelect($(this).data('value')); });
     this.$input = this.$widget.find('input').change(function() { thiz._handleTextBoxChange($(this).val()); });   
@@ -2922,8 +3190,9 @@ Knob.prototype._knobReleased = function() {
 Knob.prototype._knobChanged = function(e){
     if (this.mouseDown) {
     	
-        /* Adds overlay to improve controls for handheld and touch devices. */
         e.preventDefault()
+        
+        /* Adds overlay to improve controls for handheld and touch devices. */
         $('.knob-overlay').remove();
         this.$widget.find('.knob-container').append('<div class="knob-overlay"></div>');
 
@@ -2964,7 +3233,7 @@ Knob.prototype._rotateKnob = function(){
 
     /* Update the knob input field. */
     this.$widget.find('.knob-input').val(this.val);
-}
+};
 
 /**
  * Handles the click event for the knob values 
@@ -2989,17 +3258,17 @@ Knob.prototype._handleValueSelect = function(val) {
 
     case 0.50:
         this.deg = 180;
-        this.val = ((this.config.max - this.config.min) * 0.50 + this.config.min)
+        this.val = ((this.config.max - this.config.min) * 0.50 + this.config.min);
         break;
 
     case 0.75:
         this.deg = 270;
-        this.val = ((this.config.max - this.config.min) * 0.75 + this.config.min)
+        this.val = ((this.config.max - this.config.min) * 0.75 + this.config.min);
         break;
 
     case 1:
         this.deg = 360;
-        this.val = ((this.config.max - this.config.min) + this.config.min)
+        this.val = ((this.config.max - this.config.min) + this.config.min);
         break;
 
     default:
