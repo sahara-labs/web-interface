@@ -2675,6 +2675,7 @@ RotarySwitch.prototype._animateSwitch = function(point) {
  * @config {boolean} [circular] whether the button is circular (default false)
  * @config {string}  [color]  custom color setting for the button (default #EFEFEF)
  * @config {string}  [clickColor] color of button when clicked (default #CCCCCC)
+ * @config {string}  [pushColor] color of the push button (optional)
  * @config {boolean} [overlay] whether the button has the clear style overlay (default false)
  * @config {function} [callback] callback to be invoked with response of posts (optional)
  */
@@ -2711,12 +2712,15 @@ Button.prototype.init = function($container) {
     this.$widget.bind("mouseup mouseout", function(){ thiz._buttonReleased(); });
     this.$widget.click(function() { thiz._clicked(); });
 
-//TODO Finish implementing the push button.
-/*
-    if($('#'+this.id).hasClass('push-button')) $('#'+this.id).find('.button').before('<div class="push-button-outer"></div>');
-    if($('#'+this.id).hasClass('push-button')) $('#'+this.id).find('.button').addClass('push-button-middle');
-    if($('#'+this.id).hasClass('push-button')) $('#'+this.id).find('.button').after('<div class="push-button-color push-button-red"></div>');
-*/
+    /* Remove the standard button classes for the push button. */
+    if($('#'+this.id).hasClass('push-button')) $('#'+this.id).find('.window-content').empty();
+   
+    /* Add the push button classes. */
+    if($('#'+this.id).hasClass('push-button')) $('#'+this.id).find('.window-content').append('<div class="push-button-container"></div>');
+    if($('#'+this.id).hasClass('push-button')) $('#'+this.id).find('.push-button-container').append('<div class="push-button-outer"></div>');
+    if($('#'+this.id).hasClass('push-button')) $('#'+this.id).find('.push-button-outer').append('<div class="push-button-middle"></div>');
+    if($('#'+this.id).hasClass('push-button')) $('#'+this.id).find('.push-button-outer').append('<div class="push-button-color push-button-'+ (this.config.pushColor ? this.config.pushColor : 'white') +'"></div>');
+    if($('#'+this.id).hasClass('push-button')) $('#'+this.id).find('.push-button-middle').append('<div class="push-button-label">'+ this.config.label +'</div>');
 };
 
 /**
@@ -2909,6 +2913,7 @@ Knob.prototype._knobReleased = function() {
     if (this.valueChanged) {
         this._send();
     }
+    $('.knob-overlay').remove();
 };
 
 /**
@@ -2916,8 +2921,11 @@ Knob.prototype._knobReleased = function() {
  */
 Knob.prototype._knobChanged = function(e){
     if (this.mouseDown) {
-       //TODO Track mouse on the screen to improve controls for handheld and touch devices.
+    	
+        /* Adds overlay to improve controls for handheld and touch devices. */
         e.preventDefault()
+        $('.knob-overlay').remove();
+        this.$widget.find('.knob-container').append('<div class="knob-overlay"></div>');
 
         /* The current position of the mouse within the knob. */
         var mPos = {x: e.clientX - this.kPos.x, y: e.clientY - this.kPos.y};
@@ -3189,7 +3197,7 @@ Slider.prototype._buildHTML = function() {
             "<label for='" + this.id + "-text' class='slider-text-label'>" + this.config.label + ":&nbsp;</label>" +
             "<input id='" + this.id + "-text' type='text' /> " +
             "<span>" + this.config.units + "</span>" +
-        "</div>" : 
+        "</div>" :
         "<div class='slider-text-" + (this.config.vertical ? "vertical" : "horizontal") +
                 "' style='" + (this.config.vertical ? "margin-top:" + (this.config.length + 20) +"px;" : "") + "'>" +
             this.config.label + 

@@ -310,15 +310,49 @@ WaveTank.prototype.setup = function() {
     });
     this.widgets.push(o);
 
-    o = new PushButton("button-6", {
-    	action: "setPump",
-        label: "Push Button",
+    o = new PushButton("push-1", {
+    	action: "button1",
+        label: "Default",
         draggable: true,
         windowed: true,
-        color: '#747474',
-        clickColor: '#464646'
     });
     this.widgets.push(o);
+
+    o = new PushButton("push-2", {
+    	action: "button2",
+        label: "Red",
+        draggable: true,
+        windowed: true,
+        pushColor: "red"
+    });
+    this.widgets.push(o);
+
+    o = new PushButton("push-3", {
+    	action: "button3",
+        label: "Green",
+        draggable: true,
+        windowed: true,
+        pushColor: "green"
+    });
+    this.widgets.push(o);
+
+    o = new PushButton("push-4", {
+    	action: "button4",
+        label: "Yellow",
+        draggable: true,
+        windowed: true,
+        pushColor: "yellow"
+    });
+    this.widgets.push(o);
+
+    o = new PushButton("push-5", {
+    	action: "button5",
+        label: "Blue",
+        draggable: true,
+        windowed: true,
+        pushColor: "blue"
+    });
+    this.widgets.push(o);   
 };
 
 /** 
