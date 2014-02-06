@@ -141,7 +141,7 @@ WaveTank.prototype.setup = function() {
         dimension: 180
     });
     this.widgets.push(o);
-*/
+
     o = new RotarySwitch("rotary-1", {
         field: "pump-on",
         title: "Water Level",
@@ -164,7 +164,7 @@ WaveTank.prototype.setup = function() {
         radius: 70
     });
     this.widgets.push(o);
-
+*/
     o = new RotarySwitch("rotary-2", {
         field: "pump-on",
         title: "Water Flow",
@@ -205,7 +205,7 @@ WaveTank.prototype.setup = function() {
         color: 'white'
     });
     this.widgets.push(o);
-
+/*
     o = new Knob("knob-2", {
         field: "pump",
     	action: "setPump",
@@ -217,10 +217,10 @@ WaveTank.prototype.setup = function() {
         units: 'rad',
         labelVertical: false,
         windowed: false,
-        radius: 65,
+        radius: 65
     });
     this.widgets.push(o);
-
+*/
     o = new Knob("knob-3", {
         field: "pump",
     	action: "setPump",
@@ -233,7 +233,7 @@ WaveTank.prototype.setup = function() {
         units: 'rpm',
         tooltip: 'Select a value.',
         windowed: false,
-        radius: 65,
+        radius: 65
     });
     this.widgets.push(o);
     
@@ -242,11 +242,12 @@ WaveTank.prototype.setup = function() {
     	action: "setPump",
         label: "Knob Widget",
         draggable: true,
-        style: "white",
-        max: 360,
-        units: 'deg',
+        style: "valve",
+        max: 100,
+        units: '%',
         windowed: true,
-        radius: 70,
+        indicator: true,
+        radius: 125
     });
     this.widgets.push(o);
     
@@ -314,7 +315,7 @@ WaveTank.prototype.setup = function() {
     	action: "button1",
         label: "Default",
         draggable: true,
-        windowed: true,
+        windowed: true
     });
     this.widgets.push(o);
 
@@ -323,7 +324,8 @@ WaveTank.prototype.setup = function() {
         label: "Red",
         draggable: true,
         windowed: true,
-        pushColor: "red"
+        pushColor: "red",
+        diameter: 65
     });
     this.widgets.push(o);
 
@@ -332,7 +334,8 @@ WaveTank.prototype.setup = function() {
         label: "Green",
         draggable: true,
         windowed: true,
-        pushColor: "green"
+        pushColor: "green",
+        diameter: 65
     });
     this.widgets.push(o);
 
@@ -341,7 +344,8 @@ WaveTank.prototype.setup = function() {
         label: "Yellow",
         draggable: true,
         windowed: true,
-        pushColor: "yellow"
+        pushColor: "yellow",
+        diameter: 65
     });
     this.widgets.push(o);
 

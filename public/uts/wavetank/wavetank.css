@@ -65,8 +65,8 @@
 }
 
 #knob-1 {
-    left: 50px;
-    top: 75px;
+    left: 375px;
+    top: 60px;
 }
 
 #knob-2 {
@@ -75,8 +75,8 @@
 }
 
 #knob-3 {
-    left: 85px;
-    top: 75px;
+    left: 105px;
+    top: 95px;
 }
 
 #knob-24 {
@@ -113,4 +113,29 @@
 #button-6 {
     top: 10px;
     left: 560px;
+}
+
+#push-2 {
+    top: -40px;
+    left: 780px;
+}
+
+#push-4 {
+    top: 115px;
+    left: 780px;
+}
+
+#push-3 {
+    top: 270px;
+    left: 780px;
+}
+
+#push-1 {
+    left: -330px;
+    top: -40px;
+}
+
+#push-1 {
+    left: -330px;
+    top: 150px;
 }

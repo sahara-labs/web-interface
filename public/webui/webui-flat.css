@@ -345,6 +345,9 @@
     bottom: 0;
     left: 0;
     right: 0;
+    cursor: pointer;
+    cursor: -webkit-grabbing;
+    cursor: -moz-grabbing;
 }
 
 .knob-container {
@@ -418,6 +421,28 @@
 .no-window-content .knob-val:active, .no-window-content .knob-range-val:active {
     box-shadow: none;
     border: solid 1px #E6E6E6;
+}
+
+.knob-indicator-container {
+    width: 40%;
+    position: absolute;
+    left: 3%;
+    bottom: 5%;
+}
+
+.knob-indicator {
+    box-shadow: inset 0px 0px 1px #000;    float: left;
+    width: 10%;
+    display: inline-block;
+    height: 10px;
+}
+
+.knob-indicator-1 {
+    border-radius: 5px 0px 0px 5px;
+}
+
+.knob-indicator-10 {
+    border-radius: 0px 5px 5px 0px;
 }
 
 .knob-input-container {
@@ -602,4 +627,20 @@
     background-image: -moz-linear-gradient(top, #B3B3B3 5%, #DADADA 50%,#EEE);
     background-image: -ms-linear-gradient(top, #B3B3B3 5%, #DADADA 50%,#EEE);
     background-image: -o-linear-gradient(top, #B3B3B3 5%, #DADADA 50%,#EEE);
+}
+
+
+.knob-valve {
+    background: #666;
+	background-image: url('/webui/images/skeuo/knob-valve.png');
+    background-size: 101%;
+    background-position: -2px -1px;
+}
+
+.knob-valve:after {
+    display: none;
+}
+
+.knob-container-valve .knob-texture:before {
+    display: none;
 }

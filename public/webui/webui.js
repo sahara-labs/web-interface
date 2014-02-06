@@ -2941,6 +2941,7 @@ RotarySwitch.prototype._animateSwitch = function(point) {
  * @config {object}  [params] parameters to be sent when pressed (optional)
  * @config {string}  [label] the label to display on the button (optional)
  * @config {boolean} [circular] whether the button is circular (default false)
+ * @config {number}  [diameter] The size of a push button diameter in pixels (default 100px)
  * @config {string}  [color]  custom color setting for the button (default #EFEFEF)
  * @config {string}  [clickColor] color of button when clicked (default #CCCCCC)
  * @config {string}  [pushColor] color of the push button (optional)
@@ -2959,6 +2960,7 @@ function Button(id, config)
     if (this.config.circular === undefined) this.config.circular = false;
     if (this.config.color === undefined) this.config.color = "#EFEFEF";
     if (this.config.clickColor === undefined) this.config.clickColor = "#CCC";
+    if (this.config.diameter === undefined) this.config.diameter = 100;
 }
 
 Button.prototype = new Widget;
@@ -2984,11 +2986,11 @@ Button.prototype.init = function($container) {
     if($('#'+this.id).hasClass('push-button')) $('#'+this.id).find('.window-content').empty();
    
     /* Add the push button classes. */
-    if($('#'+this.id).hasClass('push-button')) $('#'+this.id).find('.window-content').append('<div class="push-button-container"></div>');
-    if($('#'+this.id).hasClass('push-button')) $('#'+this.id).find('.push-button-container').append('<div class="push-button-outer"></div>');
-    if($('#'+this.id).hasClass('push-button')) $('#'+this.id).find('.push-button-outer').append('<div class="push-button-middle"></div>');
-    if($('#'+this.id).hasClass('push-button')) $('#'+this.id).find('.push-button-outer').append('<div class="push-button-color push-button-'+ (this.config.pushColor ? this.config.pushColor : 'white') +'"></div>');
-    if($('#'+this.id).hasClass('push-button')) $('#'+this.id).find('.push-button-middle').append('<div class="push-button-label">'+ this.config.label +'</div>');
+    if (this.$widget.hasClass('push-button')) this.$widget.find('.window-content').append('<div class="push-button-container" style="height:'+ this.config.diameter +'px; width:'+ this.config.diameter +'px;"></div>');
+    if (this.$widget.hasClass('push-button')) this.$widget.find('.push-button-container').append('<div class="push-button-outer"></div>');
+    if (this.$widget.hasClass('push-button')) this.$widget.find('.push-button-outer').append('<div class="push-button-middle"></div>');
+    if (this.$widget.hasClass('push-button')) this.$widget.find('.push-button-outer').append('<div class="push-button-color push-button-'+ (this.config.pushColor ? this.config.pushColor : 'white') +'"></div>');
+    if (this.$widget.hasClass('push-button')) this.$widget.find('.push-button-middle').append('<div class="push-button-label">'+ this.config.label +'</div>');
 };
 
 /**
@@ -3091,12 +3093,13 @@ PushButton.prototype._clicked = function() {
  * @config {string} [field] data field that has displayed value
  * @config {string} [action] server action to call when the switched is changed
  * @config {string} [label] label to display
- * @config {string} [units] Units of the knobs value 
+ * @config {string} [units] Units of the knobs value
  * @config {string} [precision] precision of values (default 0)
  * @config {string} [style] set the knob style (default smooth)
  * @config {integer} [min] minimum value of slider (default 0)
  * @config {integer} [max] maximum value of slider (default 100)
  * @config {number} [radius] the radius of the knob in pixels (default 25px)
+ * @config {boolean} [indicator] whether the knob value has a visual indicator (default false)
  * @config {boolean} [vertical] whether the label and text entry is aside (default false)
  */
 function Knob(id, config)
@@ -3107,6 +3110,7 @@ function Knob(id, config)
     if (this.config.min === undefined) this.config.min = 0;
     if (this.config.max === undefined) this.config.max = 100;
     if (this.config.vertical === undefined) this.config.vertical = false;
+    if (this.config.indicator === undefined) this.config.indicator = false;
     if (this.config.radius === undefined) this.config.radius = 25;
     if (this.config.precision === undefined) this.config.precision = 0;
     
@@ -3124,6 +3128,11 @@ Knob.prototype.init = function($container) {
     if (!(this.config.action && this.config.field)) throw "Options not supplied.";
 	
     this.$widget = this._generate($container, this._buildHTML());
+
+    /* Generates the the knobs' indicator containers. */
+    for(var i = 1; i <= 10; i++) {
+        this.$widget.find(".knob-indicator-container").append("<div class='knob-indicator knob-indicator-" + i + "'>&nbsp;</div>");
+    }
 
     /* Knob Position */        
     this.knob = this.$widget.find('.knob-' + this.config.style);
@@ -3150,16 +3159,17 @@ Knob.prototype._buildHTML = function() {
             "<div class='knob-min knob-range-val' data-value='0'>Min: " + this.config.min + "</div>" +
             "</div>" +
         "<div class='knob-container' style='height:" + this.config.radius * 2 + "px; width: " + this.config.radius * 2 + "px;'>" +
-            "<div class='knob'>" +
+            "<div class='knob " + "knob-container-" + this.config.style + "'>" +
                 "<div class='knob-texture knob-" + this.config.style + "'></div>" +
                 "<div class='knob-highlight'" + (this.config.style == 'black' ? 'style="opacity:0.4;"' : '') + "></div>"+
             "</div>" +
         "</div>" +
-        "<div class='knob-val knob-25' data-value='0.25' style='top:50%; right:" + (!this.config.windowed ? '-25%' : '8%') + ";'>" + ((this.config.max - this.config.min) * 0.25 + this.config.min) + "</div>" +
+        "<div class='knob-val knob-25' data-value='0.25' style='top:50%; right:" + (!this.config.windowed ? '-25%' : '6%') + ";'>" + ((this.config.max - this.config.min) * 0.25 + this.config.min) + "</div>" +
         "<div><div class='knob-50-outter'><div class='knob-val knob-50' data-value='0.50'>" + ((this.config.max - this.config.min) * 0.50 + this.config.min) + "</div></div></div>" +
-        "<div class='knob-val knob-75' data-value='0.75' style='top: 50%; left:" + (!this.config.windowed ? '-25%' : '8%') + ";'>" + ((this.config.max - this.config.min) * 0.75 + this.config.min) + "</div>" +
+        "<div class='knob-val knob-75' data-value='0.75' style='top: 50%; left:" + (!this.config.windowed ? '-25%' : '6%') + ";'>" + ((this.config.max - this.config.min) * 0.75 + this.config.min) + "</div>" +
         "<div class='knob-input-container" + (this.config.vertical ? '' : ' knob-input-horizontal') +"'>" +    
             "<input class='knob-input' value='0'></input>" +
+            (this.config.indicator ? '<div class="knob-indicator-container"></div>' : '') +
             "<div class='knob-input-units'>" + (this.config.units ? this.config.units : '') + "</div>" +
         "</div>" +
     "</div>"
@@ -3182,6 +3192,7 @@ Knob.prototype._knobReleased = function() {
         this._send();
     }
     $('.knob-overlay').remove();
+    this.$widget.css('z-index', 6);
 };
 
 /**
@@ -3189,11 +3200,14 @@ Knob.prototype._knobReleased = function() {
  */
 Knob.prototype._knobChanged = function(e){
     if (this.mouseDown) {
-    	
-        e.preventDefault()
-        
-        /* Adds overlay to improve controls for handheld and touch devices. */
+
+        e.preventDefault();
+
+        /* Removes any old overlays and brings the widget to the front. */
         $('.knob-overlay').remove();
+        this.$widget.css('z-index', 9999);
+
+        /* Adds a hidden overlay to improve use of the knob widget. */
         this.$widget.find('.knob-container').append('<div class="knob-overlay"></div>');
 
         /* The current position of the mouse within the knob. */
@@ -3214,6 +3228,21 @@ Knob.prototype._knobChanged = function(e){
         this.val = Math.round((this.deg * range) / 360) + this.config.min;
         this.valueChanged = 'true';
     }
+
+    /* Updates the visual indicator with the knobs value. */
+    if (this.config.indicator)
+    {
+        var perc = Math.round(((this.val - this.config.min) * 100) / (this.config.max - this.config.min));
+        var indi = Math.floor(perc / 10);
+
+        for(var i = indi; i <= 10; i++){
+            this.$widget.find('.knob-indicator-' + i).css('background','none');
+        }
+
+        for(var i = indi; i >= 0; i--){
+            this.$widget.find('.knob-indicator-' + i).css('background','#00C2FF');
+        }    
+    }    
 };
 
 /**
