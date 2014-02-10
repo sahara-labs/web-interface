@@ -791,10 +791,10 @@ Widget.prototype._postControl = function(action, params, responseCallback, error
         url: "/primitive/mapjson/pc/" + Globals.CONTROLLER + "/pa/" + action,
         data: params,
         success: function(data) {
-            if (responseCallback != null) responseCallback(data);
+            if (responseCallback) responseCallback(data);
         },
         error: function(data) {
-            if (errorCallabck != null) errorCallback(data);
+            if (errorCallback) errorCallback(data);
         }
     });
 };
@@ -2940,6 +2940,7 @@ RotarySwitch.prototype._animateSwitch = function(point) {
  * @config {string}  [action] action to send to when pressed
  * @config {object}  [params] parameters to be sent when pressed (optional)
  * @config {string}  [label] the label to display on the button (optional)
+ * @config {string}  [image] an image to display on the button (optional)
  * @config {boolean} [circular] whether the button is circular (default false)
  * @config {number}  [diameter] The size of a push button diameter in pixels (default 100px)
  * @config {string}  [color]  custom color setting for the button (default #EFEFEF)
@@ -2974,23 +2975,15 @@ Button.prototype.init = function($container) {
                 (this.config.color ? "background-color:" + this.config.color : "") +
                 (this.config.circular ? "border-radius:" + this.config.width + "px;" : "") + "'>" +
             "<span class='button-label'>" + this.config.label + "</span>" +
+            (this.config.image ? "<img src='" + this.config.image + "' alt='' />" : "") +
         "</div>"
     );
 
     var thiz = this;
-    this.$widget.mousedown(function() { thiz._buttonEngaged(); });
-    this.$widget.bind("mouseup mouseout", function(){ thiz._buttonReleased(); });
-    this.$widget.click(function() { thiz._clicked(); });
-
-    /* Remove the standard button classes for the push button. */
-    if($('#'+this.id).hasClass('push-button')) $('#'+this.id).find('.window-content').empty();
-   
-    /* Add the push button classes. */
-    if (this.$widget.hasClass('push-button')) this.$widget.find('.window-content').append('<div class="push-button-container" style="height:'+ this.config.diameter +'px; width:'+ this.config.diameter +'px;"></div>');
-    if (this.$widget.hasClass('push-button')) this.$widget.find('.push-button-container').append('<div class="push-button-outer"></div>');
-    if (this.$widget.hasClass('push-button')) this.$widget.find('.push-button-outer').append('<div class="push-button-middle"></div>');
-    if (this.$widget.hasClass('push-button')) this.$widget.find('.push-button-outer').append('<div class="push-button-color push-button-'+ (this.config.pushColor ? this.config.pushColor : 'white') +'"></div>');
-    if (this.$widget.hasClass('push-button')) this.$widget.find('.push-button-middle').append('<div class="push-button-label">'+ this.config.label +'</div>');
+    this.$widget.children(".button")
+        .mousedown(function() { thiz._buttonEngaged(); })
+        .bind("mouseup mouseout", function(){ thiz._buttonReleased(); })
+        .click(function() { thiz._clicked(); });
 };
 
 /**
