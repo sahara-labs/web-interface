@@ -1507,10 +1507,10 @@ TabLayout.prototype._tabBarHTML = function() {
     {
         w = this.container.getWidget(widgets[i]);
         
-        html += "<div class='tab " + (!Globals.THEME === 'flat' ? '' : 'button ') + (i == 0 && this.config.position != TabLayout.POSITION.bottom || 
+        html += "<div class='tab " + (Globals.THEME === 'flat' ? '' : 'button ') + (i == 0 && this.config.position != TabLayout.POSITION.bottom || 
                         i == widgets.length - 1 && this.config.position == TabLayout.POSITION.bottom ? "tab-active" : "")
                         + "' style='" + (this.config.vertical ? "float:" + (this.config.alignLeft ? "left" : "right") : "") + 
-                        (!Globals.THEME === 'flat' ? '' : '; width: '+ (this.config.position === 'left' ? '27%;' : '27%;') + ' font-size: 80%;') + "'>" + 
+                        (Globals.THEME === 'flat' ? '' : '; width: '+ (this.config.position === 'left' ? '27%;' : '27%;') + ' font-size: 80%;') + "'>" + 
                 w.config.title + "</div>";
     }
     
