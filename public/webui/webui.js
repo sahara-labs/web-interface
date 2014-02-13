@@ -1507,9 +1507,10 @@ TabLayout.prototype._tabBarHTML = function() {
     {
         w = this.container.getWidget(widgets[i]);
         
-        html += "<div class='tab " + (i == 0 && this.config.position != TabLayout.POSITION.bottom || 
+        html += "<div class='tab " + (Globals.THEME === 'flat' ? '' : 'button ') + (i == 0 && this.config.position != TabLayout.POSITION.bottom || 
                         i == widgets.length - 1 && this.config.position == TabLayout.POSITION.bottom ? "tab-active" : "")
-                        + "' style='" + (this.config.vertical ? "float:" + (this.config.alignLeft ? "left" : "right") : "") + "'>" + 
+                        + "' style='" + (this.config.vertical ? "float:" + (this.config.alignLeft ? "left" : "right") : "") + 
+                        (Globals.THEME === 'flat' ? '' : '; width: '+ (this.config.position === 'left' ? '27%;' : '27%;') + ' font-size: 80%;') + "'>" + 
                 w.config.title + "</div>";
     }
     
@@ -2915,7 +2916,7 @@ RotarySwitch.prototype._animateSwitch = function(point) {
     //TODO Fix issue with some labels making the switch fully rotate to get to the closest one.
 
     /* Calculate the switches degree in relation to the point. */
-    var deg = Math.atan((pos.left - x0) / (y0 - pos.top)) * 180 /Math.PI;
+    var deg = Math.atan((pos.left - x0) / (y0 - pos.top)) * 180 / Math.PI;
     deg = x0 < pos.top ? Math.round(deg + 180) : Math.round(deg);
 
     /* Rotates the switch. */
@@ -2984,6 +2985,31 @@ Button.prototype.init = function($container) {
         .mousedown(function() { thiz._buttonEngaged(); })
         .bind("mouseup mouseout", function(){ thiz._buttonReleased(); })
         .click(function() { thiz._clicked(); });
+    if ($('#'+this.id).hasClass('push-button')) {
+        /* Remove the standard button classes for the push button. */
+        $('#'+this.id).find('.window-content').empty();
+
+        /* Add the push button classes. */
+        this.$widget.find('.window-content').append('<div class="push-button-container" style="height:'+ this.config.diameter +'px; width:'+ this.config.diameter +'px;"></div>');
+        this.$widget.find('.push-button-container').append('<div class="push-button-outer"></div>');
+        this.$widget.find('.push-button-outer').append('<div class="push-button-middle"></div>');
+        this.$widget.find('.push-button-outer').append('<div class="push-button-color push-button-'+ (this.config.pushColor ? this.config.pushColor : 'white') +'"></div>');
+        this.$widget.find('.push-button-middle').append('<div class="push-button-label">'+ this.config.label +'</div>');
+
+        /* Animates the push buttons when clicked. */
+        this.$widget.find('.push-button-outer').click(function(){
+        	if (!thiz.$widget.hasClass('push-button-down'))
+        	{
+                thiz.$widget.find('.push-button-outer').addClass('push-button-down');
+
+                setTimeout(function()
+                {
+                    thiz.$widget.find('.push-button-outer').removeClass('push-button-down');
+                },300);       
+        	}     
+        });
+    };
+
 };
 
 /**
@@ -3157,9 +3183,9 @@ Knob.prototype._buildHTML = function() {
                 "<div class='knob-highlight'" + (this.config.style == 'black' ? 'style="opacity:0.4;"' : '') + "></div>"+
             "</div>" +
         "</div>" +
-        "<div class='knob-val knob-25' data-value='0.25' style='top:50%; right:" + (!this.config.windowed ? '-25%' : '6%') + ";'>" + ((this.config.max - this.config.min) * 0.25 + this.config.min) + "</div>" +
+        "<div class='knob-val knob-25' data-value='0.25' style='top:50%; right:" + (!this.config.windowed ? '-25%' : '-1px') + ";'>" + ((this.config.max - this.config.min) * 0.25 + this.config.min) + "</div>" +
         "<div><div class='knob-50-outter'><div class='knob-val knob-50' data-value='0.50'>" + ((this.config.max - this.config.min) * 0.50 + this.config.min) + "</div></div></div>" +
-        "<div class='knob-val knob-75' data-value='0.75' style='top: 50%; left:" + (!this.config.windowed ? '-25%' : '6%') + ";'>" + ((this.config.max - this.config.min) * 0.75 + this.config.min) + "</div>" +
+        "<div class='knob-val knob-75' data-value='0.75' style='top: 50%; left:" + (!this.config.windowed ? '-25%' : '-1px') + ";'>" + ((this.config.max - this.config.min) * 0.75 + this.config.min) + "</div>" +
         "<div class='knob-input-container" + (this.config.vertical ? '' : ' knob-input-horizontal') +"'>" +    
             "<input class='knob-input' value='0'></input>" +
             (this.config.indicator ? '<div class="knob-indicator-container"></div>' : '') +
@@ -3324,10 +3350,7 @@ Knob.prototype._handleTextBoxChange = function(val) {
     }
 
     /* Get the values positon in relation to degrees. */
-    //TODO Set the knob to the correct degree position when entering a value in the input field.
-    //this.deg = Math.round(val * 360 / (this.config.max - this.config.min) - 90); // Works for black knob
-    this.deg = Math.round(val * 360 / (this.config.max - this.config.min) - 360); // Works for white knob
-
+    this.deg = Math.round(val * 360 / (this.config.max - this.config.min) - 90);
     this.val = val;
     this.valueChanged = true;
     this._rotateKnob();

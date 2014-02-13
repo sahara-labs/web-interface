@@ -34,7 +34,6 @@
     background: -ms-radial-gradient(center, ellipse cover,  rgba(243,243,243,1) 0%,rgba(250,250,250,1) 110%); /* IE10+ */
     background: radial-gradient(ellipse at center,  rgba(243,243,243,1) 0%,rgba(250,250,250,1) 110%); /* W3C */
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f3f3f3', endColorstr='#fafafa',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
-
 }
 
 .window-header .ui-icon, .tab-wrapper-controls .ui-icon {
@@ -162,14 +161,6 @@
     box-shadow: 0px 3px 10px 2px rgba(0, 0, 0, 0.33);
 }
 
-.push-button-outer:active {
-    box-shadow: 0px 1px 1px 0px rgba(0, 0, 0, 0.18);
-    top: 10%;
-    right: 10%;
-    left: 10%;
-    bottom: 10%;
-}
-
 .push-button-middle {
     position: absolute;
     top: 10%;
@@ -209,6 +200,14 @@
     -moz-transition:all 0.2s ease-in-out;
     -o-transition:all 0.2s ease-in-out;
     transition:all 0.2s ease-in-out;
+}
+
+.push-button-down {
+    top: 10%;
+    right: 10%;
+    left: 10%;
+    bottom: 10%;
+    box-shadow: none;
 }
 
 .push-button-color {
@@ -257,7 +256,7 @@
 }
 
 .push-button-blue {
-    background: rgba(15, 188, 255, 0.45);
+    background: rgba(15, 188, 255, 0.30);
     box-shadow: inset 0px 8px 10px 0px rgba(255, 255, 255, 0.13), inset 0px -8px 2px 0px rgba(6, 146, 201, 0.34),
         inset 0px 0px 2px 0px #000,inset 0px 1px 6px 0px #FFF, inset 7px 0px 5px rgba(0, 93, 167, 0.19),inset -5px 0px 5px rgba(0, 133, 221, 0.19);
 }
@@ -434,6 +433,15 @@
 
 .no-window-content .switch-led {
     top: 20% !important;
+}
+
+.switch-box .switch-container {
+    width: 100%;
+}
+
+.switch-box .switch-label {
+    font-size: 15px;
+    line-height: 27px;
 }
 
 /******************************************************************************
@@ -919,6 +927,18 @@
     color: #444;
 }
 
+.window-content .knob-val, .window-content .knob-range-val {
+    border-radius: 4px;
+    z-index: 100;
+    border: solid 1px #D3D3D3;
+    padding: 0px 7px;
+    background: #FFF;
+}
+
+.window-content .knob-val:hover, .window-content .knob-range-val:hover {
+    border: solid 1px #797979;
+}
+
 .no-window-content .knob-val, .no-window-content .knob-range-val {
     box-shadow: 0px 1px 3px #CCC;
     padding: 0px 7px;
@@ -1120,6 +1140,65 @@
     display: none;
 }
 
+.knob-valve:active:after {
+    content: '';
+    position: relative;
+	width: 0;
+	height: 0;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid rgba(0, 0, 0, 0);
+    border-left: 10px solid #fff;
+    top: -20px;
+    left: 47%;
+    display: block;
+}
+
+.knob-container-valve {
+    box-shadow: 0 3px 7px rgba(0, 0, 0, 0.37), inset 5px -5px 5px 5px #640000;
+}
+
 .knob-container-valve .knob-texture:before {
     display: none;
+}
+
+/******************************************************************************
+ ** Graph                                                                   **
+ ******************************************************************************/
+
+.graph-labels {
+    margin-top: -4px;
+}
+
+.graph-label-text {
+    padding: 0px !important;
+    border: none !important;
+    font-family: Arial,Helvetica,sans-serif !important;
+    box-shadow: none !important;
+    font-size: 99% !important;
+    line-height: normal !important;
+    color: #777!important;
+    background: none !important;
+}
+
+.tab-bar-top .tab {
+    background: #575757;
+}
+
+.tab:active {
+	box-shadow: none !important;
+}
+
+.tab-bar-left .button {
+    width: 75% !important;
+    margin-bottom: 3px;
+}
+
+.tab-bar-left .button:active {
+    margin: 0px;
+    margin-bottom: 3px;
+    padding-bottom: 10px;
+}
+
+.tab-active {
+    background: rgba(0, 109, 228, 0.51) !important;
 }

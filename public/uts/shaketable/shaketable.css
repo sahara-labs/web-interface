@@ -8,3 +8,7 @@
 #shake-table-anchor {
     height: 850px;
 }
+
+#knob-coil-1, #knob-coil-2 {
+	width: 120px;
+}

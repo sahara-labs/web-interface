@@ -26,7 +26,7 @@ function Config2DOF()
         controller: "ShakeTableController",
         dataAction: "dataAndGraph",
         dataDuration: 10,
-        dataPeriod: 100,
+        dataPeriod: 10,
         pollPeriod: 1000,
         windowToggle: true,
         theme: Globals.THEMES.flat,
@@ -38,9 +38,11 @@ function Config2DOF()
                 left: 351,
                 top: 423,
                 widgets: [
+                    new Spacer("graph-ffts", {
+                        color: "red",
+                        title: "FFT"
+                    }),
                     new Graph("graph-displacement", {
-                      width: 300,
-                      height: 180,
                       title: "Displacements",
                       resizable: true,
                       fields: {
@@ -114,11 +116,6 @@ function Config2DOF()
                             border: 0,
                         })
                     }),
-                    
-                    new Spacer("graph-ffts", {
-                        color: "red",
-                        title: "FFT"
-                    })
                 ],
                 layout: new TabLayout({
                     position: TabLayout.POSITION.top,
@@ -162,17 +159,18 @@ function Config2DOF()
                          units: "Hz",
                          vertical: false,
                      }), 
-//                     new Knob("knob-coil-1", {
-//                         action: "setCoil",
-//                         field: "coil-1-power",
-//                         label: "Coil 1"
-//                             
-//                     }),
-//                     new Knob("knob-coil-2", {
-//                         action: "setCoil",
-//                         field: "coil-2-power",
-//                         label: "Coil 2"
-//                     }),
+                     new Knob("knob-coil-1", {
+                         action: "setCoil",
+                         field: "coil-1-power",
+                         label: "Coil 1",
+                         vertical: true
+                     }),
+                     new Knob("knob-coil-2", {
+                         action: "setCoil",
+                         field: "coil-2-power",
+                         label: "Coil 2",
+                         vertical: true
+                     }),
                 ],
                 layout: new FlowLayout({
                     padding: 5,
