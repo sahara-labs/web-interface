@@ -8,3 +8,29 @@
 #shake-table-anchor {
     height: 850px;
 }
+
+#graph-displacement {
+    top: 12.6% !important;
+}
+
+#switch-motor-on {
+    left: 5% !important;
+}
+
+#switch-coils-on {
+    left: 40% !important;
+}
+
+#slider-motor-speed .slider-text-label {
+    background: rgba(247, 247, 247, 0.8) !important;
+}
+
+.window-skeuo #page-reset-button .button {
+    width: 210%;
+}
+
+.window-skeuo .no-window-content .slider-container-horizontal {
+    border: none;
+    border-top: solid 1px #E6E3E3;
+    margin: 15px 0px 0px 0px;
+}
