@@ -625,6 +625,7 @@ Widget.prototype._addTooltip = function($w) {
         }, Widget.TOOLTIP_TIMEOUT);
     }).mouseleave(function() {
         mousein = false;
+        thiz.removeMessages();
     });
 };
 
