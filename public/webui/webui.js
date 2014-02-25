@@ -1507,7 +1507,6 @@ TabLayout.prototype._tabBarHTML = function() {
     for (i = 0; i < widgets.length; i++)
     {
         w = this.container.getWidget(widgets[i]);
-        
         html += "<div class='tab " + (Globals.THEME === 'flat' ? '' : 'button ') + (i == 0 && this.config.position != TabLayout.POSITION.bottom || 
                         i == widgets.length - 1 && this.config.position == TabLayout.POSITION.bottom ? "tab-active" : "")
                         + "' style='" + (this.config.vertical ? "float:" + (this.config.alignLeft ? "left" : "right") : "") + 
@@ -2186,7 +2185,11 @@ Graph.prototype._adjustScaling = function() {
     }
 
     this.graphRange = max - min;
-    this.graphOffset = min / this.graphRange;    
+    
+    /* If we haven't got a sample with data yet. */
+    if (this.graphRange == 0) return;
+    
+    this.graphOffset = min / this.graphRange;
 };
 
 /** @static {integer} The stipple width. */
@@ -3740,10 +3743,81 @@ function LCD()
  * == Gauge Widget                                                           ==
  * ============================================================================ */
 
-function Gauge()
+/** 
+ * The Gauge widget displays a gauge which displays data to the user, 
+ * 
+ * @constructor
+ * @param {string} id the identifer of widget
+ * @param {object} config configuration of widget
+ * @config {string} [field] server data variable that is being displayed
+ * @config {string} [label] label to display
+ * @config {number} [radius] the radius of the gauge in pixels
+ * @config {string} [borderColor] the color of the gauges border (hex, rgb or CSS color name)
+ * @config {number} [min] the minimum value of the guage
+ * @config {number} [max] the maximum value of the gauge
+ */
+
+function Gauge(id, config)
 {
-    // TODO Implment Gauge widget
+    if (!(config.field || config.action || config.values)) throw "Options not supplied."; 
+    
+    Widget.call(this, id, config);
+    
+    /* Default options. */
+    if (this.config.label === undefined) this.config.label = '';
+
+    /** @private {boolean} The selected value. */
+    this.val = undefined;
 }
+
+Gauge.prototype = new Widget;
+
+Gauge.prototype.init = function($container) {
+	var r = this.config.radius,
+        v = this.config.values;
+	
+    this.$widget = this._generate($container,
+        "<div class='gauge gauge-outer' style= 'height:" + (this.config.radius ?  this.config.radius * 2 + 'px;': '150px;' ) +
+            " width:" + (this.config.radius ?  this.config.radius * 2 + 'px;': '150px;' ) + "'>" +
+            "<div class='gauge-inner'></div>" +
+            "<div class='gauge-range'></div>" +
+            "<div class='gauge-border' style='" + (this.config.borderColor ? "border:solid 12px " + this.config.borderColor : '')+ "'></div>" +
+            "<div class='gauge-inner-gloss'></div>" +
+            "<div class='gauge-arrow'></div>" +
+            "<div class='gauge-center'></div>" +
+        "</div>"
+    );
+
+    var thiz = this;
+    this.deg = 0;
+    this.$widget.find(".gauge").click(function() { thiz._clicked(this); });	
+};
+
+Gauge.prototype.consume = function(data) {
+
+};
+
+
+Gauge.prototype.animate = function() {
+    //TODO Rotate the '.gauge-arrow' class as the gauge gets its data.
+    //TODO convert values to degrees with the range of -145 to 145
+}
+
+
+/**
+ * Event handler to be called when a value is clicked.
+ */
+Gauge.prototype._clicked = function(point) {
+	
+	//TODO Remove the following rotate example code.
+    this.deg += 35;
+    this.$widget.find('.gauge-arrow').css({
+        "-webkit-transform": "rotate(" + this.deg + "deg)",
+        "-moz-transform": "rotate(" + this.deg + "deg)",
+        "transform": "rotate(" + this.deg + "deg)"
+    });
+};
+
 
 /* ============================================================================
  * == Linear Gauge widget                                                    ==

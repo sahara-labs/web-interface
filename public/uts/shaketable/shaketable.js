@@ -38,10 +38,6 @@ function Config2DOF()
                 left: 351,
                 top: 423,
                 widgets: [
-                    new Spacer("graph-ffts", {
-                        color: "red",
-                        title: "FFT"
-                    }),
                     new Graph("graph-displacement", {
                       title: "Displacements",
                       resizable: true,
@@ -116,6 +112,21 @@ function Config2DOF()
                             border: 0,
                         })
                     }),
+                    new FFTGraph("graph-fft", {
+                        title: "FFT",
+                        resizable: true,
+                        fields: {
+                            'disp-graph-1': 'Base',
+                            'disp-graph-2': 'Level 1',
+                            'disp-graph-3': 'Level 2'
+                        },
+                        xLabel: "Frequency (Hz)",
+                        yLabel: "Amplitude (mm)",
+                        horizScales: 5,
+                        maxValue: 30,
+                        fieldCtl: true,
+                        autoScale: true
+                    })
                 ],
                 layout: new TabLayout({
                     position: TabLayout.POSITION.top,
@@ -879,3 +890,116 @@ MimicWidget.prototype.destroy = function() {
     
     Widget.prototype.destroy.call(this);
 };
+
+/**
+ * Displays an FFT of one or more signals.
+ * 
+ * @constructor
+ * @param {string} id graph identifier
+ * @param {object} config configuration object
+ * @config {object}  [fields]      map of graphed data fields with field => label
+ * @config {object}  [colors]      map of graph trace colors with field => color (optional)
+ * @config {boolean} [autoScale]   whether to autoscale the graph dependant (default off)
+ * @config {integer} [minValue]    minimum value that is graphed, implies not autoscaling (default 0)
+ * @config {integer} [maxValue]    maximum value that is graphed, implies not autoscaling (default 100)
+ * @config {integer} [duration]    number of seconds this graph displays (default 60)
+ * @config {integer} [period]      period betweeen samples in milliseconds (default 100)
+ * @config {string}  [xLabel]      X axis label (default (Time (s))
+ * @config {String}  [yLabel]      Y axis label (optional)
+ * @config {boolean} [traceLabels] whether to show trace labels (default true)
+ * @config {boolean} [fieldCtl]    whether data field displays can be toggled (default false)
+ * @config {boolean} [autoCtl]     whether autoscaling enable control is shown (default false)
+ * @config {boolean} [durationCtl] whether duration control slider is displayed
+ * @config {integer} [vertScales]  number of vertical scales (default 5)
+ * @config {integer} [horizScales] number of horizontal scales (default 8)
+ */
+function FFTGraph(id, config)
+{
+    Graph.call(this, id, config);
+    
+    
+}
+
+FFTGraph.prototype = new Graph;
+
+FFTGraph.prototype.consume = function(data) {
+    var i = 0;
+
+    if (this.startTime == undefined) 
+    {
+        this.startTime = data.start;
+        this._updateIndependentScale();
+    }
+    
+    this.latestTime = data.time;
+
+    for (i in this.dataFields)
+    {
+        if (data[i] === undefined) continue;
+
+        this.dataFields[i].values = this.fftTransform(data[i]);
+        this.dataFields[i].seconds = this.dataFields[i].values.length * this.config.period / 1000;
+        this.displayedDuration = data.duration;
+    }
+    
+    if (this.config.autoScale) 
+    {
+        /* Determine graph scaling for this frame and label it. */
+        this._adjustScaling();
+        this._updateDependantScale();
+    }
+
+    this._drawFrame();
+    
+};
+
+FFTGraph.prototype._updateIndependentScale = function() {
+    var i, $d = this.$widget.find(".graph-bottom-scale-0"), t;
+
+    for (i = 0; i <= this.config.horizScales; i++)
+    {
+        t = 1000 * i / this.config.period / this.config.horizScales / 2; 
+        $d.html(Util.zeroPad(t, t < 100 ? 1 : 0));
+        $d = $d.next();
+    }
+};
+
+/**
+ * Pads the length of the array with 0 until its length is a multiple of 2.
+ * 
+ * @param {Array} arr array to pad
+ * @return {Array} padded arary (same as input)
+ */
+FFTGraph.prototype.fftTransform = function(sample) {
+    
+    var i, n = sample.length, vals = new Array(n);
+    
+    /* The FFT is computed on complex numbers. */
+    for (i = 0; i < n; i++)
+    {
+        vals[i] = new Complex(sample[i], 0);
+    }
+    
+    /* The Cooley-Turkey algorithm operates on samples whose length is a 
+     * multiple of 2. */ 
+    while (((n = vals.length) & (n - 1)) != 0)
+    {
+        vals.push(new Complex(0, 0));
+    } 
+    
+    /** Apply the FFT transform. */
+    vals = fft(vals);
+    
+    /* For real inputs, a DFt has a symmetry with complex conjugation so we
+     * are only plotting the lower half of the values. */
+    vals.splice(n / 2 - 1, n / 2);
+
+    /* The plot is of the absolute values of the sample, then scaled . */
+    for (i = 0; i < vals.length; i++)
+    {
+        vals[i] = vals[i].abs() * 2 / n;
+    }
+
+    return vals;
+};
+

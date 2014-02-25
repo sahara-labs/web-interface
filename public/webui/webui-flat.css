@@ -629,7 +629,6 @@
     background-image: -o-linear-gradient(top, #B3B3B3 5%, #DADADA 50%,#EEE);
 }
 
-
 .knob-valve {
     background: #666;
 	background-image: url('/webui/images/skeuo/knob-valve.png');
@@ -643,4 +642,99 @@
 
 .knob-container-valve .knob-texture:before {
     display: none;
+}
+
+/******************************************************************************
+ ** Gauge                                                                    **
+ ******************************************************************************/
+
+.gauge-outer {
+    position: relative;
+    margin: auto;
+    border-radius: 50%;
+    border: solid 1px #474747;
+    box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+.gauge-inner {
+    position: absolute;
+    top: 5%;
+    bottom: 5%;
+    left: 5%;
+    right: 5%;
+    border-radius: 50%;
+    border: solid 1px #474747;
+}
+
+.gauge-range {
+    position: absolute;
+    height: 74%;
+    width: 74%;
+    border: solid 2px #576B7A;
+    border-radius: 50%;
+    left: 12%;
+    top: 12%;
+    clip: rect(-60px,170px,130px,0px);
+}
+
+.gauge-border {
+    display: block;
+    position: absolute;
+    content: '';
+    width: 89%;
+    height: 89%;
+    border-radius: 50%;
+    margin: -0.5%;
+}
+
+.gauge-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 8%;
+    height: 8%;
+    margin-top: -4%;
+    margin-left: -4%;
+    border-radius: 50%;
+    box-shadow: inset 0px 0px 0px 1px #000,0px 1px 6px rgba(0, 0, 0, 0.24);
+    background: #D30000;
+}
+
+.gauge-arrow {
+    display: block;
+    position: relative;
+    width: 1.5%;
+    left: 50%;
+    margin-left: -1%;
+    height: 100%;
+    margin-top: auto;
+    -webkit-transform: rotate(0deg);
+    -webkit-transition:all 0.2s ease-in-out;
+    -moz-transition:all 0.2s ease-in-out;
+    -o-transition:all 0.2s ease-in-out;
+    transition:all 0.2s ease-in-out;
+}
+
+.gauge-arrow:after {
+    content: '';
+    display: block;
+    top: 8%;
+    height: 60%;
+    width: 100%;
+    position: absolute;
+    border-radius: 10px 10px 0px 0px;
+    box-shadow: 1px 2px 5px rgba(0, 0, 0, 0.33);
+    background: #DA0000;
+}
+
+.gauge-arrow:before {
+    width: 0;
+    height: 0;
+    border-left: 3px solid rgba(0, 0, 0, 0);
+    border-right: 3px solid rgba(0, 0, 0, 0);
+    border-bottom: 38px solid #F00;
+    position: absolute;
+    content: '';
+    bottom: 30%;
+    left: -65%;
 }
