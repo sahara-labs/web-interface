@@ -4217,6 +4217,32 @@ WindowManager.prototype.reset = function() {
 };
 
 /* ============================================================================
+ * == Image                                                                  ==
+ * ============================================================================ */
+
+/**
+ * An image to display.
+ * 
+ * @param {String} id image identifier
+ * @param {Object} config configuration object
+ * @config {String] [image] image path
+ * @config {String} [alt] alt value
+ */
+function Image(id, config) 
+{
+    Widget.call(this, id, config);
+    
+    if (this.config.alt === undefined) this.config.alt = '';
+}
+
+Image.prototype = new Widget;
+
+Image.prototype.init = function($container) {
+    this._generate($container, 
+            "<img src='" + this.config.image + "' alt='" + this.config.alt + "' />");
+};
+
+/* ============================================================================
  * == Window Toggler                                                         ==
  * ============================================================================ */
 

@@ -169,19 +169,51 @@ function Config2DOF()
                          label: "Motor Frequency",
                          units: "Hz",
                          vertical: false,
-                     }), 
-                     new Knob("knob-coil-1", {
+                     }),                      
+                     new Slider("knob-coil-1", {
+                         length: 75,
                          action: "setCoil",
-                         field: "coil-1-power",
+                         field: "coils-1-power",
                          label: "Coil 1",
-                         vertical: true
+                         vertical: true,
+                         scales: 2,
+                         units: "%"
                      }),
-                     new Knob("knob-coil-2", {
+                     new Slider("knob-coil-2", {
+                         length: 75,
                          action: "setCoil",
-                         field: "coil-2-power",
+                         field: "coils-2-power",
                          label: "Coil 2",
-                         vertical: true
+                         vertical: true,
+                         scales: 2,
+                         units: "%"
                      }),
+                     new Container("container-couple-button", {
+                        widgets: [
+                            new Image("couple-to-motor" , {
+                                image: "/uts/shaketable/images/arrow-couple-up.png",
+                                width: 100,
+                                height: 60,
+                            }),
+                            new Switch("switch-coupling", {
+                                field: "motor-coil-couple",
+                                action: "setCouple",
+                                label: "Couple",
+                                vertical: false,
+                            }),
+                            new Image("couple-to-coils" , {
+                                image: "/uts/shaketable/images/arrow-couple-left.png",
+                                width: 100,
+                                height: 55
+                            }),
+                        ],
+                        layout: new BoxLayout({
+                            padding: 3,
+                            vertical: true,
+                            align: BoxLayout.ALIGN.center
+                        })
+                     }),
+                     
                 ],
                 layout: new FlowLayout({
                     padding: 5,
