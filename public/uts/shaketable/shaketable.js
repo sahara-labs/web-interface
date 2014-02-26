@@ -35,8 +35,8 @@ function Config2DOF()
             new Container("graphs-container", {
                 title: "Graphs",
                 reizable: true,
-                left: 351,
-                top: 423,
+                left: 0,
+                top: 543,
                 widgets: [
                     new Graph("graph-displacement", {
                       title: "Displacements",
@@ -54,6 +54,8 @@ function Config2DOF()
                       autoCtl: false,
                       durationCtl: false,
                       traceLabels: true,
+                      width: 635,
+                      height: 325,
                     }),
                     new Container("graphs-lissajous-container", {
                         title: "Lissajous",
@@ -136,8 +138,8 @@ function Config2DOF()
             new MimicWidget(false),
             new CameraStream("camera-stream", {
                 resizable: true,
-                left: 2,
-                top: 45,
+                left: 3,
+                top: 5,
                 videoWidth: 320,
                 videoHeight: 240,
                 swfParam: 'camera-swf',
@@ -147,20 +149,9 @@ function Config2DOF()
             new Container("controls-container", {
                 title: "Controls",
                 resizable: false,
-                left: 2,
-                top: 375,
+                left: 0,
+                top: 334,
                 widgets: [
-                    new Switch("switch-motor-on", {
-                        field: "motor-on", 
-                        action: "setMotor",
-                        label: "Motor",
-                        
-                     }),
-                     new Switch("switch-coils-on", {
-                         field: "coils-on",
-                         action: "setCoils",
-                         label: "Dampening",
-                     }),
                      new Slider("slider-motor-speed", {
                          field: "motor-speed",
                          action: "setMotor",
@@ -170,7 +161,7 @@ function Config2DOF()
                          units: "Hz",
                          vertical: false,
                      }),                      
-                     new Slider("knob-coil-1", {
+                     new Slider("slider-coil-1", {
                          length: 75,
                          action: "setCoil",
                          field: "coils-1-power",
@@ -179,7 +170,7 @@ function Config2DOF()
                          scales: 2,
                          units: "%"
                      }),
-                     new Slider("knob-coil-2", {
+                     new Slider("slider-coil-2", {
                          length: 75,
                          action: "setCoil",
                          field: "coils-2-power",
@@ -188,38 +179,54 @@ function Config2DOF()
                          scales: 2,
                          units: "%"
                      }),
-                     new Container("container-couple-button", {
+                     new Container("container-control-buttons", {
+                        width: 200,
                         widgets: [
-                            new Image("couple-to-motor" , {
-                                image: "/uts/shaketable/images/arrow-couple-up.png",
-                                width: 100,
-                                height: 60,
-                            }),
+                            new Switch("switch-motor-on", {
+                                field: "motor-on", 
+                                action: "setMotor",
+                                label: "Motor",
+                                width: 96,
+                             }),
+                             new Switch("switch-coils-on", {
+                                 field: "coils-on",
+                                 action: "setCoils",
+                                 label: "Coils",
+                                 width: 92,
+                             }),
                             new Switch("switch-coupling", {
                                 field: "motor-coil-couple",
                                 action: "setCouple",
                                 label: "Couple",
-                                vertical: false,
+                                width: 107,
+                            }),
+                            new Image("couple-to-motor" , {
+                                image: "/uts/shaketable/images/arrow-couple-left.png",
                             }),
                             new Image("couple-to-coils" , {
-                                image: "/uts/shaketable/images/arrow-couple-left.png",
-                                width: 100,
-                                height: 55
+                                image: "/uts/shaketable/images/arrow-couple-right.png",
                             }),
                         ],
-                        layout: new BoxLayout({
-                            padding: 3,
-                            vertical: true,
-                            align: BoxLayout.ALIGN.center
+                        layout: new AbsoluteLayout({
+                            border: 10,
+                            coords: {
+                                "switch-motor-on": { x: -5, y: 20 },
+                                "switch-coils-on": { x: 100, y: 20 },
+                                "switch-coupling": { x: 40, y: 80 },
+                                "couple-to-motor": { x: 0, y: 55 },
+                                "couple-to-coils": { x: 154, y: 55 },
+                            }
                         })
                      }),
-                     
                 ],
-                layout: new FlowLayout({
+                layout: new GridLayout({
                     padding: 5,
-                    size: 310,
-                    vertical: false,
-                    center: true,
+                    columns: [
+                        [ "container-control-buttons" ],
+                        [ "slider-motor-speed" ],
+                        [ "slider-coil-1" ],
+                        [ "slider-coil-2" ]
+                    ]
                 })
             })
         ]
@@ -335,7 +342,7 @@ function MimicWidget(is3DOF)
         expandable: true,
         draggable: true,
         left: 351,
-        top: 5,
+        top: 10,
     });
     
     /** Model dimensions in mm. */
