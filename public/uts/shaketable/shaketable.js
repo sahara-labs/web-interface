@@ -162,17 +162,20 @@ function Config2DOF()
                          units: "Hz",
                          vertical: false,
                      }), 
-//                     new Knob("knob-coil-1", {
-//                         action: "setCoil",
-//                         field: "coil-1-power",
-//                         label: "Coil 1"
-//                             
-//                     }),
-//                     new Knob("knob-coil-2", {
-//                         action: "setCoil",
-//                         field: "coil-2-power",
-//                         label: "Coil 2"
-//                     }),
+                     new Knob("knob-coil-1", {
+                         action: "setCoil",
+                         field: "coil-1-power",
+                         style: "white",
+                         label: "Coil 1",
+                         radius: 35
+                     }),
+                     new Knob("knob-coil-2", {
+                         action: "setCoil",
+                         field: "coil-2-power",
+                         style: "white",
+                         label: "Coil 2",
+                         radius: 35
+                     }),
                 ],
                 layout: new FlowLayout({
                     padding: 5,

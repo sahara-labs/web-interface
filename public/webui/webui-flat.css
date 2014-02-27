@@ -258,10 +258,13 @@
     bottom: 8%;
     right: 8%;
     border-radius: 50%;
-    transition: .6s;
     background-size: 106%;
     background-position: 40% 15%;
     box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5),inset 0px 2px 3px 1px rgba(255, 255, 255, 0.25);
+    -webkit-transition:all 0.6s ease-in-out;
+    -moz-transition:all 0.6s ease-in-out;
+    -o-transition:all 0.6s ease-in-out;
+    transition:all 0.6s ease-in-out;
 }
 
 .rotary-white {
@@ -287,6 +290,11 @@
     position: absolute;
     cursor: pointer;
     font-size: 12px;
+    margin-left: -3px;
+    margin-top: -6px;
+    padding: 4px;
+    text-shadow: 1px 1px 1px #AAA;
+    color: #3A3A3A;
 }
 
 
@@ -512,13 +520,16 @@
     bottom: 8%;
     right: 8%;
     border-radius: 50%;
-    transition: .4s;
     background-position: 40% 15%;
     cursor: pointer;
     cursor: -webkit-grab;
     cursor: -moz-grab;
     z-index: 10;
     box-shadow: 0 3px 7px rgba(0, 0, 0, 0.37), inset 0px 2px 5px #FFF;
+    -webkit-transition:all 0.4s ease-in-out;
+    -moz-transition:all 0.4s ease-in-out;
+    -o-transition:all 0.4s ease-in-out;
+    transition:all 0.4s ease-in-out;
 }
 
 .knob:active {
