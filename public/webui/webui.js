@@ -1248,7 +1248,7 @@ function FlowLayout(config)
     if (this.config.vertical === undefined) this.config.vertical = true;
     if (this.config.size === undefined) this.config.size = Number.MAX_VALUE;
     if (this.config.center === undefined) this.config.center = false; 
-    if (this.config.padding === undefined) this.config.padding = 10;   
+    if (this.config.padding === undefined) this.config.padding = 10;
 }
 
 FlowLayout.prototype = new Layout;
@@ -2873,7 +2873,7 @@ RotarySwitch.prototype.init = function($container) {
 
         $("#rotary-container-" + this.id).append(
             "<div class='rotary-switch-val " +
-            ( y <= 55 ? y = (y - ( p ? 2 / 2 : '')) - (r >= 60 ? 9 : 4): 0) + "' id='" + this.id + "-" + i + "' " +
+            "' id='" + this.id + "-" + i + "' " +
             "style='left:" + Math.round(y) + "px;top:" + Math.round(x) + "px' " + "value=" +
             ( p ? p.value : v[0].value) + ">" + ( p ? p.label : v[0].label) + "</div>"
         );
@@ -3354,7 +3354,7 @@ Knob.prototype._handleTextBoxChange = function(val) {
     }
 
     /* Get the values positon in relation to degrees. */
-    this.deg = Math.round(val * 360 / (this.config.max - this.config.min) - 90);
+    this.deg = Math.round(val * 360 / (this.config.max - this.config.min));
     this.val = val;
     this.valueChanged = true;
     this._rotateKnob();

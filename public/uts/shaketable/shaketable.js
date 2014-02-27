@@ -160,7 +160,7 @@ function Config2DOF()
                          label: "Motor Frequency",
                          units: "Hz",
                          vertical: false,
-                     }),                      
+                     }),                   
                      new Slider("slider-coil-1", {
                          length: 75,
                          action: "setCoil",
