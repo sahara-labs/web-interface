@@ -7,7 +7,7 @@
  */
 
 /* ============================================================================
- * == Globals (must be set configured in implementations                     ==
+ * == Globals (must be set configured in implementations)                    ==
  * ============================================================================ */
 
 /** Global definitions. */
@@ -4293,7 +4293,6 @@ WindowToggler.prototype.init = function($container) {
     this.container = new Container("widget-toggle-list", {
         windowed: true,
         title: "Display",
-        icon: "toggle",
         closeable: false,
         expandable: false,
         shadeable: true,
@@ -4306,15 +4305,19 @@ WindowToggler.prototype.init = function($container) {
         
         layout: new BoxLayout({
            vertical: true,
-           padding: 7
+           padding: 10
         })
     });
     
     this.container._loadState();
     this.container.init($container);
     
-    /* Automatically set the to not displayed. */
-    if (this.container.window.shaded === undefined) this.container.toggleWindowShade();
+    /* Restore or automatically set the to not displayed. */
+    if (this.container.window.shaded || this.container.window.shaded === undefined)
+    {
+        this.container.window.shaded = false; // This is being toggled in the next call
+        this.container.toggleWindowShade();
+    }
     
     /* Set the switch state. */
     widgets.pop();
