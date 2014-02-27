@@ -4132,6 +4132,32 @@ CameraStream.prototype.toggleWindowShade = function(callback) {
 };
 
 /* ============================================================================
+ * == Image                                                                  ==
+ * ============================================================================ */
+
+/**
+ * An image to display.
+ * 
+ * @param {String} id image identifier
+ * @param {Object} config configuration object
+ * @config {String] [image] image path
+ * @config {String} [alt] alt value
+ */
+function Image(id, config) 
+{
+    Widget.call(this, id, config);
+    
+    if (this.config.alt === undefined) this.config.alt = '';
+}
+
+Image.prototype = new Widget;
+
+Image.prototype.init = function($container) {
+    this._generate($container, 
+            "<img src='" + this.config.image + "' alt='" + this.config.alt + "' />");
+};
+
+/* ============================================================================
  * == Window Manager                                                         ==
  * ============================================================================ */
 
@@ -4217,32 +4243,6 @@ WindowManager.prototype.reset = function() {
 };
 
 /* ============================================================================
- * == Image                                                                  ==
- * ============================================================================ */
-
-/**
- * An image to display.
- * 
- * @param {String} id image identifier
- * @param {Object} config configuration object
- * @config {String] [image] image path
- * @config {String} [alt] alt value
- */
-function Image(id, config) 
-{
-    Widget.call(this, id, config);
-    
-    if (this.config.alt === undefined) this.config.alt = '';
-}
-
-Image.prototype = new Widget;
-
-Image.prototype.init = function($container) {
-    this._generate($container, 
-            "<img src='" + this.config.image + "' alt='" + this.config.alt + "' />");
-};
-
-/* ============================================================================
  * == Window Toggler                                                         ==
  * ============================================================================ */
 
@@ -4297,10 +4297,10 @@ WindowToggler.prototype.init = function($container) {
         expandable: false,
         shadeable: true,
         expandable: false,
-        draggable: true,
+        draggable: false,
         resizable: false,
-        left: -188,
-        top: 144,
+        left: 589,
+        top: -41,
         widgets: widgets,
         
         layout: new BoxLayout({
@@ -4312,12 +4312,9 @@ WindowToggler.prototype.init = function($container) {
     this.container._loadState();
     this.container.init($container);
     
-    /* Restore or automatically set the to not displayed. */
-    if (this.container.window.shaded || this.container.window.shaded === undefined)
-    {
-        this.container.window.shaded = false; // This is being toggled in the next call
-        this.container.toggleWindowShade();
-    }
+    /* Always starts shaded. */
+    this.container.window.shaded = false; // This is being toggled in the next call
+    this.container.toggleWindowShade();
     
     /* Set the switch state. */
     widgets.pop();
