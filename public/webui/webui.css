@@ -946,3 +946,148 @@
     background-position: -208px 0px;
 }
 
+
+/******************************************************************************
+ ** Data Logging Widget                                                      **
+ ******************************************************************************/
+ 
+.data-controls {
+    margin-top: -8px;
+}
+
+.data-controls .data-control-line {
+    margin: 5px 0;
+}
+
+.data-controls .data-control-line label {
+    display: block;
+    width: 60px;
+    float: left;
+    text-align: right;
+    padding-right: 5px;
+}
+
+.data-enable-line label {
+    margin-top: 5px;
+}
+
+.data-format-line label {
+    margin-top: 9px;
+}
+
+.data-controls .switch {
+    float: left;
+} 
+
+.data-format-outer {
+    float: left;
+    margin: 4px;
+    width: 75px;
+    height: 25px;
+    overflow: hidden;
+    background: url('/webui/images/arrow-down.png') no-repeat right #F3F3F3;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.data-format {
+    background: rgba(0, 0, 0, 0);
+    color: #777777;
+    width: 100px;
+    padding: 5px;
+    font-size: 12px;
+    line-height: 1;
+    border: none;
+    outline: none;
+    outline-width: 0;
+    border-radius: 0;
+    height: 25px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    -ie-appearance: none;
+    appearance: none;
+    cursor: pointer;
+}
+
+.data-list-placeholder {
+    width: 100%;
+    font-size: 0.8em;
+    text-align: center;
+    color: #AAAAAA;
+}
+
+.data-logging .data-logger-blur {
+    opacity: 0.3;
+}
+
+.data-duration {
+    float: right;
+    margin-top: 6px;
+    text-align: center;
+    font-size: 0.9em;
+}
+
+.data-files-list {
+    list-style: none;
+    overflow-y: auto;
+}
+
+.data-files-list li {
+    margin: 5px 3px 5px 0;
+    border: 1px solid #DDDDDD;
+    border-radius: 4px;
+    background-color: #FEFEFE;
+    overflow-x: hidden;
+}
+
+.data-files-list li a {
+    display: block;
+    height: 100%;
+    width: 100%;
+    padding: 4px;
+    color: #AAAAAA;
+    text-decoration: none;
+    cursor: inherit;
+}
+
+.data-files-list li.data-file-downloadable {
+    border: 1px solid #888888;
+    background-color: #FAFAFA;
+    box-shadow: 0 0 4px #EFEFEF;
+}
+
+.data-files-list .data-file-downloadable:hover {
+    box-shadow: 0 0 4px #AAAAAA;    
+}
+
+.data-files-list .data-file-downloadable a {
+    color: #333333;
+    cursor: pointer;
+}
+
+.data-files .data-icon {
+    height: 16px;
+    width: 16px;
+    display: inline-block;
+    background-repeat: no-repeat;
+    background-image: url('/webui/images/csv-excel-icons.png');
+    margin: 0 10px -3px 1px;
+    opacity: 0.4;
+}
+
+.data-file-downloadable .data-icon {
+    opacity: 1;
+}
+
+.data-files .data-icon-CSV{
+    background-position: 0px 0px;
+}
+
+.data-files .data-icon-XLS {
+    background-position: -20px 0px;
+}
+
+.data-files .data-icon-XLSX {
+    background-position: -39px 0px;
+}
+

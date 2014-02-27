@@ -35,8 +35,8 @@ function Config2DOF()
             new Container("graphs-container", {
                 title: "Graphs",
                 reizable: true,
-                left: 0,
-                top: 543,
+                left: -191,
+                top: 540,
                 widgets: [
                     new Graph("graph-displacement", {
                       title: "Displacements",
@@ -54,7 +54,7 @@ function Config2DOF()
                       autoCtl: false,
                       durationCtl: false,
                       traceLabels: true,
-                      width: 635,
+                      width: 832,
                       height: 325,
                     }),
                     new Container("graphs-lissajous-container", {
@@ -138,7 +138,7 @@ function Config2DOF()
             new MimicWidget(false),
             new CameraStream("camera-stream", {
                 resizable: true,
-                left: 3,
+                left: -2,
                 top: 5,
                 videoWidth: 320,
                 videoHeight: 240,
@@ -149,8 +149,8 @@ function Config2DOF()
             new Container("controls-container", {
                 title: "Controls",
                 resizable: false,
-                left: 0,
-                top: 334,
+                left: -2,
+                top: 335,
                 widgets: [
                      new Slider("slider-motor-speed", {
                          field: "motor-speed",
@@ -228,6 +228,12 @@ function Config2DOF()
                         [ "slider-coil-2" ]
                     ]
                 })
+            }),
+            new DataLogging("data-logger", {
+                left: -193,
+                top: 142,
+                width: 183,
+                height: 388,
             })
         ]
     };
@@ -341,8 +347,9 @@ function MimicWidget(is3DOF)
         shadeable: true,
         expandable: true,
         draggable: true,
-        left: 351,
-        top: 10,
+        left: 338,
+        top: 5,
+        width: 334
     });
     
     /** Model dimensions in mm. */

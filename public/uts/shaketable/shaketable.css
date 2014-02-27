@@ -9,6 +9,18 @@
     height: 1100px;
 }
 
+#data-logger .window-content {
+	height: 331px;
+}
+
+#data-logger .data-files-list {
+	height: 265px;
+}
+
+#shaker-mimic .mimic {
+	margin: 10px 0 0 10px;
+}
+
 /*
 #graph-displacement {
     top: 12.6% !important;
