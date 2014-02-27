@@ -625,6 +625,7 @@ Widget.prototype._addTooltip = function($w) {
         }, Widget.TOOLTIP_TIMEOUT);
     }).mouseleave(function() {
         mousein = false;
+        thiz.removeMessages();
     });
 };
 
@@ -791,10 +792,10 @@ Widget.prototype._postControl = function(action, params, responseCallback, error
         url: "/primitive/mapjson/pc/" + Globals.CONTROLLER + "/pa/" + action,
         data: params,
         success: function(data) {
-            if (responseCallback != null) responseCallback(data);
+            if (responseCallback) responseCallback(data);
         },
         error: function(data) {
-            if (errorCallabck != null) errorCallback(data);
+            if (errorCallback) errorCallback(data);
         }
     });
 };
@@ -2184,7 +2185,11 @@ Graph.prototype._adjustScaling = function() {
     }
 
     this.graphRange = max - min;
-    this.graphOffset = min / this.graphRange;    
+    
+    /* If we haven't got a sample with data yet. */
+    if (this.graphRange == 0) return;
+    
+    this.graphOffset = min / this.graphRange;
 };
 
 /** @static {integer} The stipple width. */
@@ -2940,6 +2945,7 @@ RotarySwitch.prototype._animateSwitch = function(point) {
  * @config {string}  [action] action to send to when pressed
  * @config {object}  [params] parameters to be sent when pressed (optional)
  * @config {string}  [label] the label to display on the button (optional)
+ * @config {string}  [image] an image to display on the button (optional)
  * @config {boolean} [circular] whether the button is circular (default false)
  * @config {number}  [diameter] The size of a push button diameter in pixels (default 100px)
  * @config {string}  [color]  custom color setting for the button (default #EFEFEF)
@@ -2974,14 +2980,15 @@ Button.prototype.init = function($container) {
                 (this.config.color ? "background-color:" + this.config.color : "") +
                 (this.config.circular ? "border-radius:" + this.config.width + "px;" : "") + "'>" +
             "<span class='button-label'>" + this.config.label + "</span>" +
+            (this.config.image ? "<img src='" + this.config.image + "' alt='' />" : "") +
         "</div>"
     );
 
     var thiz = this;
-    this.$widget.mousedown(function() { thiz._buttonEngaged(); });
-    this.$widget.bind("mouseup mouseout", function(){ thiz._buttonReleased(); });
-    this.$widget.click(function() { thiz._clicked(); });
-
+    this.$widget.children(".button")
+        .mousedown(function() { thiz._buttonEngaged(); })
+        .bind("mouseup mouseout", function(){ thiz._buttonReleased(); })
+        .click(function() { thiz._clicked(); });
     if ($('#'+this.id).hasClass('push-button')) {
         /* Remove the standard button classes for the push button. */
         $('#'+this.id).find('.window-content').empty();
@@ -4207,6 +4214,32 @@ WindowManager.prototype.reset = function() {
         this.states[i] = true;
         this.widgets[i].init(this.$contentBox);
     }
+};
+
+/* ============================================================================
+ * == Image                                                                  ==
+ * ============================================================================ */
+
+/**
+ * An image to display.
+ * 
+ * @param {String} id image identifier
+ * @param {Object} config configuration object
+ * @config {String] [image] image path
+ * @config {String} [alt] alt value
+ */
+function Image(id, config) 
+{
+    Widget.call(this, id, config);
+    
+    if (this.config.alt === undefined) this.config.alt = '';
+}
+
+Image.prototype = new Widget;
+
+Image.prototype.init = function($container) {
+    this._generate($container, 
+            "<img src='" + this.config.image + "' alt='" + this.config.alt + "' />");
 };
 
 /* ============================================================================

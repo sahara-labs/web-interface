@@ -26,7 +26,7 @@ function Config2DOF()
         controller: "ShakeTableController",
         dataAction: "dataAndGraph",
         dataDuration: 10,
-        dataPeriod: 100,
+        dataPeriod: 10,
         pollPeriod: 1000,
         windowToggle: true,
         theme: Globals.THEMES.flat,
@@ -35,12 +35,10 @@ function Config2DOF()
             new Container("graphs-container", {
                 title: "Graphs",
                 reizable: true,
-                left: 351,
-                top: 423,
+                left: 0,
+                top: 543,
                 widgets: [
                     new Graph("graph-displacement", {
-                      width: 300,
-                      height: 180,
                       title: "Displacements",
                       resizable: true,
                       fields: {
@@ -56,6 +54,8 @@ function Config2DOF()
                       autoCtl: false,
                       durationCtl: false,
                       traceLabels: true,
+                      width: 635,
+                      height: 325,
                     }),
                     new Container("graphs-lissajous-container", {
                         title: "Lissajous",
@@ -114,10 +114,20 @@ function Config2DOF()
                             border: 0,
                         })
                     }),
-                    
-                    new Spacer("graph-ffts", {
-                        color: "red",
-                        title: "FFT"
+                    new FFTGraph("graph-fft", {
+                        title: "FFT",
+                        resizable: true,
+                        fields: {
+                            'disp-graph-1': 'Base',
+                            'disp-graph-2': 'Level 1',
+                            'disp-graph-3': 'Level 2'
+                        },
+                        xLabel: "Frequency (Hz)",
+                        yLabel: "Amplitude (mm)",
+                        horizScales: 5,
+                        maxValue: 30,
+                        fieldCtl: true,
+                        autoScale: true
                     })
                 ],
                 layout: new TabLayout({
@@ -128,8 +138,8 @@ function Config2DOF()
             new MimicWidget(false),
             new CameraStream("camera-stream", {
                 resizable: true,
-                left: 2,
-                top: 45,
+                left: 3,
+                top: 5,
                 videoWidth: 320,
                 videoHeight: 240,
                 swfParam: 'camera-swf',
@@ -139,20 +149,9 @@ function Config2DOF()
             new Container("controls-container", {
                 title: "Controls",
                 resizable: false,
-                left: 2,
-                top: 375,
+                left: 0,
+                top: 334,
                 widgets: [
-                    new Switch("switch-motor-on", {
-                        field: "motor-on", 
-                        action: "setMotor",
-                        label: "Motor",
-                        
-                     }),
-                     new Switch("switch-coils-on", {
-                         field: "coils-on",
-                         action: "setCoils",
-                         label: "Dampening",
-                     }),
                      new Slider("slider-motor-speed", {
                          field: "motor-speed",
                          action: "setMotor",
@@ -161,27 +160,73 @@ function Config2DOF()
                          label: "Motor Frequency",
                          units: "Hz",
                          vertical: false,
-                     }), 
-                     new Knob("knob-coil-1", {
+                     }),                   
+                     new Slider("slider-coil-1", {
+                         length: 75,
                          action: "setCoil",
-                         field: "coil-1-power",
-                         style: "white",
+                         field: "coils-1-power",
                          label: "Coil 1",
-                         radius: 35
+                         vertical: true,
+                         scales: 2,
+                         units: "%"
                      }),
-                     new Knob("knob-coil-2", {
+                     new Slider("slider-coil-2", {
+                         length: 75,
                          action: "setCoil",
-                         field: "coil-2-power",
-                         style: "white",
+                         field: "coils-2-power",
                          label: "Coil 2",
-                         radius: 35
+                         vertical: true,
+                         scales: 2,
+                         units: "%"
+                     }),
+                     new Container("container-control-buttons", {
+                        width: 200,
+                        widgets: [
+                            new Switch("switch-motor-on", {
+                                field: "motor-on", 
+                                action: "setMotor",
+                                label: "Motor",
+                                width: 96,
+                             }),
+                             new Switch("switch-coils-on", {
+                                 field: "coils-on",
+                                 action: "setCoils",
+                                 label: "Coils",
+                                 width: 92,
+                             }),
+                            new Switch("switch-coupling", {
+                                field: "motor-coil-couple",
+                                action: "setCouple",
+                                label: "Couple",
+                                width: 107,
+                            }),
+                            new Image("couple-to-motor" , {
+                                image: "/uts/shaketable/images/arrow-couple-left.png",
+                            }),
+                            new Image("couple-to-coils" , {
+                                image: "/uts/shaketable/images/arrow-couple-right.png",
+                            }),
+                        ],
+                        layout: new AbsoluteLayout({
+                            border: 10,
+                            coords: {
+                                "switch-motor-on": { x: -5, y: 20 },
+                                "switch-coils-on": { x: 100, y: 20 },
+                                "switch-coupling": { x: 40, y: 80 },
+                                "couple-to-motor": { x: 0, y: 55 },
+                                "couple-to-coils": { x: 154, y: 55 },
+                            }
+                        })
                      }),
                 ],
-                layout: new FlowLayout({
+                layout: new GridLayout({
                     padding: 5,
-                    size: 310,
-                    vertical: false,
-                    center: true,
+                    columns: [
+                        [ "container-control-buttons" ],
+                        [ "slider-motor-speed" ],
+                        [ "slider-coil-1" ],
+                        [ "slider-coil-2" ]
+                    ]
                 })
             })
         ]
@@ -297,7 +342,7 @@ function MimicWidget(is3DOF)
         expandable: true,
         draggable: true,
         left: 351,
-        top: 5,
+        top: 10,
     });
     
     /** Model dimensions in mm. */
@@ -884,3 +929,116 @@ MimicWidget.prototype.destroy = function() {
     
     Widget.prototype.destroy.call(this);
 };
+
+/**
+ * Displays an FFT of one or more signals.
+ * 
+ * @constructor
+ * @param {string} id graph identifier
+ * @param {object} config configuration object
+ * @config {object}  [fields]      map of graphed data fields with field => label
+ * @config {object}  [colors]      map of graph trace colors with field => color (optional)
+ * @config {boolean} [autoScale]   whether to autoscale the graph dependant (default off)
+ * @config {integer} [minValue]    minimum value that is graphed, implies not autoscaling (default 0)
+ * @config {integer} [maxValue]    maximum value that is graphed, implies not autoscaling (default 100)
+ * @config {integer} [duration]    number of seconds this graph displays (default 60)
+ * @config {integer} [period]      period betweeen samples in milliseconds (default 100)
+ * @config {string}  [xLabel]      X axis label (default (Time (s))
+ * @config {String}  [yLabel]      Y axis label (optional)
+ * @config {boolean} [traceLabels] whether to show trace labels (default true)
+ * @config {boolean} [fieldCtl]    whether data field displays can be toggled (default false)
+ * @config {boolean} [autoCtl]     whether autoscaling enable control is shown (default false)
+ * @config {boolean} [durationCtl] whether duration control slider is displayed
+ * @config {integer} [vertScales]  number of vertical scales (default 5)
+ * @config {integer} [horizScales] number of horizontal scales (default 8)
+ */
+function FFTGraph(id, config)
+{
+    Graph.call(this, id, config);
+    
+    
+}
+
+FFTGraph.prototype = new Graph;
+
+FFTGraph.prototype.consume = function(data) {
+    var i = 0;
+
+    if (this.startTime == undefined) 
+    {
+        this.startTime = data.start;
+        this._updateIndependentScale();
+    }
+    
+    this.latestTime = data.time;
+
+    for (i in this.dataFields)
+    {
+        if (data[i] === undefined) continue;
+
+        this.dataFields[i].values = this.fftTransform(data[i]);
+        this.dataFields[i].seconds = this.dataFields[i].values.length * this.config.period / 1000;
+        this.displayedDuration = data.duration;
+    }
+    
+    if (this.config.autoScale) 
+    {
+        /* Determine graph scaling for this frame and label it. */
+        this._adjustScaling();
+        this._updateDependantScale();
+    }
+
+    this._drawFrame();
+    
+};
+
+FFTGraph.prototype._updateIndependentScale = function() {
+    var i, $d = this.$widget.find(".graph-bottom-scale-0"), t;
+
+    for (i = 0; i <= this.config.horizScales; i++)
+    {
+        t = 1000 * i / this.config.period / this.config.horizScales / 2; 
+        $d.html(Util.zeroPad(t, t < 100 ? 1 : 0));
+        $d = $d.next();
+    }
+};
+
+/**
+ * Pads the length of the array with 0 until its length is a multiple of 2.
+ * 
+ * @param {Array} arr array to pad
+ * @return {Array} padded arary (same as input)
+ */
+FFTGraph.prototype.fftTransform = function(sample) {
+    
+    var i, n = sample.length, vals = new Array(n);
+    
+    /* The FFT is computed on complex numbers. */
+    for (i = 0; i < n; i++)
+    {
+        vals[i] = new Complex(sample[i], 0);
+    }
+    
+    /* The Cooley-Turkey algorithm operates on samples whose length is a 
+     * multiple of 2. */ 
+    while (((n = vals.length) & (n - 1)) != 0)
+    {
+        vals.push(new Complex(0, 0));
+    } 
+    
+    /** Apply the FFT transform. */
+    vals = fft(vals);
+    
+    /* For real inputs, a DFt has a symmetry with complex conjugation so we
+     * are only plotting the lower half of the values. */
+    vals.splice(n / 2 - 1, n / 2);
+
+    /* The plot is of the absolute values of the sample, then scaled . */
+    for (i = 0; i < vals.length; i++)
+    {
+        vals[i] = vals[i].abs() * 2 / n;
+    }
+
+    return vals;
+};
+

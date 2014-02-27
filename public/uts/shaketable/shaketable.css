@@ -6,9 +6,10 @@
 
 
 #shake-table-anchor {
-    height: 850px;
+    height: 1100px;
 }
 
+/*
 #graph-displacement {
     top: 12.6% !important;
 }
@@ -53,6 +54,7 @@
  * --- Knob Controls                                                        ---
  * ---------------------------------------------------------------------------- */
 
+/*
 #knob-coil-1 {
     margin-top: 5%;
     left: 12% !important;
@@ -167,3 +169,4 @@
         box-shadow: inset 1px 1px 2px #CFCFCF  !important;
     }
 }
+*/
