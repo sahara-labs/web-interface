@@ -7,7 +7,7 @@
  */
 
 /* ============================================================================
- * == Globals (must be set configured in implementations                     ==
+ * == Globals (must be set configured in implementations)                    ==
  * ============================================================================ */
 
 /** Global definitions. */
@@ -3040,6 +3040,14 @@ Button.prototype._clicked = function() {
     this._postControl(this.config.action, this.config.params, this.config.callback);
 };
 
+Button.prototype.resized = function(w, h ) {
+    alert("Width " + w + ", height" + h);
+};
+
+Button.prototype.resizeStopped = function(w, h ) {
+    alert("Width " + w + ", height" + h);
+};
+
 
 /* ============================================================================
  * == Push Button widget                                                     ==
@@ -3404,7 +3412,7 @@ function Spinner()
  * @config {string}  [label] slider label (optional)
  * @config {string}  [units] units label to display (optional)
  * @config {integer} [precision] precision of displayed value (default 1)
- * @config {integer} [min] minimum value of slider (default 0)
+ * @config {integer} [min] minimum value of slidDr (default 0)
  * @config {integer} [max] maximum value of slider (default 100)
  * @config {boolean} [vertical] whether slider is vertically or horizontally orientated (default vertical)
  * @config {integer} [length] length of slider in pixels (default 250)
@@ -4201,6 +4209,313 @@ CameraStream.prototype.toggleWindowShade = function(callback) {
 };
 
 /* ============================================================================
+ * == Image                                                                  ==
+ * ============================================================================ */
+
+/**
+ * An image to display.
+ * 
+ * @param {String} id image identifier
+ * @param {Object} config configuration object
+ * @config {String] [image] image path
+ * @config {String} [alt] alt value
+ */
+function Image(id, config) 
+{
+    Widget.call(this, id, config);
+    
+    if (this.config.alt === undefined) this.config.alt = '';
+}
+
+Image.prototype = new Widget;
+
+Image.prototype.init = function($container) {
+    this._generate($container, 
+            "<img src='" + this.config.image + "' alt='" + this.config.alt + "' />");
+};
+
+
+/* ============================================================================
+ * == Data Logging Manager                                                   ==
+ * ============================================================================ */
+
+/**
+ * The data logging widget allows the enabling and disabling of data logging
+ * and selection of data files to download.
+ * <br />
+ * The fields this widget expects (which may be namespaced) to determine logging
+ * state are:
+ * <ul>
+ *  <li>is-logging - Whether logging is occuring.</li>
+ *  <li>log-duration - If logging, the number of seconds that the file has been
+ *  logging.</li>
+ *  <li>log-files - List of log files. That have been generated.</li>
+ * </ul>
+ * 
+ * @param {String} id widget identifier
+ * @param {Object} config configuration object
+ * @config {String} [fieldNS] namespace of logging fields  
+ */
+function DataLogging(id, config)
+{
+    Widget.call(this, id, config);
+    
+    if (this.config.title === undefined) this.config.title = 'Logging';
+    
+    /** @type {boolean} Whether a log is currently running. */
+    this.isLogging = undefined;
+    
+    /** @type {boolean} Whether a control action has been requested. */
+    this.isControlled = false;
+    
+    /** @type {int} The duration of the current log file. */
+    this.duration = undefined;
+    
+    /** @type {object} The list of files that have been logged. */
+    this.files = undefined;
+
+    /** @type {int} Number of files. */
+    this.fileCount = 0;
+    
+    /** @type {object} The current file being logged to. */
+    this.currentFile = undefined;
+}
+DataLogging.prototype = new Widget;
+
+DataLogging.prototype.init = function($container) {
+    /* Clear to force UI redraw. */
+    this.files = this.isLogging = this.duration = undefined;
+    this.isControlled = false;
+    this.fileCount = 0;
+
+    /* Draw UI. */
+    this.$widget = this._generate($container, this.buildHTML());
+
+    /* Event handlers. */
+    var thiz = this;
+    this.$widget.find(".switch").click(function() { thiz.toggleLogging(); });
+    
+    /* Check we can download files. */
+    setTimeout(function() { thiz.pollSessionFiles(); }, 2000);
+};
+
+DataLogging.prototype.buildHTML = function() {
+    return (
+        "<div class='data-controls'>" +
+        "   <div class='data-enable-line data-control-line data-logger-blur'>" + 
+        "       <label for='" + this.id + "-data-enable'>Logging: </label>" +  
+        "       <div id='" + this.id + "-data-enable' class='switch'>" +
+        "           <div class='switch-animated switch-slide'></div>" +
+        "       </div>" +
+        "       <div class='data-duration'></div>" +
+        "       <div style='clear:both'></div>" +
+        "   </div>" + 
+        "   <div class='data-format-line data-control-line data-logger-blur'>" +
+        "       <label for='" + this.id + "-data-format'>Format: </label>" +  
+        "       <div class='data-format-outer'>" +
+        "          <select class='data-format'>" +
+        "               <option value='CSV'>CSV</option>" +
+        "               <option value='XLSX'>XLSX</option>" +
+        "               <option value='XLS'>XLS</option>" +
+        "          </select>" +
+        "       </div>" +
+        "      <div style='clear:both'></div>" +
+        "   </div>" +
+        "</div>" +
+        "<div class='data-files'>" +
+        "   <div class='data-list-placeholder'>" +
+        "       Please wait..." +
+        "   </div>" +
+        "</div>"
+    );
+};
+
+/**
+ * Toggle between logging and not logging.
+ */
+DataLogging.prototype.toggleLogging = function() {
+    /* We do not currently have a consistent state with the server so we will
+     * stop any changes until the state is consistent. */
+    if (this.isLogging === undefined) return;
+    
+    var thiz = this;
+    this.isControlled = true;
+    this._postControl(
+        "logging", 
+        {
+            enable: !this.isLogging,
+            format: this.$widget.find(".data-format :selected").val()
+        }, 
+        function(data) { thiz.isControlled = false; thiz.consume(data); }
+    );
+    
+    if (this.currentFile) this.currentFile.isLogging = false;
+    this.isLogging = !this.isLogging;
+    this.$widget.find(".data-controls .switch div").toggleClass("switch-on");
+};
+
+DataLogging.prototype.consume = function(data) {
+    if (typeof data['is-logging'] != "undefined" && data['is-logging'] !== this.isLogging && !this.controlled)
+    {
+        if (this.isLogging === undefined) 
+        {
+            /* Clear first load state. */
+            this.$widget.find(".data-controls .data-logger-blur").removeClass("data-logger-blur");
+        }
+        
+        if (this.isLogging = data['is-logging'])
+        {
+            this.$widget.find(".data-enable div").addClass("on");
+            
+        }
+        else
+        {
+            this.$widget.find(".data-enable div").removeClass("on");
+            
+            if (this.currentFile)
+            {
+                this.currentFile.isLogging = false;
+                this.currentFile = null;
+            }
+        }
+    }
+    
+    if (typeof data['log-duration'] != "undefined" && data['log-duration'] != this.duration)
+    {
+        this.duration = data['log-duration'];
+        this.$widget.find(".data-duration").html(this.duration > 0 ? this.duration + "s" : "");
+    }
+    
+    if (typeof data['log-files'] != "undefined" && $.isArray(data['log-files']))
+    {
+        if (this.files === undefined)
+        {
+            /* First load. */
+            if (data['log-files'].length == 0 ||
+                    (data['log-files'].length == 1 && data['log-files'][0] == "")) // Crap, but error in JSON generation server side 
+            {
+                this.$widget.find(".data-list-placeholder").html("No files.");
+            }
+
+            this.files = { };
+        }
+                
+        var i = 0, files = data['log-files'], f;
+        
+        /* Files may have some leading and trailing whitespace which may interfere with
+         * sorting, so this is being removed. */
+        for (i in files) files[i] = Util.trim(files[i]);
+        
+        /* The files are named with a timestamp in the format YYYYMMDD_hhmmss.<format>
+         * so a direct lexographical sort will correctly sort the files from earliest 
+         * to latest. */
+        files.sort();
+        
+        for (i in files)
+        {
+            if ((f = files[i]) != "" && typeof this.files[f] == "undefined")
+            {
+                if (this.files)
+                
+                this.files[f] = {
+                    name: f,
+                    time: f.substring(f.indexOf('_') + 1, f.indexOf('.')),
+                    format: f.substring(f.indexOf('.') + 1).toUpperCase(),
+                    path: undefined,
+                    isLogging: this.isLogging && i == files.length - 1 
+                };
+                
+                if (this.files[f].isLogging) 
+                {
+                    this.currentFile = this.files[f];
+                    
+                    if (this.files[f].format != this.$widget.find(".data-format :selected").val())
+                    {
+                        /* Update the UI to reflect to current logging format. */
+                        this.$widget.find(".data-format :selected").removeAttr("selected");
+                        this.$widget.find(".data-format option[value='" + this.files[f].format + "']")
+                                .attr("selected", "selected");
+                    }
+                }
+
+                this.files[f].hour = this.files[f].time.substring(0, 2);
+                this.files[f].min = this.files[f].time.substring(2, 4);
+                this.files[f].sec = this.files[f].time.substring(4);
+                
+                if (this.fileCount++ == 0) this.$widget.find(".data-files").html("<ul class='data-files-list'></ul>");
+                this.$widget.find(".data-files-list").prepend(
+                        "<li id='file-" + this.files[f].time + "'>" + 
+                            "<a href='#'>" +
+                                "<span class='data-icon data-icon-" + this.files[f].format + "'></span>" +
+                                "From: " + this.files[f].hour + ":" + this.files[f].min + ":" + this.files[f].sec +
+                            "</a>" +
+                        "</li>");
+//                this.resized(this.$widget.width(), this.$widget.height());
+            }
+        }
+    }
+};
+
+DataLogging.prototype.resized = function(width, height) {
+    this.$widget.children(".window-content")
+        .css("height", height - 53)
+        .children($(".data-files-list").css("height", height - 120));
+    
+    this.$widget.css("height", "auto");
+};
+
+/**
+ * Polls the files in the users home directory.
+ */
+DataLogging.prototype.pollSessionFiles = function() {
+    var thiz = this;
+    $.get(
+        "/home/listsession",
+        null,
+        function(resp) {
+            thiz.checkDownloadable(resp);
+            setTimeout(function() { thiz.pollSessionFiles(); }, 30000);
+        }
+    );
+};
+
+/**
+ * Checks whether we can download a file. To be able to download a file, the  
+ * file must be no longer being logged to and it must be listed in the users
+ * home directory contents.
+ * 
+ * @param {object} sessionFiles list of session files
+ */
+DataLogging.prototype.checkDownloadable = function(sessionFiles) {
+    if (!this.files) return;
+    
+    var f = 0;
+    for (f in sessionFiles) 
+    {
+        if (this.files[f] && !this.files[f].path && !this.files[f].isLogging)
+        {
+            /* File is avaliable for download, so the download can be made active. */
+            this.files[f].path = sessionFiles[f];
+            this.$widget.find("#file-" + this.files[f].time)
+                .addClass("data-file-downloadable")
+                .children("a")
+                    .attr("href", "/home/download" + this.files[f].path)
+                    .attr("target", "_blank");
+        }
+    }
+};
+
+DataLogging.prototype.destroy = function() {
+    Widget.prototype.destroy.call(this);
+    
+    if (this.filePollHandle)
+    {
+        clearTimeout(this.filePollHandle);
+        this.filePollHandle = null;
+    }
+};
+
+/* ============================================================================
  * == Window Manager                                                         ==
  * ============================================================================ */
 
@@ -4286,32 +4601,6 @@ WindowManager.prototype.reset = function() {
 };
 
 /* ============================================================================
- * == Image                                                                  ==
- * ============================================================================ */
-
-/**
- * An image to display.
- * 
- * @param {String} id image identifier
- * @param {Object} config configuration object
- * @config {String] [image] image path
- * @config {String} [alt] alt value
- */
-function Image(id, config) 
-{
-    Widget.call(this, id, config);
-    
-    if (this.config.alt === undefined) this.config.alt = '';
-}
-
-Image.prototype = new Widget;
-
-Image.prototype.init = function($container) {
-    this._generate($container, 
-            "<img src='" + this.config.image + "' alt='" + this.config.alt + "' />");
-};
-
-/* ============================================================================
  * == Window Toggler                                                         ==
  * ============================================================================ */
 
@@ -4362,28 +4651,28 @@ WindowToggler.prototype.init = function($container) {
     this.container = new Container("widget-toggle-list", {
         windowed: true,
         title: "Display",
-        icon: "toggle",
         closeable: false,
         expandable: false,
         shadeable: true,
         expandable: false,
-        draggable: true,
+        draggable: false,
         resizable: false,
-        left: -188,
-        top: 144,
+        left: 589,
+        top: -41,
         widgets: widgets,
         
         layout: new BoxLayout({
            vertical: true,
-           padding: 7
+           padding: 10
         })
     });
     
     this.container._loadState();
     this.container.init($container);
     
-    /* Automatically set the to not displayed. */
-    if (this.container.window.shaded === undefined) this.container.toggleWindowShade();
+    /* Always starts shaded. */
+    this.container.window.shaded = false; // This is being toggled in the next call
+    this.container.toggleWindowShade();
     
     /* Set the switch state. */
     widgets.pop();
