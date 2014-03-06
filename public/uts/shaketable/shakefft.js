@@ -13,7 +13,7 @@
  * @param {array} data data sample to perform FFT
  * @return {array} FFT sample
  */
-function fft(data, s)
+function fft(data)
 {
     var n = data.length, ff = new Array(n), d, D, e, E, k, t;
     

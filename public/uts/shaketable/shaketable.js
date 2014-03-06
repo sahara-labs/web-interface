@@ -114,21 +114,39 @@ function Config2DOF()
                             border: 0,
                         })
                     }),
-                    new FFTGraph("graph-fft", {
+                    new Container("fft-container", {
                         title: "FFT",
-                        resizable: true,
-                        fields: {
-                            'disp-graph-1': 'Base',
-                            'disp-graph-2': 'Level 1',
-                            'disp-graph-3': 'Level 2'
-                        },
-                        xLabel: "Frequency (Hz)",
-                        yLabel: "Amplitude (mm)",
-                        horizScales: 5,
-                        maxValue: 30,
-                        fieldCtl: true,
-                        autoScale: true
-                    })
+                        widgets: [
+                            new FFTGraph("graph-fft", {
+                                title: "FFT",
+                                resizable: true,
+                                fields: {
+                                    'disp-graph-1': 'Base',
+                                    'disp-graph-2': 'Level 1',
+                                    'disp-graph-3': 'Level 2'
+                                },
+                                xLabel: "Frequency (Hz)",
+                                yLabel: "Amplitude (mm)",
+                                horizScales: 5,
+                                maxValue: 30,
+                                fieldCtl: true,
+                                autoScale: true
+                            }),
+                            new Button("button-fft-export", {
+                                label: "Export FFT",
+                                action: "ghj",
+                                width: 100,
+                                height: 40,
+                                resizable: false
+                            })
+                        ],
+                        layout: new AbsoluteLayout({
+                            coords: {
+                                 "graph-fft": { x: 0, y: 0 },
+                                 "button-fft-export": { x: 0, y: -50 }
+                            }
+                        })
+                    }),
                 ],
                 layout: new TabLayout({
                     position: TabLayout.POSITION.top,

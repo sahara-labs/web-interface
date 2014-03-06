@@ -3041,6 +3041,14 @@ Button.prototype._clicked = function() {
     this._postControl(this.config.action, this.config.params, this.config.callback);
 };
 
+Button.prototype.resized = function(w, h ) {
+    alert("Width " + w + ", height" + h);
+};
+
+Button.prototype.resizeStopped = function(w, h ) {
+    alert("Width " + w + ", height" + h);
+};
+
 
 /* ============================================================================
  * == Push Button widget                                                     ==
