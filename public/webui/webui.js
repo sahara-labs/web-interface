@@ -1417,7 +1417,7 @@ TabLayout.POSITION = {
 
 TabLayout.prototype.displayInit = function($container) {
     this.$tabBar = this.container.getContentBox().prepend(this._tabBarHTML()).children(":first");
-    
+
     var thiz = this;
     this.$tabBar.children(".tab").click(function() {
         $(this).siblings(".tab-active").removeClass("tab-active");
@@ -1430,51 +1430,51 @@ TabLayout.prototype._tabClick = function(title) {
    var i = 0, w = false, x, y, 
        wOff = this.config.vertical ? 0 : this.$tabBar.width() + this.config.border,
        hOff = this.config.vertical ? this.$tabBar.height() + this.config.border : 0;
-     
+
    switch (this.config.position)
    {
    case TabLayout.POSITION.top:
        x = this.config.border;
        y = hOff + this.config.border;
        break;
-       
+
    case TabLayout.POSITION.bottom:
        x = this.config.border;
        y = this.config.border;
        break;
-       
+
    case TabLayout.POSITION.left:
        x = wOff + this.config.border;
        y = this.config.border;
        break;
-       
+
    case TabLayout.POSITION.right:
        x = this.config.border;
        y = this.config.border;
        break;
-       
+
    default:
        throw "Unknown tab bar position: " + this.config.position;
        break;
    }
-   
+
    for (i in this.container.getWidgets())
    {
        if ((w = this.container.getWidget(i)).config.title == title) break;
    }
-   
+
    if (!w)
    {
        alert("Widget with title '" + title + "' not found!");
        return;
    }
-   
+
    /* No need to tab to the current widget. */
    if (w == this.currentWidget) return;
-   
+
    /* Remove the current widget. */
    this.container.toggleEvent(this.currentWidget.id, false);
-   
+
    /* Add the current widget. */
    this.currentWidget = w;
    this.container.toggleEvent(w.id, true);
@@ -1497,13 +1497,13 @@ TabLayout.prototype._tabClick = function(title) {
 TabLayout.prototype._tabBarHTML = function() {
     var i, w, widgets = Object.getOwnPropertyNames(this.container.getWidgets()), html = 
         "<div class='tab-bar tab-bar-" + this.config.position + "'>";
-    
+
     if (this.config.position == TabLayout.POSITION.bottom)
     {
         widgets.reverse();
         html += "<div class='tab-footer'></div>"; 
     }
-    
+
     for (i = 0; i < widgets.length; i++)
     {
         w = this.container.getWidget(widgets[i]);
@@ -1513,7 +1513,7 @@ TabLayout.prototype._tabBarHTML = function() {
                         (Globals.THEME === 'flat' ? '' : '; width: '+ (this.config.position === 'left' ? '27%;' : '27%;') + ' font-size: 80%;') + "'>" + 
                 w.config.title + "</div>";
     }
-    
+
     if (this.config.position == TabLayout.POSITION.top)
     {
         html += "<div class='tab-footer'></div>"; 
@@ -1527,11 +1527,10 @@ TabLayout.prototype._tabBarHTML = function() {
         html += "<div class='tab-post' style='" + 
                 (this.config.position == TabLayout.POSITION.left ? "right:0" : "left:0") + "'></div>";
     }
-    
-    
+
     html += 
         "</div>";
-        
+
     return html;
 };
 
@@ -3761,10 +3760,9 @@ function LCD()
  * @config {string} [label] label to display
  * @config {number} [radius] the radius of the gauge in pixels
  * @config {string} [borderColor] the color of the gauges border (hex, rgb or CSS color name)
- * @config {number} [min] the minimum value of the guage
- * @config {number} [max] the maximum value of the gauge
+ * @config {number} [min] the minimum value of the guage (default 0)
+ * @config {number} [max] the maximum value of the gauge (default 100)
  */
-
 function Gauge(id, config)
 {
     if (!(config.field || config.action || config.values)) throw "Options not supplied."; 
@@ -3773,6 +3771,9 @@ function Gauge(id, config)
     
     /* Default options. */
     if (this.config.label === undefined) this.config.label = '';
+	if (this.config.min === undefined) this.config.min = 0;
+    if (this.config.max === undefined) this.config.max = 100;
+    if (this.config.radius === undefined) this.config.radius = 75;    
 
     /** @private {boolean} The selected value. */
     this.val = undefined;
@@ -3798,42 +3799,110 @@ Gauge.prototype.init = function($container) {
 
     var thiz = this;
     this.deg = 0;
-    this.$widget.find(".gauge").click(function() { thiz._clicked(this); });	
 };
 
 Gauge.prototype.consume = function(data) {
-
+	//TODO Finish consume function for the Gauge
+    this.val = data[this.config.field] ? data[this.config.field] : this.val ? this.val : '';
+    thiz.animate();
 };
 
-
 Gauge.prototype.animate = function() {
-    //TODO Rotate the '.gauge-arrow' class as the gauge gets its data.
-    //TODO convert values to degrees with the range of -145 to 145
-}
+    /* Convert value to percentage */
+	this.deg = Math.round(((this.val - this.config.min) * 360) / (this.config.max - this.config.min) * 100) / 100;
 
-
-/**
- * Event handler to be called when a value is clicked.
- */
-Gauge.prototype._clicked = function(point) {
-	
-	//TODO Remove the following rotate example code.
-    this.deg += 35;
+	/* Move the gauge arrow to the correct position */
     this.$widget.find('.gauge-arrow').css({
         "-webkit-transform": "rotate(" + this.deg + "deg)",
         "-moz-transform": "rotate(" + this.deg + "deg)",
         "transform": "rotate(" + this.deg + "deg)"
     });
-};
-
+}
 
 /* ============================================================================
  * == Linear Gauge widget                                                    ==
  * ============================================================================ */
 
-function LinearGauge()
+/** 
+ * The Linear Gauge widget displays a gauge which displays data to the user, 
+ * 
+ * @constructor
+ * @param {string} id the identifer of widget
+ * @param {object} config configuration of widget
+ * @config {string} [field] server data variable that is being displayed
+ * @config {string} [label] label to display
+ * @config {string}  [units] units label to display (optional)
+ * @config {number} [min] the minimum value of the guage (default 0)
+ * @config {number} [max] the maximum value of the gauge (default 100)
+ * @config {integer} [precision] precision of displayed value (default 1)
+ * @config {integer} [scales] number of scales to display (default fitted to min, max value)
+ * @config {integer} [length] length of slider in pixels (default 250)
+ * @config {boolean} [vertical] whether slider is vertically or horizontally orientated (default vertical)
+ */
+function LinearGauge(id, config)
 {
-    // TODO Implement Linear Gauge widget
+    if (!(config.field || config.action || config.values)) throw "Options not supplied."; 
+    
+    Widget.call(this, id, config);
+    
+    /* Default options. */
+    if (this.config.label === undefined) this.config.label = '';
+	if (this.config.min === undefined) this.config.min = 0;
+    if (this.config.max === undefined) this.config.max = 100;
+    if (this.config.length === undefined) this.config.length = 250;    
+	if (this.config.precision === undefined) this.config.precision = 1;
+	if (this.config.scales === undefined) this.config.scales = 
+            this.config.max - this.config.min > 10 ? 10 : this.config.max - this.config.min;
+
+    /** @private {boolean} The selected value. */
+    this.val = undefined;
+}
+
+LinearGauge.prototype = new Widget;
+
+LinearGauge.prototype.init = function($container) {
+    var i, s = (Math.floor((this.config.max - this.config.min) / this.config.scales));
+
+    var html =
+        "<div class='linear-gauge linear-gauge-outer'>" +
+            (this.config.label ? "<div class='linear-gauge-label'>" + this.config.label + "</div>" : '') +
+            "<div class='linear-gauge-inner' style= 'width:" + (this.config.length ?  this.config.length + 'px;': '250px;' ) +
+                "height:" + (this.config.length ?  Math.round((this.config.length / 5) * 0.7) + 'px;': '35px;' ) + "'>" +
+                "<div class='linear-gauge-gradient'></div>" +
+                "<div class='linear-gauge-arrow'></div>" +
+                "<div class='linear-gauge-scales'>";
+
+        for (i = 0; i <= this.config.scales; i++)
+        {
+            html+= 
+            "<div class='linear-gauge-scale' style='left:" + (this.config.length / this.config.scales * i -1) + "px;'>" +
+                "<div class='linear-gauge-values'>" + (this.config.vertical ? this.config.max - s * i : this.config.min + s * i) + "</div>" +
+            "</div>";
+        };
+
+        html += 
+                "</div></div>" +
+                "<div class='linear-gauge-output'>00.0 <span class='linear-gauge-units'>" + (this.config.units ? this.config.units : '') + "</span></div>" +
+            "</div>";
+
+    this.$widget = this._generate($container,html);
+    var thiz = this;
+};
+
+LinearGauge.prototype.consume = function(data) {
+	//TODO Finish consume function for the Linear Gauge
+    this.val = data[this.config.field] ? data[this.config.field] : this.val ? this.val : '';
+    thiz.animate();
+};
+
+LinearGauge.prototype.animate = function() {
+
+    /* Convert value to percentage */
+	var gaugeVal = Math.round(((this.val - this.config.min) * 100) / (this.config.max - this.config.min) * 100) / 100;
+
+    /* Display the new value */
+    this.$widget.find(".linear-gauge-arrow").css("left",(gaugeVal === 100 ? 99 : gaugeVal) + '%');
+    this.$widget.find(".linear-gauge-output").html(this.val);	
 }
 
 /* ============================================================================
