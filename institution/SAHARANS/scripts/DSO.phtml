@@ -1,0 +1,49 @@
+<?php
+$cams = new Sahara_Session_Element_Cameras($this->rigClient);
+echo $cams;
+
+$rdpApplet = new Sahara_Session_Element_RdpApplet($this->rigClient, array(
+        'cl1' => 'SP',
+        'cl2' => 'LO'
+));
+echo $rdpApplet;
+
+$code = new Sahara_Session_Element_MultiButtons($this->rigClient, 'codebutton',
+    array(
+        array(
+            'title' => 'Preset 1',
+            'tooltip' => 'Preset 1 is a square wave.',
+            'icon' => '/uts/dso/square.png',
+            'click' => "performPrimitiveJSON('DSOController', 'runScript', { script: 'Square_Wave.preset' })"
+        ),
+        array(
+            'title' => 'Preset 2',
+            'tooltip' => 'Preset 2 is a sine wave.',
+            'icon' => '/uts/dso/sine.png',
+            'click' => "performPrimitiveJSON('DSOController', 'runScript', { script: 'Sine_Wave.preset' })"
+        ),
+        array(
+            'title' => 'Preset 3',
+            'tooltip' => 'Preset 3 is a noise signal.',
+            'icon' => '/uts/dso/noise.png',
+            'click' => "performPrimitiveJSON('DSOController', 'runScript', { script: 'Noise.preset' })"
+        ),
+	array(
+            'title' => 'Preset 4',
+            'tooltip' => 'Preset 4 is a sawtooth wave.',
+            'icon' => '/uts/dso/ramp.png',
+            'click' => "performPrimitiveJSON('DSOController', 'runScript', { script: 'Ramp_Wave.preset' })"
+        )
+    ),
+    array(
+        'orientation' => Sahara_Session_Element_MultiButtons::VERTICAL,
+        'top'         => 10,
+        'left'        => 60,
+        'width'       => 60,
+        'height'      => 60
+    )
+);
+echo $code;
+?>
+
+<div style='margin-bottom:50px'> </div>
