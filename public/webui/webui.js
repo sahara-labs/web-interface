@@ -2866,14 +2866,14 @@ RotarySwitch.prototype.init = function($container) {
     for(var i = 0; i < v.length; i++) {
 
     	/* Calculate the X and Y axes of the current point.  */
-        var x = (r - 5) - (r + 10) * Math.cos(2 * Math.PI * i / v.length),
-            y = (r - 5) - (r + 10) * Math.sin(2 * Math.PI * i / v.length),
+        var y = (r - 5) - (r + 10) * Math.cos(2 * Math.PI * i / v.length),
+            x = (r - 5) - (r + 10) * Math.sin(2 * Math.PI * i / v.length),
             p = v[(v.length - i)];
 
         $("#rotary-container-" + this.id).append(
             "<div class='rotary-switch-val " +
             "' id='" + this.id + "-" + i + "' " +
-            "style='left:" + Math.round(y) + "px;top:" + Math.round(x) + "px' " + "value=" +
+            "style='left:" + Math.round(x) + "px;top:" + Math.round(y) + "px' " + "value=" +
             ( p ? p.value : v[0].value) + ">" + ( p ? p.label : v[0].label) + "</div>"
         );
     }
@@ -3759,9 +3759,13 @@ function LCD()
  * @config {string} [field] server data variable that is being displayed
  * @config {string} [label] label to display
  * @config {number} [radius] the radius of the gauge in pixels
- * @config {string} [borderColor] the color of the gauges border (hex, rgb or CSS color name)
+ * @config {string}  [units] units label to display (optional)
+ * @config {string} [border] the color of the gauges border (default #525252)
+ * @config {string} [rangeColor] the color of the gauges range indicator (default #525252)
  * @config {number} [min] the minimum value of the guage (default 0)
  * @config {number} [max] the maximum value of the gauge (default 100)
+ * @config {integer} [scales] number of scales to display (default fitted to min, max value)
+ * @config {array}  [values] the list of potential values
  */
 function Gauge(id, config)
 {
@@ -3773,7 +3777,12 @@ function Gauge(id, config)
     if (this.config.label === undefined) this.config.label = '';
 	if (this.config.min === undefined) this.config.min = 0;
     if (this.config.max === undefined) this.config.max = 100;
-    if (this.config.radius === undefined) this.config.radius = 75;    
+    if (this.config.radius === undefined) this.config.radius = 75;
+	if (this.config.units === undefined) this.config.units = '';
+	if (this.config.rangeColor === undefined) this.config.rangeColor = '#dfdfdf';
+    if (this.config.border === undefined) this.config.border  = '#525252';
+	if (this.config.scales === undefined) this.config.scales = 
+            this.config.max - this.config.min > 10 ? 10 : this.config.max - this.config.min;
 
     /** @private {boolean} The selected value. */
     this.val = undefined;
@@ -3788,14 +3797,31 @@ Gauge.prototype.init = function($container) {
     this.$widget = this._generate($container,
         "<div class='gauge gauge-outer' style= 'height:" + (this.config.radius ?  this.config.radius * 2 + 'px;': '150px;' ) +
             " width:" + (this.config.radius ?  this.config.radius * 2 + 'px;': '150px;' ) + "'>" +
+            "<div class='gauge-border' style='" + (this.config.border ? "border: solid 4px " + this.config.border + "; background:" + this.config.border : '')+ "'></div>" +
             "<div class='gauge-inner'></div>" +
             "<div class='gauge-range'></div>" +
-            "<div class='gauge-border' style='" + (this.config.borderColor ? "border:solid 12px " + this.config.borderColor : '')+ "'></div>" +
             "<div class='gauge-inner-gloss'></div>" +
             "<div class='gauge-arrow'></div>" +
             "<div class='gauge-center'></div>" +
+            "<div class='gauge-units'>" + (this.config.units ? this.config.units : '' ) + "</div>" +
         "</div>"
     );
+
+    this.$widget.find('.gauge-range').css("border", "solid 6px " + (this.config.rangeColor ? this.config.rangeColor : ''));
+
+    //TODO Fix the positions of the gauge values
+    /* Generates the positions of the gauges' points and appends them to the gauge. */
+    for (i = 0; i <= this.config.scales; i++)
+    {
+        var y = (r/2 - 5) - (r/2 + 10) * Math.cos(2 * Math.PI * i / this.config.scales),
+            x = (r/2 - 5) - (r/2 + 10) * Math.sin(2 * Math.PI * i / this.config.scales);
+
+        this.$widget.find(".gauge").append(
+            "<div class='gauge-val " +
+            "' id='" + this.id + "-" + i + "' " +
+            "style='left:" + Math.round(x + (r/1.9)) + "px;top:" + Math.round(y + (r/2)) + "px'>" + (this.config.scales - i) + "</div>"
+        );
+    };
 
     var thiz = this;
     this.deg = 0;
@@ -3808,13 +3834,15 @@ Gauge.prototype.consume = function(data) {
 };
 
 Gauge.prototype.animate = function() {
-    /* Convert value to percentage */
-	this.deg = Math.round(((this.val - this.config.min) * 360) / (this.config.max - this.config.min) * 100) / 100;
+    /* Converts the value to the ranges ratio (-140 to 140) */
+    this.deg = ((((this.config.max - this.val) - this.config.min) * (-150 - 150)) / (this.config.max - this.config.min)) + 150;
 
 	/* Move the gauge arrow to the correct position */
     this.$widget.find('.gauge-arrow').css({
         "-webkit-transform": "rotate(" + this.deg + "deg)",
         "-moz-transform": "rotate(" + this.deg + "deg)",
+        '-ms-transform' : 'rotate('+ this.deg +'deg)',
+        '-o-transform' : 'rotate('+ this.deg +'deg)',
         "transform": "rotate(" + this.deg + "deg)"
     });
 }
