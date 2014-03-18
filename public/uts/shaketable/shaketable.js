@@ -1024,7 +1024,7 @@ FFTGraph.prototype._updateIndependentScale = function() {
 
     for (i = 0; i <= this.config.horizScales; i++)
     {
-        t = 1000 * i / this.config.period / this.config.horizScales / 10; 
+        t = 1000 * i / this.config.period / this.config.horizScales / 20; 
         $d.html(Util.zeroPad(t, 1));
         $d = $d.next();
     }
@@ -1057,7 +1057,7 @@ FFTGraph.prototype.fftTransform = function(sample) {
     vals = fft(vals);
     
     /* We only care about the first 10 Hz. */
-    vals.splice(n / 10 - 1, n - n / 10);
+    vals.splice(n / 20 - 1, n - n / 20);
 
     /* The plot is of the absolute values of the sample, then scaled . */
     for (i = 0; i < vals.length; i++)

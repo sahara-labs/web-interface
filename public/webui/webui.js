@@ -1975,6 +1975,8 @@ Graph.COLORS = [
 Graph.prototype.init = function($container) {
     if (!(this.config.fields)) throw "Options not set";
     
+    this.startTime = undefined;
+    
     var i = 0, c = 0, thiz = this;
     
     /* Field dynamic properties. */
