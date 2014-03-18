@@ -3761,7 +3761,6 @@ function LCD()
  * @config {number} [radius] the radius of the gauge in pixels
  * @config {string}  [units] units label to display (optional)
  * @config {string} [border] the color of the gauges border (default #525252)
- * @config {string} [rangeColor] the color of the gauges range indicator (default #525252)
  * @config {number} [min] the minimum value of the guage (default 0)
  * @config {number} [max] the maximum value of the gauge (default 100)
  * @config {integer} [scales] number of scales to display (default fitted to min, max value)
@@ -3770,16 +3769,15 @@ function LCD()
 function Gauge(id, config)
 {
     if (!(config.field || config.action || config.values)) throw "Options not supplied."; 
-    
+
     Widget.call(this, id, config);
-    
+
     /* Default options. */
     if (this.config.label === undefined) this.config.label = '';
 	if (this.config.min === undefined) this.config.min = 0;
     if (this.config.max === undefined) this.config.max = 100;
     if (this.config.radius === undefined) this.config.radius = 75;
 	if (this.config.units === undefined) this.config.units = '';
-	if (this.config.rangeColor === undefined) this.config.rangeColor = '#dfdfdf';
     if (this.config.border === undefined) this.config.border  = '#525252';
 	if (this.config.scales === undefined) this.config.scales = 
             this.config.max - this.config.min > 10 ? 10 : this.config.max - this.config.min;
@@ -3793,33 +3791,32 @@ Gauge.prototype = new Widget;
 Gauge.prototype.init = function($container) {
 	var r = this.config.radius,
         v = this.config.values;
-	
+
     this.$widget = this._generate($container,
+        (this.config.label ? "<div class='gauge-label'>" + this.config.label + "</div>" : '') +
         "<div class='gauge gauge-outer' style= 'height:" + (this.config.radius ?  this.config.radius * 2 + 'px;': '150px;' ) +
             " width:" + (this.config.radius ?  this.config.radius * 2 + 'px;': '150px;' ) + "'>" +
             "<div class='gauge-border' style='" + (this.config.border ? "border: solid 4px " + this.config.border + "; background:" + this.config.border : '')+ "'></div>" +
             "<div class='gauge-inner'></div>" +
-            "<div class='gauge-range'></div>" +
             "<div class='gauge-inner-gloss'></div>" +
             "<div class='gauge-arrow'></div>" +
             "<div class='gauge-center'></div>" +
             "<div class='gauge-units'>" + (this.config.units ? this.config.units : '' ) + "</div>" +
+            "<div class='gauge-vals'></div>" +
+            "<div class='gauge-output'>00.0</div>" +
         "</div>"
     );
 
-    this.$widget.find('.gauge-range').css("border", "solid 6px " + (this.config.rangeColor ? this.config.rangeColor : ''));
-
-    //TODO Fix the positions of the gauge values
-    /* Generates the positions of the gauges' points and appends them to the gauge. */
+    /* Generates the positions of the points in a range of -160 to 86deg and appends them to the gauge. */
     for (i = 0; i <= this.config.scales; i++)
     {
-        var y = (r/2 - 5) - (r/2 + 10) * Math.cos(2 * Math.PI * i / this.config.scales),
-            x = (r/2 - 5) - (r/2 + 10) * Math.sin(2 * Math.PI * i / this.config.scales);
+        var x = (r/2 - 5) - (r/2 + 10) * Math.cos(1.41 * Math.PI * i / this.config.scales),
+            y = (r/2 - 5) - (r/2 + 10) * Math.sin(1.41 * Math.PI * i / this.config.scales);
 
-        this.$widget.find(".gauge").append(
-            "<div class='gauge-val " +
+        this.$widget.find(".gauge-vals").append(
+            "<div class='gauge-val " + (i === this.config.scales ? 'gauge-val-last' : '') +
             "' id='" + this.id + "-" + i + "' " +
-            "style='left:" + Math.round(x + (r/1.9)) + "px;top:" + Math.round(y + (r/2)) + "px'>" + (this.config.scales - i) + "</div>"
+            "style='left:" + Math.round(x + (r/1.9)) + "px;top:" + Math.round(y + (r/2)) + "px'>" + (i) + "</div>"
         );
     };
 
@@ -3834,8 +3831,8 @@ Gauge.prototype.consume = function(data) {
 };
 
 Gauge.prototype.animate = function() {
-    /* Converts the value to the ranges ratio (-140 to 140) */
-    this.deg = ((((this.config.max - this.val) - this.config.min) * (-150 - 150)) / (this.config.max - this.config.min)) + 150;
+    /* Converts the value to the ranges ratio (-160 to 86) */
+    this.deg = ((((this.config.max - this.val) - this.config.min) * (-160 - 86)) / (this.config.max - this.config.min)) + 86;
 
 	/* Move the gauge arrow to the correct position */
     this.$widget.find('.gauge-arrow').css({
@@ -3845,6 +3842,8 @@ Gauge.prototype.animate = function() {
         '-o-transform' : 'rotate('+ this.deg +'deg)',
         "transform": "rotate(" + this.deg + "deg)"
     });
+
+    this.$widget.find(".gauge-output").html(this.val);
 }
 
 /* ============================================================================
@@ -3864,8 +3863,8 @@ Gauge.prototype.animate = function() {
  * @config {number} [max] the maximum value of the gauge (default 100)
  * @config {integer} [precision] precision of displayed value (default 1)
  * @config {integer} [scales] number of scales to display (default fitted to min, max value)
- * @config {integer} [length] length of slider in pixels (default 250)
- * @config {boolean} [vertical] whether slider is vertically or horizontally orientated (default vertical)
+ * @config {integer} [size] size of slider in pixels (default 250)
+ * @config {boolean} [vertical] whether slider is vertically or horizontally orientated (default true)
  */
 function LinearGauge(id, config)
 {
@@ -3877,8 +3876,9 @@ function LinearGauge(id, config)
     if (this.config.label === undefined) this.config.label = '';
 	if (this.config.min === undefined) this.config.min = 0;
     if (this.config.max === undefined) this.config.max = 100;
-    if (this.config.length === undefined) this.config.length = 250;    
+    if (this.config.size === undefined) this.config.size = 250;    
 	if (this.config.precision === undefined) this.config.precision = 1;
+    if (this.config.vertical === undefined) this.config.vertical = true;
 	if (this.config.scales === undefined) this.config.scales = 
             this.config.max - this.config.min > 10 ? 10 : this.config.max - this.config.min;
 
@@ -3894,23 +3894,25 @@ LinearGauge.prototype.init = function($container) {
     var html =
         "<div class='linear-gauge linear-gauge-outer'>" +
             (this.config.label ? "<div class='linear-gauge-label'>" + this.config.label + "</div>" : '') +
-            "<div class='linear-gauge-inner' style= 'width:" + (this.config.length ?  this.config.length + 'px;': '250px;' ) +
-                "height:" + (this.config.length ?  Math.round((this.config.length / 5) * 0.7) + 'px;': '35px;' ) + "'>" +
-                "<div class='linear-gauge-gradient'></div>" +
-                "<div class='linear-gauge-arrow'></div>" +
-                "<div class='linear-gauge-scales'>";
+            "<div class='linear-gauge-inner' style= '" + (this.config.vertical ? 'height:' : 'width:') + (this.config.size ?  this.config.size + 'px;': '250px;' ) +
+                (this.config.vertical ? 'width:' : 'height:') + (this.config.size ?  Math.round((this.config.size / 5) * 0.7) + 'px;': '35px;' ) + "'>" +
+                "<div class='linear-gauge-gradient " + (this.config.vertical ? 'linear-gauge-gradient-vertical' : '') + "'></div>" +
+                "<div class='linear-gauge-arrow " + (this.config.vertical ? 'linear-gauge-arrow-vertical' : '') + "'></div>" +
+                "<div class='linear-gauge-scales' style='" + (this.config.vertical ? 'bottom: 95%; left: 37%;' : '') + "'>";
 
         for (i = 0; i <= this.config.scales; i++)
         {
             html+= 
-            "<div class='linear-gauge-scale' style='left:" + (this.config.length / this.config.scales * i -1) + "px;'>" +
-                "<div class='linear-gauge-values'>" + (this.config.vertical ? this.config.max - s * i : this.config.min + s * i) + "</div>" +
+            "<div class='linear-gauge-scale' style='" + (this.config.vertical ? 'top' : 'background: #000; left') + ":" + 
+                (this.config.size / this.config.scales * i -1) + "px;'>" +
+                "<div class='linear-gauge-values'>" + (this.config.vertical ? this.config.scales - i : i) + "</div>" +
             "</div>";
         };
 
         html += 
                 "</div></div>" +
-                "<div class='linear-gauge-output'>00.0 <span class='linear-gauge-units'>" + (this.config.units ? this.config.units : '') + "</span></div>" +
+                "<div class='linear-gauge-output " + (this.config.vertical ? 'linear-gauge-output-vertical' : '') + "'>00.0 <span class='linear-gauge-units'>" +
+                    (this.config.units ? this.config.units : '') + "</span></div>" +
             "</div>";
 
     this.$widget = this._generate($container,html);
@@ -3927,9 +3929,17 @@ LinearGauge.prototype.animate = function() {
 
     /* Convert value to percentage */
 	var gaugeVal = Math.round(((this.val - this.config.min) * 100) / (this.config.max - this.config.min) * 100) / 100;
-
+    
     /* Display the new value */
-    this.$widget.find(".linear-gauge-arrow").css("left",(gaugeVal === 100 ? 99 : gaugeVal) + '%');
+    if (this.config.vertical)
+    {
+        this.$widget.find(".linear-gauge-arrow").css("top"),((gaugeVal === 100 ? -99 : -gaugeVal) + '%');
+    }
+    else
+    {
+        this.$widget.find(".linear-gauge-arrow").css("left"),((gaugeVal === 100 ? 99 : gaugeVal) + '%');
+    }
+
     this.$widget.find(".linear-gauge-output").html(this.val);	
 }
 
