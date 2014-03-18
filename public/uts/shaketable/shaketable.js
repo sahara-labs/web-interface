@@ -514,7 +514,7 @@ MimicWidget.prototype.consume = function(data) {
                                  peaks[0][1] - peaks[0][2],
                                  peaks[0][2] - peaks[0][3],
                                  peaks[0][3] - peaks[0][4] ]);
-    this.w = isFinite(i = 2 * Math.PI * 1 / (0.1 * range)) != Number.Infinity ? i : 0;
+    this.w = isFinite(i = 2 * Math.PI * 1 / (this.period / 1000 * range)) != Number.Infinity ? i : 0;
     
     /* Phase if determined based on the difference in peaks between the level
      * one and upper levels. */
