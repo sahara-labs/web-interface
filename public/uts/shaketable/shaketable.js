@@ -48,6 +48,7 @@ function Config2DOF()
                       },
                       minValue: -60,
                       maxValue: 60,
+                      period: 10,
                       duration: 10,
                       yLabel: "Displacement (mm)",
                       fieldCtl: true,
@@ -67,6 +68,7 @@ function Config2DOF()
                                 autoScale: true,
                                 vertScales: 5,
                                 horizScales: 5,
+                                period: 10,
                                 duration: 5,
                                 fields: {
                                     'disp-graph-1': 'disp-graph-2'
@@ -127,8 +129,9 @@ function Config2DOF()
                                 },
                                 xLabel: "Frequency (Hz)",
                                 yLabel: "Amplitude (mm)",
-                                horizScales: 5,
+                                horizScales: 10,
                                 maxValue: 30,
+                                period: 10,
                                 fieldCtl: true,
                                 autoScale: true
                             }),
@@ -401,7 +404,7 @@ function MimicWidget(is3DOF)
     this.height = undefined;
     
     /** The period in milliseconds. */
-    this.period = 100;
+    this.period = 10;
     
     /** Canvas context. */
     this.ctx = null;
@@ -980,8 +983,6 @@ MimicWidget.prototype.destroy = function() {
 function FFTGraph(id, config)
 {
     Graph.call(this, id, config);
-    
-    
 }
 
 FFTGraph.prototype = new Graph;
@@ -1002,6 +1003,7 @@ FFTGraph.prototype.consume = function(data) {
         if (data[i] === undefined) continue;
 
         this.dataFields[i].values = this.fftTransform(data[i]);
+        
         this.dataFields[i].seconds = this.dataFields[i].values.length * this.config.period / 1000;
         this.displayedDuration = data.duration;
     }
@@ -1022,8 +1024,8 @@ FFTGraph.prototype._updateIndependentScale = function() {
 
     for (i = 0; i <= this.config.horizScales; i++)
     {
-        t = 1000 * i / this.config.period / this.config.horizScales / 2; 
-        $d.html(Util.zeroPad(t, t < 100 ? 1 : 0));
+        t = 1000 * i / this.config.period / this.config.horizScales / 10; 
+        $d.html(Util.zeroPad(t, 1));
         $d = $d.next();
     }
 };
@@ -1054,9 +1056,8 @@ FFTGraph.prototype.fftTransform = function(sample) {
     /** Apply the FFT transform. */
     vals = fft(vals);
     
-    /* For real inputs, a DFt has a symmetry with complex conjugation so we
-     * are only plotting the lower half of the values. */
-    vals.splice(n / 2 - 1, n / 2);
+    /* We only care about the first 10 Hz. */
+    vals.splice(n / 10 - 1, n - n / 10);
 
     /* The plot is of the absolute values of the sample, then scaled . */
     for (i = 0; i < vals.length; i++)
