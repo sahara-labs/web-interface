@@ -132,13 +132,13 @@ function Config2DOF()
                                 fieldCtl: true,
                                 autoScale: true
                             }),
-                            new Button("button-fft-export", {
-                                label: "Export FFT",
-                                action: "ghj",
-                                width: 100,
-                                height: 40,
-                                resizable: false
-                            })
+//                            new Button("button-fft-export", {
+//                                label: "Export FFT",
+//                                action: "ghj",
+//                                width: 100,
+//                                height: 40,
+//                                resizable: false
+//                            })
                         ],
                         layout: new AbsoluteLayout({
                             coords: {
