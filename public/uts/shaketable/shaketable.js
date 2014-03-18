@@ -68,8 +68,7 @@ function Config2DOF()
                                 autoScale: true,
                                 vertScales: 5,
                                 horizScales: 5,
-                                period: 10,
-                                duration: 5,
+                                sampleSize: 1000,
                                 fields: {
                                     'disp-graph-1': 'disp-graph-2'
                                 },
@@ -85,7 +84,7 @@ function Config2DOF()
                                 autoScale: true,
                                 vertScales: 5,
                                 horizScales: 5,
-                                duration: 5,
+                                sampleSize: 1000,
                                 fields: {
                                     'disp-graph-1': 'disp-graph-3'
                                 },
@@ -101,7 +100,7 @@ function Config2DOF()
                                 autoScale: true,
                                 vertScales: 5,
                                 horizScales: 5,
-                                duration: 5,
+                                sampleSize: 1000,                                
                                 fields: {
                                     'disp-graph-2': 'disp-graph-3'
                                 },

@@ -2469,7 +2469,7 @@ function ScatterPlot(id, config)
      *  packet data length will be used as the sample size. */
     this.sampleSize = undefined;
     if (this.config.sampleSize) this.sampleSize = this.config.sampleSize;
-    else if (this.config.duration && this.config.period) this.sampleSize = this.config.duration * this.config.period;
+    else if (this.config.duration && this.config.period) this.sampleSize = this.config.duration * 1000 / this.config.period;
 }
 
 ScatterPlot.prototype = new Graph;
@@ -2642,7 +2642,7 @@ ScatterPlot.prototype._drawTrace = function(dObj) {
             this.ctx.stroke();
         }
     }
-    while (++i < dObj.independant.length);
+    while (++i < this.sampleSize);
     
     this.ctx.stroke();
     this.ctx.restore();
