@@ -2939,20 +2939,23 @@ RotarySwitch.prototype._animateSwitch = function(point) {
  * ============================================================================ */
 
 /**
- * Button that posts to the server when clicked.
+ * Button that may eithe post to the server when clicked or embed as a link
+ * on the page.
  * 
  * @param {string} id identifier of widget
  * @param {object} config configuration of widget
- * @config {string}  [action] action to send to when pressed
- * @config {object}  [params] parameters to be sent when pressed (optional)
- * @config {string}  [label] the label to display on the button (optional)
- * @config {string}  [image] an image to display on the button (optional)
- * @config {boolean} [circular] whether the button is circular (default false)
- * @config {number}  [diameter] The size of a push button diameter in pixels (default 100px)
- * @config {string}  [color]  custom color setting for the button (default #EFEFEF)
- * @config {string}  [clickColor] color of button when clicked (default #CCCCCC)
- * @config {string}  [pushColor] color of the push button (optional)
- * @config {boolean} [overlay] whether the button has the clear style overlay (default false)
+ * @config {string}   [action] action to send to when pressed
+ * @config {string}   [link] link that is embedded on the page
+ * @config {string}   [target] if link used, what the target attribute so to
+ * @config {object}   [params] parameters to be sent when pressed (optional)
+ * @config {string}   [label] the label to display on the button (optional)
+ * @config {string}   [image] an image to display on the button (optional)
+ * @config {boolean}  [circular] whether the button is circular (default false)
+ * @config {number}   [diameter] The size of a push button diameter in pixels (default 100px)
+ * @config {string}   [color]  custom color setting for the button (default #EFEFEF)
+ * @config {string}   [clickColor] color of button when clicked (default #CCCCCC)
+ * @config {string}   [pushColor] color of the push button (optional)
+ * @config {boolean}  [overlay] whether the button has the clear style overlay (default false)
  * @config {function} [callback] callback to be invoked with response of posts (optional)
  */
 function Button(id, config)
@@ -2973,23 +2976,30 @@ function Button(id, config)
 Button.prototype = new Widget;
 
 Button.prototype.init = function($container) {
-    if (!this.config.action) throw "Options not set.";
+    if (!(this.config.action || this.config.link)) throw "Action or link options not set.";
 
     this.$widget = this._generate($container,
-        "<div class='button " + (this.config.overlay && this.config.circular === false ? "button-overlay" : '') + "'style='" +
-                (this.config.height ? "line-height:" + this.config.height + "px;" : "") +
-                (this.config.color ? "background-color:" + this.config.color : "") +
-                (this.config.circular ? "border-radius:" + this.config.width + "px;" : "") + "'>" +
+        "<" + (this.config.action ? "div " : "a ") +
+                "class='button " + (this.config.overlay && this.config.circular === false ? "button-overlay" : '') + 
+                "' style='" +
+                    (this.config.height ? "line-height:" + this.config.height + "px;" : "") +
+                    (this.config.color ? "background-color:" + this.config.color : "") +
+                    (this.config.circular ? "border-radius:" + this.config.width + "px;" : "") +
+                    (this.config.width ? "width:" + this.config.width + "px;" : "") +
+                    (this.config.height ? "height:" + this.config.height + "px;" : "") +
+                (this.config.link ? "' href='" + this.config.link : "") +
+                (this.config.target ? "' target='" + this.config.target : "") +
+                "'>" +
             "<span class='button-label'>" + this.config.label + "</span>" +
             (this.config.image ? "<img src='" + this.config.image + "' alt='' />" : "") +
-        "</div>"
+        "</" + (this.config.action ? "div>" : "a>")
     );
 
     var thiz = this;
     this.$widget.children(".button")
         .mousedown(function() { thiz._buttonEngaged(); })
         .bind("mouseup mouseout", function(){ thiz._buttonReleased(); })
-        .click(function() { thiz._clicked(); });
+        .click(function() { if (thiz.config.action) thiz._clicked(); });
     if ($('#'+this.id).hasClass('push-button')) {
         /* Remove the standard button classes for the push button. */
         $('#'+this.id).find('.window-content').empty();
@@ -3041,15 +3051,6 @@ Button.prototype._buttonReleased = function() {
 Button.prototype._clicked = function() {
     this._postControl(this.config.action, this.config.params, this.config.callback);
 };
-
-Button.prototype.resized = function(w, h ) {
-    alert("Width " + w + ", height" + h);
-};
-
-Button.prototype.resizeStopped = function(w, h ) {
-    alert("Width " + w + ", height" + h);
-};
-
 
 /* ============================================================================
  * == Push Button widget                                                     ==

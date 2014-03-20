@@ -134,18 +134,19 @@ function Config2DOF()
                                 fieldCtl: true,
                                 autoScale: true
                             }),
-//                            new Button("button-fft-export", {
-//                                label: "Export FFT",
-//                                action: "ghj",
-//                                width: 100,
-//                                height: 40,
-//                                resizable: false
-//                            })
+                            new Button("button-fft-export", {
+                                label: "Export FFT",
+                                link: "/primitive/file/pc/ShakeTableController/pa/exportFFT/fn/fft.txt",
+                                target: "_blank",
+                                width: 40,
+                                height: 20,
+                                resizable: false
+                            })
                         ],
                         layout: new AbsoluteLayout({
                             coords: {
                                  "graph-fft": { x: 0, y: 0 },
-                                 "button-fft-export": { x: 0, y: -50 }
+                                 "button-fft-export": { x: 20, y: -1 }
                             }
                         })
                     }),
