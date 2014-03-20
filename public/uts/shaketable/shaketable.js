@@ -471,7 +471,7 @@ MimicWidget.prototype.init = function($container) {
 };
 
 MimicWidget.prototype.consume = function(data) {
-    var i, l, peaks = [], level, range;
+    var i, l, peaks = [], level, range, topLevel = this.numberLevels - 1;
     
     /* We need to find a list of peaks for each of the levels. */
     for (l = 1; l <= this.numberLevels; l++)
@@ -510,20 +510,20 @@ MimicWidget.prototype.consume = function(data) {
     this.amp[0] = data['motor-on'] ? this.model.baseDisp : 0;
     
     /* Angular frequency is derived by the periodicity of peaks. */
-    range =  this.medianFilter([ peaks[0][0] - peaks[0][1],
-                                 peaks[0][1] - peaks[0][2],
-                                 peaks[0][2] - peaks[0][3],
-                                 peaks[0][3] - peaks[0][4] ]);
+    range =  this.medianFilter([ peaks[topLevel][0] - peaks[topLevel][1],
+                                 peaks[topLevel][1] - peaks[topLevel][2],
+                                 peaks[topLevel][2] - peaks[topLevel][3],
+                                 peaks[topLevel][3] - peaks[topLevel][4] ]);
     this.w = isFinite(i = 2 * Math.PI * 1 / (this.period / 1000 * range)) != Number.Infinity ? i : 0;
     
-    /* Phase if determined based on the difference in peaks between the level
-     * one and upper levels. */
-    for (l = 2; l <= this.numberLevels - 1; l++)
+    /* Phase if determined based on the difference in peaks between the top 
+     * level and lower levels. */
+    for (l = 2; l < this.numberLevels - 1; l++)
     {
-        this.o[l] = 2 * Math.PI * this.medianFilter([ peaks[l - 1][0] - peaks[0][0],
-                                                      peaks[l - 1][1] - peaks[0][1],
-                                                      peaks[l - 1][2] - peaks[0][2],
-                                                      peaks[l - 1][3] - peaks[0][3] ]) / range;
+        this.o[l] = 2 * Math.PI * this.medianFilter([ peaks[l - 1][0] - peaks[topLevel][0],
+                                                      peaks[l - 1][1] - peaks[topLevel][1],
+                                                      peaks[l - 1][2] - peaks[topLevel][2],
+                                                      peaks[l - 1][3] - peaks[topLevel][3] ]) / range;
     }
     
     /** Coil states. */
@@ -554,9 +554,9 @@ MimicWidget.prototype.animationFrame = function() {
     var disp = [], i;
     
     this.fr++;
-    for (i = 0; i < this.numberLevels; i++)
+    for (i = 1; i <= this.numberLevels; i++)
     {
-        disp[i] = this.amp[i] * Math.sin(this.w * MimicWidget.ANIMATE_PERIOD / 1000 * this.fr + this.o[i]);
+        disp[i - 1] = this.amp[i] * Math.sin(this.w * MimicWidget.ANIMATE_PERIOD / 1000 * this.fr + this.o[i]);
     }
     
     this.drawFrame(disp, disp[0] > 0 ? (this.w * MimicWidget.ANIMATE_PERIOD / 1000 * this.fr) : 0);
