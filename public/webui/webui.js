@@ -2592,16 +2592,14 @@ ScatterPlot.prototype.consume = function(data) {
  * @return {array} pruned values
  */
 ScatterPlot.prototype._pruneSample = function(values, size) {
-    if (values.length < size)
+    if (values.length == size) return values;
+    else if (values.length > size) return values.slice(values.length - size);
+    else
     {
-        while (values.length < size) values.push(0);
+        var i, arr = new Array(size);
+        for (i = 0; i < size; i++) arr[i] = i < values.length ? values[i] : 0;
+        return arr;
     }
-    else if (values.length > size)
-    {
-        while (values.length > size) values.shift();
-    }
-    
-    return values;
 };
 
 ScatterPlot.prototype._drawTrace = function(dObj) {
