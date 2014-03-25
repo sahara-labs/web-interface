@@ -1206,42 +1206,63 @@
     background: -webkit-radial-gradient(center, ellipse cover, #EDEDED 54%,#BCBCBC 79%,#BCBCBC 90%,#848484 100%);
 }
 
-.gauge-range {
+.gauge-label {
     position: absolute;
-    height: 74%;
-    width: 74%;
-    border-radius: 50%;
-    left: 12%;
-    top: 12%;
-    margin-left: -5px;
-    margin-top: -6px;
+    z-index: 1;
+    left: 10%;
+    right: 10%;
+    font-size: 11px;
+    text-align: center;
+    border: solid 1px;
+    background: #FFF;
+    bottom: 90%;
 }
 
-.gauge-range:after {
-    content: "";
-    position: absolute;
-    bottom: -5%;
-    left: 25%;
-    right: 25%;
-    height: 25%;
-    background: #FFF;
+.gauge-vals {
+    height: 100%;
+    position: relative;
+    bottom: 101%;
+    border-radius: 50%;
+    left: -1%;
+    -webkit-transform: rotate(-430deg);
+    -moz-transform: rotate(-430deg);
+    -ms-transform: rotate(-430deg);
+    -o-transform: rotate(-430deg);
+    transform: rotate(-430deg);
 }
 
 .gauge-val {
     position: absolute;
     font-size: 9px;
     cursor: default;
+    left: 24px;
+    top: 70px;
+    -webkit-transform: rotate(-290deg);
+    -moz-transform: rotate(-290deg);
+    -ms-transform: rotate(-290deg);
+    -o-transform: rotate(-290deg);
+    transform: rotate(-290deg);
+}
+
+.gauge-val-last {
+    color: #B90000;
+    border-bottom: solid 1px;
+    -webkit-transform: rotate(70deg);
+    -moz-transform: rotate(70deg);
+    -ms-transform: rotate(70deg);
+    -o-transform: rotate(70deg);
+    transform: rotate(70deg);
 }
 
 .gauge-units {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 8%;
-    height: 8%;
-    margin-top: 20%;
-    margin-left: -4%;
+    top: 70%;
+    left: 55%;
+    right: 22%;
+    text-align: right;
     font-size: 11px;
+    color: #444;
+    text-shadow: 1px 1px 1px #8D8D8D;
 }
 
 .gauge-inner-gloss {
@@ -1252,7 +1273,6 @@
     right: 5%;
     border-radius: 50%;
     -webkit-transform: rotate(-30deg);
-    background: -moz-linear-gradient(top, rgba(255,255,255,0.6) 8%, rgba(0,0,0,0) 40%);
     background: -webkit-gradient(linear, left top, left bottom, color-stop(8%,rgba(255, 255, 255, 0.6)), color-stop(40%,rgba(0, 0, 0, 0)));
     background: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.6) 8%,rgba(0, 0, 0, 0) 40%);
     background: -o-linear-gradient(top, rgba(255,255,255,0.6) 8%,rgba(0,0,0,0) 40%);
@@ -1260,6 +1280,8 @@
     background: linear-gradient(to bottom, rgba(255, 255, 255, 0.6) 8%,rgba(0, 0, 0, 0) 40%);
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#99ffffff', endColorstr='#00000000',GradientType=0 );
     background: -webkit-radial-gradient(top, rgba(255, 255, 255, 0.6) 8%,rgba(0, 0, 0, 0) 40%);
+    background: -moz-linear-gradient(top, rgba(255,255,255,0.1) 25%, rgba(0,0,0,0) 40%);
+    background: -ms-linear-gradient(top, rgba(255,255,255,0.1) 25%,rgba(0,0,0,0) 40%);
 }
 
 .gauge-inner:before {
@@ -1312,11 +1334,11 @@
     margin-left: -1%;
     height: 100%;
     margin-top: auto;
-    -webkit-transform: rotate(0deg);
-    -webkit-transition:all 0.2s ease-in-out;
-    -moz-transition:all 0.2s ease-in-out;
-    -o-transition:all 0.2s ease-in-out;
-    transition:all 0.2s ease-in-out;
+    -webkit-transform: rotate(-160deg);
+    -moz-transform: rotate(-160deg);
+    -ms-transform: rotate(-160deg);
+    -o-transform: rotate(-160deg);
+    transform: rotate(-160deg);
 }
 
 .gauge-arrow:after {
@@ -1349,7 +1371,19 @@
     position: absolute;
     content: '';
     bottom: 30%;
-    left: -65%;
+    left: -75%;
+}
+
+.gauge-output {
+    display: block;
+    position: absolute;
+    color: #000;
+    padding: 3%;
+    bottom: 25%;
+    left: 49%;
+    right: 15%;
+    text-align: center;
+    font-size: 19px;
 }
 
 /******************************************************************************
@@ -1387,6 +1421,14 @@
     transition:all 0.1s ease-in-out;
 }
 
+.linear-gauge-arrow-vertical {
+    height: 2px;
+    left: 0%;
+    top: -1%;
+    position: relative;
+    width: 100%;
+}
+
 .linear-gauge-gradient {
     width: 100%;
     height: 10%;
@@ -1403,12 +1445,34 @@
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#65ff32', endColorstr='#ff0000',GradientType=1 ); /* IE6-9 */
 }
 
+.linear-gauge-gradient-vertical {
+    background: #F00;
+    background: -moz-linear-gradient(top, #ff0000 0%, #fccd32 50%, #65ff32 100%);
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#F00), color-stop(50%,#FCCD32), color-stop(100%,#65FF32));
+    background: -webkit-linear-gradient(top, #F00 0%,#FCCD32 50%,#65FF32 100%);
+    background: -o-linear-gradient(top, #ff0000 0%,#fccd32 50%,#65ff32 100%);
+    background: -ms-linear-gradient(top, #ff0000 0%,#fccd32 50%,#65ff32 100%);
+    background: linear-gradient(to bottom, #F00 0%,#FCCD32 50%,#65FF32 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ff0000', endColorstr='#65ff32',GradientType=0 );
+    width: 10%;
+    height: 100%;
+    top: 0;
+}
+
 .linear-gauge-output {
     display: block;
     position: absolute;
     right: 5px;
     color: #383838;
     padding-top: 3%;
+}
+
+.linear-gauge-output-vertical {
+    left: 0;
+    right: inherit;
+    border-top: solid 1px #9B9B9B;
+    padding-top: 1px;
+    margin-top: 2px;
 }
 
 .linear-gauge-units {
@@ -1432,7 +1496,6 @@
 
 .linear-gauge-scale {
     position: absolute;
-    background: #000;
     width: 1px;
     height: 5px;
 }
