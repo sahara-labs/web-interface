@@ -504,6 +504,10 @@ MimicWidget.prototype.consume = function(data) {
         this.amp[l] = this.medianFilter([ data["disp-graph-" + l][level[0]], 
                                           data["disp-graph-" + l][level[1]], 
                                           data["disp-graph-" + l][level[2]] ]); 
+        
+        /* Without a distinct signal, the model has an unrepresentative wiggle,
+         * so we small amplitudes will be thresholded to 0. */
+        if (this.amp[l] < 2) this.amp[l] = 0;
     }
     
     /* Amplitude for the base is fixed at 0.7 mm but only applies if the motor
@@ -560,7 +564,7 @@ MimicWidget.prototype.animationFrame = function() {
         disp[i - 1] = this.amp[i] * Math.sin(this.w * MimicWidget.ANIMATE_PERIOD / 1000 * this.fr + this.o[i]);
     }
     
-    this.drawFrame(disp, disp[0] > 0 ? (this.w * MimicWidget.ANIMATE_PERIOD / 1000 * this.fr) : 0);
+    this.drawFrame(disp, this.motor > 0 ? (this.w * MimicWidget.ANIMATE_PERIOD / 1000 * this.fr) : 0);
 };
 
 /**
