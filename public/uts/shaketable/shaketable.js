@@ -30,7 +30,7 @@ function Config2DOF()
         pollPeriod: 1000,
         windowToggle: true,
         theme: Globals.THEMES.flat,
-        cookie: "shaketable",
+        cookie: "shaketable2dof",
         widgets: [
             new Container("graphs-container", {
                 title: "Graphs",
