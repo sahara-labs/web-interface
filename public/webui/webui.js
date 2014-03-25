@@ -3024,7 +3024,6 @@ Button.prototype.init = function($container) {
         	}     
         });
     };
-
 };
 
 /**
@@ -3050,6 +3049,14 @@ Button.prototype._buttonReleased = function() {
  */
 Button.prototype._clicked = function() {
     this._postControl(this.config.action, this.config.params, this.config.callback);
+};
+
+Button.prototype.resizeStopped = function(width, height) {
+    /* Buttons show never be resized. */
+    this.$widget.css({
+       width: "auto",
+       height: "auto"
+    });
 };
 
 /* ============================================================================
