@@ -30,7 +30,7 @@ function Config2DOF()
         pollPeriod: 1000,
         windowToggle: true,
         theme: Globals.THEMES.flat,
-        cookie: "shaketable",
+        cookie: "shaketable2dof",
         widgets: [
             new Container("graphs-container", {
                 title: "Graphs",
@@ -48,6 +48,7 @@ function Config2DOF()
                       },
                       minValue: -60,
                       maxValue: 60,
+                      period: 10,
                       duration: 10,
                       yLabel: "Displacement (mm)",
                       fieldCtl: true,
@@ -67,7 +68,7 @@ function Config2DOF()
                                 autoScale: true,
                                 vertScales: 5,
                                 horizScales: 5,
-                                duration: 5,
+                                sampleSize: 125,
                                 fields: {
                                     'disp-graph-1': 'disp-graph-2'
                                 },
@@ -83,7 +84,7 @@ function Config2DOF()
                                 autoScale: true,
                                 vertScales: 5,
                                 horizScales: 5,
-                                duration: 5,
+                                sampleSize: 125,
                                 fields: {
                                     'disp-graph-1': 'disp-graph-3'
                                 },
@@ -99,7 +100,7 @@ function Config2DOF()
                                 autoScale: true,
                                 vertScales: 5,
                                 horizScales: 5,
-                                duration: 5,
+                                sampleSize: 125,                                
                                 fields: {
                                     'disp-graph-2': 'disp-graph-3'
                                 },
@@ -127,23 +128,25 @@ function Config2DOF()
                                 },
                                 xLabel: "Frequency (Hz)",
                                 yLabel: "Amplitude (mm)",
-                                horizScales: 5,
+                                horizScales: 10,
                                 maxValue: 30,
+                                period: 10,
                                 fieldCtl: true,
                                 autoScale: true
                             }),
                             new Button("button-fft-export", {
                                 label: "Export FFT",
-                                action: "ghj",
-                                width: 100,
-                                height: 40,
+                                link: "/primitive/file/pc/ShakeTableController/pa/exportFFT/fn/fft.txt",
+                                target: "_blank",
+                                width: 40,
+                                height: 20,
                                 resizable: false
                             })
                         ],
                         layout: new AbsoluteLayout({
                             coords: {
                                  "graph-fft": { x: 0, y: 0 },
-                                 "button-fft-export": { x: 0, y: -50 }
+                                 "button-fft-export": { x: 20, y: -1 }
                             }
                         })
                     }),
@@ -401,7 +404,7 @@ function MimicWidget(is3DOF)
     this.height = undefined;
     
     /** The period in milliseconds. */
-    this.period = 100;
+    this.period = 10;
     
     /** Canvas context. */
     this.ctx = null;
@@ -469,7 +472,7 @@ MimicWidget.prototype.init = function($container) {
 };
 
 MimicWidget.prototype.consume = function(data) {
-    var i, l, peaks = [], level, range;
+    var i, l, peaks = [], level, range, topLevel = this.numberLevels - 1;
     
     /* We need to find a list of peaks for each of the levels. */
     for (l = 1; l <= this.numberLevels; l++)
@@ -501,6 +504,10 @@ MimicWidget.prototype.consume = function(data) {
         this.amp[l] = this.medianFilter([ data["disp-graph-" + l][level[0]], 
                                           data["disp-graph-" + l][level[1]], 
                                           data["disp-graph-" + l][level[2]] ]); 
+        
+        /* Without a distinct signal, the model has an unrepresentative wiggle,
+         * so we small amplitudes will be thresholded to 0. */
+        if (this.amp[l] < 2) this.amp[l] = 0;
     }
     
     /* Amplitude for the base is fixed at 0.7 mm but only applies if the motor
@@ -508,20 +515,20 @@ MimicWidget.prototype.consume = function(data) {
     this.amp[0] = data['motor-on'] ? this.model.baseDisp : 0;
     
     /* Angular frequency is derived by the periodicity of peaks. */
-    range =  this.medianFilter([ peaks[0][0] - peaks[0][1],
-                                 peaks[0][1] - peaks[0][2],
-                                 peaks[0][2] - peaks[0][3],
-                                 peaks[0][3] - peaks[0][4] ]);
-    this.w = isFinite(i = 2 * Math.PI * 1 / (0.1 * range)) != Number.Infinity ? i : 0;
+    range =  this.medianFilter([ peaks[topLevel][0] - peaks[topLevel][1],
+                                 peaks[topLevel][1] - peaks[topLevel][2],
+                                 peaks[topLevel][2] - peaks[topLevel][3],
+                                 peaks[topLevel][3] - peaks[topLevel][4] ]);
+    this.w = isFinite(i = 2 * Math.PI * 1 / (this.period / 1000 * range)) != Number.Infinity ? i : 0;
     
-    /* Phase if determined based on the difference in peaks between the level
-     * one and upper levels. */
-    for (l = 2; l <= this.numberLevels - 1; l++)
+    /* Phase if determined based on the difference in peaks between the top 
+     * level and lower levels. */
+    for (l = 2; l < this.numberLevels - 1; l++)
     {
-        this.o[l] = 2 * Math.PI * this.medianFilter([ peaks[l - 1][0] - peaks[0][0],
-                                                      peaks[l - 1][1] - peaks[0][1],
-                                                      peaks[l - 1][2] - peaks[0][2],
-                                                      peaks[l - 1][3] - peaks[0][3] ]) / range;
+        this.o[l] = 2 * Math.PI * this.medianFilter([ peaks[l - 1][0] - peaks[topLevel][0],
+                                                      peaks[l - 1][1] - peaks[topLevel][1],
+                                                      peaks[l - 1][2] - peaks[topLevel][2],
+                                                      peaks[l - 1][3] - peaks[topLevel][3] ]) / range;
     }
     
     /** Coil states. */
@@ -552,12 +559,12 @@ MimicWidget.prototype.animationFrame = function() {
     var disp = [], i;
     
     this.fr++;
-    for (i = 0; i < this.numberLevels; i++)
+    for (i = 1; i <= this.numberLevels; i++)
     {
-        disp[i] = this.amp[i] * Math.sin(this.w * MimicWidget.ANIMATE_PERIOD / 1000 * this.fr + this.o[i]);
+        disp[i - 1] = this.amp[i] * Math.sin(this.w * MimicWidget.ANIMATE_PERIOD / 1000 * this.fr + this.o[i]);
     }
     
-    this.drawFrame(disp, disp[0] > 0 ? (this.w * MimicWidget.ANIMATE_PERIOD / 1000 * this.fr) : 0);
+    this.drawFrame(disp, this.motor > 0 ? (this.w * MimicWidget.ANIMATE_PERIOD / 1000 * this.fr) : 0);
 };
 
 /**
@@ -980,8 +987,6 @@ MimicWidget.prototype.destroy = function() {
 function FFTGraph(id, config)
 {
     Graph.call(this, id, config);
-    
-    
 }
 
 FFTGraph.prototype = new Graph;
@@ -1002,6 +1007,7 @@ FFTGraph.prototype.consume = function(data) {
         if (data[i] === undefined) continue;
 
         this.dataFields[i].values = this.fftTransform(data[i]);
+        
         this.dataFields[i].seconds = this.dataFields[i].values.length * this.config.period / 1000;
         this.displayedDuration = data.duration;
     }
@@ -1022,8 +1028,8 @@ FFTGraph.prototype._updateIndependentScale = function() {
 
     for (i = 0; i <= this.config.horizScales; i++)
     {
-        t = 1000 * i / this.config.period / this.config.horizScales / 2; 
-        $d.html(Util.zeroPad(t, t < 100 ? 1 : 0));
+        t = 1000 * i / this.config.period / this.config.horizScales / 20; 
+        $d.html(Util.zeroPad(t, 1));
         $d = $d.next();
     }
 };
@@ -1054,9 +1060,8 @@ FFTGraph.prototype.fftTransform = function(sample) {
     /** Apply the FFT transform. */
     vals = fft(vals);
     
-    /* For real inputs, a DFt has a symmetry with complex conjugation so we
-     * are only plotting the lower half of the values. */
-    vals.splice(n / 2 - 1, n / 2);
+    /* We only care about the first 10 Hz. */
+    vals.splice(n / 20 - 1, n - n / 20);
 
     /* The plot is of the absolute values of the sample, then scaled . */
     for (i = 0; i < vals.length; i++)
