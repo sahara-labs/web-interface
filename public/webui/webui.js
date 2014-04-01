@@ -3398,10 +3398,134 @@ Knob.prototype.destroy = function() {
  * == Spinner widget                                                         ==
  * ============================================================================ */
 
-function Spinner()
+/**
+ * Spinner widget that displays a text input with incremental arrows to the side of it.
+ * 
+ * @constructor
+ * @param {string} id widget identifier
+ * @param {object} config configuration of widget
+ * @config {string}  [field] server data variable that is being set
+ * @config {string}  [action] server action to call when the spinner is changed
+ * @config {string}  [label] spinner label (optional)
+ * @config {string}  [units] units label to display (optional)
+ * @config {integer} [length] length of spinner in pixels (default 80)
+ * @config {integer} [min] minimum value of spinner (default 0)
+ * @config {integer} [max] maximum value of spinner (default 100)
+ */
+function Spinner(id, config)
 {
-    // TODO Spinner widget
+    if (!(config.field || config.action)) throw "Options not supplied.";
+
+    Widget.call(this, id, config);
+
+    /* Default options. */
+    if (this.config.min === undefined) this.config.min = 0;
+    if (this.config.max === undefined) this.config.max = 100;
+    if (this.config.length === undefined) this.config.length = 120;
+    if (this.config.units === undefined) this.config.units = '';
+    if (this.config.label === undefined) this.config.label = '';
+
+    /** The current value of the data variable. */
+    this.val = undefined;
+
+    /** Whether the value has changed due to user interaction. */
+    this.valueChanged = false;
+
+    /** Value box. */
+    this.$input = undefined;
 }
+Spinner.prototype = new Widget;
+
+Spinner.prototype.init = function($container) {
+    /* Set dafault value. */
+    this.val = undefined;
+    this.valueChanged = false;
+
+    this.$widget = this._generate($container,
+    	"<div>" +
+    	    (this.config.label ? '<div class="spinner-label">' + this.config.label + "<span class='spinner-units'> (" +
+    	        (this.config.units ? this.config.units + ")</span>" : '') +'</div>': '') +
+    	    "<div class='spinner' style='width:" + this.config.length + "px;'>" +
+                "<input class='spinner-input' style='width:" + (this.config.length - 45) + "px;' value='0'></input>" +
+                "<div class='spinner-buttons' style='left:" + (this.config.length - 30) + "px;'>" +
+                    "<button class='spinner-up spinner-btn'/>" +
+                    "<button class='spinner-down spinner-btn'/>" +
+                "</div>" +
+            "</div>" +
+        "</div>"
+    );
+
+    var thiz = this;
+    this.$widget.find('.spinner-up').mousedown(function(e){ e.preventDefault(); thiz.changeValue('up');});
+    this.$widget.find('.spinner-down').mousedown(function(e){ e.preventDefault(); thiz.changeValue('');});
+
+    //TODO Get appropriate value on change
+    this.$widget.find('.spinner-input').change(function(){ thiz._setValue($(this).val()); });
+};
+
+Spinner.prototype.changeValue = function(newVal) {
+    val = this.$widget.find('.spinner-input').val();
+    var thiz = this;
+
+    if (newVal === 'up')
+    {
+        if (val >= this.config.max)
+        {
+            //TODO Add error prompt
+            console.log('too big!')
+        }
+        else
+        {
+            //TODO Add auto increment on mouse hold
+        	val++;
+            val >= this.config.max ? this.$widget.find('.spinner-up').addClass("spinner-max") :'';
+            this.$widget.find('.spinner-down').removeClass("spinner-min");
+        }
+    }
+    else
+    {
+        if (val <= this.config.min)
+        {
+            //TODO Add error prompt
+            console.log('too small!')
+            val <= this.config.min ? this.$widget.find('.spinner-down').addClass("spinner-min") :'';
+        }
+        else
+        {
+            //TODO Add auto decrement on mouse hold
+        	val--;
+            val <= this.config.min ? this.$widget.find('.spinner-down').addClass("spinner-min") :'';
+            this.$widget.find('.spinner-up').removeClass("spinner-max");
+        }
+    }
+    this.$widget.find('.spinner-input').val(val);
+    this._setValue(val);
+}
+
+/**
+ * Handles a value text box change.
+ * 
+ * @param {number} val new value
+ */
+Spinner.prototype._setValue = function(val) {
+    this.removeMessages();
+    this.valueChanged = true;
+    this.val = val;
+    this._send();  
+};
+
+/** 
+ * Sends the updated value to the server.
+ */
+Spinner.prototype._send = function() {
+    var thiz = this, params = { };
+    params[this.config.field] = this.val;
+    this._postControl(this.config.action, params,
+        function(data) {
+            thiz.valueChanged = false;
+        }
+    );
+};
 
 /* ============================================================================
  * == Slider widget                                                          ==
