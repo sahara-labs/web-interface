@@ -837,11 +837,14 @@
 }
 
 .slider-text-vertical input, .slider-text-horizontal input{
-    float: right !important;
     -webkit-box-shadow: inset 1px -1px 3px 1px #A3A3A3;
     -moz-box-shadow: inset 1px -1px 3px 1px #A3A3A3;
     box-shadow: inset 1px -1px 3px 1px #A3A3A3;
     border: solid 1px #FFF !important;
+}
+
+.slider-text-horizontal input{
+    float: right !important;
 }
 
 .slider-text-vertical input {

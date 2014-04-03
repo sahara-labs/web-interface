@@ -3421,7 +3421,7 @@ function Spinner(id, config)
     /* Default options. */
     if (this.config.min === undefined) this.config.min = 0;
     if (this.config.max === undefined) this.config.max = 100;
-    if (this.config.length === undefined) this.config.length = 120;
+    if (this.config.length === undefined) this.config.length = 130;
     if (this.config.units === undefined) this.config.units = '';
     if (this.config.label === undefined) this.config.label = '';
 
@@ -3437,13 +3437,9 @@ function Spinner(id, config)
 Spinner.prototype = new Widget;
 
 Spinner.prototype.init = function($container) {
-    /* Set dafault value. */
-    this.val = undefined;
-    this.valueChanged = false;
-
     this.$widget = this._generate($container,
     	"<div>" +
-    	    (this.config.label ? '<div class="spinner-label">' + this.config.label + "<span class='spinner-units'> (" +
+    	    (this.config.label ? '<div class="spinner-label">' + this.config.label + ": <span class='spinner-units'> (" +
     	        (this.config.units ? this.config.units + ")</span>" : '') +'</div>': '') +
     	    "<div class='spinner' style='width:" + this.config.length + "px;'>" +
                 "<input class='spinner-input' style='width:" + (this.config.length - 45) + "px;' value='0'></input>" +
@@ -3455,51 +3451,67 @@ Spinner.prototype.init = function($container) {
         "</div>"
     );
 
+    /* Handles the button and input events. */ 
     var thiz = this;
-    this.$widget.find('.spinner-up').mousedown(function(e){ e.preventDefault(); thiz.changeValue('up');});
-    this.$widget.find('.spinner-down').mousedown(function(e){ e.preventDefault(); thiz.changeValue('');});
+    this.$widget.find('.spinner-up').mousedown(function(e){ e.preventDefault(); thiz._buttonClicked(true);});
+    this.$widget.find('.spinner-down').mousedown(function(e){ e.preventDefault(); thiz._buttonClicked(false);});
+    this.$widget.find('.spinner-input').change(function(){ thiz._handleTextBoxChange($(this).val()); });
+    this.$widget.find('.spinner-up, .spinner-down').mouseup(function(){ clearInterval(thiz.holdTimer); thiz._setValue(thiz.val);});
 
-    //TODO Get appropriate value on change
-    this.$widget.find('.spinner-input').change(function(){ thiz._setValue($(this).val()); });
+    /* Sets the position for message indicators. */
+    this.ttLeft = this.config.length - this.config.length / 6;
+    this.ttTop  = this.config.length / 6;
 };
 
-Spinner.prototype.changeValue = function(newVal) {
-    val = this.$widget.find('.spinner-input').val();
-    var thiz = this;
+Spinner.prototype._buttonClicked = function(up) {
+    var val = this.$widget.find('.spinner-input').val(),
+        thiz = this;    
 
-    if (newVal === 'up')
+    if (!val.match(/^-?\d+\.?\d*$/))
     {
-        if (val >= this.config.max)
+        val = 0;
+        this.$widget.find('.spinner-input').val(this.val);
+        this.addMessage("Value must be a number.", Widget.MESSAGE_TYPE.error, thiz.ttLeft, thiz.ttTop, Widget.MESSAGE_INDICATOR.left);
+        return;
+    }
+
+    /* Remove min/max classes */
+    this.$widget.find('.spinner-' + (up ? 'down' : 'up')).removeClass('spinner-' + (up ? 'min' : 'max'));
+
+    /* Increments/decrement the value. */
+    up ? val++ : val--;
+    val > thiz.config.max ? val = thiz.config.max : '';
+    val < thiz.config.min ? val = thiz.config.min : '';
+
+    /* Clears any previous interval. */
+    clearInterval(this.holdTimer);
+
+    /* Increments/decrements the value while the buttons are pressed. */
+    this.holdTimer = setInterval(function() {
+        if (up && val == thiz.config.max || !up && val == thiz.config.min)
         {
-            //TODO Add error prompt
-            console.log('too big!')
+            clearInterval(thiz.holdTimer);
+            return;
         }
         else
         {
-            //TODO Add auto increment on mouse hold
-        	val++;
-            val >= this.config.max ? this.$widget.find('.spinner-up').addClass("spinner-max") :'';
-            this.$widget.find('.spinner-down').removeClass("spinner-min");
+            /* Increments/decrement the value. */
+            up ? val++ : val--;
+            
+            /* Display min/max classes if val is at range limit. */
+            val <= thiz.config.min ? thiz.$widget.find('.spinner-down').addClass("spinner-min") :'';
+            val >= thiz.config.max ? thiz.$widget.find('.spinner-up').addClass("spinner-max") :'';
+
+            /* Update the value. */
+            thiz.val = val;
+            thiz.$widget.find('.spinner-input').val(val);
         }
-    }
-    else
-    {
-        if (val <= this.config.min)
-        {
-            //TODO Add error prompt
-            console.log('too small!')
-            val <= this.config.min ? this.$widget.find('.spinner-down').addClass("spinner-min") :'';
-        }
-        else
-        {
-            //TODO Add auto decrement on mouse hold
-        	val--;
-            val <= this.config.min ? this.$widget.find('.spinner-down').addClass("spinner-min") :'';
-            this.$widget.find('.spinner-up').removeClass("spinner-max");
-        }
-    }
-    this.$widget.find('.spinner-input').val(val);
-    this._setValue(val);
+    }, 100);
+
+    /* Display min/max classes if val is at range limit. */
+    val <= this.config.min ? this.$widget.find('.spinner-down').addClass("spinner-min") :'';
+    val >= this.config.max ? this.$widget.find('.spinner-up').addClass("spinner-max") :'';
+    this.val = val;
 }
 
 /**
@@ -3507,14 +3519,42 @@ Spinner.prototype.changeValue = function(newVal) {
  * 
  * @param {number} val new value
  */
+Spinner.prototype._handleTextBoxChange = function(val) {
+	var thiz = this;
+    this.removeMessages();
+
+    if (!val.match(/^-?\d+\.?\d*$/))
+    {
+        this.val = 0;
+        this.$widget.find('.spinner-input').val(this.val);
+        this.addMessage("Value must be a number.", Widget.MESSAGE_TYPE.error, thiz.ttLeft, thiz.ttTop, Widget.MESSAGE_INDICATOR.left);
+        return;
+    }
+
+    if (val < this.config.min || val > this.config.max)
+    {
+        this.addMessage("Value out of range.", Widget.MESSAGE_TYPE.error, thiz.ttLeft, thiz.ttTop, Widget.MESSAGE_INDICATOR.left);
+        return;
+    }
+    this._setValue(val); 
+};
+
+/**
+ * Sets the updated value and calls the send method.
+ * 
+ * @param {number} val new value
+ */
 Spinner.prototype._setValue = function(val) {
+    val <= this.config.min ? this.$widget.find('.spinner-down').addClass("spinner-min") :'';
+    val >= this.config.max ? this.$widget.find('.spinner-up').addClass("spinner-max") :'';
+    this.$widget.find('.spinner-input').val(val);
     this.removeMessages();
     this.valueChanged = true;
     this.val = val;
-    this._send();  
+    this._send();
 };
 
-/** 
+/**
  * Sends the updated value to the server.
  */
 Spinner.prototype._send = function() {
@@ -4001,9 +4041,9 @@ Gauge.prototype.animate = function() {
 function LinearGauge(id, config)
 {
     if (!(config.field || config.action || config.values)) throw "Options not supplied."; 
-    
+
     Widget.call(this, id, config);
-    
+
     /* Default options. */
     if (this.config.label === undefined) this.config.label = '';
 	if (this.config.min === undefined) this.config.min = 0;
@@ -4061,7 +4101,7 @@ LinearGauge.prototype.animate = function() {
 
     /* Convert value to percentage */
 	var gaugeVal = Math.round(((this.val - this.config.min) * 100) / (this.config.max - this.config.min) * 100) / 100;
-    
+
     /* Display the new value */
     if (this.config.vertical)
     {
