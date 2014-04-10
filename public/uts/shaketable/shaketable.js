@@ -361,7 +361,7 @@ function MimicWidget(is3DOF)
         title: "Model",
         windowed: true,
         resizable: true,
-        preserveAspectRation: true,
+        preserveAspectRatio: true,
         minWidth: 320,
         minHeight: 410,
         closeable: true,
@@ -440,6 +440,7 @@ MimicWidget.ANIMATE_PERIOD = 50;
 MimicWidget.prototype.init = function($container) {
     var canvas, thiz = this;
     
+    this.mmPerPx = 1.475;
     if (this.window.width)
     {
         this.mmPerPx = 320 / this.window.width * 1.475;
@@ -656,7 +657,7 @@ MimicWidget.prototype.drawCoil = function(y, pw) {
     this.ctx.font = this.px(13) + "px sans-serif";
     this.ctx.textAlign = "center";
     this.ctx.textBaseline = "middle";
-    this.ctx.fillText("C", this.width - this.px(55 - this.px(MimicWidget.COIL_BOX_WIDTH / 2)), y);
+    this.ctx.fillText("C", this.width - this.px(30) - this.px(MimicWidget.COIL_BOX_WIDTH / 2), y);
     
 };
 
