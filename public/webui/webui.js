@@ -2837,6 +2837,11 @@ function RotarySwitch(id, config)
     
     /* Default options. */
     if (this.config.label === undefined) this.config.label = '';
+    if (this.config.radius === undefined) this.config.radius = 60;
+    if (this.config.values === undefined) this.config.values = [
+        {label:'ON', value: 1},
+        {label: 'OFF', value: 0}
+    ];
 
     /** @private {boolean} The selected value. */
     this.val = undefined;
@@ -2852,18 +2857,18 @@ RotarySwitch.prototype.init = function($container) {
         v = this.config.values;
 	
     this.$widget = this._generate($container,
-    	"<div class='rotary-container " + (this.config.label ? 'rotary-container-label' : '') + 
+    	"<div class='rotary-container " + (this.config.label ? 'rotary-container-label' : '') +
     	"' style='width:" + r * 3 + "px'>" +
-    	(this.config.label ? "<label>" + this.config.label + "</label>" : '') +
-        "<div id='rotary-container-" + this.id + "' class='rotary-switch-container' " + 
+    	(this.config.label ? "<label class='rotary-switch-label'>" + this.config.label + "</label>" : '') +
+        "<div id='rotary-container-" + this.id + "' class='rotary-switch-container' " +
             "style='width:" + r * 2 +"px;height:" + r * 2 + "px;'>" +
-                "<div id='rotary-switch-" + this.id + "' class='rotary-switch rotary-" + 
+                "<div id='rotary-switch-" + this.id + "' class='rotary-switch rotary-" +
                 (this.config.color ? this.config.color : 'black') + "'></div>" +
         "</div></div>"
     );
 
     /* Generates the positions of the switches' points. */
-    for(var i = 0; i < v.length; i++) {
+    for(var i = 0, j = v.length; i < v.length; i++, j--) {
 
     	/* Calculate the X and Y axes of the current point.  */
         var y = (r - 5) - (r + 10) * Math.cos(2 * Math.PI * i / v.length),
@@ -2872,7 +2877,7 @@ RotarySwitch.prototype.init = function($container) {
 
         $("#rotary-container-" + this.id).append(
             "<div class='rotary-switch-val " +
-            "' id='" + this.id + "-" + i + "' " +
+            "' id='" + this.id + "-" + j + "' " +
             "style='left:" + Math.round(x) + "px;top:" + Math.round(y) + "px' " + "value=" +
             ( p ? p.value : v[0].value) + ">" + ( p ? p.label : v[0].label) + "</div>"
         );
@@ -2880,10 +2885,6 @@ RotarySwitch.prototype.init = function($container) {
 
     var thiz = this;
     this.$widget.find(".rotary-switch-val").click(function() { thiz._clicked(this); });	
-};
-
-RotarySwitch.prototype.consume = function(data) {
-
 };
 
 /**
@@ -2911,16 +2912,13 @@ RotarySwitch.prototype._clicked = function(point) {
  * @param point the selected label
  */
 RotarySwitch.prototype._animateSwitch = function(point) {
-    /* Get the position of the point and sets the X and Y axes used for calculating the value positions. */
-    var pos = $(point).position(),
-        x0 = (this.config.radius - 5),
-        y0 = (this.config.radius - 5);
+    var thiz = this,
+        v = this.config.values,
+        p = point.id.replace(thiz.id + '-','');
 
-    //TODO Fix issue with some labels making the switch fully rotate to get to the closest one.
-
-    /* Calculate the switches degree in relation to the point. */
-    var deg = Math.atan((pos.left - x0) / (y0 - pos.top)) * 180 / Math.PI;
-    deg = x0 < pos.top ? Math.round(deg + 180) : Math.round(deg);
+    /* Calculate the switches degree in relation to the point and amount of values. */
+    var deg = p * 360 / v.length;
+    deg === 360 ? deg = 0: '';
 
     /* Rotates the switch. */
     $(point).parent().find('.rotary-switch').css({
@@ -3497,7 +3495,7 @@ Spinner.prototype._buttonClicked = function(up) {
         {
             /* Increments/decrement the value. */
             up ? val++ : val--;
-            
+
             /* Display min/max classes if val is at range limit. */
             val <= thiz.config.min ? thiz.$widget.find('.spinner-down').addClass("spinner-min") :'';
             val >= thiz.config.max ? thiz.$widget.find('.spinner-up').addClass("spinner-max") :'';
@@ -3889,6 +3887,7 @@ function LED(id, config)
     /** @private {boolean} The displayed value of the field. */
     this.val = undefined;
 }
+
 LED.prototype = new Widget;
 
 LED.prototype.init = function($container) {
@@ -3913,10 +3912,62 @@ LED.prototype.consume = function(data) {
  * == LCD widget                                                             ==
  * ============================================================================ */
 
-function LCD() 
+/** 
+ * The LCD widget.
+ * 
+ * @constructor
+ * @param {string} id the identifer of widget
+ * @param {object} config configuration of widget
+ * @config {string} [field] server data variable that is being displayed
+ * @config {string} [label] label to display
+ * @config {string} [headerColor] color of the widgets header (default: white)
+ * @config {string} [labelColor] color of the widgets label (default: #535151)
+ * @config {string} [units] Unit of measurement used by the LCD
+ * @config {number} [length] the length of the LCD container
+ * @config {number} [precision] the precision of the value (default: 3)
+ */
+function LCD(id, config)
 {
-    // TODO Implement LCD widget
+    if (!config.field) throw "Option not supplied.";
+
+    Widget.call(this, id, config);
+
+    /* Default options. */
+    if (this.config.label === undefined) this.config.label = '';
+    if (this.config.headerColor === undefined) this.config.headerColor = '#fff';
+    if (this.config.labelColor === undefined) this.config.labelColor = '#535151';
+    if (this.config.labelColor === undefined) this.config.units = '';
+    if (this.config.length === undefined) this.config.length = 160;
+    if (this.config.precision == undefined) this.config.precision = 1;
+
+    /** @private {boolean} The displayed value of the field. */
+    this.val = undefined;
 }
+
+LCD.prototype = new Widget;
+
+LCD.prototype.init = function($container) {
+    this.$widget = this._generate($container,
+        '<div class="lcd-container" style="width:' + this.config.length + 'px;">' +
+            '<div class="lcd-header" style="background:' + this.config.headerColor + ';">' +
+                (this.config.label ? '<div class="lcd-label" style="color:' + this.config.labelColor + ';">' +
+                    this.config.label + '</div>' : '') +
+            '</div>' +
+            '<div class="lcd-inner">' +
+                '<div class="lcd-value">' + (this.val ? this.val : '0.' + ('000000').substring(0, this.config.precision)) +'</div>' +
+                '<div class="lcd-units">' + this.config.units + '</div>' +
+            '</div>' +
+        '</div>'
+    );
+};
+
+LCD.prototype.consume = function(data) {
+    if (!(data[this.config.field] === undefined || data[this.config.field] == this.val))
+    {
+        this.val = parseFloat(data[this.config.field].toFixed(this.config.precision));
+        this.$widget.find('.lcd-value').html(this.val);
+    }
+};
 
 /* ============================================================================
  * == Gauge Widget                                                           ==
@@ -3997,7 +4048,6 @@ Gauge.prototype.init = function($container) {
 };
 
 Gauge.prototype.consume = function(data) {
-	//TODO Finish consume function for the Gauge
     this.val = data[this.config.field] ? data[this.config.field] : this.val ? this.val : '';
     thiz.animate();
 };
@@ -4092,7 +4142,6 @@ LinearGauge.prototype.init = function($container) {
 };
 
 LinearGauge.prototype.consume = function(data) {
-	//TODO Finish consume function for the Linear Gauge
     this.val = data[this.config.field] ? data[this.config.field] : this.val ? this.val : '';
     thiz.animate();
 };

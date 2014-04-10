@@ -588,6 +588,11 @@
 /******************************************************************************
  ** Rotary Switch                                                            **
  ******************************************************************************/
+.rotary-switch-label {
+    text-shadow: 0px 1px 2px #B9B9B9;
+    color: #535151;
+    padding: 5px 0px;
+}
 
 .rotary-switch-container {
     margin: 25px auto 25px auto;
@@ -1717,4 +1722,67 @@
 
 .spinner-max:after {
     border-bottom: 5px solid #aaa;
+}
+
+/******************************************************************************
+ ** LCD	                                                                     **
+ ******************************************************************************/
+
+.lcd-container {
+    border: solid 1px #333;
+    background: #f3f3f3;
+    -moz-box-shadow: 0px 2px 4px #CCC;
+    -webkit-box-shadow: 0px 2px 4px #CCC;
+    box-shadow: 0px 2px 4px #CCC;
+}
+
+.lcd-header {
+    border-bottom: solid 1px #333;
+    padding: 3%;
+    text-align: center;
+    -moz-box-shadow: 0px 1px 1px #CCC;
+    -webkit-box-shadow: 0px 1px 1px #CCC;
+    box-shadow: 0px 1px 1px #CCC;
+}
+
+.lcd-label {
+    font-size: 12px;
+    color: #515151;
+}
+
+.lcd-inner {
+    height: 43px;
+    width: 92%;
+    margin: 4%;
+}
+
+.lcd-value {
+    width: 75%;
+    color: #525252;
+    border: solid 1px #C2C2C2;
+    font-size: 1.8em;
+    text-align: right;
+    padding: 5px 0px;
+    padding-right: 2%;
+    float: left;
+    background: #FFF;
+    font-family: consolas;
+    background: url("../images/linear_grad.png") repeat-x scroll 0 0 #FDFDFD;
+    -moz-box-shadow: inset 0px -2px 1px #DFDFDF;
+    -webkit-box-shadow: inset 0px -2px 1px #DFDFDF;
+    box-shadow: inset 0px -2px 1px #DFDFDF;
+}
+
+.lcd-units {
+    font-size: 18px;
+    text-align: center;
+    color: #414141;
+    font-family: courier new;
+    font-weight: bold;
+    float: right;
+    width: 20%;
+    height: 50%;
+    position: relative;
+    bottom: 25%;
+    top: 25%;
 }

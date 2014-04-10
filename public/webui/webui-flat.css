@@ -282,6 +282,11 @@
 /******************************************************************************
  ** Rotary Switch                                                            **
  ******************************************************************************/
+.rotary-switch-label {
+    text-shadow: 0px 1px 2px #B9B9B9;
+    color: #535151;
+    padding: 5px 0px;
+}
 
 .rotary-switch-container {
     margin: 30px;
@@ -1085,4 +1090,57 @@
 
 .spinner-max:after {
     border-bottom: 5px solid #aaa;
+}
+
+/******************************************************************************
+ ** LCD	                                                                     **
+ ******************************************************************************/
+
+.lcd-container {
+    border: solid 1px #333;
+    background: #f3f3f3;
+}
+
+.lcd-header {
+    border-bottom: solid 1px #333;
+    padding: 3%;
+    text-align: center;
+}
+
+.lcd-label {
+    font-size: 11px;
+    color: #515151;
+}
+
+.lcd-inner {
+    height: 43px;
+    width: 92%;
+    margin: 4%;
+}
+
+.lcd-value {
+    width: 75%;
+    color: #525252;
+    background: #fff;
+    border: 1px solid;
+    font-size: 1.8em;
+    text-align: right;
+    padding: 5px 0px;
+    padding-right: 2%;
+    float: left;
+    font-family: consolas;
+}
+
+.lcd-units {
+    font-size: 18px;
+    text-align: center;
+    color: #414141;
+    font-weight: bold;
+    float: right;
+    width: 20%;
+    height: 50%;
+    position: relative;
+    bottom: 25%;
+    top: 25%;
+    font-family: courier new;
 }
