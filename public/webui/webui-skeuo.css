@@ -8,7 +8,7 @@
 
 @font-face {
 	font-family: 'impact-label';
-	src: url('/webui/images/impact-label.ttf')  format('truetype');
+	src: url('/webui/images/impact-label.ttf') format('truetype');
 	}
 
 .window-wrapper {
@@ -1737,9 +1737,9 @@
 }
 
 .lcd-header {
-    border-bottom: solid 1px #333;
-    padding: 3%;
-    text-align: center;
+    border-bottom: solid 1px #646464;
+    padding: 3px 0px 3px 8px;
+    font-weight: bold;
     -moz-box-shadow: 0px 1px 1px #CCC;
     -webkit-box-shadow: 0px 1px 1px #CCC;
     box-shadow: 0px 1px 1px #CCC;

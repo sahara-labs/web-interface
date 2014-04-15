@@ -5,6 +5,11 @@
  * @date 20th November 2013
  */
 
+@font-face {
+	font-family: 'digital';
+	src: url('/webui/images/digital.ttf') format('truetype');
+	}
+
 .window-wrapper {
 	background: #fafafa;
     border-radius: 10px;
@@ -1096,15 +1101,10 @@
  ** LCD	                                                                     **
  ******************************************************************************/
 
-.lcd-container {
-    border: solid 1px #333;
-    background: #f3f3f3;
-}
-
 .lcd-header {
-    border-bottom: solid 1px #333;
-    padding: 3%;
-    text-align: center;
+    border: solid 1px #646464;
+    padding: 3px 0px 3px 8px;
+    font-weight: bold;
 }
 
 .lcd-label {
@@ -1120,15 +1120,15 @@
 
 .lcd-value {
     width: 75%;
-    color: #525252;
-    background: #fff;
+    color: #333;
+    background: #f1f1f1;
     border: 1px solid;
-    font-size: 1.8em;
+    font-size: 1.7em;
     text-align: right;
-    padding: 5px 0px;
+    padding: 7px 2px;
     padding-right: 2%;
     float: left;
-    font-family: consolas;
+    font-family: "digital", "Lucida Console", Monaco, monospace;
 }
 
 .lcd-units {
