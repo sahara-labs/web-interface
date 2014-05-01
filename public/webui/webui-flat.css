@@ -5,6 +5,11 @@
  * @date 20th November 2013
  */
 
+@font-face {
+	font-family: 'digital';
+	src: url('/webui/images/digital.ttf') format('truetype');
+	}
+
 .window-wrapper {
 	background: #fafafa;
     border-radius: 10px;
@@ -256,6 +261,7 @@
     background: #ccc;
     margin: 2px;
     border-radius: 10px;
+    border: 1px solid #aaa;
 }
 
 .switch-animated {
@@ -274,10 +280,18 @@
     border: 1px solid #4d4c4c;   
 }
 
+.switch-off {
+    border: solid 1px rgba(0, 0, 0, 0.5);
+}
 
 /******************************************************************************
  ** Rotary Switch                                                            **
  ******************************************************************************/
+.rotary-switch-label {
+    text-shadow: 0px 1px 2px #B9B9B9;
+    color: #535151;
+    padding: 5px 0px;
+}
 
 .rotary-switch-container {
     margin: 30px;
@@ -1081,4 +1095,52 @@
 
 .spinner-max:after {
     border-bottom: 5px solid #aaa;
+}
+
+/******************************************************************************
+ ** LCD	                                                                     **
+ ******************************************************************************/
+
+.lcd-header {
+    border: solid 1px #646464;
+    padding: 3px 0px 3px 8px;
+    font-weight: bold;
+}
+
+.lcd-label {
+    font-size: 11px;
+    color: #515151;
+}
+
+.lcd-inner {
+    height: 43px;
+    width: 92%;
+    margin: 4%;
+}
+
+.lcd-value {
+    width: 75%;
+    color: #333;
+    background: #f1f1f1;
+    border: 1px solid;
+    font-size: 1.7em;
+    text-align: right;
+    padding: 7px 2px;
+    padding-right: 2%;
+    float: left;
+    font-family: "digital", "Lucida Console", Monaco, monospace;
+}
+
+.lcd-units {
+    font-size: 18px;
+    text-align: center;
+    color: #414141;
+    font-weight: bold;
+    float: right;
+    width: 20%;
+    height: 50%;
+    position: relative;
+    bottom: 25%;
+    top: 25%;
+    font-family: courier new;
 }
