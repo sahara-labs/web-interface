@@ -128,6 +128,38 @@ $(document).ready(function() {
                     vertical: true,
                     align: "center"
                 }),
+            }),
+            new Gauge("gauge-voltage", {
+                field: "monitor-volts",
+                resizable: false,
+                title: "Voltage",
+                units: "V",
+                max: 5,
+                radius: 65
+            }),
+            new Gauge("gauge-amps", {
+                field: "monitor-amps",
+                resizable: false,
+                title: "Amps",
+                units: "A",
+                max: 5,
+                radius: 65
+            }),
+            new Gauge("gauge-joules", {
+                field: "monitor-joules",
+                resizable: false,
+                title: "Joules",
+                units: "J",
+                max: 5,
+                radius: 65
+            }),
+            new Gauge("gauge-rpm", {
+                field: "monitor-rpm",
+                resizable: false,
+                title: "RPM",
+                units: "RPM",
+                max: 5,
+                radius: 65
             })
         ]
     }).setup().run();
