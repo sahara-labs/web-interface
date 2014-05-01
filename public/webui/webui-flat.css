@@ -209,7 +209,6 @@
     box-shadow: 0 0 4px #B5B5B5;
 	background-color: #EFEFEF;
 	cursor: pointer;
-	width: 100%;
 	height: 100%;
 	font-weight: bold;
 	text-align: center;
@@ -468,10 +467,11 @@
 
 .knob-max {
     float: left;
+    margin-right: 3px;
 }
 
 .knob-min {
-    float: right;
+    float: left;
 }
 
 .knob-val {
@@ -529,12 +529,6 @@
     height: auto;
     text-align: right;
     margin-top: 5px;
-}
-
-.knob-input-horizontal {
-    width: 100%;
-    left: 85%;
-    top: 20%;
 }
 
 .knob-input {
@@ -1123,7 +1117,7 @@
     color: #333;
     background: #f1f1f1;
     border: 1px solid;
-    font-size: 1.7em;
+    font-size: 1.6em;
     text-align: right;
     padding: 7px 2px;
     padding-right: 2%;

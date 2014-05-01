@@ -121,7 +121,6 @@
 .button {
     padding: 10px;
     border-radius: 8px;
-    width: 85%;
     height: 100%;
     cursor: pointer;
 	text-align: center;
@@ -373,6 +372,21 @@
     box-shadow: 1px 5px 7px rgba(43, 43, 43, 0.6);
     background-image: url('/webui/images/skeuo/switch-knob.png');
     background-size: 100% 100%;
+}
+
+.switch-slide:after {
+    display: block;
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    background: #494949;
+    width: inherit;
+    height: inherit;
+    opacity: 0.5;
+}
+
+.switch-on .switch-slide:after {
+    opacity: 0 !important;
 }
 
 .switch-animated {
@@ -970,10 +984,11 @@
 
 .knob-max {
     float: left;
+    margin-right: 3px;
 }
 
 .knob-min {
-    float: right;
+    float: left;
 }
 
 .knob-val {
@@ -1018,12 +1033,6 @@
     height: auto;
     text-align: right;
     margin-top: 5px;
-}
-
-.knob-input-horizontal {
-    width: 100%;
-    left: 85%;
-    top: 20%;
 }
 
 .knob-input {

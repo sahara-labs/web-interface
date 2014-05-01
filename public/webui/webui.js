@@ -3145,6 +3145,7 @@ function Knob(id, config)
     /** Default settings. */
     if (this.config.min === undefined) this.config.min = 0;
     if (this.config.max === undefined) this.config.max = 100;
+    if (this.config.style === undefined) this.congif.style = "white";
     if (this.config.vertical === undefined) this.config.vertical = false;
     if (this.config.indicator === undefined) this.config.indicator = false;
     if (this.config.radius === undefined) this.config.radius = 25;
@@ -3188,7 +3189,9 @@ Knob.prototype.init = function($container) {
 
 Knob.prototype._buildHTML = function() {
     return (
-    "<div id='knob-container-" + this.id + "'>" +
+    "<div id='knob-container-" + this.id + "' style='margin:" + this.config.radius * 0.5 + "px;'>" +
+    	//TODO Fix bounding issue with label
+        "<div class='knob-bounding'>" +
         (this.config.label ? "<label class='knob-label" + (this.config.vertical ? '' : ' knob-label-horizontal') +"'>" + this.config.label + ":</label>" : '') +
         "<div class='knob-range" + (!this.config.vertical && !this.config.windowed ? ' knob-range-horizontal' : '') +"'>" +
             "<div class='knob-range-val knob-max' data-value='1'>Max: " + this.config.max + "</div>" +
@@ -3200,13 +3203,14 @@ Knob.prototype._buildHTML = function() {
                 "<div class='knob-highlight'" + (this.config.style == 'black' ? 'style="opacity:0.4;"' : '') + "></div>"+
             "</div>" +
         "</div>" +
-        "<div class='knob-val knob-25' data-value='0.25' style='top:50%; right:" + (!this.config.windowed ? '-25%' : '-1px') + ";'>" + ((this.config.max - this.config.min) * 0.25 + this.config.min) + "</div>" +
+        "<div class='knob-val knob-25' data-value='0.25' style='top:50%; right:" + (!this.config.windowed ? '-3%' : '-1px') + ";'>" + ((this.config.max - this.config.min) * 0.25 + this.config.min) + "</div>" +
         "<div><div class='knob-50-outter'><div class='knob-val knob-50' data-value='0.50'>" + ((this.config.max - this.config.min) * 0.50 + this.config.min) + "</div></div></div>" +
-        "<div class='knob-val knob-75' data-value='0.75' style='top: 50%; left:" + (!this.config.windowed ? '-25%' : '-1px') + ";'>" + ((this.config.max - this.config.min) * 0.75 + this.config.min) + "</div>" +
+        "<div class='knob-val knob-75' data-value='0.75' style='top: 50%; left:" + (!this.config.windowed ? '-3%' : '-1px') + ";'>" + ((this.config.max - this.config.min) * 0.75 + this.config.min) + "</div>" +
         "<div class='knob-input-container" + (this.config.vertical ? '' : ' knob-input-horizontal') +"'>" +    
             "<input class='knob-input' value='0'></input>" +
             (this.config.indicator ? '<div class="knob-indicator-container"></div>' : '') +
             "<div class='knob-input-units'>" + (this.config.units ? this.config.units : '') + "</div>" +
+        "</div>" +
         "</div>" +
     "</div>"
     );
@@ -3437,8 +3441,8 @@ Spinner.prototype = new Widget;
 Spinner.prototype.init = function($container) {
     this.$widget = this._generate($container,
     	"<div>" +
-    	    (this.config.label ? '<div class="spinner-label">' + this.config.label + ": <span class='spinner-units'> (" +
-    	        (this.config.units ? this.config.units + ")</span>" : '') +'</div>': '') +
+    	    (this.config.label ? '<div class="spinner-label">' + this.config.label + ": <span class='spinner-units'>" +
+    	        (this.config.units ? "(" + this.config.units + ")</span>" : '') +'</div>': '') +
     	    "<div class='spinner' style='width:" + this.config.length + "px;'>" +
                 "<input class='spinner-input' style='width:" + (this.config.length - 45) + "px;' value='0'></input>" +
                 "<div class='spinner-buttons' style='left:" + (this.config.length - 30) + "px;'>" +
