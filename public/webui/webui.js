@@ -48,6 +48,7 @@ Globals = {
  *                          requesting again in milliseconds (default 10000)
  * @config {string} [theme] display theme (default 'flat')
  * @config {string} [cookie] cookie prefix (default anchor id) 
+ * @config {integer} [height] height of the page to prevent border overflow (default none set)
  */
 function WebUIApp(config)
 {
@@ -120,7 +121,13 @@ WebUIApp.prototype._setupDisplay = function() {
         throw "Anchor " + this.config.anchor + " not found on the page.";
     }
     
+    /* Set initial page height. */
+    if (this.config.height) this.$anchor.css("height", this.config.height);
+    
     this.display.init(this.$anchor);
+    
+    /* Reset footer to account for new content. */
+    resizeFooter();
 };
 
 /**
@@ -4047,7 +4054,7 @@ Gauge.prototype.init = function($container) {
 
 Gauge.prototype.consume = function(data) {
     this.val = data[this.config.field] ? data[this.config.field] : this.val ? this.val : '';
-    thiz.animate();
+    this.animate();
 };
 
 Gauge.prototype.animate = function() {
