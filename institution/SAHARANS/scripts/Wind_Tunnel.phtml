@@ -4,8 +4,11 @@
  * Wind Tunnel web interface.
  */
 
-$this->headScript()->appendFile($this->baseUrl('uts/windtunnel/windtunnel.js'));
-$this->headLink()->appendStylesheet($this->baseUrl('uts/windtunnel/windtunnel.css'));
+$this->headScript()->appendFile($this->baseUrl('webui/webui.js'));
+$this->headLink()->appendStylesheet($this->baseUrl('webui/webui.css'));
+$this->headLink()->appendStylesheet($this->baseUrl('webui/webui-skeuo.css'));
+// $this->headScript()->appendFile($this->baseUrl('uts/windtunnel/windtunnel.js'));
+// $this->headLink()->appendStylesheet($this->baseUrl('uts/windtunnel/windtunnel.css'));
 
 /* Canvas compatability implementation for Internet Explorer 8 and earlier. */
 $this->headScript()->appendFile($this->baseUrl('js/excanvas.js'),
@@ -24,8 +27,109 @@ $this->headScript()->appendFile($this->baseUrl('uts/coupledtanksnew/jquery.ui.to
 
 <script type="text/javascript">
 $(document).ready(function() {
-	var inter = new WindTunnel("wind-tunnel-anchor");
-	inter.setup();
-	inter.run();
+    new WebUIApp({
+        anchor: "#wind-tunnel-anchor",
+        windowToggle: true,
+        controller: "WindTunnelController",
+        dataAction: "dataAndGraph",
+        theme: Globals.THEME.skeuo,
+        cookie: "windtunnelt",
+        widgets: [
+            new Container("camera-containers", {
+                title: "Cameras",
+                resizable: true,
+                preserveAspectRatio: true,
+                draggable: true,
+                shadable: true,
+                closeable: true,
+                widgets: [
+                    new CameraStream("camera-1", {
+                        title: "Camera 1",
+                        swfParam: "camera-swf-c1",
+                        mjpegParam: "camera-mjpeg-c1",
+                        videoWidth: 640,
+                        videoHeight: 360
+                    }),
+                    new CameraStream("camera-2", {
+                        title: "Camera 2",
+                        swfParam: "camera-swf-c2",
+                        mjpegParam: "camera-mjpeg-c2",
+                        videoWidth: 640,
+                        videoHeight: 360
+                    }),
+                ],
+                layout: new TabLayout({
+                })
+            }),
+            new Graph("graph-airvelocity", {
+                title: "Air Velocity",
+                fields: { "graph-wind-speed": "Air Velocity" },
+                colors: { "graph-wind-speed": "blue" },
+                yLabel: "Air Velocity (m/s)",
+                traceLabels: false,
+                horizScales: 5
+            }),
+            new Graph("graph-temphumid", {
+                title: "Temp. / Relative Humidity",
+                fields: {
+                    "graph-exhaust-temp": "Temperature",
+                    "graph-relative-humidity": "Humidity"
+                },
+                colors: {
+                    "graph-exhaust-temp": "yellow",
+                    "graph-relative-humidity": "green",
+                },
+                yLabel: "Temp (C) / Humidity (%)",
+                traceLabels: false,
+                horizScales: 5
+            }),
+            new Graph("graph-diffpressure", {
+                title: "Differential Pressure",
+                fields: { "graph-diff-pressure": "Differential Pressure" },
+                colors: { "graph-diff-pressure": "red" },
+                yLabel: "Differential Pressure (Pa)",
+                traceLabels: false,
+                horizScales: 5
+            }),
+            new Graph("graph-baropressure", {
+                title: "Barometric Pressure",
+                fields: { "graph-barometric-pressure": "Barometric Pressure" },
+                colors: { "graph-barometric-pressure": "orange" },
+                yLabel: "Barometric Pressure (Pa)",
+                traceLabels: false,
+                horizScales: 5
+            }),
+            new Container("container-controllers", {
+                title: "Controls",
+                draggable: true,
+                shadable: true,
+                closeable: true,
+                expandable: false,
+                resizable: false,
+                widgets: [
+                     new Switch("button-motor", {
+                         action: "setMotor",
+                         field: "motor-enable",
+                         label: "Fan On",
+                     }),
+                     new Slider("slider-motor", {
+                         action: "setMotor",
+                         field: "motor-speed",
+                         label: "Fan",
+                         units: "%",
+                     }),
+                     new Switch("button-load", {
+                         action: "setLoad",
+                         field: "load-enable",
+                         label: "Load On",
+                     }),
+                ],
+                layout: new BoxLayout({
+                    vertical: true,
+                    align: "center"
+                }),
+            })
+        ]
+    }).setup().run();
 });
 </script>

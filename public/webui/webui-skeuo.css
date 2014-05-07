@@ -382,6 +382,21 @@
     left: 22px;
 }
 
+.switch-slide:after {
+    display: block;
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    background: #494949;
+    width: inherit;
+    height: inherit;
+    opacity: 0.5;
+}
+
+.switch-on .switch-slide:after {
+    opacity: 0 !important;
+}
+
 .switch-animated {
     -webkit-transition:all 0.2s ease-in-out;
     -moz-transition:all 0.2s ease-in-out;
