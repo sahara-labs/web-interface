@@ -121,7 +121,6 @@
 .button {
     padding: 10px;
     border-radius: 8px;
-    width: 85%;
     height: 100%;
     cursor: pointer;
 	text-align: center;
@@ -364,6 +363,7 @@
 .switch-slide {
     height: 20px;
     width: 20px;
+    left: 0;
     position: relative;
     top: -4px;
     border: 1px solid #313131;
@@ -373,6 +373,13 @@
     box-shadow: 1px 5px 7px rgba(43, 43, 43, 0.6);
     background-image: url('/webui/images/skeuo/switch-knob.png');
     background-size: 100% 100%;
+    opacity: 0.7;
+}
+
+.switch-on {
+    background-image: url('/webui/images/skeuo/switch-knob.png');
+	opacity: 1;
+    left: 22px;
 }
 
 .switch-animated {
@@ -380,10 +387,6 @@
     -moz-transition:all 0.2s ease-in-out;
     -o-transition:all 0.2s ease-in-out;
     transition:all 0.2s ease-in-out;
-}
-
-.switch-on {
-    left: 22px;
 }
 
 .switch-vertical-container {
@@ -709,6 +712,19 @@
 	background: #575757;
 }
 
+.slider-label-vertical, .slider-label-horizontal {
+    font-family: Arial,Helvetica,sans-serif !important;
+    color: #777!important;
+    text-shadow: 0px 1px 2px #B9B9B9;
+}
+
+.slider-label-vertical {
+    position: absolute;
+    background: #F7F7F7;
+    margin-top: -20%;
+    top: 0;
+}
+
 .slider-knob-slice {
     display: none;
 }
@@ -717,6 +733,12 @@
 	position: absolute;
 	border: solid 1px #555;
     border-radius: 20%;
+    cursor: pointer;
+    cursor: -webkit-grab;
+    cursor: -moz-grab;
+}
+
+.slider-knob:active {
     cursor: pointer;
     cursor: -webkit-grabbing;
     cursor: -moz-grabbing;
@@ -859,15 +881,21 @@
 
 .slider-text-vertical label {
     position: relative;
-    left: -4px;
-    top: -550px;
-    background: #FFF !important;
-    width: 70px !important;
+    left: -30%;
+    padding-top: 5%;
 }
 
 .slider-text-vertical input {
     left: 9px;
     top: -257px;
+}
+
+.slider-units {
+    text-shadow: 0px 1px 2px #FFF;
+    color: #b;
+    position: relative;
+    left: -3%;
+    bottom: -4px;
 }
 
 .slider-container .slider-text-horizontal .slider-text-label {
@@ -970,10 +998,11 @@
 
 .knob-max {
     float: left;
+    margin-right: 3px;
 }
 
 .knob-min {
-    float: right;
+    float: left;
 }
 
 .knob-val {
@@ -1018,12 +1047,6 @@
     height: auto;
     text-align: right;
     margin-top: 5px;
-}
-
-.knob-input-horizontal {
-    width: 100%;
-    left: 85%;
-    top: 20%;
 }
 
 .knob-input {
