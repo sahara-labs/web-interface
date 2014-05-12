@@ -738,8 +738,12 @@
     cursor: -moz-grab;
 }
 
+.slider-knob-vertical .slider-knob:active {
+	cursor: pointer;
+    cursor: s-resize;
+}
+
 .slider-knob:active {
-    cursor: pointer;
     cursor: -webkit-grabbing;
     cursor: -moz-grabbing;
 }
@@ -952,7 +956,7 @@
 }
 
 .knob-container {
-    margin: 15px auto 5px auto;
+    margin: 12px auto 5px auto;
     position: relative;
     border-radius: 50%;
     border-bottom: 1px solid #FFF;
@@ -963,35 +967,28 @@
 }
 
 .knob-label-horizontal {
-    position: absolute;
-    left: -60%;
-    top: 18%;
     border: none !important;
-    border-bottom: 1px solid #DDD !important;
-    -webkit-box-shadow: none !important;
-    -moz-box-shadow: none !important;
     box-shadow: none !important;
     background: none !important;
     font-size: 14px !important;
     color: #727272 !important;
     text-shadow: 1px 1px 1px #BEBEBE !important;
     font-family: Arial,Helvetica,sans-serif !important;
+    margin-top: -30%;
 }
 
 .knob-range {
-	height: 1px;
+    height: 1px;
     width: 80%;
     margin: 0px 10%;
     margin-bottom: 15px;
     cursor: pointer;
-    font-size: smaller;
-    font-weight: bold;
-    color: #444;
+    font-size: 11px;
+    color: #555;
+    text-shadow: 1px 1px 1px #BEBEBE;
 }
 
 .knob-range-horizontal {
-    position: absolute;
-    top: 0%;
     width: 100%;
     margin: auto;
 }
@@ -1002,51 +999,21 @@
 }
 
 .knob-min {
-    float: left;
+    float: right;
 }
 
 .knob-val {
 	cursor: pointer;
     position: absolute;
-    font-size: smaller;
-    font-weight: bold;
-    color: #444;
-}
-
-.window-content .knob-val, .window-content .knob-range-val {
-    border-radius: 4px;
-    z-index: 100;
-    border: solid 1px #D3D3D3;
-    padding: 0px 7px;
-    background: #FFF;
-}
-
-.window-content .knob-val:hover, .window-content .knob-range-val:hover {
-    border: solid 1px #797979;
-}
-
-.no-window-content .knob-val, .no-window-content .knob-range-val {
-    -webkit-box-shadow: 0px 1px 3px #CCC;
-    -moz-box-shadow: 0px 1px 3px #CCC;
-    box-shadow: 0px 1px 3px #CCC;
-    padding: 0px 7px;
-}
-
-.no-window-content .knob-val:hover, .no-window-content .knob-range-val:hover {
-    -webkit-box-shadow: 0px 1px 3px #9E9E9E;
-    -moz-box-shadow: 0px 1px 3px #9E9E9E;
-    box-shadow: 0px 1px 3px #9E9E9E;
-}
-
-.no-window-content .knob-val:active, .no-window-content .knob-range-val:active {
-    box-shadow: none;
-    border: solid 1px #E6E6E6;
+    font-size: 11px;
+    color: #555;
+    text-shadow: 1px 1px 1px #BEBEBE;
 }
 
 .knob-input-container {
     height: auto;
     text-align: right;
-    margin-top: 5px;
+    margin-top: 10px;
 }
 
 .knob-input {
@@ -1077,7 +1044,7 @@
 
 .no-window-content .knob-input {
     border: 1px solid #B8B8B8 !important;
-    background: rgba(255, 255, 255, 0);
+    background: #fff;
     padding: 0 3%;
     width: 50%;
     color: #555;
@@ -1096,8 +1063,9 @@
 
 .knob-50-outter {
     width: 100%;
-    height: 20px;
     text-align: center;
+    position: absolute;
+    margin-top: 98%;
 }
 
 .knob {
