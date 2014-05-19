@@ -3938,8 +3938,7 @@ function LCD(id, config)
 
     /* Default options. */
     if (this.config.label === undefined) this.config.label = '';
-    if (this.config.headerColor === undefined) this.config.headerColor = '#fff';
-    if (this.config.labelColor === undefined) this.config.labelColor = '#535151';
+    if (this.config.labelColor === undefined) this.config.labelColor = '#333';
     if (this.config.labelColor === undefined) this.config.units = '';
     if (this.config.length === undefined) this.config.length = 160;
     if (this.config.precision == undefined) this.config.precision = 1;
@@ -3953,7 +3952,7 @@ LCD.prototype = new Widget;
 LCD.prototype.init = function($container) {
     this.$widget = this._generate($container,
         '<div class="lcd-container" style="width:' + this.config.length + 'px;">' +
-            '<div class="lcd-header" style="background:' + this.config.headerColor + ';">' +
+            '<div class="lcd-header" style="background:' + (this.config.headerColor ? this.config.headerColor :"#fff; border:none") + ';">' +
                 (this.config.label ? '<div class="lcd-label" style="color:' + this.config.labelColor + ';">' +
                     this.config.label + '</div>' : '') +
             '</div>' +
@@ -4100,6 +4099,7 @@ function LinearGauge(id, config)
 
     /* Default options. */
     if (this.config.label === undefined) this.config.label = '';
+    if (this.config.units === undefined) this.config.units = '';
 	if (this.config.min === undefined) this.config.min = 0;
     if (this.config.max === undefined) this.config.max = 100;
     if (this.config.size === undefined) this.config.size = 250;    
@@ -4122,24 +4122,26 @@ LinearGauge.prototype.init = function($container) {
             (this.config.label ? "<div class='linear-gauge-label'>" + this.config.label + "</div>" : '') +
             "<div class='linear-gauge-inner' style= '" + (this.config.vertical ? 'height:' : 'width:') + (this.config.size ?  this.config.size + 'px;': '250px;' ) +
                 (this.config.vertical ? 'width:' : 'height:') + (this.config.size ?  Math.round((this.config.size / 5) * 0.7) + 'px;': '35px;' ) + "'>" +
+                (!this.config.vertical ? "<div class='linear-gauge-output linear-gauge-output-horizontal'>00.0 <span class='linear-gauge-units'>" +
+                    this.config.units + "</span></div>" : '') +
                 "<div class='linear-gauge-gradient " + (this.config.vertical ? 'linear-gauge-gradient-vertical' : '') + "'></div>" +
-                "<div class='linear-gauge-arrow " + (this.config.vertical ? 'linear-gauge-arrow-vertical' : '') + "'></div>" +
-                "<div class='linear-gauge-scales' style='" + (this.config.vertical ? 'bottom: 95%; left: 37%;' : '') + "'>";
+                "<div class='linear-gauge-arrow " + (this.config.vertical ? 'linear-gauge-arrow-vertical' : '') + "'></div>" +                
+                "<div class='linear-gauge-scales" + (this.config.vertical ? '-vertical' : '') + "'>";
 
-        for (i = 0; i <= this.config.scales; i++)
-        {
-            html+= 
-            "<div class='linear-gauge-scale' style='" + (this.config.vertical ? 'top' : 'background: #000; left') + ":" + 
-                (this.config.size / this.config.scales * i -1) + "px;'>" +
-                "<div class='linear-gauge-values'>" + (this.config.vertical ? this.config.scales - i : i) + "</div>" +
-            "</div>";
-        };
+                    for (i = 0; i <= this.config.scales; i++)
+                    {
+                        html+= 
+                            "<div class='linear-gauge-scale' style='" + (this.config.vertical ? 'top' : 'background: #000; left') + ":" + 
+                            (this.config.size / this.config.scales * i) + "px;'>" +
+                            "<div class='linear-gauge-values'>" + (this.config.vertical ? + this.config.scales - i : i) + "</div>" +
+                            "</div>";
+                    };
 
         html += 
                 "</div></div>" +
-                "<div class='linear-gauge-output " + (this.config.vertical ? 'linear-gauge-output-vertical' : '') + "'>00.0 <span class='linear-gauge-units'>" +
-                    (this.config.units ? this.config.units : '') + "</span></div>" +
-            "</div>";
+            (this.config.vertical ? "<div class='linear-gauge-output linear-gauge-output-vertical'>00.0 <span class='linear-gauge-units'>" +
+                this.config.units + "</span></div>" : '') +
+        "</div>";
 
     this.$widget = this._generate($container,html);
     var thiz = this;

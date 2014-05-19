@@ -232,6 +232,10 @@
  ** Slider                                                                   **
  ******************************************************************************/
 
+.slider-knob-vertical {
+    top: 100%;
+}
+
 .slider-knob-slice {
     cursor: pointer;
     cursor: -webkit-grab;
@@ -246,9 +250,13 @@
 
 .slider-label-vertical {
     position: absolute;
-    background: #F7F7F7;
     margin-top: -10%;
     top: 0;
+}
+
+.slider-label-horizontal, .slider-label-vertical {
+    text-shadow: 0px 1px 2px #B9B9B9;
+    color: #535151;
 }
 
 /******************************************************************************
@@ -380,6 +388,8 @@
 .led-below .led-label {
 	display: block;
 	text-align: center;
+	text-shadow: 0px 1px 2px #B9B9B9;
+    color: #535151;
 }
  
 .led {
@@ -912,6 +922,11 @@
  ** Linear Gauge                                                             **
  ******************************************************************************/
 
+.linear-gauge-outer {
+    padding-bottom: 15px;
+    margin-right: 15px;
+}
+
 .linear-gauge-label {
     text-shadow: 0px 1px 2px #B9B9B9;
     color: #535151;
@@ -922,20 +937,22 @@
     display: inline-block;
     border: solid 1px #6F6F6F;
     background: #fff;
+    -webkit-box-shadow: inset 0px 1px 3px #B6B6B6;
+    -moz-box-shadow: inset 0px 1px 3px #B6B6B6;
+    box-shadow: inset 0px 1px 3px #B6B6B6;
 }
 
 .linear-gauge-arrow {
     width: 2px;
+    height: 100%;
     background: #D60000;
-    position: absolute;
-    left: 49.6%;
-    bottom: 6%;
-    top: 41%;
+    position: relative;
+    top: -10%;
     opacity: 0.7;
-    -webkit-transition:all 0.1s ease-in-out;
-    -moz-transition:all 0.1s ease-in-out;
-    -o-transition:all 0.1s ease-in-out;
-    transition:all 0.1s ease-in-out;
+    -webkit-transition: all 0.1s ease-in-out;
+    -moz-transition: all 0.1s ease-in-out;
+    -o-transition: all 0.1s ease-in-out;
+    transition: all 0.1s ease-in-out;
 }
 
 .linear-gauge-arrow-vertical {
@@ -944,6 +961,10 @@
     top: -1%;
     position: relative;
     width: 100%;
+    -webkit-transition: all 0.1s ease-in-out;
+    -moz-transition: all 0.1s ease-in-out;
+    -o-transition: all 0.1s ease-in-out;
+    transition: all 0.1s ease-in-out;
 }
 
 .linear-gauge-gradient {
@@ -971,7 +992,7 @@
     background: -ms-linear-gradient(top, #ff0000 0%,#fccd32 50%,#65ff32 100%);
     background: linear-gradient(to bottom, #F00 0%,#FCCD32 50%,#65FF32 100%);
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ff0000', endColorstr='#65ff32',GradientType=0 );
-    width: 10%;
+    width: 9%;
     height: 100%;
     top: 0;
 }
@@ -979,9 +1000,14 @@
 .linear-gauge-output {
     display: block;
     position: absolute;
-    right: 5px;
     color: #383838;
-    padding-top: 3%;
+}
+
+.linear-gauge-output-horizontal {
+    width: inherit;
+    height: inherit;
+    text-align: right;
+    margin-top: -20px;
 }
 
 .linear-gauge-output-vertical {
@@ -989,19 +1015,24 @@
     right: inherit;
     border-top: solid 1px #9B9B9B;
     padding-top: 1px;
-    margin-top: 2px;
+    margin-top: 5px;
 }
 
 .linear-gauge-units {
     font-size: 80%;
-    color: #727272;
-    text-shadow: 1px 1px 1px #BEBEBE;
+    color: #6b6b6b;
 }
 
 .linear-gauge-scales {
-    position: absolute;
     width: 100%;
     bottom: 9.5px;
+}
+
+.linear-gauge-scales-vertical {
+    position: relative;
+    text-align: right;
+    top: -105%;
+    left: 115%;
 }
 
 .linear-gauge-values {
@@ -1016,6 +1047,7 @@
     width: 1px;
     height: 5px;
 }
+
 
 /******************************************************************************
  ** Spinner                                                                  **
