@@ -66,22 +66,11 @@
 	color: #666666;
 }
 
-.window-wrapper label, .no-window-content label {
-    display: block;
-    text-align: center;
-    padding: 0px 8px;
-    border-left: 1px dashed #6B6B6B;
-    border-right: 1px dashed #6B6B6B;
-    font-family: "impact-label", "Lucida Console", Monaco, monospace;
-    box-shadow: 1px 1px 1px #A3A3A3;
-    -webkit-box-shadow: 1px 1px 1px #A3A3A3;
-    -moz-box-shadow: 1px 1px 1px #A3A3A3;
-    font-size: 18px;
-    line-height: 23px;
-    text-shadow: 0px 1px 2px #B9B9B9;
-    color: #E7E7E7;
-    background: #353535;
-    background: url('/webui/images/skeuo/label-texture.png');
+.label, label{
+	font-size: 14px;
+	color: #5A6470;
+	text-shadow: 0px 1px 1px #FFF, 1px 1px 2px rgba(0, 0, 0, 0.5);
+	font-family: Arial,Helvetica,sans-serif;
 }
 
 .contentheader {
@@ -580,21 +569,13 @@
 }
 
 .no-window-content .led-label {
-    border: none;
-    box-shadow: none;
-    background: none;
     font-size: 12px;
-    color: #727272;
-    text-shadow: 1px 1px 1px #BEBEBE;
-    font-family: Arial,Helvetica,sans-serif;
 }
 
 /******************************************************************************
  ** Rotary Switch                                                            **
  ******************************************************************************/
 .rotary-switch-label {
-    text-shadow: 0px 1px 2px #B9B9B9;
-    color: #535151;
     padding: 5px 0px;
 }
 
@@ -713,15 +694,8 @@
 	background: #575757;
 }
 
-.slider-label-vertical, .slider-label-horizontal {
-    font-family: Arial,Helvetica,sans-serif !important;
-    color: #777!important;
-    text-shadow: 0px 1px 2px #B9B9B9;
-}
-
 .slider-label-vertical {
     position: absolute;
-    background: #F7F7F7;
     margin-top: -20%;
     top: 0;
 }
@@ -858,17 +832,8 @@
 }
 
 .slider-text label {
-	border: 0 !important;
-	text-shadow: 0px 0px 0px rgba(255, 255, 255, 0) !important;
-	-webkit-box-shadow: 0px 0px 0px rgba(255, 255, 255, 0) !important;
-	-moz-box-shadow: 0px 0px 0px rgba(255, 255, 255, 0) !important;
-	box-shadow: 0px 0px 0px rgba(255, 255, 255, 0) !important;
     line-height: 19px;
 	font-size: 12px;
-    color: #727272;
-    text-shadow: 1px 1px 1px #bebebe !important;
-	background: rgba(255, 255, 255, 0) !important;
-	font-family: Arial,Helvetica,sans-serif;
 	text-align: right;
 }
 
@@ -972,14 +937,10 @@
 }
 
 .knob-label-horizontal {
-    border: none !important;
-    box-shadow: none !important;
-    background: none !important;
-    font-size: 14px !important;
-    color: #727272 !important;
-    text-shadow: 1px 1px 1px #BEBEBE !important;
-    font-family: Arial,Helvetica,sans-serif !important;
     margin-top: -30%;
+    width: 100%;
+	margin-left: -17%;
+	text-align: center;
 }
 
 .knob-range {
@@ -1242,17 +1203,6 @@
 /******************************************************************************
  ** Graph                                                                    **
  ******************************************************************************/
-
-.switch-label, .graph-label-text {
-    padding: 0px !important;
-    border: none !important;
-    font-family: Arial,Helvetica,sans-serif !important;
-    box-shadow: none !important;
-    font-size: 99% !important;
-    line-height: normal !important;
-    color: #777!important;
-    background: none !important;
-}
 
 .switch-label{
     line-height: 25px !important;
@@ -1522,8 +1472,6 @@
 }
 
 .linear-gauge-label {
-    text-shadow: 0px 1px 2px #B9B9B9;
-    color: #535151;
     padding: 5px 0px;
 }
 
@@ -1658,10 +1606,6 @@
 
 .spinner-label {
     margin-bottom: 2px;
-    font-family: Arial,Helvetica,sans-serif;
-    font-size: 99%;
-    text-shadow: 0px 1px 2px #B9B9B9;
-    color: #777;
 }
 
 .spinner-input {

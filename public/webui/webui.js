@@ -3189,7 +3189,7 @@ Knob.prototype.init = function($container) {
 
 Knob.prototype._buildHTML = function() {
     return (
-    "<div id='knob-container-" + this.id + "' style='margin:" + this.config.radius * 0.5 + "px;'>" +
+    "<div id='knob-container-" + this.id + "' style='margin:" + this.config.radius * 0.5 + "px; margin-top: 5px;'>" +
         "<div class='knob-bounding'>" +
         (this.config.label ? "<label class='knob-label" + (this.config.vertical ? '' : ' knob-label-horizontal') +"'>" + this.config.label + ":</label>" : '') +
         "<div class='knob-range" + (!this.config.vertical && !this.config.windowed ? ' knob-range-horizontal' : '') +"'>" +
@@ -3440,7 +3440,7 @@ Spinner.prototype = new Widget;
 Spinner.prototype.init = function($container) {
     this.$widget = this._generate($container,
     	"<div>" +
-    	    (this.config.label ? '<div class="spinner-label">' + this.config.label + ": <span class='spinner-units'>" +
+    	    (this.config.label ? '<div class="label spinner-label">' + this.config.label + ": <span class='spinner-units'>" +
     	        (this.config.units ? "(" + this.config.units + ")</span>" : '') +'</div>': '') +
     	    "<div class='spinner' style='width:" + this.config.length + "px;'>" +
                 "<input class='spinner-input' style='width:" + (this.config.length - 45) + "px;' value='0'></input>" +
@@ -3657,7 +3657,7 @@ Slider.prototype._buildHTML = function() {
         html = 
         "<div class='slider-container-" + (this.config.vertical ? "vertical" : "horizontal") + "' style='" + 
                     (this.config.vertical ? "" : "width:" + (this.config.length + 15) + "px;") + "'>" +
-            "<div class='slider-label-" + (this.config.vertical ? "vertical" : "horizontal") + "'>" + this.config.label + ":</div>" +
+            "<div class='label slider-label-" + (this.config.vertical ? "vertical" : "horizontal") + "'>" + this.config.label + ":</div>" +
             "<div class='slider-outer' style='" + (this.config.vertical ? "height" : "width") + ":" + this.config.length + "px'>";
             
     /* Slider scale. */
@@ -3938,7 +3938,7 @@ function LCD(id, config)
 
     /* Default options. */
     if (this.config.label === undefined) this.config.label = '';
-    if (this.config.labelColor === undefined) this.config.labelColor = '#333';
+    if (this.config.labelColor === undefined) this.config.labelColor = '#5A6470';
     if (this.config.labelColor === undefined) this.config.units = '';
     if (this.config.length === undefined) this.config.length = 160;
     if (this.config.precision == undefined) this.config.precision = 1;
@@ -3953,7 +3953,7 @@ LCD.prototype.init = function($container) {
     this.$widget = this._generate($container,
         '<div class="lcd-container" style="width:' + this.config.length + 'px;">' +
             '<div class="lcd-header" style="background:' + (this.config.headerColor ? this.config.headerColor :"#fff; border:none") + ';">' +
-                (this.config.label ? '<div class="lcd-label" style="color:' + this.config.labelColor + ';">' +
+                (this.config.label ? '<div class="label lcd-label" style="color:' + this.config.labelColor + ';">' +
                     this.config.label + '</div>' : '') +
             '</div>' +
             '<div class="lcd-inner">' +
@@ -4119,7 +4119,7 @@ LinearGauge.prototype.init = function($container) {
 
     var html =
         "<div class='linear-gauge linear-gauge-outer'>" +
-            (this.config.label ? "<div class='linear-gauge-label'>" + this.config.label + "</div>" : '') +
+            (this.config.label ? "<div class='linear-gauge-label label'>" + this.config.label + "</div>" : '') +
             "<div class='linear-gauge-inner' style= '" + (this.config.vertical ? 'height:' : 'width:') + (this.config.size ?  this.config.size + 'px;': '250px;' ) +
                 (this.config.vertical ? 'width:' : 'height:') + (this.config.size ?  Math.round((this.config.size / 5) * 0.7) + 'px;': '35px;' ) + "'>" +
                 (!this.config.vertical ? "<div class='linear-gauge-output linear-gauge-output-horizontal'>00.0 <span class='linear-gauge-units'>" +
