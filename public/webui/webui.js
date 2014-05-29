@@ -2696,14 +2696,17 @@ ScatterPlot.prototype._adjustScaling = function() {
  * @config {string}  [action]     server action to call when the switched is changed
  * @config {string}  [label]      switch label (optional)
  * @config {string}  [stickColor] sets the color of the switches stick (silver, black, red)
- * @config {string} [led] set switch LED indicator (optional)
+ * @config {string}  [led] set switch LED indicator (optional)
  * @config {boolean} [vertical]   set button vertical or horizontal (default horizontal)
  */
 function Switch(id, config)
 {
-    if (!(config.field || config.action)) throw "Options not supplied."; 
+    if (!(config.field || config.action)) throw "Options not supplied.";
     
     Widget.call(this, id, config);
+
+    /* Default options. */
+    if (this.config.stickColor === undefined) this.config.stickColor = 'black';
 
     /** @private {boolean} The state of the switch. */
     this.val = undefined;
@@ -2718,7 +2721,7 @@ Switch.prototype = new Widget;
 
 Switch.prototype.init = function($container) {
     this.$widget = this._generate($container, 
-        this.config.vertical ? // Vertical orientation
+        this.config.vertical && Globals.THEME == "skeuo"  ? // Vertical orientation
             '<div class="switch-vertical-container">' +
                 (this.config.label ? '<label class="switch-vertical-label">' + this.config.label + ':</label>' : '') +
                 (this.config.led ?'<div class="led switch-led led-novalue"></div>' : '') +
@@ -2782,7 +2785,7 @@ Switch.prototype._clicked = function() {
  * @param on whether the display should be on or off
  */
 Switch.prototype._setDisplay = function(on) {
-    if (this.config.vertical)
+    if (this.config.vertical && Globals.THEME == "skeuo")
     {
         if (on)
         {
@@ -2876,7 +2879,7 @@ RotarySwitch.prototype.init = function($container) {
             p = v[(v.length - i)];
 
         $("#rotary-container-" + this.id).append(
-            "<div class='rotary-switch-val " +
+            "<div class='small-range-val rotary-switch-val " +
             "' id='" + this.id + "-" + j + "' " +
             "style='left:" + Math.round(x) + "px;top:" + Math.round(y) + "px' " + "value=" +
             ( p ? p.value : v[0].value) + ">" + ( p ? p.label : v[0].label) + "</div>"
@@ -2964,7 +2967,6 @@ function Button(id, config)
     if (this.config.label === undefined) this.config.label = '';
     if (this.config.overlay === undefined) this.config.overlay = false;
     if (this.config.circular === undefined) this.config.circular = false;
-    if (this.config.color === undefined) this.config.color = "#EFEFEF";
     if (this.config.clickColor === undefined) this.config.clickColor = "#CCC";
     if (this.config.diameter === undefined) this.config.diameter = 100;
 }
@@ -3131,7 +3133,7 @@ PushButton.prototype._clicked = function() {
  * @config {string} [label] label to display
  * @config {string} [units] Units of the knobs value
  * @config {string} [precision] precision of values (default 0)
- * @config {string} [style] set the knob style (default smooth)
+ * @config {string} [style] set the knob style to one of the following: white, black, metal, valve (default white)
  * @config {integer} [min] minimum value of slider (default 0)
  * @config {integer} [max] maximum value of slider (default 100)
  * @config {number} [radius] the radius of the knob in pixels (default 25px)
@@ -3148,7 +3150,7 @@ function Knob(id, config)
     if (this.config.style === undefined) this.congif.style = "white";
     if (this.config.vertical === undefined) this.config.vertical = false;
     if (this.config.indicator === undefined) this.config.indicator = false;
-    if (this.config.radius === undefined) this.config.radius = 25;
+    if (this.config.radius === undefined) this.config.radius = 60;
     if (this.config.precision === undefined) this.config.precision = 0;
     
     /** @private {number} Current value of knob. */
@@ -3189,26 +3191,26 @@ Knob.prototype.init = function($container) {
 
 Knob.prototype._buildHTML = function() {
     return (
-    "<div id='knob-container-" + this.id + "' style='margin:" + this.config.radius * 0.5 + "px; margin-top: 5px;'>" +
+    "<div id='knob-container-" + this.id + "' class='knob-outter' style='margin:" + this.config.radius * 0.5 + "px; margin-top: 5px;'>" +
         "<div class='knob-bounding'>" +
         (this.config.label ? "<label class='knob-label" + (this.config.vertical ? '' : ' knob-label-horizontal') +"'>" + this.config.label + ":</label>" : '') +
         "<div class='knob-range" + (!this.config.vertical && !this.config.windowed ? ' knob-range-horizontal' : '') +"'>" +
-            "<div class='knob-range-val knob-max' data-value='1'>Max: " + this.config.max + "</div>" +
-            "<div class='knob-min knob-range-val' data-value='0'>Min: " + this.config.min + "</div>" +
+            "<div class='small-range-val knob-range-val knob-max' data-value='1'>Max: " + this.config.max + "</div>" +
+            "<div class='small-range-val knob-min knob-range-val' data-value='0'>Min: " + this.config.min + "</div>" +
             "</div>" +
         "<div class='knob-container' style='height:" + this.config.radius * 2 + "px; width: " + this.config.radius * 2 + "px;'>" +
             "<div class='knob " + "knob-container-" + this.config.style + "'>" +
                 "<div class='knob-texture knob-" + this.config.style + "'></div>" +
                 "<div class='knob-highlight'" + (this.config.style == 'black' ? 'style="opacity:0.4;"' : '') + "></div>"+
             "</div>" +
-            "<div class='knob-val knob-25' data-value='0.25' style='top:50%; right:" + (!this.config.windowed ? '-15%' : '-1px') + ";'>" + ((this.config.max - this.config.min) * 0.25 + this.config.min) + "</div>" +
-            "<div><div class='knob-50-outter'><div class='knob-val knob-50' data-value='0.50'>" + ((this.config.max - this.config.min) * 0.50 + this.config.min) + "</div></div></div>" +
-            "<div class='knob-val knob-75' data-value='0.75' style='top: 50%; left:" + (!this.config.windowed ? '-15%' : '-1px') + ";'>" + ((this.config.max - this.config.min) * 0.75 + this.config.min) + "</div>" +
+            "<div class='small-range-val knob-val knob-25' data-value='0.25' style='top:50%; right:" + (!this.config.windowed ? '-15%' : '-1px') + ";'>" + ((this.config.max - this.config.min) * 0.25 + this.config.min) + "</div>" +
+            "<div><div class='small-range-val knob-50-outter'><div class='knob-val knob-50' data-value='0.50'>" + ((this.config.max - this.config.min) * 0.50 + this.config.min) + "</div></div></div>" +
+            "<div class='small-range-val knob-val knob-75' data-value='0.75' style='top: 50%; left:" + (!this.config.windowed ? '-15%' : '-1px') + ";'>" + ((this.config.max - this.config.min) * 0.75 + this.config.min) + "</div>" +
         "</div>" + 
         "<div class='knob-input-container" + (this.config.vertical ? '' : ' knob-input-horizontal') +"'>" +    
-            "<input class='knob-input' value='0'></input>" +
+            "<input class='input knob-input' value='0'></input>" +
             (this.config.indicator ? '<div class="knob-indicator-container"></div>' : '') +
-            "<div class='knob-input-units'>" + (this.config.units ? this.config.units : '') + "</div>" +
+            "<div class='units-small knob-input-units'>" + (this.config.units ? this.config.units : '') + "</div>" +
         "</div>" +
         "</div>" +
     "</div>"
@@ -3440,10 +3442,10 @@ Spinner.prototype = new Widget;
 Spinner.prototype.init = function($container) {
     this.$widget = this._generate($container,
     	"<div>" +
-    	    (this.config.label ? '<div class="label spinner-label">' + this.config.label + ": <span class='spinner-units'>" +
-    	        (this.config.units ? "(" + this.config.units + ")</span>" : '') +'</div>': '') +
+    	    (this.config.label ? '<div class="label spinner-label">' + this.config.label + " <span class='units-small spinner-units'>" +
+    	        (this.config.units ? this.config.units + "</span>" : '') +'</div>': '') +
     	    "<div class='spinner' style='width:" + this.config.length + "px;'>" +
-                "<input class='spinner-input' style='width:" + (this.config.length - 45) + "px;' value='0'></input>" +
+                "<input class='input spinner-input' style='width:" + (this.config.length - 45) + "px;' value='0'></input>" +
                 "<div class='spinner-buttons' style='left:" + (this.config.length - 30) + "px;'>" +
                     "<button class='spinner-up spinner-btn'/>" +
                     "<button class='spinner-down spinner-btn'/>" +
@@ -3667,7 +3669,7 @@ Slider.prototype._buildHTML = function() {
         html += "<div class='slider-scale' style='" + (this.config.vertical ? "top" : "left") + ":" + 
                         (this.config.length / this.config.scales * i) + "px'>" +
                     "<span class='ui-icon ui-icon-arrowthick-1-" + (this.config.vertical ? "w" : "n") + "'></span>" +
-                    "<span class='slider-scale-value'>" + 
+                    "<span class='small-range-val slider-scale-value' style='" + (this.config.vertical ? "top:2px;" : "right:6px;") + "'>" + 
                             (this.config.vertical ? this.config.max - s * i : this.config.min + s * i) + "</span>" +
                 "</div>";
     }
@@ -3692,10 +3694,9 @@ Slider.prototype._buildHTML = function() {
     /* Text box with numeric value. */
     html += this.config.textEntry ?
         "<div class='slider-text slider-text-" + (this.config.vertical ? "vertical" : "horizontal") +
-                " saharaform' style='" + (this.config.vertical ? "margin-top:" + (this.config.length + 20) + "px;" : "") + "'>" +
-            "<label for='" + this.id + "-text' class='slider-text-label'>" + this.config.label + ":&nbsp;</label>" +
-            "<input id='" + this.id + "-text' type='text' /> " +
-            "<span class='slider-units'>" + this.config.units + "</span>" +
+                " saharaform' style='" + (this.config.vertical ? "margin-top:" + (this.config.length + 35) + "px;" : "") + "'>" +
+            "<input id='" + this.id + "-text' class='input' type='text' /> " +
+            "<span class='units-small slider-units'>" + this.config.units + "</span>" +
         "</div>" :
         "<div class='slider-text-" + (this.config.vertical ? "vertical" : "horizontal") +
                 "' style='" + (this.config.vertical ? "margin-top:" + (this.config.length + 20) +"px;" : "") + "'>" +
@@ -3924,8 +3925,7 @@ LED.prototype.consume = function(data) {
  * @param {object} config configuration of widget
  * @config {string} [field] server data variable that is being displayed
  * @config {string} [label] label to display
- * @config {string} [headerColor] color of the widgets header (default: white)
- * @config {string} [labelColor] color of the widgets label (default: #535151)
+ * @config {string} [colorIndicator] displays selected color in the header (optional)
  * @config {string} [units] Unit of measurement used by the LCD
  * @config {number} [length] the length of the LCD container
  * @config {number} [precision] the precision of the value (default: 3)
@@ -3938,8 +3938,7 @@ function LCD(id, config)
 
     /* Default options. */
     if (this.config.label === undefined) this.config.label = '';
-    if (this.config.labelColor === undefined) this.config.labelColor = '#5A6470';
-    if (this.config.labelColor === undefined) this.config.units = '';
+    if (this.config.units === undefined) this.config.units = '';
     if (this.config.length === undefined) this.config.length = 160;
     if (this.config.precision == undefined) this.config.precision = 1;
 
@@ -3952,14 +3951,15 @@ LCD.prototype = new Widget;
 LCD.prototype.init = function($container) {
     this.$widget = this._generate($container,
         '<div class="lcd-container" style="width:' + this.config.length + 'px;">' +
-            '<div class="lcd-header" style="background:' + (this.config.headerColor ? this.config.headerColor :"#fff; border:none") + ';">' +
-                (this.config.label ? '<div class="label lcd-label" style="color:' + this.config.labelColor + ';">' +
-                    this.config.label + '</div>' : '') +
+            '<div class="lcd-header">' +
+            '<div class="label lcd-label">' + this.config.label +
+                '<div class="lcd-units">' + this.config.units + '</div>' +
+            '</div>'+
             '</div>' +
             '<div class="lcd-inner">' +
                 '<div class="lcd-value">' + (this.val ? this.val : '0.' + ('000000').substring(0, this.config.precision)) +'</div>' +
-                '<div class="lcd-units">' + this.config.units + '</div>' +
             '</div>' +
+            (this.config.colorIndicator ? '<span class="lcd-color-indicator" style="background:' + this.config.colorIndicator + ';"></span>' : '') +
         '</div>'
     );
 };
@@ -4122,7 +4122,7 @@ LinearGauge.prototype.init = function($container) {
             (this.config.label ? "<div class='linear-gauge-label label'>" + this.config.label + "</div>" : '') +
             "<div class='linear-gauge-inner' style= '" + (this.config.vertical ? 'height:' : 'width:') + (this.config.size ?  this.config.size + 'px;': '250px;' ) +
                 (this.config.vertical ? 'width:' : 'height:') + (this.config.size ?  Math.round((this.config.size / 5) * 0.7) + 'px;': '35px;' ) + "'>" +
-                (!this.config.vertical ? "<div class='linear-gauge-output linear-gauge-output-horizontal'>00.0 <span class='linear-gauge-units'>" +
+                (!this.config.vertical ? "<div class='linear-gauge-output linear-gauge-output-horizontal'>00.0 <span class='units-small'>" +
                     this.config.units + "</span></div>" : '') +
                 "<div class='linear-gauge-gradient " + (this.config.vertical ? 'linear-gauge-gradient-vertical' : '') + "'></div>" +
                 "<div class='linear-gauge-arrow " + (this.config.vertical ? 'linear-gauge-arrow-vertical' : '') + "'></div>" +                
@@ -4133,7 +4133,7 @@ LinearGauge.prototype.init = function($container) {
                         html+= 
                             "<div class='linear-gauge-scale' style='" + (this.config.vertical ? 'top' : 'background: #000; left') + ":" + 
                             (this.config.size / this.config.scales * i) + "px;'>" +
-                            "<div class='linear-gauge-values'>" + (this.config.vertical ? + this.config.scales - i : i) + "</div>" +
+                            "<div class='small-range-val linear-gauge-values'>" + (this.config.vertical ? + this.config.scales - i : i) + "</div>" +
                             "</div>";
                     };
 
