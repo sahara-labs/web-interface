@@ -3447,8 +3447,9 @@ Spinner.prototype.init = function($container) {
     	    "<div class='spinner' style='width:" + this.config.length + "px;'>" +
                 "<input class='input spinner-input' style='width:" + (this.config.length - 45) + "px;' value='0'></input>" +
                 "<div class='spinner-buttons' style='left:" + (this.config.length - 30) + "px;'>" +
-                    "<button class='spinner-up spinner-btn'/>" +
-                    "<button class='spinner-down spinner-btn'/>" +
+                	//TODO Change theme back to flat
+                    "<button class='" + (Globals.THEME == 'skeuo' ? 'button' : '') + " spinner-up spinner-btn'/>" +
+                    "<button class='" + (Globals.THEME == 'skeuo' ? 'button' : '') + " spinner-down spinner-btn'/>" +
                 "</div>" +
             "</div>" +
         "</div>"

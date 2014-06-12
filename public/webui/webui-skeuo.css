@@ -185,6 +185,7 @@
     outline: none;
     padding-bottom: .5em;
     margin-top: 3px;
+    background: #CCC;
 }
 
 .push-button-container {
@@ -924,8 +925,6 @@
     margin: 1%;
 }
 
-
-
 .gauge-center {
     -webkit-box-shadow: inset 0px 0px 0px 1px #680000,0px 1px 6px rgba(0, 0, 0, 0.75);
     -moz-box-shadow: inset 0px 0px 0px 1px #680000,0px 1px 6px rgba(0, 0, 0, 0.75);
@@ -968,20 +967,6 @@
     background: -o-linear-gradient(top, #FFF 30%,rgba(88, 88, 88, 0.13) 100%);
     background: -ms-linear-gradient(top, #FFF 30%,rgba(88, 88, 88, 0.13) 100%);
     background: linear-gradient(to bottom, #FFF 30%,rgba(210, 210, 210, 0.2) 100%);
-}
-
-/******************************************************************************
- ** Spinner                                                                  **
- ******************************************************************************/
-
-.spinner-up:active, .spinner-down:active {
-    box-shadow: none;
-}
-
-.spinner-up, .spinner-down {
-    -webkit-box-shadow: 0px 1px 2px #9B9B9B;
-    -moz-box-shadow: 0px 1px 2px #9B9B9B;
-    box-shadow: 0px 1px 2px #9B9B9B;
 }
 
 /******************************************************************************

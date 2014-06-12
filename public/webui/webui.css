@@ -1415,6 +1415,10 @@
     top: 8%;
     bottom: 8%;
     right: 8%;
+    left: calc(0% + 9px);
+    top: calc(0% + 9px);
+    bottom: calc(0% + 9px);
+    right: calc(0% + 9px);
     border-radius: 50%;
     background-position: 40% 15%;
 }
@@ -1752,8 +1756,56 @@
 }
 
 /******************************************************************************
+ ** Button, Push Button                                                      **
+ ******************************************************************************/
+
+.button, .spinner button {
+    cursor: pointer;
+    text-align: center;
+    font-weight: bold;
+    display: block;
+    padding: 6px;
+    border-radius: 4px;
+    border: solid 1px #C7C6C6;
+    box-shadow: inset 0 1px 0px #FFF;
+    text-decoration: none;
+    color: #666;
+    text-shadow: 1px 1px #FFF;
+    background: -webkit-linear-gradient(top, #EDEDED 5%,#DFDFDF 100%);
+    background: -moz-linear-gradient(top, #ededed 5%, #dfdfdf 100%);
+    background: -ms-linear-gradient(top, #ededed 5%,#dfdfdf 100%);
+    background: -o-linear-gradient(top, #ededed 5%,#dfdfdf 100%);
+    background: linear-gradient(to bottom, #EDEDED 5%,#DFDFDF 100%);
+}
+
+.button:hover {
+    border: solid 1px #A2A2A2;
+}
+
+.button:active, .spinner button:active {
+    background: linear-gradient(to bottom, #dfdfdf 5%,#ededed 100%);
+    background: -webkit-linear-gradient(top,  #dfdfdf 5%,#ededed 100%);
+    background: -moz-linear-gradient(top,  #dfdfdf 5%, #ededed 100%);
+    background: -ms-linear-gradient(top,  #dfdfdf 5%,#ededed 100%);
+    background: -o-linear-gradient(top,  #dfdfdf 5%,#ededed 100%);
+    background: linear-gradient(to bottom,  #dfdfdf 5%,#ededed 100%);   
+    -webkit-box-shadow: inset 0 0 4px rgba(111, 111, 111, 0.14);
+    -moz-box-shadow: inset 0 0 4px rgba(111, 111, 111, 0.14);
+	box-shadow: inset 0 0 4px rgba(111, 111, 111, 0.14);
+    border: solid 1px #ccc;
+}
+
+.button-engaged {
+    border: solid 1px #A2A2A2;
+}
+
+/******************************************************************************
  ** Spinner                                                                  **
  ******************************************************************************/
+
+.spinner button, .spinner button:active {
+    border-radius: 0;
+}
 
 .spinner {
     float: right;
@@ -1808,8 +1860,13 @@
     display: block;
     top: 30%;
     left: 30%;
+    left: calc(50% - 5px);
     border-left: 5px solid transparent;
     border-right: 5px solid transparent;
+}
+
+.spinner-up:active, .spinner-down:active {
+    box-shadow: none;
 }
 
 .spinner-up:after {
