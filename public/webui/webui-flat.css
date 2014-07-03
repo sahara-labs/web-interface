@@ -257,7 +257,16 @@
 /******************************************************************************
  ** Switch                                                                   **
  ******************************************************************************/
- 
+
+.switch-container {
+    display: block;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: #ccc;
+}
+
+
 .switch-label, .led-adjacent .led-label {
     display: block;
     float: left;

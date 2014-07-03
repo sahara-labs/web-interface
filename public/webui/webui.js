@@ -2713,7 +2713,7 @@ function Switch(id, config)
     
     /** @private {boolean} Whether the value has been changed by user action. */
     this.isChanged = false;  
-    
+
     this.config.classes.push("switch-box");
     this.config.classes.push("switch-" + Globals.THEME);
 }
@@ -2744,7 +2744,12 @@ Switch.prototype.init = function($container) {
                             this.$widget.find(".switch").outerWidth(true) + 13;
         this.$widget.css("width", this.config.width + "px");
     }
-    
+
+    //TODO Fix button position for Internet Explorer
+    this.$widget.find('.switch-label').css('position','absolute');
+    this.$widget.find('.switch-label').css('width','100%');
+    this.$widget.find('.switch-label').css('float','left');
+
     var thiz = this;
     this.$widget.find(".switch-label, .switch, .switch-vertical").click(function() { thiz._clicked(); });
     
@@ -2767,7 +2772,7 @@ Switch.prototype._clicked = function() {
     this.isChanged = true;
     this.val = !this.val;
     this._setDisplay(this.val);
-    
+
     var thiz = this, params = { };
     params[this.config.field] = this.val ? 'true' : 'false';
     this._postControl(
@@ -2780,7 +2785,7 @@ Switch.prototype._clicked = function() {
 };
 
 /**
- * Sets the display value. 
+ * Sets the display value.
  * 
  * @param on whether the display should be on or off
  */
@@ -3187,6 +3192,18 @@ Knob.prototype.init = function($container) {
     this.$widget.find('.knob-range-val').click(function() { thiz._handleValueSelect($(this).data('value')); });
     this.$input = this.$widget.find('input').change(function() { thiz._handleTextBoxChange($(this).val()); });   
     $(document).bind("mouseup.knob-" + this.id, function(){ thiz._knobReleased(); });
+
+    /* Display fixes for Internet Explorer */
+    if (window.navigator.userAgent.indexOf("MSIE ") > 0) {
+
+        /* Prevents knob widget from shifting down when clicked */
+        this.$widget.css('margin-top', 7);
+        this.$widget.find('.knob-outter').css('margin-top',-7);
+
+        /* Fixes text clipping in IE */
+        this.$widget.find('.input').css('line-height', 1);
+        this.$widget.find('.input').css('font-size', '1em');
+    }
 };
 
 Knob.prototype._buildHTML = function() {
@@ -3252,7 +3269,10 @@ Knob.prototype._knobChanged = function(e){
         this.$widget.find('.knob-container').append('<div class="knob-overlay"></div>');
 
         /* The current position of the mouse within the knob. */
-        var mPos = {x: e.clientX - this.kPos.x, y: e.clientY - this.kPos.y};
+        var mPos = {
+            x: e.clientX - this.kPos.x, 
+            y: e.clientY - this.kPos.y
+        };
 
         /* The current angle whose tangent is the mouse position. */
         var atan = Math.atan2(mPos.x - this.config.radius, mPos.y - this.config.radius);
@@ -3414,6 +3434,7 @@ Knob.prototype.destroy = function() {
  * @config {integer} [length] length of spinner in pixels (default 80)
  * @config {integer} [min] minimum value of spinner (default 0)
  * @config {integer} [max] maximum value of spinner (default 100)
+ * @config {integer} [val] value the default value of the spinner (default 0)
  */
 function Spinner(id, config)
 {
@@ -3427,9 +3448,7 @@ function Spinner(id, config)
     if (this.config.length === undefined) this.config.length = 130;
     if (this.config.units === undefined) this.config.units = '';
     if (this.config.label === undefined) this.config.label = '';
-
-    /** The current value of the data variable. */
-    this.val = undefined;
+    if (this.config.val === undefined) this.config.val = 0;
 
     /** Whether the value has changed due to user interaction. */
     this.valueChanged = false;
@@ -3447,9 +3466,8 @@ Spinner.prototype.init = function($container) {
     	    "<div class='spinner' style='width:" + this.config.length + "px;'>" +
                 "<input class='input spinner-input' style='width:" + (this.config.length - 45) + "px;' value='0'></input>" +
                 "<div class='spinner-buttons' style='left:" + (this.config.length - 30) + "px;'>" +
-                	//TODO Change theme back to flat
-                    "<button class='" + (Globals.THEME == 'skeuo' ? 'button' : '') + " spinner-up spinner-btn'/>" +
-                    "<button class='" + (Globals.THEME == 'skeuo' ? 'button' : '') + " spinner-down spinner-btn'/>" +
+                    "<button class='" + (Globals.THEME == 'flat' ? 'button' : '') + " spinner-up spinner-btn'/>" +
+                    "<button class='" + (Globals.THEME == 'flat' ? 'button' : '') + " spinner-down spinner-btn'/>" +
                 "</div>" +
             "</div>" +
         "</div>"
@@ -3459,8 +3477,11 @@ Spinner.prototype.init = function($container) {
     var thiz = this;
     this.$widget.find('.spinner-up').mousedown(function(e){ e.preventDefault(); thiz._buttonClicked(true);});
     this.$widget.find('.spinner-down').mousedown(function(e){ e.preventDefault(); thiz._buttonClicked(false);});
-    this.$widget.find('.spinner-input').change(function(){ thiz._handleTextBoxChange($(this).val()); });
-    this.$widget.find('.spinner-up, .spinner-down').mouseup(function(){ clearInterval(thiz.holdTimer); thiz._setValue(thiz.val);});
+    this.$widget.find('.spinner-input').change(function(){ thiz._handleTextBoxChange($(this).val());});
+    
+    /* Prevent the value from changing if mouse is released or not hovered on a button. */
+    this.$widget.find('.spinner-up, .spinner-down').mouseup(function(){ thiz._stopButton(thiz.holdTimer);});
+    this.$widget.find('.spinner-up, .spinner-down').mouseout(function(){ thiz._stopButton(thiz.holdTimer);});
 
     /* Sets the position for message indicators. */
     this.ttLeft = this.config.length - this.config.length / 6;
@@ -3469,11 +3490,11 @@ Spinner.prototype.init = function($container) {
 
 Spinner.prototype._buttonClicked = function(up) {
     var val = this.$widget.find('.spinner-input').val(),
-        thiz = this;    
+        thiz = this;
 
     if (!val.match(/^-?\d+\.?\d*$/))
     {
-        val = 0;
+        this.val = 0;
         this.$widget.find('.spinner-input').val(this.val);
         this.addMessage("Value must be a number.", Widget.MESSAGE_TYPE.error, thiz.ttLeft, thiz.ttTop, Widget.MESSAGE_INDICATOR.left);
         return;
@@ -3556,6 +3577,18 @@ Spinner.prototype._setValue = function(val) {
     this.valueChanged = true;
     this.val = val;
     this._send();
+};
+
+/**
+ * Stops the input value from incrementing/decrementing and updates the spinner's value.
+ */
+Spinner.prototype._stopButton = function(timer) {
+
+    /* Clear the spinner's interval. */
+    clearInterval(timer);
+
+    /* Update the spinner value. */
+    thiz._setValue(this.$widget.find('.spinner-input').val());
 };
 
 /**
