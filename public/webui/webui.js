@@ -2745,11 +2745,6 @@ Switch.prototype.init = function($container) {
         this.$widget.css("width", this.config.width + "px");
     }
 
-    //TODO Fix button position for Internet Explorer
-    this.$widget.find('.switch-label').css('position','absolute');
-    this.$widget.find('.switch-label').css('width','100%');
-    this.$widget.find('.switch-label').css('float','left');
-
     var thiz = this;
     this.$widget.find(".switch-label, .switch, .switch-vertical").click(function() { thiz._clicked(); });
     
