@@ -109,7 +109,6 @@ class Sahara_Database
             }
             else
             {
-                if (isset($dbconfig->failover)) unset($dbconfig->failover);
                 self::_registerDatabase(Zend_Db::factory($dbconfig));
             }
         }
