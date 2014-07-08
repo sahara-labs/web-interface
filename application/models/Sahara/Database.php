@@ -135,6 +135,8 @@ class Sahara_Database
      */
     public static function performFailover($config = false)
     {
+        $logger = Sahara_Logger::getInstance();
+
         if (!$config && !($config = Zend_Registry::get('config')->database))
             throw new Exception('Database not configured.', 100);
 
@@ -163,7 +165,7 @@ class Sahara_Database
 
                 /* If no exception was thrown connecting to the database, it probably is online
                  * and we can register it. */
-                Sahara_Logger::getInstance()->info("Using fail over database server with index $id for database operations.");
+                $logger->info('Using fail over database server with index $id for database operations.');
                 self::_registerDatabase($db);
 
                 /* Write configuration for future requests. */
@@ -174,7 +176,16 @@ class Sahara_Database
 
                 if (!file_put_contents($config->failover->file, $contents, LOCK_EX))
                 {
-                    throw new Exception("Failed to write fail over file.", 100);
+                    throw new Exception('Failed to write fail over file.', 100);
+                }
+
+                /* The written configuration file contains the database authentication credentials,
+                 * it should have restricted access to only the web server user. */
+                if (!chmod($config->failover->file, 0600))
+                {
+                    $logger->warn('Failed to change permissions of database configuration file \'' .
+                            $config->failover->file . '\' to only web server readable and writable, it should be ' .
+                            'changed to having this permission.');
                 }
 
                 /* Found online database server. */
@@ -182,8 +193,8 @@ class Sahara_Database
             }
             catch (Zend_Db_Adapter_Exception $ex)
             {
-                Sahara_Logger::getInstance()->warn("Failed to connect to fail over database server with index '$id'. " .
-                        "Error is " . $ex->getMessage() . '. Will attempt to connect to any remaining fail over servers.');
+                $logger->warn("Failed to connect to fail over database server with index '$id'. Error is " .
+                        $ex->getMessage() . '. Will attempt to connect to any remaining fail over servers.');
             }
         }
 
