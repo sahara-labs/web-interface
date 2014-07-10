@@ -2982,7 +2982,7 @@ Button.prototype.init = function($container) {
                 "' style='" +
                     (this.config.height ? "line-height:" + this.config.height + "px;" : "") +
                     (this.config.color ? "background-color:" + this.config.color : "") +
-                    (this.config.circular ? "border-radius:" + this.config.width + "px;" : "") +
+                    (this.config.circular ? "border-radius:" + (this.config.width ? this.config.width : 5) + "px;" : "") +
                     (this.config.width ? "width:" + this.config.width + "px;" : "") +
                     (this.config.height ? "height:" + this.config.height + "px;" : "") +
                 (this.config.link ? "' href='" + this.config.link : "") +
@@ -2993,11 +2993,16 @@ Button.prototype.init = function($container) {
         "</" + (this.config.action ? "div>" : "a>")
     );
 
+    //TODO Make entire button clickable for IE
+    /* Adds a clickable text area, required for Internet Explorer. */
+    this.$widget.find('.button').append('<div class="button-click-area"></div>');
+
     var thiz = this;
-    this.$widget.children(".button")
+    this.$widget.children(".button-click-area")
         .mousedown(function() { thiz._buttonEngaged(); })
         .bind("mouseup mouseout", function(){ thiz._buttonReleased(); })
         .click(function() { if (thiz.config.action) thiz._clicked(); });
+
     if ($('#'+this.id).hasClass('push-button')) {
         /* Remove the standard button classes for the push button. */
         $('#'+this.id).find('.window-content').empty();
@@ -3010,7 +3015,7 @@ Button.prototype.init = function($container) {
         this.$widget.find('.push-button-middle').append('<div class="push-button-label">'+ this.config.label +'</div>');
 
         /* Animates the push buttons when clicked. */
-        this.$widget.find('.push-button-outer').click(function(){
+        this.$widget.find('.button-click-area').click(function(){
         	if (!thiz.$widget.hasClass('push-button-down'))
         	{
                 thiz.$widget.find('.push-button-outer').addClass('push-button-down');
@@ -3027,7 +3032,7 @@ Button.prototype.init = function($container) {
 /**
  * Event handler triggered from mouse down on button.
  */
-Button.prototype._buttonEngaged = function() {
+Button.prototype._buttonEngaged = function() {    
     this.$widget.find(".button").css("background-color", this.config.clickColor);
     !this.config.color ? this.$widget.find(".button").css("box-shadow", "0px 1px 5px 1px #" + this.config.color) : '';
     !this.config.color ? this.$widget.find(".button:after").css("background-size", "100% 100% !important") : '';
@@ -3218,8 +3223,8 @@ Knob.prototype._buildHTML = function() {
             "<div class='small-range-val knob-val knob-25' data-value='0.25' style='top:50%; right:" + (!this.config.windowed ? '-15%' : '-1px') + ";'>" + ((this.config.max - this.config.min) * 0.25 + this.config.min) + "</div>" +
             "<div><div class='small-range-val knob-50-outter'><div class='knob-val knob-50' data-value='0.50'>" + ((this.config.max - this.config.min) * 0.50 + this.config.min) + "</div></div></div>" +
             "<div class='small-range-val knob-val knob-75' data-value='0.75' style='top: 50%; left:" + (!this.config.windowed ? '-15%' : '-1px') + ";'>" + ((this.config.max - this.config.min) * 0.75 + this.config.min) + "</div>" +
-        "</div>" + 
-        "<div class='knob-input-container" + (this.config.vertical ? '' : ' knob-input-horizontal') +"'>" +    
+        "</div>" +
+        "<div class='knob-input-container" + (this.config.vertical ? '' : ' knob-input-horizontal') +"'>" +
             "<input class='input knob-input' value='0'></input>" +
             (this.config.indicator ? '<div class="knob-indicator-container"></div>' : '') +
             "<div class='units-small knob-input-units'>" + (this.config.units ? this.config.units : '') + "</div>" +
@@ -3232,7 +3237,7 @@ Knob.prototype._buildHTML = function() {
 /**
  * Event handler triggered when the knob is active.
  */
-Knob.prototype._knobEngaged = function(){
+Knob.prototype._knobEngaged = function() {
     this.mouseDown = true;
 };
 
@@ -3468,15 +3473,30 @@ Spinner.prototype.init = function($container) {
         "</div>"
     );
 
-    /* Handles the button and input events. */ 
+    /* Adjusts the positioning of the spinner-input for Internet Explorer. */
+    if ($.browser.msie) {
+        this.$widget.find('.spinner-input')
+            .css({'padding-right': '10px'})
+            .width(this.$widget.find('.spinner-input').width() - 5);
+    }
+
+    /* Handles the button and input events. */
     var thiz = this;
     this.$widget.find('.spinner-up').mousedown(function(e){ e.preventDefault(); thiz._buttonClicked(true);});
     this.$widget.find('.spinner-down').mousedown(function(e){ e.preventDefault(); thiz._buttonClicked(false);});
     this.$widget.find('.spinner-input').change(function(){ thiz._handleTextBoxChange($(this).val());});
-    
+
+    /* Handles value changes via keyboard. */
+    this.$widget.find('.spinner-input').keydown(function(e){
+        e.which == 38 ? thiz._buttonClicked(true) : '';
+        e.which == 40 ? thiz._buttonClicked(false) : '';
+        thiz._stopButton(thiz.holdTimer);
+    });
+
     /* Prevent the value from changing if mouse is released or not hovered on a button. */
-    this.$widget.find('.spinner-up, .spinner-down').mouseup(function(){ thiz._stopButton(thiz.holdTimer);});
-    this.$widget.find('.spinner-up, .spinner-down').mouseout(function(){ thiz._stopButton(thiz.holdTimer);});
+    this.$widget.find('.spinner-up, .spinner-down')
+        .mouseup(function(){ thiz._stopButton(thiz.holdTimer);})
+        .mouseout(function(){ thiz._stopButton(thiz.holdTimer);});
 
     /* Sets the position for message indicators. */
     this.ttLeft = this.config.length - this.config.length / 6;
@@ -3487,28 +3507,39 @@ Spinner.prototype._buttonClicked = function(up) {
     var val = this.$widget.find('.spinner-input').val(),
         thiz = this;
 
+    /* checks that the value is valid. */
     if (!val.match(/^-?\d+\.?\d*$/))
     {
         this.val = 0;
-        this.$widget.find('.spinner-input').val(this.val);
+        this.$widget.find('.spinner-input').val(0);
         this.addMessage("Value must be a number.", Widget.MESSAGE_TYPE.error, thiz.ttLeft, thiz.ttTop, Widget.MESSAGE_INDICATOR.left);
         return;
     }
 
-    /* Remove min/max classes */
-    this.$widget.find('.spinner-' + (up ? 'down' : 'up')).removeClass('spinner-' + (up ? 'min' : 'max'));
+    /* Clears any previous intervals used by the spinner. */
+    clearInterval(this.holdTimer);
 
     /* Increments/decrement the value. */
-    up ? val++ : val--;
-    val > thiz.config.max ? val = thiz.config.max : '';
-    val < thiz.config.min ? val = thiz.config.min : '';
+    if (up && val < thiz.config.max || !up && val > thiz.config.min)
+    {
+        up ? val++ : val--;
+    }
+    else
+    {
+        /* Limits the value to the mix/max range. */
+        val > this.config.max ? val = this.config.max : '';
+        val < this.config.min ? val = this.config.min : '';
+    }
 
-    /* Clears any previous interval. */
-    clearInterval(this.holdTimer);
+    /* Sets the value after the initial click. */
+    thiz._setValue(val);
+
+    /* condition to prevent double increment on click. */
+    var firstInc = true;
 
     /* Increments/decrements the value while the buttons are pressed. */
     this.holdTimer = setInterval(function() {
-        if (up && val == thiz.config.max || !up && val == thiz.config.min)
+        if (up && val >= thiz.config.max || !up && val <= thiz.config.min)
         {
             clearInterval(thiz.holdTimer);
             return;
@@ -3516,22 +3547,17 @@ Spinner.prototype._buttonClicked = function(up) {
         else
         {
             /* Increments/decrement the value. */
-            up ? val++ : val--;
+            if (firstInc === false) {
+                up ? val++ : val--;
+            }
 
-            /* Display min/max classes if val is at range limit. */
-            val <= thiz.config.min ? thiz.$widget.find('.spinner-down').addClass("spinner-min") :'';
-            val >= thiz.config.max ? thiz.$widget.find('.spinner-up').addClass("spinner-max") :'';
+            /* flag to start increments/decrements. */
+            firstInc = false;
 
             /* Update the value. */
-            thiz.val = val;
-            thiz.$widget.find('.spinner-input').val(val);
+            thiz._setValue(val);
         }
     }, 100);
-
-    /* Display min/max classes if val is at range limit. */
-    val <= this.config.min ? this.$widget.find('.spinner-down').addClass("spinner-min") :'';
-    val >= this.config.max ? this.$widget.find('.spinner-up').addClass("spinner-max") :'';
-    this.val = val;
 }
 
 /**
@@ -3546,7 +3572,7 @@ Spinner.prototype._handleTextBoxChange = function(val) {
     if (!val.match(/^-?\d+\.?\d*$/))
     {
         this.val = 0;
-        this.$widget.find('.spinner-input').val(this.val);
+        this.$widget.find('.spinner-input').val(0);
         this.addMessage("Value must be a number.", Widget.MESSAGE_TYPE.error, thiz.ttLeft, thiz.ttTop, Widget.MESSAGE_INDICATOR.left);
         return;
     }
@@ -3565,8 +3591,15 @@ Spinner.prototype._handleTextBoxChange = function(val) {
  * @param {number} val new value
  */
 Spinner.prototype._setValue = function(val) {
+	/* Add the appropriate classes if value has reached its max/min value. */
     val <= this.config.min ? this.$widget.find('.spinner-down').addClass("spinner-min") :'';
     val >= this.config.max ? this.$widget.find('.spinner-up').addClass("spinner-max") :'';
+
+	/* Remove the appropriate classes if value has reached its max/min value. */
+    val > this.config.min ? this.$widget.find('.spinner-down').removeClass("spinner-min") :'';
+    val < this.config.max ? this.$widget.find('.spinner-up').removeClass("spinner-max") :'';
+    
+    /* Remove Messages and update the inputs value. */
     this.$widget.find('.spinner-input').val(val);
     this.removeMessages();
     this.valueChanged = true;
@@ -3583,7 +3616,7 @@ Spinner.prototype._stopButton = function(timer) {
     clearInterval(timer);
 
     /* Update the spinner value. */
-    thiz._setValue(this.$widget.find('.spinner-input').val());
+    this._setValue(this.$widget.find('.spinner-input').val());
 };
 
 /**
