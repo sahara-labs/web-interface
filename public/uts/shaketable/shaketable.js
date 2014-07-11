@@ -52,7 +52,7 @@ function Config2DOF()
                       duration: 10,
                       yLabel: "Displacement (mm)",
                       fieldCtl: true,
-                      autoCtl: false,
+                      autoCtl: true,
                       durationCtl: false,
                       traceLabels: true,
                       width: 832,

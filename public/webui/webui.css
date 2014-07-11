@@ -358,33 +358,54 @@
 }
 
 .graph-controls-show {
-    float: right;
-    width: 100px;
-    margin-top: 5px;
-    z-index: 10;
+	position: absolute;
+	right: 0px;
+	bottom: 0px;
+	padding: 3px !important;
+	font-size: 0.9em;
 }
 
-.graph-no-controls {
-	margin-top: 20px;
-}
-
-.graph-controls-show label {
-    margin-top: 4px;
+.graph-controls-overlay {
+	position: absolute;
+	left: -2px;
+	top: -2px;
+	background-color: #EEEEEE;
+	border: 1px solid #C0C0C0;
+	border-radius: 0 0 6px 6px;
+	opacity: 0.6;
 }
 
 .graph-controls {
-    display: none;
-    height: 60px;
-    margin-top: 20px;
+	position: absolute;
+	top: 40px;
+	width: 300px;
+	background-color: white;
+	box-shadow: 0 1px 3px #B5B5B5;
+	padding: 0 !important;
 }
 
-.graph-autoscale {
-    width: 110px;
-    margin: 15px 0 0 10px;
+.graph-controls-title {
+	background-color: #FAFAFA;
+	border-bottom: 1px solid #AAAAAA;
+	padding: 4px 4px 8px 4px;
 }
 
-.graph-autoscale label {
-    margin-top: 5px;
+
+.graph-controls-close {
+	position: absolute;
+	right: 5px;
+	bottom: 5px;
+	padding: 3px !important;
+	font-size: 0.9em;
+}
+
+.graph-autoscale-control {
+	width: 120px;
+	margin: 10px;
+}
+
+.group-autoscale-switch {
+	margin-top: -3px;
 }
 
 /******************************************************************************

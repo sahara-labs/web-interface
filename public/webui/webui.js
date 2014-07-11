@@ -1943,6 +1943,9 @@ function Graph(id, config)
 	if (this.config.width === undefined) this.config.width = 300;
 	if (this.config.height === undefined) this.config.height = 300;
 	
+	/* Whether we need controls on the page. */
+	this.config.hasControls = this.config.autoCtl || this.config.durationCtl;
+	
 	/** @private {object} Data fields. */
 	this.dataFields = undefined;
 	
@@ -1971,6 +1974,9 @@ function Graph(id, config)
 
 	/** @private {integer} The displayed duration in seconds. */
 	this.displayedDuration = this.config.duration;
+	
+	/** @private {boolean} Whether controls are currently being display. */
+	this.showingControls = false;
 }
 Graph.prototype = new Widget;
 
@@ -2036,13 +2042,7 @@ Graph.prototype.init = function($container) {
     	});
 	}
 	
-	if (this.config.autoCtl || this.config.durationCtl) this.$widget.find(".graph-controls-show").click(function() {
-	    thiz._showControls($(this).find(".switch .switch-slide").toggleClass("switch-on switch-off").hasClass("switch-on"));
-	});
-	
-	if (this.config.autoCtl) this.$widget.find(".graph-autoscale").click(function() {
-	   thiz._enableAutoscale($(this).find(".switch .switch-slide").toggleClass("switch-on switch-off").hasClass("switch-on")); 
-	});
+	if (this.config.hasControls) this.$widget.find(".graph-controls-show").click(function() { thiz._addControls(); });
 
 	/* Draw the first frame contents. */
 	this._drawFrame();
@@ -2051,14 +2051,6 @@ Graph.prototype.init = function($container) {
 Graph.prototype._buildHTML = function() {
 	var i = 0, unitScale, styleScale, html = '', left, top; 
 	
-	if (this.config.autoCtl || this.config.durationCtl)
-    {
-        /* Controls show / hide button. */
-        html += "<div class='graph-controls-show'>" +
-                "   <label for='" + this.id + "-graph-controls-show' class='graph-label-text'>Controls</label>" +  
-                "</div>";
-    }
-
 	/* Graph labels. */
 	if (this.config.traceLabels)
 	{
@@ -2067,8 +2059,9 @@ Graph.prototype._buildHTML = function() {
     	{
     		html += "	<div class='graph-label'>" +
     		        (this.config.fieldCtl ?
-    				"		<label for='graph-label-" + i + "' class='graph-label-text'>" + this.dataFields[i].label + "</label>" +  
-    		        "       <div id='graph-label-" + i + "' class='switch graph-label-enable'>" +
+    				"		<label for='" + this.id + "-graph-label-" + i + "' class='graph-label-text'>" + 
+    				                this.dataFields[i].label + "</label>" +  
+    		        "       <div id='" + this.id + "-graph-label-" + i + "' class='switch graph-label-enable'>" +
             		"		    <div class='switch-animated switch-slide switch-on' " +
             		"                 style='background-color:" + this.dataFields[i].color + "'></div>" +
             		"       </div>"
@@ -2117,19 +2110,14 @@ Graph.prototype._buildHTML = function() {
 	/* Bottom axis label. */
 	html += "<div class='graph-axis-label graph-bottom-axis-label'>" + this.config.xLabel + "</div>";
 	
-	if (this.config.autoCtl)
-	{
-    	/* Controls. */
-    	html += "<div class='graph-controls'>" +
-            	"   <div class='graph-autoscale'>" +
-                "       <label for='" + this.id + "-graph-autoscale' class='graph-label-text'>Autoscale</label>" +  
-                "       <div id='" + this.id + "-graph-autoscale' class='switch'>" +
-                "          <div class='switch-animated switch-slide " + (this.config.autoScale ? "switch-on" : "") + "'></div>" +
-                "       </div>" +
-                "   </div>" +
-    	        "</div>";
-	}
-
+	if (this.config.hasControls)
+    {
+        /* Controls show / hide button. */
+	    html += "<div class='button butter-overlay graph-controls-show'>" +
+	    		"    <span class='button-label'>Controls</span>" +
+	    		"</div>";
+    }
+	
 	return html;
 };
 
@@ -2148,13 +2136,18 @@ Graph.prototype.consume = function(data) {
         this.displayedDuration = data.duration;
     }
     
+    /* Updating the frame seems to cause weird blinking between the controls 
+     * overlay and the canvas, so while the controls are active, there will
+     * be no updates to the graph. */  
+    if (this.showingControls) return;
+    
     if (this.config.autoScale) 
     {
         /* Determine graph scaling for this frame and label it. */
         this._adjustScaling();
         this._updateDependantScale();
     }
-
+        
     this._drawFrame();
     this._updateIndependentScale();
 };
@@ -2402,14 +2395,67 @@ Graph.prototype._enableAutoscale = function(autoscale) {
 
 
 /**
- * Shows or hides the graph controls.
- * 
- * @param {boolean} show whether to show the controls
+ * Adds controls to the graph widget.
  */
-Graph.prototype._showControls = function(show) {
-    var $n = this.$widget.find(".graph-controls");
-    $n.css("display", $n.css("display") == "none" ? "block" : "none");
-    this.$widget.css("height", "auto");
+Graph.prototype._addControls = function() {
+    this.showingControls = true;
+    
+    var thiz = this, width = this.getWindowProperty('width'), height = this.getWindowProperty('height'), html = 
+        "<div class='graph-controls-overlay' style='width:" + (width + 4) + "px;height:" + (height + 4) + "px'></div>" +
+        "<div class='graph-controls window-content' style='left:" + (width / 2 - 150) + "px;height: " + (height - 100) + "px'>" +
+            "<div class='graph-controls-title'>" +
+                "<span class='window-title'>Graph Controls</span>" +
+            "</div>";
+            
+    if (this.config.autoCtl)
+    {
+        /* Autoscale enable / disable. */
+        html += "<div class='graph-autoscale-control'>" + 
+                    "<label for='graph-" + this.id + "-autoscale-switch'>Auto Scale:</label>" +
+                    "<div id='graph-" + this.id + "-autoscale-switch' class='switch graph-autoscale-switch'>" +
+                        "<div class='switch-animated switch-slide " + (this.config.autoScale ? "switch-on" : "") + "'></div>" +
+                "</div>";
+        
+    }
+    
+    if (this.config.durationCtl)
+    {
+        /* Number of seconds that graph displays. */
+    }
+        
+    html += "<div class='button butter-overlay graph-controls-close'>" +
+                "<span class='button-label'>Close</span>" +
+            "</div>" +
+        "</div>";
+    
+    this.$widget.append(html);
+    
+    /* Event handlers. */
+    this.$widget.find(".graph-controls .graph-controls-close").click(function() { thiz._removeControls(); });
+    
+    /* Remove displaying controls if the Esc key is pressed. */
+    $(document).bind("keypress.graph-controls-" + this.id, function(e) {
+        if (e.keyCode == 27) thiz._removeControls(); 
+    });
+    
+    if (this.config.autoCtl) this.$widget.find(".graph-autoscale-switch").click(function() {
+        var $w = thiz.$widget.find('.graph-autoscale-switch > div');
+        thiz._enableAutoscale(!$w.hasClass('switch-on'));
+        $w.toggleClass('switch-on');
+    });
+};
+
+/**
+ * Removes controls from the graph widget.
+ */
+Graph.prototype._removeControls = function() {
+    /* Remove global event handlers. */
+    $(document).unbind("keypress.graph-controls-" + this.id);
+    
+    /* Remove controls. */
+    this.$widget.find(".graph-controls-overlay, .graph-controls").remove();
+    
+    this.showingControls = false;
 };
 
 /* ============================================================================
