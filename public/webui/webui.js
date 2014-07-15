@@ -48,6 +48,7 @@ Globals = {
  *                          requesting again in milliseconds (default 10000)
  * @config {string} [theme] display theme (default 'flat')
  * @config {string} [cookie] cookie prefix (default anchor id) 
+ * @config {integer} [height] height of the page to prevent border overflow (default none set)
  */
 function WebUIApp(config)
 {
@@ -120,7 +121,13 @@ WebUIApp.prototype._setupDisplay = function() {
         throw "Anchor " + this.config.anchor + " not found on the page.";
     }
     
+    /* Set initial page height. */
+    if (this.config.height) this.$anchor.css("height", this.config.height);
+    
     this.display.init(this.$anchor);
+    
+    /* Reset footer to account for new content. */
+    resizeFooter();
 };
 
 /**
@@ -3562,7 +3569,7 @@ Spinner.prototype._buttonClicked = function(up) {
             thiz._setValue(val);
         }
     }, 100);
-}
+};
 
 /**
  * Handles a value text box change.
@@ -4081,8 +4088,7 @@ function Gauge(id, config)
 Gauge.prototype = new Widget;
 
 Gauge.prototype.init = function($container) {
-	var r = this.config.radius,
-        v = this.config.values;
+	var i, x, y, r = this.config.radius;
 
     this.$widget = this._generate($container,
         (this.config.label ? "<div class='gauge-label'>" + this.config.label + "</div>" : '') +
@@ -4102,8 +4108,8 @@ Gauge.prototype.init = function($container) {
     /* Generates the positions of the points in a range of -160 to 86deg and appends them to the gauge. */
     for (i = 0; i <= this.config.scales; i++)
     {
-        var x = (r/2 - 5) - (r/2 + 10) * Math.cos(1.41 * Math.PI * i / this.config.scales),
-            y = (r/2 - 5) - (r/2 + 10) * Math.sin(1.41 * Math.PI * i / this.config.scales);
+        x = (r/2 - 5) - (r/2 + 10) * Math.cos(1.41 * Math.PI * i / this.config.scales);
+        y = (r/2 - 5) - (r/2 + 10) * Math.sin(1.41 * Math.PI * i / this.config.scales);
 
         this.$widget.find(".gauge-vals").append(
             "<div class='gauge-val " + (i === this.config.scales ? 'gauge-val-last' : '') +
@@ -4112,13 +4118,12 @@ Gauge.prototype.init = function($container) {
         );
     };
 
-    var thiz = this;
     this.deg = 0;
 };
 
 Gauge.prototype.consume = function(data) {
     this.val = data[this.config.field] ? data[this.config.field] : this.val ? this.val : '';
-    thiz.animate();
+    this.animate();
 };
 
 Gauge.prototype.animate = function() {
@@ -4135,7 +4140,7 @@ Gauge.prototype.animate = function() {
     });
 
     this.$widget.find(".gauge-output").html(this.val);
-}
+};
 
 /* ============================================================================
  * == Linear Gauge widget                                                    ==
@@ -4181,9 +4186,7 @@ function LinearGauge(id, config)
 LinearGauge.prototype = new Widget;
 
 LinearGauge.prototype.init = function($container) {
-    var i, s = (Math.floor((this.config.max - this.config.min) / this.config.scales));
-
-    var html =
+    var i, html =
         "<div class='linear-gauge linear-gauge-outer'>" +
             (this.config.label ? "<div class='linear-gauge-label label'>" + this.config.label + "</div>" : '') +
             "<div class='linear-gauge-inner' style= '" + (this.config.vertical ? 'height:' : 'width:') + (this.config.size ?  this.config.size + 'px;': '250px;' ) +
@@ -4210,7 +4213,6 @@ LinearGauge.prototype.init = function($container) {
         "</div>";
 
     this.$widget = this._generate($container,html);
-    var thiz = this;
 };
 
 LinearGauge.prototype.consume = function(data) {
@@ -4234,7 +4236,7 @@ LinearGauge.prototype.animate = function() {
     }
 
     this.$widget.find(".linear-gauge-output").html(this.val);	
-}
+};
 
 /* ============================================================================
  * == Camera Widget                                                          ==

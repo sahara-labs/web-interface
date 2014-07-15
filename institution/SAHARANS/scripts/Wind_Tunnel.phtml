@@ -7,8 +7,7 @@
 $this->headScript()->appendFile($this->baseUrl('webui/webui.js'));
 $this->headLink()->appendStylesheet($this->baseUrl('webui/webui.css'));
 $this->headLink()->appendStylesheet($this->baseUrl('webui/webui-skeuo.css'));
-// $this->headScript()->appendFile($this->baseUrl('uts/windtunnel/windtunnel.js'));
-// $this->headLink()->appendStylesheet($this->baseUrl('uts/windtunnel/windtunnel.css'));
+$this->headLink()->appendStylesheet($this->baseUrl('uts/windtunnel/windtunnel.css'));
 
 /* Canvas compatability implementation for Internet Explorer 8 and earlier. */
 $this->headScript()->appendFile($this->baseUrl('js/excanvas.js'),
@@ -34,6 +33,7 @@ $(document).ready(function() {
         dataAction: "dataAndGraph",
         theme: Globals.THEME.skeuo,
         cookie: "windtunnelt",
+        height: 1250,
         widgets: [
             new Container("camera-containers", {
                 title: "Cameras",
@@ -59,7 +59,9 @@ $(document).ready(function() {
                     }),
                 ],
                 layout: new TabLayout({
-                })
+                }),
+                left: 0,
+                top: 5,
             }),
             new Graph("graph-airvelocity", {
                 title: "Air Velocity",
@@ -67,7 +69,10 @@ $(document).ready(function() {
                 colors: { "graph-wind-speed": "blue" },
                 yLabel: "Air Velocity (m/s)",
                 traceLabels: false,
-                horizScales: 5
+                horizScales: 5,
+                top: 550,
+                left: 0,
+                width: 330
             }),
             new Graph("graph-temphumid", {
                 title: "Temp. / Relative Humidity",
@@ -81,7 +86,10 @@ $(document).ready(function() {
                 },
                 yLabel: "Temp (C) / Humidity (%)",
                 traceLabels: false,
-                horizScales: 5
+                horizScales: 5,
+                top: 550,
+                left: 340,
+                width: 330
             }),
             new Graph("graph-diffpressure", {
                 title: "Differential Pressure",
@@ -89,7 +97,10 @@ $(document).ready(function() {
                 colors: { "graph-diff-pressure": "red" },
                 yLabel: "Differential Pressure (Pa)",
                 traceLabels: false,
-                horizScales: 5
+                horizScales: 5,
+                top: 860,
+                left: 0,
+                width: 330
             }),
             new Graph("graph-baropressure", {
                 title: "Barometric Pressure",
@@ -97,7 +108,10 @@ $(document).ready(function() {
                 colors: { "graph-barometric-pressure": "orange" },
                 yLabel: "Barometric Pressure (Pa)",
                 traceLabels: false,
-                horizScales: 5
+                horizScales: 5,
+                top: 860,
+                left: 340,
+                width: 330
             }),
             new Container("container-controllers", {
                 title: "Controls",
@@ -128,6 +142,48 @@ $(document).ready(function() {
                     vertical: true,
                     align: "center"
                 }),
+                left: 680,
+                top: 390,
+            }),
+            new Gauge("gauge-voltage", {
+                field: "monitor-volts",
+                resizable: false,
+                title: "Voltage",
+                units: "V",
+                max: 5,
+                radius: 65,
+                left: -182,
+                top: 140,
+            }),
+            new Gauge("gauge-amps", {
+                field: "monitor-amps",
+                resizable: false,
+                title: "Amps",
+                units: "A",
+                max: 5,
+                radius: 65,
+                left: -182,
+                top: 335,
+            }),
+            new Gauge("gauge-joules", {
+                field: "monitor-joules",
+                resizable: false,
+                title: "Joules",
+                units: "J",
+                max: 5,
+                radius: 65,
+                left: -180,
+                top: 530,
+            }),
+            new Gauge("gauge-rpm", {
+                field: "monitor-rpm",
+                resizable: false,
+                title: "RPM",
+                units: "RPM",
+                max: 5,
+                radius: 65,
+                left: -180,
+                top: 725,
             })
         ]
     }).setup().run();

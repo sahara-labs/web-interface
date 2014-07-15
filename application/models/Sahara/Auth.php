@@ -257,7 +257,7 @@ class Sahara_Auth
         }
         catch (Exception $ex)
         {
-            $this->_logger->fatal("Failed to load auth class $name, with error: " . $ex->getMessage() . '.');
+            $this->_logger->fatal("Failed to load auth class $name, with error: " . $ex->getMessage());
             return false;
         }
     }
