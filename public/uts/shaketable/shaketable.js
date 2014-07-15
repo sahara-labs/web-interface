@@ -25,13 +25,14 @@ function Config2DOF()
         anchor: "#shake-table-anchor",
         controller: "ShakeTableController",
         dataAction: "dataAndGraph",
-        dataDuration: 10,
+        dataDuration: 120,
         dataPeriod: 10,
         pollPeriod: 1000,
         windowToggle: true,
         theme: Globals.THEMES.flat,
         cookie: "shaketable2dof",
         widgets: [
+            new MimicWidget(false),
             new Container("graphs-container", {
                 title: "Graphs",
                 reizable: true,
@@ -48,12 +49,11 @@ function Config2DOF()
                       },
                       minValue: -60,
                       maxValue: 60,
-                      period: 10,
                       duration: 10,
+                      durationCtl: true,
                       yLabel: "Displacement (mm)",
                       fieldCtl: true,
                       autoCtl: true,
-                      durationCtl: false,
                       traceLabels: true,
                       width: 832,
                       height: 325,
@@ -156,7 +156,6 @@ function Config2DOF()
                     border: 10,
                 })
             }),
-            new MimicWidget(false),
             new CameraStream("camera-stream", {
                 resizable: true,
                 left: -2,
