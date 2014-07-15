@@ -2712,7 +2712,7 @@ function Switch(id, config)
     this.val = undefined;
     
     /** @private {boolean} Whether the value has been changed by user action. */
-    this.isChanged = false;  
+    this.isChanged = false;
 
     this.config.classes.push("switch-box");
     this.config.classes.push("switch-" + Globals.THEME);
@@ -2747,7 +2747,15 @@ Switch.prototype.init = function($container) {
 
     var thiz = this;
     this.$widget.find(".switch-label, .switch, .switch-vertical").click(function() { thiz._clicked(); });
-    
+
+    //TODO finsih switch positioning fix
+    if (this.$widget.parents('#widget-toggle-list').length) {
+    }
+    else
+    {
+        this.$widget.css("width", "120px");
+    }
+
     /* Set existing state. */
     if (this.value !== undefined) this._setDisplay(this.value);
 };
@@ -2993,12 +3001,8 @@ Button.prototype.init = function($container) {
         "</" + (this.config.action ? "div>" : "a>")
     );
 
-    //TODO Make entire button clickable for IE
-    /* Adds a clickable text area, required for Internet Explorer. */
-    this.$widget.find('.button').append('<div class="button-click-area"></div>');
-
     var thiz = this;
-    this.$widget.children(".button-click-area")
+    this.$widget.children(".button")
         .mousedown(function() { thiz._buttonEngaged(); })
         .bind("mouseup mouseout", function(){ thiz._buttonReleased(); })
         .click(function() { if (thiz.config.action) thiz._clicked(); });
@@ -3015,7 +3019,7 @@ Button.prototype.init = function($container) {
         this.$widget.find('.push-button-middle').append('<div class="push-button-label">'+ this.config.label +'</div>');
 
         /* Animates the push buttons when clicked. */
-        this.$widget.find('.button-click-area').click(function(){
+        this.$widget.find(".button").click(function(){
         	if (!thiz.$widget.hasClass('push-button-down'))
         	{
                 thiz.$widget.find('.push-button-outer').addClass('push-button-down');
@@ -3023,8 +3027,8 @@ Button.prototype.init = function($container) {
                 setTimeout(function()
                 {
                     thiz.$widget.find('.push-button-outer').removeClass('push-button-down');
-                },300);       
-        	}     
+                },300);
+        	}
         });
     };
 };
