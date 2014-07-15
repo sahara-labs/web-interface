@@ -131,14 +131,15 @@ function Config2DOF()
                                 horizScales: 10,
                                 maxValue: 30,
                                 period: 10,
+                                duration: 10,
                                 fieldCtl: true,
-                                autoScale: true
+                                autoScale: true,
                             }),
                             new Button("button-fft-export", {
                                 label: "Export FFT",
                                 link: "/primitive/file/pc/ShakeTableController/pa/exportFFT/fn/fft.txt",
                                 target: "_blank",
-                                width: 40,
+                                width: 80,
                                 height: 20,
                                 resizable: false
                             })
@@ -992,6 +993,9 @@ function FFTGraph(id, config)
 FFTGraph.prototype = new Graph;
 
 FFTGraph.prototype.consume = function(data) {
+    /* Not stopping updates when controls are showing , causes ugly blinking. */
+    if (this.showingControls) return;
+    
     var i = 0;
 
     if (this.startTime == undefined) 
@@ -1006,7 +1010,8 @@ FFTGraph.prototype.consume = function(data) {
     {
         if (data[i] === undefined) continue;
 
-        this.dataFields[i].values = this.fftTransform(data[i]);
+        this.dataFields[i].values = this.fftTransform(
+                this._pruneSample(data[i], this.config.duration * 1000 / this.config.period));
         
         this.dataFields[i].seconds = this.dataFields[i].values.length * this.config.period / 1000;
         this.displayedDuration = data.duration;

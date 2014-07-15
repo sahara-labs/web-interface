@@ -3806,8 +3806,9 @@ Slider.prototype.init = function($container) {
     this.val = undefined;
     this.valueChanged = false;
     
+    /* Precompute this value as it seems to be a bottleneck in knob sliding. */
     if (this.config.logarithmic) this.logRange = Util.log(this.config.max - this.config.min, this.config.logBase);
-    
+
     this.$widget = this._generate($container, this._buildHTML());
     
     var thiz = this;
@@ -3843,7 +3844,7 @@ Slider.prototype._buildHTML = function() {
                         (this.config.length / this.config.scales * i) + "px'>" +
                     "<span class='ui-icon ui-icon-arrowthick-1-" + (this.config.vertical ? "w" : "n") + "'></span>" +
                     "<span class='small-range-val slider-scale-value' style='" + (this.config.vertical ? "top:2px;" : "right:6px;") + "'>" + 
-                            Util.round(s[i], this.config.precision) + "</span>" +
+                            Math.round(s[i]) + "</span>" +
                 "</div>";
     }
     html += "</div>";
@@ -3890,7 +3891,7 @@ Slider.prototype._getScales = function() {
         /* Logarithm scales. */
         for (i = 0; i <= this.config.scales; i++)
         {
-            scales[i] = Math.pow(this.config.logBase, this.logRange * i / (this.config.scales));
+            scales[i] = Math.pow(this.config.logBase, this.logRange * i / this.config.scales);
         }
         scales[this.config.scales] = this.config.max; // Rounding errors
     }
