@@ -28,7 +28,13 @@ Globals = {
     CONTROLLER: undefined,
     
     /** @static {string} Default theme is flat. */
-    THEME: 'flat'
+    THEME: 'flat',
+        
+    /** @static {integer} The duration of graph data samples. */
+    DATA_DURATION: undefined,
+    
+    /** @static {integer} The period between graph data samples. */
+    DATA_PERIOD: undefined,
 };
 
 /**
@@ -89,13 +95,14 @@ function WebUIApp(config)
 WebUIApp.prototype.setup = function() {
     /* Validation of mandatory options. */
     if (!this.config.controller) throw "Rig Client controller not set.";
-    if (!this.config.anchor) throw "Page anchor not configured.";
-    if (!this.config.widgets) throw "No widgets added to the interface.";
+    if (!this.config.anchor)     throw "Page anchor not configured.";
+    if (!this.config.widgets)    throw "No widgets added to the interface.";
     
     Globals.CONTROLLER = this.config.controller;
     Globals.COOKIE_PREFIX = this.config.cookie;
     Globals.THEME = this.config.theme;
-
+    Globals.DATA_DURATION = this.config.dataDuration;
+    Globals.DATA_PERIOD = this.config.dataPeriod;
     return this;
 };
 
@@ -1911,7 +1918,6 @@ Spacer.prototype.resized = function(width, height) {
  * @config {integer} [minValue]    minimum value that is graphed, implies not autoscaling (default 0)
  * @config {integer} [maxValue]    maximum value that is graphed, implies not autoscaling (default 100)
  * @config {integer} [duration]    number of seconds this graph displays (default 60)
- * @config {integer} [period]      period betweeen samples in milliseconds (default 100)
  * @config {string}  [xLabel]      X axis label (default (Time (s))
  * @config {String}  [yLabel]      Y axis label (optional)
  * @config {boolean} [traceLabels] whether to show trace labels (default true)
@@ -1930,8 +1936,7 @@ function Graph(id, config)
 	if (this.config.autoScale === undefined)   this.config.autoScale = false;
 	if (this.config.minValue === undefined)    this.config.minValue = 0;
 	if (this.config.maxValue === undefined)    this.config.maxValue = 100;
-	if (this.config.duration === undefined)    this.config.duration = 60;
-	if (this.config.period === undefined)      this.config.period = 100;
+	if (this.config.duration === undefined)    this.config.duration = 60;	
 	if (this.config.xLabel === undefined)      this.config.xLabel = "Time (s)";
 	if (this.config.yLabel === undefined)      this.config.yLabel = '';
 	if (this.config.traceLabels === undefined) this.config.traceLabels = true;
@@ -1942,6 +1947,9 @@ function Graph(id, config)
 	if (this.config.horizScales === undefined) this.config.horizScales = 8;
 	if (this.config.width === undefined) this.config.width = 300;
 	if (this.config.height === undefined) this.config.height = 300;
+	
+	/* Whether we need controls on the page. */
+	this.config.hasControls = this.config.autoCtl || this.config.durationCtl;
 	
 	/** @private {object} Data fields. */
 	this.dataFields = undefined;
@@ -1971,6 +1979,12 @@ function Graph(id, config)
 
 	/** @private {integer} The displayed duration in seconds. */
 	this.displayedDuration = this.config.duration;
+	
+	/** @private {boolean} Whether controls are currently being display. */
+	this.showingControls = false;
+	
+	/** @private {Slider} Duration slider control. */
+	this.durationSlider = undefined;
 }
 Graph.prototype = new Widget;
 
@@ -1982,6 +1996,7 @@ Graph.COLORS = [
 Graph.prototype.init = function($container) {
     if (!(this.config.fields)) throw "Options not set";
     
+    this.config.period = Globals.DATA_PERIOD;
     this.startTime = undefined;
     
     var i = 0, c = 0, thiz = this;
@@ -2036,13 +2051,7 @@ Graph.prototype.init = function($container) {
     	});
 	}
 	
-	if (this.config.autoCtl || this.config.durationCtl) this.$widget.find(".graph-controls-show").click(function() {
-	    thiz._showControls($(this).find(".switch .switch-slide").toggleClass("switch-on switch-off").hasClass("switch-on"));
-	});
-	
-	if (this.config.autoCtl) this.$widget.find(".graph-autoscale").click(function() {
-	   thiz._enableAutoscale($(this).find(".switch .switch-slide").toggleClass("switch-on switch-off").hasClass("switch-on")); 
-	});
+	if (this.config.hasControls) this.$widget.find(".graph-controls-show").click(function() { thiz._addControls(); });
 
 	/* Draw the first frame contents. */
 	this._drawFrame();
@@ -2051,14 +2060,6 @@ Graph.prototype.init = function($container) {
 Graph.prototype._buildHTML = function() {
 	var i = 0, unitScale, styleScale, html = '', left, top; 
 	
-	if (this.config.autoCtl || this.config.durationCtl)
-    {
-        /* Controls show / hide button. */
-        html += "<div class='graph-controls-show'>" +
-                "   <label for='" + this.id + "-graph-controls-show' class='graph-label-text'>Controls</label>" +  
-                "</div>";
-    }
-
 	/* Graph labels. */
 	if (this.config.traceLabels)
 	{
@@ -2067,8 +2068,9 @@ Graph.prototype._buildHTML = function() {
     	{
     		html += "	<div class='graph-label'>" +
     		        (this.config.fieldCtl ?
-    				"		<label for='graph-label-" + i + "' class='graph-label-text'>" + this.dataFields[i].label + "</label>" +  
-    		        "       <div id='graph-label-" + i + "' class='switch graph-label-enable'>" +
+    				"		<label for='" + this.id + "-graph-label-" + i + "' class='graph-label-text'>" + 
+    				                this.dataFields[i].label + "</label>" +  
+    		        "       <div id='" + this.id + "-graph-label-" + i + "' class='switch graph-label-enable'>" +
             		"		    <div class='switch-animated switch-slide switch-on' " +
             		"                 style='background-color:" + this.dataFields[i].color + "'></div>" +
             		"       </div>"
@@ -2117,19 +2119,14 @@ Graph.prototype._buildHTML = function() {
 	/* Bottom axis label. */
 	html += "<div class='graph-axis-label graph-bottom-axis-label'>" + this.config.xLabel + "</div>";
 	
-	if (this.config.autoCtl)
-	{
-    	/* Controls. */
-    	html += "<div class='graph-controls'>" +
-            	"   <div class='graph-autoscale'>" +
-                "       <label for='" + this.id + "-graph-autoscale' class='graph-label-text'>Autoscale</label>" +  
-                "       <div id='" + this.id + "-graph-autoscale' class='switch'>" +
-                "          <div class='switch-animated switch-slide " + (this.config.autoScale ? "switch-on" : "") + "'></div>" +
-                "       </div>" +
-                "   </div>" +
-    	        "</div>";
-	}
-
+	if (this.config.hasControls)
+    {
+        /* Controls show / hide button. */
+	    html += "<div class='button butter-overlay graph-controls-show'>" +
+	    		"    <span class='button-label'>Controls</span>" +
+	    		"</div>";
+    }
+	
 	return html;
 };
 
@@ -2142,11 +2139,25 @@ Graph.prototype.consume = function(data) {
     for (i in this.dataFields)
     {
         if (data[i] === undefined) continue;
-
-        this.dataFields[i].values = data[i];
-        this.dataFields[i].seconds = data.duration;
-        this.displayedDuration = data.duration;
+        
+        if (data.duration <= this.config.duration)
+        {
+            this.dataFields[i].values = data[i];
+            this.dataFields[i].seconds = data.duration;
+            this.displayedDuration = data.duration;
+        }
+        else
+        {
+            this.dataFields[i].values = this._pruneSample(data[i], this.config.duration * this.config.period);
+            this.dataFields[i].seconds = this.config.duration;
+            this.displayedDuration = this.config.duration;
+        }
     }
+    
+    /* Updating the frame seems to cause weird blinking between the controls 
+     * overlay and the canvas, so while the controls are active, there will
+     * be no updates to the graph. */  
+    if (this.showingControls) return;
     
     if (this.config.autoScale) 
     {
@@ -2154,9 +2165,31 @@ Graph.prototype.consume = function(data) {
         this._adjustScaling();
         this._updateDependantScale();
     }
-
+        
     this._drawFrame();
     this._updateIndependentScale();
+};
+
+
+/**
+ * Prune the sample dataset to the number of specified size. If the values 
+ * length is less than the specified size, the data is padded with zeros, if
+ * the values length is greater than the specified size, the oldest data 
+ * (from the beginning of the values) is discarded.
+ * 
+ * @param {array} values list of samples
+ * @param {integer} desired data size
+ * @return {array} pruned values
+ */
+Graph.prototype._pruneSample = function(values, size) {
+    if (values.length == size) return values;
+    else if (values.length > size) return values.slice(values.length - size);
+    else
+    {
+        var i, arr = new Array(size);
+        for (i = 0; i < size; i++) arr[i] = i < values.length ? values[i] : 0;
+        return arr;
+    }
 };
 
 /**
@@ -2253,8 +2286,8 @@ Graph.prototype._drawIndependantScales = function() {
  * @param {array} dObj data object
  */
 Graph.prototype._drawTrace = function(dObj) {
-    var xStep = this.graphWidth / (dObj.seconds * 1000 / this.config.period), 
-	    yScale = this.graphHeight / this.graphRange, i, yCoord;
+    var xStep = this.graphWidth / (dObj.values.length - 1), // We are making trace overflow to ensure it doesn't fall short
+	    yScale = this.graphHeight / this.graphRange, i, yCoord;    
 
 	this.ctx.save();
 	this.ctx.strokeStyle = dObj.color;
@@ -2262,10 +2295,10 @@ Graph.prototype._drawTrace = function(dObj) {
 	this.ctx.lineJoin = "round";
 	this.ctx.shadowColor = "#222222";
 	this.ctx.shadowBlur = 2;
-	this.ctx.shadowOffsetX = 1;
+	this.ctx.shadowOffsetX = 1;    
 	this.ctx.shadowOffsetY = 1;
 
-	this.ctx.beginPath();
+	this.ctx.beginPath();	
 	for (i = 0; i < dObj.values.length; i++)
 	{
 		yCoord = this.graphHeight - dObj.values[i] * yScale + this.graphOffset * this.graphHeight;
@@ -2375,6 +2408,20 @@ Graph.prototype.resized = function(width, height) {
         $s = $s.next();
     }
     
+    /* Control overlay and box. */
+    if (this.showingControls)
+    {
+        this.$widget.find(".graph-controls-overlay").css({ 
+            width: width + 4,
+            height: height + 4
+        });
+        
+        this.$widget.find(".graph-controls").css({
+            left: width/ 2 - 150,
+            top: height < 235 ? height / 2 - 92 : 40
+        });
+    }
+    
     this.$widget.css({
         width: width,
         height: height
@@ -2400,16 +2447,117 @@ Graph.prototype._enableAutoscale = function(autoscale) {
     }
 };
 
+/**
+ * Sets the displayed duration of the graph. This must be between ten times
+ * the data period and the global graph data duration.
+ * 
+ * @param {integer} duration displayed data duration
+ * @throws {String} if the duration is out of range
+ */
+Graph.prototype._setDuration = function(duration) {
+    if (duration < this.config.period * 10 || duration > Globals.DATA_DURATION)
+    {
+        throw "Graph displayed duration is out of range.";
+    }
+    
+    this.config.duration = duration;
+};
+
 
 /**
- * Shows or hides the graph controls.
- * 
- * @param {boolean} show whether to show the controls
+ * Adds controls to the graph widget.
  */
-Graph.prototype._showControls = function(show) {
-    var $n = this.$widget.find(".graph-controls");
-    $n.css("display", $n.css("display") == "none" ? "block" : "none");
-    this.$widget.css("height", "auto");
+Graph.prototype._addControls = function() {
+    this.showingControls = true;
+    
+    var thiz = this, width = this.getWindowProperty('width'), height = this.getWindowProperty('height'), html = 
+        "<div class='graph-controls-overlay' style='width:" + (width + 4) + "px;height:" + (height + 4) + "px'></div>" +
+        "<div class='graph-controls' style='left:" + (width / 2 - 150) + "px;top:" + (height < 235 ? height / 2 - 92 : 40) + "px'>" +
+            "<div class='graph-controls-title'>" +
+                "<span class='window-title'>Graph Controls</span>" +
+            "</div>";
+            
+    if (this.config.autoCtl)
+    {
+        /* Autoscale enable / disable. */
+        html += "<div class='graph-autoscale-control'>" + 
+                    "<label for='graph-" + this.id + "-autoscale-switch'>Auto Scale:</label>" +
+                    "<div id='graph-" + this.id + "-autoscale-switch' class='switch graph-autoscale-switch'>" +
+                        "<div class='switch-animated switch-slide " + (this.config.autoScale ? "switch-on" : "") + "'></div>" +
+                "</div>";
+    }
+    
+    if (this.config.durationCtl)
+    {
+        /* Number of seconds that graph displays. The actual control is a slider 
+         * and will be appended to this placeholder. */
+        html += "<div class='graph-duration-control'></div>";        
+    }
+        
+    html += "<div class='button butter-overlay graph-controls-close'>" +
+                "<span class='button-label'>Close</span>" +
+            "</div>" +
+        "</div>";
+    
+    this.$widget.append(html);
+    
+    /* Event handlers. */
+    this.$widget.find(".graph-controls .graph-controls-close").click(function() { thiz._removeControls(); });
+    
+    /* Remove displaying controls if the Esc key is pressed. */
+    $(document).bind("keypress.graph-controls-" + this.id, function(e) {
+        if (e.keyCode == 27) thiz._removeControls(); 
+    });
+    
+    if (this.config.autoCtl) this.$widget.find(".graph-autoscale-switch").click(function() {
+        var $w = thiz.$widget.find('.graph-autoscale-switch > div');
+        thiz._enableAutoscale(!$w.hasClass('switch-on'));
+        $w.toggleClass('switch-on');
+    });
+    
+    if (this.config.durationCtl)
+    {
+        /* Display control. */
+        this.durationSlider = new Slider("graph-" + this.id + "-duration-slider", {
+            label: "Time base (seconds)",
+            action: "#", field: "dur",                 // Slider should not actually contact the server
+            vertical: false,
+            textEntry: false,
+            min: Math.ceil(this.config.period / 100),  // Min is 10 times period 
+            max: Globals.DATA_DURATION,                // Max is maximum received data from server
+            logarithmic: true,                         // We want the scales to be logarithmic
+            scales: 4
+        });
+        this.durationSlider.init(this.$widget.find(".graph-duration-control"));
+        
+        /* Change it to the correct value. */
+        this.durationSlider.consume({ "dur": this.config.duration });
+        
+        /* Event handler. */
+        this.durationSlider._send = function() {
+            thiz.config.duration = Math.round(thiz.durationSlider.val);
+        };
+    }
+};
+
+/**
+ * Removes controls from the graph widget.
+ */
+Graph.prototype._removeControls = function() {
+    /* Remove global event handlers. */
+    $(document).unbind("keypress.graph-controls-" + this.id);
+    
+    if (this.durationSlider)
+    {
+        /* Remove duration control slider. */
+        this.durationSlider.destroy();
+        this.durationSlider = undefined;
+    }
+    
+    /* Remove controls. */
+    this.$widget.find(".graph-controls-overlay, .graph-controls").remove();
+    
+    this.showingControls = false;
 };
 
 /* ============================================================================
@@ -2586,27 +2734,6 @@ ScatterPlot.prototype.consume = function(data) {
     }
 
     this._drawFrame();
-};
-
-/**
- * Prune the sample dataset to the number of specified size. If the values 
- * length is less than the specified size, the data is padded with zeros, if
- * the values length is greater than the specified size, the oldest data 
- * (from the beginning of the values) is discarded.
- * 
- * @param {array} values list of samples
- * @param {integer} desired data size
- * @return {array} pruned values
- */
-ScatterPlot.prototype._pruneSample = function(values, size) {
-    if (values.length == size) return values;
-    else if (values.length > size) return values.slice(values.length - size);
-    else
-    {
-        var i, arr = new Array(size);
-        for (i = 0; i < size; i++) arr[i] = i < values.length ? values[i] : 0;
-        return arr;
-    }
 };
 
 ScatterPlot.prototype._drawTrace = function(dObj) {
@@ -3656,6 +3783,8 @@ Spinner.prototype._send = function() {
  * @config {string}  [label] slider label (optional)
  * @config {string}  [units] units label to display (optional)
  * @config {integer} [precision] precision of displayed value (default 1)
+ * @config {boolean} [logarithmic] whether this slider provide linear or logarithmic range (default linear)
+ * @config {integer} [logBase] if logarithmic, the log base to use (default 10)
  * @config {integer} [min] minimum value of slidDr (default 0)
  * @config {integer} [max] maximum value of slider (default 100)
  * @config {boolean} [vertical] whether slider is vertically or horizontally orientated (default vertical)
@@ -3677,26 +3806,31 @@ function Slider(id, config)
     if (this.config.label === undefined) this.config.label = '';
     if (this.config.units === undefined) this.config.units = '';
     if (this.config.precision === undefined) this.config.precision = 1;
+    if (this.config.logarithmic === undefined) this.config.logarithmic = false;
+    if (this.config.logBase === undefined) this.config.logBase = 10;
     if (this.config.scales === undefined) this.config.scales = 
             this.config.max - this.config.min > 10 ? 10 : this.config.max - this.config.min;
 
-    /** The current value of the data variable. */
+    /** @protected {number} The current value of the data variable. */
     this.val = undefined;
     
-    /** Whether the value has changed due to user interaction. */
+    /** @protected {boolean} Whether the value has changed due to user interaction. */
     this.valueChanged = false;
     
-    /** Knob holder. */
+    /** @protected {jQuery} Knob holder. */
     this.$knob = undefined;
     
-    /** Value box. */
+    /** @protected {jQuery} Value box. */
     this.$input = undefined;
     
-    /** Whether we are sliding. */
+    /** @protected {boolean} Whether we are sliding. */
     this.isSliding = false;
     
-    /** Last coordinate in sliding orientation. */
+    /** @protected {integer} Last coordinate in sliding orientation. */
     this.lastCoordinate = undefined;
+    
+    /** @protected {number} Computed log range. */
+    this.logRange = undefined;
 }
 Slider.prototype = new Widget;
 
@@ -3705,6 +3839,9 @@ Slider.prototype.init = function($container) {
     this.val = undefined;
     this.valueChanged = false;
     
+    /* Precompute this value as it seems to be a bottleneck in knob sliding. */
+    if (this.config.logarithmic) this.logRange = Util.log(this.config.max - this.config.min, this.config.logBase);
+
     this.$widget = this._generate($container, this._buildHTML());
     
     var thiz = this;
@@ -3724,7 +3861,7 @@ Slider.prototype.init = function($container) {
 };
 
 Slider.prototype._buildHTML = function() {
-    var i, s = (Math.floor((this.config.max - this.config.min) / this.config.scales)),
+    var i, s = this._getScales(),
         html = 
         "<div class='slider-container-" + (this.config.vertical ? "vertical" : "horizontal") + "' style='" + 
                     (this.config.vertical ? "" : "width:" + (this.config.length + 15) + "px;") + "'>" +
@@ -3732,6 +3869,7 @@ Slider.prototype._buildHTML = function() {
             "<div class='slider-outer' style='" + (this.config.vertical ? "height" : "width") + ":" + this.config.length + "px'>";
             
     /* Slider scale. */
+    if (this.config.vertical) s.reverse();
     html += "<div class='slider-scales slider-scales-" + (this.config.vertical ? "vertical" : "horizontal") + "'>";
     for (i = 0; i <= this.config.scales; i++)
     {
@@ -3739,7 +3877,7 @@ Slider.prototype._buildHTML = function() {
                         (this.config.length / this.config.scales * i) + "px'>" +
                     "<span class='ui-icon ui-icon-arrowthick-1-" + (this.config.vertical ? "w" : "n") + "'></span>" +
                     "<span class='small-range-val slider-scale-value' style='" + (this.config.vertical ? "top:2px;" : "right:6px;") + "'>" + 
-                            (this.config.vertical ? this.config.max - s * i : this.config.min + s * i) + "</span>" +
+                            Math.round(s[i]) + "</span>" +
                 "</div>";
     }
     html += "</div>";
@@ -3778,6 +3916,35 @@ Slider.prototype._buildHTML = function() {
 };
 
 /**
+ * Gets the list of scales to be displayed.
+ * 
+ * @return {array} list of scales
+ */
+Slider.prototype._getScales = function() {
+    var scales = new Array(this.config.scales + 1), i;
+    
+    if (this.config.logarithmic) 
+    {
+        /* Logarithm scales. */
+        for (i = 0; i <= this.config.scales; i++)
+        {
+            scales[i] = Math.pow(this.config.logBase, this.logRange * i / this.config.scales);
+        }
+        scales[this.config.scales] = this.config.max; // Rounding errors
+    }
+    else
+    {
+        /* Linear scale. */
+        for (i = 0; i <= this.config.scales; i++)
+        {
+            scales[i] = (Math.floor((this.config.max - this.config.min) / this.config.scales)) * i;
+        }
+    }
+    
+    return scales;
+};
+
+/**
  * Handles a slider position click.
  * 
  * @param {number} x coordinate of mouse
@@ -3795,7 +3962,15 @@ Slider.prototype._sliderClicked = function(x, y) {
     
     /* Value scaling. */
     this.valueChanged = true;
-    this.val = p * (this.config.max - this.config.min) / this.config.length + this.config.min;
+    
+    if (this.config.logarithmic)
+    {
+        this.val = Math.pow(this.config.logBase, p / this.config.length * this.logRange);
+    }
+    else
+    {
+        this.val = p * (this.config.max - this.config.min) / this.config.length + this.config.min;
+    }
     
     /* Range check. */
     if (this.val < this.config.min) this.val = this.config.min;
@@ -3846,9 +4021,19 @@ Slider.prototype._slideMove = function(x, y) {
     if (!this.isSliding) return;
     
     /* Scaling to value. */
-    var dist = (this.config.vertical ? y : x) - this.lastCoordinate;
-    this.val += (this.config.max - this.config.min) * dist / this.config.length * (this.config.vertical ? -1 : 1);
+    var dist = (this.config.vertical ? y : x) - this.lastCoordinate, diff;
     
+    if (this.config.logarithmic)
+    {
+        diff = Math.pow(this.config.logBase, this.logRange * Math.abs(dist) / this.config.length);
+        if (dist < 0) diff *= -1; 
+    }
+    else
+    {
+        diff = (this.config.max - this.config.min) * dist / this.config.length;
+    }
+    
+    this.val += diff * (this.config.vertical ? -1 : 1);
     
     /* Range check. */
     if (this.val < this.config.min) this.val = this.config.min;
@@ -3885,8 +4070,19 @@ Slider.prototype._slideStop = function(x, y) {
  * Moves the slider to the specified value 
  */
 Slider.prototype._moveTo = function() {
-    var p = this.val / (this.config.max - this.config.min) * this.config.length - 
-            this.config.min / (this.config.max - this.config.min) * this.config.length;
+    var p;
+    
+    if (this.config.logarithmic)
+    {
+        p = Util.log(this.val, this.config.logBase) / this.logRange * this.config.length - 
+            Util.log(this.config.min, this.config.logBase) / this.logRange * this.config.length;
+        
+    }
+    else
+    {
+        p = this.val / (this.config.max - this.config.min) * this.config.length - 
+                this.config.min / (this.config.max - this.config.min) * this.config.length;
+    }
     this.$knob.css(this.config.vertical ? "top" : "left", this.config.vertical ? this.config.length - p : p);
 };
 
@@ -5163,6 +5359,17 @@ Util.setCookie = function(cookie, value) {
  */
 Util.round = function(num, places) {
     return Math.round(num * Math.pow(10, places)) / Math.pow(10, places);
+};
+
+/**
+ * Returns the logarithm of a number at a specified base.
+ * 
+ * @param {number} num number to find logarithm of
+ * @param {number} logarithm base
+ * @return {number} logarithm at the specified base
+ */
+Util.log = function(num, base) {
+    return Math.log(num) / Math.log(base);
 };
 
 /**

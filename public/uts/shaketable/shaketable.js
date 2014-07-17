@@ -25,13 +25,14 @@ function Config2DOF()
         anchor: "#shake-table-anchor",
         controller: "ShakeTableController",
         dataAction: "dataAndGraph",
-        dataDuration: 10,
+        dataDuration: 120,
         dataPeriod: 10,
         pollPeriod: 1000,
         windowToggle: true,
         theme: Globals.THEMES.flat,
         cookie: "shaketable2dof",
         widgets: [
+            new MimicWidget(false),
             new Container("graphs-container", {
                 title: "Graphs",
                 reizable: true,
@@ -48,12 +49,11 @@ function Config2DOF()
                       },
                       minValue: -60,
                       maxValue: 60,
-                      period: 10,
                       duration: 10,
+                      durationCtl: true,
                       yLabel: "Displacement (mm)",
                       fieldCtl: true,
-                      autoCtl: false,
-                      durationCtl: false,
+                      autoCtl: true,
                       traceLabels: true,
                       width: 832,
                       height: 325,
@@ -131,14 +131,15 @@ function Config2DOF()
                                 horizScales: 10,
                                 maxValue: 30,
                                 period: 10,
+                                duration: 10,
                                 fieldCtl: true,
-                                autoScale: true
+                                autoScale: true,
                             }),
                             new Button("button-fft-export", {
                                 label: "Export FFT",
                                 link: "/primitive/file/pc/ShakeTableController/pa/exportFFT/fn/fft.txt",
                                 target: "_blank",
-                                width: 40,
+                                width: 80,
                                 height: 20,
                                 resizable: false
                             })
@@ -156,7 +157,6 @@ function Config2DOF()
                     border: 10,
                 })
             }),
-            new MimicWidget(false),
             new CameraStream("camera-stream", {
                 resizable: true,
                 left: -2,
@@ -993,6 +993,9 @@ function FFTGraph(id, config)
 FFTGraph.prototype = new Graph;
 
 FFTGraph.prototype.consume = function(data) {
+    /* Not stopping updates when controls are showing , causes ugly blinking. */
+    if (this.showingControls) return;
+    
     var i = 0;
 
     if (this.startTime == undefined) 
@@ -1007,7 +1010,8 @@ FFTGraph.prototype.consume = function(data) {
     {
         if (data[i] === undefined) continue;
 
-        this.dataFields[i].values = this.fftTransform(data[i]);
+        this.dataFields[i].values = this.fftTransform(
+                this._pruneSample(data[i], this.config.duration * 1000 / this.config.period));
         
         this.dataFields[i].seconds = this.dataFields[i].values.length * this.config.period / 1000;
         this.displayedDuration = data.duration;
