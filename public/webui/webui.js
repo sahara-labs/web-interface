@@ -2755,13 +2755,10 @@ Switch.prototype.init = function($container) {
     var thiz = this;
     this.$widget.find(".switch-label, .switch, .switch-vertical").click(function() { thiz._clicked(); });
 
-    //TODO finsih switch positioning fix
-    if (this.$widget.parents('#widget-toggle-list').length) {
-    }
-    else
-    {
-        this.$widget.css("width", "120px");
-    }
+    /* Sets width to prevent switch and label from appearing on multiple lines. */
+    this.$widget.parents('#widget-toggle-list').length == false &&
+    this.$widget.parents('#container-control-buttons').length == false ?
+    this.$widget.css("width", "120px") : '';
 
     /* Set existing state. */
     if (this.value !== undefined) this._setDisplay(this.value);
@@ -3468,7 +3465,6 @@ function Spinner(id, config)
     this.$input = undefined;
 }
 Spinner.prototype = new Widget;
-
 Spinner.prototype.init = function($container) {
     this.$widget = this._generate($container,
     	"<div>" +
@@ -3773,7 +3769,7 @@ Slider.prototype._buildHTML = function() {
         "</div>" :
         "<div class='slider-text-" + (this.config.vertical ? "vertical" : "horizontal") +
                 "' style='" + (this.config.vertical ? "margin-top:" + (this.config.length + 20) +"px;" : "") + "'>" +
-            this.config.label + 
+            this.config.label +
         "</div>";
 
     html += "</div>";
@@ -3788,8 +3784,12 @@ Slider.prototype._buildHTML = function() {
  * @param {number} y coordiante of mouse
  */
 Slider.prototype._sliderClicked = function(x, y) {
+
+    /* Remove any previous error messages. */
+    this.removeMessages();
+
     if (this.isSliding) return;
-    
+
     var off = this.$widget.find(".slider-outer").offset(),
         p = this.config.vertical ? y - off.top - 7 : x - off.left - 7;
     
@@ -4303,7 +4303,7 @@ CameraStream.prototype.init = function($container) {
     });
     
     /* Loads Metro help window */
-    this.$widget.find(".metro-fcheck").click(function() { $('.metro-container').fadeToggle(); });
+    this.$widget.find(".metro-check").click(function() { $('.metro-container').fadeToggle(); });
 
     /* Restore current format after reinit. */
     if (this.deployedFormat) this._deploy(this.deployedFormat);
