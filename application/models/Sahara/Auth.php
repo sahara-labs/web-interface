@@ -103,6 +103,7 @@ class Sahara_Auth
             if ($auth->authenticate())
             {
                 $this->_successType = $auth;
+                $this->_username = $auth->getUsername();
                 break;
             }
         }

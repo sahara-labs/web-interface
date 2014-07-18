@@ -86,6 +86,10 @@ class IndexController extends Sahara_Controller_Action_Acl
                 }
 
                 $saharaAuth->setupSession();
+
+                /* The authentication method may modify the username, such as prefixing the username,
+                 * so we will read it back out. */
+                $username = $saharaAuth->getUsername();
             }
             else
             {
