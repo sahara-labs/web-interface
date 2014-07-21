@@ -139,4 +139,24 @@ class Sahara_Auth_Type_Moodle extends Sahara_Auth_Type
             return $this->_user;
         }
     }
+
+    /**
+     * Returns the plain Moodle username that was used to authenticate.
+     *
+     * @return {string} Moodle username
+     */
+    public function getMoodleUsername()
+    {
+        return $this->_user;
+    }
+
+    /**
+     * Returns the connection to the Moodle database.
+     *
+     * @return Zend_Db Moodle database connection.
+     */
+    public function getMoodleDatabaseConn()
+    {
+        return $this->_mdb;
+    }
 }
