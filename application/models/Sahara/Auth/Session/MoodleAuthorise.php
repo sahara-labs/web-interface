@@ -37,8 +37,17 @@
  */
 
 /**
- * Session setup that
- *
+ * Session setup that uses a Moodle enrolment to courses to determine which
+ * Sahara user classes the user should be a member of.
+ * <br />
+ * The configuration to map enrolment to user class is the form of rules that
+ * are in the format 'moodle.authorise.rule[] = <field>=<value>,{<class,class,...}',
+ * where field can be:
+ * <ul>
+ *     <li>id - Course ID number (as specified in Moodle course admin interface).</li>
+ *     <li>short - Short name of course.</li>
+ *     <li>full - Full name of course.<li>
+ * </ul>
  */
 class Sahara_Auth_Session_MoodleAuthorise extends Sahara_Auth_Session
 {
