@@ -72,6 +72,9 @@ class Sahara_Auth_Session_MoodleAuthorise extends Sahara_Auth_Session
     /** @private {assoc} Loaded categories. */
     private $_categories = array();
 
+    /** @private {string} Moodle database table name prefix. */
+    private $_tblPrefix;
+
     public function __construct()
     {
         parent::__construct();
@@ -89,6 +92,8 @@ class Sahara_Auth_Session_MoodleAuthorise extends Sahara_Auth_Session
             }
             else $this->_parseRule($rules);
         }
+
+        $this->_tblPrefix = $this->_config->moodle->database->prefix ? $this->_config->moodle->database->prefix : '';
     }
 
     /**
@@ -109,19 +114,18 @@ class Sahara_Auth_Session_MoodleAuthorise extends Sahara_Auth_Session
         }
 
         /* Load the user's Moodle enrolment. */
-        $prefix = $this->_config->moodle->database->prefix ? $this->_config->moodle->database->prefix : '';
-        $enrolment = $this->_authType->getMoodleDatabaseConn()->fetchAll(
+
+                $enrolment = $this->_authType->getMoodleDatabaseConn()->fetchAll(
                     'SELECT co.shortname, co.fullname, co.idnumber, co.category FROM ' .
-                        $prefix . 'course AS co JOIN ' . $prefix . 'enrol AS e ON co.id = e.courseid ' .
-                        'JOIN ' . $prefix . 'user_enrolments AS ue ON e.id = ue.enrolid ' .
-                        'JOIN ' . $prefix . 'user AS u ON u.id = ue.userid ' .
+                        $this->_tblPrefix . 'course AS co JOIN ' . $this->_tblPrefix . 'enrol AS e ON co.id = e.courseid ' .
+                        'JOIN ' . $this->_tblPrefix . 'user_enrolments AS ue ON e.id = ue.enrolid ' .
+                        'JOIN ' . $this->_tblPrefix . 'user AS u ON u.id = ue.userid ' .
                     'WHERE u.username = ? ' .
                         'AND e.status = 0 ' .                                  // Enrolment must be valid
                         'AND ue.status = 0 ' .                                 // User's enrolment must be valid
                         'AND ue.timestart < ' . time() .                       // Must not start in the future
                        ' AND (ue.timeend > ' . time() . ' OR ue.timeend = 0)', // Must not end in the past
                 $this->_authType->getMoodleUsername());
-
 
         /* Determine the list of classes the user should be a member of. */
         $memberOf = array();
@@ -135,9 +139,6 @@ class Sahara_Auth_Session_MoodleAuthorise extends Sahara_Auth_Session
 
         /* In case a multiple rules put the user in the same user class. */
         $memberOf = array_unique($memberOf);
-
-        var_dump($memberOf);
-        exit;
 
         /* Determine what classes the user is already a member of. */
         $db = Sahara_Database::getDatabase();
@@ -250,8 +251,56 @@ class Sahara_Auth_Session_MoodleAuthorise extends Sahara_Auth_Session
             }
         }
 
-        /* Run through category checks. */
+        if (count($this->_catRules['idnumber']) || count($this->_catRules['name']))
+        {
+            /* Category rules exist, so we will need to load the category recods
+             * for the enrolment. */
+            $this->_loadCategoryHierarchy($enrolment->category);
+
+            /* Check all category rules agains the enrolments category hierarchy. */
+            foreach ($this->_catRules as $type => $mapping)
+            {
+                foreach ($mapping as $pattern => $allowed)
+                {
+                    $cid = $enrolment->category;
+
+                    while ($cid && array_key_exists($cid, $this->_categories))
+                    {
+                        if ($this->_match($pattern, $this->_categories[$cid]->$type))
+                        {
+                            $classes = array_merge($classes, $allowed);
+                        }
+
+                        $cid = $this->_categories[$cid]->parent;
+                    }
+                }
+            }
+        }
+
         return $classes;
+    }
+
+    /**
+     * Loads a category, including all parent categories.
+     *
+     * @param {integer} $id categroy identifier
+     */
+    private function _loadCategoryHierarchy($id)
+    {
+        /* Check if category previously loaded. */
+        if (array_key_exists($id, $this->_categories)) return;
+
+        $res = $this->_authType->getMoodleDatabaseConn()->fetchAll('SELECT id, name, idnumber, parent FROM ' .
+                $this->_tblPrefix . 'course_categories WHERE id = ?', $id);
+
+        /* Category record found. */
+        if (count($res))
+        {
+            $this->_categories[$id] = $res[0];
+
+            /* Load parent categories if they exist. */
+            if ($this->_categories[$id]->parent) $this->_loadCategoryHierarchy($this->_categories[$id]->parent);
+        }
     }
 
     /**
@@ -262,7 +311,7 @@ class Sahara_Auth_Session_MoodleAuthorise extends Sahara_Auth_Session
      * @param {string} $pattern that will be matched against
      * @param {string} $value value to match
      */
-    public function _match($pattern, $value)
+    private function _match($pattern, $value)
     {
         /* If the pattern is a literal, only equality is a match. */
         if (strpos($pattern, self::WILD_CARD) === FALSE) return $pattern == $value;
