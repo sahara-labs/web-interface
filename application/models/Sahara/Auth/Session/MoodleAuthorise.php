@@ -51,13 +51,26 @@
  */
 class Sahara_Auth_Session_MoodleAuthorise extends Sahara_Auth_Session
 {
-    /** @private {assoc array} Mapping between course identifiers, short names,
-     *  or full names and the Sahara user classses that the member should be
-     *  a memeber. */
+    /** Wild card character. */
+    const WILD_CARD = '*';
+
+    /** @private {assoc} Mapping between Moodle course record fields and Sahara
+     *  user classes. */
     private $_rules = array(
-          'idnumber' => array(),     // Matching course identifiers
-          'shortnname' => array(),  // Match course short names
-          'fullname' => array());    // Match course full names
+          'idnumber'   => array(),  // Matching course identifiers
+          'shortnname' => array(),  // Matching course short names
+          'fullname'   => array()   // Matching course full names
+    );
+
+    /** @private {assoc} Mapping between Moodle categories and Sahara user
+     *  classes. */
+    private $_catRules = array(
+          'idnumber' => array(),   // Matching category identifier
+          'name'     => array()    // Matching category name
+    );
+
+    /** @private {assoc} Loaded categories. */
+    private $_categories = array();
 
     public function __construct()
     {
@@ -123,6 +136,9 @@ class Sahara_Auth_Session_MoodleAuthorise extends Sahara_Auth_Session
         /* In case a multiple rules put the user in the same user class. */
         $memberOf = array_unique($memberOf);
 
+        var_dump($memberOf);
+        exit;
+
         /* Determine what classes the user is already a member of. */
         $db = Sahara_Database::getDatabase();
         $ucRecords = $db->fetchAll(
@@ -177,7 +193,7 @@ class Sahara_Auth_Session_MoodleAuthorise extends Sahara_Auth_Session
     private function _parseRule($rule)
     {
         /* Validate the rule matches to correct format. */
-        if (!preg_match('/^\w+=\w+[\s\w]*\{\w+[,\s\w]*}$/', $rule))
+        if (!preg_match('/^\w+=[\w\*]+[\s\w]*\{\w+[,\s\w]*}$/', $rule))
         {
             $this->_logger->warn("Moodle authorisation rule '$rule' is not valid as it does not have the correct " .
                     'format, excluding rule from authorisation decisions.');
@@ -185,16 +201,23 @@ class Sahara_Auth_Session_MoodleAuthorise extends Sahara_Auth_Session
         }
 
         list ($field, $val, $cl) = preg_split('/[=\{}]+/', $rule);
+        $classes = explode(',', $cl);
         switch ($field)
         {
             case 'id':
-                $this->_rules['idnumber'][$val] = explode(',', $cl);
+                $this->_rules['idnumber'][$val] = $classes;
                 break;
             case 'short':
-                $this->_rules['shortname'][$val] = explode(',', $cl);
+                $this->_rules['shortname'][$val] = $classes;
                 break;
             case 'full':
-                $this->_rules['fullname'][$val] = explode(',', $cl);
+                $this->_rules['fullname'][$val] = $classes;
+                break;
+            case 'cat':
+                $this->_catRules['name'][$val] = $classes;
+                break;
+            case 'catid':
+                $this->_catRules['idnumber'][$val] = $classes;
                 break;
             default:
                 $this->_logger->warn("Moodle authorisation rule '$rule' is not valid as the subject field '$field' " .
@@ -215,14 +238,42 @@ class Sahara_Auth_Session_MoodleAuthorise extends Sahara_Auth_Session
     {
         $classes = array();
 
-        foreach ($this->_rules as $type => $options)
+        /* Run through enrolment record checks. */
+        foreach ($this->_rules as $type => $mapping)
         {
-            if (array_key_exists($enrolment->$type, $options))
+            foreach ($mapping as $pattern => $allowed)
             {
-                $classes = array_merge($options[$enrolment->$type], $classes);
+                if ($this->_match($pattern, $enrolment->$type))
+                {
+                    $classes = array_merge($classes, $allowed);
+                }
             }
         }
 
+        /* Run through category checks. */
         return $classes;
+    }
+
+    /**
+     * Attempts to match a value to a pattern. The pattern may be a literal
+     * or containing one or more wildcards that specify at that position
+     * zero or more characters are expected.
+     *
+     * @param {string} $pattern that will be matched against
+     * @param {string} $value value to match
+     */
+    public function _match($pattern, $value)
+    {
+        /* If the pattern is a literal, only equality is a match. */
+        if (strpos($pattern, self::WILD_CARD) === FALSE) return $pattern == $value;
+
+        $off = 0;
+        foreach (explode(self::WILD_CARD, $pattern) as $sub)
+        {
+            if (!$sub) continue; // Wild card position
+            if (($off = strpos($value, $sub, $off)) === FALSE) return false;
+        }
+
+        return true;
     }
 }
