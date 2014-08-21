@@ -11,73 +11,136 @@
 
 #switch-1 {
     left: -121px;
-    top: 80px;
+    top: 140px;
 }
 
 #switch-2 {
     left: -58px;
-    top: 80px;
+    top: 140px;
 }
 
 #switch-3 {
 	left: -183px;
-    top: 80px;
+    top: 140px;
 }
 
 #switch-4 {
     left: -178px;
-    top: 205px;
+    top: 265px;
 }
 
 #led-1 {
     left: -52px;
-    top: 204px;
+    top: 264px;
 }
 
 #slider-1{
     left: 60px;
-    top: 230px;
+    top: 290px;
 }
 
 #slider-2 {
-     left: 80%;
-     top: -50px;
+    left: 80%;
+    top: -50px;
 }
 
 #slider-3 {
-     left: 65%;
-     top: -50px;
+    left: 65%;
+    top: -50px;
 }
 
 #rotary-1 {
-     left: 5%;
-     top: 400px;
+    left: 8%;
+    top: 275px;
 }
 
 #rotary-2 {
-     left: 43%;
-     top: 420px;
+    left: 48%;
+    top: 275px;
 }
 
 #rotary-3 {
     left: -27%;
-    top: 256px;
+    top: 316px;
 }
 
 #knob-1 {
-    left: 50px;
+    left: 375px;
+    top: 60px;
 }
 
 #knob-2 {
-    left: 530px;
-    top: 417px;
+    left: 415px;
+    top: 75px;
+}
+
+#knob-black {
+    left: 105px;
+    top: 315px;
 }
 
 #knob-3 {
-    left: 235px;
+    left: 105px;
+    top: 95px;
 }
 
-#knob-4 {
-    left: -167px;
-    top: 440px;
+#knob-24 {
+    left: -420px;
+}
+
+#button-1 {
+    position: absolute;
+    top: -80px;
+    right: 30px;
+}
+
+#button-2 {
+    position: absolute;
+    top: -80px;
+    right: -100px;
+}
+
+#button-3 {
+    top: 10px;
+    left: 5px;
+}
+
+#button-4 {
+    top: 10px;
+    left: 95px;
+}
+
+#button-5 {
+    top: 10px;
+    left: 184px;
+}
+
+#button-6 {
+    top: 10px;
+    left: 560px;
+}
+
+#push-2 {
+    top: -40px;
+    left: 780px;
+}
+
+#push-4 {
+    top: 115px;
+    left: 780px;
+}
+
+#push-3 {
+    top: 270px;
+    left: 780px;
+}
+
+#push-1 {
+    left: -330px;
+    top: -40px;
+}
+
+#push-1 {
+    left: -330px;
+    top: 150px;
 }

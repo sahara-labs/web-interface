@@ -5,6 +5,11 @@
  * @date 20th November 2013
  */
 
+@font-face {
+	font-family: 'digital';
+	src: url('/webui/images/digital.ttf') format('truetype');
+	}
+
 .window-wrapper {
 	background: #fafafa;
     border-radius: 10px;
@@ -22,11 +27,15 @@
 
 .window-header .ui-icon, .tab-wrapper-controls .ui-icon {
     border: 1px solid #ddd;
+    -webkit-box-shadow: 0 0 2px #ddd;
+    -moz-box-shadow: 0 0 2px #ddd;
     box-shadow: 0 0 2px #ddd;
     cursor: pointer;
 }
 
 .window-header .ui-icon:hover, .tab-wrapper-controls .ui-icon:hover {
+    -webkit-box-shadow: 0 0 2px #999;
+    -moz-box-shadow: 0 0 2px #999;
     box-shadow: 0 0 2px #999;
 }
 
@@ -54,41 +63,208 @@
 }
 
 /******************************************************************************
- ** Button, Push Button                                                      **
+ ** Common Page Elements                                                     **
  ******************************************************************************/
 
-.button {
-	padding: 2px;
-    border-radius: 4px;
-    border: 1px solid #B5B5B5;
-    box-shadow: 0 0 4px #B5B5B5;
-	background-color: #EFEFEF;
-	cursor: pointer;
-	width: 100%;
-	height: 100%;
-	font-weight: bold;
-	text-align: center;
+.input {
+	
 }
 
-.button:hover {
-    box-shadow: 0 0 4px #555555;
+.label, label {
+	
 }
 
-.button-engaged {
-	background-color: #FE6F5E;
+.input {
+    border: 1px solid #AAA;
 }
 
+.units-small {
+	
+}
 
+.small-range-val {
+	
+}
+
+/******************************************************************************
+ ** Tabs                                                                     **
+ ******************************************************************************/
+
+.tab-bar {
+	
+}
+
+.tab-bar-left {
+	
+}
+
+.tab-bar-right {
+	
+}
+
+.tab {
+    padding: 5px 10px 2px 10px;
+    height: 20px;
+    background-color: #FAFAFA;
+    border: 1px solid #AAAAAA;
+    cursor: pointer;
+    text-align: center;
+    color: #666666;
+}
+
+.tab-bar-top .tab {
+    margin: -1px 2px;
+    -webkit-box-shadow: 0 -1px 2px #AAAAAA; 
+    -moz-box-shadow: 0 -1px 2px #AAAAAA; 
+    box-shadow: 0 -1px 2px #AAAAAA; 
+    border-radius: 8px 8px 0 0;
+}
+
+.tab-bar-top .tab:hover {
+    -webkit-box-shadow: 0 -1px 4px #AAAAAA;
+    -moz-box-shadow: 0 -1px 4px #AAAAAA;
+    box-shadow: 0 -1px 4px #AAAAAA;
+}
+
+.tab-bar-bottom .tab {
+    margin: 0 2px;
+    -webkit-box-shadow: 0 1px 2px #AAAAAA; 
+    -moz-box-shadow: 0 1px 2px #AAAAAA; 
+    box-shadow: 0 1px 2px #AAAAAA; 
+    border-radius: 0 0 8px 8px;
+}
+
+.tab-bar-bottom .tab:hover {
+    -webkit-box-shadow: 0 1px 4px #AAAAAA;
+    -moz-box-shadow: 0 1px 4px #AAAAAA;
+    box-shadow: 0 1px 4px #AAAAAA;
+}
+
+.tab-bar-left .tab {
+    margin: 2px 0;
+    -webkit-box-shadow: -1px 0 2px #AAAAAA;
+    -moz-box-shadow: -1px 0 2px #AAAAAA;
+    box-shadow: -1px 0 2px #AAAAAA;
+    border-radius: 8px 0 0 8px;
+}
+
+.tab-bar-left .tab:hover {
+	-webkit-box-shadow: -1px 0 4px #AAAAAA;
+	-moz-box-shadow: -1px 0 4px #AAAAAA;
+	box-shadow: -1px 0 4px #AAAAAA;
+}
+
+.tab-bar-right .tab {
+    margin: 2px 0;
+    -webkit-box-shadow: 1px 0 2px #AAAAAA;
+    -moz-box-shadow: 1px 0 2px #AAAAAA;
+    box-shadow: 1px 0 2px #AAAAAA;
+    border-radius: 0 8px 8px 0;
+}
+
+.tab-bar-right .tab:hover {
+    -webkit-box-shadow: 1px 0 4px #AAAAAA;
+    -moz-box-shadow: 1px 0 4px #AAAAAA;
+    box-shadow: 1px 0 4px #AAAAAA;
+}
+
+.tab-active {
+    border: 1px solid #333333;
+    background-color: #333333;
+    color: #EFEFEF;
+    font-weight: bold;
+}
+
+.tab-bar-top .tab-active{
+    -webkit-box-shadow: 0 -1px 4px #333333; 
+    -moz-box-shadow: 0 -1px 4px #333333; 
+    box-shadow: 0 -1px 4px #333333; 
+}
+
+.tab-bar-bottom .tab-active {
+    -webkit-box-shadow: 0 1px 4px #333333; 
+    -moz-box-shadow: 0 1px 4px #333333; 
+    box-shadow: 0 1px 4px #333333; 
+}
+
+.tab-bar-left .tab-active {
+    -webkit-box-shadow: 0 -1px 4px #333333;
+    -moz-box-shadow: 0 -1px 4px #333333;
+    box-shadow: 0 -1px 4px #333333;
+}
+
+.tab-bar-right .tab-active {
+    -webkit-box-shadow: 0 1px 4px #333333;
+    -moz-box-shadow: 0 1px 4px #333333;
+    box-shadow: 0 1px 4px #333333;
+}
+
+.tab-footer {
+	clear: both;
+	border-bottom: 3px solid #333333;
+	-webkit-box-shadow: 0 1px 2px #333333;
+	-moz-box-shadow: 0 1px 2px #333333;
+	box-shadow: 0 1px 2px #333333;
+}
+
+.tab-post {
+	position: absolute;
+	top: 0;
+	border-left: 3px solid #333333;
+	-webkit-box-shadow: 0 1px 2px #333333;
+	-moz-box-shadow: 0 1px 2px #333333;
+	box-shadow: 0 1px 2px #333333;
+	width: 0;
+	clear: both;
+}
+
+/******************************************************************************
+ ** Spinner                                                                  **
+ ******************************************************************************/
+
+.spinner-input {
+    border-radius: 3px;
+}
+
+.spinner-btn {
+    border-radius: 0;
+}
+
+.spinner-btn:after {
+    left: 20%;
+}
 
 /******************************************************************************
  ** Slider                                                                   **
  ******************************************************************************/
 
+.slider-knob-slice {
+    cursor: pointer;
+    cursor: -webkit-grab;
+    cursor: -moz-grab;
+}
+
+.slider-knob-slice:active {
+    cursor: pointer;
+    cursor: -webkit-grabbing;
+    cursor: -moz-grabbing;
+}
+
+.slider-label-vertical {
+    margin-top: -10%;
+}
 
 /******************************************************************************
  ** Switch                                                                   **
  ******************************************************************************/
- 
+
+.switch-container {
+    display: block;
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
 .switch-label, .led-adjacent .led-label {
     display: block;
     float: left;
@@ -112,78 +288,34 @@
     background: #ccc;
     margin: 2px;
     border-radius: 10px;
+    border: 1px solid #aaa;
+    left: 0;
+    position: relative;
 }
 
 .switch-animated {
-    -webkit-transition:all 0.3s ease-in-out;
-    -moz-transition:all 0.3s ease-in-out;
-    -o-transition:all 0.3s ease-in-out;
-    transition:all 0.3s ease-in-out;
+    -moz-transition:all 0.1s ease-in-out;
+    -o-transition:all 0.1s ease-in-out;
+    transition:all 0.1s ease-in-out;
+    -webkit-transition: none;
 }
 
 .switch-on {
     background-color: #757575;
+    -webkit-box-shadow: 0 0 2px #999999;
+    -moz-box-shadow: 0 0 2px #999999;
     box-shadow: 0 0 2px #999999;
-    float:right; 
-    border: 1px solid #4d4c4c;   
+    border: 1px solid #4d4c4c;
+    left: 19px;
 }
 
+.switch-off {
+    border: solid 1px rgba(0, 0, 0, 0.5);
+}
 
 /******************************************************************************
  ** Rotary Switch                                                            **
  ******************************************************************************/
-
-.rotary-switch-container {
-    margin: 30px;
-    margin-top: 25px;
-    position: relative;
-    border-radius: 50%;
-    border-bottom: 1px solid #fff;
-    background-image: -webkit-linear-gradient(top, #dadada, #eee);
-    background-image: -moz-linear-gradient(top, #dadada, #eee);
-    background-image: -ms-linear-gradient(top, #dadada, #eee);
-    background-image: -o-linear-gradient(top, #dadada, #eee);
-}
-
-.rotary-switch {
-    margin: 0px;
-    position: absolute;
-    left: 8%;
-    top: 8%;
-    bottom: 8%;
-    right: 8%;
-    border-radius: 50%;
-    transition: .6s;
-    background-size: 106%;
-    background-position: 40% 15%;
-    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5),inset 0px 2px 3px 1px rgba(255, 255, 255, 0.25);
-}
-
-.rotary-white {
-    background-image: url('/webui/images/skeuo/rotary-switch-white.png');
-}
-
-.rotary-black {
-    background-image: url('/webui/images/skeuo/rotary-switch-black.png');
-}
-
-.rotary-switch:before {
-    display: block;
-    content: "";
-    width: 2px;
-    height: 18%;
-    background: #CECECE;
-    margin: 0% auto;
-    position: relative;
-    left: 1px;
-}
-
-.rotary-switch-val {
-    position: absolute;
-    cursor: pointer;
-    font-size: 12px;
-}
-
 
 /******************************************************************************
  ** LED                                                                      **
@@ -191,6 +323,7 @@
 .led-below .led-label {
 	display: block;
 	text-align: center;
+	font-size: 12px;
 }
  
 .led {
@@ -199,28 +332,117 @@
 	border-radius: 11px;
 }
 
-.led-below .led {
-	margin: 5px auto;
-}
-
-.led-adjacent .led {
-	float: right;
-}
-
 .led-novalue {
 	border: 1px solid #B5B5B5;
 	background-color: #EFEFEF;
+	-webkit-box-shadow: 0 0 2px #B4B4B4;
+	-moz-box-shadow: 0 0 2px #B4B4B4;
 	box-shadow: 0 0 2px #B4B4B4;
 }
 
 .led-on {
 	border: 1px solid #79B864;
     background-color: #A2DEA7;
+    -webkit-box-shadow: 0 0 2px #B4B4B4;
+    -moz-box-shadow: 0 0 2px #B4B4B4;
     box-shadow: 0 0 2px #B4B4B4;
 }
 
 .led-off {
 	border: 1px solid #A01D1D;
     background-color: #D76666;
+    -webkit-box-shadow: 0 0 2px #B4B4B4;
+    -moz-box-shadow: 0 0 2px #B4B4B4;
     box-shadow: 0 0 2px #B4B4B4;
+}
+
+/******************************************************************************
+ ** Knob                                                                     **
+ ******************************************************************************/
+
+.knob-label-horizontal {
+    margin-top: -5%;
+    margin-bottom: 10px;
+}
+
+.knob-range-horizontal {
+    margin-top: -5px;
+}
+
+.knob-val {
+	cursor: pointer;
+}
+
+.knob-input {
+	height: 12px;
+}
+
+.knob-input-units {
+    padding-left: 2px;
+}
+
+/******************************************************************************
+ ** Gauge                                                                    **
+ ******************************************************************************/
+
+.gauge-outer {
+    -webkit-box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+    -moz-box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+    box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+.gauge-inner {
+    background: #fff;
+}
+
+.gauge-label {
+    position: relative;
+    margin-top: -3%;
+    padding-bottom: 5px;
+    border: none;
+    left: 0;
+}
+
+.gauge-val {
+    font-size: 10px;
+}
+
+.gauge-center {
+    -webkit-box-shadow: inset 0px 0px 0px 1px #000,0px 1px 6px rgba(0, 0, 0, 0.24);
+    -moz-box-shadow: inset 0px 0px 0px 1px #000,0px 1px 6px rgba(0, 0, 0, 0.24);
+    box-shadow: inset 0px 0px 0px 1px #000,0px 1px 6px rgba(0, 0, 0, 0.24);
+    background: #D30000;
+}
+
+.gauge-arrow {
+    z-index: 2;
+}
+
+.gauge-arrow:after {
+    -webkit-box-shadow: 1px 2px 5px rgba(0, 0, 0, 0.33);
+    -moz-box-shadow: 1px 2px 5px rgba(0, 0, 0, 0.33);
+    box-shadow: 1px 2px 5px rgba(0, 0, 0, 0.33);
+    background: #DA0000;
+}
+
+/******************************************************************************
+ ** Linear Gauge                                                             **
+ ******************************************************************************/
+
+.linear-gauge-inner {
+    -webkit-box-shadow: inset 0px 1px 3px #B6B6B6;
+    -moz-box-shadow: inset 0px 1px 3px #B6B6B6;
+    box-shadow: inset 0px 1px 3px #B6B6B6;
+}
+
+.linear-gauge-gradient-vertical {
+    width: 9%;
+}
+
+/******************************************************************************
+ ** LCD	                                                                     **
+ ******************************************************************************/
+
+.lcd-value {
+    background-color: #F3F3F3;
 }

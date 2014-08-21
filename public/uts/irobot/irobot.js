@@ -24,6 +24,9 @@ function IRobot(id)
 	/** The list of widgets that are displayed on the page. */
 	this.widgets = [];
 	
+	/** Mode change response. */
+	this.modeError;
+	
 	/* Log level. */
 	this.logLevel = 0;
 }
@@ -52,7 +55,7 @@ IRobot.prototype.init = function() {
 IRobot.prototype.determineMode = function() {
 	var thiz = this;
 	$.get(
-		"/primitive/json/pc/" + IRobot.MODE_CONTROLLER + "/pa/getMode",
+		"/primitive/mapjson/pc/" + IRobot.MODE_CONTROLLER + "/pa/getMode",
 		null,
 		function (resp) {
 			if (typeof resp != "object")
@@ -60,11 +63,17 @@ IRobot.prototype.determineMode = function() {
 				/* Probably logged out. */
 				return;
 			}
-			var m = parseInt(resp.value);
+			var m = parseInt(resp.mode);
 			if(m == 0)
 			{
-				thiz.changeMode(1);
+				thiz.changeMode(1);			
 			}		
+			else if (m == 5)
+			{
+			    /* Error mode. */
+			    thiz.modeError = resp;
+			    thiz.displayMode(5);
+			}			
 			else thiz.displayMode(m);
 		}
 	);
@@ -81,7 +90,7 @@ IRobot.prototype.displayMode = function(mode) {
 	{
 		/* If in mode transition, keep polling to determine whether the mode
 		 * is ready to be used. */
-		setTimeout(function() { thiz.determineMode(); }, 2000);
+		setTimeout(function() { thiz.determineMode(); }, 5000);
 	}
 	else
 	{
@@ -141,6 +150,10 @@ IRobot.prototype.displayMode = function(mode) {
 		this.log("Waiting for mode transition to complete.", IRobot.DEBUG);
 		this.widgets.push(new TransitionOverlay(this));
 		break;
+		
+	case 5: // Error mode
+	    this.widgets.push(new WarningMessage(this))
+	    break;
 
 	default:
 		this.log(IRobot.ERROR, "Unknown mode: " + mode);
@@ -155,19 +168,20 @@ IRobot.prototype.displayMode = function(mode) {
 	resizeFooter();
 };
 
-IRobot.prototype.changeMode = function(mode) {
+IRobot.prototype.changeMode = function(m) {
 	this.displayMode(4); // Mode transition mode.
+	
 	
 	$.post(
 			"/primitive/json/pc/" + IRobot.MODE_CONTROLLER + "/pa/setMode",
 			{
-				mode: mode
+				mode: m
 			},
 			function (resp) {
 				if (typeof resp != "object")
 				{
 					/* Probably logged out. */
-					window.location.reload();
+//					window.location.reload();
 					return;
 				}
 					
@@ -378,7 +392,8 @@ TransitionOverlay.prototype.init = function() {
 	this.pageAppend(
 		"<div class='ui-state-secondary ui-corner-all'>" +
 			"<span class='ui-icon ui-icon-clock'></span>" +
-			"Please wait <span id='load-dots'>. </span>" + 
+			"Please wait<span id='load-dots'>. </span>" +
+			"<div style='margin:10px 0 0 -27px; width:200px;font-size:0.9em;'>(This may take over a minute.)</div>" +
 		"</div>"
 	);
 	
@@ -416,15 +431,41 @@ function WarningMessage(pc)
 	IWidget.call(this, pc);
 	
 	this.wid = "warning-message";
+	this.error = pc.modeError;
 }
 WarningMessage.prototype = new IWidget;
 
 WarningMessage.prototype.init = function() {
+    var diag = '';
+    if (this.error) diag += 
+        "<div class='player-diag'>" +
+            "<div class='player-diag-title'>Diagnostics</div>" +
+            "<div><strong>Player running:</strong> " + (this.error.running ? "Yes" : "No") +
+            (this.error.reason != "" ? "<div>Error: " + this.error.reason + "</div" : "") +
+            (this.error.stdout != "" ? 
+                    "<div class='player-stream-title'>Player Standard Out</div>" +
+                        "<pre>" + this.error.stdout + "</pre>" +
+                    "</div>" : "") +
+            (this.error.stderr != "" ? 
+                    "<div class='player-stream-title'>Player Standard Error</div>" +
+                        "<pre>" + this.error.stderr + "</pre>" +
+                    "</div>" : "") +
+        "</div>";    
+    
+    
 	this.pageAppend(
 		"<div class='ui-state-error ui-corner-all'>" +
 			"<span class='ui-icon ui-icon-alert'></span>" +
-			"Code upload is not yet implemented." +
-		"</div>"
+			"The selected mode has failed to deploy. The possible causes of this are:" +
+			"<ul style='list-style:inside'>" +
+			    "<li>Communications has been lost with the iRobot platform, Wi-Fi is used but may drop out.</li>" +
+			    "<li>The iRobot platform batteries have discharged. A pantograph system is used to charge " +
+			    "the batteries continously but the robot may lose connectivity in certain regions of the maze.</li>" +
+			    "<li>A software glitch in the 'player' robot server.</li>" +
+			"</ul>" +
+			"Please click one of the mode tabs above and if it fails multiple times, please contact support." + 
+		"</div>" +
+		diag
 	);
 };
 
@@ -610,7 +651,7 @@ DPad.prototype.movePing = function(resp) {
 		var thiz = this;
 		this.ping = setTimeout(function() {
 			thiz.movePing();
-		}, 205 - (ts - this.setTs));
+		}, 1000 - (ts - this.setTs));
 	}
 };
 
@@ -930,14 +971,14 @@ Ranger.prototype.mainLoop = function() {
 			
 			setTimeout(function() {
 				thiz.mainLoop();
-			}, 500);
+			}, 5000);
 		},
 		error: function(xhr, status, err) {
 			thiz.control.log("Failed to obtain ranger scan, with status: " + status + ". Trying again in 1 second.",
 					IRobot.WARN);
 			setTimeout(function() {
 				thiz.mainLoop();
-			}, 2000);
+			}, 5000);
 		}
 	});
 };
@@ -1275,13 +1316,13 @@ NavControl.prototype.mainLoop = function() {
 			
 			thiz.ds.setFiles(files);
 			
-			/* Next packet update in 1000. */
-			setTimeout(function() { thiz.mainLoop(); }, 1000);
+			/* Next packet update in 5s. */
+			setTimeout(function() { thiz.mainLoop(); }, 5000);
 		},
 		error: function(xhr, err) {
 			thiz.control.log("Failed making navigiatin data packet request with error: " + err, IRobot.WARN);
 			
-			if (!thiz.stopMainLoop) setTimeout(function() { thiz.mainLoop(); }, 2000);
+			if (!thiz.stopMainLoop) setTimeout(function() { thiz.mainLoop(); }, 5000);
 		}
 	});
 };
@@ -2558,9 +2599,9 @@ OverheadCameraControl.MAN_MODE = 2;
 OverheadCameraControl.prototype.init = function() {
 	this.pageAppend(
 		"<div id='ov-control-buttons'>" +
-			"<div id='ov-control-man' class='ov-control-button'>Manual</div>" +  
-			"<div id='ov-control-auto' class='ov-control-button'>Auto</div>" +  
-			"<div style='clear:left;'></div>" +
+//			"<div id='ov-control-man' class='ov-control-button'>Manual</div>" +  
+//			"<div id='ov-control-auto' class='ov-control-button'>Auto</div>" +  
+//			"<div style='clear:left;'></div>" +
 		"</div>"
 	);
 
@@ -2603,6 +2644,9 @@ OverheadCameraControl.prototype.init = function() {
 };
 
 OverheadCameraControl.prototype.setMode = function(mode) {
+// DISABLED: Too unreliable, no more auto mode.
+    return;
+    
 	/* No need to do anything if we are already at the correct mode. */
 	if (this.mode == mode) return;
 	
@@ -2614,7 +2658,7 @@ OverheadCameraControl.prototype.setMode = function(mode) {
 	this.displayMode(mode);
 };
 
-OverheadCameraControl.prototype.displayMode = function(mode) {
+OverheadCameraControl.prototype.displayMode = function(mode) {    
 	/* No need to do anything if we are already at the correct mode. */
 	if (this.mode == mode) return;
 	
@@ -2827,11 +2871,11 @@ CodeUpload.prototype.init = function() {
 		 	"<div id='kill-button' class='commonbutton disabled'>" +
 		 		"<img src='/uts/irobot/images/kill.png' alt=' ' /><br />" +
 		 		"Kill Program" +
-		 	"</div>" +
-		 	"<div id='random-walk-button' class='commonbutton disabled'>" +
-		 		"<img src='/uts/irobot/images/random_walk.png' alt=' ' /><br />" +
-		 		"Random Walk" +
 		 	"</div>"
+//		 	"<div id='random-walk-button' class='commonbutton disabled'>" +
+//		 		"<img src='/uts/irobot/images/random_walk.png' alt=' ' /><br />" +
+//		 		"Random Walk" +
+//		 	"</div>"
 	 );
 	 
 	 /* Empty the upload target. */
@@ -2976,7 +3020,7 @@ CodeUpload.prototype.startUpload = function() {
 	$("#code-upload-form").submit();
 	
 	/* Start polling the target frame for upload status. */
-	setTimeout(function() { thiz.checkIfUploaded(); }, 1000);
+	setTimeout(function() { thiz.checkIfUploaded(); }, 3000);
 };
 
 CodeUpload.prototype.checkIfUploaded = function() {
@@ -2985,7 +3029,7 @@ CodeUpload.prototype.checkIfUploaded = function() {
 	if (text == "")
 	{
 		/* File still uploading. */
-		setTimeout(function() { thiz.checkIfUploaded(); }, 1000);
+		setTimeout(function() { thiz.checkIfUploaded(); }, 3000);
 	}
 	else 
 	{
@@ -3021,7 +3065,7 @@ CodeUpload.prototype.checkIfUploaded = function() {
 		{
 			this.setRunning(true);
 			this.$uploadDialog.dialog("close");
-			setTimeout(function() { thiz.getStatus(); }, 2000);
+			setTimeout(function() { thiz.getStatus(); }, 3000);
 		}
 	}
 };
@@ -3041,7 +3085,7 @@ CodeUpload.prototype.getStatus = function() {
 			{
 				/* If the execution is not complete we keep polling the response. */
 				thiz.setRunning(true);
-				setTimeout(function() { thiz.getStatus(); }, 2000);
+				setTimeout(function() { thiz.getStatus(); }, 3000);
 			}
 			else
 			{
@@ -3526,7 +3570,7 @@ CodeUploadGraphics.prototype.getFrame = function() {
 		cache: false,
 		success: function (data) { 
 			thiz.parseFrame(data);
-			if (thiz.enabled) setTimeout(function() { thiz.getFrame(); }, 1000);
+			if (thiz.enabled) setTimeout(function() { thiz.getFrame(); }, 3000);
 		},	
 		error:   function() {
 			setTimeout(function() { thiz.getFrame(); }, 2000); 

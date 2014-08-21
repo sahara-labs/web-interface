@@ -6,7 +6,8 @@ $this->headLink()->appendStylesheet($this->baseUrl('webui/webui.css'));
 $this->headLink()->appendStylesheet($this->baseUrl('webui/webui-flat.css'));
 
 /* Shake Table interface implementation. */
-$this->headScript()->appendFile($this->baseUrl('uts/shaketable/shaketable_3dof.js'));
+$this->headScript()->appendFile($this->baseUrl('uts/shaketable/shakefft.js'));
+$this->headScript()->appendFile($this->baseUrl('uts/shaketable/shaketable.js'));
 $this->headLink()->appendStylesheet($this->baseUrl('uts/shaketable/shaketable.css'));
 
 /* Canvas compatability implementation for Internet Explorer 8 and earlier. */
@@ -26,6 +27,6 @@ $this->headScript()->appendFile($this->baseUrl('uts/coupledtanksnew/jquery.ui.to
 
 <script type="text/javascript">
 $(document).ready(function() {
-	ShakeTable(true);
+	ShakeTable();
 });
 </script>

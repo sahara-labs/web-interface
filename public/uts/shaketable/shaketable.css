@@ -6,6 +6,21 @@
 
 
 #shake-table-anchor {
-    height: 850px;
+    height: 1100px;
 }
 
+#data-logger .window-content {
+	height: 331px;
+}
+
+#data-logger .data-files-list {
+	height: 265px;
+}
+
+#shaker-mimic .mimic {
+	margin: 10px 0 0 10px;
+}
+
+#button-fft-export {
+	margin: -7px 0 0 -7px;
+}

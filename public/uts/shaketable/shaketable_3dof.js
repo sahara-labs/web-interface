@@ -25,21 +25,22 @@ function Config2DOF()
         anchor: "#shake-table-anchor",
         controller: "ShakeTableController",
         dataAction: "dataAndGraph",
-        dataDuration: 120,
-        dataPeriod: 10,
+        dataDuration: 10,
+        dataPeriod: 100,
         pollPeriod: 1000,
         windowToggle: true,
         theme: Globals.THEMES.flat,
-        cookie: "shaketable2dof",
+        cookie: "shaketable",
         widgets: [
-            new MimicWidget(false),
             new Container("graphs-container", {
                 title: "Graphs",
                 reizable: true,
-                left: -191,
-                top: 540,
+                left: 351,
+                top: 423,
                 widgets: [
                     new Graph("graph-displacement", {
+                      width: 300,
+                      height: 180,
                       title: "Displacements",
                       resizable: true,
                       fields: {
@@ -50,13 +51,11 @@ function Config2DOF()
                       minValue: -60,
                       maxValue: 60,
                       duration: 10,
-                      durationCtl: true,
                       yLabel: "Displacement (mm)",
                       fieldCtl: true,
-                      autoCtl: true,
+                      autoCtl: false,
+                      durationCtl: false,
                       traceLabels: true,
-                      width: 832,
-                      height: 325,
                     }),
                     new Container("graphs-lissajous-container", {
                         title: "Lissajous",
@@ -68,7 +67,7 @@ function Config2DOF()
                                 autoScale: true,
                                 vertScales: 5,
                                 horizScales: 5,
-                                sampleSize: 125,
+                                duration: 5,
                                 fields: {
                                     'disp-graph-1': 'disp-graph-2'
                                 },
@@ -84,7 +83,7 @@ function Config2DOF()
                                 autoScale: true,
                                 vertScales: 5,
                                 horizScales: 5,
-                                sampleSize: 125,
+                                duration: 5,
                                 fields: {
                                     'disp-graph-1': 'disp-graph-3'
                                 },
@@ -100,7 +99,7 @@ function Config2DOF()
                                 autoScale: true,
                                 vertScales: 5,
                                 horizScales: 5,
-                                sampleSize: 125,                                
+                                duration: 5,
                                 fields: {
                                     'disp-graph-2': 'disp-graph-3'
                                 },
@@ -115,52 +114,22 @@ function Config2DOF()
                             border: 0,
                         })
                     }),
-                    new Container("fft-container", {
-                        title: "FFT",
-                        widgets: [
-                            new FFTGraph("graph-fft", {
-                                title: "FFT",
-                                resizable: true,
-                                fields: {
-                                    'disp-graph-1': 'Base',
-                                    'disp-graph-2': 'Level 1',
-                                    'disp-graph-3': 'Level 2'
-                                },
-                                xLabel: "Frequency (Hz)",
-                                yLabel: "Amplitude (mm)",
-                                horizScales: 10,
-                                maxValue: 30,
-                                period: 10,
-                                duration: 10,
-                                fieldCtl: true,
-                                autoScale: true,
-                            }),
-                            new Button("button-fft-export", {
-                                label: "Export FFT",
-                                link: "/primitive/file/pc/ShakeTableController/pa/exportFFT/fn/fft.txt",
-                                target: "_blank",
-                                width: 80,
-                                height: 20,
-                                resizable: false
-                            })
-                        ],
-                        layout: new AbsoluteLayout({
-                            coords: {
-                                 "graph-fft": { x: 0, y: 0 },
-                                 "button-fft-export": { x: 20, y: -1 }
-                            }
-                        })
-                    }),
+                    
+                    new Spacer("graph-ffts", {
+                        color: "red",
+                        title: "FFT"
+                    })
                 ],
                 layout: new TabLayout({
                     position: TabLayout.POSITION.top,
                     border: 10,
                 })
             }),
+            new MimicWidget(false),
             new CameraStream("camera-stream", {
                 resizable: true,
-                left: -2,
-                top: 5,
+                left: 2,
+                top: 45,
                 videoWidth: 320,
                 videoHeight: 240,
                 swfParam: 'camera-swf',
@@ -170,9 +139,20 @@ function Config2DOF()
             new Container("controls-container", {
                 title: "Controls",
                 resizable: false,
-                left: -2,
-                top: 335,
+                left: 2,
+                top: 375,
                 widgets: [
+                    new Switch("switch-motor-on", {
+                        field: "motor-on", 
+                        action: "setMotor",
+                        label: "Motor",
+                        
+                     }),
+                     new Switch("switch-coils-on", {
+                         field: "coils-on",
+                         action: "setCoils",
+                         label: "Dampening",
+                     }),
                      new Slider("slider-motor-speed", {
                          field: "motor-speed",
                          action: "setMotor",
@@ -181,80 +161,25 @@ function Config2DOF()
                          label: "Motor Frequency",
                          units: "Hz",
                          vertical: false,
-                     }),                   
-                     new Slider("slider-coil-1", {
-                         length: 75,
-                         action: "setCoil",
-                         field: "coils-1-power",
-                         label: "Coil 1",
-                         vertical: true,
-                         scales: 2,
-                         units: "%"
-                     }),
-                     new Slider("slider-coil-2", {
-                         length: 75,
-                         action: "setCoil",
-                         field: "coils-2-power",
-                         label: "Coil 2",
-                         vertical: true,
-                         scales: 2,
-                         units: "%"
-                     }),
-                     new Container("container-control-buttons", {
-                        width: 200,
-                        widgets: [
-                            new Switch("switch-motor-on", {
-                                field: "motor-on", 
-                                action: "setMotor",
-                                label: "Motor",
-                                width: 96,
-                             }),
-                             new Switch("switch-coils-on", {
-                                 field: "coils-on",
-                                 action: "setCoils",
-                                 label: "Coils",
-                                 width: 92,
-                             }),
-                            new Switch("switch-coupling", {
-                                field: "motor-coil-couple",
-                                action: "setCouple",
-                                label: "Couple",
-                                width: 107,
-                            }),
-                            new Image("couple-to-motor" , {
-                                image: "/uts/shaketable/images/arrow-couple-left.png",
-                            }),
-                            new Image("couple-to-coils" , {
-                                image: "/uts/shaketable/images/arrow-couple-right.png",
-                            }),
-                        ],
-                        layout: new AbsoluteLayout({
-                            border: 10,
-                            coords: {
-                                "switch-motor-on": { x: -5, y: 20 },
-                                "switch-coils-on": { x: 100, y: 20 },
-                                "switch-coupling": { x: 40, y: 80 },
-                                "couple-to-motor": { x: 0, y: 55 },
-                                "couple-to-coils": { x: 154, y: 55 },
-                            }
-                        })
-                     }),
+                     }), 
+//                     new Knob("knob-coil-1", {
+//                         action: "setCoil",
+//                         field: "coil-1-power",
+//                         label: "Coil 1"
+//                             
+//                     }),
+//                     new Knob("knob-coil-2", {
+//                         action: "setCoil",
+//                         field: "coil-2-power",
+//                         label: "Coil 2"
+//                     }),
                 ],
-                layout: new GridLayout({
+                layout: new FlowLayout({
                     padding: 5,
-                    columns: [
-                        [ "container-control-buttons" ],
-                        [ "slider-motor-speed" ],
-                        [ "slider-coil-1" ],
-                        [ "slider-coil-2" ]
-                    ]
+                    size: 310,
+                    vertical: false,
+                    center: true,
                 })
-            }),
-            new DataLogging("data-logger", {
-                left: -193,
-                top: 142,
-                width: 183,
-                height: 388,
             })
         ]
     };
@@ -361,16 +286,15 @@ function MimicWidget(is3DOF)
         title: "Model",
         windowed: true,
         resizable: true,
-        preserveAspectRatio: true,
+        preserveAspectRation: true,
         minWidth: 320,
         minHeight: 410,
         closeable: true,
         shadeable: true,
         expandable: true,
         draggable: true,
-        left: 338,
+        left: 351,
         top: 5,
-        width: 334
     });
     
     /** Model dimensions in mm. */
@@ -404,7 +328,7 @@ function MimicWidget(is3DOF)
     this.height = undefined;
     
     /** The period in milliseconds. */
-    this.period = 10;
+    this.period = 100;
     
     /** Canvas context. */
     this.ctx = null;
@@ -440,7 +364,6 @@ MimicWidget.ANIMATE_PERIOD = 50;
 MimicWidget.prototype.init = function($container) {
     var canvas, thiz = this;
     
-    this.mmPerPx = 1.475;
     if (this.window.width)
     {
         this.mmPerPx = 320 / this.window.width * 1.475;
@@ -473,7 +396,7 @@ MimicWidget.prototype.init = function($container) {
 };
 
 MimicWidget.prototype.consume = function(data) {
-    var i, l, peaks = [], level, range, topLevel = this.numberLevels - 1;
+    var i, l, peaks = [], level, range;
     
     /* We need to find a list of peaks for each of the levels. */
     for (l = 1; l <= this.numberLevels; l++)
@@ -505,10 +428,6 @@ MimicWidget.prototype.consume = function(data) {
         this.amp[l] = this.medianFilter([ data["disp-graph-" + l][level[0]], 
                                           data["disp-graph-" + l][level[1]], 
                                           data["disp-graph-" + l][level[2]] ]); 
-        
-        /* Without a distinct signal, the model has an unrepresentative wiggle,
-         * so we small amplitudes will be thresholded to 0. */
-        if (this.amp[l] < 2) this.amp[l] = 0;
     }
     
     /* Amplitude for the base is fixed at 0.7 mm but only applies if the motor
@@ -516,20 +435,20 @@ MimicWidget.prototype.consume = function(data) {
     this.amp[0] = data['motor-on'] ? this.model.baseDisp : 0;
     
     /* Angular frequency is derived by the periodicity of peaks. */
-    range =  this.medianFilter([ peaks[topLevel][0] - peaks[topLevel][1],
-                                 peaks[topLevel][1] - peaks[topLevel][2],
-                                 peaks[topLevel][2] - peaks[topLevel][3],
-                                 peaks[topLevel][3] - peaks[topLevel][4] ]);
-    this.w = isFinite(i = 2 * Math.PI * 1 / (this.period / 1000 * range)) != Number.Infinity ? i : 0;
+    range =  this.medianFilter([ peaks[0][0] - peaks[0][1],
+                                 peaks[0][1] - peaks[0][2],
+                                 peaks[0][2] - peaks[0][3],
+                                 peaks[0][3] - peaks[0][4] ]);
+    this.w = isFinite(i = 2 * Math.PI * 1 / (0.1 * range)) != Number.Infinity ? i : 0;
     
-    /* Phase if determined based on the difference in peaks between the top 
-     * level and lower levels. */
-    for (l = 2; l < this.numberLevels - 1; l++)
+    /* Phase if determined based on the difference in peaks between the level
+     * one and upper levels. */
+    for (l = 2; l <= this.numberLevels - 1; l++)
     {
-        this.o[l] = 2 * Math.PI * this.medianFilter([ peaks[l - 1][0] - peaks[topLevel][0],
-                                                      peaks[l - 1][1] - peaks[topLevel][1],
-                                                      peaks[l - 1][2] - peaks[topLevel][2],
-                                                      peaks[l - 1][3] - peaks[topLevel][3] ]) / range;
+        this.o[l] = 2 * Math.PI * this.medianFilter([ peaks[l - 1][0] - peaks[0][0],
+                                                      peaks[l - 1][1] - peaks[0][1],
+                                                      peaks[l - 1][2] - peaks[0][2],
+                                                      peaks[l - 1][3] - peaks[0][3] ]) / range;
     }
     
     /** Coil states. */
@@ -560,12 +479,12 @@ MimicWidget.prototype.animationFrame = function() {
     var disp = [], i;
     
     this.fr++;
-    for (i = 1; i <= this.numberLevels; i++)
+    for (i = 0; i < this.numberLevels; i++)
     {
-        disp[i - 1] = this.amp[i] * Math.sin(this.w * MimicWidget.ANIMATE_PERIOD / 1000 * this.fr + this.o[i]);
+        disp[i] = this.amp[i] * Math.sin(this.w * MimicWidget.ANIMATE_PERIOD / 1000 * this.fr + this.o[i]);
     }
     
-    this.drawFrame(disp, this.motor > 0 ? (this.w * MimicWidget.ANIMATE_PERIOD / 1000 * this.fr) : 0);
+    this.drawFrame(disp, disp[0] > 0 ? (this.w * MimicWidget.ANIMATE_PERIOD / 1000 * this.fr) : 0);
 };
 
 /**
@@ -657,7 +576,7 @@ MimicWidget.prototype.drawCoil = function(y, pw) {
     this.ctx.font = this.px(13) + "px sans-serif";
     this.ctx.textAlign = "center";
     this.ctx.textBaseline = "middle";
-    this.ctx.fillText("C", this.width - this.px(30) - this.px(MimicWidget.COIL_BOX_WIDTH / 2), y);
+    this.ctx.fillText("C", this.width - this.px(55 - this.px(MimicWidget.COIL_BOX_WIDTH / 2)), y);
     
 };
 
@@ -962,118 +881,3 @@ MimicWidget.prototype.destroy = function() {
     
     Widget.prototype.destroy.call(this);
 };
-
-/**
- * Displays an FFT of one or more signals.
- * 
- * @constructor
- * @param {string} id graph identifier
- * @param {object} config configuration object
- * @config {object}  [fields]      map of graphed data fields with field => label
- * @config {object}  [colors]      map of graph trace colors with field => color (optional)
- * @config {boolean} [autoScale]   whether to autoscale the graph dependant (default off)
- * @config {integer} [minValue]    minimum value that is graphed, implies not autoscaling (default 0)
- * @config {integer} [maxValue]    maximum value that is graphed, implies not autoscaling (default 100)
- * @config {integer} [duration]    number of seconds this graph displays (default 60)
- * @config {integer} [period]      period betweeen samples in milliseconds (default 100)
- * @config {string}  [xLabel]      X axis label (default (Time (s))
- * @config {String}  [yLabel]      Y axis label (optional)
- * @config {boolean} [traceLabels] whether to show trace labels (default true)
- * @config {boolean} [fieldCtl]    whether data field displays can be toggled (default false)
- * @config {boolean} [autoCtl]     whether autoscaling enable control is shown (default false)
- * @config {boolean} [durationCtl] whether duration control slider is displayed
- * @config {integer} [vertScales]  number of vertical scales (default 5)
- * @config {integer} [horizScales] number of horizontal scales (default 8)
- */
-function FFTGraph(id, config)
-{
-    Graph.call(this, id, config);
-}
-
-FFTGraph.prototype = new Graph;
-
-FFTGraph.prototype.consume = function(data) {
-    /* Not stopping updates when controls are showing , causes ugly blinking. */
-    if (this.showingControls) return;
-    
-    var i = 0;
-
-    if (this.startTime == undefined) 
-    {
-        this.startTime = data.start;
-        this._updateIndependentScale();
-    }
-    
-    this.latestTime = data.time;
-
-    for (i in this.dataFields)
-    {
-        if (data[i] === undefined) continue;
-
-        this.dataFields[i].values = this.fftTransform(
-                this._pruneSample(data[i], this.config.duration * 1000 / this.config.period));
-        
-        this.dataFields[i].seconds = this.dataFields[i].values.length * this.config.period / 1000;
-        this.displayedDuration = data.duration;
-    }
-    
-    if (this.config.autoScale) 
-    {
-        /* Determine graph scaling for this frame and label it. */
-        this._adjustScaling();
-        this._updateDependantScale();
-    }
-
-    this._drawFrame();
-    
-};
-
-FFTGraph.prototype._updateIndependentScale = function() {
-    var i, $d = this.$widget.find(".graph-bottom-scale-0"), t;
-
-    for (i = 0; i <= this.config.horizScales; i++)
-    {
-        t = 1000 * i / this.config.period / this.config.horizScales / 20; 
-        $d.html(Util.zeroPad(t, 1));
-        $d = $d.next();
-    }
-};
-
-/**
- * Pads the length of the array with 0 until its length is a multiple of 2.
- * 
- * @param {Array} arr array to pad
- * @return {Array} padded arary (same as input)
- */
-FFTGraph.prototype.fftTransform = function(sample) {
-    
-    var i, n = sample.length, vals = new Array(n);
-    
-    /* The FFT is computed on complex numbers. */
-    for (i = 0; i < n; i++)
-    {
-        vals[i] = new Complex(sample[i], 0);
-    }
-    
-    /* The Cooley-Turkey algorithm operates on samples whose length is a 
-     * multiple of 2. */ 
-    while (((n = vals.length) & (n - 1)) != 0)
-    {
-        vals.push(new Complex(0, 0));
-    } 
-    
-    /** Apply the FFT transform. */
-    vals = fft(vals);
-    
-    /* We only care about the first 10 Hz. */
-    vals.splice(n / 20 - 1, n - n / 20);
-
-    /* The plot is of the absolute values of the sample, then scaled . */
-    for (i = 0; i < vals.length; i++)
-    {
-        vals[i] = vals[i].abs() * 2 / n;
-    }
-
-    return vals;
-};
-

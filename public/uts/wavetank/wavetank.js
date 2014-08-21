@@ -96,7 +96,7 @@ WaveTank.prototype.setup = function() {
         windowed: false,
         ledBelow: true
     }));
-
+/*
     o = new Slider("slider-1", {
         field: "pump-on",
         action: "setPump",
@@ -144,11 +144,11 @@ WaveTank.prototype.setup = function() {
 
     o = new RotarySwitch("rotary-1", {
         field: "pump-on",
+        title: "Water Level",
         action: "setPump",
-        label: "Water Level",
         icon: "pump",
         draggable: true,
-        windowed: false,
+        windowed: true,
         values: [
             {label: "One", value: 1},
             {label: "Two", value: 2},
@@ -164,13 +164,14 @@ WaveTank.prototype.setup = function() {
         radius: 70
     });
     this.widgets.push(o);
-
+*/
     o = new RotarySwitch("rotary-2", {
         field: "pump-on",
+        title: "Water Flow",
         action: "setPump",
         icon: "pump",
         draggable: true,
-        windowed: false,
+        windowed: true,
         values: [
             {label: "1", value: 1},
             {label: "2", value: 2},
@@ -184,7 +185,7 @@ WaveTank.prototype.setup = function() {
             {label: "10", value: 10}
         ],
         radius: 70,
-        colour: "white"
+        color: "white"
     });
     this.widgets.push(o);
 
@@ -201,50 +202,161 @@ WaveTank.prototype.setup = function() {
             {label: "four", value: 4}
         ],
         radius: 50,
-        colour: 'white'
+        color: 'white'
     });
     this.widgets.push(o);
- 
-    o = new Knob("knob-1", {
-    	action: "setPump",
-        label: "Knob Smooth",
-        draggable: true,
-        style: "white",
-        windowed: false,
-        radius: 70,
-    });
-    this.widgets.push(o);
-
+/*
     o = new Knob("knob-2", {
-    	action: "setPump",
-        label: "Knob Black",
-        draggable: true,
-        style: "black",
-        windowed: false,
-        radius: 70,
-    });
-    this.widgets.push(o);
-
-    o = new Knob("knob-3", {
+        field: "pump",
     	action: "setPump",
         label: "Knob Metal",
         draggable: true,
         style: "metal",
+        max: 200,
+        min: 100,
+        units: 'rad',
+        labelVertical: false,
         windowed: false,
-        radius: 70,
+        radius: 65
     });
     this.widgets.push(o);
-
-    o = new Knob("knob-4", {
+*/
+    o = new Knob("knob-3", {
+        field: "pump",
     	action: "setPump",
-        label: "Knob Volume",
+        label: "Knob Black",
         draggable: true,
-        style: "volume",
+        style: "black",
+        min: 10,
+        max: 50,
+        labelVertical: false,
+        units: 'rpm',
+        tooltip: 'Select a value.',
         windowed: false,
-        radius: 50,
+        radius: 65
     });
     this.widgets.push(o);
     
+    o = new Knob("knob-1", {
+        field: "pump",
+    	action: "setPump",
+        label: "Knob Widget",
+        draggable: true,
+        style: "valve",
+        max: 100,
+        units: '%',
+        windowed: true,
+        indicator: true,
+        radius: 125
+    });
+    this.widgets.push(o);
+    
+    o = new Button("button-1", {
+    	action: "setPump",
+        label: "Start Machine",
+        draggable: true,
+        windowed: false,
+        overlay: true,
+        circular: false,
+        color: '#59835E',
+        clickColor: '#03D61B'
+    });
+    this.widgets.push(o);
+    
+    o = new Button("button-2", {
+    	action: "setPump",
+        label: "Stop Machine",
+        draggable: true,
+        windowed: false,
+        circular: false,
+        overlay: true,
+        color: '#B13333',
+        clickColor: '#FF5252'
+    });
+    this.widgets.push(o);
+    
+    o = new Button("button-3", {
+    	action: "setPump",
+        label: "Mode 1",
+        draggable: true,
+        windowed: false,
+        circular: false,
+        overlay: false,
+        color: '#747474',
+        clickColor: '#464646'
+    });
+    this.widgets.push(o);
+
+    o = new Button("button-4", {
+    	action: "setPump",
+        label: "Mode 2",
+        draggable: true,
+        windowed: false,
+        circular: false,
+        overlay: false,
+        color: '#747474',
+        clickColor: '#464646'
+    });
+    this.widgets.push(o);
+
+    o = new Button("button-5", {
+    	action: "setPump",
+        label: "Mode 3",
+        draggable: true,
+        windowed: false,
+        circular: false,
+        overlay: false,
+        color: '#747474',
+        clickColor: '#464646'
+    });
+    this.widgets.push(o);
+
+    o = new PushButton("push-1", {
+    	action: "button1",
+        label: "Default",
+        draggable: true,
+        windowed: true
+    });
+    this.widgets.push(o);
+
+    o = new PushButton("push-2", {
+    	action: "button2",
+        label: "Red",
+        draggable: true,
+        windowed: true,
+        pushColor: "red",
+        diameter: 65
+    });
+    this.widgets.push(o);
+
+    o = new PushButton("push-3", {
+    	action: "button3",
+        label: "Green",
+        draggable: true,
+        windowed: true,
+        pushColor: "green",
+        diameter: 65
+    });
+    this.widgets.push(o);
+
+    o = new PushButton("push-4", {
+    	action: "button4",
+        label: "Yellow",
+        draggable: true,
+        windowed: true,
+        pushColor: "yellow",
+        diameter: 65
+    });
+    this.widgets.push(o);
+
+    o = new PushButton("push-5", {
+    	action: "button5",
+        label: "Blue",
+        draggable: true,
+        windowed: true,
+        pushColor: "blue"
+    });
+    this.widgets.push(o);   
 };
 
 /** 
