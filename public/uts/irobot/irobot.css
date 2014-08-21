@@ -4,6 +4,10 @@
 	clear: both;
 }
 
+#warningmessage {
+	display: none;
+}
+
 /******************************************************************************
  ** Widgets                                                                  **
  ******************************************************************************/
@@ -118,8 +122,8 @@
  ******************************************************************************/
 
 #warning-message {
-	width: 300px;
-	margin: 30px auto;
+	width: 500px;
+	margin: 10px auto -800px;
 }
 
 #t-overlay {
@@ -138,6 +142,41 @@
 #warning-message .ui-icon, #t-overlay .ui-icon {
 	float: left;
 	margin-right: 5px;
+}
+
+#warning-message ul {
+	list-style: inner;
+	padding: 10px;
+}
+
+#warning-message ul li {
+	padding: 5px 0;
+}
+
+#warning-message .player-diag {
+	width: 660px;
+	margin: 20px -90px;
+	padding: 10px;
+	border: 1px solid #EFEFEF;
+}
+
+#warning-message .player-diag-title {
+	font-size: 1.2em;
+	text-align: center;
+	font-weight: bold;
+	background-color: #EFEFEF;
+	margin-bottom: 10px
+}
+
+#warning-message .player-stream-title {
+	background-color: #EFEFEF;
+	font-weight: bold;
+	margin: 10px 0 3px;
+}
+
+#warning-message pre {
+	font-family: monospace;
+	font-size: 0.9em;	
 }
 
 /******************************************************************************
