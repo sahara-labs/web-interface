@@ -25,7 +25,7 @@ function Config2DOF()
         anchor: "#shake-table-anchor",
         controller: "ShakeTableController",
         dataAction: "dataAndGraph",
-        dataDuration: 120,
+        dataDuration: 30,
         dataPeriod: 10,
         pollPeriod: 1000,
         windowToggle: true,

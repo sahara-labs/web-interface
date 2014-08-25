@@ -2148,7 +2148,8 @@ Graph.prototype.consume = function(data) {
         }
         else
         {
-            this.dataFields[i].values = this._pruneSample(data[i], this.config.duration * this.config.period);
+            this.dataFields[i].values = this._pruneSample(data[i], 
+                    this.config.duration * 1000 / this.config.period);
             this.dataFields[i].seconds = this.config.duration;
             this.displayedDuration = this.config.duration;
         }
@@ -3907,7 +3908,7 @@ Slider.prototype._buildHTML = function() {
         "</div>" :
         "<div class='slider-text-" + (this.config.vertical ? "vertical" : "horizontal") +
                 "' style='" + (this.config.vertical ? "margin-top:" + (this.config.length + 20) +"px;" : "") + "'>" +
-            this.config.label +
+            this.config.units +
         "</div>";
 
     html += "</div>";
