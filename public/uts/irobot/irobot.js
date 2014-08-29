@@ -2255,6 +2255,7 @@ function CameraWidget(pc)
 	this.displayFormat = null;
 	
 	this.lastHeartBeat = 0;
+	this.shutdown = false;
 }
 CameraWidget.prototype = new IWidget;
 
@@ -2340,6 +2341,7 @@ CameraWidget.prototype.deployDefault = function() {
 
 CameraWidget.prototype.deploy = function(format) {
 	/* Remove the current format. */
+    if (this.displayFormat = 'mjpeg') this.undeployMJpeg();
 	this.$w.children(".camera-box").empty();
 	
 	this.$w.children(".selected").removeClass("selected");
@@ -2414,6 +2416,8 @@ CameraWidget.prototype.deployMJpeg = function() {
 };
 
 CameraWidget.prototype.mozMJpegCOP = function() {
+    if (this.shutdown) return;
+    
 	if (this.displayFormat == 'mjpeg' && new Date().getTime() - this.lastHeartBeat > 2000)
 	{
 		/* Need to redeploy. */
@@ -2426,6 +2430,12 @@ CameraWidget.prototype.mozMJpegCOP = function() {
 			thiz.mozMJpegCOP();
 		}, 2000);
 	}
+};
+
+CameraWidget.prototype.undeployMJpeg = function() {
+    if ($.browser.msie) return; 
+    
+    $("#" + this.cameraBox).children("img").attr("src", "#");
 };
 
 CameraWidget.prototype.deploySWF = function() {
@@ -2529,6 +2539,12 @@ CameraWidget.prototype.getStoredFormat = function() {
 		}
 	}
 	return "";
+};
+
+CameraWidget.prototype.destroy = function() {
+    this.shutdown = true;
+    if (this.displayFormat == 'mjpeg') this.undeployMJpeg();
+    IWidget.prototype.destroy.call(this);
 };
 
 /* ----------------------------------------------------------------------------
