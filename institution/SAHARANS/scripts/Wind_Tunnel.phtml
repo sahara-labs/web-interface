@@ -72,6 +72,7 @@ $(document).ready(function() {
                 fields: { "graph-wind-speed": "Air Velocity" },
                 colors: { "graph-wind-speed": "blue" },
                 yLabel: "Air Velocity (m/s)",
+                maxValue: 15,
                 traceLabels: false,
                 horizScales: 5,
                 top: 550,
@@ -100,6 +101,7 @@ $(document).ready(function() {
                 fields: { "graph-diff-pressure": "Differential Pressure" },
                 colors: { "graph-diff-pressure": "red" },
                 yLabel: "Differential Pressure (Pa)",
+                maxValue: 250,
                 traceLabels: false,
                 horizScales: 5,
                 top: 860,
@@ -112,6 +114,8 @@ $(document).ready(function() {
                 colors: { "graph-barometric-pressure": "orange" },
                 yLabel: "Barometric Pressure (Pa)",
                 traceLabels: false,
+                minValue: 900,
+                maxValue: 1100,
                 horizScales: 5,
                 top: 860,
                 left: 340,
@@ -136,27 +140,91 @@ $(document).ready(function() {
                          label: "Fan",
                          units: "%",
                      }),
+                     s = new Slider("slider-load", {
+                         action: "setLoad",
+                         field: "load-val",
+                         label: "Load",
+                         units: "A",
+                         max: 1,
+                         precision: 3,
+                         vertical: false,
+						 length: 134,
+						 scales: 1,
+						 consumeEvt: function(data) {
+							if (!(data["load-mode-ord"] === undefined || this.loadMode == data["load-mode-ord"]))
+							{
+								switch (data["load-mode-ord"])
+								{
+								case 0: // Constant current.
+									this.config.max = 1;
+									this.config.units = "A";
+									this.config.precision = 3;
+									break;
+
+								case 1: // Constant voltage.
+									this.config.max = 65;
+									this.config.units = "V";
+									this.config.precision = 1;
+									break;
+
+								case 2: // Constant Power.
+									this.config.max = 20;
+									this.config.units = "W";
+									this.config.precision = 2;
+									break;
+
+								case 3: // Constant Resistance.
+									this.config.max = 2000;
+									this.config.units = "&#8486;";
+									this.config.precision = 1;
+									break;
+
+								default:
+									alert("Unknown load mode!!!");
+								}
+
+
+								var $c = this.$widget.parent(),
+									l = this.getWindowProperty("left"), t = this.getWindowProperty("top");
+								this.destroy();
+								this.init($c);
+								this.$widget.css({
+									left: l,
+									top: t
+								});
+
+								this.loadMode = data["load-mode-ord"];
+							}
+						 }
+                     }),
                      new SelectionList("selection-load-mode", {
                          action: "setLoad",
-                         field: "load-mode",
-                         label: "Load Constant",
-                         radius: 45,
-                         values: [ "Current", "Voltage", "Power", "Resistance" ]                         
-                     })                                         
+                         field: "load-mode-ord",
+                         label: "Load Constant:",
+                         values: [ "Current",
+                                   "Voltage",
+                                   "Power",
+                                   "Resistance" ],
+                         selectionWidth: 100,
+                         consumeEvt: function(data) {
+                             s.consume(data);
+                         }
+                     }),
                 ],
                 layout: new BoxLayout({
                     vertical: true,
                     align: "center"
                 }),
-                left: 680,
-                top: 390,
+                left: -193,
+                top: 550,
             }),
+/* It seems the Horizon Monitor is no longer going to be in use.
             new Container("container-energy-monitor", {
-                widgets: [                    
+                widgets: [
 		            new LCD("lcd-voltage", {
 		                field: "monitor-volts",
 		                label: "Voltage",
-		                units: "V",		                
+		                units: "V",
 		            }),
 		            new LCD("lcd-amps", {
 		                field: "monitor-amps",
@@ -181,7 +249,7 @@ $(document).ready(function() {
 		        }),
 		        left: -202,
 		        top: 550,
-            }),
+            }), */
         ]
     }).setup().run();
 });

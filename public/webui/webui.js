@@ -231,6 +231,7 @@ WebUIApp.prototype._errorData = function(msg) {
  * @config {boolean} [shadeable]           whether this widget should be shadeable (default false)
  * @config {boolean} [closeable]           whether this widget should be closeable (default false) 
  * @config {string}  [tooltip]             tooltip to show on hover (optional)
+ * @config {function} [consumeEvt]         event called when consume is received (optional)
  */
 function Widget(id, config)
 {
@@ -275,7 +276,9 @@ Widget.prototype.init = function($container) {
  * 
  * @param {object} data data object
  */
-Widget.prototype.consume = function(data) { };
+Widget.prototype.consume = function(data) { 
+    if (this.config.consumeEvt) this.config.consumeEvt.call(this, data);
+};
 
 /** 
  * Removes the widget from the page and cleans up all registered
@@ -2169,6 +2172,8 @@ Graph.prototype.consume = function(data) {
         
     this._drawFrame();
     this._updateIndependentScale();
+    
+    Widget.prototype.consume.call(this, data);
 };
 
 
@@ -2735,6 +2740,8 @@ ScatterPlot.prototype.consume = function(data) {
     }
 
     this._drawFrame();
+    
+    Widget.prototype.consume.call(this, data);
 };
 
 ScatterPlot.prototype._drawTrace = function(dObj) {
@@ -2898,6 +2905,8 @@ Switch.prototype.consume = function(data) {
         this.val = data[this.config.field];
         this._setDisplay(this.val);
     }
+    
+    Widget.prototype.consume.call(this, data);
 };
 
 /**
@@ -3084,39 +3093,79 @@ RotarySwitch.prototype._animateSwitch = function(point) {
  * @constructor
  * @param {string} id the identifier of widget
  * @param {object} config configuration of widget
- * @config {string} [field]  server data variable that is being switched
- * @config {string} [action] server action to call when the switched is changed
- * @config {array}  [values] the list of potential values
- * @config {string} [label]  switch label (optional)
- * @config {string} [color] set the switch color (default black)
+ * @config {string}  [field]  server data variable that is being switched
+ * @config {string}  [action] server action to call when the switched is changed
+ * @config {string}  [label] label adjacent of selection list (options)
+ * @config {array}   [values] the list of potential values
+ * @config {integer} [selectionWidth] width of selection  
+ * @config 
  */
 function SelectionList(id, config)
 {
     Widget.call(this, id, config);
+    
+    if (this.config.selectionWidth === undefined) this.config.selectionWidth = 100;
+    
+    /* Current value. */
+    this.val = undefined;
+    
+    /* Whether the value has been be user command and is the process of being 
+     * sent. */
+    this.valChange = false;
 }
 
 SelectionList.prototype = new Widget;
 
 SelectionList.prototype.init = function($container) {
-    if (!(this.config.action || this.config.field)) throw "Options not configured.";
+    if (!(this.config.action || this.config.field || 
+            this.config.values.length < 1)) throw "Options not configured.";
     
     this.$widget = this._generate($container, this._buildHTML());
     
+    var thiz = this;
+    this.$widget.find("select").change(function () { thiz._changed(); }); 
 };
 
 SelectionList.prototype._buildHTML = function() {
     var k, html = 
-        "<select name='" + this.id + "-select' class='selection-list'>"
+        (this.config.label ? "<label>" + this.config.label + "</label>" : "") +
+        "<div class='data-format-outer' style='width:" + this.config.selectionWidth + "px'>" +
+            "<select name='" + this.id + "-select' class='selection-list' " +
+            		"style='width:" + (this.config.selectionWidth + 25) + "px'>"
     
     for (k in this.config.values)
     {
+        if (this.val == undefined) this.val = k; // First key set.
         html += "<option value='" + k + "'>" + this.config.values[k] + "</option>";
     }
     
-    html += 
-        "</select>";
+    html += "</select>" +
+        "</div>";
     
     return html;
+};
+
+SelectionList.prototype.consume = function(data) {
+    if (!(data[this.config.field] === undefined || data[this.config.field] == this.val || this.valChanged))
+    {
+        this.val = data[this.config.field];
+
+        this.$widget.find("select option:selected").removeAttr("selected");
+        this.$widget.find('select option[value="' + this.val + '"]').attr("selected", "selected");
+    }
+    
+    Widget.prototype.consume.call(this, data);
+};
+
+SelectionList.prototype._changed = function() {
+    this.val = this.$widget.find("select option:selected").attr("value");
+    this.valChanged = true;
+    
+    var thiz = this, params = { };
+    params[this.config.field] = this.val;
+    this._postControl(this.config.action, params, function() {
+        thiz.valChanged = false;
+    });
 };
 
 /* ============================================================================
@@ -4175,13 +4224,15 @@ Slider.prototype._send = function() {
     );
 };
 
-Slider.prototype.consume = function(data) {
+Slider.prototype.consume = function(data) {   
     if (!(data[this.config.field] === undefined || data[this.config.field] == this.val || this.valueChanged))
     {
         this.val = data[this.config.field];
         this._moveTo();
         if (this.config.textEntry) this.$input.val(Util.zeroPad(this.val, this.config.precision));
     }
+    
+    Widget.prototype.consume.call(this, data);
 };
 
 /* ============================================================================
@@ -4227,6 +4278,8 @@ LED.prototype.consume = function(data) {
         this.val = data[this.config.field];
         this.$widget.find(".led").removeClass("led-novalue led-on led-off").addClass(this.val ? 'led-on' : 'led-off');
     }
+    
+    Widget.prototype.consume.call(this, data);
 };
 
 /* ============================================================================
@@ -4286,6 +4339,8 @@ LCD.prototype.consume = function(data) {
         this.val = Util.zeroPad(data[this.config.field], this.config.precision);
         this.$widget.find('.lcd-value').html(this.val);
     }
+    
+    Widget.prototype.consume.call(this, data);
 };
 
 /* ============================================================================
@@ -4367,6 +4422,8 @@ Gauge.prototype.init = function($container) {
 Gauge.prototype.consume = function(data) {
     this.val = data[this.config.field] ? data[this.config.field] : this.val ? this.val : '';
     this.animate();
+    
+    Widget.prototype.consume.call(this, data);
 };
 
 Gauge.prototype.animate = function() {
@@ -4461,6 +4518,8 @@ LinearGauge.prototype.init = function($container) {
 LinearGauge.prototype.consume = function(data) {
     this.val = data[this.config.field] ? data[this.config.field] : this.val ? this.val : '';
     thiz.animate();
+    
+    Widget.prototype.consume.call(this, data);
 };
 
 LinearGauge.prototype.animate = function() {
@@ -4570,6 +4629,8 @@ CameraStream.prototype.consume = function(data) {
     {
         this._restoreDeploy();
     }
+    
+    Widget.prototype.consume.call(this, data);
 };
 
 /**
@@ -5030,6 +5091,8 @@ DataLogging.prototype.consume = function(data) {
             }
         }
     }
+    
+    Widget.prototype.consume.call(this, data);
 };
 
 DataLogging.prototype.resized = function(width, height) {
