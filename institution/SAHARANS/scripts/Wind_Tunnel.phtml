@@ -6,7 +6,7 @@
 
 $this->headScript()->appendFile($this->baseUrl('webui/webui.js'));
 $this->headLink()->appendStylesheet($this->baseUrl('webui/webui.css'));
-$this->headLink()->appendStylesheet($this->baseUrl('webui/webui-skeuo.css'));
+$this->headLink()->appendStylesheet($this->baseUrl('webui/webui-flat.css'));
 $this->headLink()->appendStylesheet($this->baseUrl('uts/windtunnel/windtunnel.css'));
 
 /* Canvas compatability implementation for Internet Explorer 8 and earlier. */
@@ -31,7 +31,7 @@ $(document).ready(function() {
         windowToggle: true,
         controller: "WindTunnelController",
         dataAction: "dataAndGraph",
-        theme: Globals.THEME.skeuo,
+        theme: Globals.THEME.flat	,
         cookie: "windtunnelt",
         height: 1250,
         widgets: [
@@ -63,6 +63,10 @@ $(document).ready(function() {
                 left: 0,
                 top: 5,
             }),
+            new DataLogging("data-logging", {
+                left: -193,
+                top: 144,
+            }),
             new Graph("graph-airvelocity", {
                 title: "Air Velocity",
                 fields: { "graph-wind-speed": "Air Velocity" },
@@ -72,7 +76,7 @@ $(document).ready(function() {
                 horizScales: 5,
                 top: 550,
                 left: 0,
-                width: 330
+                width: 330,
             }),
             new Graph("graph-temphumid", {
                 title: "Temp. / Relative Humidity",
@@ -132,11 +136,13 @@ $(document).ready(function() {
                          label: "Fan",
                          units: "%",
                      }),
-                     new Switch("button-load", {
+                     new SelectionList("selection-load-mode", {
                          action: "setLoad",
-                         field: "load-enable",
-                         label: "Load On",
-                     }),
+                         field: "load-mode",
+                         label: "Load Constant",
+                         radius: 45,
+                         values: [ "Current", "Voltage", "Power", "Resistance" ]                         
+                     })                                         
                 ],
                 layout: new BoxLayout({
                     vertical: true,
@@ -145,46 +151,37 @@ $(document).ready(function() {
                 left: 680,
                 top: 390,
             }),
-            new Gauge("gauge-voltage", {
-                field: "monitor-volts",
-                resizable: false,
-                title: "Voltage",
-                units: "V",
-                max: 5,
-                radius: 65,
-                left: -182,
-                top: 140,
+            new Container("container-energy-monitor", {
+                widgets: [                    
+		            new LCD("lcd-voltage", {
+		                field: "monitor-volts",
+		                label: "Voltage",
+		                units: "V",		                
+		            }),
+		            new LCD("lcd-amps", {
+		                field: "monitor-amps",
+		                label: "Amps",
+		                units: "A",
+		                precision: 3
+		            }),
+		            new LCD("lcd-joules", {
+		                field: "monitor-joules",
+		                label: "Joules",
+		                units: "J",
+		            }),
+		            new LCD("gauge-rpm", {
+		                field: "monitor-rpm",
+		                label: "RPM",
+		                units: "RPM",
+		                precision: 0
+		            })
+		        ],
+		        layout: new BoxLayout({
+			        vertical: true
+		        }),
+		        left: -202,
+		        top: 550,
             }),
-            new Gauge("gauge-amps", {
-                field: "monitor-amps",
-                resizable: false,
-                title: "Amps",
-                units: "A",
-                max: 5,
-                radius: 65,
-                left: -182,
-                top: 335,
-            }),
-            new Gauge("gauge-joules", {
-                field: "monitor-joules",
-                resizable: false,
-                title: "Joules",
-                units: "J",
-                max: 5,
-                radius: 65,
-                left: -180,
-                top: 530,
-            }),
-            new Gauge("gauge-rpm", {
-                field: "monitor-rpm",
-                resizable: false,
-                title: "RPM",
-                units: "RPM",
-                max: 5,
-                radius: 65,
-                left: -180,
-                top: 725,
-            })
         ]
     }).setup().run();
 });

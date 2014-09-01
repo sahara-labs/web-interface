@@ -8,3 +8,7 @@
 #rigscriptcontainer #warningmessage div {
 	display: none;
 }
+
+#data-logging .window-content {
+	height: 330px;
+}

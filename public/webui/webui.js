@@ -2996,8 +2996,7 @@ function RotarySwitch(id, config)
 RotarySwitch.prototype = new Widget;
 
 RotarySwitch.prototype.init = function($container) {
-	var r = this.config.radius,
-        v = this.config.values;
+	var r = this.config.radius, i, k, x, y;
 	
     this.$widget = this._generate($container,
     	"<div class='rotary-container " + (this.config.label ? 'rotary-container-label' : '') +
@@ -3011,18 +3010,20 @@ RotarySwitch.prototype.init = function($container) {
     );
 
     /* Generates the positions of the switches' points. */
-    for(var i = 0, j = v.length; i < v.length; i++, j--) {
+    i = 0;
+    for (k in this.config.values)
+    {
+        i++;
 
     	/* Calculate the X and Y axes of the current point.  */
-        var y = (r - 5) - (r + 10) * Math.cos(2 * Math.PI * i / v.length),
-            x = (r - 5) - (r + 10) * Math.sin(2 * Math.PI * i / v.length),
-            p = v[(v.length - i)];
+        y = (r - 5) - (r + 10) * Math.cos(2 * Math.PI * i / this.config.values.length);
+        x = (r - 5) - (r + 10) * Math.sin(2 * Math.PI * i / this.config.values.length);            
 
         $("#rotary-container-" + this.id).append(
             "<div class='small-range-val rotary-switch-val " +
-            "' id='" + this.id + "-" + j + "' " +
+            "' id='" + this.id + "-" + i + "' " +
             "style='left:" + Math.round(x) + "px;top:" + Math.round(y) + "px' " + "value=" +
-            ( p ? p.value : v[0].value) + ">" + ( p ? p.label : v[0].label) + "</div>"
+            k + ">" + this.config.values[k] + "</div>"
         );
     }
 
@@ -3071,6 +3072,51 @@ RotarySwitch.prototype._animateSwitch = function(point) {
         '-o-transform' : 'rotate('+ deg +'deg)',
         'transform' : 'rotate('+ deg +'deg)'
     });
+};
+
+/* ============================================================================
+ * == Selection List                                                         ==
+ * ============================================================================ */
+
+/**
+ * A selection allows the selection of a limited number of options.
+ *
+ * @constructor
+ * @param {string} id the identifier of widget
+ * @param {object} config configuration of widget
+ * @config {string} [field]  server data variable that is being switched
+ * @config {string} [action] server action to call when the switched is changed
+ * @config {array}  [values] the list of potential values
+ * @config {string} [label]  switch label (optional)
+ * @config {string} [color] set the switch color (default black)
+ */
+function SelectionList(id, config)
+{
+    Widget.call(this, id, config);
+}
+
+SelectionList.prototype = new Widget;
+
+SelectionList.prototype.init = function($container) {
+    if (!(this.config.action || this.config.field)) throw "Options not configured.";
+    
+    this.$widget = this._generate($container, this._buildHTML());
+    
+};
+
+SelectionList.prototype._buildHTML = function() {
+    var k, html = 
+        "<select name='" + this.id + "-select' class='selection-list'>"
+    
+    for (k in this.config.values)
+    {
+        html += "<option value='" + k + "'>" + this.config.values[k] + "</option>";
+    }
+    
+    html += 
+        "</select>";
+    
+    return html;
 };
 
 /* ============================================================================
@@ -3288,7 +3334,7 @@ function Knob(id, config)
     /** Default settings. */
     if (this.config.min === undefined) this.config.min = 0;
     if (this.config.max === undefined) this.config.max = 100;
-    if (this.config.style === undefined) this.congif.style = "white";
+    if (this.config.style === undefined) this.config.style = "white";
     if (this.config.vertical === undefined) this.config.vertical = false;
     if (this.config.indicator === undefined) this.config.indicator = false;
     if (this.config.radius === undefined) this.config.radius = 60;
@@ -4198,7 +4244,7 @@ LED.prototype.consume = function(data) {
  * @config {string} [colorIndicator] displays selected color in the header (optional)
  * @config {string} [units] Unit of measurement used by the LCD
  * @config {number} [length] the length of the LCD container
- * @config {number} [precision] the precision of the value (default: 3)
+ * @config {number} [precision] the precision of the value (default: 1)
  */
 function LCD(id, config)
 {
@@ -4227,7 +4273,7 @@ LCD.prototype.init = function($container) {
             '</div>'+
             '</div>' +
             '<div class="lcd-inner">' +
-                '<div class="lcd-value">' + (this.val ? this.val : '0.' + ('000000').substring(0, this.config.precision)) +'</div>' +
+                '<div class="lcd-value">' + Util.zeroPad(0, this.config.precision) +'</div>' +
             '</div>' +
             (this.config.colorIndicator ? '<span class="lcd-color-indicator" style="background:' + this.config.colorIndicator + ';"></span>' : '') +
         '</div>'
@@ -4237,7 +4283,7 @@ LCD.prototype.init = function($container) {
 LCD.prototype.consume = function(data) {
     if (!(data[this.config.field] === undefined || data[this.config.field] == this.val))
     {
-        this.val = parseFloat(data[this.config.field].toFixed(this.config.precision));
+        this.val = Util.zeroPad(data[this.config.field], this.config.precision);
         this.$widget.find('.lcd-value').html(this.val);
     }
 };

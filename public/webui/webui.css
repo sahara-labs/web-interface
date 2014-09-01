@@ -1057,7 +1057,7 @@
     border-radius: 4px;
 }
 
-.data-format {
+.data-format, .selection-list {
     background: rgba(0, 0, 0, 0);
     color: #777777;
     width: 100px;
