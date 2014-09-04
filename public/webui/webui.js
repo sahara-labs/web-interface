@@ -1993,7 +1993,7 @@ Graph.prototype = new Widget;
 
 /** @const {array} List of default trace colors. */
 Graph.COLORS = [
-     "#FCFF00", "#FF3B3B", "#8C42FB"
+     "#FCFF00", "#FF3B3B", "#8C42FB", "#82FF1B", "#FF29D1", "#C0C0FF"
 ];
 
 Graph.prototype.init = function($container) {
@@ -2129,6 +2129,8 @@ Graph.prototype._buildHTML = function() {
 	    		"    <span class='button-label'>Controls</span>" +
 	    		"</div>";
     }
+	
+	html += "<div class='graph-clear'></div>";
 	
 	return html;
 };
@@ -3203,7 +3205,8 @@ function Button(id, config)
     if (this.config.overlay === undefined) this.config.overlay = false;
     if (this.config.circular === undefined) this.config.circular = false;
     if (this.config.clickColor === undefined) this.config.clickColor = "#CCC";
-    if (this.config.diameter === undefined) this.config.diameter = 100;
+    
+    /* For width we need to take account padding. */
 }
 
 Button.prototype = new Widget;
@@ -3218,7 +3221,7 @@ Button.prototype.init = function($container) {
                     (this.config.height ? "line-height:" + this.config.height + "px;" : "") +
                     (this.config.color ? "background-color:" + this.config.color : "") +
                     (this.config.circular ? "border-radius:" + (this.config.width ? this.config.width : 5) + "px;" : "") +
-                    (this.config.width ? "width:" + this.config.width + "px;" : "") +
+                    (this.config.width ? "width:" + (this.config.width - 12) + "px;" : "") +
                     (this.config.height ? "height:" + this.config.height + "px;" : "") +
                 (this.config.link ? "' href='" + this.config.link : "") +
                 (this.config.target ? "' target='" + this.config.target : "") +
@@ -3254,7 +3257,7 @@ Button.prototype.init = function($container) {
                 setTimeout(function()
                 {
                     thiz.$widget.find('.push-button-outer').removeClass('push-button-down');
-                },300);
+                }, 300);
         	}
         });
     };

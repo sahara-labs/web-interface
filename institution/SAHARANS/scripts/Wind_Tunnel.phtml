@@ -14,9 +14,6 @@ $this->headScript()->appendFile($this->baseUrl('js/excanvas.js'),
         'text/javascript',
         array('conditional' => 'lt IE 9')
 );
-
-/* Touch events punching to mouse events. */
-$this->headScript()->appendFile($this->baseUrl('uts/coupledtanksnew/jquery.ui.touch-punch.js'));
 ?>
 
 <div id="wind-tunnel-anchor">
@@ -32,8 +29,9 @@ $(document).ready(function() {
         controller: "WindTunnelController",
         dataAction: "dataAndGraph",
         theme: Globals.THEME.flat	,
-        cookie: "windtunnelt",
-        height: 1250,
+        cookie: "windtunnel",
+        dataPeriod: 500,
+        height: 1850,
         widgets: [
             new Container("camera-containers", {
                 title: "Cameras",
@@ -73,28 +71,30 @@ $(document).ready(function() {
                 colors: { "graph-wind-speed": "blue" },
                 yLabel: "Air Velocity (m/s)",
                 maxValue: 25,
-                traceLabels: false,
                 horizScales: 5,
                 top: 550,
                 left: 0,
                 width: 330,
+                autoCtl: true,
+                traceLabels: false,
             }),
             new Graph("graph-temphumid", {
                 title: "Temp. / Relative Humidity",
                 fields: {
-                    "graph-exhaust-temp": "Temperature",
-                    "graph-relative-humidity": "Humidity"
+                    "graph-exhaust-temp": "Temperature (&deg;C)",
+                    "graph-relative-humidity": "Humidity (%)"
                 },
                 colors: {
                     "graph-exhaust-temp": "yellow",
                     "graph-relative-humidity": "green",
                 },
-                yLabel: "Temp (C) / Humidity (%)",
-                traceLabels: false,
+                yLabel: "Temp / Humidity",
                 horizScales: 5,
                 top: 550,
                 left: 340,
-                width: 330
+                width: 330,
+                autoCtl: true,
+                fieldCtl: true
             }),
             new Graph("graph-diffpressure", {
                 title: "Differential Pressure",
@@ -102,27 +102,29 @@ $(document).ready(function() {
                 colors: { "graph-diff-pressure": "red" },
                 yLabel: "Differential Pressure (Pa)",
                 maxValue: 500,
-                traceLabels: false,
                 horizScales: 5,
                 top: 860,
                 left: 0,
-                width: 330
+                width: 330,
+                autoCtl: true,
+                traceLabels: false,
             }),
             new Graph("graph-baropressure", {
                 title: "Barometric Pressure",
                 fields: { "graph-barometric-pressure": "Barometric Pressure" },
                 colors: { "graph-barometric-pressure": "orange" },
                 yLabel: "Barometric Pressure (Pa)",
-                traceLabels: false,
                 minValue: 900,
                 maxValue: 1100,
                 horizScales: 5,
                 top: 860,
                 left: 340,
-                width: 330
+                width: 330,
+                autoCtl: true,
+                traceLabels: false,
             }),
-            new Container("container-controllers", {
-                title: "Controls",
+            new Container("container-controllers-fan", {
+                title: "Fan",
                 draggable: true,
                 shadable: true,
                 closeable: true,
@@ -140,14 +142,35 @@ $(document).ready(function() {
                          label: "Fan",
                          units: "%",
                      }),
-                     s = new Slider("slider-load", {
-                         action: "setLoad",
-                         field: "load-val",
-                         label: "Load",
-                         units: "A",
-                         max: 1,
-                         precision: 3,
-                         vertical: false,
+                ],
+                layout: new BoxLayout({
+                    vertical: true,
+                    align: "center"
+                }),
+                left: -163,
+                top: 550,
+            }),
+	        new Container("container-controllers-load", {
+	            title: "Load Controller",
+                draggable: true,
+                shadable: true,
+                closeable: true,
+                expandable: false,
+                resizable: false,
+                widgets: [
+                    new Switch("switch-load-enable", {
+						field: "load-enable",
+						action: "setLoad",
+						label: "Load On"
+                    }),
+	                s = new Slider("slider-load", {
+	                    action: "setLoad",
+	                    field: "load-val",
+	                    label: "Load",
+	                    units: "A",
+	                    max: 1,
+	                    precision: 3,
+	                    vertical: false,
 						 length: 134,
 						 scales: 1,
 						 consumeEvt: function(data) {
@@ -196,60 +219,50 @@ $(document).ready(function() {
 								this.loadMode = data["load-mode-ord"];
 							}
 						 }
-                     }),
-                     new SelectionList("selection-load-mode", {
-                         action: "setLoad",
-                         field: "load-mode-ord",
-                         label: "Load Constant:",
-                         values: [ "Current",
-                                   "Voltage",
-                                   "Power",
-                                   "Resistance" ],
-                         selectionWidth: 100,
-                         consumeEvt: function(data) {
-                             s.consume(data);
-                         }
-                     }),
-                ],
+	                }),
+	                l = new SelectionList("selection-load-mode", {
+	                    action: "setLoad",
+	                    field: "load-mode-ord",
+	                    label: "Load Constant:",
+	                    values: [ "Current",
+	                              "Voltage",
+	                              "Power",
+	                              "Resistance" ],
+	                    selectionWidth: 100,
+						width: 110,
+	                    consumeEvt: function(data) {
+	                        s.consume(data);
+	                    }
+	                }),
+	                new Button("button-load-reset", {
+						action: "setLoad",
+						params: { "load-reset": true },
+						label: "Reset",
+						width: 110
+	                }),
+				],
                 layout: new BoxLayout({
                     vertical: true,
-                    align: "center"
+                    align: BoxLayout.ALIGN.center
                 }),
-                left: -193,
-                top: 550,
+                left: -192,
+                top: 1180,
             }),
-/* It seems the Horizon Monitor is no longer going to be in use.
-            new Container("container-energy-monitor", {
-                widgets: [
-		            new LCD("lcd-voltage", {
-		                field: "monitor-volts",
-		                label: "Voltage",
-		                units: "V",
-		            }),
-		            new LCD("lcd-amps", {
-		                field: "monitor-amps",
-		                label: "Amps",
-		                units: "A",
-		                precision: 3
-		            }),
-		            new LCD("lcd-joules", {
-		                field: "monitor-joules",
-		                label: "Joules",
-		                units: "J",
-		            }),
-		            new LCD("gauge-rpm", {
-		                field: "monitor-rpm",
-		                label: "RPM",
-		                units: "RPM",
-		                precision: 0
-		            })
-		        ],
-		        layout: new BoxLayout({
-			        vertical: true
-		        }),
-		        left: -202,
-		        top: 550,
-            }), */
+			new Graph("graph-load-controller", {
+				title: "Load Controller Values",
+				fields: {
+					"graph-load-volts": "Volts (V)",
+					"graph-load-amps":  "Amps (A)",
+					"graph-load-watts": "Power (W)",
+					"graph-load-ohms": "Resistance (&#8486;)"
+				},
+				autoCtl: true,
+				fieldCtl: true,
+				left: 0,
+				top: 1180,
+				width: 670,
+				height: 450
+			})
         ]
     }).setup().run();
 });
