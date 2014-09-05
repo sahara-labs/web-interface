@@ -31,7 +31,7 @@ $(document).ready(function() {
         theme: Globals.THEME.flat	,
         cookie: "windtunnel",
         dataPeriod: 500,
-        height: 1850,
+        height: 1750,
         widgets: [
             new Container("camera-containers", {
                 title: "Cameras",
@@ -74,7 +74,7 @@ $(document).ready(function() {
                 horizScales: 5,
                 top: 550,
                 left: 0,
-                width: 330,
+                width: 378,
                 autoCtl: true,
                 traceLabels: false,
             }),
@@ -91,8 +91,8 @@ $(document).ready(function() {
                 yLabel: "Temp / Humidity",
                 horizScales: 5,
                 top: 550,
-                left: 340,
-                width: 330,
+                left: 389,
+                width: 378,
                 autoCtl: true,
                 fieldCtl: true
             }),
@@ -105,7 +105,7 @@ $(document).ready(function() {
                 horizScales: 5,
                 top: 860,
                 left: 0,
-                width: 330,
+                width: 378,
                 autoCtl: true,
                 traceLabels: false,
             }),
@@ -118,8 +118,8 @@ $(document).ready(function() {
                 maxValue: 1100,
                 horizScales: 5,
                 top: 860,
-                left: 340,
-                width: 330,
+                left: 389,
+                width: 378,
                 autoCtl: true,
                 traceLabels: false,
             }),
@@ -141,17 +141,19 @@ $(document).ready(function() {
                          field: "motor-speed",
                          label: "Fan",
                          units: "%",
+                         length: 407,
                      }),
                 ],
                 layout: new BoxLayout({
                     vertical: true,
-                    align: "center"
+                    align: BoxLayout.ALIGN.center,
+                    padding: 25
                 }),
-                left: -163,
+                left: -193,
                 top: 550,
             }),
 	        new Container("container-controllers-load", {
-	            title: "Load Controller",
+	            title: "Load",
                 draggable: true,
                 shadable: true,
                 closeable: true,
@@ -170,10 +172,10 @@ $(document).ready(function() {
 	                    units: "A",
 	                    max: 1,
 	                    precision: 3,
-	                    vertical: false,
-						 length: 134,
-						 scales: 1,
-						 consumeEvt: function(data) {
+	                    vertical: true,
+						length: 164,
+						scales: 5,
+						consumeEvt: function(data) {
 							if (!(data["load-mode-ord"] === undefined || this.loadMode == data["load-mode-ord"]))
 							{
 								switch (data["load-mode-ord"])
@@ -243,7 +245,8 @@ $(document).ready(function() {
 				],
                 layout: new BoxLayout({
                     vertical: true,
-                    align: BoxLayout.ALIGN.center
+                    align: BoxLayout.ALIGN.center,
+                    padding: 25
                 }),
                 left: -192,
                 top: 1180,
@@ -260,8 +263,8 @@ $(document).ready(function() {
 				fieldCtl: true,
 				left: 0,
 				top: 1180,
-				width: 670,
-				height: 450
+				width: 767,
+				height: 500
 			})
         ]
     }).setup().run();
