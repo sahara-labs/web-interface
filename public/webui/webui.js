@@ -843,11 +843,9 @@ Widget.prototype.getWindowProperty = function(property) {
     {
     case 'width':
         return this.window.width === undefined ? this.$widget.outerWidth(true) : this.window.width;
-        break;
 
     case 'height':
         return this.window.height === undefined ? this.$widget.outerHeight(true) : this.window.height;
-        break;
 
     case 'left':
         return this.window.left === undefined ? parseInt(this.$widget.css("left")) : this.window.left;
@@ -855,11 +853,9 @@ Widget.prototype.getWindowProperty = function(property) {
 
     case 'top':
         return this.window.top === undefined ? parseInt(this.$widget.css("top")) : this.window.top;
-        break;
 
     default:
         return this.window[property];
-        break;
     }
 };
 
@@ -1948,8 +1944,8 @@ function Graph(id, config)
 	if (this.config.durationCtl === undefined) this.config.durationCtl = false;
 	if (this.config.vertScales === undefined)  this.config.vertScales = 5;
 	if (this.config.horizScales === undefined) this.config.horizScales = 8;
-	if (this.config.width === undefined) this.config.width = 300;
-	if (this.config.height === undefined) this.config.height = 300;
+	if (this.config.width === undefined)       this.config.width = 300;
+	if (this.config.height === undefined)      this.config.height = 300;
 	
 	/* Whether we need controls on the page. */
 	this.config.hasControls = this.config.autoCtl || this.config.durationCtl;
@@ -2011,7 +2007,7 @@ Graph.prototype.init = function($container) {
         for (i in this.config.fields)
         {
             this.dataFields[i] = {
-                    label: this.config.fields[i],
+                    label: Util.getDOMStr(this.config.fields[i]),
                     visible: true,
                     values: [ ],
                     seconds: 0,
@@ -2226,6 +2222,8 @@ Graph.prototype._adjustScaling = function() {
 
     for (i in this.dataFields)
     {
+        if (!this.dataFields[i].visible) continue;
+        
         for (j = 0; j < this.dataFields[i].values.length; j++)
         {
             if (this.dataFields[i].values[j] < min) min = this.dataFields[i].values[j];
@@ -2377,7 +2375,6 @@ Graph.prototype._showTrace = function(label, show) {
 
 	this._drawFrame();
 };
-
 
 Graph.prototype.resized = function(width, height) {
     this.graphWidth = this.graphWidth + (width - this.config.width);
@@ -3960,7 +3957,8 @@ Slider.prototype.init = function($container) {
 };
 
 Slider.prototype._buildHTML = function() {
-    var i, s = this._getScales(),
+    var i, s = this._getScales(), 
+        spr = (this.config.max - this.config.min < this.config.scales ? 1 : 0), // For small ranges we need to use a decimal point
         html = 
         "<div class='slider-container-" + (this.config.vertical ? "vertical" : "horizontal") + "' style='" + 
                     (this.config.vertical ? "" : "width:" + (this.config.length + 15) + "px;") + "'>" +
@@ -3976,7 +3974,7 @@ Slider.prototype._buildHTML = function() {
                         (this.config.length / this.config.scales * i) + "px'>" +
                     "<span class='ui-icon ui-icon-arrowthick-1-" + (this.config.vertical ? "w" : "n") + "'></span>" +
                     "<span class='small-range-val slider-scale-value' style='" + (this.config.vertical ? "top:2px;" : "right:6px;") + "'>" + 
-                            Math.round(s[i]) + "</span>" +
+                            Util.zeroPad(s[i], spr) + "</span>" +
                 "</div>";
     }
     html += "</div>";
@@ -4036,7 +4034,7 @@ Slider.prototype._getScales = function() {
         /* Linear scale. */
         for (i = 0; i <= this.config.scales; i++)
         {
-            scales[i] = (Math.floor((this.config.max - this.config.min) / this.config.scales)) * i;
+            scales[i] = (this.config.max - this.config.min) * i / this.config.scales;
         }
     }
     
@@ -5554,4 +5552,21 @@ Util.sizeOf = function(o) {
     var i = 0, c = 0;
     for (i in o) c++;
     return c;
+};
+
+/**
+ * Gets a string as would be returned by the DOM.
+ * 
+ * @param s string to get DOM equiv
+ * @return DOM string
+ */
+Util.getDOMStr = function(s) {
+    var i = s.indexOf('&');
+
+    if (i > 0 && (s.indexOf(';', i) - i) < 7)
+    {
+        s = $("<p>" + s + "</p>").text();
+    }
+    
+    return s;
 };
