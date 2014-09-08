@@ -31,6 +31,7 @@ $(document).ready(function() {
         theme: Globals.THEME.flat	,
         cookie: "windtunnel",
         dataPeriod: 500,
+        pollPeriod: 2000,
         height: 1750,
         widgets: [
             new Container("camera-containers", {
@@ -259,6 +260,11 @@ $(document).ready(function() {
 					"graph-load-watts": "Power (W)",
 					"graph-load-ohms": "Resistance (k&#8486;)"
 				},
+				multipliers: {
+					"graph-load-ohms": 50,
+					"graph-load-amps": 50
+				},
+				yLabel: "Volts (V) / Power (W)",
 				autoCtl: true,
 				fieldCtl: true,
 				left: 0,

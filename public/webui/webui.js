@@ -1912,6 +1912,7 @@ Spacer.prototype.resized = function(width, height) {
  * @param {string} id graph identifier
  * @param {object} config configuration object
  * @config {object}  [fields]      map of graphed data fields with field => label
+ * @config {object}  [multipliers] map of data fields scale multipers with field => multiplier (optional) 
  * @config {object}  [colors]      map of graph trace colors with field => color (optional)
  * @config {boolean} [autoScale]   whether to autoscale the graph dependant (default off)
  * @config {integer} [minValue]    minimum value that is graphed, implies not autoscaling (default 0)
@@ -1931,7 +1932,8 @@ function Graph(id, config)
 	Widget.call(this, id, config);
 
 	/* Default options. */
-	if (this.config.colors === undefined )     this.config.colors = { };
+	if (this.config.multipliers === undefined) this.config.multipliers = { };
+	if (this.config.colors === undefined)      this.config.colors = { };
 	if (this.config.autoScale === undefined)   this.config.autoScale = false;
 	if (this.config.minValue === undefined)    this.config.minValue = 0;
 	if (this.config.maxValue === undefined)    this.config.maxValue = 100;
@@ -2012,7 +2014,8 @@ Graph.prototype.init = function($container) {
                     values: [ ],
                     seconds: 0,
                     color: this.config.colors.hasOwnProperty(i) ? this.config.colors[i] : 
-                        Graph.COLORS[c++ % Graph.COLORS.length]
+                        Graph.COLORS[c++ % Graph.COLORS.length],
+                    multiplier: this.config.multipliers[i] !== undefined ? this.config.multipliers[i] : 1
             };
         }
     }
@@ -2214,11 +2217,22 @@ Graph.prototype._drawFrame = function() {
 };
 
 /**
+ * Returns a scaled value based on any set multipliers.
+ * 
+ * @param {Object} data data object
+ * @param {Integer} i index of value
+ * @return {Number} scaled value
+ */
+Graph.prototype._scaleVal = function(data, i) {
+    return data.values[i] * data.multiplier;
+}
+
+/**
  * Adjusts the scaling and offset based on the range of values in the graphed
  * datasets.
  */
 Graph.prototype._adjustScaling = function() {
-    var min = Number.POSITIVE_INFINITY, max = Number.NEGATIVE_INFINITY, i = 0, j;
+    var min = Number.POSITIVE_INFINITY, max = Number.NEGATIVE_INFINITY, i = 0, j, v;
 
     for (i in this.dataFields)
     {
@@ -2226,8 +2240,9 @@ Graph.prototype._adjustScaling = function() {
         
         for (j = 0; j < this.dataFields[i].values.length; j++)
         {
-            if (this.dataFields[i].values[j] < min) min = this.dataFields[i].values[j];
-            if (this.dataFields[i].values[j] > max) max = this.dataFields[i].values[j];
+            v = this._scaleVal(this.dataFields[i], j);
+            if (v < min) min = v;
+            if (v > max) max = v;
         }
     }
 
@@ -2307,7 +2322,7 @@ Graph.prototype._drawTrace = function(dObj) {
 	this.ctx.beginPath();	
 	for (i = 0; i < dObj.values.length; i++)
 	{
-		yCoord = this.graphHeight - dObj.values[i] * yScale + this.graphOffset * this.graphHeight;
+		yCoord = this.graphHeight - this._scaleVal(dObj, i) * yScale + this.graphOffset * this.graphHeight;
 		/* If value too large, clipping at the top of the graph. */
 		if (yCoord > this.graphHeight) yCoord = this.graphHeight;
 		/* If value too small, clippling at the bottom of the graph. */
