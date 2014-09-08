@@ -231,6 +231,7 @@ WebUIApp.prototype._errorData = function(msg) {
  * @config {boolean} [shadeable]           whether this widget should be shadeable (default false)
  * @config {boolean} [closeable]           whether this widget should be closeable (default false) 
  * @config {string}  [tooltip]             tooltip to show on hover (optional)
+ * @config {function} [consumeEvt]         event called when consume is received (optional)
  */
 function Widget(id, config)
 {
@@ -275,7 +276,9 @@ Widget.prototype.init = function($container) {
  * 
  * @param {object} data data object
  */
-Widget.prototype.consume = function(data) { };
+Widget.prototype.consume = function(data) { 
+    if (this.config.consumeEvt) this.config.consumeEvt.call(this, data);
+};
 
 /** 
  * Removes the widget from the page and cleans up all registered
@@ -840,11 +843,9 @@ Widget.prototype.getWindowProperty = function(property) {
     {
     case 'width':
         return this.window.width === undefined ? this.$widget.outerWidth(true) : this.window.width;
-        break;
 
     case 'height':
         return this.window.height === undefined ? this.$widget.outerHeight(true) : this.window.height;
-        break;
 
     case 'left':
         return this.window.left === undefined ? parseInt(this.$widget.css("left")) : this.window.left;
@@ -852,11 +853,9 @@ Widget.prototype.getWindowProperty = function(property) {
 
     case 'top':
         return this.window.top === undefined ? parseInt(this.$widget.css("top")) : this.window.top;
-        break;
 
     default:
         return this.window[property];
-        break;
     }
 };
 
@@ -1913,6 +1912,7 @@ Spacer.prototype.resized = function(width, height) {
  * @param {string} id graph identifier
  * @param {object} config configuration object
  * @config {object}  [fields]      map of graphed data fields with field => label
+ * @config {object}  [multipliers] map of data fields scale multipers with field => multiplier (optional) 
  * @config {object}  [colors]      map of graph trace colors with field => color (optional)
  * @config {boolean} [autoScale]   whether to autoscale the graph dependant (default off)
  * @config {integer} [minValue]    minimum value that is graphed, implies not autoscaling (default 0)
@@ -1932,7 +1932,8 @@ function Graph(id, config)
 	Widget.call(this, id, config);
 
 	/* Default options. */
-	if (this.config.colors === undefined )     this.config.colors = { };
+	if (this.config.multipliers === undefined) this.config.multipliers = { };
+	if (this.config.colors === undefined)      this.config.colors = { };
 	if (this.config.autoScale === undefined)   this.config.autoScale = false;
 	if (this.config.minValue === undefined)    this.config.minValue = 0;
 	if (this.config.maxValue === undefined)    this.config.maxValue = 100;
@@ -1945,8 +1946,8 @@ function Graph(id, config)
 	if (this.config.durationCtl === undefined) this.config.durationCtl = false;
 	if (this.config.vertScales === undefined)  this.config.vertScales = 5;
 	if (this.config.horizScales === undefined) this.config.horizScales = 8;
-	if (this.config.width === undefined) this.config.width = 300;
-	if (this.config.height === undefined) this.config.height = 300;
+	if (this.config.width === undefined)       this.config.width = 300;
+	if (this.config.height === undefined)      this.config.height = 300;
 	
 	/* Whether we need controls on the page. */
 	this.config.hasControls = this.config.autoCtl || this.config.durationCtl;
@@ -1990,7 +1991,7 @@ Graph.prototype = new Widget;
 
 /** @const {array} List of default trace colors. */
 Graph.COLORS = [
-     "#FCFF00", "#FF3B3B", "#8C42FB"
+     "#FCFF00", "#FF3B3B", "#8C42FB", "#82FF1B", "#FF29D1", "#C0C0FF"
 ];
 
 Graph.prototype.init = function($container) {
@@ -2008,12 +2009,13 @@ Graph.prototype.init = function($container) {
         for (i in this.config.fields)
         {
             this.dataFields[i] = {
-                    label: this.config.fields[i],
+                    label: Util.getDOMStr(this.config.fields[i]),
                     visible: true,
                     values: [ ],
                     seconds: 0,
                     color: this.config.colors.hasOwnProperty(i) ? this.config.colors[i] : 
-                        Graph.COLORS[c++ % Graph.COLORS.length]
+                        Graph.COLORS[c++ % Graph.COLORS.length],
+                    multiplier: this.config.multipliers[i] !== undefined ? this.config.multipliers[i] : 1
             };
         }
     }
@@ -2127,6 +2129,8 @@ Graph.prototype._buildHTML = function() {
 	    		"</div>";
     }
 	
+	html += "<div class='graph-clear'></div>";
+	
 	return html;
 };
 
@@ -2169,6 +2173,8 @@ Graph.prototype.consume = function(data) {
         
     this._drawFrame();
     this._updateIndependentScale();
+    
+    Widget.prototype.consume.call(this, data);
 };
 
 
@@ -2211,18 +2217,32 @@ Graph.prototype._drawFrame = function() {
 };
 
 /**
+ * Returns a scaled value based on any set multipliers.
+ * 
+ * @param {Object} data data object
+ * @param {Integer} i index of value
+ * @return {Number} scaled value
+ */
+Graph.prototype._scaleVal = function(data, i) {
+    return data.values[i] * data.multiplier;
+}
+
+/**
  * Adjusts the scaling and offset based on the range of values in the graphed
  * datasets.
  */
 Graph.prototype._adjustScaling = function() {
-    var min = Number.POSITIVE_INFINITY, max = Number.NEGATIVE_INFINITY, i = 0, j;
+    var min = Number.POSITIVE_INFINITY, max = Number.NEGATIVE_INFINITY, i = 0, j, v;
 
     for (i in this.dataFields)
     {
+        if (!this.dataFields[i].visible) continue;
+        
         for (j = 0; j < this.dataFields[i].values.length; j++)
         {
-            if (this.dataFields[i].values[j] < min) min = this.dataFields[i].values[j];
-            if (this.dataFields[i].values[j] > max) max = this.dataFields[i].values[j];
+            v = this._scaleVal(this.dataFields[i], j);
+            if (v < min) min = v;
+            if (v > max) max = v;
         }
     }
 
@@ -2302,7 +2322,7 @@ Graph.prototype._drawTrace = function(dObj) {
 	this.ctx.beginPath();	
 	for (i = 0; i < dObj.values.length; i++)
 	{
-		yCoord = this.graphHeight - dObj.values[i] * yScale + this.graphOffset * this.graphHeight;
+		yCoord = this.graphHeight - this._scaleVal(dObj, i) * yScale + this.graphOffset * this.graphHeight;
 		/* If value too large, clipping at the top of the graph. */
 		if (yCoord > this.graphHeight) yCoord = this.graphHeight;
 		/* If value too small, clippling at the bottom of the graph. */
@@ -2370,7 +2390,6 @@ Graph.prototype._showTrace = function(label, show) {
 
 	this._drawFrame();
 };
-
 
 Graph.prototype.resized = function(width, height) {
     this.graphWidth = this.graphWidth + (width - this.config.width);
@@ -2735,6 +2754,8 @@ ScatterPlot.prototype.consume = function(data) {
     }
 
     this._drawFrame();
+    
+    Widget.prototype.consume.call(this, data);
 };
 
 ScatterPlot.prototype._drawTrace = function(dObj) {
@@ -2898,6 +2919,8 @@ Switch.prototype.consume = function(data) {
         this.val = data[this.config.field];
         this._setDisplay(this.val);
     }
+    
+    Widget.prototype.consume.call(this, data);
 };
 
 /**
@@ -2996,8 +3019,7 @@ function RotarySwitch(id, config)
 RotarySwitch.prototype = new Widget;
 
 RotarySwitch.prototype.init = function($container) {
-	var r = this.config.radius,
-        v = this.config.values;
+	var r = this.config.radius, i, k, x, y;
 	
     this.$widget = this._generate($container,
     	"<div class='rotary-container " + (this.config.label ? 'rotary-container-label' : '') +
@@ -3011,18 +3033,20 @@ RotarySwitch.prototype.init = function($container) {
     );
 
     /* Generates the positions of the switches' points. */
-    for(var i = 0, j = v.length; i < v.length; i++, j--) {
+    i = 0;
+    for (k in this.config.values)
+    {
+        i++;
 
     	/* Calculate the X and Y axes of the current point.  */
-        var y = (r - 5) - (r + 10) * Math.cos(2 * Math.PI * i / v.length),
-            x = (r - 5) - (r + 10) * Math.sin(2 * Math.PI * i / v.length),
-            p = v[(v.length - i)];
+        y = (r - 5) - (r + 10) * Math.cos(2 * Math.PI * i / this.config.values.length);
+        x = (r - 5) - (r + 10) * Math.sin(2 * Math.PI * i / this.config.values.length);            
 
         $("#rotary-container-" + this.id).append(
             "<div class='small-range-val rotary-switch-val " +
-            "' id='" + this.id + "-" + j + "' " +
+            "' id='" + this.id + "-" + i + "' " +
             "style='left:" + Math.round(x) + "px;top:" + Math.round(y) + "px' " + "value=" +
-            ( p ? p.value : v[0].value) + ">" + ( p ? p.label : v[0].label) + "</div>"
+            k + ">" + this.config.values[k] + "</div>"
         );
     }
 
@@ -3074,6 +3098,91 @@ RotarySwitch.prototype._animateSwitch = function(point) {
 };
 
 /* ============================================================================
+ * == Selection List                                                         ==
+ * ============================================================================ */
+
+/**
+ * A selection allows the selection of a limited number of options.
+ *
+ * @constructor
+ * @param {string} id the identifier of widget
+ * @param {object} config configuration of widget
+ * @config {string}  [field]  server data variable that is being switched
+ * @config {string}  [action] server action to call when the switched is changed
+ * @config {string}  [label] label adjacent of selection list (options)
+ * @config {array}   [values] the list of potential values
+ * @config {integer} [selectionWidth] width of selection  
+ * @config 
+ */
+function SelectionList(id, config)
+{
+    Widget.call(this, id, config);
+    
+    if (this.config.selectionWidth === undefined) this.config.selectionWidth = 100;
+    
+    /* Current value. */
+    this.val = undefined;
+    
+    /* Whether the value has been be user command and is the process of being 
+     * sent. */
+    this.valChange = false;
+}
+
+SelectionList.prototype = new Widget;
+
+SelectionList.prototype.init = function($container) {
+    if (!(this.config.action || this.config.field || 
+            this.config.values.length < 1)) throw "Options not configured.";
+    
+    this.$widget = this._generate($container, this._buildHTML());
+    
+    var thiz = this;
+    this.$widget.find("select").change(function () { thiz._changed(); }); 
+};
+
+SelectionList.prototype._buildHTML = function() {
+    var k, html = 
+        (this.config.label ? "<label>" + this.config.label + "</label>" : "") +
+        "<div class='data-format-outer' style='width:" + this.config.selectionWidth + "px'>" +
+            "<select name='" + this.id + "-select' class='selection-list' " +
+            		"style='width:" + (this.config.selectionWidth + 25) + "px'>"
+    
+    for (k in this.config.values)
+    {
+        if (this.val == undefined) this.val = k; // First key set.
+        html += "<option value='" + k + "'>" + this.config.values[k] + "</option>";
+    }
+    
+    html += "</select>" +
+        "</div>";
+    
+    return html;
+};
+
+SelectionList.prototype.consume = function(data) {
+    if (!(data[this.config.field] === undefined || data[this.config.field] == this.val || this.valChanged))
+    {
+        this.val = data[this.config.field];
+
+        this.$widget.find("select option:selected").removeAttr("selected");
+        this.$widget.find('select option[value="' + this.val + '"]').attr("selected", "selected");
+    }
+    
+    Widget.prototype.consume.call(this, data);
+};
+
+SelectionList.prototype._changed = function() {
+    this.val = this.$widget.find("select option:selected").attr("value");
+    this.valChanged = true;
+    
+    var thiz = this, params = { };
+    params[this.config.field] = this.val;
+    this._postControl(this.config.action, params, function() {
+        thiz.valChanged = false;
+    });
+};
+
+/* ============================================================================
  * == Button widget                                                          ==
  * ============================================================================ */
 
@@ -3108,7 +3217,8 @@ function Button(id, config)
     if (this.config.overlay === undefined) this.config.overlay = false;
     if (this.config.circular === undefined) this.config.circular = false;
     if (this.config.clickColor === undefined) this.config.clickColor = "#CCC";
-    if (this.config.diameter === undefined) this.config.diameter = 100;
+    
+    /* For width we need to take account padding. */
 }
 
 Button.prototype = new Widget;
@@ -3123,7 +3233,7 @@ Button.prototype.init = function($container) {
                     (this.config.height ? "line-height:" + this.config.height + "px;" : "") +
                     (this.config.color ? "background-color:" + this.config.color : "") +
                     (this.config.circular ? "border-radius:" + (this.config.width ? this.config.width : 5) + "px;" : "") +
-                    (this.config.width ? "width:" + this.config.width + "px;" : "") +
+                    (this.config.width ? "width:" + (this.config.width - 12) + "px;" : "") +
                     (this.config.height ? "height:" + this.config.height + "px;" : "") +
                 (this.config.link ? "' href='" + this.config.link : "") +
                 (this.config.target ? "' target='" + this.config.target : "") +
@@ -3159,7 +3269,7 @@ Button.prototype.init = function($container) {
                 setTimeout(function()
                 {
                     thiz.$widget.find('.push-button-outer').removeClass('push-button-down');
-                },300);
+                }, 300);
         	}
         });
     };
@@ -3288,7 +3398,7 @@ function Knob(id, config)
     /** Default settings. */
     if (this.config.min === undefined) this.config.min = 0;
     if (this.config.max === undefined) this.config.max = 100;
-    if (this.config.style === undefined) this.congif.style = "white";
+    if (this.config.style === undefined) this.config.style = "white";
     if (this.config.vertical === undefined) this.config.vertical = false;
     if (this.config.indicator === undefined) this.config.indicator = false;
     if (this.config.radius === undefined) this.config.radius = 60;
@@ -3862,7 +3972,8 @@ Slider.prototype.init = function($container) {
 };
 
 Slider.prototype._buildHTML = function() {
-    var i, s = this._getScales(),
+    var i, s = this._getScales(), 
+        spr = (this.config.max - this.config.min < this.config.scales ? 1 : 0), // For small ranges we need to use a decimal point
         html = 
         "<div class='slider-container-" + (this.config.vertical ? "vertical" : "horizontal") + "' style='" + 
                     (this.config.vertical ? "" : "width:" + (this.config.length + 15) + "px;") + "'>" +
@@ -3878,7 +3989,7 @@ Slider.prototype._buildHTML = function() {
                         (this.config.length / this.config.scales * i) + "px'>" +
                     "<span class='ui-icon ui-icon-arrowthick-1-" + (this.config.vertical ? "w" : "n") + "'></span>" +
                     "<span class='small-range-val slider-scale-value' style='" + (this.config.vertical ? "top:2px;" : "right:6px;") + "'>" + 
-                            Math.round(s[i]) + "</span>" +
+                            Util.zeroPad(s[i], spr) + "</span>" +
                 "</div>";
     }
     html += "</div>";
@@ -3938,7 +4049,7 @@ Slider.prototype._getScales = function() {
         /* Linear scale. */
         for (i = 0; i <= this.config.scales; i++)
         {
-            scales[i] = (Math.floor((this.config.max - this.config.min) / this.config.scales)) * i;
+            scales[i] = (this.config.max - this.config.min) * i / this.config.scales;
         }
     }
     
@@ -4129,13 +4240,15 @@ Slider.prototype._send = function() {
     );
 };
 
-Slider.prototype.consume = function(data) {
+Slider.prototype.consume = function(data) {   
     if (!(data[this.config.field] === undefined || data[this.config.field] == this.val || this.valueChanged))
     {
         this.val = data[this.config.field];
         this._moveTo();
         if (this.config.textEntry) this.$input.val(Util.zeroPad(this.val, this.config.precision));
     }
+    
+    Widget.prototype.consume.call(this, data);
 };
 
 /* ============================================================================
@@ -4181,6 +4294,8 @@ LED.prototype.consume = function(data) {
         this.val = data[this.config.field];
         this.$widget.find(".led").removeClass("led-novalue led-on led-off").addClass(this.val ? 'led-on' : 'led-off');
     }
+    
+    Widget.prototype.consume.call(this, data);
 };
 
 /* ============================================================================
@@ -4198,7 +4313,7 @@ LED.prototype.consume = function(data) {
  * @config {string} [colorIndicator] displays selected color in the header (optional)
  * @config {string} [units] Unit of measurement used by the LCD
  * @config {number} [length] the length of the LCD container
- * @config {number} [precision] the precision of the value (default: 3)
+ * @config {number} [precision] the precision of the value (default: 1)
  */
 function LCD(id, config)
 {
@@ -4227,7 +4342,7 @@ LCD.prototype.init = function($container) {
             '</div>'+
             '</div>' +
             '<div class="lcd-inner">' +
-                '<div class="lcd-value">' + (this.val ? this.val : '0.' + ('000000').substring(0, this.config.precision)) +'</div>' +
+                '<div class="lcd-value">' + Util.zeroPad(0, this.config.precision) +'</div>' +
             '</div>' +
             (this.config.colorIndicator ? '<span class="lcd-color-indicator" style="background:' + this.config.colorIndicator + ';"></span>' : '') +
         '</div>'
@@ -4237,9 +4352,11 @@ LCD.prototype.init = function($container) {
 LCD.prototype.consume = function(data) {
     if (!(data[this.config.field] === undefined || data[this.config.field] == this.val))
     {
-        this.val = parseFloat(data[this.config.field].toFixed(this.config.precision));
+        this.val = Util.zeroPad(data[this.config.field], this.config.precision);
         this.$widget.find('.lcd-value').html(this.val);
     }
+    
+    Widget.prototype.consume.call(this, data);
 };
 
 /* ============================================================================
@@ -4321,6 +4438,8 @@ Gauge.prototype.init = function($container) {
 Gauge.prototype.consume = function(data) {
     this.val = data[this.config.field] ? data[this.config.field] : this.val ? this.val : '';
     this.animate();
+    
+    Widget.prototype.consume.call(this, data);
 };
 
 Gauge.prototype.animate = function() {
@@ -4415,6 +4534,8 @@ LinearGauge.prototype.init = function($container) {
 LinearGauge.prototype.consume = function(data) {
     this.val = data[this.config.field] ? data[this.config.field] : this.val ? this.val : '';
     thiz.animate();
+    
+    Widget.prototype.consume.call(this, data);
 };
 
 LinearGauge.prototype.animate = function() {
@@ -4524,6 +4645,8 @@ CameraStream.prototype.consume = function(data) {
     {
         this._restoreDeploy();
     }
+    
+    Widget.prototype.consume.call(this, data);
 };
 
 /**
@@ -4984,6 +5107,8 @@ DataLogging.prototype.consume = function(data) {
             }
         }
     }
+    
+    Widget.prototype.consume.call(this, data);
 };
 
 DataLogging.prototype.resized = function(width, height) {
@@ -5442,4 +5567,21 @@ Util.sizeOf = function(o) {
     var i = 0, c = 0;
     for (i in o) c++;
     return c;
+};
+
+/**
+ * Gets a string as would be returned by the DOM.
+ * 
+ * @param s string to get DOM equiv
+ * @return DOM string
+ */
+Util.getDOMStr = function(s) {
+    var i = s.indexOf('&');
+
+    if (i > 0 && (s.indexOf(';', i) - i) < 7)
+    {
+        s = $("<p>" + s + "</p>").text();
+    }
+    
+    return s;
 };

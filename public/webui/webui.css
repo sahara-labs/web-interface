@@ -359,8 +359,8 @@
 
 .graph-controls-show {
 	position: absolute;
-	right: 0px;
-	bottom: 0px;
+	right: 6px;
+	bottom: 6px;
 	padding: 3px !important;
 	font-size: 0.9em;
 }
@@ -419,6 +419,12 @@
 
 .graph-duration-control .slider-container-horizontal {
 	margin-left: 8px;
+}
+
+.graph-clear {
+	clear: both;
+	width: 0;
+	height: 25px;
 }
 
 /******************************************************************************
@@ -1057,7 +1063,7 @@
     border-radius: 4px;
 }
 
-.data-format {
+.data-format, .selection-list {
     background: rgba(0, 0, 0, 0);
     color: #777777;
     width: 100px;
@@ -1074,6 +1080,10 @@
     -ie-appearance: none;
     appearance: none;
     cursor: pointer;
+}
+
+.data-format option[selected=selected] , .selection-list option[selected=selected] {
+	font-weight: bold;
 }
 
 .data-list-placeholder {

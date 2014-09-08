@@ -6,7 +6,7 @@
 
 $this->headScript()->appendFile($this->baseUrl('webui/webui.js'));
 $this->headLink()->appendStylesheet($this->baseUrl('webui/webui.css'));
-$this->headLink()->appendStylesheet($this->baseUrl('webui/webui-skeuo.css'));
+$this->headLink()->appendStylesheet($this->baseUrl('webui/webui-flat.css'));
 $this->headLink()->appendStylesheet($this->baseUrl('uts/windtunnel/windtunnel.css'));
 
 /* Canvas compatability implementation for Internet Explorer 8 and earlier. */
@@ -14,9 +14,6 @@ $this->headScript()->appendFile($this->baseUrl('js/excanvas.js'),
         'text/javascript',
         array('conditional' => 'lt IE 9')
 );
-
-/* Touch events punching to mouse events. */
-$this->headScript()->appendFile($this->baseUrl('uts/coupledtanksnew/jquery.ui.touch-punch.js'));
 ?>
 
 <div id="wind-tunnel-anchor">
@@ -31,9 +28,11 @@ $(document).ready(function() {
         windowToggle: true,
         controller: "WindTunnelController",
         dataAction: "dataAndGraph",
-        theme: Globals.THEME.skeuo,
-        cookie: "windtunnelt",
-        height: 1250,
+        theme: Globals.THEME.flat	,
+        cookie: "windtunnel",
+        dataPeriod: 500,
+        pollPeriod: 2000,
+        height: 1750,
         widgets: [
             new Container("camera-containers", {
                 title: "Cameras",
@@ -63,58 +62,70 @@ $(document).ready(function() {
                 left: 0,
                 top: 5,
             }),
+            new DataLogging("data-logging", {
+                left: -193,
+                top: 144,
+            }),
             new Graph("graph-airvelocity", {
                 title: "Air Velocity",
                 fields: { "graph-wind-speed": "Air Velocity" },
                 colors: { "graph-wind-speed": "blue" },
                 yLabel: "Air Velocity (m/s)",
-                traceLabels: false,
+                maxValue: 25,
                 horizScales: 5,
                 top: 550,
                 left: 0,
-                width: 330
+                width: 378,
+                autoCtl: true,
+                traceLabels: false,
             }),
             new Graph("graph-temphumid", {
                 title: "Temp. / Relative Humidity",
                 fields: {
-                    "graph-exhaust-temp": "Temperature",
-                    "graph-relative-humidity": "Humidity"
+                    "graph-exhaust-temp": "Temperature (&deg;C)",
+                    "graph-relative-humidity": "Humidity (%)"
                 },
                 colors: {
                     "graph-exhaust-temp": "yellow",
                     "graph-relative-humidity": "green",
                 },
-                yLabel: "Temp (C) / Humidity (%)",
-                traceLabels: false,
+                yLabel: "Temp / Humidity",
                 horizScales: 5,
                 top: 550,
-                left: 340,
-                width: 330
+                left: 389,
+                width: 378,
+                autoCtl: true,
+                fieldCtl: true
             }),
             new Graph("graph-diffpressure", {
                 title: "Differential Pressure",
                 fields: { "graph-diff-pressure": "Differential Pressure" },
                 colors: { "graph-diff-pressure": "red" },
                 yLabel: "Differential Pressure (Pa)",
-                traceLabels: false,
+                maxValue: 500,
                 horizScales: 5,
                 top: 860,
                 left: 0,
-                width: 330
+                width: 378,
+                autoCtl: true,
+                traceLabels: false,
             }),
             new Graph("graph-baropressure", {
                 title: "Barometric Pressure",
                 fields: { "graph-barometric-pressure": "Barometric Pressure" },
                 colors: { "graph-barometric-pressure": "orange" },
                 yLabel: "Barometric Pressure (Pa)",
-                traceLabels: false,
+                minValue: 900,
+                maxValue: 1100,
                 horizScales: 5,
                 top: 860,
-                left: 340,
-                width: 330
+                left: 389,
+                width: 378,
+                autoCtl: true,
+                traceLabels: false,
             }),
-            new Container("container-controllers", {
-                title: "Controls",
+            new Container("container-controllers-fan", {
+                title: "Fan",
                 draggable: true,
                 shadable: true,
                 closeable: true,
@@ -131,60 +142,136 @@ $(document).ready(function() {
                          field: "motor-speed",
                          label: "Fan",
                          units: "%",
-                     }),
-                     new Switch("button-load", {
-                         action: "setLoad",
-                         field: "load-enable",
-                         label: "Load On",
+                         length: 407,
                      }),
                 ],
                 layout: new BoxLayout({
                     vertical: true,
-                    align: "center"
+                    align: BoxLayout.ALIGN.center,
+                    padding: 25
                 }),
-                left: 680,
-                top: 390,
+                left: -193,
+                top: 550,
             }),
-            new Gauge("gauge-voltage", {
-                field: "monitor-volts",
+	        new Container("container-controllers-load", {
+	            title: "Load",
+                draggable: true,
+                shadable: true,
+                closeable: true,
+                expandable: false,
                 resizable: false,
-                title: "Voltage",
-                units: "V",
-                max: 5,
-                radius: 65,
-                left: -182,
-                top: 140,
+                widgets: [
+                    new Switch("switch-load-enable", {
+						field: "load-enable",
+						action: "setLoad",
+						label: "Load On"
+                    }),
+	                s = new Slider("slider-load", {
+	                    action: "setLoad",
+	                    field: "load-val",
+	                    label: "Load",
+	                    units: "A",
+	                    max: 1,
+	                    precision: 3,
+	                    vertical: true,
+						length: 164,
+						scales: 5,
+						consumeEvt: function(data) {
+							if (!(data["load-mode-ord"] === undefined || this.loadMode == data["load-mode-ord"]))
+							{
+								switch (data["load-mode-ord"])
+								{
+								case 0: // Constant current.
+									this.config.max = 1;
+									this.config.units = "A";
+									this.config.precision = 3;
+									break;
+
+								case 1: // Constant voltage.
+									this.config.max = 65;
+									this.config.units = "V";
+									this.config.precision = 1;
+									break;
+
+								case 2: // Constant Power.
+									this.config.max = 20;
+									this.config.units = "W";
+									this.config.precision = 2;
+									break;
+
+								case 3: // Constant Resistance.
+									this.config.max = 2;
+									this.config.units = "k&#8486;";
+									this.config.precision = 3;
+									break;
+
+								default:
+									alert("Unknown load mode!!!");
+								}
+
+
+								var $c = this.$widget.parent(),
+									l = this.getWindowProperty("left"), t = this.getWindowProperty("top");
+								this.destroy();
+								this.init($c);
+								this.$widget.css({
+									left: l,
+									top: t
+								});
+
+								this.loadMode = data["load-mode-ord"];
+							}
+						 }
+	                }),
+	                l = new SelectionList("selection-load-mode", {
+	                    action: "setLoad",
+	                    field: "load-mode-ord",
+	                    label: "Load Constant:",
+	                    values: [ "Current",
+	                              "Voltage",
+	                              "Power",
+	                              "Resistance" ],
+	                    selectionWidth: 100,
+						width: 110,
+	                    consumeEvt: function(data) {
+	                        s.consume(data);
+	                    }
+	                }),
+	                new Button("button-load-reset", {
+						action: "setLoad",
+						params: { "load-reset": true },
+						label: "Reset",
+						width: 110
+	                }),
+				],
+                layout: new BoxLayout({
+                    vertical: true,
+                    align: BoxLayout.ALIGN.center,
+                    padding: 25
+                }),
+                left: -192,
+                top: 1180,
             }),
-            new Gauge("gauge-amps", {
-                field: "monitor-amps",
-                resizable: false,
-                title: "Amps",
-                units: "A",
-                max: 5,
-                radius: 65,
-                left: -182,
-                top: 335,
-            }),
-            new Gauge("gauge-joules", {
-                field: "monitor-joules",
-                resizable: false,
-                title: "Joules",
-                units: "J",
-                max: 5,
-                radius: 65,
-                left: -180,
-                top: 530,
-            }),
-            new Gauge("gauge-rpm", {
-                field: "monitor-rpm",
-                resizable: false,
-                title: "RPM",
-                units: "RPM",
-                max: 5,
-                radius: 65,
-                left: -180,
-                top: 725,
-            })
+			new Graph("graph-load-controller", {
+				title: "Load Controller Values",
+				fields: {
+					"graph-load-volts": "Volts (V)",
+					"graph-load-amps":  "Amps (A)",
+					"graph-load-watts": "Power (W)",
+					"graph-load-ohms": "Resistance (k&#8486;)"
+				},
+				multipliers: {
+					"graph-load-ohms": 50,
+					"graph-load-amps": 50
+				},
+				yLabel: "Volts (V) / Power (W)",
+				autoCtl: true,
+				fieldCtl: true,
+				left: 0,
+				top: 1180,
+				width: 767,
+				height: 500
+			})
         ]
     }).setup().run();
 });
