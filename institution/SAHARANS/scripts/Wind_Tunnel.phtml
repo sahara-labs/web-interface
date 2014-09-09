@@ -76,7 +76,7 @@ $(document).ready(function() {
 		                yLabel: "Air Velocity (m/s)",
 		                maxValue: 25,
 		                horizScales: 5,
-		                width: 350,
+		                width: 355,
 		                height: 200,
 		                autoCtl: true,
 		                traceLabels: false,
@@ -99,6 +99,7 @@ $(document).ready(function() {
 	            ],
 	            layout: new TabLayout({
 					position: TabLayout.POSITION.top,
+					border: 5
 	            }),
 	            top: 550,
                 left: 0,
@@ -118,7 +119,7 @@ $(document).ready(function() {
 		                },
 		                yLabel: "Temp / Humidity",
 		                horizScales: 5,
-		                width: 350,
+		                width: 355,
 		                height: 200,
 		                autoCtl: true,
 		                fieldCtl: true
@@ -151,12 +152,14 @@ $(document).ready(function() {
 				        widgets: [
 							new Gauge("gauge-temp", {
 								field: "air-temperature",
+								label: "Air Pressure",
 								units: "&deg;C",
 								precision: 1,
 								scales: 5
 							}),
 							new Gauge("gauge-humidity", {
 								field: "relative-humidity",
+								label: "Relative Humidity",
 								units: "%",
 								precision: 1,
 								scales: 5
@@ -171,37 +174,88 @@ $(document).ready(function() {
 		        ],
 		        layout: new TabLayout({
 			        position: TabLayout.POSITION.top,
-			        padding: 0
+			        border: 5
 		        }),
 		        top: 550,
 		        left: 389,
             }),
-            new Graph("graph-diffpressure", {
+            new Container("container-diffpressure", {
                 title: "Differential Pressure",
-                fields: { "graph-diff-pressure": "Differential Pressure" },
-                colors: { "graph-diff-pressure": "red" },
-                yLabel: "Differential Pressure (Pa)",
-                maxValue: 500,
-                horizScales: 5,
-                top: 860,
-                left: 0,
-                width: 378,
-                autoCtl: true,
-                traceLabels: false,
+                widgets: [
+		            new Graph("graph-diffpressure", {
+		                title: "Graph",
+		                fields: { "graph-diff-pressure": "Differential Pressure" },
+		                colors: { "graph-diff-pressure": "red" },
+		                yLabel: "Differential Pressure (Pa)",
+		                maxValue: 500,
+		                horizScales: 5,
+		                width: 355,
+		                height: 200,
+		                autoCtl: true,
+		                traceLabels: false,
+		            }),
+		            new LCD("lcd-diffpressure", {
+			            title: "Digital",
+						field: "differential-pressure",
+						label: "Differential Pressure",
+						units: "Pa",
+						precision: 1
+		            }),
+		            new Gauge("gauge-diffpressure", {
+						title: "Analogue",
+						field: "differential-pressure",
+						units: "Pa",
+						max: 500,
+						precision: 1,
+						scales: 5
+		            })
+		         ],
+		         layout: new TabLayout({
+					position: TabLayout.POSITION.top,
+					border: 5
+	             }),
+	             left: 0,
+	             top: 860,	             
             }),
-            new Graph("graph-baropressure", {
+            new Container("container-baropressure", {
                 title: "Barometric Pressure",
-                fields: { "graph-barometric-pressure": "Barometric Pressure" },
-                colors: { "graph-barometric-pressure": "orange" },
-                yLabel: "Barometric Pressure (Pa)",
-                minValue: 900,
-                maxValue: 1100,
-                horizScales: 5,
-                top: 860,
-                left: 389,
-                width: 378,
-                autoCtl: true,
-                traceLabels: false,
+                widgets: [
+		            new Graph("graph-baropressure", {
+		                title: "Graph",
+		                fields: { "graph-barometric-pressure": "Barometric Pressure" },
+		                colors: { "graph-barometric-pressure": "orange" },
+		                yLabel: "Barometric Pressure (Pa)",
+		                minValue: 900,
+		                maxValue: 1100,
+		                horizScales: 5,
+		                width: 355,
+		                height: 200,
+		                autoCtl: true,
+		                traceLabels: false,
+		            }),
+		             new LCD("lcd-baropressure", {
+			            title: "Digital",
+						field: "barometric-pressure",
+						label: "Barometric Pressure",
+						units: "Pa",
+						precision: 0
+		            }),
+		            new Gauge("gauge-baropressure", {
+						title: "Analogue",
+						field: "barometric-pressure",
+						units: "Pa",
+						min: 900,
+						max: 1100,
+						precision: 0,
+						scales: 5
+		            })
+		         ],
+		         layout: new TabLayout({
+					position: TabLayout.POSITION.top,
+					border: 5
+	             }),
+	             left: 389,
+	             top: 860,	             
             }),
             new Container("container-controllers-fan", {
                 title: "Fan",
@@ -331,26 +385,103 @@ $(document).ready(function() {
                 left: -192,
                 top: 1180,
             }),
-			new Graph("graph-load-controller", {
-				title: "Load Controller Values",
-				fields: {
-					"graph-load-volts": "Volts (V)",
-					"graph-load-amps":  "Amps (A)",
-					"graph-load-watts": "Power (W)",
-					"graph-load-ohms": "Resistance (k&#8486;)"
-				},
-				multipliers: {
-					"graph-load-ohms": 50,
-					"graph-load-amps": 50
-				},
-				yLabel: "Volts (V) / Power (W)",
-				autoCtl: true,
-				fieldCtl: true,
-				left: 0,
-				top: 1180,
-				width: 767,
-				height: 500
-			})
+            new Container("container-load-controller", {
+                title: "Load Controller",
+                widgets: [
+					new Graph("graph-load-controller", {
+						title: "Graph",
+						fields: {
+							"graph-load-volts": "Voltage (V)",
+							"graph-load-amps":  "Current (A)",
+							"graph-load-watts": "Power (W)",
+							"graph-load-ohms": "Resistance (k&#8486;)"
+						},
+						multipliers: {
+							"graph-load-ohms": 50,
+							"graph-load-amps": 50
+						},
+						yLabel: "Volts (V) / Power (W)",
+						autoCtl: true,
+						fieldCtl: true,
+						width: 745,
+						height: 500
+					}),
+					new Container("digital-load-controller", {
+						title: "Digital",
+						widgets: [
+							new LCD("lcd-load-volts", {
+								field: "load-volts",
+								label: "Voltage",
+								units: "V",
+								precision: 2
+							}),
+							new LCD("lcd-load-amps", {
+								field: "load-amps",
+								label: "Current",
+								units: "A",
+								precision: 3
+							}),
+							new LCD("lcd-load-watts", {
+								field: "load-watts",
+								label: "Power",
+								units: "W",
+								precision: 2
+							}),
+							new LCD("lcd-load-ohms", {
+								field: "load-ohms",
+								label: "Resistance",
+								units: "k&#8486;",
+								precision: 3
+							}),
+						],
+						layout: new BoxLayout({
+							vertical: false,
+						}),
+					}),
+					new Container("analogue-load-controller", {
+						title: "Analogue",
+						widgets: [
+							new Gauge("gauge-load-volts", {
+								field: "load-volts",
+								label: "Voltage",
+								units: "V",
+								precision: 2,
+								max: 65,
+							}),
+							new Gauge("gauge-load-amps", {
+								field: "load-amps",
+								label: "Current",
+								units: "A",
+								precision: 3,
+								max: 1
+							}),
+							new Gauge("gauge-load-watts", {
+								field: "load-watts",
+								label: "Power",
+								units: "W",
+								precision: 2,
+								max: 20,
+							}),
+							new Gauge("gauge-load-ohms", {
+								field: "load-ohms",
+								label: "Resistance",
+								units: "k&#8486;",
+								precision: 3,
+								max: 2
+							}),
+						],
+						layout: new BoxLayout({
+							vertical: false,
+						}),
+					}),
+				],
+				layout: new TabLayout({
+					position: TabLayout.POSITION.top,
+					border: 5
+	            }),
+	            top: 1180,
+                left: 0,
+            }),
         ]
     }).setup().run();
 });
