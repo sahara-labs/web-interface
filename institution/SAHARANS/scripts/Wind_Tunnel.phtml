@@ -66,36 +66,115 @@ $(document).ready(function() {
                 left: -193,
                 top: 144,
             }),
-            new Graph("graph-airvelocity", {
+            new Container("container-airvelocity", {
                 title: "Air Velocity",
-                fields: { "graph-wind-speed": "Air Velocity" },
-                colors: { "graph-wind-speed": "blue" },
-                yLabel: "Air Velocity (m/s)",
-                maxValue: 25,
-                horizScales: 5,
-                top: 550,
+                widgets: [
+		            new Graph("graph-airvelocity", {
+		                title: "Graph",
+		                fields: { "graph-wind-speed": "Air Velocity" },
+		                colors: { "graph-wind-speed": "blue" },
+		                yLabel: "Air Velocity (m/s)",
+		                maxValue: 25,
+		                horizScales: 5,
+		                width: 350,
+		                height: 200,
+		                autoCtl: true,
+		                traceLabels: false,
+		            }),
+		            new LCD("lcd-airvelocity", {
+			            title: "Digital",
+						field: "wind-speed",
+						label: "Air Velocity",
+						units: "m/s",
+						precision: 2
+		            }),
+		            new Gauge("gauge-airvelocity", {
+						title: "Analogue",
+						field: "wind-speed",
+						units: "m/s",
+						max: 25,
+						precision: 1,
+						scales: 5
+		            })
+	            ],
+	            layout: new TabLayout({
+					position: TabLayout.POSITION.top,
+	            }),
+	            top: 550,
                 left: 0,
-                width: 378,
-                autoCtl: true,
-                traceLabels: false,
             }),
-            new Graph("graph-temphumid", {
+            new Container("container-temphumid", {
                 title: "Temp. / Relative Humidity",
-                fields: {
-                    "graph-exhaust-temp": "Temperature (&deg;C)",
-                    "graph-relative-humidity": "Humidity (%)"
-                },
-                colors: {
-                    "graph-exhaust-temp": "yellow",
-                    "graph-relative-humidity": "green",
-                },
-                yLabel: "Temp / Humidity",
-                horizScales: 5,
-                top: 550,
-                left: 389,
-                width: 378,
-                autoCtl: true,
-                fieldCtl: true
+                widgets: [
+		            new Graph("graph-temphumid", {
+		                title: "Graph",
+		                fields: {
+		                    "graph-exhaust-temp": "Temperature (&deg;C)",
+		                    "graph-relative-humidity": "Humidity (%)"
+		                },
+		                colors: {
+		                    "graph-exhaust-temp": "yellow",
+		                    "graph-relative-humidity": "green",
+		                },
+		                yLabel: "Temp / Humidity",
+		                horizScales: 5,
+		                width: 350,
+		                height: 200,
+		                autoCtl: true,
+		                fieldCtl: true
+		            }),
+		            new Container("digital-temphumid", {
+				     	title: "Digital",
+				        widgets: [
+							new LCD("lcd-temp", {
+								field: "air-temperature",
+								label: "Air Temperature",
+								units: "&deg;C",
+								precision: 2
+							}),
+							new LCD("lcd-humidity", {
+								field: "relative-humidity",
+								label: "Relative Humidity",
+								units: "%",
+								precision: 2
+							}),
+						],
+						layout: new FlowLayout({
+							vertical: true,
+							width: 160,
+							padding: 20,
+
+						}),
+		            }),
+		            new Container("analogue-temphumid", {
+				     	title: "Analogue",
+				        widgets: [
+							new Gauge("gauge-temp", {
+								field: "air-temperature",
+								units: "&deg;C",
+								precision: 1,
+								scales: 5
+							}),
+							new Gauge("gauge-humidity", {
+								field: "relative-humidity",
+								units: "%",
+								precision: 1,
+								scales: 5
+							}),
+						],
+						layout: new BoxLayout({
+							vertical: false,
+							padding: 0,
+							align: BoxLayout.ALIGN.center
+						}),
+		            }),
+		        ],
+		        layout: new TabLayout({
+			        position: TabLayout.POSITION.top,
+			        padding: 0
+		        }),
+		        top: 550,
+		        left: 389,
             }),
             new Graph("graph-diffpressure", {
                 title: "Differential Pressure",

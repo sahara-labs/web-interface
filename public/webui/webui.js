@@ -4377,7 +4377,7 @@ LCD.prototype.consume = function(data) {
  * @config {number} [min] the minimum value of the guage (default 0)
  * @config {number} [max] the maximum value of the gauge (default 100)
  * @config {integer} [scales] number of scales to display (default fitted to min, max value)
- * @config {array}  [values] the list of potential values
+ * @config {integer} [precision] number of digits after decimal point (default 1) 
  */
 function Gauge(id, config)
 {
@@ -4392,6 +4392,7 @@ function Gauge(id, config)
     if (this.config.radius === undefined) this.config.radius = 75;
 	if (this.config.units === undefined) this.config.units = '';
     if (this.config.border === undefined) this.config.border  = '#525252';
+    if (this.config.precision === undefined) this.config.precision = 1;
 	if (this.config.scales === undefined) this.config.scales = 
             this.config.max - this.config.min > 10 ? 10 : this.config.max - this.config.min;
 
@@ -4415,7 +4416,7 @@ Gauge.prototype.init = function($container) {
             "<div class='gauge-center'></div>" +
             "<div class='gauge-units'>" + (this.config.units ? this.config.units : '' ) + "</div>" +
             "<div class='gauge-vals'></div>" +
-            "<div class='gauge-output'>00.0</div>" +
+            "<div class='gauge-output'>" + Util.zeroPad(0, this.config.precision) + "</div>" +
         "</div>"
     );
 
@@ -4428,7 +4429,8 @@ Gauge.prototype.init = function($container) {
         this.$widget.find(".gauge-vals").append(
             "<div class='gauge-val " + (i === this.config.scales ? 'gauge-val-last' : '') +
             "' id='" + this.id + "-" + i + "' " +
-            "style='left:" + Math.round(x + (r/1.9)) + "px;top:" + Math.round(y + (r/2)) + "px'>" + (i) + "</div>"
+            "style='left:" + Math.round(x + (r/2)) + "px;top:" + Math.round(y + (r/2)) + "px'>" + 
+                Util.zeroPad((this.config.max - this.config.min) / this.config.scales * i, 0) + "</div>"
         );
     };
 
@@ -4455,7 +4457,7 @@ Gauge.prototype.animate = function() {
         "transform": "rotate(" + this.deg + "deg)"
     });
 
-    this.$widget.find(".gauge-output").html(this.val);
+    this.$widget.find(".gauge-output").html(Util.zeroPad(this.val, this.config.precision));
 };
 
 /* ============================================================================
