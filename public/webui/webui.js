@@ -1441,8 +1441,8 @@ TabLayout.prototype.displayInit = function($container) {
 
 TabLayout.prototype._tabClick = function(title) {
    var i = 0, w = false, x, y, 
-       wOff = this.config.vertical ? 0 : this.$tabBar.width() + this.config.border,
-       hOff = this.config.vertical ? this.$tabBar.height() + this.config.border : 0;
+       wOff = this.config.vertical ? 0 : this.$tabBar.width() + this.config.border * 2,
+       hOff = this.config.vertical ? this.$tabBar.height() + this.config.border * 2 : 0;
 
    switch (this.config.position)
    {
@@ -1509,7 +1509,8 @@ TabLayout.prototype._tabClick = function(title) {
 
 TabLayout.prototype._tabBarHTML = function() {
     var i, w, widgets = Object.getOwnPropertyNames(this.container.getWidgets()), html = 
-        "<div class='tab-bar tab-bar-" + this.config.position + "'>";
+        "<div class='tab-bar tab-bar-" + this.config.position + "' " +
+        		(this.config.vertical ? "style='width:10000px'>" : ">");
 
     if (this.config.position == TabLayout.POSITION.bottom)
     {
@@ -1554,8 +1555,8 @@ TabLayout.prototype.displayDestroy = function() {
 
 TabLayout.prototype.layout = function() {
     var i = 0, w, wid, hei, x, y,
-        wOff = this.config.vertical ? 0 : this.$tabBar.width() + this.config.border, 
-        hOff = this.config.vertical ? this.$tabBar.height() + this.config.border : 0;
+        wOff = this.config.vertical ? 0 : this.$tabBar.width() + this.config.border * 2, 
+        hOff = this.config.vertical ? this.$tabBar.height() + this.config.border * 2 : 0;
 
     this.width = this.height = 0;
 
@@ -1596,7 +1597,7 @@ TabLayout.prototype.layout = function() {
             case TabLayout.POSITION.bottom:
                 this.$tabBar.css({
                     left: 0,
-                    top: hei + this.config.border * 2
+                    top: hei + this.config.border
                 });
                 x = this.config.border;
                 y = this.config.border;
@@ -1634,6 +1635,8 @@ TabLayout.prototype.layout = function() {
     {
         this.$tabBar.children(".tab-post").css("height", this.height + "px");
     }
+    
+    if (this.config.vertical) this.$tabBar.css("width", "auto");
 };
 
 TabLayout.prototype.scale = function(h, v) {
@@ -1920,6 +1923,8 @@ Spacer.prototype.resized = function(width, height) {
  * @config {integer} [duration]    number of seconds this graph displays (default 60)
  * @config {string}  [xLabel]      X axis label (default (Time (s))
  * @config {String}  [yLabel]      Y axis label (optional)
+ * @config {String}  [yOtherLabel] Y axis label of right hand side (optional)
+ * @config {number}  [yOtherMulti] multiplier of right hand side label (default 1)
  * @config {boolean} [traceLabels] whether to show trace labels (default true)
  * @config {boolean} [fieldCtl]    whether data field displays can be toggled (default false)
  * @config {boolean} [autoCtl]     whether autoscaling enable control is shown (default false)
@@ -2107,6 +2112,11 @@ Graph.prototype._buildHTML = function() {
 	/* Canvas element holding box. */
 	html += "<div id='" + this.id +  "-canvas' class='graph-canvas-box gradient' style='height:" + this.graphHeight + 
 	                "px;width:" + this.graphWidth + "px;margin-top:" + (this.config.traceLabels ? "30" : "0") + "px'></div>";
+
+	if (this.config.yOtherLabel)
+	{
+		html += "<div class='graoh-axis-label graph-right-axis-label'>" + this.config.yOtherLabel + "</div>";
+	}
 
 	/* Bottom scale. */
 	html += "<div class='graph-bottom-scales'>";
@@ -4909,7 +4919,7 @@ Image.prototype.init = function($container) {
  * 
  * @param {String} id widget identifier
  * @param {Object} config configuration object
- * @config {String} [fieldNS] namespace of logging fields  
+ * @config {String} [fieldNS] namespace of logging fields
  */
 function DataLogging(id, config)
 {
@@ -4956,7 +4966,8 @@ DataLogging.prototype.init = function($container) {
 
 DataLogging.prototype.buildHTML = function() {
     return (
-        "<div class='data-controls'>" +
+        "<div class='data-controls' style='" + 
+			(this.config.height ? "height:" + (this.config.height - 68) + "px" : "") + "'>" +
         "   <div class='data-enable-line data-control-line data-logger-blur'>" + 
         "       <label for='" + this.id + "-data-enable'>Logging: </label>" +  
         "       <div id='" + this.id + "-data-enable' class='switch'>" +

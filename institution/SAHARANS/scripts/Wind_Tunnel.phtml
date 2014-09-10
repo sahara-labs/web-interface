@@ -65,6 +65,7 @@ $(document).ready(function() {
             new DataLogging("data-logging", {
                 left: -193,
                 top: 144,
+				height: 370,
             }),
             new Container("container-airvelocity", {
                 title: "Air Velocity",
@@ -77,7 +78,7 @@ $(document).ready(function() {
 		                maxValue: 25,
 		                horizScales: 5,
 		                width: 355,
-		                height: 200,
+		                height: 205,
 		                autoCtl: true,
 		                traceLabels: false,
 		            }),
@@ -101,7 +102,7 @@ $(document).ready(function() {
 					position: TabLayout.POSITION.top,
 					border: 5
 	            }),
-	            top: 550,
+	            top: 530,
                 left: 0,
             }),
             new Container("container-temphumid", {
@@ -120,7 +121,7 @@ $(document).ready(function() {
 		                yLabel: "Temp / Humidity",
 		                horizScales: 5,
 		                width: 355,
-		                height: 200,
+		                height: 205,
 		                autoCtl: true,
 		                fieldCtl: true
 		            }),
@@ -140,11 +141,8 @@ $(document).ready(function() {
 								precision: 2
 							}),
 						],
-						layout: new FlowLayout({
-							vertical: true,
-							width: 160,
-							padding: 20,
-
+						layout: new BoxLayout({
+							vertical: false,
 						}),
 		            }),
 		            new Container("analogue-temphumid", {
@@ -176,7 +174,7 @@ $(document).ready(function() {
 			        position: TabLayout.POSITION.top,
 			        border: 5
 		        }),
-		        top: 550,
+		        top: 530,
 		        left: 389,
             }),
             new Container("container-diffpressure", {
@@ -190,7 +188,7 @@ $(document).ready(function() {
 		                maxValue: 500,
 		                horizScales: 5,
 		                width: 355,
-		                height: 200,
+		                height: 207,
 		                autoCtl: true,
 		                traceLabels: false,
 		            }),
@@ -215,7 +213,7 @@ $(document).ready(function() {
 					border: 5
 	             }),
 	             left: 0,
-	             top: 860,	             
+	             top: 840,	             
             }),
             new Container("container-baropressure", {
                 title: "Barometric Pressure",
@@ -229,7 +227,7 @@ $(document).ready(function() {
 		                maxValue: 1100,
 		                horizScales: 5,
 		                width: 355,
-		                height: 200,
+		                height: 207,
 		                autoCtl: true,
 		                traceLabels: false,
 		            }),
@@ -255,7 +253,7 @@ $(document).ready(function() {
 					border: 5
 	             }),
 	             left: 389,
-	             top: 860,	             
+	            top: 840,	             
             }),
             new Container("container-controllers-fan", {
                 title: "Fan",
@@ -284,7 +282,7 @@ $(document).ready(function() {
                     padding: 25
                 }),
                 left: -193,
-                top: 550,
+                top: 530,
             }),
 	        new Container("container-controllers-load", {
 	            title: "Load",
@@ -383,9 +381,9 @@ $(document).ready(function() {
                     padding: 25
                 }),
                 left: -192,
-                top: 1180,
+                top: 1155,
             }),
-            new Container("container-load-controller", {
+            new Container("container-load-data", {
                 title: "Load Controller",
                 widgets: [
 					new Graph("graph-load-controller", {
@@ -403,8 +401,8 @@ $(document).ready(function() {
 						yLabel: "Volts (V) / Power (W)",
 						autoCtl: true,
 						fieldCtl: true,
-						width: 745,
-						height: 500
+						width: 743,
+						height: 410,
 					}),
 					new Container("digital-load-controller", {
 						title: "Digital",
@@ -479,7 +477,7 @@ $(document).ready(function() {
 					position: TabLayout.POSITION.top,
 					border: 5
 	            }),
-	            top: 1180,
+	            top: 1155,
                 left: 0,
             }),
         ]
