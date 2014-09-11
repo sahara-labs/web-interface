@@ -1923,8 +1923,8 @@ Spacer.prototype.resized = function(width, height) {
  * @config {integer} [duration]    number of seconds this graph displays (default 60)
  * @config {string}  [xLabel]      X axis label (default (Time (s))
  * @config {String}  [yLabel]      Y axis label (optional)
- * @config {String}  [yOtherLabel] Y axis label of right hand side (optional)
- * @config {number}  [yOtherMulti] multiplier of right hand side label (default 1)
+ * @config {String}  [yRightLabel] Y axis label of right hand side (optional)
+ * @config {number}  [yScaling]    scaling of right hand side scales relative to main scales (default 1)
  * @config {boolean} [traceLabels] whether to show trace labels (default true)
  * @config {boolean} [fieldCtl]    whether data field displays can be toggled (default false)
  * @config {boolean} [autoCtl]     whether autoscaling enable control is shown (default false)
@@ -1945,6 +1945,7 @@ function Graph(id, config)
 	if (this.config.duration === undefined)    this.config.duration = 60;	
 	if (this.config.xLabel === undefined)      this.config.xLabel = "Time (s)";
 	if (this.config.yLabel === undefined)      this.config.yLabel = '';
+	if (this.config.yScaling === undefined)    this.config.yScaling = 1; 
 	if (this.config.traceLabels === undefined) this.config.traceLabels = true;
 	if (this.config.fieldCtl === undefined)    this.config.fieldCtl = false;
 	if (this.config.autoCtl === undefined)     this.config.autoCtl = false;
@@ -2034,6 +2035,7 @@ Graph.prototype.init = function($container) {
         this.graphHeight += 50;
         this.graphWidth += 15;
     }
+    if (this.config.yRightLabel) this.graphWidth -= 40;
     
 	this.$widget = this._generate($container, this._buildHTML());
 	
@@ -2043,6 +2045,15 @@ Graph.prototype.init = function($container) {
 	    top: (this.config.windowed ? 30 : 0) + this.graphHeight / 2,
 	    left: -0.545 * c.width() + (this.config.windowed ? 26.1 : 21)
 	});
+	
+	if (this.config.yRightLabel)
+	{
+	     c = this.$widget.find(".graph-right-axis-label");
+	     c.css({
+	         top: (this.config.windowed ? 30 : 0) + this.graphHeight / 2,
+	         right: -0.545 * c.width() + (this.config.windowed ? 26.1 : 21)
+	     });
+	}
 
 	/* Add the canvas panel. */
 	var canvas = Util.getCanvas(this.id, this.graphWidth, this.graphHeight);
@@ -2097,17 +2108,37 @@ Graph.prototype._buildHTML = function() {
 	styleScale = this.graphHeight / this.config.vertScales;
 	top = this.config.windowed ? (this.config.traceLabels ? 33 : 3) : (this.config.traceLabels ? 26 : 0);
 	left = this.config.windowed ? 15 : 6;
-	html += "<div class='graph-left-scales' style='top:" + top + "px;left:" + left + "px'>";
+	
+	html += "<div class='graph-y-scales graph-left-scales' style='top:" + top + "px;left:" + left + "px'>";
 	for (i = 0; i <= this.config.vertScales; i++)
 	{
 		html += "<div class='graph-left-scale-" + i + "' style='top:"+ (styleScale * i) + "px'>" + 
-					(this.config.maxValue - i * unitScale)+ 
+					Util.zeroPad(this.config.maxValue - i * unitScale, this.graphRange >= this.config.vertScales * 2 ? 0 : 1) + 
 				"</div>";
 	}
 	html += "</div>";
+	
+	if (this.config.yRightLabel)
+	{
+	    /* Right scale. */
+	    html += "<div class='graph-y-scales graph-right-scales' style='top:" + top + "px;'>";
+    	for (i = 0; i <= this.config.vertScales; i++)
+    	{
+    		html += "<div class='graph-right-scale-" + i + "' style='top:"+ (styleScale * i) + "px'>" + 
+    					Util.zeroPad((this.config.maxValue - i * unitScale) * this.config.yScaling,
+    					        this.graphRange * this.config.yScaling >= this.config.vertScales * 2 ? 0 : 1) + 
+    				"</div>";
+    	}
+    	html += "</div>";
+	}
 
 	/* Left axis label. */
 	html += "<div class='graph-axis-label graph-left-axis-label'>" + this.config.yLabel + "</div>";
+	
+	if (this.config.yRightLabel)
+	{
+	    html += "<div class='graph-axis-label graph-right-axis-label'>" + this.config.yRightLabel + "</div>";
+	}
 
 	/* Canvas element holding box. */
 	html += "<div id='" + this.id +  "-canvas' class='graph-canvas-box gradient' style='height:" + this.graphHeight + 
@@ -2115,7 +2146,7 @@ Graph.prototype._buildHTML = function() {
 
 	if (this.config.yOtherLabel)
 	{
-		html += "<div class='graoh-axis-label graph-right-axis-label'>" + this.config.yOtherLabel + "</div>";
+		html += "<div class='graph-axis-label graph-right-axis-label'>" + this.config.yOtherLabel + "</div>";
 	}
 
 	/* Bottom scale. */
@@ -2356,7 +2387,12 @@ Graph.prototype._drawTrace = function(dObj) {
  * Updates the dependant variable scale.
  */
 Graph.prototype._updateDependantScale = function() {
-    var i, $s = this.$widget.find(".graph-left-scale-0");
+    var i, $s = this.$widget.find(".graph-left-scale-0"), $r;
+    
+    if (this.config.yRightLabel)
+    {
+        $r = this.$widget.find(".graph-right-scale-0");
+    }
     
     for (i = 0; i <= this.config.vertScales; i++)
     {
@@ -2364,6 +2400,15 @@ Graph.prototype._updateDependantScale = function() {
                 this.graphRange + this.graphOffset * this.graphRange - this.graphRange / this.config.vertScales * i, 
                 this.graphRange >= this.config.vertScales * 2 ? 0 : 1));
         $s = $s.next();
+        
+        if (this.config.yRightLabel)
+        {
+            $r.html(Util.zeroPad(
+                (this.graphRange + this.graphOffset * this.graphRange - this.graphRange / this.config.vertScales * i) * 
+                        this.config.yScaling, 
+                this.graphRange * this.config.yScaling >= this.config.vertScales * 2 ? 0 : 1));
+            $r = $r.next();
+        }
     }
 };
 
@@ -2430,6 +2475,11 @@ Graph.prototype.resized = function(width, height) {
     
     /* Left label. */
     this.$widget.find(".graph-left-axis-label").css("top", (this.config.windowed ? 30 : 0) + this.graphHeight / 2);
+    
+    if (this.config.yRightLabel)
+    {
+        this.$widget.find(".graph-right-axis-label").css("top", (this.config.windowed ? 30 : 0) + this.graphHeight / 2);
+    }
     
     /* Bottom scales. */
     for (i = 0, $s = this.$widget.find(".graph-bottom-scale-0"); i <= this.config.horizScales; i++)
@@ -4440,7 +4490,7 @@ Gauge.prototype.init = function($container) {
             "<div class='gauge-val " + (i === this.config.scales ? 'gauge-val-last' : '') +
             "' id='" + this.id + "-" + i + "' " +
             "style='left:" + Math.round(x + (r/2)) + "px;top:" + Math.round(y + (r/2)) + "px'>" + 
-                Util.zeroPad((this.config.max - this.config.min) / this.config.scales * i, 0) + "</div>"
+                Util.zeroPad(this.config.min + (this.config.max - this.config.min) / this.config.scales * i, 0) + "</div>"
         );
     };
 

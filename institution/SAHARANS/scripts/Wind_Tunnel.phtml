@@ -213,7 +213,7 @@ $(document).ready(function() {
 					border: 5
 	             }),
 	             left: 0,
-	             top: 840,	             
+	             top: 840,
             }),
             new Container("container-baropressure", {
                 title: "Barometric Pressure",
@@ -253,7 +253,7 @@ $(document).ready(function() {
 					border: 5
 	             }),
 	             left: 389,
-	            top: 840,	             
+	            top: 840,
             }),
             new Container("container-controllers-fan", {
                 title: "Fan",
@@ -398,7 +398,9 @@ $(document).ready(function() {
 							"graph-load-ohms": 50,
 							"graph-load-amps": 50
 						},
-						yLabel: "Volts (V) / Power (W)",
+						yLabel: "Voltage (V) / Power (W)",
+						yRightLabel: "Current (A) / Resistance (k&#8486;)",
+						yScaling: 0.02,
 						autoCtl: true,
 						fieldCtl: true,
 						width: 743,
