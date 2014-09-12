@@ -1992,6 +1992,9 @@ function Graph(id, config)
 	
 	/** @private {Slider} Duration slider control. */
 	this.durationSlider = undefined;
+	
+	/** @private {boolean} Whether the y label is the wide scale position. */
+	this.yScaleWide = false;
 }
 Graph.prototype = new Widget;
 
@@ -2005,6 +2008,7 @@ Graph.prototype.init = function($container) {
     
     this.config.period = Globals.DATA_PERIOD;
     this.startTime = undefined;
+    this.yScaleWide = false;
     
     var i = 0, c = 0, thiz = this;
     
@@ -2409,6 +2413,25 @@ Graph.prototype._updateDependantScale = function() {
                 this.graphRange * this.config.yScaling >= this.config.vertScales * 2 ? 0 : 1));
             $r = $r.next();
         }
+    }
+    
+    if (this.graphRange + this.graphOffset > 1000 && this.graphRange < this.config.vertScales * 2)
+    {
+        /* In this case there will be two many digits causing the scales to 
+         * overlay the label so we will need to move the label more to the left. */
+        if (!this.yScaleWide) 
+        {
+            $s = this.$widget.find(".graph-left-axis-label");
+            $s.css("left", -0.545 * $s.width() + (this.config.windowed ? 26.1 : 21) - 10);
+            this.yScaleWide = true;
+        }
+    }
+    else if (this.yScaleWide)
+    {
+        /* Reset back to normal position. */
+        $s = this.$widget.find(".graph-left-axis-label");
+        $s.css("left", -0.545 * $s.width() + (this.config.windowed ? 26.1 : 21));
+        this.yScaleWide = false;
     }
 };
 
