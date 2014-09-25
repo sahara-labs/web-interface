@@ -5594,6 +5594,8 @@ Util.log = function(num, base) {
  * @returns {string} padded string
  */
 Util.zeroPad = function(num, places) {
+    if (num == "NaN" || isNaN(num)) return num;
+    
     var r = '' + Util.round(num, places);
 
     if (places > 0)
