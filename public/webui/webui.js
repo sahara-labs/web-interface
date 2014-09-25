@@ -4654,6 +4654,7 @@ LinearGauge.prototype.animate = function() {
  * @config {string} [title] the camera box title
  * @config {string} [swfParam] data variable that specifies SWF stream URL
  * @config {string} [mjpegParam] data variable that specifies MJPEG stream URL
+ * @config {string} [webmParam] data variable that specifies WebM stream URL
  * @config {integer} [videoWidth] width of the video stream
  * @config {integer} [videoHeight] height of the video stream
  */
@@ -4664,7 +4665,8 @@ function CameraStream(id, config)
     /** The list of address for the each of the camera formats. */
     this.urls = {
         swf:   undefined, // Flash format
-        mjpeg: undefined  // MJPEG format
+        mjpeg: undefined, // MJPEG format
+        webm:  undefined, // WebM format
     };  
     
     /** @private {boolean} Whether the camera is deployed. */
@@ -4726,7 +4728,12 @@ CameraStream.prototype.consume = function(data) {
         this.urls.mjpeg = decodeURIComponent(data[this.config.mjpegParam]);
     }
     
-    if ((this.urls.swf || this.urls.mjpeg) && !this.isDeployed) 
+    if (this.config.webmParam || data[this.config.webmParam] != undefined)
+    {
+        this.urls.webm = decodeURIComponent(data[this.config.webmParam]);
+    }
+    
+    if ((this.urls.swf || this.urls.mjpeg || this.urls.webm) && !this.isDeployed) 
     {
         this._restoreDeploy();
     }
@@ -4776,6 +4783,10 @@ CameraStream.prototype._deploy = function(format) {
         html = this._getMjpegHtml();
         break;
         
+    case 'webm':
+        html = this._getWebMHtml();
+        break;
+        
     default:
         this._platformDeploy();
         return;
@@ -4800,11 +4811,11 @@ CameraStream.prototype._deploy = function(format) {
  * Removes the currently deployed video from displaying.
  */
 CameraStream.prototype._undeploy = function() {
-    if (this.deployedFormat == 'mjpeg')
+    if (this.deployedFormat == 'mjpeg' || this.deployedFormat == 'webm')
     {
         /* Reports in the wild indicate Firefox may continue to the download 
          * the stream unless the source attribute is cleared. */
-        this.$widget.find(".video-player > img").attr("src", "#");
+        this.$widget.find(".video-player > img, .video-player > video").attr("src", "#");
     }
 
     this.$widget.find(".video-player").empty();
@@ -4840,6 +4851,7 @@ CameraStream.prototype._buildHTML = function() {
                 '<option selected="selected" value=" ">Select Format</option>' +
                 (this.config.swfParam ? '<option value="swf">SWF</option>' : '') +
                 (this.config.mjpegParam ? '<option value="mjpeg">M-JPEG</option>' : '') +
+                (this.config.webmParam ? '<option value="webm">WebM</option>' : '') +
             '</select>' +
         '</div>'
     );
@@ -4904,6 +4916,20 @@ CameraStream.prototype._getMjpegHtml = function() {
                 '<param name="accessories" value="none"/>' +
             '</applet>'
         );
+};
+
+/**
+ * Gets the HTML to deploy a WebM stream. This uses the HTML5 video
+ * tag.
+ * 
+ * @returns {String} WebM video HTML
+ */
+CameraStream.prototype._getWebMHtml = function() {
+  return (
+      "<video src='" + this.urls.webm + "' width='" + this.videoWidth + "' height='" + this.videoHeight + "' " +
+      		"autoplay='true' >" +
+      "</video>"
+  );
 };
 
 /** @const {integer} Difference between widget width and video width. */
@@ -5033,14 +5059,21 @@ DataLogging.prototype.init = function($container) {
     var thiz = this;
     this.$widget.find(".switch").click(function() { thiz.toggleLogging(); });
     
+    /* Properly resize list. */
+    if (this.config.height)
+    {
+        this.$widget.children(".window-content")
+            .css("height", this.config.height - 57)
+            .children($(".data-files-list").css("height", this.config.height - 120));
+    }
+    
     /* Check we can download files. */
     setTimeout(function() { thiz.pollSessionFiles(); }, 2000);
 };
 
 DataLogging.prototype.buildHTML = function() {
     return (
-        "<div class='data-controls' style='" + 
-			(this.config.height ? "height:" + (this.config.height - 68) + "px" : "") + "'>" +
+        "<div class='data-controls'>" +
         "   <div class='data-enable-line data-control-line data-logger-blur'>" + 
         "       <label for='" + this.id + "-data-enable'>Logging: </label>" +  
         "       <div id='" + this.id + "-data-enable' class='switch'>" +
