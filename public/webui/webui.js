@@ -1796,6 +1796,7 @@ Container.prototype.resizeStopped = function(width, height) {
     {
         this.config.layout.scale(horiz, vert);
         this.config.layout.layout();
+        
         this.$contentBox.css({
             width: this.config.layout.getWidth() - parseInt(this.$contentBox.css("padding-left")) - 
                         parseInt(this.$contentBox.css("padding-right")),
@@ -3194,6 +3195,8 @@ RotarySwitch.prototype._animateSwitch = function(point) {
  * @config {string}  [action] server action to call when the switched is changed
  * @config {string}  [label] label adjacent of selection list (options)
  * @config {array}   [values] the list of potential values
+ * @config {boolean} [indexes] whether the data variable values sent and received \
+ *                       are array indexes or arrays values (default indexes)
  * @config {integer} [selectionWidth] width of selection  
  * @config 
  */
@@ -3202,6 +3205,7 @@ function SelectionList(id, config)
     Widget.call(this, id, config);
     
     if (this.config.selectionWidth === undefined) this.config.selectionWidth = 100;
+    if (this.config.indexes === undefined) this.config.indexes = true;
     
     /* Current value. */
     this.val = undefined;
@@ -3232,8 +3236,8 @@ SelectionList.prototype._buildHTML = function() {
     
     for (k in this.config.values)
     {
-        if (this.val == undefined) this.val = k; // First key set.
-        html += "<option value='" + k + "'>" + this.config.values[k] + "</option>";
+        if (this.val == undefined) this.val = this._val(k); // First key set.
+        html += "<option value='" + this._val(k) + "'>" + this.config.values[k] + "</option>";
     }
     
     html += "</select>" +
@@ -3263,6 +3267,10 @@ SelectionList.prototype._changed = function() {
     this._postControl(this.config.action, params, function() {
         thiz.valChanged = false;
     });
+};
+
+SelectionList.prototype._val = function(i) {
+    return this.config.indexes ? i : this.config.values[i];
 };
 
 /* ============================================================================
@@ -3978,6 +3986,7 @@ Spinner.prototype._send = function() {
  * @config {string}  [units] units label to display (optional)
  * @config {integer} [precision] precision of displayed value (default 1)
  * @config {boolean} [logarithmic] whether this slider provide linear or logarithmic range (default linear)
+ * @config {boolean} [snap] whether values are snapped to the nearest scale (default false) 
  * @config {integer} [logBase] if logarithmic, the log base to use (default 10)
  * @config {integer} [min] minimum value of slidDr (default 0)
  * @config {integer} [max] maximum value of slider (default 100)
@@ -4001,6 +4010,7 @@ function Slider(id, config)
     if (this.config.units === undefined) this.config.units = '';
     if (this.config.precision === undefined) this.config.precision = 1;
     if (this.config.logarithmic === undefined) this.config.logarithmic = false;
+    if (this.config.snap === undefined) this.config.snap = false;
     if (this.config.logBase === undefined) this.config.logBase = 10;
     if (this.config.scales === undefined) this.config.scales = 
             this.config.max - this.config.min > 10 ? 10 : this.config.max - this.config.min;
@@ -4171,6 +4181,9 @@ Slider.prototype._sliderClicked = function(x, y) {
     if (this.val < this.config.min) this.val = this.config.min;
     if (this.val > this.config.max) this.val = this.config.max;
     
+    /* If snapping is configured, round the value to the nearest integer. */
+    if (this.config.snap) this.val = Math.round(this.val);
+    
     /* Vertical sliders have the scale inverse to positioning. */
     if (this.config.vertical) this.val = this.config.max + this.config.min - this.val;
     
@@ -4256,6 +4269,14 @@ Slider.prototype._slideStop = function(x, y) {
         .unbind('mouseup.' + this.id);
     
     this.isSliding = false;
+    
+    if (this.config.snap)
+    {
+        /* If snapping is configured, snap to the closet value. */
+        this.val = Math.round(this.val);
+        this._moveTo();
+    }
+    
     this._send();
     
     var thiz = this;
@@ -4303,9 +4324,12 @@ Slider.prototype._handleTextBoxChange = function(val) {
         this.addMessage("Value out of range.", Widget.MESSAGE_TYPE.error, ttLeft, ttTop, Widget.MESSAGE_INDICATOR.left);
         return;
     }
-    
+        
     this.valueChanged = true;
     this.val = n;
+    
+    if (this.config.snap) this.val = Math.round(this.val);
+    
     this._moveTo();
     this._send();  
 };

@@ -1576,8 +1576,9 @@
 }
 
 .gauge-label {
-    font-size: 11px;
+    font-size: 14px;
     text-align: center;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
 }
 
 .gauge-vals {

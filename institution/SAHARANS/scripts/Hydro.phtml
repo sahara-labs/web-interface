@@ -1,91 +1,257 @@
 <?php
 /**
- * SAHARA Web Interface
+ * Hydro web interface.
  *
- * User interface to Sahara Remote Laboratory system.
- *
- * @license See LICENSE in the top level directory for complete license terms.
- *
- * Copyright (c) 2010, University of Technology, Sydney
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- *  * Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *  * Neither the name of the University of Technology, Sydney nor the names
- *    of its contributors may be used to endorse or promote products derived from
- *    this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * @author Michael Diponio (mdiponio)
- * @date 13th February 2010
+ * @author Michael Diponio
+ * @date 23/10/2014
  */
 
-$this->headScript()->appendFile('/uts/hydro/hydro.js');
-$this->headLink()->appendStylesheet('/uts/hydro/hydro.css');
-$this->headLink()->appendStylesheet('/uts/hydro/hydro-ie.css', 'screen', 'lt IE 9')
+$this->headScript()->appendFile($this->baseUrl('webui/webui.js'));
+$this->headLink()->appendStylesheet($this->baseUrl('webui/webui.css'));
+$this->headLink()->appendStylesheet($this->baseUrl('webui/webui-flat.css'));
+$this->headLink()->appendStylesheet($this->baseUrl('uts/windtunnel/windtunnel.css'));
+
+/* Canvas compatability implementation for Internet Explorer 8 and earlier. */
+$this->headScript()->appendFile($this->baseUrl('js/excanvas.js'),
+        'text/javascript',
+        array('conditional' => 'lt IE 9')
+);
 ?>
 
-<div id="hydro">
-	<!--  Experiment canvas. -->
-</div>
+<div id="hydro-anchor"> </div>
 
-<a id="hydroselectorbutton" class="hydrobutton ui-corner-all">
-	<img src="<?=$this->baseUrl('/uts/hydro/images/experiments.png')?>" alt="launch" />
-	Change Experiment
-</a>
-
-<a id="hydroresetbutton" class="hydrobutton ui-corner-all">
-	<img src="<?=$this->baseUrl('/uts/hydro/images/experiments.png')?>" alt="launch" />
-	Restore Positions
-</a>
-
-<a id="datadownloadbutton" class="hydrobutton ui-corner-all">
-	<img src="<?=$this->baseUrl('/uts/hydro/images/datadownload.png')?>" alt="download" />
-	Download Data
-</a>
 
 <script type="text/javascript">
-var hydro = new Hydro();
 $(document).ready(function() {
-	hydro.init();
+    new WebUIApp({
+        anchor: "#hydro-anchor",
+        windowToggle: true,
+        controller: "HydroController",
+        dataAction: "dataAndGraph",
+        theme: Globals.THEME.flat,
+        cookie: "hydro-webui",
+        dataPeriod: 1000,
+        dataDuration: 300,
+        pollPeriod: 2000,
+        height: 900,
+        widgets: [
+            new CameraStream("camera-1", {
+                title: "Camera",
+                swfParam: "camera-swf-c1",
+                mjpegParam: "camera-mjpeg-c1",
+                webmParam: "camera-webm-c1",
+                videoWidth: 320,
+                videoHeight: 240,
+                left: 165,
+                top: 0
+            }),
+			new DataLogging("data-logging", {
+			    left: -193,
+			    top: 144,
+				height: 370,
+			}),
+			new Container("container-pump", {
+			    title: "Pump",
+			    draggable: true,
+			    shadable: true,
+			    closeable: true,
+			    expandable: false,
+			    resizable: false,
+			    widgets: [
+			         new Switch("pump-on", {
+			             action: "setPump",
+			             field: "pump-on",
+			             label: "Pump On",
+			         }),
+			         new Slider("pump", {
+			             action: "setPump",
+			             field: "pump-val",
+			             label: "Pump",
+			             units: "%",
+			             length: 160,
+			             scales: 5
+			         }),
+			    ],
+			    layout: new BoxLayout({
+			        vertical: true,
+			        align: BoxLayout.ALIGN.center,
+			        padding: 10
+			    }),
+			    left: 0,
+			    top: 0,
+			}),
+			new Container("container-load", {
+				title: "Load",
+				draggable: true,
+				shadable: true,
+				closeable: true,
+				resizable: false,
+				widgets: [
+					new Switch("load-on", {
+						action: "setLoad",
+						field: "load-on",
+						label: "Load On",
+					}),
+					new Slider("slider", {
+						action: "setLoad",
+						field: "load-val",
+						label: "Load",
+						vertical: false,
+						min: 0,
+						max: 4,
+						scales: 4,
+						snap: true,
+						length: 110,
+						textEntry: false,
+						height: 80,
 
-	/* Button behaviours. */
-  	$("#hydroselectorbutton").click(function() {
-  	  	hydro.changeExperiment();
-  	});
+					}),
+			    ],
+			    layout: new BoxLayout({
+				    vertical: true,
+				    align: BoxLayout.ALIGN.center,
+				    padding: 10
+			    }),
+			    left: 510,
+			    top: 0,
+			}),
+			new Container("container-sensors", {
+			    title: "Sensors",
+			    widgets: [
+				    new Container("analogue-sensor", {
+						title: "Analogue",
+						widgets: [
+							new Gauge("gauge-volts", {
+								field: "voltage",
+								label: "Voltage",
+								units: "V",
+								precision: 2,
+								max: 5,
+							}),
+							new Gauge("gauge-amps", {
+								field: "current",
+								label: "Current",
+								units: "A",
+								precision: 2,
+								max: 5
+							}),
+							new Gauge("gauge-power", {
+								field: "power",
+								label: "Power",
+								units: "W",
+								precision: 2,
+								max: 5,
+							}),
+							new Gauge("gauge-flow_rate", {
+								field: "flow_rate",
+								label: "Flow Rate",
+								units: "L/min",
+								precision: 1,
+								max: 50
+							}),
+							new Gauge("gauge-rpm", {
+								field: "rpm",
+								label: "RPM",
+								units: "rpm",
+								precision: 0,
+								max: 1250
+							}),
+						],
+						layout: new FlowLayout({
+							vertical: false,
+							size: 650,
+							center: true,
+							padding: 20
+						}),
 
-  	$("#hydroresetbutton").click(function() {
-  	  	hydro.resetPosition();
-  	});
-
-	$("datadownloadbutton").click(function() {
-
-	});
+					}),
+					new Container("digital-sensors", {
+						title: "Digital",
+						widgets: [
+							new LCD("lcd-volts", {
+								field: "voltage",
+								label: "Voltage",
+								units: "V",
+								precision: 2
+							}),
+							new LCD("lcd-load-amps", {
+								field: "current",
+								label: "Current",
+								units: "A",
+								precision: 2
+							}),
+							new LCD("lcd-load-watts", {
+								field: "power",
+								label: "Power",
+								units: "W",
+								precision: 2
+							}),
+							new LCD("lcd-flow-rate", {
+								field: "flow_rate",
+								label: "Flow Rate",
+								units: "L/min",
+								precision: 1
+							}),
+							new LCD("lcd-rpm", {
+								field: "rpm",
+								label: "Revs / Min",
+								units: "rpm",
+								precision: 0
+							}),
+						],
+						layout: new FlowLayout({
+							vertical: false,
+							size: 650,
+							center: true,
+							padding: 10
+						}),
+					}),
+					new Graph("graph-sensors", {
+						title: "Graph",
+						fields: {
+							"graph-voltage": "Voltage (V)",
+							"graph-current":  "Current (A)",
+							"graph-power": "Power (W)",
+							"graph-flow_rate": "Flow Rate (L/min)"
+						},
+						multipliers: {
+							"graph-flow-rate": 0.5,
+						},
+						maxValue: 5,
+						yLabel: "Voltage (V) / Current (A) / Power (W)",
+						yRightLabel: "Flow Rate (L/min)",
+						yScaling: 10,
+						autoCtl: true,
+						fieldCtl: true,
+					}),
+				],
+				layout: new TabLayout({
+					position: TabLayout.POSITION.top,
+					border: 5
+	            }),
+	            left: 0,
+                top: 335,
+			}),
+			new SelectionList("camera-position", {
+				title: "Positions",
+				label: "Move To:",
+				field: "camera-position",
+				action: "cameraMove",
+				values: [
+					"Pelton Wheel",
+					"Pressure Gauge",
+					"Valve",
+					"Flow Meter",
+					"House"
+				],
+				indexes: false,
+				selectionWidth: 120,
+				resizable: false,
+				expandable: false,
+				left: 510,
+				top: 207,
+			})
+        ]
+    }).setup().run();
 });
 </script>
-
-<!-- Debug panel. -->
-<div id="hydrodebugpanel" class="sessionpanel ui-corner-all">
-	<div class="sessionpanelheader">
-		<p><span class="ui-icon ui-icon-wrench sessionpanelheadericon"></span>Debug</p>
-	</div>
-	<div id="hydrodebug"></div>
-</div>
-
-<div style="clear:both; margin-bottom:40px;"> </div>
