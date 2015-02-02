@@ -86,6 +86,7 @@ $(document).ready(function() {
 				shadable: true,
 				closeable: true,
 				resizable: false,
+				expandable: false,
 				widgets: [
 					new Switch("load-on", {
 						action: "setLoad",
@@ -233,8 +234,8 @@ $(document).ready(function() {
                 top: 335,
 			}),
 			new SelectionList("camera-position", {
-				title: "Positions",
-				label: "Move To:",
+				title: "Camera",
+				label: "Move To Position:",
 				field: "camera-position",
 				action: "cameraMove",
 				values: [
