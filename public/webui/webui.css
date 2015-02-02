@@ -303,17 +303,31 @@
     clear: both;
 }
 
-.graph-left-scales {
+.graph-y-scales {
     position: absolute;
-    left: 15px;
 }
 
-.graph-left-scales div {
+.graph-left-scales {
+	left: 15px;
+}
+
+.graph-right-scales {
+	right: 50px;
+}
+
+.graph-y-scales div {
     position: absolute;
     width: 40px;
     color: #666;
-    text-align: right;
     font-size: 12px;
+}
+
+.graph-left-scales div {
+	text-align: right;
+}
+
+.graph-right-scales div {
+	text-align: left;
 }
 
 .graph-bottom-scales {
@@ -346,7 +360,12 @@
 .graph-left-axis-label {
     transform: rotate(270deg);
     -ms-transform: rotate(270deg);
-    -webkit-transform: rotate(270deg);
+}
+
+.graph-right-axis-label {
+	transform: rotate(90deg);
+	-ms-transform(90deg);
+	right: 0;
 }
 
 .graph-bottom-axis-label {
@@ -1557,8 +1576,9 @@
 }
 
 .gauge-label {
-    font-size: 11px;
+    font-size: 14px;
     text-align: center;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
 }
 
 .gauge-vals {

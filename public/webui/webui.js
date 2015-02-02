@@ -1441,8 +1441,8 @@ TabLayout.prototype.displayInit = function($container) {
 
 TabLayout.prototype._tabClick = function(title) {
    var i = 0, w = false, x, y, 
-       wOff = this.config.vertical ? 0 : this.$tabBar.width() + this.config.border,
-       hOff = this.config.vertical ? this.$tabBar.height() + this.config.border : 0;
+       wOff = this.config.vertical ? 0 : this.$tabBar.width() + this.config.border * 2,
+       hOff = this.config.vertical ? this.$tabBar.height() + this.config.border * 2 : 0;
 
    switch (this.config.position)
    {
@@ -1509,7 +1509,8 @@ TabLayout.prototype._tabClick = function(title) {
 
 TabLayout.prototype._tabBarHTML = function() {
     var i, w, widgets = Object.getOwnPropertyNames(this.container.getWidgets()), html = 
-        "<div class='tab-bar tab-bar-" + this.config.position + "'>";
+        "<div class='tab-bar tab-bar-" + this.config.position + "' " +
+        		(this.config.vertical ? "style='width:10000px'>" : ">");
 
     if (this.config.position == TabLayout.POSITION.bottom)
     {
@@ -1554,8 +1555,8 @@ TabLayout.prototype.displayDestroy = function() {
 
 TabLayout.prototype.layout = function() {
     var i = 0, w, wid, hei, x, y,
-        wOff = this.config.vertical ? 0 : this.$tabBar.width() + this.config.border, 
-        hOff = this.config.vertical ? this.$tabBar.height() + this.config.border : 0;
+        wOff = this.config.vertical ? 0 : this.$tabBar.width() + this.config.border * 2, 
+        hOff = this.config.vertical ? this.$tabBar.height() + this.config.border * 2 : 0;
 
     this.width = this.height = 0;
 
@@ -1596,7 +1597,7 @@ TabLayout.prototype.layout = function() {
             case TabLayout.POSITION.bottom:
                 this.$tabBar.css({
                     left: 0,
-                    top: hei + this.config.border * 2
+                    top: hei + this.config.border
                 });
                 x = this.config.border;
                 y = this.config.border;
@@ -1634,6 +1635,8 @@ TabLayout.prototype.layout = function() {
     {
         this.$tabBar.children(".tab-post").css("height", this.height + "px");
     }
+    
+    if (this.config.vertical) this.$tabBar.css("width", "auto");
 };
 
 TabLayout.prototype.scale = function(h, v) {
@@ -1793,6 +1796,7 @@ Container.prototype.resizeStopped = function(width, height) {
     {
         this.config.layout.scale(horiz, vert);
         this.config.layout.layout();
+        
         this.$contentBox.css({
             width: this.config.layout.getWidth() - parseInt(this.$contentBox.css("padding-left")) - 
                         parseInt(this.$contentBox.css("padding-right")),
@@ -1920,6 +1924,8 @@ Spacer.prototype.resized = function(width, height) {
  * @config {integer} [duration]    number of seconds this graph displays (default 60)
  * @config {string}  [xLabel]      X axis label (default (Time (s))
  * @config {String}  [yLabel]      Y axis label (optional)
+ * @config {String}  [yRightLabel] Y axis label of right hand side (optional)
+ * @config {number}  [yScaling]    scaling of right hand side scales relative to main scales (default 1)
  * @config {boolean} [traceLabels] whether to show trace labels (default true)
  * @config {boolean} [fieldCtl]    whether data field displays can be toggled (default false)
  * @config {boolean} [autoCtl]     whether autoscaling enable control is shown (default false)
@@ -1940,6 +1946,7 @@ function Graph(id, config)
 	if (this.config.duration === undefined)    this.config.duration = 60;	
 	if (this.config.xLabel === undefined)      this.config.xLabel = "Time (s)";
 	if (this.config.yLabel === undefined)      this.config.yLabel = '';
+	if (this.config.yScaling === undefined)    this.config.yScaling = 1; 
 	if (this.config.traceLabels === undefined) this.config.traceLabels = true;
 	if (this.config.fieldCtl === undefined)    this.config.fieldCtl = false;
 	if (this.config.autoCtl === undefined)     this.config.autoCtl = false;
@@ -1986,6 +1993,9 @@ function Graph(id, config)
 	
 	/** @private {Slider} Duration slider control. */
 	this.durationSlider = undefined;
+	
+	/** @private {boolean} Whether the y label is the wide scale position. */
+	this.yScaleWide = false;
 }
 Graph.prototype = new Widget;
 
@@ -1999,6 +2009,7 @@ Graph.prototype.init = function($container) {
     
     this.config.period = Globals.DATA_PERIOD;
     this.startTime = undefined;
+    this.yScaleWide = false;
     
     var i = 0, c = 0, thiz = this;
     
@@ -2029,6 +2040,7 @@ Graph.prototype.init = function($container) {
         this.graphHeight += 50;
         this.graphWidth += 15;
     }
+    if (this.config.yRightLabel) this.graphWidth -= 40;
     
 	this.$widget = this._generate($container, this._buildHTML());
 	
@@ -2038,6 +2050,15 @@ Graph.prototype.init = function($container) {
 	    top: (this.config.windowed ? 30 : 0) + this.graphHeight / 2,
 	    left: -0.545 * c.width() + (this.config.windowed ? 26.1 : 21)
 	});
+	
+	if (this.config.yRightLabel)
+	{
+	     c = this.$widget.find(".graph-right-axis-label");
+	     c.css({
+	         top: (this.config.windowed ? 30 : 0) + this.graphHeight / 2,
+	         right: -0.545 * c.width() + (this.config.windowed ? 26.1 : 21)
+	     });
+	}
 
 	/* Add the canvas panel. */
 	var canvas = Util.getCanvas(this.id, this.graphWidth, this.graphHeight);
@@ -2092,21 +2113,46 @@ Graph.prototype._buildHTML = function() {
 	styleScale = this.graphHeight / this.config.vertScales;
 	top = this.config.windowed ? (this.config.traceLabels ? 33 : 3) : (this.config.traceLabels ? 26 : 0);
 	left = this.config.windowed ? 15 : 6;
-	html += "<div class='graph-left-scales' style='top:" + top + "px;left:" + left + "px'>";
+	
+	html += "<div class='graph-y-scales graph-left-scales' style='top:" + top + "px;left:" + left + "px'>";
 	for (i = 0; i <= this.config.vertScales; i++)
 	{
 		html += "<div class='graph-left-scale-" + i + "' style='top:"+ (styleScale * i) + "px'>" + 
-					(this.config.maxValue - i * unitScale)+ 
+					Util.zeroPad(this.config.maxValue - i * unitScale, this.graphRange >= this.config.vertScales * 2 ? 0 : 1) + 
 				"</div>";
 	}
 	html += "</div>";
+	
+	if (this.config.yRightLabel)
+	{
+	    /* Right scale. */
+	    html += "<div class='graph-y-scales graph-right-scales' style='top:" + top + "px;'>";
+    	for (i = 0; i <= this.config.vertScales; i++)
+    	{
+    		html += "<div class='graph-right-scale-" + i + "' style='top:"+ (styleScale * i) + "px'>" + 
+    					Util.zeroPad((this.config.maxValue - i * unitScale) * this.config.yScaling,
+    					        this.graphRange * this.config.yScaling >= this.config.vertScales * 2 ? 0 : 1) + 
+    				"</div>";
+    	}
+    	html += "</div>";
+	}
 
 	/* Left axis label. */
 	html += "<div class='graph-axis-label graph-left-axis-label'>" + this.config.yLabel + "</div>";
+	
+	if (this.config.yRightLabel)
+	{
+	    html += "<div class='graph-axis-label graph-right-axis-label'>" + this.config.yRightLabel + "</div>";
+	}
 
 	/* Canvas element holding box. */
 	html += "<div id='" + this.id +  "-canvas' class='graph-canvas-box gradient' style='height:" + this.graphHeight + 
 	                "px;width:" + this.graphWidth + "px;margin-top:" + (this.config.traceLabels ? "30" : "0") + "px'></div>";
+
+	if (this.config.yOtherLabel)
+	{
+		html += "<div class='graph-axis-label graph-right-axis-label'>" + this.config.yOtherLabel + "</div>";
+	}
 
 	/* Bottom scale. */
 	html += "<div class='graph-bottom-scales'>";
@@ -2346,7 +2392,12 @@ Graph.prototype._drawTrace = function(dObj) {
  * Updates the dependant variable scale.
  */
 Graph.prototype._updateDependantScale = function() {
-    var i, $s = this.$widget.find(".graph-left-scale-0");
+    var i, $s = this.$widget.find(".graph-left-scale-0"), $r;
+    
+    if (this.config.yRightLabel)
+    {
+        $r = this.$widget.find(".graph-right-scale-0");
+    }
     
     for (i = 0; i <= this.config.vertScales; i++)
     {
@@ -2354,6 +2405,34 @@ Graph.prototype._updateDependantScale = function() {
                 this.graphRange + this.graphOffset * this.graphRange - this.graphRange / this.config.vertScales * i, 
                 this.graphRange >= this.config.vertScales * 2 ? 0 : 1));
         $s = $s.next();
+        
+        if (this.config.yRightLabel)
+        {
+            $r.html(Util.zeroPad(
+                (this.graphRange + this.graphOffset * this.graphRange - this.graphRange / this.config.vertScales * i) * 
+                        this.config.yScaling, 
+                this.graphRange * this.config.yScaling >= this.config.vertScales * 2 ? 0 : 1));
+            $r = $r.next();
+        }
+    }
+    
+    if (this.graphRange + this.graphOffset > 1000 && this.graphRange < this.config.vertScales * 2)
+    {
+        /* In this case there will be two many digits causing the scales to 
+         * overlay the label so we will need to move the label more to the left. */
+        if (!this.yScaleWide) 
+        {
+            $s = this.$widget.find(".graph-left-axis-label");
+            $s.css("left", -0.545 * $s.width() + (this.config.windowed ? 26.1 : 21) - 10);
+            this.yScaleWide = true;
+        }
+    }
+    else if (this.yScaleWide)
+    {
+        /* Reset back to normal position. */
+        $s = this.$widget.find(".graph-left-axis-label");
+        $s.css("left", -0.545 * $s.width() + (this.config.windowed ? 26.1 : 21));
+        this.yScaleWide = false;
     }
 };
 
@@ -2420,6 +2499,11 @@ Graph.prototype.resized = function(width, height) {
     
     /* Left label. */
     this.$widget.find(".graph-left-axis-label").css("top", (this.config.windowed ? 30 : 0) + this.graphHeight / 2);
+    
+    if (this.config.yRightLabel)
+    {
+        this.$widget.find(".graph-right-axis-label").css("top", (this.config.windowed ? 30 : 0) + this.graphHeight / 2);
+    }
     
     /* Bottom scales. */
     for (i = 0, $s = this.$widget.find(".graph-bottom-scale-0"); i <= this.config.horizScales; i++)
@@ -3111,6 +3195,8 @@ RotarySwitch.prototype._animateSwitch = function(point) {
  * @config {string}  [action] server action to call when the switched is changed
  * @config {string}  [label] label adjacent of selection list (options)
  * @config {array}   [values] the list of potential values
+ * @config {boolean} [indexes] whether the data variable values sent and received \
+ *                       are array indexes or arrays values (default indexes)
  * @config {integer} [selectionWidth] width of selection  
  * @config 
  */
@@ -3119,6 +3205,7 @@ function SelectionList(id, config)
     Widget.call(this, id, config);
     
     if (this.config.selectionWidth === undefined) this.config.selectionWidth = 100;
+    if (this.config.indexes === undefined) this.config.indexes = true;
     
     /* Current value. */
     this.val = undefined;
@@ -3149,8 +3236,8 @@ SelectionList.prototype._buildHTML = function() {
     
     for (k in this.config.values)
     {
-        if (this.val == undefined) this.val = k; // First key set.
-        html += "<option value='" + k + "'>" + this.config.values[k] + "</option>";
+        if (this.val == undefined) this.val = this._val(k); // First key set.
+        html += "<option value='" + this._val(k) + "'>" + this.config.values[k] + "</option>";
     }
     
     html += "</select>" +
@@ -3180,6 +3267,10 @@ SelectionList.prototype._changed = function() {
     this._postControl(this.config.action, params, function() {
         thiz.valChanged = false;
     });
+};
+
+SelectionList.prototype._val = function(i) {
+    return this.config.indexes ? i : this.config.values[i];
 };
 
 /* ============================================================================
@@ -3895,6 +3986,7 @@ Spinner.prototype._send = function() {
  * @config {string}  [units] units label to display (optional)
  * @config {integer} [precision] precision of displayed value (default 1)
  * @config {boolean} [logarithmic] whether this slider provide linear or logarithmic range (default linear)
+ * @config {boolean} [snap] whether values are snapped to the nearest scale (default false) 
  * @config {integer} [logBase] if logarithmic, the log base to use (default 10)
  * @config {integer} [min] minimum value of slidDr (default 0)
  * @config {integer} [max] maximum value of slider (default 100)
@@ -3918,6 +4010,7 @@ function Slider(id, config)
     if (this.config.units === undefined) this.config.units = '';
     if (this.config.precision === undefined) this.config.precision = 1;
     if (this.config.logarithmic === undefined) this.config.logarithmic = false;
+    if (this.config.snap === undefined) this.config.snap = false;
     if (this.config.logBase === undefined) this.config.logBase = 10;
     if (this.config.scales === undefined) this.config.scales = 
             this.config.max - this.config.min > 10 ? 10 : this.config.max - this.config.min;
@@ -4088,6 +4181,9 @@ Slider.prototype._sliderClicked = function(x, y) {
     if (this.val < this.config.min) this.val = this.config.min;
     if (this.val > this.config.max) this.val = this.config.max;
     
+    /* If snapping is configured, round the value to the nearest integer. */
+    if (this.config.snap) this.val = Math.round(this.val);
+    
     /* Vertical sliders have the scale inverse to positioning. */
     if (this.config.vertical) this.val = this.config.max + this.config.min - this.val;
     
@@ -4173,6 +4269,14 @@ Slider.prototype._slideStop = function(x, y) {
         .unbind('mouseup.' + this.id);
     
     this.isSliding = false;
+    
+    if (this.config.snap)
+    {
+        /* If snapping is configured, snap to the closet value. */
+        this.val = Math.round(this.val);
+        this._moveTo();
+    }
+    
     this._send();
     
     var thiz = this;
@@ -4220,9 +4324,12 @@ Slider.prototype._handleTextBoxChange = function(val) {
         this.addMessage("Value out of range.", Widget.MESSAGE_TYPE.error, ttLeft, ttTop, Widget.MESSAGE_INDICATOR.left);
         return;
     }
-    
+        
     this.valueChanged = true;
     this.val = n;
+    
+    if (this.config.snap) this.val = Math.round(this.val);
+    
     this._moveTo();
     this._send();  
 };
@@ -4377,7 +4484,7 @@ LCD.prototype.consume = function(data) {
  * @config {number} [min] the minimum value of the guage (default 0)
  * @config {number} [max] the maximum value of the gauge (default 100)
  * @config {integer} [scales] number of scales to display (default fitted to min, max value)
- * @config {array}  [values] the list of potential values
+ * @config {integer} [precision] number of digits after decimal point (default 1) 
  */
 function Gauge(id, config)
 {
@@ -4392,6 +4499,7 @@ function Gauge(id, config)
     if (this.config.radius === undefined) this.config.radius = 75;
 	if (this.config.units === undefined) this.config.units = '';
     if (this.config.border === undefined) this.config.border  = '#525252';
+    if (this.config.precision === undefined) this.config.precision = 1;
 	if (this.config.scales === undefined) this.config.scales = 
             this.config.max - this.config.min > 10 ? 10 : this.config.max - this.config.min;
 
@@ -4415,7 +4523,7 @@ Gauge.prototype.init = function($container) {
             "<div class='gauge-center'></div>" +
             "<div class='gauge-units'>" + (this.config.units ? this.config.units : '' ) + "</div>" +
             "<div class='gauge-vals'></div>" +
-            "<div class='gauge-output'>00.0</div>" +
+            "<div class='gauge-output'>" + Util.zeroPad(0, this.config.precision) + "</div>" +
         "</div>"
     );
 
@@ -4428,7 +4536,8 @@ Gauge.prototype.init = function($container) {
         this.$widget.find(".gauge-vals").append(
             "<div class='gauge-val " + (i === this.config.scales ? 'gauge-val-last' : '') +
             "' id='" + this.id + "-" + i + "' " +
-            "style='left:" + Math.round(x + (r/1.9)) + "px;top:" + Math.round(y + (r/2)) + "px'>" + (i) + "</div>"
+            "style='left:" + Math.round(x + (r/2)) + "px;top:" + Math.round(y + (r/2)) + "px'>" + 
+                Util.zeroPad(this.config.min + (this.config.max - this.config.min) / this.config.scales * i, 0) + "</div>"
         );
     };
 
@@ -4455,7 +4564,7 @@ Gauge.prototype.animate = function() {
         "transform": "rotate(" + this.deg + "deg)"
     });
 
-    this.$widget.find(".gauge-output").html(this.val);
+    this.$widget.find(".gauge-output").html(Util.zeroPad(this.val, this.config.precision));
 };
 
 /* ============================================================================
@@ -4569,6 +4678,7 @@ LinearGauge.prototype.animate = function() {
  * @config {string} [title] the camera box title
  * @config {string} [swfParam] data variable that specifies SWF stream URL
  * @config {string} [mjpegParam] data variable that specifies MJPEG stream URL
+ * @config {string} [webmParam] data variable that specifies WebM stream URL
  * @config {integer} [videoWidth] width of the video stream
  * @config {integer} [videoHeight] height of the video stream
  */
@@ -4579,7 +4689,8 @@ function CameraStream(id, config)
     /** The list of address for the each of the camera formats. */
     this.urls = {
         swf:   undefined, // Flash format
-        mjpeg: undefined  // MJPEG format
+        mjpeg: undefined, // MJPEG format
+        webm:  undefined, // WebM format
     };  
     
     /** @private {boolean} Whether the camera is deployed. */
@@ -4641,7 +4752,12 @@ CameraStream.prototype.consume = function(data) {
         this.urls.mjpeg = decodeURIComponent(data[this.config.mjpegParam]);
     }
     
-    if ((this.urls.swf || this.urls.mjpeg) && !this.isDeployed) 
+    if (this.config.webmParam || data[this.config.webmParam] != undefined)
+    {
+        this.urls.webm = decodeURIComponent(data[this.config.webmParam]);
+    }
+    
+    if ((this.urls.swf || this.urls.mjpeg || this.urls.webm) && !this.isDeployed) 
     {
         this._restoreDeploy();
     }
@@ -4691,6 +4807,10 @@ CameraStream.prototype._deploy = function(format) {
         html = this._getMjpegHtml();
         break;
         
+    case 'webm':
+        html = this._getWebMHtml();
+        break;
+        
     default:
         this._platformDeploy();
         return;
@@ -4715,11 +4835,11 @@ CameraStream.prototype._deploy = function(format) {
  * Removes the currently deployed video from displaying.
  */
 CameraStream.prototype._undeploy = function() {
-    if (this.deployedFormat == 'mjpeg')
+    if (this.deployedFormat == 'mjpeg' || this.deployedFormat == 'webm')
     {
         /* Reports in the wild indicate Firefox may continue to the download 
          * the stream unless the source attribute is cleared. */
-        this.$widget.find(".video-player > img").attr("src", "#");
+        this.$widget.find(".video-player > img, .video-player > video").attr("src", "#");
     }
 
     this.$widget.find(".video-player").empty();
@@ -4755,6 +4875,7 @@ CameraStream.prototype._buildHTML = function() {
                 '<option selected="selected" value=" ">Select Format</option>' +
                 (this.config.swfParam ? '<option value="swf">SWF</option>' : '') +
                 (this.config.mjpegParam ? '<option value="mjpeg">M-JPEG</option>' : '') +
+                (this.config.webmParam ? '<option value="webm">WebM</option>' : '') +
             '</select>' +
         '</div>'
     );
@@ -4819,6 +4940,20 @@ CameraStream.prototype._getMjpegHtml = function() {
                 '<param name="accessories" value="none"/>' +
             '</applet>'
         );
+};
+
+/**
+ * Gets the HTML to deploy a WebM stream. This uses the HTML5 video
+ * tag.
+ * 
+ * @returns {String} WebM video HTML
+ */
+CameraStream.prototype._getWebMHtml = function() {
+  return (
+      "<video src='" + this.urls.webm + "' width='" + this.videoWidth + "' height='" + this.videoHeight + "' " +
+      		"autoplay='true' >" +
+      "</video>"
+  );
 };
 
 /** @const {integer} Difference between widget width and video width. */
@@ -4907,7 +5042,7 @@ Image.prototype.init = function($container) {
  * 
  * @param {String} id widget identifier
  * @param {Object} config configuration object
- * @config {String} [fieldNS] namespace of logging fields  
+ * @config {String} [fieldNS] namespace of logging fields
  */
 function DataLogging(id, config)
 {
@@ -4947,6 +5082,14 @@ DataLogging.prototype.init = function($container) {
     /* Event handlers. */
     var thiz = this;
     this.$widget.find(".switch").click(function() { thiz.toggleLogging(); });
+    
+    /* Properly resize list. */
+    if (this.config.height)
+    {
+        this.$widget.children(".window-content")
+            .css("height", this.config.height - 57)
+            .children($(".data-files-list").css("height", this.config.height - 120));
+    }
     
     /* Check we can download files. */
     setTimeout(function() { thiz.pollSessionFiles(); }, 2000);
@@ -5508,6 +5651,8 @@ Util.log = function(num, base) {
  * @returns {string} padded string
  */
 Util.zeroPad = function(num, places) {
+    if (num == "NaN" || isNaN(num)) return num;
+    
     var r = '' + Util.round(num, places);
 
     if (places > 0)
