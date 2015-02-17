@@ -16,9 +16,6 @@ $this->headScript()->appendFile($this->baseUrl('js/excanvas.js'),
 );
 ?>
 
-<div id="wind-tunnel-label" style='position:absolute;top:-27px;left:100px;text-align:center;color:red'>
-	Supergroup A - Turbine Installed until 9:45am 15/10/14
-</div>
 <div id="wind-tunnel-anchor">
     <!-- Interface goes here! -->
 </div>
@@ -33,7 +30,8 @@ $(document).ready(function() {
         dataAction: "dataAndGraph",
         theme: Globals.THEME.flat	,
         cookie: "windtunnel",
-        dataPeriod: 500,
+        dataPeriod: 100,
+        dataDuration: 60,
         pollPeriod: 2000,
         height: 1750,
         widgets: [
@@ -324,13 +322,13 @@ $(document).ready(function() {
 									break;
 
 								case 1: // Constant voltage.
-									this.config.max = 65;
+									this.config.max = 100;
 									this.config.units = "V";
 									this.config.precision = 1;
 									break;
 
 								case 2: // Constant Power.
-									this.config.max = 20;
+									this.config.max = 50;
 									this.config.units = "W";
 									this.config.precision = 2;
 									break;
@@ -451,7 +449,7 @@ $(document).ready(function() {
 								label: "Voltage",
 								units: "V",
 								precision: 2,
-								max: 65,
+								max: 100
 							}),
 							new Gauge("gauge-load-amps", {
 								field: "load-amps",
@@ -465,7 +463,7 @@ $(document).ready(function() {
 								label: "Power",
 								units: "W",
 								precision: 2,
-								max: 20,
+								max: 50,
 							}),
 							new Gauge("gauge-load-ohms", {
 								field: "load-ohms",
