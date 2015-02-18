@@ -2048,7 +2048,7 @@ Graph.prototype.init = function($container) {
 	c = this.$widget.find(".graph-left-axis-label");
 	c.css({
 	    top: (this.config.windowed ? 30 : 0) + this.graphHeight / 2,
-	    left: -0.545 * c.width() + (this.config.windowed ? 26.1 : 21)
+	    left: Math.round(-0.545 * c.width() + (this.config.windowed ? 26.1 : 15))
 	});
 	
 	if (this.config.yRightLabel)

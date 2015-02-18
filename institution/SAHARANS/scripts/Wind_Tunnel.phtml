@@ -225,7 +225,7 @@ $(document).ready(function() {
 		                title: "Graph",
 		                fields: { "graph-barometric-pressure": "Barometric Pressure" },
 		                colors: { "graph-barometric-pressure": "orange" },
-		                yLabel: "Barometric Pressure (Pa)",
+		                yLabel: "Baro. Pressure (mBar)",
 		                minValue: 900,
 		                maxValue: 1100,
 		                horizScales: 5,
@@ -237,14 +237,14 @@ $(document).ready(function() {
 		             new LCD("lcd-baropressure", {
 			            title: "Digital",
 						field: "barometric-pressure",
-						label: "Barometric Pressure",
-						units: "Pa",
+						label: "Baro. Pressure",
+						units: "mBar",
 						precision: 0
 		            }),
 		            new Gauge("gauge-baropressure", {
 						title: "Analogue",
 						field: "barometric-pressure",
-						units: "Pa",
+						units: "mBar",
 						min: 900,
 						max: 1100,
 						precision: 0,
