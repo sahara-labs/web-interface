@@ -38,6 +38,7 @@ PowerLab.prototype.setMode = function(mode) {
 	case 0: // Lab selection
 		this.setTitle("Power System Lab");
 		this.widgets.push(new SwitchMode(this));
+		this.widgets.push(new Camera(this));
 		break;
 	
 	case 1: // Lab 1 mode
@@ -1715,7 +1716,8 @@ function Camera(control)
 	
 	this.urls = {
 		swf: '',
-		mjpeg: ''
+		mjpeg: '',
+		webm: ''
 	};
 	this.urlsReceived = false;
 	
@@ -1799,10 +1801,15 @@ Camera.prototype.deploy = function() {
 	
 	$("body").append(
 			"<div id='camera-dialog' title='Power System Lab Camera'>" +
+			    "<div id='camera-popout'>" +
+			        "<span class='ui-icon ui-icon-newwin'></span>" +
+			        "Open in New Window" +
+			    "</div>" +
 				"<div id='camera-formats'>" +
 					"Video format: " +
 					"<span id='camera-format-swf' class='camera-format'>Flash</span> " +
 					"<span id='camera-format-mjpeg' class='camera-format'>MJpeg</span> " +
+					"<span id='camera-format-webm' class='camera-format'>WebM</span>" +
 				"</div>" + 
 				"<div id='camera-box' style='height:" + this.height + "px;width:" + this.width + "px'> </div>" +
 			"</div>"
@@ -1824,6 +1831,8 @@ Camera.prototype.deploy = function() {
 		resizeStop: function(e, ui) { thiz.resize(ui.size.width, ui.size.height); },
 		close:  function()          { thiz.close(); }
 	});
+	
+	$("#camera-popout").click(function() { thiz.popout(); });
 	
 	/* Setup video format control. */
 	this.$dialog.find(".camera-format").click(function() { thiz.switchFormat($(this).text()); });
@@ -1911,6 +1920,10 @@ Camera.prototype.deployVideo = function() {
 		this.deploySWF();
 		break;
 		
+	case 'webm':
+	    this.deployWebM();
+	    break;
+		
 	default: // Some form of corruption in the cookie value
 		this.currentFormat = /Mobile|mobi/i.test(navigator.userAgent) ? 'mjpeg' : 'swf';
 		this.deployVideo();
@@ -1971,6 +1984,14 @@ Camera.prototype.deployMJPEG = function() {
 	}
 };
 
+Camera.prototype.deployWebM = function() {
+    this.$box.empty().append(
+        "<video src='" + this.urls.webm + "' width='" + this.width + "' height='" + this.height + "' " +
+            "autoplay='true' >" +
+        "</video>"
+    );
+};
+
 Camera.prototype.switchFormat = function(format) {
 	this.currentFormat = format.toLowerCase();
 	this.setCookie("camera-format", this.currentFormat);
@@ -1981,4 +2002,15 @@ Camera.prototype.switchFormat = function(format) {
 Camera.prototype.undeployVideo = function() {
 	this.$box.empty();	
 	if (this.swfTimeout) clearTimeout(this.swfTimeout);
+};
+
+Camera.prototype.popout = function() {
+    var url = "/uts/power/camera.php?format=" + this.currentFormat + "&url=" + 
+        encodeURIComponent(this.urls[this.currentFormat]);
+    
+    /* Remove deployed video. */
+    this.close();
+    
+    var win = window.open(url, 'Power Lab Camera', 'width=640,height=480');
+    if (win.focus) win.focus();
 };

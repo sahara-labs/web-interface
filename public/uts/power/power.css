@@ -1457,6 +1457,16 @@
 /* ----------------------------------------------------------------------------
  * -- Cameras                                                                --
  * ---------------------------------------------------------------------------- */
+ 
+#camera-popout {
+	float: left;
+}
+
+#camera-popout span {
+	float: left;
+	margin-right: 5px;
+}
+ 
 #camera-button {
 	background-color: #EEEEEE;
 	left: 90px;
@@ -1475,7 +1485,7 @@
 	margin-bottom: 8px;
 }
 
-#camera-formats span {
+#camera-formats span, #camera-popout {
 	display: inline-block;
 	padding: 3px;
 	border: 1px solid #CCCCCC;
@@ -1483,7 +1493,7 @@
 	cursor: pointer;
 }
 
-#camera-formats span:hover {
+#camera-formats span:hover, #camera-popout:hover {
 	background-color: #F6F7F7;
 	box-shadow: 0 0 2px #CCCCCC;
 }
