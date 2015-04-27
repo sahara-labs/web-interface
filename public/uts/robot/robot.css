@@ -1,0 +1,163 @@
+/**
+ * Robot CSS.
+ *
+ * @author Michael Diponio
+ * @date 27th April 2015
+ */
+ 
+ 
+
+/******************************************************************************
+ ** D-Pad                                                                    **
+ ******************************************************************************/
+
+
+#dpad.mode-3 {
+    top: 285px;
+    left: -170px;
+}
+
+#dpad .dpad-finger {
+    width: 39px;
+    height: 39px;
+    background-color: #EFEFEF;
+    box-shadow: 0 0 4px #B5B5B5;
+    -moz-box-shadow: 0 0 4px #B5B5B5;
+    cursor: pointer;
+}
+
+#dpad .dpad-finger:hover {
+    box-shadow: 0 0 4px #606060;
+    -moz-box-shadow: 0 0 4px #606060;
+}
+
+#dpad span {
+    background-image: url('images/dpad_sprite.png');
+    display:block;
+    width: 30px;
+    height: 30px;
+    position: absolute;
+    left: 5px;
+    top: 5px;
+}
+
+#dpad #pad-center {
+    position: absolute;
+    left: 50px;
+    top: 50px;
+    width: 40px;
+    height: 40px;
+    box-shadow: 0;
+    -moz-box-shadow: 0; 
+    background-color: #EFEFEF;
+}
+
+#pad-center span {
+    background-position: -2px 32px;
+}
+
+#dpad #north-finger {
+    position: absolute;
+    left: 50px;
+    top: 0px;
+    height: 49px;
+    border-radius: 8px 8px 0 0;
+    -moz-border-radius: 8px 8px 0 0;
+    border: 1px solid #B5B5B5;
+    border-bottom-width: 0;
+    background: -moz-linear-gradient(top, #DEDEDE, #EFEFEF);
+}
+
+#dpad #north-finger span {
+    background-position: -2px -1px;
+}
+
+#dpad #north-finger.pressed {
+    background-color: #EDEDED;
+    background: -moz-linear-gradient(top, #F5F5F5, #EFEFEF);
+}
+
+#dpad #north-finger.pressed span {
+    background-position: -2px -36px;
+}
+
+#dpad #east-finger {
+    position: absolute;
+    left: 90px;
+    top: 50px;
+    width: 49px;
+    border-radius: 0 8px 8px 0;
+    -moz-border-radius: 0 8px 8px 0;
+    border: 1px solid #B5B5B5;
+    border-left-width: 0;
+    background: -moz-linear-gradient(right, #DEDEDE, #EFEFEF);
+}
+
+
+#dpad #east-finger span {
+    background-position: -35px -2px;
+    left: 15px;
+}
+
+#dpad #east-finger.pressed {
+    background-color: #EDEDED;
+    background: -moz-linear-gradient(right, #F5F5F5, #EFEFEF);
+}
+
+#dpad #east-finger.pressed span {
+    background-position: -35px -35px;
+    left: 15px;
+}
+
+#dpad #south-finger {
+    position: absolute;
+    left: 50px;
+    top: 90px;
+    height: 49px;
+    border-radius: 0 0 8px 8px;
+    -moz-border-radius: 0 0 8px 8px;
+    border: 1px solid #B5B5B5;
+    border-top-width: 0;
+    background: -moz-linear-gradient(bottom, #DEDEDE, #EFEFEF);
+}
+
+#dpad #south-finger span {
+    background-position: -68px -2px;
+    top: 15px;
+}
+
+#dpad #south-finger.pressed {
+    background-color: #EDEDED;
+    background: -moz-linear-gradient(bottom, #F5F5F5, #EFEFEF);
+}
+
+#dpad #south-finger.pressed span {
+    background-position: -68px -35px;
+    top: 15px;
+}
+
+#dpad #west-finger {
+    position: absolute;
+    left: 0;
+    top: 50px;
+    width: 49px;
+    border-radius: 8px 0 0 8px;
+    -moz-border-radius: 8px 0 0 8px;
+    border: 1px solid #B5B5B5;
+    border-right-width: 0;
+    background: -moz-linear-gradient(left, #DEDEDE, #EFEFEF);
+}
+
+#dpad #west-finger span {
+    background-position: -68px -68px;
+}
+
+#dpad #west-finger.pressed {
+    background-color: #EDEDED;
+    background: -moz-linear-gradient(left, #F5F5F5, #EFEFEF);
+}
+
+#dpad #west-finger.pressed span {
+    background-position: -35px -68px;
+}
+ 

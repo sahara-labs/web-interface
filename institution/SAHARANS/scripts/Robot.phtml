@@ -1,0 +1,76 @@
+<?php
+/**
+ * Robot web interface.
+ */
+
+$this->headScript()->appendFile($this->baseUrl('webui/webui.js'));
+$this->headLink()->appendStylesheet($this->baseUrl('webui/webui.css'));
+$this->headLink()->appendStylesheet($this->baseUrl('webui/webui-flat.css'));
+
+$this->headScript()->appendFile($this->baseUrl('uts/robot/robot-imperative.js'));
+$this->headLink()->appendStylesheet($this->baseUrl('uts/robot/robot.css'));
+
+/* Canvas compatability implementation for Internet Explorer 8 and earlier. */
+$this->headScript()->appendFile($this->baseUrl('js/excanvas.js'),
+        'text/javascript',
+        array('conditional' => 'lt IE 9')
+);
+?>
+
+<div id="robot-anchor">
+    <!-- Interface goes here! -->
+</div>
+
+
+<script type="text/javascript">
+$(document).ready(function() {
+    new WebUIApp({
+        anchor: "#robot-anchor",
+        windowToggle: true,
+        controller: "RobotController",
+        dataAction: "data",
+        theme: Globals.THEME.flat	,
+        cookie: "robot",
+        dataPeriod: 100,
+        dataDuration: 60,
+        pollPeriod: 2000,
+        height: 1750,
+        widgets: [
+            new Container("container-robot", {
+                title: "Velocity",
+                expandable: false,
+                widgets: [
+		            new LCD("lcd-robot-linear", {
+			            title: "Digital",
+						field: "robot-linear",
+						label: "Linear",
+						units: "m/s",
+						precision: 1
+		            }),
+		            new LCD("lcd-robot-angular", {
+			            title: "Digital",
+						field: "robot-angular",
+						label: "Angular",
+						units: "m/s",
+						precision: 1
+		            }),
+		         ],
+		         layout: new BoxLayout({
+					border: 5
+	             }),
+	             left: 0,
+	             top: 0,
+            }),
+            new DPad("dpad", {
+                title: "DPad",
+               	action: "setSpeed",
+                speedField: "robot-linear",
+                yawField: "robot-angular",
+                windowed: false,
+                top: 150,
+                left: -165
+            }),
+        ]
+    }).setup().run();
+});
+</script>
