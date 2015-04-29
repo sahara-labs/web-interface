@@ -36,31 +36,7 @@ $(document).ready(function() {
         pollPeriod: 2000,
         height: 1750,
         widgets: [
-            new Container("container-robot", {
-                title: "Velocity",
-                expandable: false,
-                widgets: [
-		            new LCD("lcd-robot-linear", {
-			            title: "Digital",
-						field: "robot-linear",
-						label: "Linear",
-						units: "m/s",
-						precision: 1
-		            }),
-		            new LCD("lcd-robot-angular", {
-			            title: "Digital",
-						field: "robot-angular",
-						label: "Angular",
-						units: "m/s",
-						precision: 1
-		            }),
-		         ],
-		         layout: new BoxLayout({
-					border: 5
-	             }),
-	             left: 0,
-	             top: 0,
-            }),
+
             new DPad("dpad", {
                 title: "DPad",
                	action: "setSpeed",
@@ -69,6 +45,11 @@ $(document).ready(function() {
                 windowed: false,
                 top: 150,
                 left: -165
+            }),
+            new Ranger("ranger-panel", {
+                title: "Laser Scan",
+                width: 360,
+                height: 380
             }),
         ]
     }).setup().run();
