@@ -5022,6 +5022,58 @@ Image.prototype.init = function($container) {
             "<img src='" + this.config.image + "' alt='" + this.config.alt + "' />");
 };
 
+/* ============================================================================
+ * == Local Overlay Widget                                                    ==
+ * ============================================================================ */
+
+/**
+ * Display an overlay on the page with user specified information.
+ * 
+ * @param {string} 
+ */
+function GlobalError() 
+{
+    Widget.call(this, 'global-error-overlay', { });
+    
+    /** @private {jQuery} Parent container. */
+    this.$container = undefined;
+    
+    /** @private {String} Displayed error message. */
+    this.error = '';
+}
+
+GlobalError.prototype = new Widget;
+
+GlobalError.prototype.init = function($container) {
+    this.$container = $container ? $container : $("#rigscriptcontainer");
+    
+    this.$widget = this.$container.append(
+        "<div id='global-error' class='global-error-overlay'>" +
+            "<div class='global-error-container'>" +
+                "<span class='ui-icon ui-icon-alert global-error-icon'></span>" +
+                "<span class='global-error-heading'>Alert!</span>" +
+                "<span class='window-close ui-icon ui-icon-close global-error-close'></span>" +
+                "<p class='global-error-message'>This web page has encountered an error. This may be " +
+                "because you are no longer connected to the internet. To resolve this error, first " +
+                "check your internet connection, then refresh this page.<br/><br/>" +
+                "If further assistance is required, please use the 'Contact Support' button to the " +
+                "right of the page.</p>" +
+                "<p class='global-error-log'>" + this.error + "</p>" +
+            "</div>" +
+        "</div>"
+    ).children().last();
+
+    /* Add a error class to widget boxes. */
+    this.$container.find(".window-wrapper, .tab-wrapper").addClass("global-error-blur");
+    
+    var thiz = this;
+    this.$widget.find(".window-close").click(function() { thiz.destroy(); });
+    
+    $(document).bind("keydown.global-error", function(e) {
+        if (e.keyCode == 27) thiz.destroy();
+    });
+};
+
 
 /* ============================================================================
  * == Data Logging Manager                                                   ==

@@ -36,7 +36,17 @@ $(document).ready(function() {
         pollPeriod: 2000,
         height: 1750,
         widgets: [
-
+			new AMCL("amcl", {
+				title: "Map & AMCL",
+				action: "setAMCLInitialPose",
+				initialPoseField: "amcl-initial-pose",
+				poseField: "amcl-pose",
+				particlesField: "amcl-particles",
+				width: 679,
+				height: 395,
+				left: 0,
+				top: 0
+			}),
             new DPad("dpad", {
                 title: "DPad",
                	action: "setSpeed",
