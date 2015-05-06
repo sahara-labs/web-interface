@@ -251,12 +251,12 @@ AMCL.prototype.drawParticles = function() {
         y = this.yo + this.particles[i + 1] * this.pxPerM;
         th = this.particles[i + 2];
         
-        this.ctx.moveTo(x1 = x - 15 * Math.cos(th), y1 = y - 15 * Math.sin(th));
-        this.ctx.lineTo(x + 15 * Math.cos(th), y + 15 * Math.sin(th));
+        this.ctx.moveTo(x1 = x - 15 * Math.cos(th), y1 = y + 15 * Math.sin(th));
+        this.ctx.lineTo(x + 15 * Math.cos(th), y - 15 * Math.sin(th));
         
-        this.ctx.moveTo(x + 5 * Math.cos(th + Math.PI / 6), y + 5 * Math.sin(th + Math.PI / 6));
+        this.ctx.moveTo(x + 5 * Math.cos(th + Math.PI / 6), y - 5 * Math.sin(th + Math.PI / 6));
         this.ctx.lineTo(x1, y1);
-        this.ctx.lineTo(x + 5 * Math.cos(th - Math.PI / 6), y + 5 * Math.sin(th - Math.PI / 6));
+        this.ctx.lineTo(x + 5 * Math.cos(th - Math.PI / 6), y - 5 * Math.sin(th - Math.PI / 6));
     }
     
     this.ctx.strokeStyle = "red";
