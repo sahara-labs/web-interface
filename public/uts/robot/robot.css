@@ -5,13 +5,57 @@
  * @date 27th April 2015
  */
  
+/******************************************************************************
+ ** Code Upload                                                              **
+ ******************************************************************************/
+#code-upload .window-content {
+	padding: 0;
+}
  
+#code-status { 
+	height: 40px;
+	padding: 0;
+	margin: -5px 0 5px
+}
+ 
+#code-terminal {
+	width: 390px;
+	height: 285px;
+	background-color: #2C2C2C;
+}
+
+#code-led {
+	margin-top: 5px;
+	margin-left: -5px;
+}
+
+#upload-dialog code {
+	font-family: monospace;
+	font-weight: bold;
+}
+
+#upload-dialog .saharaform {
+	margin-top: 20px;
+}
+
+#upload-dialog .saharaform div {
+	margin: 15px 0;
+}
+
+#upload-dialog label {
+	width: 80px;
+	text-align: right;
+	margin-right: 10px;
+}
+
+#upload-dialog input {
+	width: 247px;
+	color: #000000;
+}
 
 /******************************************************************************
  ** D-Pad                                                                    **
  ******************************************************************************/
-
-
 #dpad.mode-3 {
     top: 285px;
     left: -170px;
@@ -160,8 +204,9 @@
 #dpad #west-finger.pressed span {
     background-position: -35px -68px;
 }
- /******************************************************************************
- ** Ranger widget                                                          **
+
+/******************************************************************************
+ ** Ranger widget                                                            **
  ******************************************************************************/
 #ranger {
     z-index: 1000;

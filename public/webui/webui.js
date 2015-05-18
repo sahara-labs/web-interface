@@ -3284,6 +3284,8 @@ SelectionList.prototype._val = function(i) {
  * @param {string} id identifier of widget
  * @param {object} config configuration of widget
  * @config {string}   [action] action to send to when pressed
+ * @config {string}   [field] data field that enables this button (optional, default alway enabled)
+ * @config {boolean}  [negate] if enable field set, whether true or false enables the button (default true enables)
  * @config {string}   [link] link that is embedded on the page
  * @config {string}   [target] if link used, what the target attribute so to
  * @config {object}   [params] parameters to be sent when pressed (optional)
@@ -3305,11 +3307,13 @@ function Button(id, config)
     /* Default options. */
     if (this.config.params === undefined) this.config.params = { };
     if (this.config.label === undefined) this.config.label = '';
+    if (this.config.negate === undefined) this.config.negate = false;
     if (this.config.overlay === undefined) this.config.overlay = false;
     if (this.config.circular === undefined) this.config.circular = false;
-    if (this.config.clickColor === undefined) this.config.clickColor = "#CCC";
+    if (this.config.clickColor === undefined) this.config.clickColor = "#CCC";    
     
-    /* For width we need to take account padding. */
+    /** Whether this button is enabled. */
+    this.enabled = this.config.field ? undefined : true;    
 }
 
 Button.prototype = new Widget;
@@ -3320,6 +3324,7 @@ Button.prototype.init = function($container) {
     this.$widget = this._generate($container,
         "<" + (this.config.action ? "div " : "a ") +
                 "class='button " + (this.config.overlay && this.config.circular === false ? "button-overlay" : '') + 
+                    (this.config.field ? "button-disabled" : "") +
                 "' style='" +
                     (this.config.height ? "line-height:" + this.config.height + "px;" : "") +
                     (this.config.color ? "background-color:" + this.config.color : "") +
@@ -3336,9 +3341,9 @@ Button.prototype.init = function($container) {
 
     var thiz = this;
     this.$widget.children(".button")
-        .mousedown(function() { thiz._buttonEngaged(); })
-        .bind("mouseup mouseout", function(){ thiz._buttonReleased(); })
-        .click(function() { if (thiz.config.action) thiz._clicked(); });
+        .mousedown(function() { if (thiz.enabled) thiz._buttonEngaged(); })
+        .bind("mouseup mouseout", function(){ if (thiz.enabled) thiz._buttonReleased(); })
+        .click(function() { if (thiz.config.action && thiz.enabled) thiz._clicked(); });
 
     if ($('#'+this.id).hasClass('push-button')) {
         /* Remove the standard button classes for the push button. */
@@ -3353,6 +3358,8 @@ Button.prototype.init = function($container) {
 
         /* Animates the push buttons when clicked. */
         this.$widget.find(".button").click(function(){
+            if (thiz.enabled) return;
+            
         	if (!thiz.$widget.hasClass('push-button-down'))
         	{
                 thiz.$widget.find('.push-button-outer').addClass('push-button-down');
@@ -3397,6 +3404,24 @@ Button.prototype.resizeStopped = function(width, height) {
        width: "auto",
        height: "auto"
     });
+};
+
+Button.prototype.consume = function(data) {
+    var t = this.config.negate ? !this.enabled : this.enabled;
+    if (this.config.field && data[this.config.field] !== undefined && 
+            (this.enabled === undefined || t ^ data[this.config.field]))
+    {
+        this.enabled = data[this.config.field];
+        if (this.config.negate) this.enabled = !this.enabled;
+        if (this.enabled)
+        {
+            this.$widget.find(".button").removeClass("button-disabled");
+        }
+        else
+        {
+            this.$widget.children(".button").addClass("button-disabled");
+        }
+    }
 };
 
 /* ============================================================================

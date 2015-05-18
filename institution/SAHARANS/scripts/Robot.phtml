@@ -36,6 +36,12 @@ $(document).ready(function() {
         pollPeriod: 2000,
         height: 1750,
         widgets: [
+            new CodeUpload("code-upload", {
+				title: "ROS Package Upload",
+				width: 400,
+				height: 370,
+				expandable: false
+            }),
 			new AMCL("amcl", {
 				title: "Map & AMCL",
 				action: "setAMCLInitialPose",
@@ -65,3 +71,5 @@ $(document).ready(function() {
     }).setup().run();
 });
 </script>
+
+<iframe style="display:none" id="code-upload-target" name="code-upload-frame"></iframe>

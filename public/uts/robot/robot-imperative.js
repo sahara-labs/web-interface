@@ -5,6 +5,344 @@
  * @date 27th April 2015
  */
 
+
+/* ----------------------------------------------------------------------------
+ * -- Code Upload                                                            --
+ * ---------------------------------------------------------------------------- */
+
+/**
+ * Code upload control buttons and code file upload form.
+ * 
+ *  @param {string} id widget identifier
+ *  @param {object} config configuration object
+ *  
+ */
+function CodeUpload(id, config)
+{
+    Widget.call(this, id, config);    
+    
+    this.$uploadDialog = undefined;
+    this.$uploadTarget = undefined;
+    
+    this.terminalIn = 0;
+    this.terminalData = [ ];
+    
+    this.buttons = undefined;
+    this.running = undefined;
+    this.uploading = false;
+    
+    this.rosPackage = undefined;
+    this.rosExec = undefined;
+    
+    this.$uploadTarget = undefined;
+    this.$uploadDialog = undefined;
+}
+CodeUpload.prototype = new Widget;
+
+CodeUpload.prototype.init = function($container) {     
+     this.$widget = this._generate($container, 
+            "<div id='code-status'> </div>" +
+            "<div id='code-terminal'>" +
+                "<ul> </ul>" +
+            "</div>"
+     );
+     
+     this.buttons = new Container("code-status-container", {
+         widgets: [
+              new LED("code-led", {
+                 field: "user-prog-running",
+                 label: "Running",                 
+                 width: 95
+              }),
+              new Button("upload-button", {
+                  label: "Upload",
+                  field: "user-prog-running",
+                  negate: true,
+                  action: "null",
+                  tooltip: "Upload a ROS package to be compiled and run on the iRobot create.",
+                  width: 65
+              }),
+              new Button("interrupt-button", {
+                  label: "Interrupt",                  
+                  field: "user-prog-running",
+                  action: "null",
+                  tooltip: "Send a UNIX signal to uploaded ROS node.",
+                  width: 75
+              }),
+              new Button("kill-button", {
+                  label: "Kill",
+                  field: "user-prog-running",
+                  action: "null",
+                  tooltip: "Terminate uploaded ROS node.",
+                  width: 50,
+              })
+         ],
+         layout: new BoxLayout({
+             vertical: false
+         }),
+     });
+     this.buttons.init(this.$widget.find("#code-status"));
+     
+     var thiz = this;
+     this.buttons.getWidget("upload-button")._clicked = function() { thiz._uploadClicked(); };
+     this.buttons.getWidget("interrupt-button")._clicked = function() { thiz._interruptClicked(); };
+     this.buttons.getWidget("kill-button")._clicked = function() { thiz._killClicked(); };
+     
+     this.$uploadTarget = $("#code-upload-target");
+};
+
+CodeUpload.prototype.consume = function(data) {
+    this.running = data["user-prog-running"];
+    this.rosPackage = data["user-package"];
+    this.rosExec = data["user-exec"];
+    
+    if (this.buttons) this.buttons.consume(data);
+};
+
+CodeUpload.prototype._uploadClicked = function(n) {
+    if (this.isRunning) return;
+
+    var thiz = this;
+    $("body").append(
+            "<div id='upload-dialog'>" +
+                "<div>" +
+                    "Upload a ROS packaged compressed as a ZIP or GZipped Tar file to be extracted, built and run." +
+                    "The commands used will be '<code>rosmake&nbsp&lt;package&gt;</code>' and " +
+                    "'<code>rosrun&nbsp&lt;package&gt;&nbsp;&lt;executable&gt;</code>' to build and run respectively." +
+                "</div>" +
+                "<div class='saharaform'>" +     
+                    /* Information that must be submitted. */             
+                    "<div>" +
+                        "<label for='ros-package'>Package:</label>" +
+                        "<input type='text' id='ros-package' value='" + (this.rosPackage ? this.rosPackage : "") +"' />" +
+                    "</div>" +
+                    "<div>" +
+                        "<label for='ros-exec'>Executable:</label>" +
+                        "<input type='text' id='ros-exec' value='" + (this.rosExec ? this.rosExec : "") + "'/>" +
+                    "</div>" +
+                
+                    /* Code Upload form. */
+                    "<form id='code-upload-form' action='/batch/torigclient' target='" + this.$uploadTarget.attr("name") + "' " +
+                            "method='post' enctype='multipart/form-data'>" +
+                        "<label form='code-archive'>Archive:</label>" +
+                        "<input type='file' id='code-archive' name='file' />" +
+                    "</form>" +
+
+                "</div>" +
+            "</div>"
+    );
+
+    this.$uploadDialog = $("#upload-dialog").dialog({
+        autoOpen: true,
+        title: "ROS Code Upload",
+        width: 400,
+        modal: true,
+        resizable: false,
+        buttons: {
+            'Upload': function() { 
+                thiz.startUpload(); 
+            },
+            'Cancel': function() { 
+
+                $(this).dialog("close"); 
+            }
+        },
+        close:   function() { $(this).dialog("destroy"); $("#upload-dialog").remove(); },
+    });
+};
+
+
+
+CodeUpload.prototype.startUpload = function() {
+    if (this.isUploading) return;
+    this.isUploading = true;
+    
+    /* Make sure we have all the required information. */
+    this.rosPackage = $("#ros-pacakage").val();
+    this.rosExec = $("#ros-exec").val();
+  
+    /* Quick sanity check. */
+    var file = $("#code-archive").val(), thiz = this, validated = true;
+    
+    
+
+    if (!validated) return;
+    
+    /*if (!$.browser.opera && (file.length == 0 || !file.indexOf(".zip") > 0))
+    {
+        $("#code-upload-err").show()
+            .children("p")
+                .empty()
+                .append("Uploaded file is not valid. Ensure it has a '.zip' file extension.");
+        this.isUploading = false;
+        return;
+    } */
+    
+    /* Give the user the option of stoppong page navigation. 
+    window.onbeforeunload = function(e) {
+        var str = "Navigating away from this page will cancel the upload of your code.";
+        
+        /* IE pre 8 & and Firefox pre 4 (according MDN). 
+        e = e || window.event;
+        if (e) e.returnValue = str;
+
+        return str;
+    };*/ 
+
+    /* Tear down dialog. */
+    this.$uploadDialog
+        .dialog("option", {
+            closeOnEscape: false,
+            width: 100
+        })
+        .hide()
+        .prev().hide()
+        .next().next().hide();
+    
+    /* Add a spinner. */
+    this.$uploadDialog.parent()
+        .css("left", parseInt(this.$uploadDialog.parent().css("left")) + 100);
+    
+    
+    /* Upload archive. */
+    $("#code-upload-form").submit();
+    
+    /* Start polling the target frame for upload status. */
+    setTimeout(function() { thiz.checkIfUploaded(); }, 3000);
+    
+    this.$uploadDialog.dialog("close");   
+};
+
+CodeUpload.prototype.checkIfUploaded = function() {
+    var text = this.$uploadTarget.contents().text(), thiz = this;
+    
+    if (text == "")
+    {
+        /* File still uploading. */
+        setTimeout(function() { thiz.checkIfUploaded(); }, 3000);
+    }
+    else 
+    {
+        this.isUploading = false;
+        
+        this.$uploadTarget.empty();
+        window.onbeforeunload = null;
+        
+        if (text.indexOf("error;") == 0 || text.indexOf("false;") == 0)
+        {
+            /* Something failed in the initial upload. */
+            $("#code-upload-err").show()
+                .children("p")
+                    .empty()
+                    .append(text.substring(text.indexOf(";") + 1));
+            
+            /* Restore dialog. */
+            this.$uploadDialog.parent()
+                .css("left", parseInt(this.$uploadDialog.parent().css("left")) - 100);
+            
+            this.$uploadDialog
+                .dialog("option", {
+                    closeOnEscape: true,
+                    width: 400
+                })
+                .show()
+                .prev().show()
+                .next().next().show();
+            
+            $("#code-upload-spinner").remove();
+        }
+        else
+        {
+            this.setRunning(true);
+            this.$uploadDialog.dialog("close");
+            setTimeout(function() { thiz.getStatus(); }, 3000);
+        }
+    }
+};
+
+CodeUpload.prototype.displayUpload = function() {
+    
+};
+
+
+CodeUpload.prototype.getStatus = function() {
+    var thiz = this;
+    $.ajax({
+        url: "/batch/status",
+        cache: false,
+        success: function (r) { 
+            if (typeof r != "object") window.location.reload();
+            
+            /* Display of statuses. */
+            thiz.status.setStdOut(r.stdout);
+            
+            if (r.state == "IN_PROGRESS")
+            {
+                /* If the execution is not complete we keep polling the response. */
+                thiz.setRunning(true);
+                setTimeout(function() { thiz.getStatus(); }, 3000);
+            }
+            else
+            {
+                /* Restore the page because code is no longer running. */
+                thiz.setRunning(false);
+            }
+        },
+        error: function() { setTimeout(function() { thiz.getStatus(); }, 5000); }
+    });
+};
+
+
+CodeUpload.prototype._interruptClicked = function(n) {
+   alert("Interrupt");
+};
+
+CodeUpload.prototype._killClicked = function() {
+   alert("kill");
+};
+
+
+CodeUpload.prototype.kill = function() {
+    if (!this.isRunning) return;
+    this.isKilling = true;
+    var thiz = this;
+    
+    $("#kill-button").empty().addClass("disabled")
+        .append(
+            "<img src='/uts/irobot/images/spinner.gif' alt=' ' /><br />" +
+            "Killing..."
+    );
+    
+    $.post(
+        "/batch/abort",
+        null,
+        function (resp) {
+            if (typeof resp != "object") return;
+            thiz.setRunning(resp.success);
+        }
+    );
+};
+
+CodeUpload.prototype.resizeStopped = function(width, height) {
+    this.$widget.find("#code-terminal").css({
+        width: width,
+        height: height - 85
+    });
+    
+};
+
+CodeUpload.prototype.destroy = function() {
+    $(document).unbind("keydown.terminate");
+    
+    if (this.buttons) 
+    {
+        this.buttons.destroy();
+        this.buttons = undefined;
+    }
+    if (this.$w) this.$w.remove();
+};
+
+
 /* ----------------------------------------------------------------------------
  * -- AMCL display widget.                                                   --
  * ---------------------------------------------------------------------------- */
