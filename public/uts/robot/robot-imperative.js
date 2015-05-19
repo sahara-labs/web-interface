@@ -24,18 +24,20 @@ function CodeUpload(id, config)
     this.$uploadDialog = undefined;
     this.$uploadTarget = undefined;
     
-    this.terminalIn = 0;
-    this.terminalData = [ ];
-    
     this.buttons = undefined;
     this.running = undefined;
     this.uploading = false;
+    this.killing = false;
     
     this.rosPackage = undefined;
     this.rosExec = undefined;
     
     this.$uploadTarget = undefined;
     this.$uploadDialog = undefined;
+    
+    this.$terminal = undefined;    
+    this.terminalIn = 0;
+    this.terminalData = [ ];    
 }
 CodeUpload.prototype = new Widget;
 
@@ -62,13 +64,6 @@ CodeUpload.prototype.init = function($container) {
                   tooltip: "Upload a ROS package to be compiled and run on the iRobot create.",
                   width: 65
               }),
-              new Button("interrupt-button", {
-                  label: "Interrupt",                  
-                  field: "user-prog-running",
-                  action: "null",
-                  tooltip: "Send a UNIX signal to uploaded ROS node.",
-                  width: 75
-              }),
               new Button("kill-button", {
                   label: "Kill",
                   field: "user-prog-running",
@@ -85,10 +80,11 @@ CodeUpload.prototype.init = function($container) {
      
      var thiz = this;
      this.buttons.getWidget("upload-button")._clicked = function() { thiz._uploadClicked(); };
-     this.buttons.getWidget("interrupt-button")._clicked = function() { thiz._interruptClicked(); };
      this.buttons.getWidget("kill-button")._clicked = function() { thiz._killClicked(); };
      
      this.$uploadTarget = $("#code-upload-target");
+     
+     this.$terminal = this.$widget.find("#code-terminal ul");
 };
 
 CodeUpload.prototype.consume = function(data) {
@@ -97,6 +93,30 @@ CodeUpload.prototype.consume = function(data) {
     this.rosExec = data["user-exec"];
     
     if (this.buttons) this.buttons.consume(data);
+    
+    if (data["user-prog-streams"] && data["user-prog-stream-in"])
+        this._updateTerminal(data["user-prog-streams"], data["user-prog-stream-in"]);
+    
+    if (this.killing && !this.running)
+    {
+        this.killing = false;
+        this.$widget.children("#code-upload-kill").remove();
+    }
+};
+
+CodeUpload.prototype._updateTerminal = function(str, ind) {
+    if (this.uploading) return;
+    var i, l, lines = str.split("\n"), html = "";
+    
+    for (i in lines) 
+    {
+        l = lines[i].trim();
+        html += "<li>" + lines[i].trim() + "</li>";
+    }
+
+    this.$terminal.html(html);
+    
+    this.$terminal.parent().scrollTop(this.$terminal.height());
 };
 
 CodeUpload.prototype._uploadClicked = function(n) {
@@ -140,55 +160,58 @@ CodeUpload.prototype._uploadClicked = function(n) {
         resizable: false,
         buttons: {
             'Upload': function() { 
-                thiz.startUpload(); 
+                thiz._startUpload(); 
             },
             'Cancel': function() { 
-
                 $(this).dialog("close"); 
             }
         },
-        close:   function() { $(this).dialog("destroy"); $("#upload-dialog").remove(); },
+        close:   function() { 
+            $(this).dialog("destroy"); 
+            $("#upload-dialog").remove(); 
+            if (thiz.config.dpad) thiz.config.dpad.bindActions();
+        },
     });
+    
+    /* Stop the DPad moving when the user is typing into the form. */
+    if (this.config.dpad) this.config.dpad.unbindActions();
 };
 
-
-
-CodeUpload.prototype.startUpload = function() {
-    if (this.isUploading) return;
+CodeUpload.prototype._startUpload = function() {
+    if (this.isUploading) return;       
     this.isUploading = true;
     
+    var thiz = this, validated = true, $fu = $("#code-archive"), $pi = $("#ros-package"), $ei = $("#ros-exec"),
+        file = $fu.val(), pack, exec;
+    
     /* Make sure we have all the required information. */
-    this.rosPackage = $("#ros-pacakage").val();
-    this.rosExec = $("#ros-exec").val();
-  
-    /* Quick sanity check. */
-    var file = $("#code-archive").val(), thiz = this, validated = true;
-    
-    
-
-    if (!validated) return;
-    
-    /*if (!$.browser.opera && (file.length == 0 || !file.indexOf(".zip") > 0))
+    if (!(pack = $pi.val()))
     {
-        $("#code-upload-err").show()
-            .children("p")
-                .empty()
-                .append("Uploaded file is not valid. Ensure it has a '.zip' file extension.");
+        $pi.addClass("input-invalid");
+        validated = false;
+    }
+    else $pi.removeClass("input-invalid");
+           
+    if (!(exec = $ei.val()))
+    {
+        $ei.addClass("input-invalid");
+        validated = false;
+    }
+    else $ei.removeClass("input-invalid");
+  
+    if (!(file && (file.substr(-4) == ".zip" || file.substr(-7) == ".tar.gz")))
+    {
+        $fu.addClass("input-invalid");
+        validated = false;
+    }
+    else $fu.removeClass("input-invalid");
+
+    if (!validated) 
+    {
         this.isUploading = false;
         return;
-    } */
+    }
     
-    /* Give the user the option of stoppong page navigation. 
-    window.onbeforeunload = function(e) {
-        var str = "Navigating away from this page will cancel the upload of your code.";
-        
-        /* IE pre 8 & and Firefox pre 4 (according MDN). 
-        e = e || window.event;
-        if (e) e.returnValue = str;
-
-        return str;
-    };*/ 
-
     /* Tear down dialog. */
     this.$uploadDialog
         .dialog("option", {
@@ -201,16 +224,60 @@ CodeUpload.prototype.startUpload = function() {
     
     /* Add a spinner. */
     this.$uploadDialog.parent()
-        .css("left", parseInt(this.$uploadDialog.parent().css("left")) + 100);
+		.css("left", parseInt(this.$uploadDialog.parent().css("left")) + 100)
+		.append(
+			"<div id='code-upload-spinner'>" +
+				"<img src='/uts/irobot/images/spinner.gif' alt='' /><br />" +
+				"Uploading..." +
+			"</div>"
+		);
     
+    /* Give the user the option of stopping page navigation if upload is still in progress. */ 
+    window.onbeforeunload = function(e) {
+        var str = "Navigating away from this page will cancel the upload of your package.";
+        
+        /* IE pre 8 & and Firefox pre 4 (according MDN). */ 
+        e = e || window.event;
+        if (e) e.returnValue = str;
+        return str;
+    };    
+    
+    /* If the ROS package name or executable differs from the server it will need to be send 
+     * again. */
+    if (!(this.rosPackage == pack && this.rosExec == exec))
+    {
+        this._sendROSDetails(pack, exec);
+    }
+    else
+    {
+        this._sendFile();
+    }    
+};
+
+CodeUpload.prototype._sendROSDetails = function(pack, exec) {
+    var thiz = this;
+    this._postControl(
+        "setUploadDetails",
+        {
+            "ros-pack": pack,
+            "ros-exec": exec
+        },
+        function() {
+            thiz.rosPackage = pack;
+            thiz.rosExec = exec;
+            thiz._sendFile();
+        }
+    );
+};
+
+CodeUpload.prototype._sendFile = function() {
+    this.$uploadTarget.empty();
     
     /* Upload archive. */
     $("#code-upload-form").submit();
     
     /* Start polling the target frame for upload status. */
-    setTimeout(function() { thiz.checkIfUploaded(); }, 3000);
-    
-    this.$uploadDialog.dialog("close");   
+    this.checkIfUploaded();    
 };
 
 CodeUpload.prototype.checkIfUploaded = function() {
@@ -219,7 +286,7 @@ CodeUpload.prototype.checkIfUploaded = function() {
     if (text == "")
     {
         /* File still uploading. */
-        setTimeout(function() { thiz.checkIfUploaded(); }, 3000);
+        setTimeout(function() { thiz.checkIfUploaded(); }, 250);
     }
     else 
     {
@@ -228,99 +295,38 @@ CodeUpload.prototype.checkIfUploaded = function() {
         this.$uploadTarget.empty();
         window.onbeforeunload = null;
         
+        this.$uploadDialog.dialog("close");
+        this.$uploadDialog = null;
+        
         if (text.indexOf("error;") == 0 || text.indexOf("false;") == 0)
         {
-            /* Something failed in the initial upload. */
-            $("#code-upload-err").show()
-                .children("p")
-                    .empty()
-                    .append(text.substring(text.indexOf(";") + 1));
-            
-            /* Restore dialog. */
-            this.$uploadDialog.parent()
-                .css("left", parseInt(this.$uploadDialog.parent().css("left")) - 100);
-            
-            this.$uploadDialog
-                .dialog("option", {
-                    closeOnEscape: true,
-                    width: 400
-                })
-                .show()
-                .prev().show()
-                .next().next().show();
-            
-            $("#code-upload-spinner").remove();
+            alert("Error: " + text.substring(text.indexOf(";") + 1));            
         }
         else
         {
-            this.setRunning(true);
-            this.$uploadDialog.dialog("close");
-            setTimeout(function() { thiz.getStatus(); }, 3000);
+            this.$terminal.empty();
+            this.consume({
+               "user-prog-running": true 
+            });
         }
     }
 };
 
-CodeUpload.prototype.displayUpload = function() {
-    
-};
 
 
-CodeUpload.prototype.getStatus = function() {
-    var thiz = this;
-    $.ajax({
-        url: "/batch/status",
-        cache: false,
-        success: function (r) { 
-            if (typeof r != "object") window.location.reload();
-            
-            /* Display of statuses. */
-            thiz.status.setStdOut(r.stdout);
-            
-            if (r.state == "IN_PROGRESS")
-            {
-                /* If the execution is not complete we keep polling the response. */
-                thiz.setRunning(true);
-                setTimeout(function() { thiz.getStatus(); }, 3000);
-            }
-            else
-            {
-                /* Restore the page because code is no longer running. */
-                thiz.setRunning(false);
-            }
-        },
-        error: function() { setTimeout(function() { thiz.getStatus(); }, 5000); }
-    });
-};
-
-
-CodeUpload.prototype._interruptClicked = function(n) {
-   alert("Interrupt");
-};
-
-CodeUpload.prototype._killClicked = function() {
-   alert("kill");
-};
-
-
-CodeUpload.prototype.kill = function() {
-    if (!this.isRunning) return;
-    this.isKilling = true;
-    var thiz = this;
-    
-    $("#kill-button").empty().addClass("disabled")
-        .append(
-            "<img src='/uts/irobot/images/spinner.gif' alt=' ' /><br />" +
-            "Killing..."
-    );
-    
-    $.post(
-        "/batch/abort",
-        null,
-        function (resp) {
-            if (typeof resp != "object") return;
-            thiz.setRunning(resp.success);
-        }
-    );
+CodeUpload.prototype._killClicked = function(n) {
+   if (this.killing) return;
+   this.killing = true;
+   this.$widget.append(
+       "<div id='code-upload-kill'>" +
+           "<div id='code-upload-kill-spin'>" +
+               "<img src='/uts/irobot/images/spinner.gif' alt=' ' /><br />" +
+               "Killing..." +
+           "</div>" +
+       "</div>"
+   );
+   
+   this._postControl("killProgram", {});
 };
 
 CodeUpload.prototype.resizeStopped = function(width, height) {
@@ -743,6 +749,11 @@ DPad.prototype.init = function($container) {
             thiz.fingerRelease(id.substring(0, id.indexOf("-")), this);
         });
     
+    this.bindActions();
+};
+
+DPad.prototype.bindActions = function() {
+    var thiz = this;
     $(document).bind("keydown.dpad", function(evt) {
         switch (evt.which)
         {
@@ -800,6 +811,10 @@ DPad.prototype.init = function($container) {
             break;
         }
     });
+};
+
+DPad.prototype.unbindActions = function() {
+    $(document).unbind("keydown.dpad keyup.dpad");
 };
 
 DPad.prototype.actionOccurred = function() {
@@ -878,7 +893,7 @@ DPad.prototype.fingerRelease = function(dir, e) {
 };
 
 DPad.prototype.destroy = function () {
-    $(document).unbind("keydown.dpad keyup.dpad");
+    this.unbindActions();
 
     Widget.prototype.destroy.call(this);
 };
