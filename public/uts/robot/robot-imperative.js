@@ -106,12 +106,24 @@ CodeUpload.prototype.consume = function(data) {
 
 CodeUpload.prototype._updateTerminal = function(str, ind) {
     if (this.uploading) return;
-    var i, l, lines = str.split("\n"), html = "";
+    var i, l, lines = str.split("\n"), html = "", 
+        esc, esce, color = "#EEEEEE"; // Default color is light grey.
     
     for (i in lines) 
     {
         l = lines[i].trim();
-        html += "<li>" + lines[i].trim() + "</li>";
+        
+        esce = 0;
+        while ((esc = l.indexOf("~#", esce)) >= 0)
+        {
+            for (esce = esc + 1; esce < l.length && !(l.charAt(esce) > 'a' && l.charAt(esce) < 'z'); esce++); 
+            esce++;
+            
+            if (l.substr(esc, esce) == "~#59[33m") color = "#FF7575";
+            l = (esc > 0 ? l.substr(0, esc) : "") + (esce < l.length - 1 ? l.substr(esce) : "");
+        }
+        
+        html += "<li style='color:"+ color + "'>" + l + "</li>";
     }
 
     this.$terminal.html(html);
@@ -331,7 +343,7 @@ CodeUpload.prototype._killClicked = function(n) {
 
 CodeUpload.prototype.resizeStopped = function(width, height) {
     this.$widget.find("#code-terminal").css({
-        width: width,
+        width: width - 20,
         height: height - 85
     });
     
@@ -912,7 +924,12 @@ DPad.prototype.destroy = function () {
 function Ranger(id, config)
 {
 	Widget.call(this, id, config);
-
+	
+	/* Default windowing options. */
+	this.config.expandable = false;
+	this.config.preserveAspectRatio = true;
+	this.config.minHeight = 330;
+	this.config.maxHeight = 360;
 	
 	/* Ranger configuration. */
 	this.minRange = 0;
@@ -927,10 +944,10 @@ function Ranger(id, config)
 	
 	/* Canvas context. */
 	this.ctx;
-	this.width = this.height = 300;
-	this.xo = this.width / 2;
-	this.yo = this.height / 2;
-	this.pxPerM = this.width / 12;
+	this.width = undefined;
+	this.xo = undefined;
+	this.yo = undefined;
+	this.pxPerM = undefined;	    
 	this.rotation = Math.PI / 2;
 	this.globalFrame = false;
 	
@@ -949,6 +966,9 @@ Ranger.prototype.init = function($container) {
 	var html = "",
 	    i = 0,
 	    thiz = this;
+	
+	/* Set sizing and scaling. */
+	this._setSizing(this.config.width, this.config.height);
 	
 	/* Global frame enable / disable. */
 	html += "<div id='global-frame-enable'>" +
@@ -1158,7 +1178,7 @@ Ranger.prototype.drawSkeleton = function() {
 		this.ctx.lineTo(this.xo - i, this.height);
 	}
 	
-	for (i = this.pxPerM; i < this.width - this.xo; i += this.pxPerM)
+	for (i = this.pxPerM; i < this.width; i += this.pxPerM)
 	{
 		/* Horizontal right of the origin. */
 		this.ctx.moveTo(this.xo + i, 0);
@@ -1172,7 +1192,7 @@ Ranger.prototype.drawSkeleton = function() {
 		this.ctx.lineTo(this.width, this.yo - i);
 	}
 
-	for (i = this.pxPerM; i < this.height - this.yo; i += this.pxPerM)
+	for (i = this.pxPerM; i < this.height; i += this.pxPerM)
 	{
 		/* Vertical below the origin. */
 		this.ctx.moveTo(0, this.yo + i);
@@ -1279,6 +1299,24 @@ Ranger.prototype.drawDetails = function() {
 	
 	this.ctx.restore();
 	
+};
+
+Ranger.prototype.resizeStopped = function(w, h) {
+    this._setSizing(w, h);
+    this.$widget.find("#ranger").attr({
+        width: this.width,
+        height: this.height
+    });
+    
+    this.drawFrame();
+};
+
+Ranger.prototype._setSizing = function(w, h) {
+    this.width = w - 30;
+    this.height = h - 60;
+    this.pxPerM = this.width / 12;
+    this.xo = this.width / 2;
+    this.yo = this.height / 2;
 };
 
 Ranger.prototype.destroy = function() {
