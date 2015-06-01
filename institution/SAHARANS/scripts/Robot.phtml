@@ -35,8 +35,18 @@ $(document).ready(function() {
         dataPeriod: 100,
         dataDuration: 60,
         pollPeriod: 1000,
-        height: 1750,
+        height: 1350,
         widgets: [
+			new CameraStream("overhead-camera", {
+			    title: "Overhead Camera",
+			    swfParam: "camera-swf-overhead",
+			    mjpegParam: "camera-mjpeg-overhead",
+			    webmParam: "camera-webm-overhead",
+			    videoWidth: 512,
+			    videoHeight: 384,
+			    left: 136,
+			    top: 0
+			}),
 			new AMCL("amcl", {
 				title: "Map & AMCL",
 				action: "setAMCLInitialPose",
@@ -45,8 +55,8 @@ $(document).ready(function() {
 				particlesField: "amcl-particles",
 				width: 679,
 				height: 395,
-				left: 0,
-				top: 0,
+				left: -16,
+				top: 860,
 				resizable: false,
 				expandable: false,
 			}),
@@ -56,20 +66,24 @@ $(document).ready(function() {
                 speedField: "robot-linear",
                 yawField: "robot-angular",
                 windowed: false,
-                top: 150,
-                left: -165
+                top: 320,
+                left: -110
             }),
             new Ranger("ranger-panel", {
                 title: "Hokuyo",
                 width: 330,
                 height: 360,
+                left: -210,
+                top: 480
             }),
             new CodeUpload("code-upload", {
 				title: "ROS Upload",
-				width: 400,
-				height: 370,
+				width: 522,
+				height: 360,
 				expandable: false,
-				dpad: dp
+				dpad: dp,
+				top: 480,
+				left: 136
             }),
             new InitError(),
         ]
