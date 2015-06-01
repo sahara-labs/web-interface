@@ -5,6 +5,73 @@
  * @date 27th April 2015
  */
  
+  
+#init-error {
+    position: absolute;
+    top: 150px;
+    left: 150px;
+}
+ 
+#init-error .global-error-container {
+    width: 350px;
+    display: block;
+    position: absolute;
+    padding: 25px;   
+    background: #fafafa;
+    border-radius: 10px;
+    border: 2px solid #575757;
+    -moz-box-shadow: 0 0 10px #aaa;
+    -webkit-box-shadow: 0 0 10px #aaa;
+    box-shadow: 0 0 10px #aaa;
+    z-index: 110;
+}
+
+#init-error .global-error-log {
+    font-size: 11px;
+    color: #7e7e7e;
+    border-top: 1px solid #E4D3B0;
+    padding-top: 5px;
+}
+
+#init-error .global-error-heading, #init-error .starting-heading {
+    padding-left: 5px;
+    font-size: 20pt;
+    font-style: oblique;
+    font-weight: bold;    
+}
+
+#init-error .global-error-heading {
+	color: #cd0a0a;
+}
+
+#init-error .global-error-message, #init-error .starting-message {
+    padding: 15px 0px 15px 0px;
+    font-size: 13px;
+}
+
+#init-error .global-error-message {
+	color: #cd0a0a;
+}
+
+#init-error .starting-spinner {
+	display: block;
+	margin: 20px auto 5px;
+}
+
+#init-error .global-error-icon {
+    float: left;
+    margin-right: 5px;
+}
+
+#init-error .global-error-close {
+    float: right;
+    cursor: pointer;
+    border: 1px solid #B1A3A3;
+    border-radius: 2px;
+    box-shadow: 1px 1px 1px #BEBDBD;
+    margin: -8px -8px 0px -1px;
+}
+ 
 /******************************************************************************
  ** Code Upload                                                              **
  ******************************************************************************/

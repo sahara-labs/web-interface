@@ -5,6 +5,109 @@
  * @date 27th April 2015
  */
 
+/* -----------------------------------------------------------------------------
+ * -- Init state overlay                                                      --
+ * ----------------------------------------------------------------------------- */
+
+/**
+ * Display an overlay on the page with user specified information.
+ */
+function InitError() 
+{
+    Widget.call(this, 'init-error-overlay', { 
+        title: "Status" 
+    });
+    
+    /** @private {jQuery} Parent container. */
+    this.$container = undefined;
+    
+    /** @private {boolean} Whether the overlay is delaying an error. */
+    this.isError = false;
+    
+    /** @private {String} Displayed error message. */
+    this.error = '';
+    
+    /** @private {String} Current displayed state. */
+    this.currentState = "";   
+    
+    /** @private {jQuery} Page container. */
+    this.$container;
+}
+
+InitError.prototype = new Widget;
+
+InitError.prototype.consume = function(data) {
+    if (data["init-state"] && data["init-state"] != this.currentState)
+    {
+        if (this.$widget) this.remove();
+        switch (this.currentState = data["init-state"])
+        {
+        case "RUNNING":
+            /* Should not be displayed. */
+            break;
+            
+        case "SETTING_UP":
+        case "STARTING":
+            this.isError = false;
+            this.display();
+            break;
+            
+        case "STOPPED":
+            /* Stopped is the initial state. */
+            this.isError = !data["ros-starting"];
+            this.display();
+            break;
+            
+        default:
+            this.isError = true;
+            this.error = "State: " + this.currentState;
+            this.display();
+            break;
+        }
+    }
+};
+
+InitError.prototype.init = function($container) {
+    this.$container = $("#rigscriptcontainer");
+};
+
+InitError.prototype.display = function() {
+    this.$widget = this.$container.append(
+        "<div id='init-error' class='global-error-overlay'>" +
+            "<div class='global-error-container'>" +
+                (this.isError ?
+                "<span class='global-error-heading'>Robot Error!</span>" +
+                "<p class='global-error-message'>An error has occurred running ROS. It may be a software problem, the " +
+                "robotic platform has lost power, Wi-Fi communication has dropped or the iRobot Create and/or a " +
+                "mounted sensor has malfunctioned." +
+                "<br /><br />" +
+                "It may help to 'Finish Session' and start a new session which will kill and restart ROS." +
+                "<br /><br />" +
+                "If further assistance is required, please use the 'Contact Support' button to the right of the page, " +
+                "noting the problem displayed below.</p>" +
+                "<p class='global-error-log'>" + this.error + "</p>" 
+                    :
+                "<span class='starting-heading'>ROS is starting...</span>" +
+                "<img class='starting-spinner' src='/uts/robot/images/starting.gif' alt='' />" +
+                "<p class='starting-message'>This message will automatically clear when ROS is ready." +
+                "</p>"
+                ) +                    
+            "</div>" +
+        "</div>"
+    ).children().last();
+
+    /* Add a error class to widget boxes. */
+    this.$container.find(".window-wrapper, .tab-wrapper, #dpad").addClass("global-error-blur");
+};
+
+InitError.prototype.remove = function() {
+    if (this.$widget) 
+    {
+        this.$widget.remove();
+        this.$widget = undefined;
+        this.$container.find(".window-wrapper, .tab-wrapper, #dpad").removeClass("global-error-blur");
+    }
+};
 
 /* ----------------------------------------------------------------------------
  * -- Code Upload                                                            --

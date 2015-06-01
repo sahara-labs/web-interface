@@ -65,12 +65,13 @@ $(document).ready(function() {
                 height: 360,
             }),
             new CodeUpload("code-upload", {
-				title: "ROS Package Upload",
+				title: "ROS Upload",
 				width: 400,
 				height: 370,
 				expandable: false,
 				dpad: dp
             }),
+            new InitError(),
         ]
     }).setup().run();
 });
