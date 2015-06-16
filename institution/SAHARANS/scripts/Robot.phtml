@@ -38,7 +38,7 @@ $(document).ready(function() {
         height: 1350,
         widgets: [
 			new CameraStream("overhead-camera", {
-			    title: "Overhead Camera",
+			    title: "Camera",
 			    swfParam: "camera-swf-overhead",
 			    mjpegParam: "camera-mjpeg-overhead",
 			    webmParam: "camera-webm-overhead",
@@ -46,6 +46,15 @@ $(document).ready(function() {
 			    videoHeight: 384,
 			    left: 136,
 			    top: 0
+			}),
+			new CameraControl("camera-control", {
+				title: "Camera View",
+				width: 225,
+				height: 160,
+				left: -157,
+				top: 145,
+				resizable: false,
+				expandable: false
 			}),
 			new AMCL("amcl", {
 				title: "Map & AMCL",

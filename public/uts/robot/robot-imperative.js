@@ -6,6 +6,171 @@
  */
 
 /* -----------------------------------------------------------------------------
+ * -- Camera control.                                                         --
+ * ----------------------------------------------------------------------------- */
+
+/**
+ * Camera control panel.
+ */
+function CameraControl(id, config)
+{
+    Widget.call(this, id, config);
+    
+    /* Default options. */
+    if (this.config.horizSegments === undefined) this.config.horizSegments = 3;
+    if (this.config.vertSegments === undefined) this.config.vertSegments = 2;
+    
+    /** Canvas HTML element. */
+    this.canvas = null;
+    
+    /* Canvas context. */
+    this.ctx = null;
+    
+    /* Canvas dimensions. */
+    this.width = this.config.width - 30;
+    this.height = this.config.height - 60;
+    
+    /* Scaling, pixels per metre. */
+    this.pxPerM = 100 * this.height / 333;
+    
+    /* Center origin. */
+    this.xo = this.width / 2;
+    this.yo = this.height / 2;
+    
+    /* Segments. */
+    this.segmentWidth = this.width / this.config.horizSegments;
+    this.segmentHeight = this.height / this.config.vertSegments;
+    
+    /* Segments to highlight. */
+    this.currentSegment = undefined;
+    this.mouseSegment = undefined;
+    
+    /* Offsets for mouse handling. */
+    this.offx = undefined;    
+    this.offy = undefined;
+    
+    /* Whether a new segment is in the process of being sent. */
+    this.changingSegment = false;
+}
+CameraControl.prototype = new Widget;
+
+CameraControl.prototype.init = function($container) {
+    this.$widget = this._generate($container, "");
+    
+    this.canvas = Util.getCanvas("cc-canvas", this.width, this.height);
+    this.$widget.children(".window-content").prepend(this.canvas);
+    
+    if (this.canvas.getContext)
+    {
+        this.ctx = this.canvas.getContext("2d");
+        this.draw();
+    }
+    else
+    {
+        alert("Using this interface requires a modern browser.");
+    }
+    
+    var thiz = this;
+        
+    $(this.canvas)
+        .mousemove(function(e) { thiz.mouseEntered(e.pageX, e.pageY); })
+        .click(function() { thiz.mouseClicked(); })
+        .mouseleave(function() { thiz.mouseLeft(); });
+    
+    this.offx = $(this.canvas).offset().left;
+    this.offy = $(this.canvas).offset().top;
+};
+
+CameraControl.prototype.draw = function() {
+    this.ctx.clearRect(0, 0, this.width, this.height);
+    
+    AMCL.prototype.drawSkeleton.call(this);
+
+    this.ctx.save();
+    this.ctx.beginPath();
+    this.ctx.strokeStyle = "#d76666";
+    this.ctx.lineWidth = 2;
+    
+    /* Segments. */
+    var i, sx, sy;
+    for (i = 1; i < this.config.horizSegments; i++)
+    {
+        this.ctx.moveTo(this.segmentWidth * i, 0);
+        this.ctx.lineTo(this.segmentWidth * i, this.height);
+    }
+    
+    for (i = 1; i < this.config.vertSegments; i++)
+    {
+        this.ctx.moveTo(0, this.segmentHeight * i);        
+        this.ctx.lineTo(this.width, this.segmentHeight * i);        
+    }
+    
+    this.ctx.stroke();
+    
+    if (this.currentSegment !== undefined) this.drawSegment(this.currentSegment, "rgba(215, 102, 102, 0.3)");
+    if (this.mouseSegment !== undefined) this.drawSegment(this.mouseSegment, "rgba(237, 225, 95, 0.3)");
+    
+    this.ctx.restore();
+};
+
+CameraControl.prototype.drawSegment = function(segment, fill) {
+    var sx = segment * this.segmentWidth,
+        sy = 0;
+    while (sx >= this.width)
+    {
+        sx -= this.width;
+        sy += this.segmentHeight
+    }
+            
+    this.ctx.fillStyle = fill;
+    this.ctx.shadowBlur = 10;
+    this.ctx.fillRect(sx, sy, this.segmentWidth, this.segmentHeight);
+};
+
+CameraControl.prototype.mouseEntered = function(mx, my) {
+    var seg;
+    
+    seg = Math.floor((mx - this.offx) / this.segmentWidth) +
+          Math.floor((my - this.offy) / this.segmentHeight) * this.width / this.segmentWidth;
+    
+    if (this.mouseSegment != seg)
+    {
+        this.mouseSegment = seg;
+        this.draw();
+    }
+};
+
+CameraControl.prototype.mouseLeft = function() {
+    this.mouseSegment = undefined;
+    this.draw();
+};
+
+CameraControl.prototype.mouseClicked = function() {
+    this.changingSegment = true;
+    
+    var params = {}, thiz = this;
+    params["camera-segment"] = this.mouseSegment;
+    this._postControl(
+        "cameraMove",
+        params,
+        function() { 
+            thiz.currentSegment = thiz.mouseSegment;
+            thiz.draw();
+            thiz.changingSegment = false; 
+        }
+    )
+};
+
+CameraControl.prototype.consume = function(data) {
+    if (!this.changingSegment && data["camera-segment"] !== undefined && 
+            data["camera-segment"] !== this.currentSegment)
+    {
+        this.currentSegment = data["camera-segment"]
+        this.draw();
+    }
+};
+
+/* -----------------------------------------------------------------------------
  * -- Init state overlay                                                      --
  * ----------------------------------------------------------------------------- */
 
