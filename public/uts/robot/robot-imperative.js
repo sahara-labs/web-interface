@@ -1067,7 +1067,7 @@ DPad.prototype.bindActions = function() {
             break;
         }
         
-        if (!scroll) scroll.preventDefault();
+        if (!scroll) evt.preventDefault();
         return scroll;
     });
     
