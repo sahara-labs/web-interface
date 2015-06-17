@@ -1017,79 +1017,96 @@ DPad.prototype.init = function($container) {
         "<div id='west-finger' class='dpad-finger'><span></span></div>" + 
         "<div id='pad-center'><span></span></div>"
     );
-    
-    var thiz = this;
-    this.$widget.children(".dpad-finger")
-        .bind("mousedown touchstart", function() {
-            var id = $(this).attr("id");
-            thiz.fingerPress(id.substring(0, id.indexOf("-")), this);
-        })
-        .bind("mouseup touchend mouseleave touchleave", function() {
-            var id = $(this).attr("id");
-            thiz.fingerRelease(id.substring(0, id.indexOf("-")), this);
-        });
-    
+
     this.bindActions();
 };
 
 DPad.prototype.bindActions = function() {
     var thiz = this;
+    
+    this.$widget.children(".dpad-finger").bind("mousedown touchstart", function() {
+        var id = $(this).attr("id");
+        thiz.fingerPress(id.substring(0, id.indexOf("-")), this);
+    })
+    .bind("mouseup touchend mouseleave touchleave", function() {
+        var id = $(this).attr("id");
+        thiz.fingerRelease(id.substring(0, id.indexOf("-")), this);
+    });
+    
     $(document).bind("keydown.dpad", function(evt) {
+        var scroll = true;
+        
         switch (evt.which)
         {
         case 38:  // Up arrow
         case 87:  // W
         case 119: // w
             thiz.fingerPress("north");
+            scroll = false;
             break;
             
         case 39:  // Right arrow
         case 68:  // D
         case 100: // d
             thiz.fingerPress("east");
+            scroll = false;
             break;
             
         case 40:  // Down arrow
         case 83:  // S
         case 115: // s
             thiz.fingerPress("south");
+            scroll = false;
             break;
             
         case 37:  // Left arrow
         case 65:  // A
         case 97:  // a
             thiz.fingerPress("west");
+            scroll = false;
             break;
         }
+        
+        if (!scroll) scroll.preventDefault();
+        return scroll;
     });
     
     $(document).bind("keyup.dpad", function(evt) {
+        var scroll = true;
+        
         switch (evt.which)
         {
         case 38:  // Up arrow
         case 87:  // W
         case 119: // w
             thiz.fingerRelease("north");
+            scroll = false;
             break;
             
         case 39:  // Right arrow
         case 68:  // D
         case 100: // d
             thiz.fingerRelease("east");
+            scroll = false;
             break;
             
         case 40:  // Down arrow
         case 83:  // S
         case 115: // s
             thiz.fingerRelease("south");
+            scroll = false;
             break;
             
         case 37:  // Left arrow
         case 65:  // A
         case 97:  // a
             thiz.fingerRelease("west");
+            scroll = false;
             break;
         }
+        
+        if (scroll) evt.preventDefault();
+        return scroll;
     });
 };
 
