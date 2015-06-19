@@ -666,9 +666,9 @@ function AMCL(id, config)
 		
 	/* Scaling factors between units and canvas pixels. */
 	this.pxPerM = 100; 			 // From the map configuration
-	this.xo = this.width  / 2;                 // Origin is at the lower left pixel
-	this.yo = this.height / 2;
-	this.tho = Math.PI / 2;      // 90 deg. rotation offset
+	this.xo = 0;
+	this.yo = this.height;
+	this.tho = Math.PI;
 	this.r = 0.25 * this.pxPerM; // Robot radius
 	
 	/* AMCL provided positions. */
@@ -837,8 +837,8 @@ AMCL.prototype.drawPose = function() {
 
 AMCL.prototype.drawRobot = function(pos, color, opacity) {		
 	/* Robot coords are relative to the orgin in the centre of diagram. */
-	var x = this.xo - pos[0] * this.pxPerM,
-		y = this.yo + pos[1] * this.pxPerM,
+	var x = this.xo + pos[0] * this.pxPerM,
+		y = this.yo - pos[1] * this.pxPerM,
 		a = pos[2] + this.tho;
 
 	this.ctx.save();
@@ -871,9 +871,9 @@ AMCL.prototype.drawParticles = function() {
     var i, x, y, th, x1, y1;
     for (i = 0; i < this.particles.length; i += 3)
     {
-        x = this.xo - this.particles[i] * this.pxPerM;
-        y = this.yo + this.particles[i + 1] * this.pxPerM;
-        th = this.particles[i + 2];
+        x = this.xo + this.particles[i] * this.pxPerM;
+        y = this.yo - this.particles[i + 1] * this.pxPerM;
+        th = this.particles[i + 2] + Math.PI;
         
         this.ctx.moveTo(x1 = x - 15 * Math.cos(th), y1 = y + 15 * Math.sin(th));
         this.ctx.lineTo(x + 15 * Math.cos(th), y - 15 * Math.sin(th));
@@ -928,7 +928,7 @@ AMCL.prototype.poseStart = function(e) {
     
     /* Clicking on the map sets the initial POSE. */
     this.setInitialPose[0] = (this.xo + this.offX - e.pageX) / this.pxPerM;
-    this.setInitialPose[1] = (this.yo + e.pageY -this.height - this.offY) / this.pxPerM;
+    this.setInitialPose[1] = (this.yo + e.pageY - this.height - this.offY) / this.pxPerM;
     this.setInitialPose[2] = 0;
 
     this.poseFrame();
