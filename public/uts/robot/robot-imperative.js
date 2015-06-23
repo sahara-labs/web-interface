@@ -713,7 +713,7 @@ AMCL.prototype.consume = function(data) {
     if ($.isArray(data[this.config.initialPoseField]))
     {
         this.initialPose = data[this.config.initialPoseField];
-        this.initialPose[2] -= Math.PI;
+        this.initialPose[2] += Math.PI / 2;
     }
     if ($.isArray(data[this.config.poseField])) this.pose = data[this.config.poseField];
     if ($.isArray(data[this.config.particlesField])) this.particles = data[this.config.particlesField];
@@ -836,33 +836,33 @@ AMCL.prototype.drawPose = function() {
 
 
 AMCL.prototype.drawRobot = function(pos, color, opacity) {		
-	/* Robot coords are relative to the orgin in the centre of diagram. */
-	var x = this.xo + pos[0] * this.pxPerM,
-		y = this.yo - pos[1] * this.pxPerM,
-		a = pos[2] + this.tho;
+    /* Robot coords are relative to the orgin in the centre of diagram. */
+    var x = this.xo + pos[0] * this.pxPerM,
+        y = this.yo - pos[1] * this.pxPerM,
+        a = pos[2];
 
-	this.ctx.save();
-	this.ctx.beginPath();
+    this.ctx.save();
+    this.ctx.beginPath();
 	
-	this.ctx.arc(x, y, this.r, 0, Math.PI * 2, true);
-	this.ctx.moveTo(x, y);
-	this.ctx.lineTo(x + this.r * Math.sin(a + Math.PI / 6), y + this.r * Math.cos(a + Math.PI / 6));
-	this.ctx.moveTo(x, y);
-	this.ctx.lineTo(x + this.r * Math.sin(a - Math.PI / 6), y + this.r * Math.cos(a - Math.PI / 6));
+    this.ctx.arc(x, y, this.r, 0, Math.PI * 2, true);
+    this.ctx.moveTo(x, y);
+    this.ctx.lineTo(x + this.r * Math.sin(a + Math.PI / 6), y + this.r * Math.cos(a + Math.PI / 6));
+    this.ctx.moveTo(x, y);
+    this.ctx.lineTo(x + this.r * Math.sin(a - Math.PI / 6), y + this.r * Math.cos(a - Math.PI / 6));
 		
-	this.ctx.shadowBlur = 3;
-	this.ctx.shadowColor = "#AAAAAA";
+    this.ctx.shadowBlur = 3;
+    this.ctx.shadowColor = "#AAAAAA";
 	
-	this.ctx.strokeStyle = "#000000";
-	this.ctx.globalAlpha = opacity;
-	this.ctx.lineWidth = 2;
-	this.ctx.fillStyle = color;
+    this.ctx.strokeStyle = "#000000";
+    this.ctx.globalAlpha = opacity;
+    this.ctx.lineWidth = 2;
+    this.ctx.fillStyle = color;
 
 
-	this.ctx.fill();
-	this.ctx.stroke();
+    this.ctx.fill();
+    this.ctx.stroke();
 
-	this.ctx.restore();
+    this.ctx.restore();
 };
 
 AMCL.prototype.drawParticles = function() {
@@ -873,7 +873,7 @@ AMCL.prototype.drawParticles = function() {
     {
         x = this.xo + this.particles[i] * this.pxPerM;
         y = this.yo - this.particles[i + 1] * this.pxPerM;
-        th = this.particles[i + 2] + Math.PI;
+        th = this.particles[i + 2] + this.tho;
         
         this.ctx.moveTo(x1 = x - 15 * Math.cos(th), y1 = y + 15 * Math.sin(th));
         this.ctx.lineTo(x + 15 * Math.cos(th), y - 15 * Math.sin(th));
@@ -893,20 +893,20 @@ AMCL.prototype.poseFrame = function() {
 	this.drawRobot(this.setInitialPose, "green", 0.9);
 	
 	/* Rotation arrow. */
-	var x1 = this.xo - this.setInitialPose[0] * this.pxPerM,
-	    y1 = this.yo + this.setInitialPose[1] * this.pxPerM,
-	    a = this.tho + this.setInitialPose[2],
+	var x1 = this.xo + this.setInitialPose[0] * this.pxPerM,
+	    y1 = this.yo - this.setInitialPose[1] * this.pxPerM,
+	    a =  this.setInitialPose[2],
 	    x2 = x1 + 100 * Math.sin(a),
 	    y2 = y1 + 100 * Math.cos(a);
 	
-	this.ctx.save();
-	this.ctx.beginPath();
+    this.ctx.save();
+    this.ctx.beginPath();
+    
+    this.ctx.moveTo(x1, y1);
+    this.ctx.lineTo(x2, y2);
 	
-	this.ctx.moveTo(x1, y1);
-	this.ctx.lineTo(x2, y2);
-	
-	this.ctx.moveTo(x2, y2);
-	this.ctx.lineTo(x1 + 75 * Math.sin(a - Math.PI / 18), y1 + 75 * Math.cos(a - Math.PI / 18));
+    this.ctx.moveTo(x2, y2);
+    this.ctx.lineTo(x1 + 75 * Math.sin(a - Math.PI / 18), y1 + 75 * Math.cos(a - Math.PI / 18));
 	
     this.ctx.moveTo(x2, y2);
     this.ctx.lineTo(x1 + 75 * Math.sin(a + Math.PI / 18), y1 + 75 * Math.cos(a + Math.PI / 18));
@@ -927,8 +927,8 @@ AMCL.prototype.poseStart = function(e) {
     this.mouse.y = e.pageY;
     
     /* Clicking on the map sets the initial POSE. */
-    this.setInitialPose[0] = (this.xo + this.offX - e.pageX) / this.pxPerM;
-    this.setInitialPose[1] = (this.yo + e.pageY - this.height - this.offY) / this.pxPerM;
+    this.setInitialPose[0] = (this.xo + e.pageX - this.offX) / this.pxPerM;
+    this.setInitialPose[1] = (this.yo - (e.pageY - this.offY)) / this.pxPerM;
     this.setInitialPose[2] = 0;
 
     this.poseFrame();
@@ -939,7 +939,7 @@ AMCL.prototype.poseStart = function(e) {
 
 AMCL.prototype.poseRotate = function(e) {	
     /* Moving the mouse rotates the position. */
-    this.setInitialPose[2] = Math.atan2(this.mouse.y - e.pageY, e.pageX - this.mouse.x);
+    this.setInitialPose[2] = Math.atan2(this.mouse.x - e.pageX, this.mouse.y - e.pageY) + Math.PI;
     this.poseFrame();
 };
 
@@ -953,7 +953,7 @@ AMCL.prototype.poseStop = function(e) {
         {
             x: this.setInitialPose[0],
             y: this.setInitialPose[1],
-            th: this.setInitialPose[2] + Math.PI
+            th: this.setInitialPose[2] - Math.PI / 2
         },
         function(data) {
             thiz.isSettingPose = false;
