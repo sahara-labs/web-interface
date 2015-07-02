@@ -676,6 +676,9 @@ function AMCL(id, config)
 	this.pose = [];
 	this.particles = [];	
 	
+	/* TF tree anchored at /map. */
+	this.tf = undefined;
+	
 	/* Setting initial pose variables. */
 	this.isSettingPose = false;	
 	this.setInitialPose = [];
@@ -718,7 +721,33 @@ AMCL.prototype.consume = function(data) {
     if ($.isArray(data[this.config.poseField])) this.pose = data[this.config.poseField];
     if ($.isArray(data[this.config.particlesField])) this.particles = data[this.config.particlesField];
     
+    if (data[this.config.tfField]) this.parseTF(data[this.config.tfField]);
+    else this.tfTree = undefined;
+    
     this.draw();
+};
+
+AMCL.prototype.parseTF = function(tfData) {
+    var f, frames = tfData.split("::"), i;
+    
+    /* Data format is:
+     *  <frame>:<child>:<x>:<y>:<z>:<th>::<frame 2>:<child 2>:<x2>:<y2>:<z2>:<th2>::...
+     */
+    this.tf = { };
+    for (i in frames)
+    {
+        f = frames[i].split(":");        
+        if (!this.tf[f[0]]) this.tf[f[0]] = [];
+            
+        this.tf[f[0]].push({
+            name: f[0],
+            child: f[1],
+            x: f[2],
+            y: f[3],
+            z: f[4],
+            th: f[5],
+        });
+    }    
 };
 
 AMCL.prototype.draw = function(poseDraw) {
@@ -732,6 +761,7 @@ AMCL.prototype.draw = function(poseDraw) {
 	this.drawInitialPose();
 	this.drawPose();
 	this.drawParticles();	
+	this.drawTF();
 };
 
 AMCL.prototype.drawSkeleton = function() {	
@@ -830,8 +860,8 @@ AMCL.prototype.drawInitialPose = function() {
 };
 
 AMCL.prototype.drawPose = function() {
-    if (this.pose.length > 0)
-        this.drawRobot(this.pose, "red", 1);
+//    if (this.pose.length > 0)
+//        this.drawRobot(this.pose, "red", 1);
 };
 
 
@@ -886,6 +916,62 @@ AMCL.prototype.drawParticles = function() {
     this.ctx.strokeStyle = "red";
     this.ctx.lineWidth = 0.5;
     this.ctx.stroke();
+};
+
+AMCL.prototype.drawTF = function() {
+    if (!this.tf) return;
+    
+    /* We want to start from the map frame. If the map frame does not 
+     * exist, the tf tree is incomplete and we cannot display it. */    
+    if (!this.tf["/map"]) return;
+    
+    var i, map = this.tf["/map"];   
+    
+    for (i in map) 
+    {
+        this.descendTFTree(map[i], this.xo, this.yo);
+    }
+};
+
+AMCL.prototype.descendTFTree = function(next, px, py) {
+    var nx, ny, a;
+    
+    /* Line. */    
+    this.ctx.beginPath();
+    this.ctx.moveTo(px, py);
+    this.ctx.lineTo(nx = px + next.x * this.pxPerM, ny = py - next.y * this.pxPerM);
+    this.ctx.strokeStyle = "yellow";
+    this.ctx.lineWidth = 1;
+    this.ctx.globalAlpha = 0.5;
+    this.ctx.stroke();
+    
+    /* Text. */
+    this.ctx.globalAlpha = 1;
+    this.ctx.strokeStyle = "#000";
+    this.ctx.lineWidth = 1;
+    this.ctx.font = "10pt sans";
+    this.ctx.strokeText("X:" + Util.zeroPad(next.x, 1) + ", Y:" + Util.zeroPad(next.y, 1) + ", " + 
+            String.fromCharCode("0x3B8") + ":" + Util.zeroPad(next.th, 1), nx + 30, ny);
+    this.ctx.strokeText(next.child, nx + 30, ny + 20);
+    
+    
+    if (next.child == "/base_link")
+    {
+        this.drawRobot([next.x, next.y, new Number(next.th) + Math.PI / 2], "red", 1);
+    }
+    else if (next.child == "/odom")
+    {
+        this.drawRobot([next.x, next.y, new Number(next.th) + Math.PI / 2], "blue", 0.25);
+    }
+    
+    var i, ch;
+    if (!(ch = this.tf[next.child])) return;
+        
+    for (i in ch)
+    {
+        this.descendTFTree(ch[i], nx, ny);
+    }
+    
 };
 
 AMCL.prototype.poseFrame = function() {
