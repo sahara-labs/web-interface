@@ -139,7 +139,7 @@
 }
 
 #code-terminal {
-	width: 502px;
+	width: 614px;
 	height: 275px;
 	background-color: #2C2C2C;
 	padding: 3px;
@@ -517,3 +517,46 @@
     opacity: 0.3;
 }
  
+/******************************************************************************
+ ** ROS Topic information.                                                   **
+ ******************************************************************************/
+#ros-info .window-content {
+	height: 85%;
+	overflow-y: scroll;
+}
+
+#ros-info .ros-version {
+	margin-bottom: 5px;
+	font-weight: bold;
+	text-align: center;
+	font-size: 13px;
+	color: #525252;	
+}
+
+#info-button {
+	left: 25px;
+}
+
+#ros-info .tn-header {
+	width: 150%;
+	height: 20px;
+	color: #525252;
+	background-color: #FAFAFA;
+	padding: 5px;
+	margin: 10px -10px;
+	font-weight: bold;
+}
+
+#ros-info .tn-header span {
+	font-weight: normal;
+	font-size: 10pt;
+}
+
+#ros-info .nodes-header {
+	margin-top: 40px
+}
+
+#ros-info ul {
+	font-size: 9pt;
+	margin-left: 10px;
+}

@@ -84,7 +84,7 @@ CameraControl.prototype.init = function($container) {
 CameraControl.prototype.draw = function() {
     this.ctx.clearRect(0, 0, this.width, this.height);
     
-    AMCL.prototype.drawSkeleton.call(this);
+    Graphics.prototype.drawSkeleton.call(this);
 
     this.ctx.save();
     this.ctx.beginPath();
@@ -304,8 +304,7 @@ function CodeUpload(id, config)
     this.$uploadDialog = undefined;
     
     this.$terminal = undefined;    
-    this.terminalIn = 0;
-    this.terminalData = [ ];    
+    this.scrollBack = 0;
 }
 CodeUpload.prototype = new Widget;
 
@@ -374,9 +373,12 @@ CodeUpload.prototype.consume = function(data) {
 
 CodeUpload.prototype._updateTerminal = function(str, ind) {
     if (this.uploading) return;
+    if (this.scrollBack == str) return;
+    this.scrollBack = str;
+  
     var i, l, lines = str.split("\n"), html = "", 
         esc, esce, color = "#EEEEEE"; // Default color is light grey.
-    
+
     for (i in lines) 
     {
         l = lines[i].trim();
@@ -585,14 +587,13 @@ CodeUpload.prototype.checkIfUploaded = function() {
         else
         {
             this.$terminal.empty();
+            this.scrollBack = "";
             this.consume({
                "user-prog-running": true 
             });
         }
     }
 };
-
-
 
 CodeUpload.prototype._killClicked = function(n) {
    if (this.killing) return;
@@ -620,6 +621,8 @@ CodeUpload.prototype.resizeStopped = function(width, height) {
 CodeUpload.prototype.destroy = function() {
     $(document).unbind("keydown.terminate");
     
+    this.scrollBack = "";
+    
     if (this.buttons) 
     {
         this.buttons.destroy();
@@ -630,23 +633,24 @@ CodeUpload.prototype.destroy = function() {
 
 
 /* ----------------------------------------------------------------------------
- * -- AMCL display widget.                                                   --
+ * -- Graphics display widget.                                                   --
  * ---------------------------------------------------------------------------- */
 
 /**
- * AMCL widget provides a display with the AMCL map, AMCL pose estimation and 
- * particle list. It also also the AMCL initial pose estimation to be set to 
+ * Graphics widget provides a display with the Graphics map, Graphics pose estimation and 
+ * particle list. It also also the Graphics initial pose estimation to be set to 
  * initialise AMCL.
  * 
  * @constructor
  * @param {string} id widget identifier
  * @param {object} config configuration object
- * @config {string} [initalPoseField] data field which has the AMCL initial pose
- * @config {string} [poseField] data field which has the AMCL pose estimate
+ * @config {string} [initalPoseField] data field which has the Graphics initial pose
+ * @config {string} [poseField] data field which has the Graphics pose estimate
  * @config {string} [particlesField] data field which has the particles poses
+ * @config {string} [planField] data field which has the plan waypoints
  */
 
-function AMCL(id, config)
+function Graphics(id, config)
 {
 	Widget.call(this, id, config);
 	
@@ -666,15 +670,16 @@ function AMCL(id, config)
 		
 	/* Scaling factors between units and canvas pixels. */
 	this.pxPerM = 100; 			 // From the map configuration
-	this.xo = 0;
-	this.yo = this.height;
+	this.xo = this.width  / 2;
+	this.yo = this.height / 2;
 	this.tho = Math.PI;
 	this.r = 0.25 * this.pxPerM; // Robot radius
 	
-	/* AMCL provided positions. */
+	/* Graphics provided positions. */
 	this.initialPose = [];
 	this.pose = [];
 	this.particles = [];	
+	this.plan = [];
 	
 	/* TF tree anchored at /map. */
 	this.tf = undefined;
@@ -684,9 +689,9 @@ function AMCL(id, config)
 	this.setInitialPose = [];
 	this.mouse = { x: 0, y: 0};
 }
-AMCL.prototype = new Widget;
+Graphics.prototype = new Widget;
 
-AMCL.prototype.init = function($container) {
+Graphics.prototype.init = function($container) {
 	
     this.$widget = this._generate($container, "");
 	
@@ -712,7 +717,7 @@ AMCL.prototype.init = function($container) {
 	this.offY = $c.offset().top;	
 };
 
-AMCL.prototype.consume = function(data) {
+Graphics.prototype.consume = function(data) {
     if ($.isArray(data[this.config.initialPoseField]))
     {
         this.initialPose = data[this.config.initialPoseField];
@@ -720,6 +725,7 @@ AMCL.prototype.consume = function(data) {
     }
     if ($.isArray(data[this.config.poseField])) this.pose = data[this.config.poseField];
     if ($.isArray(data[this.config.particlesField])) this.particles = data[this.config.particlesField];
+    if ($.isArray(data[this.config.planField])) this.plan = data[this.config.planField];
     
     if (data[this.config.tfField]) this.parseTF(data[this.config.tfField]);
     else this.tfTree = undefined;
@@ -727,7 +733,7 @@ AMCL.prototype.consume = function(data) {
     this.draw();
 };
 
-AMCL.prototype.parseTF = function(tfData) {
+Graphics.prototype.parseTF = function(tfData) {
     var f, frames = tfData.split("::"), i;
     
     /* Data format is:
@@ -750,7 +756,7 @@ AMCL.prototype.parseTF = function(tfData) {
     }    
 };
 
-AMCL.prototype.draw = function(poseDraw) {
+Graphics.prototype.draw = function(poseDraw) {
 	/* If the inital pose is being set, the frame should not be updated as 
 	 * will clear the pose set. */
 	if (this.isSettingPose && !poseDraw) return;
@@ -761,10 +767,11 @@ AMCL.prototype.draw = function(poseDraw) {
 	this.drawInitialPose();
 	this.drawPose();
 	this.drawParticles();	
+	this.drawPlan();
 	this.drawTF();
 };
 
-AMCL.prototype.drawSkeleton = function() {	
+Graphics.prototype.drawSkeleton = function() {	
 	var i;
 	
 	/* Grid lines. */
@@ -854,22 +861,22 @@ AMCL.prototype.drawSkeleton = function() {
 	this.ctx.restore();
 };
 
-AMCL.prototype.drawInitialPose = function() {
+Graphics.prototype.drawInitialPose = function() {
     if (this.initialPose.length > 0)    
         this.drawRobot(this.initialPose, "grey", 0.5);
 };
 
-AMCL.prototype.drawPose = function() {
-//    if (this.pose.length > 0)
-//        this.drawRobot(this.pose, "red", 1);
+Graphics.prototype.drawPose = function() {
+    if (this.pose.length > 0)
+        this.drawRobot(this.pose, "red", 1);
 };
 
 
-AMCL.prototype.drawRobot = function(pos, color, opacity) {		
+Graphics.prototype.drawRobot = function(pos, color, opacity) {		
     /* Robot coords are relative to the orgin in the centre of diagram. */
     var x = this.xo + pos[0] * this.pxPerM,
         y = this.yo - pos[1] * this.pxPerM,
-        a = pos[2];
+        a = pos[2] + this.tho / 2;
 
     this.ctx.save();
     this.ctx.beginPath();
@@ -895,14 +902,14 @@ AMCL.prototype.drawRobot = function(pos, color, opacity) {
     this.ctx.restore();
 };
 
-AMCL.prototype.drawParticles = function() {
+Graphics.prototype.drawParticles = function() {
     if (this.particles.length == 0) return;
     
     var i, x, y, th, x1, y1;
     for (i = 0; i < this.particles.length; i += 3)
     {
-        x = this.xo + this.particles[i] * this.pxPerM;
-        y = this.yo - this.particles[i + 1] * this.pxPerM;
+        x = this.xMtoPx(this.particles[i]);
+        y = this.yMtoPx(this.particles[i + 1]);
         th = this.particles[i + 2] + this.tho;
         
         this.ctx.moveTo(x1 = x - 15 * Math.cos(th), y1 = y + 15 * Math.sin(th));
@@ -918,7 +925,32 @@ AMCL.prototype.drawParticles = function() {
     this.ctx.stroke();
 };
 
-AMCL.prototype.drawTF = function() {
+Graphics.prototype.drawPlan = function() {
+    if (this.plan.length == 0) return;
+    
+    var i;
+    
+    this.ctx.beginPath();
+    this.ctx.moveTo(this.xMtoPx(this.plan[0]), this.yMtoPx(this.plan[1]));
+    
+    
+    for (i = 3; i < this.plan.length - 2; i += 3)
+    {
+        this.ctx.lineTo(this.xMtoPx(this.plan[i]), this.yMtoPx(this.plan[i + 1]));
+    }
+    
+    this.ctx.save();
+    this.ctx.strokeStyle = "#162955";
+    this.ctx.shadowOffsetX = 1;
+    this.ctx.shadowOffsetY = 1;
+    this.ctx.shadowBlur = 7;
+    this.ctx.shadowColor = "#666";
+    this.ctx.lineWidth = 2;
+    this.ctx.stroke();
+    this.ctx.restore();
+};
+
+Graphics.prototype.drawTF = function() {
     if (!this.tf) return;
     
     /* We want to start from the map frame. If the map frame does not 
@@ -933,7 +965,7 @@ AMCL.prototype.drawTF = function() {
     }
 };
 
-AMCL.prototype.descendTFTree = function(next, px, py) {
+Graphics.prototype.descendTFTree = function(next, px, py) {
     var nx, ny, a;
     
     /* Line. */    
@@ -974,7 +1006,7 @@ AMCL.prototype.descendTFTree = function(next, px, py) {
     
 };
 
-AMCL.prototype.poseFrame = function() {
+Graphics.prototype.poseFrame = function() {
     this.draw(true);
 	this.drawRobot(this.setInitialPose, "green", 0.9);
 	
@@ -1006,7 +1038,7 @@ AMCL.prototype.poseFrame = function() {
     this.ctx.restore();
 };
 
-AMCL.prototype.poseStart = function(e) {
+Graphics.prototype.poseStart = function(e) {
     this.isSettingPose = true;
     
     this.mouse.x = e.pageX;
@@ -1023,13 +1055,13 @@ AMCL.prototype.poseStart = function(e) {
 	$(this.canvas).bind("mousemove", function(evt) { thiz.poseRotate(evt); });
 };
 
-AMCL.prototype.poseRotate = function(e) {	
+Graphics.prototype.poseRotate = function(e) {	
     /* Moving the mouse rotates the position. */
     this.setInitialPose[2] = Math.atan2(this.mouse.x - e.pageX, this.mouse.y - e.pageY) + Math.PI;
     this.poseFrame();
 };
 
-AMCL.prototype.poseStop = function(e) {
+Graphics.prototype.poseStop = function(e) {
     $(this.canvas).unbind("mousemove");
     
     var thiz = this;
@@ -1048,11 +1080,115 @@ AMCL.prototype.poseStop = function(e) {
     );
 };
 
+Graphics.prototype.xMtoPx = function(m) {
+    return this.xo + m * this.pxPerM;
+};
 
+Graphics.prototype.yMtoPx = function(m) {
+    return this.yo - m * this.pxPerM;
+};
 
-AMCL.prototype.destroy = function() {
+Graphics.prototype.destroy = function() {
 	Widget.prototype.destroy.call(this);
 };
+
+/* ----------------------------------------------------------------------------
+ * -- ROS Information                                                        --
+ * ---------------------------------------------------------------------------- */
+
+/**
+ * ROS information widget showing ROS environment information, running nodes and
+ * published topics.
+ * 
+ * @constructor
+ * @param {string} id widget identifier
+ * @param {object} config configuration object
+ */
+function ROSInfo(id, config) 
+{
+    Widget.call(this, id, config);
+
+    /** @private {Button} ROS information refresh button. */
+    this.updateBtn = undefined;
+    
+    /** @private {String} ROS Topic information. */
+    this.topicNode = "";
+}
+
+ROSInfo.prototype = new Widget;
+
+ROSInfo.prototype.init = function($container) {
+    var thiz = this;
+    
+    this.updateBtn = new Button("info-button", {
+        windowed: false,
+        action: "refreshTopicNode",        
+        label: "Refresh Details",
+        callback: thiz.consume,
+        width: 120,
+     });
+    this.updateBtn.config.callback = function(resp) { thiz.consume(resp); };
+    
+    this.$widget = this._generate($container, 
+        "<div class='ros-version'>ROS Indigo Igloo</div>" +
+        "<div class='update-button'></div>" +
+        "<div class='nodes-header tn-header'>Nodes <span>(rosnode list)</div>" +
+        "<ul class='nodes-list'> </ul>" +        
+        "<div class='tn-header'>Topics <span>(rostopic list)</span></div>" +
+        "<ul class='topics-list'> </ul>"
+     );
+            
+    this.updateBtn.init(this.$widget.find(".update-button"));
+};
+
+ROSInfo.prototype.consume = function(data) {
+    if (data["ros-topic-node"] && data["ros-topic-node"] != this.topicNode)
+    {
+        this.topicNode = data["ros-topic-node"];
+        this._updateTopicNode();
+    }
+};
+
+ROSInfo.prototype._updateTopicNode = function() {
+        var s, c, li;
+        
+        /* Extract node information. */
+        if ((s = this.topicNode.indexOf('node[')) >= 0)        
+        {
+            c = this.topicNode.substring(s + 5, this.topicNode.indexOf(']', s))
+            this._displayList(this.$widget.find(".nodes-list"), c.split(':'));            
+        }
+        
+        if ((s = this.topicNode.indexOf('topic[')) >= 0)        
+        {
+            c = this.topicNode.substring(s + 6, this.topicNode.indexOf(']', s));
+            
+            c = c.split(":");
+            li = [ ];
+            for (s = 0; s < c.length - 1; s += 2)
+            {
+                li.push(c[s] + ' (' + c[s + 1] +')');
+            }
+            
+            this._displayList(this.$widget.find(".topics-list"), li);
+        }
+};
+
+ROSInfo.prototype._displayList = function($list, li) {
+    var i, html = "";
+    for (i in li)
+    {
+        html += "<li>" + li[i] + "</li>";
+    }
+    
+    $list.html(html);
+};
+
+ROSInfo.prototype.destroy = function() {
+    this.topcNode = "";
+    Widget.prototype.destroy.call(this);
+};
+
 
 /* ----------------------------------------------------------------------------
  * -- D-Pad widget to move the robot around.                                 --

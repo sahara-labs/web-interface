@@ -56,18 +56,27 @@ $(document).ready(function() {
 				resizable: false,
 				expandable: false
 			}),
-			new AMCL("amcl", {
-				title: "Map & AMCL",
+			new Graphics("amcl", {
+				title: "Visualisation ",
 				action: "setAMCLInitialPose",
 				initialPoseField: "amcl-initial-pose",
-				poseField: "amcl-pose",
+				poseField: "estimate-pose",
 				particlesField: "amcl-particles",
+				planField: "plan",
 				tfField: "tf",
 				width: 679,
 				height: 395,
-				left: -16,
+				left: 88,
 				top: 860,
 				resizable: false,
+				expandable: false,
+			}),
+			new ROSInfo("ros-info", {
+				title: "ROS Details",
+				width: 280,
+				height: 395,
+				top: 860,
+				left: -210,
 				expandable: false,
 			}),
             dp = new DPad("dpad", {
@@ -88,7 +97,7 @@ $(document).ready(function() {
             }),
             new CodeUpload("code-upload", {
 				title: "ROS Upload",
-				width: 522,
+				width: 632,
 				height: 360,
 				expandable: false,
 				dpad: dp,
