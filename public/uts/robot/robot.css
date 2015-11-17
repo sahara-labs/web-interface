@@ -82,6 +82,22 @@
     box-shadow: 1px 1px 1px #BEBDBD;
     margin: -8px -8px 0px -1px;
 }
+
+/******************************************************************************
+ ** Graphics                                                                 **
+ ******************************************************************************/
+#graphics .graphics-topics {
+	height: 25px;
+	top: 2px;
+}
+
+#graphics .graphics-topics span {
+	float: left;
+	position: relative;
+	top: 4px;
+	color: #525252;
+	font-weight: bold;
+}
  
 /******************************************************************************
  ** Code Upload                                                              **
@@ -521,7 +537,7 @@
  ** ROS Topic information.                                                   **
  ******************************************************************************/
 #ros-info .window-content {
-	height: 85%;
+	height: 86%;
 	overflow-y: scroll;
 }
 
@@ -534,7 +550,8 @@
 }
 
 #info-button {
-	left: 25px;
+	position: static;
+    margin: 0px auto;
 }
 
 #ros-info .tn-header {
@@ -550,10 +567,6 @@
 #ros-info .tn-header span {
 	font-weight: normal;
 	font-size: 10pt;
-}
-
-#ros-info .nodes-header {
-	margin-top: 40px
 }
 
 #ros-info ul {

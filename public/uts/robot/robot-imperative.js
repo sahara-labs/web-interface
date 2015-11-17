@@ -683,17 +683,35 @@ function Graphics(id, config)
 	
 	/* TF tree anchored at /map. */
 	this.tf = undefined;
-	
+	3
 	/* Setting initial pose variables. */
 	this.isSettingPose = false;	
 	this.setInitialPose = [];
 	this.mouse = { x: 0, y: 0};
+	
+	/* Whether to display certain topics. */
+	this.displayTopic = {
+	    particles: true,
+	    estimate: true,
+	    plan: true
+	};
+	
+	/* Display buttons. */
+	this.displayButtons = {
+	     particles: undefined,
+	     estimate: undefined,
+	     plan: undefined
+	};
 }
 Graphics.prototype = new Widget;
 
 Graphics.prototype.init = function($container) {
 	
-    this.$widget = this._generate($container, "");
+    this.$widget = this._generate($container, 
+            "<div class='graphics-topics'>" +
+                "<span>Displayed Topics:</span>" +
+            "</div>" +
+            "<div style='clear:both'></div>");
 	
 	this.canvas = Util.getCanvas("nav", this.width, this.height); 
 	this.$widget.children(".window-content").prepend(this.canvas);
@@ -711,10 +729,41 @@ Graphics.prototype.init = function($container) {
 	var thiz = this,
 	    $c = $(this.canvas)
 				.mousedown(function(evt) { thiz.poseStart(evt); })
-				.bind('mouseup', function (evt)  { thiz.poseStop(evt); });
+				.bind('mouseup', function (evt)  { thiz.poseStop(evt); }),
+	    i, $btns = this.$widget.find(".graphics-topics");
 		
 	this.offX = $c.offset().left;
 	this.offY = $c.offset().top;	
+	
+	/* Setup topic toggle buttons. */
+	this.displayButtons.estimate = new Switch("display-estimate", {
+	    label: "/estimate_pose",
+	    callback: function(val) { thiz.displayTopic.estimate = val; thiz.draw(); },
+	    windowed: false,
+	    length: 155,
+	    left: 130
+	});
+	this.displayButtons.particles = new Switch("display-partciles", {
+	    label: "/particlecloud",
+	    callback: function(val) { thiz.displayTopic.particles = val; thiz.draw(); },
+	    windowed: false,
+	    length: 145,
+	    left: 290
+	});
+	this.displayButtons.plan = new Switch("display-plan", {
+	    label: "/plan",
+	    callback: function(val) { thiz.displayTopic.plan = val; thiz.draw(); },
+	    windowed: false,
+	    length: 90,
+	    left: 435
+	});
+	
+	for (i in this.displayButtons)
+	{
+	    this.displayButtons[i].val = true;
+	    this.displayButtons[i].init($btns);
+	    this.displayButtons[i]._setDisplay(true);
+	}
 };
 
 Graphics.prototype.consume = function(data) {
@@ -765,9 +814,9 @@ Graphics.prototype.draw = function(poseDraw) {
 	this.drawSkeleton();
 
 	this.drawInitialPose();
-	this.drawPose();
-	this.drawParticles();	
-	this.drawPlan();
+	if (this.displayTopic.estimate) this.drawPose();
+	if (this.displayTopic.particles) this.drawParticles();	
+	if (this.displayTopic.plan) this.drawPlan();
 	this.drawTF();
 };
 

@@ -2932,21 +2932,24 @@ ScatterPlot.prototype._adjustScaling = function() {
  * @constructor
  * @param {string} id the identifier of widget
  * @param {object} config configuration of widget
- * @config {string}  [field]      server data variable that is being switched
- * @config {string}  [action]     server action to call when the switched is changed
- * @config {string}  [label]      switch label (optional)
- * @config {string}  [stickColor] sets the color of the switches stick (silver, black, red)
- * @config {string}  [led] set switch LED indicator (optional)
- * @config {boolean} [vertical]   set button vertical or horizontal (default horizontal)
+ * @config {string}   [field]      server data variable that is being switched
+ * @config {string}   [action]     server action to call when the switched is changed
+ * @config {function} [callback]   callback to invoke when switch changed
+ * @config {string}   [label]      switch label (optional)
+ * @config {string}   [stickColor] sets the color of the switches stick (silver, black, red)
+ * @config {string}   [led]        set switch LED indicator (optional)
+ * @config {boolean}  [vertical]   set button vertical or horizontal (default horizontal)
+ * @config {int}      [length]     length of the switch (default 120)
  */
 function Switch(id, config)
 {
-    if (!(config.field || config.action)) throw "Options not supplied.";
+    if (!(config.field || config.action || config.callback)) throw "Options not supplied.";
     
     Widget.call(this, id, config);
 
     /* Default options. */
     if (this.config.stickColor === undefined) this.config.stickColor = 'black';
+    if (this.config.length === undefined) this.config.length = 120;
 
     /** @private {boolean} The state of the switch. */
     this.val = undefined;
@@ -2991,7 +2994,7 @@ Switch.prototype.init = function($container) {
     /* Sets width to prevent switch and label from appearing on multiple lines. */
     this.$widget.parents('#widget-toggle-list').length == false &&
     this.$widget.parents('#container-control-buttons').length == false ?
-    this.$widget.css("width", "120px") : '';
+    this.$widget.css("width", this.config.length + "px") : '';
 
     /* Set existing state. */
     if (this.value !== undefined) this._setDisplay(this.value);
@@ -3016,14 +3019,21 @@ Switch.prototype._clicked = function() {
     this._setDisplay(this.val);
 
     var thiz = this, params = { };
-    params[this.config.field] = this.val ? 'true' : 'false';
-    this._postControl(
-        this.config.action,
-        params,
-        function() {
-            thiz.isChanged = false;
-        }
-     );
+    
+    if (this.config.action)
+    {
+        params[this.config.field] = this.val ? 'true' : 'false';
+        this._postControl(
+            this.config.action,
+            params,
+            function() {
+                thiz.isChanged = false;
+            }
+         );
+    }
+    
+    /* If callback supplied, invoke that. */
+    if (this.config.callback) this.config.callback.call(this, this.val);
 };
 
 /**
