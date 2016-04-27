@@ -163,8 +163,16 @@ function setup_guac(ws, tok, id)
             "GUAC_WIDTH=" + Options.width + "&" +   // Remote resolution width
             "GUAC_HEIGHT=" + Options.height + "&" + // Remote resolution height
             "GUAC_DPI=96&" +                        // Remote DPI
-            "GUAC_AUDIO=audio%2FL8&GUAC_AUDIO=audio%2FL16&GUAC_IMAGE=image%2Fjpeg&GUAC_IMAGE=image%2Fpng&" + 
-            "GUAC_IMAGE=image%2Fwebp";
+            "GUAC_AUDIO=audio%2FL8&GUAC_AUDIO=audio%2FL16&GUAC_IMAGE=image%2Fjpeg&GUAC_IMAGE=image%2Fpng"; 
+
+    if (/^https/.test(window.location) && !/^wss:/.test(ws))
+    {
+	/* If the page is delivered via HTTPS then the web socket will need to be 
+	 * over HTTPS so as not to trigger a security exception in the browsers. */
+	ws = ws.replace(/^ws/, 'wss');
+    }
+
+
     /* Instantiate client, using Web Services tunnel with HTTP fallback if that fails. */
     Guac.client = new Guacamole.Client(
         Guac.tunnel = new Guacamole.ChainedTunnel(
@@ -181,7 +189,17 @@ function setup_guac(ws, tok, id)
     ele = document.getElementById("guac-container");
     if (ele.hasChildNodes()) ele.removeChild(ele.firstChild);
     ele.appendChild(Guac.display.getElement());
-    
+        
+    try
+    {
+        Guac.client.connect(options);
+    }
+    catch (e)
+    {
+        console.log("Guacamole client connect error to '" + ws + "': " + e);
+	return;
+    }
+
     /* Set Guacamole error handler. */
     Guac.client.onerror = function() { 
         console.log("Client error handler");
@@ -192,15 +210,6 @@ function setup_guac(ws, tok, id)
         setTimeout(function() { setup_guac(ws, tok, id); }, 100);
     };
     
-    try
-    {
-        Guac.client.connect(options);
-    }
-    catch (e)
-    {
-        console.log("Guacamole client connect error: " + e);
-    }
-    
     /* Set mouse and keyboard handlers. */
     Guac.mouse = new Guacamole.Mouse(Guac.display.getElement());
     Guac.mouse.onmousedown = 
@@ -209,7 +218,7 @@ function setup_guac(ws, tok, id)
         Guac.client.sendMouseState(mouseState);
     };
 
-    Guac.keyboard = new Guacamole.Keyboard(document);
+    if (!Guac.keyboard) Guac.keyboard = new Guacamole.Keyboard(document);
 
     Guac.keyboard.onkeydown = function (keysym) {
         Guac.client.sendKeyEvent(1, keysym);
@@ -267,6 +276,6 @@ function close_window()
  */
 function disconnect_guac()
 {
-    Guac.client.disconnect();    
+    if (Guac.client) Guac.client.disconnect();    
 }
 
