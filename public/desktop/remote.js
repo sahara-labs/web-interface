@@ -40,7 +40,7 @@ function GuacamoleWidget(id, config)
     this.launched = false;
     
     /** @private {Window} Pop-up window reference. */
-    this.window = undefined;
+    this.popup = undefined;
     
 
     this._setResolution(this.config.resolution);
@@ -122,14 +122,14 @@ GuacamoleWidget.prototype._launch = function() {
     options += ",menubar=0,toolbar=0,location=0,personbar=0,status=0,resizable=0,scrollbars=1";
     
     /* Try to open the pop-up window. */
-    if (this.window = window.open("/desktop/remote.html?" + params, this.config.title, options))
+    if (this.popup = window.open("/desktop/remote.html?" + params, this.config.title, options))
     {        
         try
         {
             /* We want to be notified if the window is closing so we can 
              * appropriately set button state to correct state. */
-            if (this.window.addEventListener) 
-                this.window.addEventListener("beforeunload", function() { thiz._windowUnloaded(); });
+            if (this.popup.addEventListener) 
+                this.popup.addEventListener("beforeunload", function() { thiz._windowUnloaded(); });
         }
         catch (e)
         {
@@ -150,19 +150,19 @@ GuacamoleWidget.prototype._launch = function() {
 };
 
 GuacamoleWidget.prototype._windowUnloaded = function() {
-    if (!(this.launched && this.window)) return;  
+    if (!(this.launched && this.popup)) return;  
     
     try
     {
-        if (this.window.Guac) this.window.Guac.client.disconnect();
+        if (this.popup.Guac) this.popup.Guac.client.disconnect();
     }
     catch (e)
     {
         console.log("Error disconnecting with Guacamole client.");
     }
         
-    if (!this.window.closed) this.window.close();
-    this.window = null;
+    if (!this.popup.closed) this.popup.close();
+    this.popup = null;
     this.launched = false;
         
     this.$widget.find(".guac-launch").removeClass("disabled");
