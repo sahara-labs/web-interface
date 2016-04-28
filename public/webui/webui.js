@@ -1890,8 +1890,8 @@ Spacer.prototype.init = function($container) {
                 (this.config.color ? "background-color:" + this.config.color + ";" : "") +
                 (this.config.round ? "border-radius:" + 
                         ((this.config.width < this.config.height ? this.config.width : this.config.height) / 2) + "px;" : "") + 
-                this.config.css + 
-            "'>" + this.config.width + "x" + this.config.height + "</div>"
+                this.config.css + " " + 
+                this.config.width + "px" + this.config.height + "px'></div>"
     );
 };
 
@@ -4792,7 +4792,7 @@ CameraStream.prototype.consume = function(data) {
         this.urls.webm = decodeURIComponent(data[this.config.webmParam]);
     }
     
-    if ((this.urls.swf || this.urls.mjpeg || this.urls.webm) && !this.isDeployed) 
+    if (this.urls.mjpeg && !this.isDeployed) 
     {
         this._restoreDeploy();
     }
@@ -4821,7 +4821,8 @@ CameraStream.prototype._restoreDeploy = function() {
  * Deploys a format most appropriate to the platform.
  */
 CameraStream.prototype._platformDeploy = function() {
-    this._deploy(/Mobile|mobi|Android|android/i.test(navigator.userAgent) ? 'mjpeg' : 'swf');  
+	this._deploy('mjpeg');
+//    this._deploy(/Trident/i.test(navigator.userAgent) ? 'swf' : 'mjpeg');  
 };
 
 /**
@@ -5739,6 +5740,7 @@ Util.log = function(num, base) {
  */
 Util.zeroPad = function(num, places) {
     if (num == "NaN" || isNaN(num)) return num;
+    if (num == "Infinity" || !isFinite(num)) return "Inf.";
     
     var r = '' + Util.round(num, places);
 
