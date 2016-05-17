@@ -193,7 +193,7 @@ class PrimitiveController extends Zend_Controller_Action
         {
             $val = substr(substr($val, 0, strlen($val) - 1), 1);
             $res = array();
-            foreach (split(',', $val) as $v) array_push($res, $this->_parseVal($v));
+            foreach (explode(',', $val) as $v) array_push($res, $this->_parseVal($v));
             return $res;
         }
         else return $val;
