@@ -43,6 +43,8 @@ Globals = {
  * @param {object} config configuration option
  * @config {string} [anchor] where the display is anchored to the screen
  * @config {array} [widgets] list of widgets that are on the page
+ * @config {array} [visible] map of whether widgets are initially visible \
+ *                      (optional, not specified shows widget)
  * @config {boolean} [windowToggle] whether to show the widget toggle list to allow windows \
  *                                  to be closed (default off)
  * @config {string} [controller] controller used to interact with the Rig Client
@@ -67,8 +69,9 @@ function WebUIApp(config)
     /** @private {WindowManager} Page container. */
     this.display = new WindowManager(this.config.anchor + "-container", {
         widgets: this.config.widgets,
-        windowToggle: this.config.windowToggle
-    });;
+        visible: this.config.visible,
+        windowToggle: this.config.windowToggle,
+    });
     
     /** @private {boolean} Whether a data error has occurred. */
     this.dataError = false;
@@ -204,6 +207,27 @@ WebUIApp.prototype._errorData = function(msg) {
     this.errorDisplay.displayError(msg);
 };
 
+/**
+ * Shows or displays a top level widget. This does not bubble down to nested 
+ * widgets within non top level windowed containers.
+ * 
+ * @param {string} id widget identifier
+ * @param {boolean} visible whether the widget should be displayed or hidden
+ */
+WebUIApp.prototype.displayWindow = function(id, visible) {
+    this.display.toggleEvent(id, visible);
+};
+
+/**
+ * Gets the widget with the specified identifer.
+ * 
+ * @param {string} id widget identifier
+ * @return {Widget} widget with id or null if not found
+ */
+WebUIApp.prototype.getWidget = function(id) {
+	return this.display.getWidget(id);
+};
+
 /* ============================================================================
  * == Base widget                                                            ==
  * ============================================================================ */
@@ -244,7 +268,7 @@ function Widget(id, config)
     
     /** @protected {object} Display options. */
     this.config = config ? config : { };
-    if (!this.config.classes) this.config.classes = [ ];
+    if (!this.config.classes) this.config.classes = [ ];    
     
     /** @private {object} Window management properties. */
     this.window = {
@@ -272,7 +296,7 @@ Widget.prototype.init = function($container) {
 
 /** 
  * Method which is provided with data from the server. The data object is the 
- * return from /data operation and is a map of the response keys and objects. 
+ * return from controller data operation and is a map of the response keys and objects. 
  * 
  * @param {object} data data object
  */
@@ -829,6 +853,22 @@ Widget.prototype.getIdentifier = function() {
 };
 
 /**
+ * Enumeration of queryable window properties.
+ * @readonly
+ * @enum {String}
+ */
+Widget.WINDOW_PROPERTY = {
+        /* Width of window in pixels. */
+        width: 'width',
+        /* Height of window in pixels. */
+        height: 'height',
+        /* Left coordinate of window relative to its parent. */
+        left: 'left',
+        /* Top coordinate of window relative to its parent. */
+        top: 'top',
+};
+
+/**
  * Gets the specified window property.
  * 
  * @param {string} name of window property
@@ -942,6 +982,13 @@ Layout.prototype.getHeight = function() {
 Layout.prototype.setContainer = function(container) {
     this.container = container;
 };
+
+/**
+ * Method which is provided with data from the server.  
+ * 
+ * @param {object} data data object
+ */
+Layout.prototype.consume = function(data) { };
 
 /* ============================================================================
  * == Absolute Layout                                                        ==
@@ -1396,10 +1443,13 @@ FlowLayout.prototype.scale = function(h, v) {
  * switch between the widgets. 
  * 
  * @param {object} config configuration object
- * @config {string} [position] position of tab bar, either 'top', 'bottom' (horizontal tab bar), 
+ * @config {string}   [position] position of tab bar, either 'top', 'bottom' (horizontal tab bar), 
  *                          'left', 'right' (vertical tab bar) (default top)
- * @config {integer} [border] border padding of widget in pixels (default 10px)
- * @config {boolean} [alignLeft] whether to align left or right for horizonal orientation (default left)
+ * @config {integer}  [border] border padding of widget in pixels (default 10px)
+ * @config {boolean}  [alignLeft] whether to align left or right for horizontal orientation (default left)
+ * @config {string}   [field] data field to restore selected tab when browser refreshed (optional)
+ * @config {string}   [action] action to notify when a tab is changed (optional) 
+ * @config {function} [callback] function that is called if a tab is changed 
  */
 function TabLayout(config)
 {
@@ -1416,6 +1466,9 @@ function TabLayout(config)
     
     /** @private {Widget} Currently displayed widget. */    
     this.currentWidget = undefined;
+    
+    /** @private {boolean} Whether sending tab changed. */
+    this.sendingTab = false;
 }
 
 TabLayout.prototype = new Layout;
@@ -1432,14 +1485,17 @@ TabLayout.prototype.displayInit = function($container) {
     this.$tabBar = this.container.getContentBox().prepend(this._tabBarHTML()).children(":first");
 
     var thiz = this;
-    this.$tabBar.children(".tab").click(function() {
-        $(this).siblings(".tab-active").removeClass("tab-active");
-        $(this).addClass("tab-active");
-        thiz._tabClick($(this).text()); 
+    this.$tabBar.children(".tab").click(function() {        
+        thiz._tabClick($(this).text(), true); 
     });
+        
+    if (!this.config.field)
+    {
+        this.$tabBar.children(this.config.position == TabLayout.POSITION.bottom ? ":last" : ":first").addClass("tab-active");
+    }
 };
 
-TabLayout.prototype._tabClick = function(title) {
+TabLayout.prototype._tabClick = function(title, user) {
    var i = 0, w = false, x, y, 
        wOff = this.config.vertical ? 0 : this.$tabBar.width() + this.config.border * 2,
        hOff = this.config.vertical ? this.$tabBar.height() + this.config.border * 2 : 0;
@@ -1484,18 +1540,27 @@ TabLayout.prototype._tabClick = function(title) {
 
    /* No need to tab to the current widget. */
    if (w == this.currentWidget) return;
+   
+   /* Mask changing from server variable. */
+   this.sendingTab = true;
 
    /* Remove the current widget. */
-   this.container.toggleEvent(this.currentWidget.id, false);
+   if (this.currentWidget) this.container.toggleEvent(this.currentWidget.id, false);
+   
+   /* Set the tab bar selected. */
+   this.$tabBar.children().removeClass("tab-active");
+   this.$tabBar.children("[data-title='" + title + "']").addClass("tab-active");
 
    /* Add the current widget. */
    this.currentWidget = w;
+   this.currentTitle = w.title;
    this.container.toggleEvent(w.id, true);
 
    /* Resize and move the widget into the center. */
-   if (w.getWindowProperty("width") + wOff + this.config.border * 2 != this.width || 
-           w.getWindowProperty("height") + hOff + this.config.border * 2 != this.height)
-   {
+   if ((w.getWindowProperty("width") + wOff + this.config.border * 2 != this.width || 
+           w.getWindowProperty("height") + hOff + this.config.border * 2 != this.height) &&
+           w.config.resizable)
+   {       
        w.resized(this.width - wOff - this.config.border * 2, this.height - hOff - this.config.border * 2);
        w.resizeStopped(this.width - wOff - this.config.border * 2, this.height - hOff - this.config.border * 2);
    }
@@ -1505,6 +1570,18 @@ TabLayout.prototype._tabClick = function(title) {
 
    w.moveTo(x, y);
 
+   /* If user clicked tab change, send to server. */
+   if (this.config.action && user)
+   {       
+       var thiz = this, params = { };
+       params[this.config.field] = title;
+       this.container._postControl(this.config.action, params, function(params) {
+           thiz.sendingTab = false;
+       });
+   }
+   
+   /* If callback trigger it. */
+   if (this.config.callback) this.config.callback.call(w, title);
 };
 
 TabLayout.prototype._tabBarHTML = function() {
@@ -1521,10 +1598,10 @@ TabLayout.prototype._tabBarHTML = function() {
     for (i = 0; i < widgets.length; i++)
     {
         w = this.container.getWidget(widgets[i]);
-        html += "<div class='tab " + (Globals.THEME === 'flat' ? '' : 'button ') + (i == 0 && this.config.position != TabLayout.POSITION.bottom || 
-                        i == widgets.length - 1 && this.config.position == TabLayout.POSITION.bottom ? "tab-active" : "")
-                        + "' style='" + (this.config.vertical ? "float:" + (this.config.alignLeft ? "left" : "right") : "") + 
-                        (Globals.THEME === 'flat' ? '' : '; width: '+ (this.config.position === 'left' ? '27%;' : '27%;') + ' font-size: 80%;') + "'>" + 
+        html += "<div class='tab " + (Globals.THEME === 'flat' ? '' : 'button ') +
+                        "' style='" + (this.config.vertical ? "float:" + (this.config.alignLeft ? "left" : "right") : "") + 
+                        (Globals.THEME === 'flat' ? '' : '; width: '+ (this.config.position === 'left' ? '27%;' : '27%;') + ' font-size: 80%;') + 
+                        "' data-title='" + w.config.title +"'>" +
                 w.config.title + "</div>";
     }
 
@@ -1559,6 +1636,10 @@ TabLayout.prototype.layout = function() {
         hOff = this.config.vertical ? this.$tabBar.height() + this.config.border * 2 : 0;
 
     this.width = this.height = 0;
+    
+    /* If not using server storage of tab selection, this first tab will be 
+     * displayed initially. */
+    if (!this.config.field) this.currentWidget = this.container.config.widgets[0];
 
     for (i in this.container.getWidgets())
     {
@@ -1568,20 +1649,19 @@ TabLayout.prototype.layout = function() {
         if ((wid = w.getWindowProperty("width")) > this.width) this.width = wid;
         if ((hei = w.getWindowProperty("height")) > this.height) this.height = hei;    
     }
-    
+        
     for (i in this.container.getWidgets())
     {
-        w = this.container.getWidget(i);
+        w = this.container.getWidget(i);            
         
-        if (!this.currentWidget || this.currentWidget == w)
+        if (this.currentWidget == w)
         {
-            /* The first widget is the widget first displayed. */
             this.currentWidget = w;
             
             wid = w.getWindowProperty("width");
             hei = w.getWindowProperty("height");
 
-            if (wid < this.width || hei < this.height)
+            if (w.config.resizable &&  (wid < this.width || hei < this.height))
             {
                 w.resized(this.width, this.height);
                 w.resizeStopped(this.width, this.height);
@@ -1646,6 +1726,14 @@ TabLayout.prototype.scale = function(h, v) {
     }
 };
 
+TabLayout.prototype.consume = function(data) {
+    if (this.config.field && !this.sendingTab &&
+            (!this.currentWidget || data[this.config.field] != this.currentWidget.title))
+    {
+        this._tabClick(data[this.config.field], false);
+    }
+};
+
 /* ============================================================================
  * == Container Widget                                                       ==
  * ============================================================================ */
@@ -1662,23 +1750,27 @@ TabLayout.prototype.scale = function(h, v) {
  * @param {string} id identifier 
  * @param {object} config configuration object
  * @config {array} [widgets] list of widgets managed by this container
+ * @config {map}   [visible] list of widget ids and whether they should be initially \
+ *                      displayed (optional, not specified means visible)
  * @config {Layout} [layout] layout used to specify how widgets are placed (optional)
  */
 function Container(id, config)
 {
     Widget.call(this, id, config);
     
+    if (this.config.visible === undefined) this.config.visible = {};    
+    
     /** @protected {object} Map of widget visibility states keyed by widget id. */
     this.states = { };
     
-    /** @protected {object} Map of widgets keyed by identifer. */
+    /** @protected {object} Map of widgets keyed by identifier. */
     this.widgets = { };
     
     /** @protected {jQuery} Box where the contained widgets displayed gets attached to. */
     this.$contentBox = undefined;
     
     /** @protected {boolean} Whether contents are shown or hidden. */
-    this.contentsShown = true;
+    this.contentsShown = true;    
 }
 
 Container.prototype = new Widget;
@@ -1694,9 +1786,11 @@ Container.prototype.init = function($container) {
     {
     	this.widgets[this.config.widgets[i].id] = w = this.config.widgets[i];
     	
-        w._loadState();
+        w._loadState();              
         
-        if (w.window.shown = this.states[w.id] = !(w.window.shown === false))
+        if (w.window.shown = this.states[w.id] = 
+                w.window.shown ||  // Closed by user request
+                (w.window.shown === undefined && this.config.visible[w.id] !== false)) // Initially set to be not visible
         {
             w.init(this.$contentBox);
 
@@ -1740,6 +1834,8 @@ Container.prototype.init = function($container) {
 Container.prototype.consume = function(data) {
     var i = 0;
     for (i in this.widgets) if (this.states[i]) this.widgets[i].consume(data);
+    
+    if (this.config.layout) this.config.layout.consume(data);
 };
 
 Container.prototype.destroy = function() {
@@ -1821,6 +1917,10 @@ Container.prototype.resizeStopped = function(width, height) {
  * @param {boolean} visible whether the widget is displayed or hidden
  */
 Container.prototype.toggleEvent = function(id, visible) {
+    /* No need to do any work if the widget is already in the correct 
+     * displayed state. */
+    if (this.states[id] == visible) return;
+    
     if (this.states[id] = visible)
     {
         this.widgets[id].init(this.$contentBox);
@@ -1879,6 +1979,8 @@ function Spacer(id, config)
     Widget.call(this, id, config);
     
     if (this.config.css === undefined) this.config.css = '';
+    if (this.config.width === undefined) this.config.width = 1;
+    if (this.config.height === undefined) this.config.height = 0;
 }
 
 Spacer.prototype = new Widget;
@@ -1901,7 +2003,6 @@ Spacer.prototype.resized = function(width, height) {
         this.$widget.children("border-radius", (width < height ? width : height) / 2);
     }
     this.$widget.css({ width: width, height: height });
-    this.$widget.children().text(Math.round(width) + "x" + Math.round(height));
 };
 
 /* ============================================================================
@@ -2020,13 +2121,13 @@ Graph.prototype.init = function($container) {
         for (i in this.config.fields)
         {
             this.dataFields[i] = {
-                    label: Util.getDOMStr(this.config.fields[i]),
-                    visible: true,
-                    values: [ ],
-                    seconds: 0,
-                    color: this.config.colors.hasOwnProperty(i) ? this.config.colors[i] : 
-                        Graph.COLORS[c++ % Graph.COLORS.length],
-                    multiplier: this.config.multipliers[i] !== undefined ? this.config.multipliers[i] : 1
+                label: Util.getDOMStr(this.config.fields[i]),
+                visible: true,
+                values: [ ],
+                seconds: 0,
+                color: this.config.colors.hasOwnProperty(i) ? this.config.colors[i] : 
+                    Graph.COLORS[c++ % Graph.COLORS.length],
+                multiplier: this.config.multipliers[i] !== undefined ? this.config.multipliers[i] : 1
             };
         }
     }
@@ -2226,7 +2327,8 @@ Graph.prototype.consume = function(data) {
 
 /**
  * Prune the sample dataset to the number of specified size. If the values 
- * length is less than the specified size, the data is padded with zeros, if
+ * length is less than the specified size, the data is padded with a value smaller 
+ * than the minimum value displayed on screen so the trace is not displayed. If  
  * the values length is greater than the specified size, the oldest data 
  * (from the beginning of the values) is discarded.
  * 
@@ -2240,7 +2342,7 @@ Graph.prototype._pruneSample = function(values, size) {
     else
     {
         var i, arr = new Array(size);
-        for (i = 0; i < size; i++) arr[i] = i < values.length ? values[i] : 0;
+        for (i = 0; i < size; i++) arr[i] = i < values.length ? values[i] : this.config.minValue;
         return arr;
     }
 };
@@ -2353,9 +2455,9 @@ Graph.prototype._drawIndependantScales = function() {
  * @param {array} dObj data object
  */
 Graph.prototype._drawTrace = function(dObj) {
-    var xStep = this.graphWidth / (dObj.values.length - 1), // We are making trace overflow to ensure it doesn't fall short
+    var xStep = this._computeXDelta(dObj),
 	    yScale = this.graphHeight / this.graphRange, i, yCoord;    
-
+    
 	this.ctx.save();
 	this.ctx.strokeStyle = dObj.color;
 	this.ctx.lineWidth = 3;
@@ -2371,7 +2473,7 @@ Graph.prototype._drawTrace = function(dObj) {
 		yCoord = this.graphHeight - this._scaleVal(dObj, i) * yScale + this.graphOffset * this.graphHeight;
 		/* If value too large, clipping at the top of the graph. */
 		if (yCoord > this.graphHeight) yCoord = this.graphHeight;
-		/* If value too small, clippling at the bottom of the graph. */
+		/* If value too small, clipping at the bottom of the graph. */
 		if (yCoord < 0) yCoord = 0;
 
 		if (i == 0)
@@ -2386,6 +2488,19 @@ Graph.prototype._drawTrace = function(dObj) {
 
 	this.ctx.stroke();
 	this.ctx.restore();
+};
+
+/**
+ * Computes the number of pixels each trace point is plotted in the horizontal
+ * direction.
+ * 
+ * @param {array} dObj data object
+ * @return {integer} pixels to move between points in x
+ */
+Graph.prototype._computeXDelta = function(dObj) {
+    /* We are making trace overflow visible canvas bounds to ensure it doesn't
+     * fall short. */
+    return (this.graphWidth / (dObj.values.length - 1));
 };
 
 /**
@@ -2665,6 +2780,88 @@ Graph.prototype._removeControls = function() {
 };
 
 /* ============================================================================
+ * == Time Series Widget.                                                    ==
+ * ============================================================================ */
+
+/**
+ * The time series widget is a graph that plots a fixed duration series of data 
+ * points. 
+ * 
+ * @constructor
+ * @param {string} id graph identifier
+ * @param {object} config configuration object
+ * @config {object}  [fields]      map of graphed data fields with field => label
+ * @config {object}  [multipliers] map of data fields scale multipers with field => multiplier (optional)
+ * @config {boolean} [stop]        field to control whether to update 
+ * @config {object}  [colors]      map of graph trace colors with field => color (optional)
+ * @config {boolean} [autoScale]   whether to autoscale the graph dependant (default off)
+ * @config {integer} [minValue]    minimum value that is graphed, implies not autoscaling (default 0)
+ * @config {integer} [maxValue]    maximum value that is graphed, implies not autoscaling (default 100)
+ * @config {integer} [duration]    number of seconds this time series displays (default 60)
+ * @config {string}  [durationFrom] server data field that specifies the duration of the graph (optional)
+ * @config {string}  [xLabel]      X axis label (default (Time (s))
+ * @config {String}  [yLabel]      Y axis label (optional)
+ * @config {String}  [yRightLabel] Y axis label of right hand side (optional)
+ * @config {number}  [yScaling]    scaling of right hand side scales relative to main scales (default 1)
+ * @config {boolean} [traceLabels] whether to show trace labels (default true)
+ * @config {boolean} [fieldCtl]    whether data field displays can be toggled (default false)
+ * @config {boolean} [autoCtl]     whether autoscaling enable control is shown (default false)
+ * @config {boolean} [durationCtl] whether duration control slider is displayed
+ * @config {integer} [vertScales]  number of vertical scales (default 5)
+ * @config {integer} [horizScales] number of horizontal scales (default 8)
+ * 
+ */
+function TimeSeries(id, config) 
+{
+    Graph.call(this, id, config);
+}
+
+TimeSeries.prototype = new Graph;
+
+TimeSeries.prototype.consume = function(data) {
+	if (this.config.stop && !data[this.config.stop]) return;		
+	
+    if (this.config.durationFrom && data[this.config.durationFrom] !== undefined &&
+            this.config.duration != data[this.config.durationFrom])
+    {
+        this.config.duration = data[this.config.durationFrom];
+        this._updateIndependentScale();
+    }
+    
+    Graph.prototype.consume.call(this, data);
+};
+
+TimeSeries.prototype._computeXDelta = function(dObj) {
+    var st = this.graphWidth / (this.config.duration * 1000 / this.config.period);
+    
+    if (st * dObj.values.length > this.graphWidth) 
+    {
+        return this.graphWidth / (dObj.values.length - 1);
+    }
+    else 
+    {
+        return st;
+    }
+};
+
+TimeSeries.prototype._updateIndependentScale = function() {
+    var xstep = this.displayedDuration / this.config.horizScales, i,
+		$d = this.$widget.find(".graph-bottom-scale-0"), t;
+
+	for (i = 0; i <= this.config.horizScales; i++)
+	{
+		t = xstep * i;
+		$d.html(Util.zeroPad(t, t < 100 ? 1 : 0));
+		$d = $d.next();
+	}
+};
+
+TimeSeries.prototype._pruneSample = function(dObj) {
+    return dObj;
+};
+
+
+/* ============================================================================
  * == Scatter Plot Widget.                                                   ==
  * ============================================================================ */
 
@@ -2776,6 +2973,11 @@ ScatterPlot.prototype.init = function($container) {
     
     Graph.prototype.init.call(this, $container);
     
+    for (i in this.config.fields) 
+    {
+        
+    }
+    
     this._updateDependantScale();
     this._updateIndependentScale();
 };
@@ -2814,7 +3016,6 @@ ScatterPlot.prototype._drawIndependantScales = function() {
     this.ctx.restore();
 };
 
-
 ScatterPlot.prototype.consume = function(data) {
     var i = 0, size;
     
@@ -2838,11 +3039,9 @@ ScatterPlot.prototype.consume = function(data) {
     }
 
     this._drawFrame();
-    
-    Widget.prototype.consume.call(this, data);
 };
 
-ScatterPlot.prototype._drawTrace = function(dObj) {
+ScatterPlot.prototype._drawTrace = function(dObj) {   
     var i = 0, xCoord, yCoord;
     
     this.ctx.save();
@@ -2950,6 +3149,7 @@ function Switch(id, config)
     /* Default options. */
     if (this.config.stickColor === undefined) this.config.stickColor = 'black';
     if (this.config.length === undefined) this.config.length = 120;
+    if (this.config.vertical === undefined) this.config.vertical = false;
 
     /** @private {boolean} The state of the switch. */
     this.val = undefined;
@@ -3202,13 +3402,15 @@ RotarySwitch.prototype._animateSwitch = function(point) {
  * @param {string} id the identifier of widget
  * @param {object} config configuration of widget
  * @config {string}  [field]  server data variable that is being switched
+ * @config {string}  [valuesField] server data variable that has possible selection options (optionaL)
  * @config {string}  [action] server action to call when the switched is changed
- * @config {string}  [label] label adjacent of selection list (options)
- * @config {array}   [values] the list of potential values
+ * @config {string}  [label] label adjacent or below selection list (optional)
+ * @config {array}   [values] the list of potential values (optional)
  * @config {boolean} [indexes] whether the data variable values sent and received \
  *                       are array indexes or arrays values (default indexes)
  * @config {integer} [selectionWidth] width of selection  
- * @config 
+ * @config {boolean} [below] whether the selection list is placed adjacent or \
+ *                       below label (default adjacent) 
  */
 function SelectionList(id, config)
 {
@@ -3216,6 +3418,10 @@ function SelectionList(id, config)
     
     if (this.config.selectionWidth === undefined) this.config.selectionWidth = 100;
     if (this.config.indexes === undefined) this.config.indexes = true;
+    if (this.config.values === undefined) this.config.values = [];
+    if (this.config.below === undefined) this.config.below = false;
+        
+    this.config.classes.push("selection-list-outer");
     
     /* Current value. */
     this.val = undefined;
@@ -3239,8 +3445,10 @@ SelectionList.prototype.init = function($container) {
 
 SelectionList.prototype._buildHTML = function() {
     var k, html = 
-        (this.config.label ? "<label>" + this.config.label + "</label>" : "") +
-        "<div class='data-format-outer' style='width:" + this.config.selectionWidth + "px'>" +
+        (this.config.label ? "<label>" + this.config.label + ":</label>" : "") +
+        "<div class='data-format-outer' style='" + 
+                    "width:" + this.config.selectionWidth + "px; " +
+                    "float:" + (this.config.below ? "none; margin-left: 0;" : "left;") + "'>" +
             "<select name='" + this.id + "-select' class='selection-list' " +
             		"style='width:" + (this.config.selectionWidth + 25) + "px'>"
     
@@ -3256,7 +3464,13 @@ SelectionList.prototype._buildHTML = function() {
     return html;
 };
 
-SelectionList.prototype.consume = function(data) {
+SelectionList.prototype.consume = function(data) {     
+    if (this.config.valuesField && $.isArray(data[this.config.valuesField]) && !this.valChanged && 
+            data[this.config.valuesField].length != this.config.values.length)
+    {
+        this._updateSelectionList(data[this.config.valuesField]);
+    }
+    
     if (!(data[this.config.field] === undefined || data[this.config.field] == this.val || this.valChanged))
     {
         this.val = data[this.config.field];
@@ -3264,6 +3478,7 @@ SelectionList.prototype.consume = function(data) {
         this.$widget.find("select option:selected").removeAttr("selected");
         this.$widget.find('select option[value="' + this.val + '"]').attr("selected", "selected");
     }
+   
     
     Widget.prototype.consume.call(this, data);
 };
@@ -3283,6 +3498,24 @@ SelectionList.prototype._val = function(i) {
     return this.config.indexes ? i : this.config.values[i];
 };
 
+SelectionList.prototype._updateSelectionList = function(vals) {
+    var i, html = "";
+    
+    this.config.values = [];
+    for (k in vals) 
+    {
+        this.config.values[k] = $.trim(vals[k]);
+        html += "<option value='" + this._val(k) + "'>" + this.config.values[k] + "</option>";
+    }
+    
+    this.$widget.find("select").html(html);
+};
+
+SelectionList.prototype.destroy = function() {
+    this.val = undefined;
+    Widget.prototype.destroy.call(this);
+};
+
 /* ============================================================================
  * == Button widget                                                          ==
  * ============================================================================ */
@@ -3294,7 +3527,8 @@ SelectionList.prototype._val = function(i) {
  * @param {string} id identifier of widget
  * @param {object} config configuration of widget
  * @config {string}   [action] action to send to when pressed
- * @config {string}   [field] data field that enables this button (optional, default alway enabled)
+ * @config {function} [event] event handler to invoke when button pressed
+ * @config {string}   [field] data field that enables this button (optional, default always enabled)
  * @config {boolean}  [negate] if enable field set, whether true or false enables the button (default true enables)
  * @config {string}   [link] link that is embedded on the page
  * @config {string}   [target] if link used, what the target attribute so to
@@ -3329,8 +3563,10 @@ function Button(id, config)
 Button.prototype = new Widget;
 
 Button.prototype.init = function($container) {
-    if (!(this.config.action || this.config.link)) throw "Action or link options not set.";
+    if (!(this.config.action || this.config.link || this.config.event)) throw "Action or link options not set.";
 
+    this.enabled = this.config.field ? undefined : true;    
+    
     this.$widget = this._generate($container,
         "<" + (this.config.action ? "div " : "a ") +
                 "class='button " + (this.config.overlay && this.config.circular === false ? "button-overlay" : '') + 
@@ -3353,7 +3589,7 @@ Button.prototype.init = function($container) {
     this.$widget.children(".button")
         .mousedown(function() { if (thiz.enabled) thiz._buttonEngaged(); })
         .bind("mouseup mouseout", function(){ if (thiz.enabled) thiz._buttonReleased(); })
-        .click(function() { if (thiz.config.action && thiz.enabled) thiz._clicked(); });
+        .click(function() { if ((thiz.config.action || thiz.config.event) && thiz.enabled) thiz._clicked(); });
 
     if ($('#'+this.id).hasClass('push-button')) {
         /* Remove the standard button classes for the push button. */
@@ -3405,7 +3641,8 @@ Button.prototype._buttonReleased = function() {
  * Event handler triggered when button clicked.
  */
 Button.prototype._clicked = function() {
-    this._postControl(this.config.action, this.config.params, this.config.callback);
+    if (this.config.action) this._postControl(this.config.action, this.config.params, this.config.callback);
+    if (this.config.event) this.config.event.call(this);
 };
 
 Button.prototype.resizeStopped = function(width, height) {
@@ -4014,24 +4251,25 @@ Spinner.prototype._send = function() {
  * @constructor
  * @param {string} id widget identifier
  * @param {object} config configuration of widget
- * @config {string}  [field] server data variable that is being set
- * @config {string}  [action] server action to call when the slider is changed
- * @config {boolean} [textEntry] whether text entry is displayed (default true) 
- * @config {string}  [label] slider label (optional)
- * @config {string}  [units] units label to display (optional)
- * @config {integer} [precision] precision of displayed value (default 1)
- * @config {boolean} [logarithmic] whether this slider provide linear or logarithmic range (default linear)
- * @config {boolean} [snap] whether values are snapped to the nearest scale (default false) 
- * @config {integer} [logBase] if logarithmic, the log base to use (default 10)
- * @config {integer} [min] minimum value of slidDr (default 0)
- * @config {integer} [max] maximum value of slider (default 100)
- * @config {boolean} [vertical] whether slider is vertically or horizontally orientated (default vertical)
- * @config {integer} [length] length of slider in pixels (default 250)
- * @config {integer} [scales] number of scales to display (default fitted to min, max value)
+ * @config {string}   [field] server data variable that is being set
+ * @config {string}   [action] server action to call when the slider is changed
+ * @conifg {function} [callback] Event to be called back with slider value is changed
+ * @config {boolean}  [textEntry] whether text entry is displayed (default true) 
+ * @config {string}   [label] slider label (optional)
+ * @config {string}   [units] units label to display (optional)
+ * @config {integer}  [precision] precision of displayed value (default 1)
+ * @config {boolean}  [logarithmic] whether this slider provide linear or logarithmic range (default linear)
+ * @config {boolean}  [snap] whether values are snapped to the nearest scale (default false) 
+ * @config {integer}  [logBase] if logarithmic, the log base to use (default 10)
+ * @config {integer}  [min] minimum value of slidDr (default 0)
+ * @config {integer}  [max] maximum value of slider (default 100)
+ * @config {boolean}  [vertical] whether slider is vertically or horizontally orientated (default vertical)
+ * @config {integer}  [length] length of slider in pixels (default 250)
+ * @config {integer}  [scales] number of scales to display (default fitted to min, max value)
  */
 function Slider(id, config)
 {
-    if (!(config.field || config.action)) throw "Options not supplied.";
+    if (!(config.field || config.action || config.callback)) throw "Options not supplied.";
     
     Widget.call(this, id, config);
     
@@ -4105,7 +4343,8 @@ Slider.prototype._buildHTML = function() {
         html = 
         "<div class='slider-container-" + (this.config.vertical ? "vertical" : "horizontal") + "' style='" + 
                     (this.config.vertical ? "" : "width:" + (this.config.length + 15) + "px;") + "'>" +
-            "<div class='label slider-label-" + (this.config.vertical ? "vertical" : "horizontal") + "'>" + this.config.label + ":</div>" +
+            (this.config.label ? 
+                    "<div class='label slider-label-" + (this.config.vertical ? "vertical" : "horizontal") + "'>" + this.config.label + ":</div>" : '') +
             "<div class='slider-outer' style='" + (this.config.vertical ? "height" : "width") + ":" + this.config.length + "px'>";
             
     /* Slider scale. */
@@ -4177,7 +4416,7 @@ Slider.prototype._getScales = function() {
         /* Linear scale. */
         for (i = 0; i <= this.config.scales; i++)
         {
-            scales[i] = (this.config.max - this.config.min) * i / this.config.scales;
+            scales[i] = this.config.min + (this.config.max - this.config.min) * i / this.config.scales;
         }
     }
     
@@ -4373,13 +4612,18 @@ Slider.prototype._handleTextBoxChange = function(val) {
  * Sends the updated value to the server.
  */
 Slider.prototype._send = function() {
-    var thiz = this, params = { };
-    params[this.config.field] = this.val;
-    this._postControl(this.config.action, params,
-        function(data) {
-            thiz.valueChanged = false;
-        }
-    );
+    if (this.config.action && this.config.field)
+    {
+        var thiz = this, params = { };
+        params[this.config.field] = this.val;
+        this._postControl(this.config.action, params,
+            function(data) {
+                thiz.valueChanged = false;
+            }
+        );
+    }
+    
+    if (this.config.callback) this.config.callback.call(this, this.val);
 };
 
 Slider.prototype.consume = function(data) {   
@@ -4716,10 +4960,14 @@ LinearGauge.prototype.animate = function() {
  * @config {string} [webmParam] data variable that specifies WebM stream URL
  * @config {integer} [videoWidth] width of the video stream
  * @config {integer} [videoHeight] height of the video stream
+ * @config {string} [popupSize] size of pop-up in the format widthxheight 
+ *              (optional, default current video size)
  */
 function CameraStream(id, config)
 {
     Widget.call(this, id, config);
+    
+    this.config.classes.push("camera-stream");
 
     /** The list of address for the each of the camera formats. */
     this.urls = {
@@ -4740,10 +4988,11 @@ function CameraStream(id, config)
     /** @private {integer} Deployed video height. */
     this.videoHeight = undefined;
     
-    /** @private {} SWF timer. */
+    /** @private {Handle} SWF timer. */
     this.swfTimer = undefined;
     
-    this.config.classes.push("camera-stream");
+    /** @private {Window} Pop-up window reference. */
+    this.popup = undefined
 };
 
 CameraStream.prototype = new Widget;
@@ -4794,6 +5043,7 @@ CameraStream.prototype.consume = function(data) {
     
     if (this.urls.mjpeg && !this.isDeployed) 
     {
+        console.log("Deploying.");
         this._restoreDeploy();
     }
     
@@ -5032,6 +5282,75 @@ CameraStream.prototype.toggleWindowShade = function(callback) {
     else this._deploy(this.deployedFormat);
 };
 
+/**
+ * Popout the video in a seperate pop up window. 
+ */
+CameraStream.prototype.popout = function() {
+    if (this.popup) return;
+    
+    var params, options, thiz = this;
+    
+    if (this.config.popupSize)
+    {
+        var pos = this.config.popupSize.indexOf("x");
+        options = "width=" + (parseInt(this.config.popupSize.substr(0, pos)) + 10);
+        options += ",height=" + (parseInt(this.config.popupSize.substr(pos + 1)) + 40); 
+    }
+    else
+    {
+        /* The popup size is not configured so it will open at the in screen video size. */
+        options = "width=" + this.videoWidth + ",height=" + this.videoHeight;
+    }
+
+    /* The other options set are to disable as much chrome as possible. */
+    options += ",menubar=0,toolbar=0,location=0,personbar=0,status=0,resizable=0,scrollbars=1";
+    
+    params = "format=" + this.deployedFormat;
+
+    if (this.urls.swf) params += "&swf=" + this.urls.swf;
+    if (this.urls.mjpeg) params += "&mjpeg=" + this.urls.mjpeg;
+    if (this.urls.webm) params += "&webm=" + this.urls.webm;
+    
+    /* Try to open the pop-up window. */
+    if (this.popup = window.open("/webui/camera-popup.html?" + params, this.config.title, options))
+    {        
+        try
+        {
+            /* We want to be notified if the window is closing so we can 
+             * appropriately set button state to correct state. */
+            if (this.popup.addEventListener) 
+                this.popup.addEventListener("beforeunload", function() { thiz._popupUnloaded(); });
+        }
+        catch (e)
+        {
+            console.log("Error from window unload bind: " + e);
+        }
+    }
+    else
+    {
+        /* Pop-up blocker or some other security setting has prevented a 
+         * pop-up being opened. */
+        console.log("Failed to open camera popup.");
+        this.addMessage("Pop-up window did not open. Please allow pop-ups for this page and try again.",
+                Widget.MESSAGE_TYPE.error, 0, 0, Widget.MESSAGE_INDICATOR.bottomCenter);
+    }
+};
+
+/**
+ * Closes the pop up video window if it is open. 
+ */
+CameraStream.prototype.closePopout = function() {
+    if (this.popup)
+    {
+        this.popup.close();
+        this.popup = undefined;
+    }
+};
+
+CameraStream.prototype._popupUnloaded = function() {
+    this.popup = undefined;
+};
+
 /* ============================================================================
  * == Image                                                                  ==
  * ============================================================================ */
@@ -5130,13 +5449,21 @@ GlobalError.prototype.init = function($container) {
  * 
  * @param {String} id widget identifier
  * @param {Object} config configuration object
- * @config {String} [fieldNS] namespace of logging fields
+ * @config {String}  [prefix]   prefix of files to display (optional, no prefix)
+ * @config {boolean} [negPrefix] whether to negate prefix of files to display, has \
+ *                      not effect if prefix not set (optional, false)
+ * @config {boolean} [controls] whether to display log controls (optional, default true)
+ * @config {boolean} [named] whether to display name in download list of from whence \
+ *                      loggin was started (optional, false) 
  */
 function DataLogging(id, config)
 {
     Widget.call(this, id, config);
     
     if (this.config.title === undefined) this.config.title = 'Logging';
+    if (this.config.controls === undefined) this.config.controls = true;
+    if (this.config.negPrefix === undefined) this.config.negPrefix = false;
+    if (this.config.named === undefined) this.config.named = false;
     
     /** @type {boolean} Whether a log is currently running. */
     this.isLogging = undefined;
@@ -5153,15 +5480,21 @@ function DataLogging(id, config)
     /** @type {int} Number of files. */
     this.fileCount = 0;
     
+    /** @type {boolean} Whether files load has occurred. */
+    this.filesLoaded = false;
+    
     /** @type {object} The current file being logged to. */
     this.currentFile = undefined;
+    
+    /** @type {boolean} Poll timeout. */
+    this.pollTimeout = undefined;
 }
 DataLogging.prototype = new Widget;
 
 DataLogging.prototype.init = function($container) {
     /* Clear to force UI redraw. */
     this.files = this.isLogging = this.duration = undefined;
-    this.isControlled = false;
+    this.filesLoaded = this.isControlled = false;
     this.fileCount = 0;
 
     /* Draw UI. */
@@ -5180,11 +5513,12 @@ DataLogging.prototype.init = function($container) {
     }
     
     /* Check we can download files. */
-    setTimeout(function() { thiz.pollSessionFiles(); }, 2000);
+    this.pollTimeout = setTimeout(function() { thiz.pollSessionFiles(); }, 2000);
 };
 
 DataLogging.prototype.buildHTML = function() {
     return (
+    	(this.config.controls ? 
         "<div class='data-controls'>" +
         "   <div class='data-enable-line data-control-line data-logger-blur'>" + 
         "       <label for='" + this.id + "-data-enable'>Logging: </label>" +  
@@ -5205,7 +5539,7 @@ DataLogging.prototype.buildHTML = function() {
         "       </div>" +
         "      <div style='clear:both'></div>" +
         "   </div>" +
-        "</div>" +
+        "</div>" : "") + 
         "<div class='data-files'>" +
         "   <div class='data-list-placeholder'>" +
         "       Please wait..." +
@@ -5274,12 +5608,7 @@ DataLogging.prototype.consume = function(data) {
     {
         if (this.files === undefined)
         {
-            /* First load. */
-            if (data['log-files'].length == 0 ||
-                    (data['log-files'].length == 1 && data['log-files'][0] == "")) // Crap, but error in JSON generation server side 
-            {
-                this.$widget.find(".data-list-placeholder").html("No files.");
-            }
+            
 
             this.files = { };
         }
@@ -5297,6 +5626,12 @@ DataLogging.prototype.consume = function(data) {
         
         for (i in files)
         {
+            if (this.config.prefix)
+            {
+                /* If prefix set we may need to exclude some files. */
+                if (files[i].indexOf(this.config.prefix) != 0 ^ this.config.negPrefix) continue;
+            }
+            
             if ((f = files[i]) != "" && typeof this.files[f] == "undefined")
             {
                 if (this.files)
@@ -5328,15 +5663,22 @@ DataLogging.prototype.consume = function(data) {
                 
                 if (this.fileCount++ == 0) this.$widget.find(".data-files").html("<ul class='data-files-list'></ul>");
                 this.$widget.find(".data-files-list").prepend(
-                        "<li id='file-" + this.files[f].time + "'>" + 
+                        "<li id='file-" + this.files[f].time + "' class=" + (this.config.named ? "named-data-file" : "") + ">" + 
                             "<a href='#'>" +
                                 "<span class='data-icon data-icon-" + this.files[f].format + "'></span>" +
-                                "From: " + this.files[f].hour + ":" + this.files[f].min + ":" + this.files[f].sec +
+                               (this.config.named ? f : "From: " + this.files[f].hour + ":" + this.files[f].min + ":" + this.files[f].sec) +
                             "</a>" +
                         "</li>");
 //                this.resized(this.$widget.width(), this.$widget.height());
             }
         }
+        
+        if (!this.filesLoaded && this.fileCount == 0)
+        {
+            this.$widget.find(".data-list-placeholder").html("No files.");
+        }
+        
+        this.filesLoaded = true;
     }
     
     Widget.prototype.consume.call(this, data);
@@ -5360,7 +5702,7 @@ DataLogging.prototype.pollSessionFiles = function() {
         null,
         function(resp) {
             thiz.checkDownloadable(resp);
-            setTimeout(function() { thiz.pollSessionFiles(); }, 30000);
+            this.pollTimeout = setTimeout(function() { thiz.pollSessionFiles(); }, 30000);
         }
     );
 };
@@ -5391,14 +5733,24 @@ DataLogging.prototype.checkDownloadable = function(sessionFiles) {
     }
 };
 
+/**
+ * Sets from when to display download log files. All logs from earlier than 
+ * this time are not displayed.
+ * 
+ * @param date log file start
+ */
+DataLogging.prototype.setFrom = function(date) {
+	this.config.from = date;
+};
+
 DataLogging.prototype.destroy = function() {
-    Widget.prototype.destroy.call(this);
-    
-    if (this.filePollHandle)
+    if (this.pollTimeout)
     {
-        clearTimeout(this.filePollHandle);
-        this.filePollHandle = null;
+        clearTimeout(this.pollTimeout);
+        this.pollTimeout = null;
     }
+    
+    Widget.prototype.destroy.call(this);
 };
 
 /* ============================================================================

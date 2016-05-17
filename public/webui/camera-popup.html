@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title>Camera</title>
+	<script type="text/javascript" src="/js/jquery-min.js"></script>
+	<script type="text/javascript" src="/webui/webui.js"></script>
+	<link href="/webui/webui.css" rel="stylesheet" type="text/css"></link>
+	<link href="/webui/webui.css" rel="stylesheet" type="text/css"></link>
+</head>
+<body>
+	<!-- 
+	http://localhost/webui/camera-popup.html?format=mjpeg&swf=http://138.25.49.25/camera1.swf&mjpeg=http://138.25.49.25/camera1.mjpg&webm=http://138.25.49.25/camera1.webm
+	 -->
+	<div id="camera-anchor"></div>
+	<script type="text/javascript">
+		Globals.COOKIE_PREFIX = "emm";
+	
+		/* The request URL encodes the camera details. */
+		var opts = window.location.href.substr(window.location.href.indexOf("?") + 1).split("&"),
+			i, v, format, params = {};
+	
+		for (i in opts)
+		{
+		    if (!(v = opts[i].substr(opts[i].indexOf("=") + 1))) continue;
+		   		    
+		 	if (opts[i].indexOf("format=") === 0) format = v;
+		 	if (opts[i].indexOf("swf=") === 0) params.swf = v;
+		 	if (opts[i].indexOf("mjpeg") === 0) params.mjpeg = v;
+		 	if (opts[i].indexOf("webm") === 0) params.webm = v;
+		}
+	
+		var cam = new CameraStream("camera", {
+		    title: "Camera",
+			windowed: false,  
+			videoWidth: window.innerWidth - 10,
+            videoHeight: window.innerHeight - 40,
+            swfParam: params.swf ? "swf" : undefined,
+            mjpegParam: params.mjpeg ? "mjpeg" : undefined,
+            webmParam: params.webm ? "webm" : undefined,
+		});
+		
+		cam.init($("#camera-anchor"));
+		cam.consume(params);
+		cam._deploy(format);
+	</script>
+<body>
+</html>
