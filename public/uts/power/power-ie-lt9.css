@@ -1,8 +1,0 @@
-/**
- * Overrides for Internet Explorer less than version 9.
- */
- 
-#power-systems-lab .button-disabled {
-	filter: alpha(opacity=30);
-	-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
-}
