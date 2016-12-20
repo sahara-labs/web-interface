@@ -69,42 +69,40 @@ class Sahara_Acl extends Zend_Acl
     const ADMIN = 'ADMIN';
 
     /** @var assoc array Pages an unauthenticated user may access. */
-    protected $_unAuthPages = array('index' => array('index', 'sso', 'logout', 'support', 'requirements', 'permactivate'),
-                                    'labinfo' => array('index'),
-                                    'info' => array('index', 'faq', 'contact'),
-                                    'demo' => array('index'),
-                                    'error' => array('error')
-                            );
+    protected $_unAuthPages = array('index'        => array('index', 'sso', 'logout', 'support', 'requirements', 'permactivate'),
+                                    'labinfo'      => array('index'),
+                                    'info'         => array('index', 'faq', 'contact'),
+                                    'demo'         => array('index'),
+                                    'error'        => array('error'));
 
     /** @var assoc array Pages a demonstration user may access. */
     protected $_demoPages = array();
 
     /** @var assoc array Pages a user may access. */
-    protected $_userPages = array('queue' => array('index', 'unlock', 'info', 'queue', 'queuing', 'cancel',
-                                                   'update', 'inqueue'),
-                                  'bookings' => array('index', 'commit', 'times', 'existing', 'cancel', 'waiting'),
-                                  'session' => array('index', 'info', 'finish', 'primitivebridge',
-                                                     'attributebridge'),
-                                  'primitive' => array('json', 'echo', 'file'),
-                                  'batch' => array('upload', 'torigclient', 'status', 'abort'),
-                                  'home' => array('index', 'list', 'listsession', 'download',
-                                  				  'delete', 'deletesession')
-                            );
+    protected $_userPages = array('queue'          => array('index', 'unlock', 'info', 'queue', 'queuing', 'cancel',
+                                                            'update', 'inqueue'),
+                                  'bookings'       => array('index', 'commit', 'times', 'existing', 'cancel', 'waiting'),
+                                  'session'        => array('index', 'info', 'finish', 'primitivebridge',
+                                                            'attributebridge'),
+                                  'primitive'      => array('json', 'echo', 'file'),
+                                  'batch'          => array('upload', 'torigclient', 'status', 'abort'),
+                                  'home'           => array('index', 'list', 'listsession', 'download',
+                                  				            'delete', 'deletesession'));
 
     /** @var assoc array Pages a research user may access. */
-    protected $_researchPages  = array('research' => array('index', 'checkactivity', 'addproject', 'publishproject',
-                                                           'updateproject', 'removeproject', 'collections', 'removesession',
-                                                           'addcollection'),
-                                       'datafile' => array('download', 'upload', 'delete'));
+    protected $_researchPages  = array('research'  => array('index', 'checkactivity', 'addproject', 'publishproject',
+                                                            'updateproject', 'removeproject', 'collections', 'removesession',
+                                                            'addcollection'),
+                                       'datafile'  => array('download', 'upload', 'delete'));
 
     /** @var assoc array Pages an academic user may access. */
-    protected $_academicPages = array('reports' => array('index','getvalue','accessreport',
-    													'sessionreport'));
-
+    protected $_academicPages = array('reports'    => array('index','getvalue','accessreport',
+       													    'sessionreport'));
+ 
     /** @var assoc array Pages an administrator user may access. */
-    protected $_adminPages = array('admin' => array('index', 'rig', 'type', 'rigpage', 'kick',
-                                                    'putoffline', 'canceloffline', 'permkey')
-                            );
+    protected $_adminPages = array('admin'         => array('index', 'rig', 'type', 'rigpage', 'kick',
+                                                    'putoffline', 'canceloffline', 'permkey'),
+    		                       'bookingslist'  => array('index'));
 
     /** @var String The users qualified name. */
     protected $_user;

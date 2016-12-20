@@ -133,7 +133,7 @@ abstract class Sahara_Database_Record
 
         /* We need to atleast loaded up a record primary key to be ensure
          * the record is persistent. */
-        if (count($cols) && !in_array($this->_idColumn, $cols)) array_push($cols, $this->_idColumn);
+        if (count($cols) && !in_array($record->_idColumn, $cols)) array_push($cols, $record->_idColumn);
 
         /* Prepare the SQL statement. */
         $stm = 'SELECT ' . (count($cols) ? implode(', ', $cols) : ' * ') . ' FROM ' . $record->_name;
@@ -145,9 +145,19 @@ abstract class Sahara_Database_Record
             $first = true;
             foreach ($where as $c => $v)
             {
-                if (!$first) $stm .= ' AND ';
-                $first = false;
-                $stm .= $c . ' = ? ';
+	  	    	if (!$first) $stm .= ' AND ';
+	  	    	$first = false;
+            	
+            	if (array_key_exists($c, $record->_relationships))
+            	{
+            		$stm .= $record->_relationships[$c]['foreign_key'];
+            		$where[$c] = $v->getIdentity();
+            	}
+            	else
+            	{
+                	$stm .= $c;
+            	}
+            	$stm .= ' = ? ';
             }
 
             $constraints = array_values($where);
@@ -171,37 +181,70 @@ abstract class Sahara_Database_Record
         }
 
         /* Execute the query. */
-        $qu = $record->_db->prepare($stm);
-        if (!$qu->execute($constraints))
-        {
-            /* An error occurred executing the statement. */
-            throw new Sahara_Database_Exception($qu);
-        }
-
-        /* Return result. */
-        if ($qu->rowCount() == 0)
-        {
-            /* No rows found. */
-            return is_array($where) || $where == NULL ? array() : false;
-        }
-        else if ($qu->rowCount() == 1 && !is_array($where) && $where != NULL)
-        {
-            /* One row from primary key. */
-            return new static($qu->fetch());
-        }
-        else
-        {
-            /* Search, an array set will be returned. */
-            $rowSet = array();
-            foreach ($qu->fetchAll() as $row)
-            {
-                $rec = new static($row);
-                array_push($rowSet, $rec);
-            }
-
-            return $rowSet;
-        }
+        return self::query($stm, $constraints, $record);
     }
+    
+    /**
+     * Query database.
+     * 
+     * @param String $sql SQL statement
+     * @param array $constraints query constraints
+     * @param array $record object instance (optional)
+	 * @return array|Sahara_Database_Record|false
+     * @throw Sahara_Database_Exception
+     */
+    public static function query($sql, $constraints, $record = NULL)
+    {
+    	if (!$record) $record = new static();
+    	
+    	$qu = $record->_db->prepare($sql);
+    	if (!$qu->execute($constraints))
+    	{
+    		/* An error occurred executing the statement. */
+    		throw new Sahara_Database_Exception($qu);
+    	}
+    	
+    	/* Return result. */
+    	if ($qu->rowCount() == 0)
+    	{
+    		/* No rows found. */
+    		return is_array($constraints) || $constraints  == NULL ? array() : false;
+    	}
+    	else if ($qu->rowCount() == 1 && !is_array($constraints) && $constraints)
+    	{
+    		/* One row from primary key. */
+    		return new static($qu->fetch());
+    	}
+    	else
+    	{
+    		/* Search, an array set will be returned. */
+    		$rowSet = array();
+    		foreach ($qu->fetchAll() as $row)
+    		{
+    			$rec = new static($row);
+    			array_push($rowSet, $rec);
+    		}
+    	
+    		return $rowSet;
+    	}
+    }
+    
+    /**
+     * Similar to load but returns the first return object for the query constraints.
+     *
+     * @param mixed $where where constraints (optional)
+     * @param array $cols list of columns to select, (optional)
+     * @param String $order column name to order the result set by (optional)
+     * @param boolean $asc whether the order is ascending or descending, default ascending
+     * @return Sahara_Database_Record|false
+     * @throw Sahara_Database_Exception
+     */
+    public static function loadFirst($where = NULL, $cols = array(), $order = NULL, $asc = true)
+    {
+    	$res = self::load($where, $cols, $order, $asc);
+    	return is_array($res) && count($res) > 0 ? $res[0] : $res;
+    }
+    
 
     /**
      * Store this record in the database. If the record is not persistent, it
@@ -641,6 +684,16 @@ abstract class Sahara_Database_Record
     public function isPersistent()
     {
         return $this->_isPersistant;
+    }
+    
+    /**
+     * Geths the identity value.
+     * 
+     * @return mixed the identity column
+     */
+    public function getIdentity()
+    {
+    	return $this->_data[$this->_idColumn];
     }
 
     /**
