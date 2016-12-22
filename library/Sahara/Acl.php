@@ -64,6 +64,12 @@ class Sahara_Acl extends Zend_Acl
 
     /** Academic users. */
     const ACADEMIC = 'ACADEMIC';
+    
+    /** Tech users (irrelevant to Sahara). */
+    const TECH = 'TECH';
+    
+    /** Sahara adminitrators, VAS techs. */
+    const SATECH = 'SATECH';
 
     /** Administrator user. */
     const ADMIN = 'ADMIN';
@@ -144,15 +150,21 @@ class Sahara_Acl extends Zend_Acl
         $this->addRole(new Zend_Acl_Role(self::RESEARCH), self::USER);
         $this->addRole(new Zend_Acl_Role(self::ACADEMIC), self::RESEARCH);
         $this->addRole(new Zend_Acl_Role(self::ADMIN), self::ACADEMIC);
+        
+        /* Additional VAS roles. */
+        $this->addRole(new Zend_Acl_Role(self::TECH), self::USER);
+        $this->addRole(new Zend_Acl_Role(self::SATECH), self::ADMIN);
 
         /* Loads the permissions in a stack with each higher privilege role
          * inheriting the preceding roles privileges. */
         switch ($this->_userRole)
         {
             case self::ADMIN:
+            case self::SATECH:
                 $this->_loadAclAssoc(self::ADMIN, $this->_adminPages);
                 /* Falls through. */
             case self::ACADEMIC:
+            case self::TECH:
                 $this->_loadAclAssoc(self::ACADEMIC, $this->_academicPages);
                 /* Falls through. */
             case self::RESEARCH:

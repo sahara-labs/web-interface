@@ -174,6 +174,7 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
                 switch ($this->_acl->getUserRole())
                 {
                     case Sahara_Acl::USER:
+                    case Sahara_ACl::TECH:
                         $this->_redirectTo('index', 'queue');
                         break;
                     case Sahara_Acl::RESEARCH:
@@ -182,8 +183,9 @@ class Sahara_Controller_Action_Acl extends Zend_Controller_Action
                     case Sahara_Acl::ACADEMIC:
                         $this->_redirectTo('index', 'queue');
                         break;
+                    case Sahara_Acl::SATECH:
                     case Sahara_Acl::ADMIN:
-                        $this->_redirectTo('index', 'admin');
+                        $this->_redirectTo('index', 'queue');
                         break;
                     default:
                         $this->view->messages = array("Unknown user \"$qName\".");

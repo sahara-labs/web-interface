@@ -39,6 +39,7 @@
 switch ($this->userRole)
 {
     case Sahara_Acl::USER:
+    case Sahara_Acl::TECH:
         $menu = array(
             'Rig Selection' => array('controller' => 'queue', 'action' => 'index'),
             'Existing Reservations' => array('controller' => 'bookings', 'action' => 'existing')
@@ -62,6 +63,7 @@ switch ($this->userRole)
     	break;
 
     case Sahara_Acl::ADMIN:
+    case Sahara_Acl::SATECH:
         $menu = array(
             'Rig Administration' => array('controller' => 'admin', 'action' => 'rig'),
             'Rig Selection' => array('controller' => 'queue', 'action' => 'index'),
