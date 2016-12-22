@@ -102,7 +102,7 @@ class Sahara_Acl extends Zend_Acl
     /** @var assoc array Pages an administrator user may access. */
     protected $_adminPages = array('admin'         => array('index', 'rig', 'type', 'rigpage', 'kick',
                                                     'putoffline', 'canceloffline', 'permkey'),
-    		                       'bookingslist'  => array('index'));
+    		                       'bookingslist'  => array('index', 'list'));
 
     /** @var String The users qualified name. */
     protected $_user;
