@@ -53,5 +53,70 @@ class Sahara_Database_Record_Rig extends Sahara_Database_Record
             'foreign_key' => 'type_id' 
         )
     );
+    
+    /**
+     * Load the bookings for this rig for the specifed date range.
+     *
+     * @param DateTime $from beginning time to search
+     * @param DateTime $to end time to search
+     * @return array list of bookings
+     */
+    public function dateRangeBookings($from, $to)
+    {
+    	$bookings = Sahara_Database_Record_Booking::query('SELECT * FROM bookings WHERE ' .
+    			' active = ? ' .
+    			' AND ( rig_id = ? OR rig_type_id = ? )' .
+    			' AND end_time > ? AND start_time < ? ' .
+    			'ORDER BY start_time',
+    			array(1, $this->id, $this->type->id, $from->format('Y-m-d H:i:s'), $to->format('Y-m-d H:i:s'))
+    			);
+    
+    	if (count($bookings) > 0)
+    	{
+    		$this->_removeOverlapped($bookings);
+    	}
+    
+    	return $bookings;
+    }
+    
+    
+    /**
+     * Removes overlapped bookings.
+     *
+     * @param array $bookings
+     */
+    private function _removeOverlapped(&$bookings)
+    {
+    	$commited = array();
+    	foreach ($bookings as $b)
+    	{
+    		if ($b->resource_type == 'RIG')
+    		{
+    			$commited[$b->start_time->getTimestamp()] = $b->end_time->getTimestamp();
+    		}
+    	}
+    
+    	$remove = array();
+    	for ($i = 0; $i < count($bookings); $i++)
+    	{
+    		if ($bookings[$i]->resource_type == 'RIG') continue;
+    			
+    		$start = $bookings[$i]->start_time->getTimestamp();
+    		$end = $bookings[$i]->end_time->getTimestamp();
+    		foreach ($commited as $cs => $ce)
+    		{
+    			if ($start >= $cs && $start < $ce
+    					|| $end > $cs && $end <= $ce)
+    			{
+    				array_push($remove, $i);
+    				break;
+    			}
+    		}
+    			
+    		if (!in_array($i, $remove)) $commited[$start] = $end;
+    	}
+    
+    	foreach ($remove as $r) unset($bookings[$r]);
+    }
 }
  

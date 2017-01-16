@@ -410,4 +410,55 @@ class BookingsController extends Sahara_Controller_Action_Acl
         $this->view->displayName = $booking->displayName;
         $this->view->time = Sahara_DateTimeUtil::getTsFromISO8601($booking->startTime) - time();
     }
+    
+    /**
+     * View to list bookings for a specific rig.
+     */
+    public function rigAction()
+    {
+    	if (!($this->hasParam('for') && 
+			  $rig = Sahara_Database_Record_Rig::loadFirst(array('name' => $this->_getParam('for')))))
+		{
+			$this->_logger->debug('Missing param or rig not found');
+			$this->_redirectTo('index', 'index');
+		}
+		
+		$this->view->headTitle($this->_headPrefix . "Reservations for $rig->name");
+		
+		$from = new DateTime();
+		if ($this->hasParam('from'))
+		{
+			list($day, $mon, $year) = explode('-', $this->_getParam('from'));
+			$from->setDate($year, $mon, $day);
+		}
+		$from->setTime(0, 0, 0);
+		
+
+		$to = new DateTime();
+		$to->setTime(23, 59, 59);
+		if ($this->hasParam('to'))
+		{
+			list($day, $mon, $year) = explode('-', $this->_getParam('to'));
+			$to->setDate($year, $mon, $day);
+			
+			$diff = $from->diff($to);
+			if ($diff->invert)
+			{
+				$to->setTimestamp($from->getTimestamp());
+				$to->add(new DateInterval('P7D'));
+			}
+		}
+		else
+		{
+			$to = new DateTime();
+			$to->setTimestamp($from->getTimestamp());
+			$to->add(new DateInterval('P7D'));
+		}
+		
+		
+		$this->view->rig = $rig;
+		$this->view->from = $from;
+		$this->view->to = $to;
+		$this->view->bookings = $rig->dateRangeBookings($from, $to);
+    }
 }

@@ -1,0 +1,98 @@
+<?php 
+	$this->headScript()->appendFile($this->baseUrl('/js/bookings-admin.js'));
+	$this->headLink()->appendStylesheet($this->baseUrl('/css/bookings-admin.css'));
+	
+	function format_name($user) 
+	{
+		return $user->last_name ? ucfirst($user->first_name) . ' ' . ucfirst($user->last_name) : $user->name;
+	}
+	
+	function format_date($date, $prev)
+	{
+		$d = $date->format('d/m/Y');
+		return $prev && $d == $prev->format('d/m/Y') ? '' : $d;
+	}
+	
+	function format_time($time)
+	{
+		return $time->format('h:i a');
+	}
+?>
+
+<div id="date-title" class="date-block">
+	<h2>Show reservations</h2>
+</div>
+
+<div id="date-range-pickers" class="sahara-form date-block">
+	<div id="from-time-fields">
+		<label for="from-time">From: </label>
+		<input id="from-time" type="text" value="<?=$this->from->format('d/m/Y')?>"/>
+	</div>
+	
+	<div id="to-time-fields">
+		<label for="to-time">To: </label>
+		<input id="to-time" type="text" value="<?=$this->to->format('d/m/Y')?>"/>
+	</div>
+</div>
+
+<div id="date-load-button" class="date-block">
+	<button id="date-load" class="commonbutton">
+		<img src="/images/rightarrow.png" alt="" />
+		Find
+	</button>
+</div>
+
+<?php if (count($this->bookings) > 0): ?>
+<table id="bookings-list">
+	<thead>
+		<tr>
+			<th class="date-cell">Date</th>
+			<th class="start-cell">Start</th>
+			<th class="finish-cell">Finish</th>
+			<th class="user-cell">User</th>
+			<th class="email-cell">Email</th>
+			<th> </th>
+		</tr>
+	</thead>
+
+	<tbody>
+	<?php for ($i = 0; $i < count($this->bookings); $i++): 
+			 $email = $this->bookings[$i]->user->email; ?>
+		<tr id="booking-<?= $this->bookings[$i]->id?>-row" class="booking-row">
+			<td class="date-cell"><?= format_date($this->bookings[$i]->start_time, $i > 0 ? $this->bookings[$i - 1]->start_time : null) ?>
+			<td class="start-cell"><?= format_time($this->bookings[$i]->start_time) ?></td>
+			<td class="finish-cell"><?= format_time($this->bookings[$i]->end_time) ?></td>
+			<td class="user-cell"><?= format_name($this->bookings[$i]->user) ?></td>
+			<td class="email-cell"><?= $email ? " <a href='mailto:$email'>$email</a>" : '-' ?></td>
+			<td><button data-bid="<?= $this->bookings[$i]->id?>" class="cancel-booking commonbutton">
+				<span class="ui-icon ui-icon-close"></span>	Cancel
+			</button></td>
+		</tr>
+	<?php endfor; ?>
+	</tbody>
+</table>
+
+<?php endif; ?>
+
+<div id="no-bookings" class="ui-state-error ui-corner-all" style="display: <?= count($this->bookings) ? 'none' : 'block' ?>">
+	<span class="ui-icon ui-icon-alert"></span>
+	No active reservations in the requested date range.
+</div>
+
+<script type="text/javascript">
+$(document).ready(function() {
+    var rig = '<?=$this->rig->name?>';
+    $("#from-time, #to-time").datepicker({
+        dateFormat: 'dd/mm/yy'
+    });
+
+    $("#date-load").click(function() {
+       load_reservations_for_dates(rig, $("#from-time").val(), $("#to-time").val());
+    });
+
+    $("#bookings-list .cancel-booking").click(function() {
+        confirm_cancel_booking($(this).attr("data-bid"));
+    });
+});
+
+</script>

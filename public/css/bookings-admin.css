@@ -1,0 +1,83 @@
+.date-block {
+	position: absolute;
+}
+
+#date-title {
+	left: 180px;
+	top: 160px;
+}
+
+#date-range-pickers {
+	left: 330px;
+	top: 130px;
+}
+
+#date-range-pickers input {
+	width: 100px;
+	text-align: center;
+}
+
+#date-range-pickers input:focus {
+	border: 1px solid #333333;
+}
+
+#date-load-button {
+	left: 550px;
+	top: 135px;
+}
+
+#date-load {
+	width: 70px;
+	height: 70px;
+}
+
+#no-bookings {
+	position: absolute;
+	left: 200px;
+	top: 230px;
+	width: 400px;
+	padding: 10px;
+}
+
+#no-bookings span {
+	float: left;
+	margin-right: 5px;
+}
+
+#bookings-list {
+	position: absolute;
+	left: 0;
+	top: 230px;
+	width: 845px;
+	border-collapse: collapse;
+	border-left: 1px solid #b5b5b5;
+	border-right: 1px solid #b5b5b5;
+	border-radius: 4px;
+	box-shadow: 0 0 4px #efefef;
+}
+
+#bookings-list th {
+	background-color: #efefef;
+	text-align: left;	
+}
+
+#bookings-list th, #bookings-list td {
+	border-bottom: 1px solid #b5b5b5;
+	border-top: 1px solid #b5b5b5;
+	padding: 10px;
+	line-height: 30px;
+}
+
+#bookings-list tr td:last-child {
+	width: 100px;
+}
+
+#bookings-list .ui-icon {
+	float: left;
+	margin-right: 5px;
+}
+
+#bookings-list .no-date {
+	display: inline-block;
+	width: 40px;
+}
