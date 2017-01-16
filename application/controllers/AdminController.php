@@ -146,7 +146,7 @@ class AdminController extends Sahara_Controller_Action_Acl
         $name = $this->_getParam('rig');
         $start = $this->_getParam('start');
         $end = $this->_getParam('end');
-        $reason = $this->_getParam('reason');
+        $reason = htmlspecialchars($this->_getParam('reason'));
 
         if (!$name || !$start || !$end || !$reason)
         {
