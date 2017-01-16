@@ -19,27 +19,20 @@
 	}
 ?>
 
-<div id="date-title" class="date-block">
-	<h2>Show reservations</h2>
-</div>
 
+
+<p class="date-block">Show reservations </p> 
 <div id="date-range-pickers" class="sahara-form date-block">
-	<div id="from-time-fields">
-		<label for="from-time">From: </label>
+ 		<label for="from-time">from: </label>
 		<input id="from-time" type="text" value="<?=$this->from->format('d/m/Y')?>"/>
-	</div>
-	
-	<div id="to-time-fields">
-		<label for="to-time">To: </label>
+		<label for="to-time">to: </label> 
 		<input id="to-time" type="text" value="<?=$this->to->format('d/m/Y')?>"/>
-	</div>
 </div>
 
 <div id="date-load-button" class="date-block">
-	<button id="date-load" class="commonbutton">
-		<img src="/images/rightarrow.png" alt="" />
-		Find
-	</button>
+ 	<button id="date-load" class="commonbutton">
+ 		<span class="ui-icon ui-icon-calendar"></span> Show 
+ 	</button>
 </div>
 
 <?php if (count($this->bookings) > 0): ?>

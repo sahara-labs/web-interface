@@ -1,15 +1,11 @@
 .date-block {
-	position: absolute;
+	display: inline-block;
+	margin-top: 10px;
 }
 
-#date-title {
-	left: 180px;
-	top: 160px;
-}
-
-#date-range-pickers {
-	left: 330px;
-	top: 130px;
+#date-range-pickers label {
+	float: none;
+	width: inherit;
 }
 
 #date-range-pickers input {
@@ -22,19 +18,20 @@
 }
 
 #date-load-button {
-	left: 550px;
-	top: 135px;
+	position: relative;
+	left: 5px;
+	top: 10px;
 }
 
-#date-load {
-	width: 70px;
-	height: 70px;
+#date-load .ui-icon {
+	float: left;
+	margin-right: 5px;
 }
 
 #no-bookings {
 	position: absolute;
 	left: 200px;
-	top: 230px;
+	top: 180px;
 	width: 400px;
 	padding: 10px;
 }
@@ -47,7 +44,7 @@
 #bookings-list {
 	position: absolute;
 	left: 0;
-	top: 230px;
+	top: 180px;
 	width: 845px;
 	border-collapse: collapse;
 	border-left: 1px solid #b5b5b5;

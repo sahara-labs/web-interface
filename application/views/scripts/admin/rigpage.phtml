@@ -82,6 +82,11 @@ $(document).ready(function() {
 
 <?php endif; ?>
 
+<div id="view-reservations" class="pagebutton ui-corner-all">
+	<span class="ui-icon ui-icon-calendar"></span>
+	View Reservations
+</div>
+
 <a id="createofflinebutton" class="pagebutton ui-corner-all">
 	<span class="ui-icon ui-icon-circle-plus"></span>
 	Add Offline Period
@@ -89,6 +94,7 @@ $(document).ready(function() {
 
 
 <div id="rigpanels">
+
 <!-- Offline times panel. -->
 <div id="offlinepanel" class="panel ui-corner-all">
     <div class="paneltitle ui-corner-top">
@@ -225,6 +231,10 @@ $(document).ready(function() {
 			$(this).removeClass("loghover");
 		}
 	);
+
+	$("#view-reservations").click(function() {
+		window.location.href = "/bookings/rig/for/" + rig;
+	});
 
 	$("#createofflinebutton").click(function() {
 		confirmCreateOffline();

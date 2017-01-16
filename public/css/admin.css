@@ -322,14 +322,19 @@
 	cursor: pointer;
 }
 
-#createofflinebutton {	
+#createofflinebutton, #view-reservations {	
 	position: absolute;
     padding: 6px;
     left: 120px;
 	top: 225px;
+	width: 150px;
 }
 
-#createofflinebutton span {
+#view-reservations {
+	top: 185px;
+}
+
+#createofflinebutton span, #view-reservations span {
 	float: left;
 	margin-right: 5px;
 }
@@ -414,4 +419,3 @@
 	background-color: #EFEFEF;
 	padding: 5px;
 }
-
