@@ -416,7 +416,7 @@ class BookingsController extends Sahara_Controller_Action_Acl
      */
     public function rigAction()
     {
-    	if (!($this->hasParam('for') && 
+    	if (!($this->_getParam('for') &&
 			  $rig = Sahara_Database_Record_Rig::loadFirst(array('name' => $this->_getParam('for')))))
 		{
 			$this->_logger->debug('Missing param or rig not found');
@@ -426,7 +426,7 @@ class BookingsController extends Sahara_Controller_Action_Acl
 		$this->view->headTitle($this->_headPrefix . "Reservations for $rig->name");
 		
 		$from = new DateTime();
-		if ($this->hasParam('from'))
+		if ($this->_getParam('from'))
 		{
 			list($day, $mon, $year) = explode('-', $this->_getParam('from'));
 			$from->setDate($year, $mon, $day);
@@ -436,7 +436,7 @@ class BookingsController extends Sahara_Controller_Action_Acl
 
 		$to = new DateTime();
 		$to->setTime(23, 59, 59);
-		if ($this->hasParam('to'))
+		if ($this->_getParam('to'))
 		{
 			list($day, $mon, $year) = explode('-', $this->_getParam('to'));
 			$to->setDate($year, $mon, $day);
