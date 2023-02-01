@@ -83,10 +83,9 @@ class Sahara_Auth_Type_Ldap extends Sahara_Auth_Type
     {
         try
         {
+
             $this->_ldap->bind($this->_user, $this->_pass);
-
             $this->_userRecord = $this->_ldap->getEntry($this->_ldap->getBoundUser());
-
             if ($attribs = $this->_config->auth->ldap)
             {
                 foreach ($attribs->toArray() as $attr => $val)

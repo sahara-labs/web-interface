@@ -79,10 +79,43 @@ class PrimitiveController extends Zend_Controller_Action
             return;
         }
 
+        /* Set up the correct object model. */
+        list($junk, $allocUser) = explode(':', $this->_auth->getIdentity(), 2);
+        $request = array(
+            'requestor' => $allocUser,
+        	'param' => array());
+        foreach ($this->_request->getParams() as $key => $val)
+        {
+            switch ($key)
+            {
+               case 'pc': // Short hand of primitiveController
+               case 'primitiveController':
+                   $request['controller'] = $val;
+                   break;
+               case 'pa': // Short hand of primitiveAction
+               case 'primitiveAction':
+                   $request['action'] = $val;
+                   break;
+               case 'controller':
+               case 'action':
+               case 'module':
+                   /* These are Zend request parameters and irrelevant to the
+                    * primitive call. */
+                   break;
+               default:
+                  $param = array(
+                      'name' => $key,
+                      'value' => $val
+                  );
+                  array_push($request['param'], $param);
+                  break;
+            }
+        }
+
         try
         {
             $rigClient = new Sahara_Soap($response->contactURL . '?wsdl');
-            $response = $rigClient->performPrimitiveControl($this->_generateRequest());
+            $response = $rigClient->performPrimitiveControl($request);
 
             if ($response->success)
             {
@@ -134,10 +167,52 @@ class PrimitiveController extends Zend_Controller_Action
             return;
         }
 
+        /* Set up the correct object model. */
+        list($junk, $allocUser) = explode(':', $this->_auth->getIdentity(), 2);
+        $request = array(
+                'requestor' => $allocUser,
+                'param' => array()
+        );
+
+        foreach ($this->_request->getParams() as $key => $val)
+        {
+            switch ($key)
+            {
+                case 'pc':
+                case 'primitiveController':
+                    $request['controller'] = $val;
+                    break;
+                case 'pa':
+                case 'primitiveAction':
+                    $request['action'] = $val;
+                    break;
+                case 'rp':
+                case 'responseParam':
+                    $responseParam = $val;
+                    break;
+
+                    /* These are Zend request parameters and irrelevant to the
+                     * primitive call. */
+                case 'controller':
+                case 'action':
+                case 'module':
+                    break;
+
+                    /* Parameters to provide to primitive call. */
+                default:
+                    $param = array(
+                    'name' => $key,
+                    'value' => $val
+                    );
+                    array_push($request['param'], $param);
+                    break;
+            }
+        }
+
         try
         {
             $rigClient = new Sahara_Soap($response->contactURL . '?wsdl');
-            $response = $rigClient->performPrimitiveControl($this->_generateRequest());
+            $response = $rigClient->performPrimitiveControl($request);
 
             if (!$response->success)
             {
@@ -193,7 +268,7 @@ class PrimitiveController extends Zend_Controller_Action
         {
             $val = substr(substr($val, 0, strlen($val) - 1), 1);
             $res = array();
-            foreach (explode(',', $val) as $v) array_push($res, $this->_parseVal($v));
+            foreach (split(',', $val) as $v) array_push($res, $this->_parseVal($v));
             return $res;
         }
         else return $val;
@@ -236,14 +311,52 @@ class PrimitiveController extends Zend_Controller_Action
             echo 'FAILED';
             return;
         }
-        
-        $responseParam = $this->_request->getParam('responseParam', false);
-        if (!$responseParam) $responseParam = $this->_request->getParam('rp', false);
+
+        /* Set up the correct object model. */
+        list($junk, $allocUser) = explode(':', $this->_auth->getIdentity(), 2);
+        $request = array(
+            'requestor' => $allocUser,
+        	'param' => array());
+
+        foreach ($this->_request->getParams() as $key => $val)
+        {
+            switch ($key)
+            {
+               case 'pc':
+               case 'primitiveController':
+                   $request['controller'] = $val;
+                   break;
+               case 'pa':
+               case 'primitiveAction':
+                   $request['action'] = $val;
+                   break;
+               case 'rp':
+               case 'responseParam':
+                   $responseParam = $val;
+                   break;
+
+                   /* These are Zend request parameters and irrelevant to the
+                    * primitive call. */
+               case 'controller':
+               case 'action':
+               case 'module':
+                   break;
+
+                   /* Parameters to provide to primitive call. */
+               default:
+                  $param = array(
+                      'name' => $key,
+                      'value' => $val
+                  );
+                  array_push($request['param'], $param);
+                  break;
+            }
+        }
 
         try
         {
             $rigClient = new Sahara_Soap($response->contactURL . '?wsdl');
-            $response = $rigClient->performPrimitiveControl($this->_generateRequest());
+            $response = $rigClient->performPrimitiveControl($request);
 
             if (!$response->success)
             {
@@ -402,7 +515,7 @@ class PrimitiveController extends Zend_Controller_Action
                       'name' => $key,
                       'value' => $val
                   );
-                  $request['param'][] = $param;
+                  array_push($request['param'], $param);
                   break;
             }
         }
@@ -464,60 +577,6 @@ class PrimitiveController extends Zend_Controller_Action
         {
             echo 'FAILED';
         }
-    }
-    
-    /**
-     * Generate the request parameter for a primitive request.
-     *
-     * @return {array} request parameter
-     */
-    private function _generateRequest()
-    {
-    	/* Set up the correct object model. */
-    	list($junk, $allocUser) = explode(':', $this->_auth->getIdentity(), 2);
-    	$request = array(
-    			'requestor' => $allocUser,
-    			'controller' => '',
-    			'action' => '',
-    			'param' => array()
-    	);
-    	
-    	foreach ($this->_request->getParams() as $key => $val)
-    	{
-    		switch ($key)
-    		{
-    			case 'pc':
-    			case 'primitiveController':
-    				$request['controller'] = $val;
-    				break;
-    			case 'pa':
-    			case 'primitiveAction':
-    				$request['action'] = $val;
-    				break;
-    			case 'rp':
-    			case 'responseParam':
-    				$responseParam = $val;
-    				break;
-    	
-    				/* These are Zend request parameters and irrelevant to the
-    				 * primitive call. */
-    			case 'controller':
-    			case 'action':
-    			case 'module':
-    				break;
-    	
-    				/* Parameters to provide to primitive call. */
-    			default:
-    				$param = array(
-    				'name' => $key,
-    				'value' => $val
-    				);
-    				$request['param'][] = $param;
-    				break;
-    		}
-    	}
-    	
-    	return $request;
     }
 
     /**

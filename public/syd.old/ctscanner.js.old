@@ -1,0 +1,46 @@
+/**
+ * CT Scanner web interface stylesheet. 
+ *
+ * @author Michael Diponio
+ */
+
+var cameras = [ 
+   { mjpeg: 'http://172.16.73.4/mjpg/video.mjpg', h264: '' },
+   { mjpeg: 'http://172.16.73.3/mjpg/video.mjpg', h264: '' },
+   { mjpeg: 'http://172.16.73.5/mjpg/video.mjpg', h264: '' }
+];
+
+$(document).ready(function() {
+    /* Load the first camera. */
+    deployCamera(1);
+    
+    $("#ct-camera-selection > div").click(function() {
+        deployCamera($(this).attr("id").substr("ct-camera-".length));
+    });
+});
+
+function deployCamera(camera) 
+{   
+    $("#ct-camera-selection .ct-camera-selected").removeClass("ct-camera-selected");
+    $("#ct-camera-" + camera).addClass("ct-camera-selected");
+    
+    var i = parseInt(camera) - 1;
+    
+    $("#ct-camera").html(
+        !$.browser.msie ?
+        
+            /* Firefox, Chrome, Safari and Opera play MJpeg natively so we can 
+             * directly deploy MJpeg inside an img element. */
+            "<img src='" + cameras[i].mjpeg  + "' alt='' style='width:640px;height:480px;'/>"
+         : 
+            /* Microsoft IE does not support playing MJpeg natively so we need to 
+             * deploy an ActiveX object to stream the video. */
+            '<object id="Player" height="480" width="640" border="1" classid="CLSID:745395C8-D0E1-4227-8586-624CA9A10A8D" ' +
+                 'codebase="/syd/AXISMediaControlSDK_redist.exe">' +
+               '<param name="AutoStart" value="1">' +
+               '<param name="UIMode" value="none">' +
+               '<param name="MediaType" value="mjpeg">' +
+               '<param name="MediaURL" value="' + cameras[i].mjpeg + '">' +
+            '</object>'
+        );
+};

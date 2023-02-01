@@ -1,0 +1,518 @@
+@CHARSET "UTF-8";
+
+#hydro {
+	height: 550px;
+}
+
+.hydrobutton {
+	display: block;
+	position: absolute;
+	height: 75px;
+	width: 75px;
+	font-size: 0.8em;
+	padding: 5px;
+	text-align: center;
+	color: #606060;
+	border: 1px solid #B5B5B5;
+	box-shadow: 0 0 4px #B5B5B5;
+	-moz-box-shadow: 0 0 4px #B5B5B5;
+	-webkit-box-shadow: 0 0 4px #B5B5B5;
+	background-color: #EFEFEF;
+	cursor: pointer;
+}
+
+.hydrobutton:hover {
+	color: #000000;
+	box-shadow: 0 0 4px #606060;
+    -moz-box-shadow: 0 0 4px #606060;
+    -webkit-box-shadow: 0 0 4px #606060;	
+}
+
+#hydroselectorbutton {
+	top: -50px;
+	right: 99px;
+}
+
+#datadownloadbutton {
+	top: -50px;
+	right: 0px;
+}
+
+#hydroselector {
+	margin: 30px auto;
+	width: 200px;
+}
+
+#hydroselector ul {
+	list-style: none;
+}
+
+#hydroselector ul li {
+	display: inline;
+}
+
+#hydroselector .modesel {
+	display: block;
+	width: 200px;
+	padding: 10px;
+	background-color: #EFEFEF;
+	color: #606060;
+	border: 1px solid #B5B5B5;
+	box-shadow: 0 0 4px #B5B5B5;
+	-moz-box-shadow: 0 0 4px #B5B5B5;
+	-webkit-box-shadow: 0 0 4px #B5B5B5;
+	cursor: pointer;
+}
+
+#hydroselector .modesel:hover {
+    box-shadow: 0 0 4px #606060;
+    -moz-box-shadow: 0 0 4px #606060;
+    -webkit-box-shadow: 0 0 4px #606060;
+}
+
+#hydroselector ul li:first-of-type .modesel {
+    border-radius-topleft: 15px;
+    -moz-border-radius-topleft: 15px;
+    -webkit-border-radius-topleft: 15px;
+    border-radius-topright: 15px;
+    -moz-border-radius-topright: 15px;
+    -webkit-border-radius-topright: 15px;
+}
+
+#hydroselector ul li:last-of-type .modesel {
+    border-radius-bottomleft: 15px;
+    -moz-border-radius-bottomleft: 15px;
+    -webkit-border-radius-bottomleft: 15px;
+    border-radius-bottomright: 15px;
+    -moz-border-radius-bottomright: 15px;
+    -webkit-border-radius-bottomright: 15px;
+}
+
+#hydrooverlay {
+	position: absolute;
+	left: 0;
+	top: 0;
+	background-color: #AAAAAA;
+	opacity: 0.3;
+	z-index: 1000;
+}
+
+#hydrooverlaywarning {
+	position: absolute;
+	width: 150#px;
+	height: 50px;
+	background-color: #FFFFFF;
+	font-weight: bold;
+	text-align: center;
+	opacity: 1;
+	z-index: 1001;
+	padding: 10px;
+	border: 1px solid #B5B5B5;
+	border-radius: 5px;
+	box-shadow: 0 0 10px #B5B5B5;
+}
+
+#hydrodebugpanel {
+	display: none;
+	top: -97px;
+	right: -285px;
+}
+
+#hydrodebug div {
+	padding: 4px;
+}
+
+.hydropanel {
+	border: 1px solid #B5B5B5;
+	background-color: #FFFFFF;
+	box-shadow: 0 0 4px #B5B5B5;
+	-moz-box-shadow: 0 0 4px #B5B5B5;
+	-webkit-box-shadow: 0 0 4px #B5B5B5;
+}
+
+.hydropaneltitle {
+	height: 30px;
+	width: 100%;
+	background-color: #EFEFEF;
+	border-bottom: 1px solid #B5B5B5;
+	color: #606060;
+}
+.hydropaneltitle p {
+	padding-top: 6px;
+}
+
+.hydropaneltitle span {
+	float: left;
+	margin: 0 5px;
+}
+
+.hydrodrag p {
+	cursor: move;
+}
+
+.hydroicon {
+	display: block;
+	float: left;
+	overflow: hidden;
+	margin-right: 5px;
+	width: 16px;
+	height: 16px;
+	background-image: url('images/hydrosprite.png');
+}
+
+.hydroiconcurrent { background-position: 0px 0px; }
+.hydroiconvoltage { background-position: 47px 2px; }
+.hydroiconpower { background-position: 16px 0px; }
+.hydroicontacho { background-position: 31px 2px; }
+.hydroiconload { background-position: 64px 50px; }
+.hydroiconpressure { background-position: 48px 48px; }
+.hydroiconflow { background-position: 32px 48px; }
+.hydroicontorque { background-position: 16px 48px; }
+
+#slidercont {
+	position: absolute;
+	top: 46px;
+	left: -2px;
+	width: 105px;
+}
+
+#sliderinner {
+	margin: 10px 0 0 15px;
+	padding: 5px;
+}
+
+#slider {
+	float: left;
+	height: 300px;
+}
+
+.slidertick {
+	height: 29px;
+	width: 80px;
+}
+
+.slidertick span {
+	float: left;
+}
+
+#sliderval {
+	clear: both;
+	margin: -15px 0 5px;
+	text-align: center;
+}
+
+#sliderval span {
+	font-size: 1.2em;
+	font-weight: bold;
+}
+
+#sliderleg {
+	width: 65px;
+}
+
+#loadsetterpanel {
+	position: absolute;
+	width: 105px;
+	top: 435px;
+	left: -2px;
+	height: 85px;
+}
+
+#loadsetter {
+	width: 82px;
+	margin: 7px 10px;
+}
+
+#loadticks {
+	margin-top: -8px;
+	margin-left: 9px;
+	width: 100px;
+}
+
+.loadtick {
+	float: left;
+	width: 20px;
+}
+
+.loadtick span {
+	margin-left: -3px;
+}
+
+#ledpanel {
+	position: absolute;
+	top: 440px;
+	left: 160px;
+}
+
+.led {
+	float: left;
+	padding: 5px;
+}
+
+#gaugecontainer {
+	position: absolute;
+	top: 46px;
+	right: 0;
+    width: 150px;
+}
+
+.gauge {
+    width: 150px;
+	margin: 0 0 10px;
+}
+
+.gaugeinner {
+	width: 150px;
+	height: 115px;
+}
+
+.gaugetick {
+	position: absolute;
+	top: 45px;
+	left: 70px;
+	transform-origin: right bottom;
+	-moz-transform-origin: right bottom;
+	-webkit-transform-origin: right bottom;
+	-o-transform-origin: right bottom;
+	-ms-transform-origin: right bottom;
+	z-index: 100;
+}
+
+.gaugevalouter {
+	position: absolute;
+	bottom: 5px;
+    width: 100%;
+    text-align: center;
+}
+
+.gaugevalouter span {
+	font-weight: bold;
+	font-size: 1.3em;
+}
+
+.gaugegrad, .gaugegradlabel {
+	position: absolute;
+	z-index: 99;
+}
+
+.gaugegradmin {
+	left: 20px;
+	bottom: 31px;
+}
+
+.gaugegradlabelmin {
+	left: 10px;
+	bottom: 40px;
+}
+
+.gaugegradmax {
+	right: 20px;
+	bottom: 31px;
+}
+
+.gaugegradlabelmax {
+	right: 10px;
+	bottom: 40px;
+}
+  
+.gaugegradmid {
+	left: 71px;
+	top: 55px;
+}
+
+.gaugegradlabelmid {
+	left: 62px;
+	top: 33px;
+}
+	
+.gaugegradne {
+	left: 35px;
+	top: 72px;
+}
+
+.gaugegradnw {
+	right: 41px;
+	top: 70px;
+}
+
+.gaugekeystone {
+	position: absolute;
+	left: 48px;
+	top: 85px;
+	z-index: 102;
+}
+
+#rpmmeter {
+	position: absolute;
+	top: 46px;
+	left: 438px;
+	height: 381px;
+}
+
+.meter {
+	width: 80px;
+}
+
+.meterinner {
+	position: relative;
+}
+	
+.metercol {
+	position: absolute;
+	top: 16px;
+	left: 5px;
+	height: 100px;
+	width: 0.8em;
+	border: 1px solid #AAAAAA;
+	background-color: #FFFFFF;
+	border-radius: 4px;
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+}
+
+.meterleg {
+	position: absolute;
+	top: 17px;
+	left: 20px;
+	overflow: hidden;
+}
+
+.metertick {
+	height: 29px;
+	width: 80px;
+	text-align: left;
+}
+
+.metertick span {
+	float: left;
+}
+
+.meterind {
+	position: absolute;
+	bottom: -19px;
+	right: -47px;
+	z-index: 100;
+	opacity: 0.8;
+}
+
+.metershe {
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+	height: 0;
+	border-top: 2px solid #AAAAAA;
+	background-color: #EFEFEF;
+	overflow: hidden;
+}
+
+.metervalouter {
+	position: absolute;
+	left: 0;
+	width: 100%;
+	text-align: center;
+}
+
+.meterval {
+	font-weight: bold;
+	font-size: 1.2em;
+}
+
+#hydrocamera {
+	position:absolute;
+	left: 111px;
+	top: 46px;
+	height: 381px;
+	background-color: #000000;
+}
+
+#hydrocamerastream {
+	background-color: #000;
+}
+
+#hydrocamerastream div {
+	position: absolute;
+	left: 127px;
+	top: 117px;
+}
+
+#hydrocamerabuttons {
+	position: absolute;
+	bottom: 0;
+	border-top: 6px solid #000;
+	background-color: #FFFFFF;
+	width: 100%;
+	border-right: 1px solid #EFEFEF;
+}
+
+#hydrocamformats {
+	float: left;
+	width: 21%;
+}
+
+#hydrocampositions {
+	float: right;
+	width: 78.5%;
+}
+
+#hydrocamerabuttons .camheader {
+	background-color: #EFEFEF;
+	padding: 5px;
+	color: #606060;
+	border-top: 1px solid #
+}
+
+#hydrocamformats .camheader {
+	border-right: 2px solid #FFF;
+}
+
+#hydrocamerabuttons .camerabutton {
+	float: left;
+	background-color: #EFEFEF;
+	padding: 5px;
+	margin: 5px;
+	cursor: pointer;
+	-moz-box-shadow: 0 0 4px #B5B5B5;
+	-webkit-box-shadow: 0 0 4px #B5B5B5;
+	box-shadow: 0 0 4px #B5B5B5;
+	color: #606060;
+}
+
+#hydrocamerabuttons .camerabutton:hover {
+	color: #000;
+    -moz-box-shadow: 0 0 4px #606060;
+    -webkit-box-shadow: 0 0 4px #606060;
+    box-shadow: 0 0 4px #606060;
+}
+
+#hydrocamerabuttons .selectedbutton {
+	color: #000;
+	background-color: #F5F7E2;
+	-moz-box-shadow: 0 0 4px #D3D65D;
+    -webkit-box-shadow: 0 0 4px #D3D65D;
+    box-shadow: 0 0 4px #D3D65D;
+}
+
+#changeexperiment .ui-state-highlight {
+	padding: 5px;
+	margin: 10px auto 0;
+}
+
+#changeexperiment span {
+	float: left;
+}
+
+#rigresetting {
+	text-align: center;
+	font-weight: bold;
+}
+
+#cameradraghandle {
+	position: absolute;
+	right: 2px;
+	bottom: 2px;
+}
+
+.cameraresized .hydropaneltitle {
+	box-shadow: 0 2px 8px #404040;
+	border: 2px solid #404040;
+}

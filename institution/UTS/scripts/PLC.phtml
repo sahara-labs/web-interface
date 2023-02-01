@@ -1,0 +1,13 @@
+<?php
+$cams = new Sahara_Session_Element_Cameras($this->rigClient);
+echo $cams;
+
+$rdpApplet = new Sahara_Session_Element_RdpApplet($this->rigClient, array(
+        'cl2' => 'LO',
+));
+$rdpApplet->setResolutionSelector(true);
+echo $rdpApplet;
+
+?>
+
+<div style='margin-bottom:50px'> </div>

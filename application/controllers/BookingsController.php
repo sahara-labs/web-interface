@@ -416,7 +416,7 @@ class BookingsController extends Sahara_Controller_Action_Acl
      */
     public function rigAction()
     {
-    	if (!($this->_getParam('for') &&
+      if (!($this->_getParam('for') && 
 			  $rig = Sahara_Database_Record_Rig::loadFirst(array('name' => $this->_getParam('for')))))
 		{
 			$this->_logger->debug('Missing param or rig not found');

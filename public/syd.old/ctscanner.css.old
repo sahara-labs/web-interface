@@ -1,0 +1,67 @@
+/**
+ * CT Scanner web interface stylesheet. 
+ *
+ * @author Michael Diponio
+ */
+ 
+#rigscriptcontainer {
+	height: 640px;
+}
+
+#ct-cameras {
+	position: absolute;
+	left: 20px;
+	top: 50px;
+}
+
+#ct-camera-selection {
+	position: absolute;
+	left: 20px;
+	top: -33px;
+	z-index: 1;
+}
+
+#ct-camera-selection div {
+	float: left;
+	padding: 7px 10px;
+	margin: 0 5px;
+	background-color: #EFEFEF;
+	border: 1px solid #BBBBBB;
+	border-radius: 6px 6px 0 0;
+	box-shadow: 0 0 3px #AAAAAA;
+	cursor: pointer;
+}
+
+#ct-camera-selection div:hover {
+	font-weight: bold;
+	box-shadow: 0 0 3px #666666;
+}
+
+#ct-camera-selection .ct-camera-selected {
+	font-weight: bold;
+    background-color: #CCCCCC;
+}
+
+#ct-camera-display {
+    position: relative;
+    z-index: 10;
+}
+ 
+#ct-camera {
+	width: 640px;
+	height: 480px;
+	background-color: #CCCCCC;
+	border: 1px solid #BBBBBB;
+	box-shadow: 0 0 3px #AAAAAA;
+	border-radius: 2px;
+	z-index: 10;
+}
+
+#ct-camera-placeholder {
+	width: 165px;
+	margin: 220px auto;
+	color: #BBBBBB;
+	font-size: 20pt;
+	opactiy: 0.7;
+	text-shadow: 0 0 6px #BBBBBB;
+}

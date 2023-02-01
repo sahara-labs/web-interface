@@ -1,0 +1,107 @@
+<?php
+$cams = new Sahara_Session_Element_Cameras($this->rigClient);
+echo $cams;
+
+$rdpApplet = new Sahara_Session_Element_RdpApplet($this->rigClient, array(
+	'cl2' => 'LO'));
+echo $rdpApplet;
+
+$buttons = new Sahara_Session_Element_MultiButtons($this->rigClient, 'omapbuttons',
+    array(
+        array(
+        	'title' => 'Program Demo',
+            'tooltip' => 'Program the OMAP board with a demonstration program which exercises the perpherials.',
+            'icon' => '/uts/omap/images/rundemo.png',
+            'click' => "performPrimitiveJSON(
+            	'au.edu.uts.eng.remotelabs.omap.primitive.OMAPController',
+            	'demo',
+            	null,
+            	function(resp) {
+			var dv = $(document.createElement('div'))
+				.attr('id', 'omapdemoresponse')
+				.attr('title', 'Demo output')
+				.attr('style', 'overflow-y: scroll; overflow-x: hidden')
+				.append(document.createElement('pre'));
+			$('body').append(dv);
+
+			if (resp[0].value.length == 0)
+			{
+				$('#omapdemoresponse pre')
+					//.append('OMAP board still booting. Please wait a few seconds then try again.');
+					.append('Demonstration program in development!');
+			}
+			else $('#omapdemoresponse pre').append(resp[0].value);
+
+			$('#omapdemoresponse').dialog({
+				modal: true,
+				height: 400,
+				width: 600,
+				resizable: false,
+				buttons: {
+					'Close': function() { $(this).dialog('close'); }
+				},
+				close: function() {
+					$(this).dialog('destroy');
+					$('#omapdemoresponse').remove();
+				}
+			});
+            		return true;
+            	},
+            	'Loading demo...',
+            	true
+            )"
+        ),
+	        array(
+        	'title' => 'Hard Reset',
+            'tooltip' => 'Power cycles the rig.',
+			'icon' => '/uts/omap/images/hardreset.png',
+            'click' =>
+            	"performPrimitiveJSON(
+            		'au.edu.labshare.rigclient.primitive.IPSPowerController', 'off',
+            		null,
+            		function() {
+				setTimeout(function() { performPrimitiveJSON(
+					'au.edu.labshare.rigclient.primitive.IPSPowerController', 'on',
+					null,
+					function() { return true; },
+					'Resetting',
+					true
+				)}, 5000);	
+				return true 
+                        },
+                        'Resetting...',
+                        false
+            	)"
+        )
+/*        array(
+        	'title' => 'Upload Code',
+            'tooltip' => 'Program the OMAP board with an uploaded program.',
+            'icon' => '/uts/omap/images/program.png',
+            'click' => "alert('Upload code not yet implemented')"
+        )
+        ,
+        array(
+        	'title' => 'Download Data',
+            'tooltip' => 'Download data from the board.',
+            'icon' => '/uts/omap/images/download.png',
+            'click' => "alert('Download data not yet implemented')"
+        ) */
+    ),
+    array(
+        'orientation' => Sahara_Session_Element_MultiButtons::VERTICAL,
+        'top'         => -50,
+        'left'        => 3,
+        'width'       => 75,
+        'height'      => 75
+    )
+);
+
+echo $buttons;
+?>
+
+
+
+
+<div style="height:50px">
+</div>
+

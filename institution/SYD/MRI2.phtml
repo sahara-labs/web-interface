@@ -1,0 +1,88 @@
+<?php
+/* Widget resources for controls. */
+$this->headLink()->appendStylesheet($this->baseUrl('/webui/webui.css'));
+$this->headLink()->appendStylesheet($this->baseUrl('/webui/webui-flat.css'));
+$this->headScript()->appendFile($this->baseUrl('/webui/webui.js'));
+
+/* CT Scanner custom code. */
+$this->headLink()->appendStylesheet($this->baseUrl('/syd/ctscanner.css'));
+
+$this->headScript()->appendFile($this->baseUrl('desktop/remote.js'));
+$this->headLink()->appendStylesheet($this->baseUrl('desktop/remote.css'));
+
+
+$this->headStyle()->appendStyle(
+	'#rigscriptcontainer { height: 600px !important; }' .
+	'#applet-label span { padding: 13px 40px 0 0 !important; }' .
+	'#ct-controls .ct-line { position: absolute; left: -185px; top: 175px; height: 180px; }' 
+);
+
+?>
+
+
+
+<!-- Controls container.  -->
+<div id='ct-controls'> 
+    <div id='applet-label' class='ct-label' style='left: -186px; top: 150px; width: 180px; height: 45px !important'>
+        <!-- <div class='ct-line ct-line-horiz'></div> -->
+        <span>Remote Control</span>
+    </div>
+    <div class='ct-line ct-line-vert'></div>
+</div> 
+
+<!-- Guacamole launch and reset buttons. -->
+<div id='guac-control-buttons'> </div>
+<script type="text/javascript">
+  $(function() {
+      var w = new GuacamoleWidget("guac-widget", {
+         resolutionCtl: true,
+         scalingCtl: true,
+         resolution: "1280x1024",
+         scaling: true,
+         left: -160,
+         top: 200,
+         width: 175,
+         windowed: false
+      });
+
+      w.init($("#guac-control-buttons"));
+
+    });
+</script>
+
+<!-- Cameras -->
+<div id="camera-box" style="position:absolute;left:8px;width:640px;height:480px;background-color:#AAA;
+                            margin:10px;border:1px solid #666;box-shadow: 0 0 2px #AAA">
+
+</div>
+
+<script type="text/javascript">
+$(document).ready(function(){
+    deployMJpeg();
+});
+
+function deployMJpeg()
+{
+   if ($.browser.msie || navigator.userAgent.indexOf("Trident") > 0)
+   {
+       $("#camera-box").html(
+           '<applet code="com.charliemouse.cambozola.Viewer" archive="/applets/cambozola.jar" ' + 
+                    'width="640" height="480">' +
+                '<param name="url" value="http://172.17.113.27/cgi-bin/CGIStream.cgi?cmd=GetMJStream&usr=viewer&pwd=viewer"/>' +
+                '<param name="accessories" value="none"/>' +
+           '</applet>'
+       );
+   }
+   else
+   {
+       $("#camera-box").html(
+           '<img src="http://172.17.113.27/cgi-bin/CGIStream.cgi?cmd=GetMJStream&usr=viewer&pwd=viewer" alt="Camera" />'  
+       );
+   }
+}
+
+</script>
+
+<div style='margin-top: 50px'></div>
+
+

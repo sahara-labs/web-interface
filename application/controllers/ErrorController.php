@@ -41,74 +41,17 @@
  */
 class ErrorController extends Zend_Controller_Action
 {
-    /** @var String Puesdo role when an error occurs. */
+    /** Puesdo role when an error occurs. */
     const PUESDO_ROLE_ERROR = 'ERROR';
-
-    /** @var Zend_Config Sahara configuration. */
-    private $_config;
-
-    /** @var Sahara_Logger Logger. */
-    private $_logger;
 
     /**
      * Error action.
      */
     public function errorAction()
     {
-        $this->_config = Zend_Registry::get('config');
-        $this->_logger = Sahara_Logger::getInstance();
+        $config = Zend_Registry::get('config');
 
-        $errors = $this->_getParam('error_handler');
-        switch ($errors->type)
-        {
-            case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_ROUTE:
-            case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_CONTROLLER:
-            case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_ACTION:
-                /*---- 404 error -- controller or action not found. ---------*/
-                $this->getResponse()->setHttpResponseCode(404);
-                $this->view->code = 404;
-                $this->view->message = '404 - Page not found';
-                break;
-
-            default:
-                /*---- Application error. -----------------------------------*/
-
-                /* Can we do some form of recovery. */
-                if ($errors->exception instanceof Zend_Db_Adapter_Exception && self::_tryDatabaseRecovery())
-                {
-                    /* Extract original request and redirect back to it. */
-                    $params = $this->getAllParams();
-                    $controller = $params['controller'];
-                    $action = $params['action'];
-
-                    unset($params['controller']);
-                    unset($params['action']);
-                    unset($params['module']);
-                    unset($params['error_handler']);
-
-                    $params['failover_retry'] = true;
-
-                    $this->_request->clearParams();
-                    $this->_request->setPost($params);
-                    $this->_forward($controller, $action, null, $params);
-
-                    /* Recovery succeeded, no need to perform error handling. */
-                    return;
-                }
-
-                $this->_sendErrorEmail($errors);
-                $this->_logger->fatal($this->view->message .': ' . $errors->exception);
-
-                $auth = Zend_Auth::getInstance()->clearIdentity();
-
-                $this->getResponse()->setHttpResponseCode(500);
-                $this->view->code = 500;
-                $this->view->message = '500 - Application Error';
-                break;
-        }
-
-
-        $this->view->headTitle(($this->_config->page->title ? $this->_config->page->title :
+        $this->view->headTitle(($config->page->title ? $config->page->title :
                 Sahara_Controller_Action_Acl::DEFAULT_HEAD_PREFIX) . ' - ' . 'Error Occurred',
                 Zend_View_Helper_Placeholder_Container_Abstract::SET);
 
@@ -119,53 +62,52 @@ class ErrorController extends Zend_Controller_Action
         $this->view->controller = 'index';
         $this->view->action = 'index';
 
+        $errors = $this->_getParam('error_handler');
+
+        switch ($errors->type)
+        {
+            case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_ROUTE:
+            case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_CONTROLLER:
+            case Zend_Controller_Plugin_ErrorHandler::EXCEPTION_NO_ACTION:
+                /*---- 404 error -- controller or action not found. ---------*/
+                $this->getResponse()->setHttpResponseCode(404);
+                $this->view->code = 404;
+                $this->view->message = '404 - Page not found';
+                break;
+            default:
+                /*---- Application error. -----------------------------------*/
+                $this->sendErrorEmail($errors);
+
+                /* Clear the authentication information, if not in debug. */
+                if (APPLICATION_ENV != 'development') $auth = Zend_Auth::getInstance()->clearIdentity();
+
+                $this->getResponse()->setHttpResponseCode(500);
+                $this->view->code = 500;
+                $this->view->message = '500 - Application Error';
+                break;
+        }
+
+        if (($log = Sahara_Logger::getInstance()) &&
+                ($this->view->code != 404 || APPLICATION_ENV == 'development'))
+        {
+            $log->fatal($this->view->message .': ' . $errors->exception);
+        }
+
        	$this->view->env = APPLICATION_ENV;
        	$this->view->exception = $errors->exception;
         $this->view->request = $errors->request;
     }
 
-    /**
-     * Attempt recovery of database errors using fail over to another database
-     * server.
-     *
-     * @return bool true if successfully recovered
-     */
-    private function _tryDatabaseRecovery()
+    private function sendErrorEmail($errors)
     {
-        /* Only run failover if failover is actually configured and enabled. */
-        if (!(isset($this->_config->database->failover) && $this->_config->database->failover->enabled)) return false;
-
-        /* If no database configuration is stored, there probably aren't any
-         * suitable database servers to connect to. */
-        if (!file_exists($this->_config->database->failover->file)) return false;
-
-        $this->_logger->info('Previously chosen database server not longer appears to be online. Attempting to fail ' .
-                'over to another database server.');
-
-        /* If the error type is a database error, we may be able to fail-over
-         * the connection to another database server. */
-        if (Sahara_Database::performFailover())
-        {
-            $this->_logger->warn('Database error occurred, was able to fail over to another database server.');
-
-            return true;
-        }
-    }
-
-    /**
-     * Send error email to configured error handling reciepts.
-     *
-     * @param array $errors error details
-     */
-    private function _sendErrorEmail($errors)
-    {
-        if ($this->_config->error->disableMessages) return;
+        $config = Zend_Registry::get('config');
+        if ($config->error->disableMessages) return;
 
         $request = $errors->request;
         $exception = $errors->exception;
 
         $mail = new Sahara_Mail();
-        $mail->setFrom($this->_config->email->from->address, $this->_config->email->from->name);
+        $mail->setFrom($config->email->from->address, $config->email->from->name);
         $mail->setSubject('Sahara WI fatal error occurred at ' . date('r'));
 
         $body  = "#################################################################\n";
@@ -244,7 +186,7 @@ class ErrorController extends Zend_Controller_Action
 
         $mail->setBody($body);
 
-        $addresses = $this->_config->error->address;
+        $addresses = $config->error->address;
         if ($addresses instanceof Zend_Config)
         {
             foreach ($addresses as $addr)

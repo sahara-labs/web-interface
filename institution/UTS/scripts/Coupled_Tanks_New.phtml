@@ -1,0 +1,26 @@
+<div class="ui-state-highlight" style="margin: 0 auto;padding:10px; width: 575px">
+<p>
+	<span class="ui-icon ui-icon-info" style="float:left;margin-right:3px"></span>
+	<strong>NOTE:</strong> With some gain combinations, setting the setpoint to
+	<strong>0 mm</strong> may not disable the pump. This is normal, and not a fault.
+</p>
+</div>
+
+<?php
+$cams = new Sahara_Session_Element_Cameras($this->rigClient);
+echo $cams;
+
+$rdpApplet = new Sahara_Session_Element_RdpApplet($this->rigClient, array(
+	'cl1' => 'SP',
+	'cl2' => 'LO'
+));
+echo $rdpApplet;
+
+$files = new Sahara_Session_Element_HomeFile($this->rigClient);
+echo $files;
+
+?>
+
+<div style="height:50px">
+</div>
+

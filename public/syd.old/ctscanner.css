@@ -1,0 +1,281 @@
+/**
+ * CT Scanner web interface stylesheet. 
+ *
+ * @author Michael Diponio
+ */
+ 
+#rigscriptcontainer {
+	height: 850px;
+}
+
+
+
+#ct-cameras {
+	position: absolute;
+	left: 20px;
+	top: 50px;
+}
+
+#ct-camera-selection {
+	position: absolute;
+	left: 20px;
+	top: -33px;
+	z-index: 1;
+}
+
+#ct-format-selection {
+	position: absolute;
+	right: 20px;
+	top: -33px;
+	z-index: 1;
+}
+
+#ct-camera-selection div, #ct-format-selection div {
+	float: left;
+	padding: 7px 10px;
+	margin: 0 5px;
+	background-color: #EFEFEF;
+	border: 1px solid #BBBBBB;
+	border-radius: 6px 6px 0 0;
+	box-shadow: 0 0 3px #AAAAAA;
+	cursor: pointer;
+}
+
+#ct-camera-selection div:hover, #ct-format-selection div:hover {
+	font-weight: bold;
+	box-shadow: 0 0 3px #666666;
+}
+
+#ct-camera-selection .ct-camera-selected, #ct-format-selection .ct-format-selected {
+	font-weight: bold;
+    background-color: #555555;
+    color: #EFEFEF;
+}
+
+#ct-camera-display {
+    position: relative;
+    z-index: 10;
+}
+ 
+#ct-camera {
+	width: 640px;
+	height: 480px;
+	background-color: #CCCCCC;
+	border-width: 3px 1px 1px;
+	border-color: #555555;
+	border-style: solid;
+	box-shadow: 0 0 3px #555555;
+	border-radius: 2px;
+	z-index: 10;
+}
+
+#ct-camera-placeholder {
+	width: 165px;
+	margin: 220px auto;
+	color: #BBBBBB;
+	font-size: 20pt;
+	opactiy: 0.7;
+	text-shadow: 0 0 6px #BBBBBB;
+}
+
+#display-manager {
+	display: none;
+}
+
+#ct-controls .ct-label {
+	position: absolute;
+	width: 70px;
+    height: 75px;
+    background-color: #555555;
+    border-radius: 4px;
+    text-align: center;
+    color: #EFEFEF;
+    font-size: 11pt;
+    font-weight: bold;
+    text-align: right;
+    box-shadow: 0 1px 2px #555555;
+}
+
+#ct-controls .ct-label span {
+	display: block;
+	padding: 5px 10px 0 0;
+}
+
+#ct-controls .slider-text {
+	display: none;
+}
+
+#ct-controls .ct-line {
+	background-color: #555555;
+	box-shadow: 0 1px 2px #555555;
+}
+
+#ct-controls .ct-line-horiz {
+	width: 340px;
+	height: 5px;
+	border-radius: 0 3px 3px 0;
+}
+
+#ct-controls .ct-line-vert {
+	float: right;
+	width: 5px;
+	height: 258px;
+	border-radius: 0 0 3px 3px;
+	margin-right: -3px;
+}
+
+#slider-pan-label {
+	left: 350px;
+	top: 650px;
+}
+
+#slider-pan {
+	position: absolute;
+	left: 425px;
+	top: 645px;
+}
+
+#slider-tilt-label {
+	left: 675px;
+	top: 455px;
+}
+
+#slider-tilt {
+	position: absolute;
+	left: 750px;
+	top: 440px;
+}
+
+#slider-zoom-label {
+	left: 350px;
+	top: 545px;
+}
+
+#slider-zoom {
+	position: absolute;
+	left: 425px;
+	top: 540px;
+}
+
+#robotics-label {
+	left: -5px;
+	top: 545px;
+	height: 125px !important;
+}
+
+#robotics-label .ct-line-horiz {
+	width: 315px;
+}
+
+#robotics-divider {
+	position: absolute;
+	height: 100px !important;
+	left: 190px;
+	top: 4px;
+}
+
+#button-yaw-left {
+	left: 80px;
+	top: 585px;
+}
+
+#button-yaw-right {
+	left: 130px;
+	top: 585px;
+}
+
+#button-roll-left {
+	left: 210px;
+	top: 585px;
+}
+
+#button-roll-right {
+	left: 260px;
+	top: 585px;
+}
+
+#robotics-label .robotics-label-text {
+	position: absolute;
+	width: 80px;
+	top: 16px;
+	color: #000000;
+	font-weight: normal;
+	text-align: center;
+}
+
+#robotics-left-label {
+	left: 90px;
+}
+
+#robotics-right-label {
+	left: 210px;
+}
+
+#led-errored {
+	left: 75px;
+	top: 645px;
+}
+
+#led-homing {
+	left: 36px;
+	top: 673px;
+}
+
+#led-busy {
+	left: 90px;
+	top: 700px;
+}
+
+#large-step {
+	left: 180px;
+	top: 660px;
+}
+
+#keyboard-label {
+    left: -170px;
+    top: 150px;
+}
+
+#keyboard-label .ct-line-vert {
+	height: 95px;
+}
+
+.button {
+	border-radius: 35px !important;
+}
+
+#keyboard-move {
+	left: -90px;
+	top: 150px;
+}
+
+#keyboard-scan {
+	left: -90px;
+	top: 230px;
+}
+
+#keyboard-abort {
+	left: -90px;
+	top: 310px;
+}
+
+#keyboard-laser {
+	left: -90px;
+	top: 390px;
+}
+
+
+#led-move {
+	left: -200px;
+	top: 250px;
+}
+
+#led-scan {
+	left: -200px;
+	top: 280px;
+}
+
+#led-abort {
+	left: -177px;
+	top: 310px;
+}

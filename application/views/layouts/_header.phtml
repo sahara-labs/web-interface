@@ -38,14 +38,11 @@
 
 $config = Zend_Registry::get('config');
 
-/* Set up header image. */
-($headerImg = $config->header->logoGraphic) != null || $headerImg = 'images/logo.png';
+($headerImg = $config->header->logoGraphic) != null || $headerImg = 'images/uts.png';
 $headerImg = $this->baseUrl($headerImg);
+$headerImgLink = $config->header->logoLink;
 
-$headerImgLink = $config->header->logoLink == null ? 'http://sourceforge.net/projects/labshare-sahara/' :
-        $config->header->logoLink;
-
-($headerName = $config->header->nameImage) != null || $headerName = 'images/Sahara_header.png';
+($headerName = $config->header->nameImage) != null || $headerName = 'images/Sahara.png';
 $headerName = $this->baseUrl($headerName);
 
 ?>
@@ -59,21 +56,8 @@ $headerName = $this->baseUrl($headerName);
 
 <div class="headerimg" >
 <?php if ($headerImgLink != null): ?>
-   	<a target="_blank" href="<?=$headerImgLink?>">
+   	<a href="<?=$headerImgLink?>">
 		<img src="<?=$headerImg?>" alt="Institution Logo" />
     </a>
 <?php endif; ?>
 </div>
-
-<div class="headerimg" >
-	<img src="<?=$headerName?>" alt="Lab Name" />
-</div>
-
-<?php if ($config->header->useLabshare): ?>
-<div id="labshareimg">
-	<div>Partnered with:</div>
-	<a target="_blank" href="http://www.labshare.edu.au/">
-		<img src="<?=$this->baseUrl('images/labshare.png')?>" alt="LabShare" />
-	</a>
-</div>
-<?php endif; ?>
